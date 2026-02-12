@@ -48,6 +48,8 @@ tasks:
           --input-file-type openapi \
           --output {{.PY_SDK}}/src/browser_use_sdk/generated/v2/models.py \
           --output-model-type pydantic_v2.BaseModel \
+          --snake-case-field \
+          --field-constraints \
           --disable-timestamp
       - |
         datamodel-codegen \
@@ -55,6 +57,8 @@ tasks:
           --input-file-type openapi \
           --output {{.PY_SDK}}/src/browser_use_sdk/generated/v3/models.py \
           --output-model-type pydantic_v2.BaseModel \
+          --snake-case-field \
+          --field-constraints \
           --disable-timestamp
       - echo "Python models generated (v2 + v3)"
 

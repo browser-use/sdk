@@ -4,14 +4,14 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, conint, constr
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
 class AccountNotFoundError(BaseModel):
-    detail: Optional[str] = Field('Account not found', title='Detail')
+    detail: str | None = Field('Account not found', title='Detail')
 
 
 class BrowserSessionStatus(Enum):
@@ -33,79 +33,139 @@ class BrowserSessionView(BaseModel):
         description='Current status of the session (active/stopped)',
         title='Status',
     )
-    liveUrl: Optional[str] = Field(
+    live_url: str | None = Field(
         None,
+        alias='liveUrl',
         description='URL where the browser can be viewed live in real-time',
         title='Live URL',
     )
-    cdpUrl: Optional[str] = Field(
+    cdp_url: str | None = Field(
         None,
+        alias='cdpUrl',
         description='Chrome DevTools Protocol URL for browser automation',
         title='CDP URL',
     )
-    timeoutAt: AwareDatetime = Field(
-        ..., description='Timestamp when the session will timeout', title='Timeout At'
-    )
-    startedAt: AwareDatetime = Field(
+    timeout_at: AwareDatetime = Field(
         ...,
+        alias='timeoutAt',
+        description='Timestamp when the session will timeout',
+        title='Timeout At',
+    )
+    started_at: AwareDatetime = Field(
+        ...,
+        alias='startedAt',
         description='Timestamp when the session was created and started',
         title='Started At',
     )
-    finishedAt: Optional[AwareDatetime] = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
+        alias='finishedAt',
         description='Timestamp when the session was stopped (None if still active)',
         title='Finished At',
     )
-    proxyUsedMb: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', description='Amount of proxy data used in MB', title='Proxy Used MB'
+    proxy_used_mb: str | None = Field(
+        '0',
+        alias='proxyUsedMb',
+        description='Amount of proxy data used in MB',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxy Used MB',
     )
-    proxyCost: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', description='Cost of proxy usage in USD', title='Proxy Cost'
+    proxy_cost: str | None = Field(
+        '0',
+        alias='proxyCost',
+        description='Cost of proxy usage in USD',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxy Cost',
     )
-    browserCost: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', description='Cost of browser session hosting in USD', title='Browser Cost'
+    browser_cost: str | None = Field(
+        '0',
+        alias='browserCost',
+        description='Cost of browser session hosting in USD',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Browser Cost',
     )
 
 
 class CannotDeleteSkillWhileGeneratingError(BaseModel):
-    detail: Optional[str] = Field(
+    detail: str | None = Field(
         'Cannot delete skill while it is still generating', title='Detail'
     )
 
 
 class CannotRollbackPublicSkillError(BaseModel):
-    detail: Optional[str] = Field(
+    detail: str | None = Field(
         'Cannot rollback a public skill. Please make the skill private first.',
         title='Detail',
     )
 
 
 class ConcurrentSkillCreationsError(BaseModel):
-    detail: Optional[str] = Field(
+    detail: str | None = Field(
         'Concurrent skill creations are not allowed. Please wait for the current skill creation to finish or cancel it.',
         title='Detail',
     )
 
 
+class BrowserScreenWidth(RootModel[int]):
+    root: int = Field(
+        ...,
+        description='Custom screen width in pixels for the browser.',
+        ge=320,
+        le=6144,
+        title='Browser Screen Width',
+    )
+
+
+class BrowserScreenHeight(RootModel[int]):
+    root: int = Field(
+        ...,
+        description='Custom screen height in pixels for the browser.',
+        ge=320,
+        le=3456,
+        title='Browser Screen Height',
+    )
+
+
+class Title(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Optional title for the skill (will be generated if not provided)',
+        max_length=100,
+        title='Title',
+    )
+
+
+class Description(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Optional description for the skill (will be generated if not provided)',
+        max_length=1000,
+        title='Description',
+    )
+
+
 class CreateSkillRequest(BaseModel):
-    title: Optional[constr(max_length=100)] = Field(
+    title: Title | None = Field(
         None,
         description='Optional title for the skill (will be generated if not provided)',
         title='Title',
     )
-    description: Optional[constr(max_length=1000)] = Field(
+    description: Description | None = Field(
         None,
         description='Optional description for the skill (will be generated if not provided)',
         title='Description',
     )
-    goal: constr(max_length=1000) = Field(
+    goal: str = Field(
         ...,
         description='Goal of the skill (description of what the skill does and what the user should expect from it)',
+        max_length=1000,
         title='Goal',
     )
-    agentPrompt: constr(min_length=10) = Field(
+    agent_prompt: str = Field(
         ...,
+        alias='agentPrompt',
         description='Prompt for the agent to use when generating the skill automatically',
+        min_length=10,
         title='Agentprompt',
     )
 
@@ -116,37 +176,71 @@ class CreateSkillResponse(BaseModel):
     )
 
 
+class JudgeGroundTruth(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Expected answer for judge evaluation.',
+        max_length=10000,
+        title='Judge Ground Truth',
+    )
+
+
+class Username(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Username for proxy authentication.',
+        max_length=255,
+        min_length=1,
+        title='Username',
+    )
+
+
+class Password(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Password for proxy authentication.',
+        max_length=255,
+        min_length=1,
+        title='Password',
+    )
+
+
 class CustomProxy(BaseModel):
-    host: constr(min_length=1, max_length=255) = Field(
-        ..., description='Host of the proxy.', title='Host'
+    host: str = Field(
+        ...,
+        description='Host of the proxy.',
+        max_length=255,
+        min_length=1,
+        title='Host',
     )
-    port: conint(ge=1, le=65535) = Field(
-        ..., description='Port of the proxy.', title='Port'
+    port: int = Field(
+        ..., description='Port of the proxy.', ge=1, le=65535, title='Port'
     )
-    username: Optional[constr(min_length=1, max_length=255)] = Field(
+    username: Username | None = Field(
         None, description='Username for proxy authentication.', title='Username'
     )
-    password: Optional[constr(min_length=1, max_length=255)] = Field(
+    password: Password | None = Field(
         None, description='Password for proxy authentication.', title='Password'
     )
 
 
 class DownloadUrlGenerationError(BaseModel):
-    detail: Optional[str] = Field('Failed to generate download URL', title='Detail')
+    detail: str | None = Field('Failed to generate download URL', title='Detail')
 
 
 class EnabledSkillsLimitExceededError(BaseModel):
-    detail: Optional[str] = Field(
+    detail: str | None = Field(
         'Enabled skills limit exceeded for your plan', title='Detail'
     )
 
 
 class ExecuteSkillRequest(BaseModel):
-    parameters: Optional[Dict[str, Any]] = Field(
+    parameters: dict[str, Any] | None = Field(
         None, description='Parameters to pass to the skill handler', title='Parameters'
     )
-    sessionId: Optional[UUID] = Field(
+    session_id: UUID | None = Field(
         None,
+        alias='sessionId',
         description='Optional session ID (UUID) for IP persistence.',
         title='Sessionid',
     )
@@ -159,14 +253,15 @@ class ExecuteSkillResponse(BaseModel):
     result: Any = Field(
         None, description='Output of the skill execution', title='Result'
     )
-    error: Optional[str] = Field(
+    error: str | None = Field(
         None, description='Error message if the skill execution failed', title='Error'
     )
-    stderr: Optional[str] = Field(
+    stderr: str | None = Field(
         None, description='Standard error output of the skill execution', title='Stderr'
     )
-    latencyMs: Optional[int] = Field(
+    latency_ms: int | None = Field(
         None,
+        alias='latencyMs',
         description='Latency of the skill execution in milliseconds',
         title='Latency in ms',
     )
@@ -176,23 +271,25 @@ class FileView(BaseModel):
     id: UUID = Field(
         ..., description='Unique identifier for the output file', title='ID'
     )
-    fileName: str = Field(..., description='Name of the output file', title='File Name')
+    file_name: str = Field(
+        ..., alias='fileName', description='Name of the output file', title='File Name'
+    )
 
 
 class GenerationNotCancellableError(BaseModel):
-    detail: Optional[str] = Field('Generation is not cancellable', title='Detail')
+    detail: str | None = Field('Generation is not cancellable', title='Detail')
 
 
 class InsufficientCreditsError(BaseModel):
-    detail: Optional[str] = Field('Insufficient credits', title='Detail')
+    detail: str | None = Field('Insufficient credits', title='Detail')
 
 
 class InternalServerError(BaseModel):
-    detail: Optional[str] = Field('An internal server error occurred', title='Detail')
+    detail: str | None = Field('An internal server error occurred', title='Detail')
 
 
 class OutputFileNotFoundError(BaseModel):
-    detail: Optional[str] = Field('Output file not found', title='Detail')
+    detail: str | None = Field('Output file not found', title='Detail')
 
 
 class ParameterType(Enum):
@@ -205,61 +302,83 @@ class ParameterType(Enum):
 
 
 class PlanInfo(BaseModel):
-    planName: str = Field(..., description='The name of the plan', title='Plan Name')
-    subscriptionStatus: Optional[str] = Field(
-        ..., description='The status of the subscription', title='Subscription Status'
+    plan_name: str = Field(
+        ..., alias='planName', description='The name of the plan', title='Plan Name'
     )
-    subscriptionId: Optional[str] = Field(
-        ..., description='The ID of the subscription', title='Subscription ID'
-    )
-    subscriptionCurrentPeriodEnd: Optional[str] = Field(
+    subscription_status: str | None = Field(
         ...,
+        alias='subscriptionStatus',
+        description='The status of the subscription',
+        title='Subscription Status',
+    )
+    subscription_id: str | None = Field(
+        ...,
+        alias='subscriptionId',
+        description='The ID of the subscription',
+        title='Subscription ID',
+    )
+    subscription_current_period_end: str | None = Field(
+        ...,
+        alias='subscriptionCurrentPeriodEnd',
         description='The end of the current period',
         title='Subscription Current Period End',
     )
-    subscriptionCanceledAt: Optional[str] = Field(
+    subscription_canceled_at: str | None = Field(
         ...,
+        alias='subscriptionCanceledAt',
         description='The date the subscription was canceled',
         title='Subscription Canceled At',
     )
 
 
+class Name(RootModel[str]):
+    root: str = Field(
+        ..., description='Optional name for the profile', max_length=100, title='Name'
+    )
+
+
 class ProfileCreateRequest(BaseModel):
-    name: Optional[constr(max_length=100)] = Field(
+    name: Name | None = Field(
         None, description='Optional name for the profile', title='Name'
     )
 
 
 class ProfileNotFoundError(BaseModel):
-    detail: Optional[str] = Field('Profile not found', title='Detail')
+    detail: str | None = Field('Profile not found', title='Detail')
 
 
 class ProfileUpdateRequest(BaseModel):
-    name: Optional[constr(max_length=100)] = Field(
+    name: Name | None = Field(
         None, description='Optional name for the profile', title='Name'
     )
 
 
 class ProfileView(BaseModel):
     id: UUID = Field(..., description='Unique identifier for the profile', title='ID')
-    name: Optional[str] = Field(
+    name: str | None = Field(
         None, description='Optional name for the profile', title='Name'
     )
-    lastUsedAt: Optional[AwareDatetime] = Field(
+    last_used_at: AwareDatetime | None = Field(
         None,
+        alias='lastUsedAt',
         description='Timestamp when the profile was last used',
         title='Last Used At',
     )
-    createdAt: AwareDatetime = Field(
-        ..., description='Timestamp when the profile was created', title='Created At'
-    )
-    updatedAt: AwareDatetime = Field(
+    created_at: AwareDatetime = Field(
         ...,
+        alias='createdAt',
+        description='Timestamp when the profile was created',
+        title='Created At',
+    )
+    updated_at: AwareDatetime = Field(
+        ...,
+        alias='updatedAt',
         description='Timestamp when the profile was last updated',
         title='Updated At',
     )
-    cookieDomains: Optional[List[str]] = Field(
+    cookie_domains: list[str] | None = Field(
         None,
+        alias='cookieDomains',
         description='List of domain URLs that have cookies stored for this profile',
         title='Cookie Domains',
     )
@@ -516,16 +635,21 @@ class ProxyCountryCode(Enum):
 
 
 class RefineSkillRequest(BaseModel):
-    feedback: constr(min_length=10) = Field(
-        ..., description='Feedback describing what to improve', title='Feedback'
+    feedback: str = Field(
+        ...,
+        description='Feedback describing what to improve',
+        min_length=10,
+        title='Feedback',
     )
-    testOutput: Optional[str] = Field(
+    test_output: str | None = Field(
         None,
+        alias='testOutput',
         description='Last skill test output to include in refinement context',
         title='Testoutput',
     )
-    testLogs: Optional[str] = Field(
+    test_logs: str | None = Field(
         None,
+        alias='testLogs',
         description='Last skill test logs to include in refinement context',
         title='Testlogs',
     )
@@ -536,14 +660,14 @@ class RefineSkillResponse(BaseModel):
 
 
 class SessionHasRunningTaskError(BaseModel):
-    detail: Optional[str] = Field(
+    detail: str | None = Field(
         'Agent session already has a running task. Please wait for it to finish or stop it manually.',
         title='Detail',
     )
 
 
 class SessionNotFoundError(BaseModel):
-    detail: Optional[str] = Field('Session not found', title='Detail')
+    detail: str | None = Field('Session not found', title='Detail')
 
 
 class SessionStatus(Enum):
@@ -552,14 +676,14 @@ class SessionStatus(Enum):
 
 
 class SessionStoppedError(BaseModel):
-    detail: Optional[str] = Field(
+    detail: str | None = Field(
         'Browser session is stopped. Please start a new session and try again.',
         title='Detail',
     )
 
 
 class SessionTimeoutLimitExceededError(BaseModel):
-    detail: Optional[str] = Field(
+    detail: str | None = Field(
         'Maximum session timeout is 4 hours (240 minutes).', title='Detail'
     )
 
@@ -569,23 +693,31 @@ class SessionUpdateAction(Enum):
 
 
 class ShareNotFoundError(BaseModel):
-    detail: Optional[str] = Field('Public share not found', title='Detail')
+    detail: str | None = Field('Public share not found', title='Detail')
 
 
 class ShareView(BaseModel):
-    shareToken: str = Field(
-        ..., description='Token to access the public share', title='Share Token'
-    )
-    shareUrl: str = Field(
-        ..., description='URL to access the public share', title='Share URL'
-    )
-    viewCount: int = Field(
+    share_token: str = Field(
         ...,
+        alias='shareToken',
+        description='Token to access the public share',
+        title='Share Token',
+    )
+    share_url: str = Field(
+        ...,
+        alias='shareUrl',
+        description='URL to access the public share',
+        title='Share URL',
+    )
+    view_count: int = Field(
+        ...,
+        alias='viewCount',
         description='Number of times the public share has been viewed',
         title='View Count',
     )
-    lastViewedAt: Optional[AwareDatetime] = Field(
+    last_viewed_at: AwareDatetime | None = Field(
         None,
+        alias='lastViewedAt',
         description='Timestamp of the last time the public share was viewed (None if never viewed)',
         title='Last Viewed At',
     )
@@ -611,8 +743,9 @@ class SkillCategory(Enum):
 
 
 class SkillExecutionOutputResponse(BaseModel):
-    downloadUrl: str = Field(
+    download_url: str = Field(
         ...,
+        alias='downloadUrl',
         description='Presigned URL for downloading the execution output (valid for 5 minutes)',
         title='Downloadurl',
     )
@@ -620,8 +753,11 @@ class SkillExecutionOutputResponse(BaseModel):
 
 class SkillExecutionView(BaseModel):
     id: UUID = Field(..., description='Unique identifier for the execution', title='Id')
-    skillId: UUID = Field(
-        ..., description='ID of the skill that was executed', title='Skillid'
+    skill_id: UUID = Field(
+        ...,
+        alias='skillId',
+        description='ID of the skill that was executed',
+        title='Skillid',
     )
     status: str = Field(
         ..., description='Execution status (running, completed, failed)', title='Status'
@@ -629,26 +765,38 @@ class SkillExecutionView(BaseModel):
     success: bool = Field(
         ..., description='Whether the execution succeeded', title='Success'
     )
-    startedAt: AwareDatetime = Field(
-        ..., description='When the execution started', title='Startedat'
+    started_at: AwareDatetime = Field(
+        ...,
+        alias='startedAt',
+        description='When the execution started',
+        title='Startedat',
     )
-    finishedAt: Optional[AwareDatetime] = Field(
-        ..., description='When the execution finished', title='Finishedat'
+    finished_at: AwareDatetime | None = Field(
+        ...,
+        alias='finishedAt',
+        description='When the execution finished',
+        title='Finishedat',
     )
-    latencyMs: Optional[int] = Field(
-        ..., description='Execution latency in milliseconds', title='Latencyms'
+    latency_ms: int | None = Field(
+        ...,
+        alias='latencyMs',
+        description='Execution latency in milliseconds',
+        title='Latencyms',
     )
-    hasOutput: bool = Field(
-        ..., description='Whether output is available for download', title='Hasoutput'
+    has_output: bool = Field(
+        ...,
+        alias='hasOutput',
+        description='Whether output is available for download',
+        title='Hasoutput',
     )
 
 
 class SkillNotFinishedError(BaseModel):
-    detail: Optional[str] = Field('Skill is not finished', title='Detail')
+    detail: str | None = Field('Skill is not finished', title='Detail')
 
 
 class SkillNotFoundError(BaseModel):
-    detail: Optional[str] = Field('Skill not found', title='Detail')
+    detail: str | None = Field('Skill not found', title='Detail')
 
 
 class SkillsGenerationStatus(Enum):
@@ -686,26 +834,49 @@ class TaskCreatedResponse(BaseModel):
     id: UUID = Field(
         ..., description='Unique identifier for the created task', title='ID'
     )
-    sessionId: UUID = Field(
-        ..., description='Session ID where the task was created', title='Session ID'
+    session_id: UUID = Field(
+        ...,
+        alias='sessionId',
+        description='Session ID where the task was created',
+        title='Session ID',
+    )
+
+
+class Cost(RootModel[str]):
+    model_config = ConfigDict(
+        regex_engine="python-re",
+    )
+    root: str = Field(
+        ...,
+        description='Total cost of the task in USD. This is the sum of all step costs incurred during task execution.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Cost',
     )
 
 
 class TaskLogFileResponse(BaseModel):
-    downloadUrl: str = Field(
-        ..., description='URL to download the log file', title='Download URL'
+    download_url: str = Field(
+        ...,
+        alias='downloadUrl',
+        description='URL to download the log file',
+        title='Download URL',
     )
 
 
 class TaskNotFoundError(BaseModel):
-    detail: Optional[str] = Field('Task not found', title='Detail')
+    detail: str | None = Field('Task not found', title='Detail')
 
 
 class TaskOutputFileResponse(BaseModel):
     id: UUID = Field(..., description='Unique identifier for the file', title='ID')
-    fileName: str = Field(..., description='Name of the file', title='File Name')
-    downloadUrl: str = Field(
-        ..., description='URL to download the file', title='Download URL'
+    file_name: str = Field(
+        ..., alias='fileName', description='Name of the file', title='File Name'
+    )
+    download_url: str = Field(
+        ...,
+        alias='downloadUrl',
+        description='URL to download the file',
+        title='Download URL',
     )
 
 
@@ -716,29 +887,41 @@ class TaskStatus(Enum):
     stopped = 'stopped'
 
 
-class TaskStatusView(BaseModel):
-    model_config = ConfigDict(regex_engine="python-re")
+class Cost1(RootModel[str]):
+    model_config = ConfigDict(
+        regex_engine="python-re",
+    )
+    root: str = Field(
+        ...,
+        description='Total cost of the task in USD',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Cost',
+    )
 
+
+class TaskStatusView(BaseModel):
     id: UUID = Field(..., description='Unique identifier for the task', title='ID')
     status: TaskStatus = Field(
         ..., description='Current status of the task', title='Status'
     )
-    output: Optional[str] = Field(
+    output: str | None = Field(
         None,
         description='Final output/result of the task (null while running)',
         title='Output',
     )
-    finishedAt: Optional[AwareDatetime] = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
+        alias='finishedAt',
         description='Naive UTC timestamp when the task completed (null if still running)',
         title='Finished At',
     )
-    isSuccess: Optional[bool] = Field(
+    is_success: bool | None = Field(
         None,
+        alias='isSuccess',
         description="Whether the task was successful based on the agent's self-reported output",
         title='Is Success',
     )
-    cost: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
+    cost: Cost1 | None = Field(
         None, description='Total cost of the task in USD', title='Cost'
     )
 
@@ -748,23 +931,28 @@ class TaskStepView(BaseModel):
         ..., description='Sequential step number within the task', title='Number'
     )
     memory: str = Field(..., description="Agent's memory at this step", title='Memory')
-    evaluationPreviousGoal: str = Field(
+    evaluation_previous_goal: str = Field(
         ...,
+        alias='evaluationPreviousGoal',
         description="Agent's evaluation of the previous goal completion",
         title='Evaluation Previous Goal',
     )
-    nextGoal: str = Field(
-        ..., description='The goal for the next step', title='Next Goal'
+    next_goal: str = Field(
+        ...,
+        alias='nextGoal',
+        description='The goal for the next step',
+        title='Next Goal',
     )
     url: str = Field(
         ..., description='Current URL the browser is on for this step', title='URL'
     )
-    screenshotUrl: Optional[str] = Field(
+    screenshot_url: str | None = Field(
         None,
+        alias='screenshotUrl',
         description='Optional URL to the screenshot taken at this step',
         title='Screenshot URL',
     )
-    actions: List[str] = Field(
+    actions: list[str] = Field(
         ...,
         description='List of stringified json actions performed by the agent in this step',
         title='Actions',
@@ -776,11 +964,21 @@ class TaskUpdateAction(Enum):
     stop_task_and_session = 'stop_task_and_session'
 
 
-class TaskView(BaseModel):
-    model_config = ConfigDict(regex_engine="python-re")
+class Cost2(RootModel[str]):
+    model_config = ConfigDict(
+        regex_engine="python-re",
+    )
+    root: str = Field(
+        ...,
+        description='Total cost of the task in USD. This is the sum of all step costs incurred during task execution.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Cost',
+    )
 
+
+class TaskView(BaseModel):
     id: UUID = Field(..., description='Unique identifier for the task', title='ID')
-    sessionId: UUID = Field(..., title='Sessionid')
+    session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
     llm: str = Field(
         ...,
         description='The LLM model used for this task represented as a string',
@@ -792,57 +990,63 @@ class TaskView(BaseModel):
     status: TaskStatus = Field(
         ..., description='Current status of the task execution', title='Status'
     )
-    createdAt: AwareDatetime = Field(
+    created_at: AwareDatetime = Field(
         ...,
+        alias='createdAt',
         description='Naive UTC timestamp when the task was created',
         title='Created At',
     )
-    startedAt: Optional[AwareDatetime] = Field(
+    started_at: AwareDatetime | None = Field(
         None,
+        alias='startedAt',
         description='Naive UTC timestamp when the task was started (None if task has not started yet)',
         title='Started At',
     )
-    finishedAt: Optional[AwareDatetime] = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
+        alias='finishedAt',
         description='Naive UTC timestamp when the task completed (None if still running)',
         title='Finished At',
     )
-    metadata: Optional[Dict[str, Any]] = Field(
+    metadata: dict[str, Any] | None = Field(
         {},
         description='Optional additional metadata associated with the task set by the user',
         title='Metadata',
     )
-    steps: List[TaskStepView] = Field(..., title='Steps')
-    output: Optional[str] = Field(
+    steps: list[TaskStepView] = Field(..., title='Steps')
+    output: str | None = Field(
         None, description='Final output/result of the task', title='Output'
     )
-    outputFiles: List[FileView] = Field(..., title='Outputfiles')
-    browserUseVersion: Optional[str] = Field(
+    output_files: list[FileView] = Field(..., alias='outputFiles', title='Outputfiles')
+    browser_use_version: str | None = Field(
         None,
+        alias='browserUseVersion',
         description='Version of browser-use used for this task (older tasks may not have this set)',
         title='Browser Use Version',
     )
-    isSuccess: Optional[bool] = Field(
+    is_success: bool | None = Field(
         None,
+        alias='isSuccess',
         description="Whether the task was successful based on the agent's self-reported output (less reliable than the judge)",
         title='Is Success',
     )
-    judgement: Optional[str] = Field(
+    judgement: str | None = Field(
         None,
         description='Stringified JSON object containing the full report from the judge',
         title='Judgement',
     )
-    judgeVerdict: Optional[bool] = Field(
+    judge_verdict: bool | None = Field(
         None,
+        alias='judgeVerdict',
         description='Judge verdict - True if the judge found the task to be successful, False otherwise (None if judge is not enabled)',
         title='Judge Verdict',
     )
-    cost: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
+    cost: Cost2 | None = Field(
         None,
         description='Total cost of the task in USD. This is the sum of all step costs incurred during task execution.',
         title='Cost',
     )
-    suggestions: Optional[List[Dict[str, Any]]] = Field(
+    suggestions: list[dict[str, Any]] | None = Field(
         None,
         description='List of actionable suggestions for improving task configuration based on detected issues during execution.',
         title='Suggestions',
@@ -850,14 +1054,14 @@ class TaskView(BaseModel):
 
 
 class TooManyConcurrentActiveSessionsError(BaseModel):
-    detail: Optional[str] = Field(
+    detail: str | None = Field(
         'Too many concurrent active sessions. Please wait for one to finish, kill one, or upgrade your plan.',
         title='Detail',
     )
 
 
 class UnsupportedContentTypeError(BaseModel):
-    detail: Optional[str] = Field('Unsupported content type', title='Detail')
+    detail: str | None = Field('Unsupported content type', title='Detail')
 
 
 class UpdateBrowserSessionRequest(BaseModel):
@@ -872,25 +1076,44 @@ class UpdateSessionRequest(BaseModel):
     )
 
 
+class Title1(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Display name for the skill (shows up in the public view)',
+        max_length=100,
+        title='Title',
+    )
+
+
+class Description1(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Description of what the skill does (shows up in the public view)',
+        max_length=1000,
+        title='Description',
+    )
+
+
 class UpdateSkillRequest(BaseModel):
-    title: Optional[constr(max_length=100)] = Field(
+    title: Title1 | None = Field(
         None,
         description='Display name for the skill (shows up in the public view)',
         title='Title',
     )
-    description: Optional[constr(max_length=1000)] = Field(
+    description: Description1 | None = Field(
         None,
         description='Description of what the skill does (shows up in the public view)',
         title='Description',
     )
-    categories: Optional[List[SkillCategory]] = Field(
+    categories: list[SkillCategory] | None = Field(
         None, description='Categories to assign to the skill', title='Categories'
     )
-    domains: Optional[List[str]] = Field(
+    domains: list[str] | None = Field(
         None, description='Domains/websites this skill interacts with', title='Domains'
     )
-    isEnabled: Optional[bool] = Field(
+    is_enabled: bool | None = Field(
         None,
+        alias='isEnabled',
         description='Whether the skill is enabled for execution',
         title='Isenabled',
     )
@@ -907,18 +1130,20 @@ class UploadFilePresignedUrlResponse(BaseModel):
     method: Literal['POST'] = Field(
         ..., description='The HTTP method to use for the upload.', title='Method'
     )
-    fields: Dict[str, str] = Field(
+    fields: dict[str, str] = Field(
         ...,
         description='The form fields to include in the upload request.',
         title='Fields',
     )
-    fileName: str = Field(
+    file_name: str = Field(
         ...,
+        alias='fileName',
         description='The name of the file to upload (should be referenced when user wants to use the file in a task).',
         title='File Name',
     )
-    expiresIn: int = Field(
+    expires_in: int = Field(
         ...,
+        alias='expiresIn',
         description='The number of seconds until the presigned URL expires.',
         title='Expires In',
     )
@@ -946,52 +1171,70 @@ class ContentType(Enum):
 
 
 class UploadFileRequest(BaseModel):
-    fileName: constr(min_length=1, max_length=255) = Field(
-        ..., description='The name of the file to upload', title='File Name'
+    file_name: str = Field(
+        ...,
+        alias='fileName',
+        description='The name of the file to upload',
+        max_length=255,
+        min_length=1,
+        title='File Name',
     )
-    contentType: ContentType = Field(
-        ..., description='The content type of the file to upload', title='Content Type'
+    content_type: ContentType = Field(
+        ...,
+        alias='contentType',
+        description='The content type of the file to upload',
+        title='Content Type',
     )
-    sizeBytes: conint(ge=1, le=10485760) = Field(..., title='Sizebytes')
+    size_bytes: int = Field(
+        ..., alias='sizeBytes', ge=1, le=10485760, title='Sizebytes'
+    )
 
 
 class ValidationError(BaseModel):
-    loc: List[Union[str, int]] = Field(..., title='Location')
+    loc: list[str | int] = Field(..., title='Location')
     msg: str = Field(..., title='Message')
     type: str = Field(..., title='Error Type')
 
 
 class AppEndpointsApiV2SkillsViewsInsufficientCreditsError(BaseModel):
-    detail: Optional[str] = Field('Insufficient credits', title='Detail')
+    detail: str | None = Field('Insufficient credits', title='Detail')
 
 
 class CommonUtilsErrorsInsufficientCreditsError(BaseModel):
-    detail: Optional[str] = Field('You have insufficient credits', title='Detail')
+    detail: str | None = Field('You have insufficient credits', title='Detail')
 
 
 class AccountView(BaseModel):
-    name: Optional[str] = Field(None, description='The name of the user', title='Name')
-    totalCreditsBalanceUsd: float = Field(
-        ..., description='The total credits balance in USD', title='Credits Balance USD'
-    )
-    monthlyCreditsBalanceUsd: float = Field(
+    name: str | None = Field(None, description='The name of the user', title='Name')
+    total_credits_balance_usd: float = Field(
         ...,
+        alias='totalCreditsBalanceUsd',
+        description='The total credits balance in USD',
+        title='Credits Balance USD',
+    )
+    monthly_credits_balance_usd: float = Field(
+        ...,
+        alias='monthlyCreditsBalanceUsd',
         description='Monthly subscription credits balance in USD',
         title='Monthly Credits Balance USD',
     )
-    additionalCreditsBalanceUsd: float = Field(
+    additional_credits_balance_usd: float = Field(
         ...,
+        alias='additionalCreditsBalanceUsd',
         description='Additional top-up credits balance in USD',
         title='Additional Credits Balance USD',
     )
-    rateLimit: int = Field(
-        ..., description='The rate limit for the account', title='Rate Limit'
+    rate_limit: int = Field(
+        ...,
+        alias='rateLimit',
+        description='The rate limit for the account',
+        title='Rate Limit',
     )
-    planInfo: PlanInfo = Field(
-        ..., description='The plan information', title='Plan Info'
+    plan_info: PlanInfo = Field(
+        ..., alias='planInfo', description='The plan information', title='Plan Info'
     )
-    projectId: UUID = Field(
-        ..., description='The ID of the project', title='Project ID'
+    project_id: UUID = Field(
+        ..., alias='projectId', description='The ID of the project', title='Project ID'
     )
 
 
@@ -1005,243 +1248,315 @@ class BrowserSessionItemView(BaseModel):
         description='Current status of the session (active/stopped)',
         title='Status',
     )
-    liveUrl: Optional[str] = Field(
+    live_url: str | None = Field(
         None,
+        alias='liveUrl',
         description='URL where the browser can be viewed live in real-time',
         title='Live URL',
     )
-    cdpUrl: Optional[str] = Field(
+    cdp_url: str | None = Field(
         None,
+        alias='cdpUrl',
         description='Chrome DevTools Protocol URL for browser automation',
         title='CDP URL',
     )
-    timeoutAt: AwareDatetime = Field(
-        ..., description='Timestamp when the session will timeout', title='Timeout At'
-    )
-    startedAt: AwareDatetime = Field(
+    timeout_at: AwareDatetime = Field(
         ...,
+        alias='timeoutAt',
+        description='Timestamp when the session will timeout',
+        title='Timeout At',
+    )
+    started_at: AwareDatetime = Field(
+        ...,
+        alias='startedAt',
         description='Timestamp when the session was created and started',
         title='Started At',
     )
-    finishedAt: Optional[AwareDatetime] = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
+        alias='finishedAt',
         description='Timestamp when the session was stopped (None if still active)',
         title='Finished At',
     )
-    proxyUsedMb: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', description='Amount of proxy data used in MB', title='Proxy Used MB'
+    proxy_used_mb: str | None = Field(
+        '0',
+        alias='proxyUsedMb',
+        description='Amount of proxy data used in MB',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxy Used MB',
     )
-    proxyCost: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', description='Cost of proxy usage in USD', title='Proxy Cost'
+    proxy_cost: str | None = Field(
+        '0',
+        alias='proxyCost',
+        description='Cost of proxy usage in USD',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxy Cost',
     )
-    browserCost: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', description='Cost of browser session hosting in USD', title='Browser Cost'
+    browser_cost: str | None = Field(
+        '0',
+        alias='browserCost',
+        description='Cost of browser session hosting in USD',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Browser Cost',
     )
 
 
 class BrowserSessionListResponse(BaseModel):
-    items: List[BrowserSessionItemView] = Field(
+    items: list[BrowserSessionItemView] = Field(
         ...,
         description='List of browser session views for the current page',
         title='Items',
     )
-    totalItems: int = Field(
-        ..., description='Total number of items in the list', title='Total Items'
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
     )
-    pageNumber: int = Field(..., description='Page number', title='Page Number')
-    pageSize: int = Field(
-        ..., description='Number of items per page', title='Page Size'
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
     )
 
 
 class CreateBrowserSessionRequest(BaseModel):
-    profileId: Optional[UUID] = Field(
+    profile_id: UUID | None = Field(
         None,
+        alias='profileId',
         description='The ID of the profile to use for the session',
         title='Profile ID',
     )
-    proxyCountryCode: Optional[ProxyCountryCode] = Field(
-        None, description='Country code for proxy location.', title='Proxy Country Code'
+    proxy_country_code: ProxyCountryCode | None = Field(
+        None,
+        alias='proxyCountryCode',
+        description='Country code for proxy location.',
+        title='Proxy Country Code',
     )
-    timeout: Optional[int] = Field(
+    timeout: int | None = Field(
         60,
         description='The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.',
         title='Timeout',
     )
-    browserScreenWidth: Optional[conint(ge=320, le=6144)] = Field(
+    browser_screen_width: BrowserScreenWidth | None = Field(
         None,
+        alias='browserScreenWidth',
         description='Custom screen width in pixels for the browser.',
         title='Browser Screen Width',
     )
-    browserScreenHeight: Optional[conint(ge=320, le=3456)] = Field(
+    browser_screen_height: BrowserScreenHeight | None = Field(
         None,
+        alias='browserScreenHeight',
         description='Custom screen height in pixels for the browser.',
         title='Browser Screen Height',
     )
-    allowResizing: Optional[bool] = Field(
+    allow_resizing: bool | None = Field(
         False,
+        alias='allowResizing',
         description='Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).',
         title='Allow Resizing',
     )
-    customProxy: Optional[CustomProxy] = Field(
+    custom_proxy: CustomProxy | None = Field(
         None,
+        alias='customProxy',
         description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers.',
         title='Custom Proxy',
     )
 
 
 class CreateSessionRequest(BaseModel):
-    profileId: Optional[UUID] = Field(
+    profile_id: UUID | None = Field(
         None,
+        alias='profileId',
         description='The ID of the profile to use for the session',
         title='Profile ID',
     )
-    proxyCountryCode: Optional[ProxyCountryCode] = Field(
-        None, description='Country code for proxy location.', title='Proxy Country Code'
-    )
-    startUrl: Optional[str] = Field(
+    proxy_country_code: ProxyCountryCode | None = Field(
         None,
+        alias='proxyCountryCode',
+        description='Country code for proxy location.',
+        title='Proxy Country Code',
+    )
+    start_url: str | None = Field(
+        None,
+        alias='startUrl',
         description='URL to navigate to when the session starts.',
         title='Start URL',
     )
-    browserScreenWidth: Optional[conint(ge=320, le=6144)] = Field(
+    browser_screen_width: BrowserScreenWidth | None = Field(
         None,
+        alias='browserScreenWidth',
         description='Custom screen width in pixels for the browser.',
         title='Browser Screen Width',
     )
-    browserScreenHeight: Optional[conint(ge=320, le=3456)] = Field(
+    browser_screen_height: BrowserScreenHeight | None = Field(
         None,
+        alias='browserScreenHeight',
         description='Custom screen height in pixels for the browser.',
         title='Browser Screen Height',
     )
-    persistMemory: Optional[bool] = Field(
+    persist_memory: bool | None = Field(
         True,
+        alias='persistMemory',
         description='If True (default), tasks in this session share memory and history with each other, allowing follow-up tasks to continue from previous context. If False, each task runs as a standalone task without any previous task context.',
         title='Persist Memory',
     )
-    keepAlive: Optional[bool] = Field(
+    keep_alive: bool | None = Field(
         True,
+        alias='keepAlive',
         description='If True (default), the browser session stays alive after tasks complete, allowing follow-up tasks. If False, the session is closed immediately after task completion. Set to False for simple one-off tasks to reduce session idle time.',
         title='Keep Alive',
     )
-    customProxy: Optional[CustomProxy] = Field(
+    custom_proxy: CustomProxy | None = Field(
         None,
+        alias='customProxy',
         description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers.',
         title='Custom Proxy',
     )
 
 
 class CreateTaskRequest(BaseModel):
-    task: constr(min_length=1, max_length=50000) = Field(
-        ..., description='The task prompt/instruction for the agent.', title='Task'
+    task: str = Field(
+        ...,
+        description='The task prompt/instruction for the agent.',
+        max_length=50000,
+        min_length=1,
+        title='Task',
     )
-    llm: Optional[SupportedLLMs] = Field(
-        'browser-use-2.0',
+    llm: SupportedLLMs | None = Field(
+        SupportedLLMs.browser_use_2_0,
         description='The LLM model to use for the agent.',
         title='LLM',
     )
-    startUrl: Optional[str] = Field(
-        None, description='The URL to start the task from.', title='Start URL'
+    start_url: str | None = Field(
+        None,
+        alias='startUrl',
+        description='The URL to start the task from.',
+        title='Start URL',
     )
-    maxSteps: Optional[conint(ge=1, le=10000)] = Field(
+    max_steps: int | None = Field(
         100,
+        alias='maxSteps',
         description='Maximum number of steps the agent can take before stopping.',
+        ge=1,
+        le=10000,
         title='Max Steps',
     )
-    structuredOutput: Optional[str] = Field(
+    structured_output: str | None = Field(
         None,
+        alias='structuredOutput',
         description='The stringified JSON schema for the structured output.',
         title='Structured Output',
     )
-    sessionId: Optional[UUID] = Field(
+    session_id: UUID | None = Field(
         None,
+        alias='sessionId',
         description='The ID of the session where the task will run.',
         title='Session ID',
     )
-    metadata: Optional[Dict[str, str]] = Field(
+    metadata: dict[str, str] | None = Field(
         None,
         description='The metadata for the task. Up to 10 key-value pairs.',
         title='Metadata',
     )
-    secrets: Optional[Dict[str, str]] = Field(
+    secrets: dict[str, str] | None = Field(
         None,
         description='The secrets for the task. Allowed domains are not required for secrets to be injected, but are recommended.',
         title='Secrets',
     )
-    allowedDomains: Optional[List[str]] = Field(
-        None, description='The allowed domains for the task.', title='Allowed Domains'
-    )
-    opVaultId: Optional[str] = Field(
+    allowed_domains: list[str] | None = Field(
         None,
+        alias='allowedDomains',
+        description='The allowed domains for the task.',
+        title='Allowed Domains',
+    )
+    op_vault_id: str | None = Field(
+        None,
+        alias='opVaultId',
         description='The ID of the 1Password vault to use for the task. This is used to inject secrets into the task.',
         title='1Password Vault ID',
     )
-    highlightElements: Optional[bool] = Field(
+    highlight_elements: bool | None = Field(
         False,
+        alias='highlightElements',
         description='Tells the agent to highlight interactive elements on the page.',
         title='Highlight Elements',
     )
-    flashMode: Optional[bool] = Field(
-        False, description='Whether agent flash mode is enabled.', title='Flash Mode'
+    flash_mode: bool | None = Field(
+        False,
+        alias='flashMode',
+        description='Whether agent flash mode is enabled.',
+        title='Flash Mode',
     )
-    thinking: Optional[bool] = Field(
+    thinking: bool | None = Field(
         False, description='Whether agent thinking mode is enabled.', title='Thinking'
     )
-    vision: Optional[Union[bool, str]] = Field(
+    vision: bool | Literal['auto'] | None = Field(
         True,
         description="Whether agent vision capabilities are enabled. Set to 'auto' to let the agent decide based on the model capabilities.",
         title='Vision',
     )
-    systemPromptExtension: Optional[constr(max_length=2000)] = Field(
+    system_prompt_extension: str | None = Field(
         '',
+        alias='systemPromptExtension',
         description='Optional extension to the agent system prompt.',
+        max_length=2000,
         title='System Prompt Extension',
     )
-    judge: Optional[bool] = Field(
+    judge: bool | None = Field(
         False,
         description='Enable judge mode to evaluate task completion against ground truth.',
         title='Judge',
     )
-    judgeGroundTruth: Optional[constr(max_length=10000)] = Field(
+    judge_ground_truth: JudgeGroundTruth | None = Field(
         None,
+        alias='judgeGroundTruth',
         description='Expected answer for judge evaluation.',
         title='Judge Ground Truth',
     )
-    judgeLlm: Optional[SupportedLLMs] = Field(
+    judge_llm: SupportedLLMs | None = Field(
         None,
+        alias='judgeLlm',
         description='The LLM model to use for judging. If not provided, uses the default judge LLM.',
         title='Judge LLM',
     )
-    skillIds: Optional[List[str]] = Field(
+    skill_ids: list[str] | None = Field(
         None,
+        alias='skillIds',
         description="List of skill IDs to enable for this task. Use ['*'] to enable all available skills for the project.",
         title='Skill IDs',
     )
 
 
 class HTTPValidationError(BaseModel):
-    detail: Optional[List[ValidationError]] = Field(None, title='Detail')
+    detail: list[ValidationError] | None = Field(None, title='Detail')
 
 
 class ParameterSchema(BaseModel):
     name: str = Field(..., title='Name')
     type: ParameterType
-    required: Optional[bool] = Field(True, title='Required')
-    description: Optional[str] = Field(None, title='Description')
+    required: bool | None = Field(True, title='Required')
+    description: str | None = Field(None, title='Description')
     default: Any = Field(None, title='Default')
-    cookieDomain: Optional[str] = Field(None, title='Cookiedomain')
+    cookie_domain: str | None = Field(None, alias='cookieDomain', title='Cookiedomain')
 
 
 class ProfileListResponse(BaseModel):
-    items: List[ProfileView] = Field(
+    items: list[ProfileView] = Field(
         ..., description='List of profile views for the current page', title='Items'
     )
-    totalItems: int = Field(
-        ..., description='Total number of items in the list', title='Total Items'
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
     )
-    pageNumber: int = Field(..., description='Page number', title='Page Number')
-    pageSize: int = Field(
-        ..., description='Number of items per page', title='Page Size'
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
     )
 
 
@@ -1255,68 +1570,91 @@ class SessionItemView(BaseModel):
         description='Current status of the session (active/stopped)',
         title='Status',
     )
-    liveUrl: Optional[str] = Field(
+    live_url: str | None = Field(
         None,
+        alias='liveUrl',
         description='URL where the browser can be viewed live in real-time',
         title='Live URL',
     )
-    startedAt: AwareDatetime = Field(
+    started_at: AwareDatetime = Field(
         ...,
+        alias='startedAt',
         description='Timestamp when the session was created and started',
         title='Started At',
     )
-    finishedAt: Optional[AwareDatetime] = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
+        alias='finishedAt',
         description='Timestamp when the session was stopped (None if still active)',
         title='Finished At',
     )
-    persistMemory: bool = Field(
+    persist_memory: bool = Field(
         ...,
+        alias='persistMemory',
         description='Whether tasks in this session share memory and history with each other',
         title='Persist Memory',
     )
-    keepAlive: bool = Field(
+    keep_alive: bool = Field(
         ...,
+        alias='keepAlive',
         description='Whether the browser session stays alive after tasks complete',
         title='Keep Alive',
     )
-    proxyUsedMb: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', description='Amount of proxy data used in MB', title='Proxy Used MB'
+    proxy_used_mb: str | None = Field(
+        '0',
+        alias='proxyUsedMb',
+        description='Amount of proxy data used in MB',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxy Used MB',
     )
-    proxyCost: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', description='Cost of proxy usage in USD', title='Proxy Cost'
+    proxy_cost: str | None = Field(
+        '0',
+        alias='proxyCost',
+        description='Cost of proxy usage in USD',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxy Cost',
     )
 
 
 class SessionListResponse(BaseModel):
-    items: List[SessionItemView] = Field(
+    items: list[SessionItemView] = Field(
         ..., description='List of session views for the current page', title='Items'
     )
-    totalItems: int = Field(
-        ..., description='Total number of items in the list', title='Total Items'
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
     )
-    pageNumber: int = Field(..., description='Page number', title='Page Number')
-    pageSize: int = Field(
-        ..., description='Number of items per page', title='Page Size'
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
     )
 
 
 class SkillExecutionListResponse(BaseModel):
-    items: List[SkillExecutionView] = Field(
+    items: list[SkillExecutionView] = Field(
         ..., description='List of executions', title='Items'
     )
-    totalItems: int = Field(
-        ..., description='Total number of items in the list', title='Total Items'
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
     )
-    pageNumber: int = Field(..., description='Page number', title='Page Number')
-    pageSize: int = Field(
-        ..., description='Number of items per page', title='Page Size'
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
     )
 
 
 class SkillResponse(BaseModel):
     id: UUID = Field(..., description='Unique identifier for the skill', title='ID')
-    slug: Optional[str] = Field(
+    slug: str | None = Field(
         None, description='URL-friendly slug for the skill', title='Slug'
     )
     title: str = Field(
@@ -1329,85 +1667,109 @@ class SkillResponse(BaseModel):
         description='Description of the skill (shows up in the public view)',
         title='Description',
     )
-    categories: List[SkillCategory] = Field(
+    categories: list[SkillCategory] = Field(
         ..., description='Categories of the skill', title='Categories'
     )
-    domains: List[str] = Field(
+    domains: list[str] = Field(
         ..., description='Domains/websites this skill interacts with', title='Domains'
     )
-    goal: Optional[str] = Field(
+    goal: str | None = Field(
         None,
         description='Goal of the skill (not shown in the public view)',
         title='Goal',
     )
-    agentPrompt: Optional[str] = Field(
+    agent_prompt: str | None = Field(
         None,
+        alias='agentPrompt',
         description='Prompt for the agent to use when generating the skill automatically (not shown in the public view)',
         title='Agent Prompt',
     )
     status: SkillsGenerationStatus = Field(
         ..., description='Status of the skill', title='Status'
     )
-    parameters: List[ParameterSchema] = Field(
+    parameters: list[ParameterSchema] = Field(
         ..., description='Input parameters of the skill', title='Parameters'
     )
-    outputSchema: Dict[str, Any] = Field(
-        ..., description='Output schema of the skill', title='Output Schema'
+    output_schema: dict[str, Any] = Field(
+        ...,
+        alias='outputSchema',
+        description='Output schema of the skill',
+        title='Output Schema',
     )
-    isEnabled: bool = Field(
-        ..., description='Whether the skill is enabled', title='Enabled'
+    is_enabled: bool = Field(
+        ...,
+        alias='isEnabled',
+        description='Whether the skill is enabled',
+        title='Enabled',
     )
-    isPublic: bool = Field(
-        ..., description='Whether the skill is publicly available', title='Is Public'
+    is_public: bool = Field(
+        ...,
+        alias='isPublic',
+        description='Whether the skill is publicly available',
+        title='Is Public',
     )
-    iconUrl: Optional[str] = Field(
-        None, description='URL of the custom skill icon', title='Icon URL'
-    )
-    firstPublishedAt: Optional[AwareDatetime] = Field(
+    icon_url: str | None = Field(
         None,
+        alias='iconUrl',
+        description='URL of the custom skill icon',
+        title='Icon URL',
+    )
+    first_published_at: AwareDatetime | None = Field(
+        None,
+        alias='firstPublishedAt',
         description='When the skill was first published',
         title='First Published At',
     )
-    lastPublishedAt: Optional[AwareDatetime] = Field(
-        None, description='When the skill was last published', title='Last Published At'
-    )
-    currentVersion: Optional[int] = Field(
-        ..., description='Current version of the skill', title='Current Version'
-    )
-    currentVersionStartedAt: Optional[AwareDatetime] = Field(
+    last_published_at: AwareDatetime | None = Field(
         None,
+        alias='lastPublishedAt',
+        description='When the skill was last published',
+        title='Last Published At',
+    )
+    current_version: int | None = Field(
+        ...,
+        alias='currentVersion',
+        description='Current version of the skill',
+        title='Current Version',
+    )
+    current_version_started_at: AwareDatetime | None = Field(
+        None,
+        alias='currentVersionStartedAt',
         description='When the current version started generating',
         title='Current Version Started At',
     )
-    currentVersionFinishedAt: Optional[AwareDatetime] = Field(
+    current_version_finished_at: AwareDatetime | None = Field(
         None,
+        alias='currentVersionFinishedAt',
         description='When the current version finished generating',
         title='Current Version Finished At',
     )
-    code: Optional[str] = Field(
+    code: str | None = Field(
         None,
         description='Base64 encoded generated code (contact support@browser-use.com to get access) - ENTERPRISE ONLY',
         title='Code (base64 encoded) - ENTERPRISE ONLY',
     )
-    clonedFromSkillId: Optional[UUID] = Field(
+    cloned_from_skill_id: UUID | None = Field(
         None,
+        alias='clonedFromSkillId',
         description='Unique identifier for the skill this skill was cloned from',
         title='Cloned From Skill ID',
     )
-    createdAt: AwareDatetime = Field(
-        ..., description='Creation timestamp', title='Created At'
+    created_at: AwareDatetime = Field(
+        ..., alias='createdAt', description='Creation timestamp', title='Created At'
     )
-    updatedAt: AwareDatetime = Field(
-        ..., description='Last update timestamp', title='Updated At'
+    updated_at: AwareDatetime = Field(
+        ..., alias='updatedAt', description='Last update timestamp', title='Updated At'
     )
 
 
 class TaskItemView(BaseModel):
-    model_config = ConfigDict(regex_engine="python-re")
-
     id: UUID = Field(..., description='Unique identifier for the task', title='ID')
-    sessionId: UUID = Field(
-        ..., description='ID of the session this task belongs to', title='Session ID'
+    session_id: UUID = Field(
+        ...,
+        alias='sessionId',
+        description='ID of the session this task belongs to',
+        title='Session ID',
     )
     llm: str = Field(
         ...,
@@ -1418,55 +1780,61 @@ class TaskItemView(BaseModel):
         ..., description='The task prompt/instruction given to the agent', title='Task'
     )
     status: TaskStatus
-    createdAt: AwareDatetime = Field(
+    created_at: AwareDatetime = Field(
         ...,
+        alias='createdAt',
         description='Naive UTC timestamp when the task was created',
         title='Created At',
     )
-    startedAt: Optional[AwareDatetime] = Field(
+    started_at: AwareDatetime | None = Field(
         None,
+        alias='startedAt',
         description='Naive UTC timestamp when the task was started (None if task has not started yet)',
         title='Started At',
     )
-    finishedAt: Optional[AwareDatetime] = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
+        alias='finishedAt',
         description='Naive UTC timestamp when the task completed (None if still running)',
         title='Finished At',
     )
-    metadata: Optional[Dict[str, Any]] = Field(
+    metadata: dict[str, Any] | None = Field(
         {},
         description='Optional additional metadata associated with the task set by the user',
         title='Metadata',
     )
-    output: Optional[str] = Field(
+    output: str | None = Field(
         None, description='Final output/result of the task', title='Output'
     )
-    browserUseVersion: Optional[str] = Field(
+    browser_use_version: str | None = Field(
         None,
+        alias='browserUseVersion',
         description='Version of browser-use used for this task (older tasks may not have this set)',
         title='Browser Use Version',
     )
-    isSuccess: Optional[bool] = Field(
+    is_success: bool | None = Field(
         None,
+        alias='isSuccess',
         description='Whether the task was successful (self-reported by the agent)',
         title='Is Success',
     )
-    judgement: Optional[str] = Field(
+    judgement: str | None = Field(
         None,
         description='Stringified JSON object containing the full report from the judge',
         title='Judgement',
     )
-    judgeVerdict: Optional[bool] = Field(
+    judge_verdict: bool | None = Field(
         None,
+        alias='judgeVerdict',
         description='Judge verdict - True if the judge found the task to be successful, False otherwise (None if judge is not enabled)',
         title='Judge Verdict',
     )
-    cost: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
+    cost: Cost | None = Field(
         None,
         description='Total cost of the task in USD. This is the sum of all step costs incurred during task execution.',
         title='Cost',
     )
-    suggestions: Optional[List[Dict[str, Any]]] = Field(
+    suggestions: list[dict[str, Any]] | None = Field(
         None,
         description='List of actionable suggestions for improving task configuration based on detected issues during execution.',
         title='Suggestions',
@@ -1474,15 +1842,20 @@ class TaskItemView(BaseModel):
 
 
 class TaskListResponse(BaseModel):
-    items: List[TaskItemView] = Field(
+    items: list[TaskItemView] = Field(
         ..., description='List of task views for the current page', title='Items'
     )
-    totalItems: int = Field(
-        ..., description='Total number of items in the list', title='Total Items'
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
     )
-    pageNumber: int = Field(..., description='Page number', title='Page Number')
-    pageSize: int = Field(
-        ..., description='Number of items per page', title='Page Size'
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
     )
 
 
@@ -1499,47 +1872,62 @@ class MarketplaceSkillResponse(BaseModel):
         description='Description of the skill (shows up in the public view)',
         title='Description',
     )
-    categories: List[SkillCategory] = Field(
+    categories: list[SkillCategory] = Field(
         ..., description='Categories of the skill', title='Categories'
     )
-    domains: List[str] = Field(
+    domains: list[str] = Field(
         ..., description='Domains/websites this skill interacts with', title='Domains'
     )
-    parameters: List[ParameterSchema] = Field(
+    parameters: list[ParameterSchema] = Field(
         ..., description='Input parameters of the skill', title='Parameters'
     )
-    outputSchema: Dict[str, Any] = Field(
-        ..., description='Output schema of the skill', title='Output Schema'
-    )
-    currentVersion: Optional[int] = Field(
-        ..., description='Current version of the skill', title='Current Version'
-    )
-    isOfficial: bool = Field(
+    output_schema: dict[str, Any] = Field(
         ...,
+        alias='outputSchema',
+        description='Output schema of the skill',
+        title='Output Schema',
+    )
+    current_version: int | None = Field(
+        ...,
+        alias='currentVersion',
+        description='Current version of the skill',
+        title='Current Version',
+    )
+    is_official: bool = Field(
+        ...,
+        alias='isOfficial',
         description='Whether the skill is official (verified by Browser Use)',
         title='Is Official',
     )
-    cloneCount: int = Field(
+    clone_count: int = Field(
         ...,
+        alias='cloneCount',
         description='Number of times this skill has been cloned',
         title='Clone Count',
     )
-    iconUrl: Optional[str] = Field(
-        None, description='URL of the custom skill icon', title='Icon URL'
+    icon_url: str | None = Field(
+        None,
+        alias='iconUrl',
+        description='URL of the custom skill icon',
+        title='Icon URL',
     )
-    firstPublishedAt: AwareDatetime = Field(
+    first_published_at: AwareDatetime = Field(
         ...,
+        alias='firstPublishedAt',
         description='When the skill was first published',
         title='First Published At',
     )
-    lastPublishedAt: AwareDatetime = Field(
-        ..., description='When the skill was last published', title='Last Published At'
+    last_published_at: AwareDatetime = Field(
+        ...,
+        alias='lastPublishedAt',
+        description='When the skill was last published',
+        title='Last Published At',
     )
-    createdAt: AwareDatetime = Field(
-        ..., description='Creation timestamp', title='Created At'
+    created_at: AwareDatetime = Field(
+        ..., alias='createdAt', description='Creation timestamp', title='Created At'
     )
-    updatedAt: AwareDatetime = Field(
-        ..., description='Last update timestamp', title='Updated At'
+    updated_at: AwareDatetime = Field(
+        ..., alias='updatedAt', description='Last update timestamp', title='Updated At'
     )
 
 
@@ -1553,66 +1941,90 @@ class SessionView(BaseModel):
         description='Current status of the session (active/stopped)',
         title='Status',
     )
-    liveUrl: Optional[str] = Field(
+    live_url: str | None = Field(
         None,
+        alias='liveUrl',
         description='URL where the browser can be viewed live in real-time',
         title='Live URL',
     )
-    startedAt: AwareDatetime = Field(
+    started_at: AwareDatetime = Field(
         ...,
+        alias='startedAt',
         description='Timestamp when the session was created and started',
         title='Started At',
     )
-    finishedAt: Optional[AwareDatetime] = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
+        alias='finishedAt',
         description='Timestamp when the session was stopped (None if still active)',
         title='Finished At',
     )
-    tasks: List[TaskItemView] = Field(
+    tasks: list[TaskItemView] = Field(
         ..., description='List of tasks associated with this session', title='Tasks'
     )
-    publicShareUrl: Optional[str] = Field(
+    public_share_url: str | None = Field(
         None,
+        alias='publicShareUrl',
         description='Optional URL to access the public share of the session',
         title='Public Share URL',
     )
-    persistMemory: Optional[bool] = Field(
+    persist_memory: bool | None = Field(
         True,
+        alias='persistMemory',
         description='Whether tasks in this session share memory and history with each other',
         title='Persist Memory',
     )
-    keepAlive: Optional[bool] = Field(
+    keep_alive: bool | None = Field(
         True,
+        alias='keepAlive',
         description='Whether the browser session stays alive after tasks complete',
         title='Keep Alive',
     )
-    proxyUsedMb: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', description='Amount of proxy data used in MB', title='Proxy Used MB'
+    proxy_used_mb: str | None = Field(
+        '0',
+        alias='proxyUsedMb',
+        description='Amount of proxy data used in MB',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxy Used MB',
     )
-    proxyCost: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', description='Cost of proxy usage in USD', title='Proxy Cost'
+    proxy_cost: str | None = Field(
+        '0',
+        alias='proxyCost',
+        description='Cost of proxy usage in USD',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxy Cost',
     )
 
 
 class SkillListResponse(BaseModel):
-    items: List[SkillResponse] = Field(..., description='List of skills', title='Items')
-    totalItems: int = Field(
-        ..., description='Total number of items in the list', title='Total Items'
+    items: list[SkillResponse] = Field(..., description='List of skills', title='Items')
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
     )
-    pageNumber: int = Field(..., description='Page number', title='Page Number')
-    pageSize: int = Field(
-        ..., description='Number of items per page', title='Page Size'
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
     )
 
 
 class MarketplaceSkillListResponse(BaseModel):
-    items: List[MarketplaceSkillResponse] = Field(
+    items: list[MarketplaceSkillResponse] = Field(
         ..., description='List of skills', title='Items'
     )
-    totalItems: int = Field(
-        ..., description='Total number of items in the list', title='Total Items'
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
     )
-    pageNumber: int = Field(..., description='Page number', title='Page Number')
-    pageSize: int = Field(
-        ..., description='Number of items per page', title='Page Size'
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
     )

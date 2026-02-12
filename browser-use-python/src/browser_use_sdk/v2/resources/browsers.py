@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v2.models import (
+    BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionView,
 )
@@ -13,8 +14,8 @@ class Browsers:
     def __init__(self, http: SyncHttpClient) -> None:
         self._http = http
 
-    def create(self, **kwargs: Any) -> BrowserSessionView:
-        return BrowserSessionView.model_validate(
+    def create(self, **kwargs: Any) -> BrowserSessionItemView:
+        return BrowserSessionItemView.model_validate(
             self._http.request("POST", "/browsers", json=kwargs)
         )
 
@@ -54,8 +55,8 @@ class AsyncBrowsers:
     def __init__(self, http: AsyncHttpClient) -> None:
         self._http = http
 
-    async def create(self, **kwargs: Any) -> BrowserSessionView:
-        return BrowserSessionView.model_validate(
+    async def create(self, **kwargs: Any) -> BrowserSessionItemView:
+        return BrowserSessionItemView.model_validate(
             await self._http.request("POST", "/browsers", json=kwargs)
         )
 

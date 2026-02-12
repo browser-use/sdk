@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v2.models import (
+    CreateSkillResponse,
     ExecuteSkillResponse,
     RefineSkillResponse,
     SkillExecutionListResponse,
@@ -17,8 +18,8 @@ class Skills:
     def __init__(self, http: SyncHttpClient) -> None:
         self._http = http
 
-    def create(self, **kwargs: Any) -> SkillResponse:
-        return SkillResponse.model_validate(
+    def create(self, **kwargs: Any) -> CreateSkillResponse:
+        return CreateSkillResponse.model_validate(
             self._http.request("POST", "/skills", json=kwargs)
         )
 
@@ -115,8 +116,8 @@ class AsyncSkills:
     def __init__(self, http: AsyncHttpClient) -> None:
         self._http = http
 
-    async def create(self, **kwargs: Any) -> SkillResponse:
-        return SkillResponse.model_validate(
+    async def create(self, **kwargs: Any) -> CreateSkillResponse:
+        return CreateSkillResponse.model_validate(
             await self._http.request("POST", "/skills", json=kwargs)
         )
 

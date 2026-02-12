@@ -164,6 +164,14 @@ class Tasks:
             self._http.request("PATCH", f"/tasks/{task_id}", json={"action": "stop"})
         )
 
+    def stop_task_and_session(self, task_id: str) -> TaskView:
+        """Stop a running task and its associated browser session."""
+        return TaskView.model_validate(
+            self._http.request(
+                "PATCH", f"/tasks/{task_id}", json={"action": "stop_task_and_session"}
+            )
+        )
+
     def status(self, task_id: str) -> TaskStatusView:
         """Get lightweight task status (optimized for polling)."""
         return TaskStatusView.model_validate(
@@ -266,6 +274,16 @@ class AsyncTasks:
         """Stop a running task."""
         return TaskView.model_validate(
             await self._http.request("PATCH", f"/tasks/{task_id}", json={"action": "stop"})
+        )
+
+    async def stop_task_and_session(self, task_id: str) -> TaskView:
+        """Stop a running task and its associated browser session."""
+        return TaskView.model_validate(
+            await self._http.request(
+                "PATCH",
+                f"/tasks/{task_id}",
+                json={"action": "stop_task_and_session"},
+            )
         )
 
     async def status(self, task_id: str) -> TaskStatusView:

@@ -4,10 +4,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, Optional, Union
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, constr
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
 class BuAgentSessionStatus(Enum):
@@ -27,14 +26,16 @@ class BuModel(Enum):
 class FileInfo(BaseModel):
     path: str = Field(..., title='Path')
     size: int = Field(..., title='Size')
-    lastModified: AwareDatetime = Field(..., title='Lastmodified')
-    url: Optional[str] = Field(None, title='Url')
+    last_modified: AwareDatetime = Field(
+        ..., alias='lastModified', title='Lastmodified'
+    )
+    url: str | None = Field(None, title='Url')
 
 
 class FileListResponse(BaseModel):
-    files: List[FileInfo] = Field(..., title='Files')
-    nextCursor: Optional[str] = Field(None, title='Nextcursor')
-    hasMore: Optional[bool] = Field(False, title='Hasmore')
+    files: list[FileInfo] = Field(..., title='Files')
+    next_cursor: str | None = Field(None, alias='nextCursor', title='Nextcursor')
+    has_more: bool | None = Field(False, alias='hasMore', title='Hasmore')
 
 
 class ProxyCountryCode(Enum):
@@ -287,19 +288,25 @@ class ProxyCountryCode(Enum):
     zw = 'zw'
 
 
-class RunTaskRequest(BaseModel):
+class MaxCostUsd(RootModel[str]):
     model_config = ConfigDict(
         regex_engine="python-re",
     )
+    root: str = Field(
+        ..., pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$', title='Maxcostusd'
+    )
+
+
+class RunTaskRequest(BaseModel):
     task: str = Field(..., title='Task')
-    model: Optional[BuModel] = 'bu-mini'
-    sessionId: Optional[UUID] = Field(None, title='Sessionid')
-    keepAlive: Optional[bool] = Field(False, title='Keepalive')
-    maxCostUsd: Optional[
-        Union[float, constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')]
-    ] = Field(None, title='Maxcostusd')
-    profileId: Optional[UUID] = Field(None, title='Profileid')
-    proxyCountryCode: Optional[ProxyCountryCode] = None
+    model: BuModel | None = BuModel.bu_mini
+    session_id: UUID | None = Field(None, alias='sessionId', title='Sessionid')
+    keep_alive: bool | None = Field(False, alias='keepAlive', title='Keepalive')
+    max_cost_usd: float | MaxCostUsd | None = Field(
+        None, alias='maxCostUsd', title='Maxcostusd'
+    )
+    profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
+    proxy_country_code: ProxyCountryCode | None = Field(None, alias='proxyCountryCode')
 
 
 class SessionResponse(BaseModel):
@@ -309,44 +316,60 @@ class SessionResponse(BaseModel):
     id: UUID = Field(..., title='Id')
     status: BuAgentSessionStatus
     model: BuModel
-    title: Optional[str] = Field(None, title='Title')
-    output: Optional[str] = Field(None, title='Output')
-    liveUrl: Optional[str] = Field(None, title='Liveurl')
-    profileId: Optional[UUID] = Field(None, title='Profileid')
-    proxyCountryCode: Optional[ProxyCountryCode] = None
-    maxCostUsd: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        None, title='Maxcostusd'
+    title: str | None = Field(None, title='Title')
+    output: str | None = Field(None, title='Output')
+    live_url: str | None = Field(None, alias='liveUrl', title='Liveurl')
+    profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
+    proxy_country_code: ProxyCountryCode | None = Field(None, alias='proxyCountryCode')
+    max_cost_usd: MaxCostUsd | None = Field(
+        None, alias='maxCostUsd', title='Maxcostusd'
     )
-    totalInputTokens: Optional[int] = Field(0, title='Totalinputtokens')
-    totalOutputTokens: Optional[int] = Field(0, title='Totaloutputtokens')
-    proxyUsedMb: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', title='Proxyusedmb'
+    total_input_tokens: int | None = Field(
+        0, alias='totalInputTokens', title='Totalinputtokens'
     )
-    llmCostUsd: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', title='Llmcostusd'
+    total_output_tokens: int | None = Field(
+        0, alias='totalOutputTokens', title='Totaloutputtokens'
     )
-    proxyCostUsd: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', title='Proxycostusd'
+    proxy_used_mb: str | None = Field(
+        '0',
+        alias='proxyUsedMb',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxyusedmb',
     )
-    totalCostUsd: Optional[constr(pattern=r'^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$')] = Field(
-        '0', title='Totalcostusd'
+    llm_cost_usd: str | None = Field(
+        '0',
+        alias='llmCostUsd',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Llmcostusd',
     )
-    createdAt: AwareDatetime = Field(..., title='Createdat')
-    updatedAt: AwareDatetime = Field(..., title='Updatedat')
+    proxy_cost_usd: str | None = Field(
+        '0',
+        alias='proxyCostUsd',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxycostusd',
+    )
+    total_cost_usd: str | None = Field(
+        '0',
+        alias='totalCostUsd',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Totalcostusd',
+    )
+    created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
+    updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
 
 
 class ValidationError(BaseModel):
-    loc: List[Union[str, int]] = Field(..., title='Location')
+    loc: list[str | int] = Field(..., title='Location')
     msg: str = Field(..., title='Message')
     type: str = Field(..., title='Error Type')
 
 
 class HTTPValidationError(BaseModel):
-    detail: Optional[List[ValidationError]] = Field(None, title='Detail')
+    detail: list[ValidationError] | None = Field(None, title='Detail')
 
 
 class SessionListResponse(BaseModel):
-    sessions: List[SessionResponse] = Field(..., title='Sessions')
+    sessions: list[SessionResponse] = Field(..., title='Sessions')
     total: int = Field(..., title='Total')
     page: int = Field(..., title='Page')
-    pageSize: int = Field(..., title='Pagesize')
+    page_size: int = Field(..., alias='pageSize', title='Pagesize')

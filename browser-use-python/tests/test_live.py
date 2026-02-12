@@ -55,9 +55,9 @@ def v3():
 class TestV2Billing:
     def test_account(self, v2):
         account = v2.billing.account()
-        assert hasattr(account, "totalCreditsBalanceUsd")
-        assert hasattr(account, "rateLimit")
-        assert hasattr(account, "projectId")
+        assert hasattr(account, "total_credits_balance_usd")
+        assert hasattr(account, "rate_limit")
+        assert hasattr(account, "project_id")
 
 
 # ── V2 Profiles CRUD ────────────────────────────────────────────────────────

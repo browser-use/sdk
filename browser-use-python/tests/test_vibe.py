@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import inspect
 import json
+import typing
 from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple
 
@@ -213,6 +214,165 @@ class TestV3Coverage:
             assert inspect.iscoroutinefunction(method), (
                 f"AsyncSessions.{method_name} should be async"
             )
+
+
+def _snake_to_camel(name: str) -> str:
+    """Convert snake_case to camelCase."""
+    parts = name.split("_")
+    return parts[0] + "".join(p.capitalize() for p in parts[1:])
+
+
+def _get_resource_classes() -> Dict[str, Any]:
+    from browser_use_sdk.v2 import resources
+
+    return {
+        "billing": resources.Billing,
+        "tasks": resources.Tasks,
+        "sessions": resources.Sessions,
+        "files": resources.Files,
+        "profiles": resources.Profiles,
+        "browsers": resources.Browsers,
+        "skills": resources.Skills,
+        "marketplace": resources.Marketplace,
+    }
+
+
+def _get_async_resource_classes() -> Dict[str, Any]:
+    from browser_use_sdk.v2 import resources
+
+    return {
+        "billing": resources.AsyncBilling,
+        "tasks": resources.AsyncTasks,
+        "sessions": resources.AsyncSessions,
+        "files": resources.AsyncFiles,
+        "profiles": resources.AsyncProfiles,
+        "browsers": resources.AsyncBrowsers,
+        "skills": resources.AsyncSkills,
+        "marketplace": resources.AsyncMarketplace,
+    }
+
+
+class TestSpecDrift:
+    """Verify SDK methods match the OpenAPI spec in detail — params, return types, action variants."""
+
+    @pytest.fixture(autouse=True)
+    def _load(self) -> None:
+        self.spec = _load_spec(_V2_SPEC)
+
+    def _get_query_params(self, method: str, path: str) -> Set[str]:
+        op = self.spec["paths"].get(path, {}).get(method, {})
+        return {
+            p["name"]
+            for p in op.get("parameters", [])
+            if p.get("in") == "query"
+        }
+
+    def _resolve_ref(self, ref: str) -> Dict[str, Any]:
+        parts = ref.lstrip("#/").split("/")
+        obj: Any = self.spec
+        for part in parts:
+            obj = obj[part]
+        return obj
+
+    def _get_response_schema_name(self, method: str, path: str) -> str | None:
+        op = self.spec["paths"].get(path, {}).get(method, {})
+        for status in ("200", "201"):
+            resp = op.get("responses", {}).get(status, {})
+            content = resp.get("content", {}).get("application/json", {})
+            ref = content.get("schema", {}).get("$ref", "")
+            if ref:
+                return ref.split("/")[-1]
+        return None
+
+    def _get_action_enum(self, method: str, path: str) -> List[str]:
+        op = self.spec["paths"].get(path, {}).get(method, {})
+        body = op.get("requestBody", {})
+        content = body.get("content", {}).get("application/json", {})
+        schema = content.get("schema", {})
+        if "$ref" in schema:
+            schema = self._resolve_ref(schema["$ref"])
+        props = schema.get("properties", {})
+        action = props.get("action", {})
+        if "$ref" in action:
+            action = self._resolve_ref(action["$ref"])
+        return action.get("enum", [])
+
+    # -- Query parameter completeness --
+
+    def test_query_params_complete(self) -> None:
+        """Every spec query param should have a matching SDK method parameter."""
+        classes = _get_resource_classes()
+        missing: List[str] = []
+
+        for (method, path), (resource_attr, method_name) in _V2_MAP.items():
+            spec_params = self._get_query_params(method, path)
+            if not spec_params:
+                continue
+            cls = classes[resource_attr]
+            sig = inspect.signature(getattr(cls, method_name))
+            sdk_params = {
+                _snake_to_camel(p)
+                for p in sig.parameters
+                if p not in ("self", "extra", "kwargs")
+            }
+            for sp in sorted(spec_params):
+                if sp not in sdk_params:
+                    missing.append(
+                        f"{cls.__name__}.{method_name}() missing param '{sp}'"
+                        f" (from {method.upper()} {path})"
+                    )
+
+        assert not missing, "Missing query params:\n" + "\n".join(missing)
+
+    # -- Response type correctness --
+
+    def test_response_types_match(self) -> None:
+        """SDK return type should match the spec response schema name."""
+        classes = _get_resource_classes()
+        mismatches: List[str] = []
+
+        for (method, path), (resource_attr, method_name) in _V2_MAP.items():
+            spec_type = self._get_response_schema_name(method, path)
+            if not spec_type:
+                continue
+            cls = classes[resource_attr]
+            hints = typing.get_type_hints(getattr(cls, method_name))
+            return_type = hints.get("return")
+            if return_type is None or return_type is type(None):
+                continue
+            sdk_type_name = getattr(return_type, "__name__", str(return_type))
+            if sdk_type_name != spec_type:
+                mismatches.append(
+                    f"{cls.__name__}.{method_name}() returns '{sdk_type_name}'"
+                    f" but spec says '{spec_type}'"
+                    f" ({method.upper()} {path})"
+                )
+
+        assert not mismatches, "Return type mismatches:\n" + "\n".join(mismatches)
+
+    # -- Action variants --
+
+    def test_task_action_variants(self) -> None:
+        """All action values for PATCH /tasks/{task_id} should have SDK methods."""
+        actions = self._get_action_enum("patch", "/tasks/{task_id}")
+        assert actions, "No action enum found for PATCH /tasks/{task_id}"
+
+        action_to_method = {
+            "stop": "stop",
+            "stop_task_and_session": "stop_task_and_session",
+        }
+        missing: List[str] = []
+        for action in actions:
+            method_name = action_to_method.get(action)
+            if not method_name:
+                missing.append(f"No SDK method mapping for action '{action}'")
+                continue
+            for label, classes_fn in [("sync", _get_resource_classes), ("async", _get_async_resource_classes)]:
+                cls = classes_fn()["tasks"]
+                if not hasattr(cls, method_name):
+                    missing.append(f"{cls.__name__} missing '{method_name}' for action '{action}'")
+
+        assert not missing, "Missing action variants:\n" + "\n".join(missing)
 
 
 class TestClientInit:

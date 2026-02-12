@@ -40,7 +40,7 @@ async def main():
 
     # List all profiles
     profiles = await client.profiles.list()
-    print(f"You have {profiles.totalItems} profiles")
+    print(f"You have {profiles.total_items} profiles")
 
     # Clean up
     await client.profiles.delete(str(profile.id))

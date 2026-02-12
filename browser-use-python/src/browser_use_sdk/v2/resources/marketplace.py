@@ -22,6 +22,8 @@ class Marketplace:
         page_number: Optional[int] = None,
         category: Optional[str] = None,
         query: Optional[str] = None,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
     ) -> MarketplaceSkillListResponse:
         return MarketplaceSkillListResponse.model_validate(
             self._http.request(
@@ -32,6 +34,8 @@ class Marketplace:
                     "pageNumber": page_number,
                     "category": category,
                     "query": query,
+                    "fromDate": from_date,
+                    "toDate": to_date,
                 },
             )
         )
@@ -65,6 +69,8 @@ class AsyncMarketplace:
         page_number: Optional[int] = None,
         category: Optional[str] = None,
         query: Optional[str] = None,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
     ) -> MarketplaceSkillListResponse:
         return MarketplaceSkillListResponse.model_validate(
             await self._http.request(
@@ -75,6 +81,8 @@ class AsyncMarketplace:
                     "pageNumber": page_number,
                     "category": category,
                     "query": query,
+                    "fromDate": from_date,
+                    "toDate": to_date,
                 },
             )
         )

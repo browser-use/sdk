@@ -42,6 +42,11 @@ export class Tasks {
     return this.http.patch<TaskView>(`/tasks/${taskId}`, { action: "stop" });
   }
 
+  /** Stop a running task and its associated browser session. */
+  stopTaskAndSession(taskId: string): Promise<TaskView> {
+    return this.http.patch<TaskView>(`/tasks/${taskId}`, { action: "stop_task_and_session" });
+  }
+
   /** Get lightweight task status (optimized for polling). */
   status(taskId: string): Promise<TaskStatusView> {
     return this.http.get<TaskStatusView>(`/tasks/${taskId}/status`);

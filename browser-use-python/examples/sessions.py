@@ -17,7 +17,7 @@ async def main():
     # Create a session with a UK proxy
     session = await client.sessions.create(proxy_country_code="uk")
     print(f"Session: {session.id}")
-    print(f"Watch live: {session.liveUrl}")
+    print(f"Watch live: {session.live_url}")
 
     # Run a task in this session
     handle = await client.run(

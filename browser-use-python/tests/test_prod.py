@@ -55,10 +55,10 @@ def client():
 class TestBilling:
     def test_account(self, client):
         account = client.billing.account()
-        assert hasattr(account, "totalCreditsBalanceUsd")
-        assert hasattr(account, "rateLimit")
-        assert hasattr(account, "projectId")
-        assert isinstance(account.rateLimit, int)
+        assert hasattr(account, "total_credits_balance_usd")
+        assert hasattr(account, "rate_limit")
+        assert hasattr(account, "project_id")
+        assert isinstance(account.rate_limit, int)
 
 
 # ── 2. Profile CRUD ────────────────────────────────────────────────────────
