@@ -1,0 +1,64 @@
+{
+  "name": "browser-use-sdk",
+  "version": "3.0.0",
+  "description": "Official TypeScript SDK for the Browser Use API",
+  "author": "Browser Use",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./v3": {
+      "import": {
+        "types": "./dist/v3.d.ts",
+        "default": "./dist/v3.js"
+      },
+      "require": {
+        "types": "./dist/v3.d.cts",
+        "default": "./dist/v3.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run --exclude tests/live.test.ts --exclude tests/prod.test.ts",
+    "test:live": "tsx tests/live.test.ts",
+    "test:prod": "tsx tests/prod.test.ts",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "generate:types": "openapi-typescript ../backend/spec/api/v2/openapi.json -o src/generated/v2/types.ts && openapi-typescript ../backend/spec/api/v3/openapi.json -o src/generated/v3/types.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "openapi-typescript": "^7.6.1",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.4"
+  },
+  "keywords": [
+    "browser-use",
+    "browser",
+    "automation",
+    "ai",
+    "agent",
+    "web-agent",
+    "sdk"
+  ],
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
+}

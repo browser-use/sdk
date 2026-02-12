@@ -1,0 +1,955 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Browser Use Public API v3",
+    "summary": "Browser Use session-based agent API (v3)",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.browser-use.com/api/v3",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/sessions": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Create Session",
+        "description": "Run a task in a session.\n\n- Without session_id: creates a new session, starts a sandbox, and dispatches the task.\n- With session_id: dispatches the task to an existing idle session.\n\nIf keep_alive is false (default), the session auto-stops when the task finishes.\nIf keep_alive is true, the session stays idle after the task, ready for follow-ups.",
+        "operationId": "create_session_sessions_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunTaskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "List Sessions",
+        "description": "List sessions for the authenticated project.",
+        "operationId": "list_sessions_sessions_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get Session",
+        "description": "Get session details. Use this to poll for task completion and output.",
+        "operationId": "get_session_sessions__session_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}/stop": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Stop Session",
+        "description": "Stop a session, destroy sandbox and browser. Session remains queryable.",
+        "operationId": "stop_session_sessions__session_id__stop_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}/files": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "List Session Files",
+        "description": "List files in a session's workspace.\n\nReturns paginated file metadata. Pass includeUrls=true to get\npresigned download URLs (60s expiry) inline with each file.",
+        "operationId": "list_session_files_sessions__session_id__files_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "prefix",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Prefix"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "includeUrls",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Includeurls"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BuAgentSessionStatus": {
+        "type": "string",
+        "enum": [
+          "created",
+          "idle",
+          "running",
+          "stopped",
+          "timed_out",
+          "error"
+        ],
+        "title": "BuAgentSessionStatus"
+      },
+      "BuModel": {
+        "type": "string",
+        "enum": [
+          "bu-mini",
+          "bu-max"
+        ],
+        "title": "BuModel"
+      },
+      "FileInfo": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "lastModified": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Lastmodified"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "size",
+          "lastModified"
+        ],
+        "title": "FileInfo",
+        "description": "A file in a session's workspace."
+      },
+      "FileListResponse": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileInfo"
+            },
+            "type": "array",
+            "title": "Files"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "FileListResponse",
+        "description": "Paginated file listing with optional presigned download URLs."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ProxyCountryCode": {
+        "type": "string",
+        "enum": [
+          "ad",
+          "ae",
+          "af",
+          "ag",
+          "ai",
+          "al",
+          "am",
+          "an",
+          "ao",
+          "aq",
+          "ar",
+          "as",
+          "at",
+          "au",
+          "aw",
+          "az",
+          "ba",
+          "bb",
+          "bd",
+          "be",
+          "bf",
+          "bg",
+          "bh",
+          "bi",
+          "bj",
+          "bl",
+          "bm",
+          "bn",
+          "bo",
+          "bq",
+          "br",
+          "bs",
+          "bt",
+          "bv",
+          "bw",
+          "by",
+          "bz",
+          "ca",
+          "cc",
+          "cd",
+          "cf",
+          "cg",
+          "ch",
+          "ck",
+          "cl",
+          "cm",
+          "co",
+          "cr",
+          "cs",
+          "cu",
+          "cv",
+          "cw",
+          "cx",
+          "cy",
+          "cz",
+          "de",
+          "dj",
+          "dk",
+          "dm",
+          "do",
+          "dz",
+          "ec",
+          "ee",
+          "eg",
+          "eh",
+          "er",
+          "es",
+          "et",
+          "fi",
+          "fj",
+          "fk",
+          "fm",
+          "fo",
+          "fr",
+          "ga",
+          "gd",
+          "ge",
+          "gf",
+          "gg",
+          "gh",
+          "gi",
+          "gl",
+          "gm",
+          "gn",
+          "gp",
+          "gq",
+          "gr",
+          "gs",
+          "gt",
+          "gu",
+          "gw",
+          "gy",
+          "hk",
+          "hm",
+          "hn",
+          "hr",
+          "ht",
+          "hu",
+          "id",
+          "ie",
+          "il",
+          "im",
+          "in",
+          "iq",
+          "ir",
+          "is",
+          "it",
+          "je",
+          "jm",
+          "jo",
+          "jp",
+          "ke",
+          "kg",
+          "kh",
+          "ki",
+          "km",
+          "kn",
+          "kp",
+          "kr",
+          "kw",
+          "ky",
+          "kz",
+          "la",
+          "lb",
+          "lc",
+          "li",
+          "lk",
+          "lr",
+          "ls",
+          "lt",
+          "lu",
+          "lv",
+          "ly",
+          "ma",
+          "mc",
+          "md",
+          "me",
+          "mf",
+          "mg",
+          "mh",
+          "mk",
+          "ml",
+          "mm",
+          "mn",
+          "mo",
+          "mp",
+          "mq",
+          "mr",
+          "ms",
+          "mt",
+          "mu",
+          "mv",
+          "mw",
+          "mx",
+          "my",
+          "mz",
+          "na",
+          "nc",
+          "ne",
+          "nf",
+          "ng",
+          "ni",
+          "nl",
+          "no",
+          "np",
+          "nr",
+          "nu",
+          "nz",
+          "om",
+          "pa",
+          "pe",
+          "pf",
+          "pg",
+          "ph",
+          "pk",
+          "pl",
+          "pm",
+          "pn",
+          "pr",
+          "ps",
+          "pt",
+          "pw",
+          "py",
+          "qa",
+          "re",
+          "ro",
+          "rs",
+          "ru",
+          "rw",
+          "sa",
+          "sb",
+          "sc",
+          "sd",
+          "se",
+          "sg",
+          "sh",
+          "si",
+          "sj",
+          "sk",
+          "sl",
+          "sm",
+          "sn",
+          "so",
+          "sr",
+          "ss",
+          "st",
+          "sv",
+          "sx",
+          "sy",
+          "sz",
+          "tc",
+          "td",
+          "tf",
+          "tg",
+          "th",
+          "tj",
+          "tk",
+          "tl",
+          "tm",
+          "tn",
+          "to",
+          "tr",
+          "tt",
+          "tv",
+          "tw",
+          "tz",
+          "ua",
+          "ug",
+          "uk",
+          "us",
+          "uy",
+          "uz",
+          "va",
+          "vc",
+          "ve",
+          "vg",
+          "vi",
+          "vn",
+          "vu",
+          "wf",
+          "ws",
+          "xk",
+          "ye",
+          "yt",
+          "za",
+          "zm",
+          "zw"
+        ],
+        "title": "ProxyCountryCode"
+      },
+      "RunTaskRequest": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "model": {
+            "$ref": "#/components/schemas/BuModel",
+            "default": "bu-mini"
+          },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessionid"
+          },
+          "keepAlive": {
+            "type": "boolean",
+            "title": "Keepalive",
+            "default": false
+          },
+          "maxCostUsd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxcostusd"
+          },
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileid"
+          },
+          "proxyCountryCode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProxyCountryCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "title": "RunTaskRequest",
+        "description": "Unified request for creating a session or dispatching a task.\n\n- Without session_id: creates a new session + dispatches the task\n- With session_id: dispatches the task to an existing session"
+      },
+      "SessionListResponse": {
+        "properties": {
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/SessionResponse"
+            },
+            "type": "array",
+            "title": "Sessions"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Pagesize"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sessions",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "SessionListResponse"
+      },
+      "SessionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BuAgentSessionStatus"
+          },
+          "model": {
+            "$ref": "#/components/schemas/BuModel"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output"
+          },
+          "liveUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liveurl"
+          },
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileid"
+          },
+          "proxyCountryCode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProxyCountryCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maxCostUsd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxcostusd"
+          },
+          "totalInputTokens": {
+            "type": "integer",
+            "title": "Totalinputtokens",
+            "default": 0
+          },
+          "totalOutputTokens": {
+            "type": "integer",
+            "title": "Totaloutputtokens",
+            "default": 0
+          },
+          "proxyUsedMb": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxyusedmb",
+            "default": "0"
+          },
+          "llmCostUsd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Llmcostusd",
+            "default": "0"
+          },
+          "proxyCostUsd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxycostusd",
+            "default": "0"
+          },
+          "totalCostUsd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Totalcostusd",
+            "default": "0"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "model",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "SessionResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Browser-Use-API-Key"
+      }
+    }
+  }
+}

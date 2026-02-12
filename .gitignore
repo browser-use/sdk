@@ -1,0 +1,32 @@
+# Environment
+.env
+.env.prod
+
+# Node
+node_modules/
+dist/
+*.tgz
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+build/
+*.whl
+*.tar.gz
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Generated (tracked, but useful to ignore during local experiments)
+# browser-use-node/src/generated/
+# browser-use-python/src/browser_use_sdk/generated/
+
+# Mintlify
+docs/.mintlify/

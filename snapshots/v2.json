@@ -1,0 +1,6652 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Browser Use Public API v2",
+    "summary": "Browser Use API for running web agents (v2)",
+    "version": "2.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.browser-use.com/api/v2",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/billing/account": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Get Account Billing",
+        "description": "Get authenticated account information including credit balance and account details.",
+        "operationId": "get_account_billing_billing_account_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project for a given API key not found!",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/tasks": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "List Tasks",
+        "description": "Get paginated list of AI agent tasks with optional filtering by session and status.",
+        "operationId": "list_tasks_tasks_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessionid"
+            }
+          },
+          {
+            "name": "filterBy",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/TaskStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filterby"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Create Task",
+        "description": "Create and start a new task.\n\nYou can either:\n1. Start a new task without a sessionId (auto-creates a session with US proxy by default).\n   Note: Tasks without a sessionId are one-off tasks that automatically close the session\n   upon completion (keep_alive=false).\n2. Start a new task in an existing session (reuse for follow-up tasks or custom configuration)\n\nImportant: Proxy configuration (proxyCountryCode) and other session settings (like keep_alive) are\nsession-level settings, not task-level settings. For full control over session configuration,\ncreate a session first via POST /sessions with your desired settings, then pass that sessionId\nwhen creating tasks.",
+        "operationId": "create_task_tasks_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskCreatedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session is stopped or has running task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessionStoppedError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SessionHasRunningTaskError"
+                    }
+                  ],
+                  "title": "Response 400 Create Task Tasks Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many concurrent active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{task_id}": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Get Task",
+        "description": "Get detailed task information including status, progress, steps, and file outputs.",
+        "operationId": "get_task_tasks__task_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Update Task",
+        "description": "Control task execution with stop, pause, resume, or stop task and session actions.",
+        "operationId": "update_task_tasks__task_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{task_id}/status": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Get Task Status",
+        "description": "Lightweight endpoint optimized for polling task status.\n\nReturns only the task status, output, and cost without loading steps,\nfiles, or session details. Use this endpoint for efficient polling\ninstead of GET /tasks/{task_id}.\n\nRecommended polling pattern:\n1. POST /tasks to create a task\n2. Poll GET /tasks/{task_id}/status until status is 'finished' or 'stopped'\n3. GET /tasks/{task_id} once at the end for full details including steps",
+        "operationId": "get_task_status_tasks__task_id__status_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskStatusView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{task_id}/logs": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Get Task Logs",
+        "description": "Get secure download URL for task execution logs with step-by-step details.",
+        "operationId": "get_task_logs_tasks__task_id__logs_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskLogFileResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskNotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to generate download URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadUrlGenerationError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "List Sessions",
+        "description": "Get paginated list of AI agent sessions with optional status filtering.",
+        "operationId": "list_sessions_sessions_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          },
+          {
+            "name": "filterBy",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SessionStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filterby"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Create Session",
+        "description": "Create a new session with a new task.",
+        "operationId": "create_session_sessions_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionRequest",
+                "default": {
+                  "persistMemory": true,
+                  "keepAlive": true
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionItemView"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient credits to start a session"
+          },
+          "404": {
+            "description": "Profile not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many concurrent active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get Session",
+        "description": "Get detailed session information including status, URLs, and task details.",
+        "operationId": "get_session_sessions__session_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Update Session",
+        "description": "Stop a session and all its running tasks.",
+        "operationId": "update_session_sessions__session_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Delete Session",
+        "description": "Delete a session with all its tasks.",
+        "operationId": "delete_session_sessions__session_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}/public-share": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get Session Public Share",
+        "description": "Get public share information including URL and usage statistics.",
+        "operationId": "get_session_public_share_sessions__session_id__public_share_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session or share not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ShareNotFoundError"
+                    }
+                  ],
+                  "title": "Response 404 Get Session Public Share Sessions  Session Id  Public Share Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Create Session Public Share",
+        "description": "Create or return existing public share for a session.",
+        "operationId": "create_session_public_share_sessions__session_id__public_share_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Delete Session Public Share",
+        "description": "Remove public share for a session.",
+        "operationId": "delete_session_public_share_sessions__session_id__public_share_delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/files/sessions/{session_id}/presigned-url": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Agent Session Upload File Presigned Url",
+        "description": "Generate a secure presigned URL for uploading files to an agent session.",
+        "operationId": "agent_session_upload_file_presigned_url_files_sessions__session_id__presigned_url_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadFilePresignedUrlResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported content type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsupportedContentTypeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to generate upload URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/files/browsers/{session_id}/presigned-url": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Browser Session Upload File Presigned Url",
+        "description": "Generate a secure presigned URL for uploading files to a browser session.",
+        "operationId": "browser_session_upload_file_presigned_url_files_browsers__session_id__presigned_url_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadFilePresignedUrlResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported content type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsupportedContentTypeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to generate upload URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/files/tasks/{task_id}/output-files/{file_id}": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Get Task Output File Presigned Url",
+        "description": "Get secure download URL for an output file generated by the AI agent.",
+        "operationId": "get_task_output_file_presigned_url_files_tasks__task_id__output_files__file_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskOutputFileResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task or file not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/TaskNotFoundError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OutputFileNotFoundError"
+                    }
+                  ],
+                  "title": "Response 404 Get Task Output File Presigned Url Files Tasks  Task Id  Output Files  File Id  Get"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to generate download URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadUrlGenerationError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profiles": {
+      "get": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "List Profiles",
+        "description": "Get paginated list of profiles.",
+        "operationId": "list_profiles_profiles_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Create Profile",
+        "description": "Profiles allow you to preserve the state of the browser between tasks.\n\nThey are most commonly used to allow users to preserve the log-in state in the agent between tasks.\nYou'd normally create one profile per user and then use it for all their tasks.\n\nYou can create a new profile by calling this endpoint.",
+        "operationId": "create_profile_profiles_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Subscription required for additional profiles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/common__utils__errors__InsufficientCreditsError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{profile_id}": {
+      "get": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Get Profile",
+        "description": "Get profile details.",
+        "operationId": "get_profile_profiles__profile_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Profile not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Update Profile",
+        "description": "Update a browser profile's information.",
+        "operationId": "update_profile_profiles__profile_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Profile not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Delete Browser Profile",
+        "description": "Permanently delete a browser profile and its configuration.",
+        "operationId": "delete_browser_profile_profiles__profile_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browsers": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "List Browser Sessions",
+        "description": "Get paginated list of browser sessions with optional status filtering.",
+        "operationId": "list_browser_sessions_browsers_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          },
+          {
+            "name": "filterBy",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/BrowserSessionStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filterby"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserSessionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Create Browser Session",
+        "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged per hour with tiered pricing:\n- Pay As You Go users: $0.06/hour\n- Business/Scaleup subscribers: $0.03/hour (50% discount)\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
+        "operationId": "create_browser_session_browsers_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBrowserSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserSessionItemView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Session timeout limit exceeded (maximum 4 hours)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionTimeoutLimitExceededError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Profile not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many concurrent active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browsers/{session_id}": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Get Browser Session",
+        "description": "Get detailed browser session information including status and URLs.",
+        "operationId": "get_browser_session_browsers__session_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserSessionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Update Browser Session",
+        "description": "Stop a browser session.\n\n**Refund:** When you stop a session, unused time is automatically refunded.\nIf the session ran for less than 1 hour, you'll receive a proportional refund.\nBilling is ceil to the nearest minute (minimum 1 minute).",
+        "operationId": "update_browser_session_browsers__session_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrowserSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserSessionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skills": {
+      "get": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "List Skills",
+        "description": "List all skills owned by the authenticated project with optional filtering.",
+        "operationId": "list_skills_skills_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          },
+          {
+            "name": "isPublic",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ispublic"
+            }
+          },
+          {
+            "name": "isEnabled",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Isenabled"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SkillCategory"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fromdate"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Todate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "Create Skill",
+        "description": "Create a new skill via automated generation.",
+        "operationId": "create_skill_skills_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSkillRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSkillResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Concurrent skill creations are not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConcurrentSkillCreationsError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient credits to create skill",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__endpoints__api__v2__skills__views__InsufficientCreditsError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many concurrent active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skills/{skill_id}": {
+      "get": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "Get Skill",
+        "description": "Get details of a specific skill owned by the project.",
+        "operationId": "get_skill_skills__skill_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "Delete Skill",
+        "description": "Delete a skill owned by the project.",
+        "operationId": "delete_skill_skills__skill_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Cannot delete skill while it is still generating",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CannotDeleteSkillWhileGeneratingError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "Update Skill",
+        "description": "Update skill metadata (name, description, enabled, etc.).",
+        "operationId": "update_skill_skills__skill_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSkillRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Enabled skills limit exceeded for your plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnabledSkillsLimitExceededError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skills/{skill_id}/cancel": {
+      "post": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "Cancel Generation",
+        "description": "Cancel the current in-progress generation for a skill.",
+        "operationId": "cancel_generation_skills__skill_id__cancel_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found or no generation found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Generation is not cancellable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationNotCancellableError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skills/{skill_id}/rollback": {
+      "post": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "Rollback Skill",
+        "description": "Rollback to the previous version (cannot be undone).",
+        "operationId": "rollback_skill_skills__skill_id__rollback_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Cannot rollback a public skill",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CannotRollbackPublicSkillError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skills/{skill_id}/execute": {
+      "post": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "Execute Skill",
+        "description": "Execute a skill with the provided parameters.",
+        "operationId": "execute_skill_skills__skill_id__execute_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteSkillRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecuteSkillResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found, no code available, or project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Skill is not finished or not enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFinishedError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__endpoints__api__v2__skills__views__InsufficientCreditsError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many concurrent active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skills/{skill_id}/refine": {
+      "post": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "Refine Skill",
+        "description": "Refine a skill based on feedback.",
+        "operationId": "refine_skill_skills__skill_id__refine_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefineSkillRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefineSkillResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found or no code available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Skill is not finished or is public",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFinishedError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many concurrent active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skills/{skill_id}/executions": {
+      "get": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "List Skill Executions",
+        "description": "List executions for a specific skill.",
+        "operationId": "list_skill_executions_skills__skill_id__executions_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillExecutionListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skills/{skill_id}/executions/{execution_id}/output": {
+      "get": {
+        "tags": [
+          "Skills"
+        ],
+        "summary": "Get Skill Execution Output",
+        "description": "Get presigned URL for downloading skill execution output.",
+        "operationId": "get_skill_execution_output_skills__skill_id__executions__execution_id__output_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          },
+          {
+            "name": "execution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Execution Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillExecutionOutputResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill or execution not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketplace/skills": {
+      "get": {
+        "tags": [
+          "Skills Marketplace"
+        ],
+        "summary": "List Skills",
+        "description": "List all public skills available in the marketplace with optional filtering.",
+        "operationId": "list_skills_marketplace_skills_get",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SkillCategory"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fromdate"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Todate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceSkillListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketplace/skills/{skill_slug}": {
+      "get": {
+        "tags": [
+          "Skills Marketplace"
+        ],
+        "summary": "Get Skill",
+        "description": "Get details of a specific public skill from the marketplace.",
+        "operationId": "get_skill_marketplace_skills__skill_slug__get",
+        "parameters": [
+          {
+            "name": "skill_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skill Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceSkillResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketplace/skills/{skill_id}/clone": {
+      "post": {
+        "tags": [
+          "Skills Marketplace"
+        ],
+        "summary": "Clone Skill",
+        "description": "Clone a public marketplace skill to the user's project.",
+        "operationId": "clone_skill_marketplace_skills__skill_id__clone_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found or no finished generation available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Skill has no finished generation to clone",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFinishedError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketplace/skills/{skill_id}/execute": {
+      "post": {
+        "tags": [
+          "Skills Marketplace"
+        ],
+        "summary": "Execute Skill",
+        "description": "Execute a skill with the provided parameters.",
+        "operationId": "execute_skill_marketplace_skills__skill_id__execute_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteSkillRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecuteSkillResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill not found, no code available, or project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFoundError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Skill is not finished or not enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillNotFinishedError"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient credits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsufficientCreditsError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccountNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Account not found"
+          }
+        },
+        "type": "object",
+        "title": "AccountNotFoundError",
+        "description": "Error response when an account is not found"
+      },
+      "AccountView": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "The name of the user"
+          },
+          "totalCreditsBalanceUsd": {
+            "type": "number",
+            "title": "Credits Balance USD",
+            "description": "The total credits balance in USD"
+          },
+          "monthlyCreditsBalanceUsd": {
+            "type": "number",
+            "title": "Monthly Credits Balance USD",
+            "description": "Monthly subscription credits balance in USD"
+          },
+          "additionalCreditsBalanceUsd": {
+            "type": "number",
+            "title": "Additional Credits Balance USD",
+            "description": "Additional top-up credits balance in USD"
+          },
+          "rateLimit": {
+            "type": "integer",
+            "title": "Rate Limit",
+            "description": "The rate limit for the account"
+          },
+          "planInfo": {
+            "$ref": "#/components/schemas/PlanInfo",
+            "title": "Plan Info",
+            "description": "The plan information"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project ID",
+            "description": "The ID of the project"
+          }
+        },
+        "type": "object",
+        "required": [
+          "totalCreditsBalanceUsd",
+          "monthlyCreditsBalanceUsd",
+          "additionalCreditsBalanceUsd",
+          "rateLimit",
+          "planInfo",
+          "projectId"
+        ],
+        "title": "AccountView",
+        "description": "View model for account information."
+      },
+      "BrowserSessionItemView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the session"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BrowserSessionStatus",
+            "title": "Status",
+            "description": "Current status of the session (active/stopped)"
+          },
+          "liveUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live URL",
+            "description": "URL where the browser can be viewed live in real-time"
+          },
+          "cdpUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "CDP URL",
+            "description": "Chrome DevTools Protocol URL for browser automation"
+          },
+          "timeoutAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timeout At",
+            "description": "Timestamp when the session will timeout"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At",
+            "description": "Timestamp when the session was created and started"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At",
+            "description": "Timestamp when the session was stopped (None if still active)"
+          },
+          "proxyUsedMb": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Used MB",
+            "description": "Amount of proxy data used in MB",
+            "default": "0"
+          },
+          "proxyCost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Cost",
+            "description": "Cost of proxy usage in USD",
+            "default": "0"
+          },
+          "browserCost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Browser Cost",
+            "description": "Cost of browser session hosting in USD",
+            "default": "0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "timeoutAt",
+          "startedAt"
+        ],
+        "title": "BrowserSessionItemView",
+        "description": "View model for representing a browser session in list views."
+      },
+      "BrowserSessionListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserSessionItemView"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of browser session views for the current page"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "BrowserSessionListResponse",
+        "description": "Response model for paginated browser session list requests."
+      },
+      "BrowserSessionStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "stopped"
+        ],
+        "title": "BrowserSessionStatus",
+        "description": "Enumeration of possible browser session states\n\nAttributes:\n    ACTIVE: Session is currently active and running (browser is running)\n    STOPPED: Session has been stopped and is no longer active (browser is stopped)"
+      },
+      "BrowserSessionUpdateAction": {
+        "type": "string",
+        "enum": [
+          "stop"
+        ],
+        "title": "BrowserSessionUpdateAction",
+        "description": "Available actions that can be performed on a browser session\n\nAttributes:\n    STOP: Stop the browser session (cannot be undone)"
+      },
+      "BrowserSessionView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the session"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BrowserSessionStatus",
+            "title": "Status",
+            "description": "Current status of the session (active/stopped)"
+          },
+          "liveUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live URL",
+            "description": "URL where the browser can be viewed live in real-time"
+          },
+          "cdpUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "CDP URL",
+            "description": "Chrome DevTools Protocol URL for browser automation"
+          },
+          "timeoutAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timeout At",
+            "description": "Timestamp when the session will timeout"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At",
+            "description": "Timestamp when the session was created and started"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At",
+            "description": "Timestamp when the session was stopped (None if still active)"
+          },
+          "proxyUsedMb": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Used MB",
+            "description": "Amount of proxy data used in MB",
+            "default": "0"
+          },
+          "proxyCost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Cost",
+            "description": "Cost of proxy usage in USD",
+            "default": "0"
+          },
+          "browserCost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Browser Cost",
+            "description": "Cost of browser session hosting in USD",
+            "default": "0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "timeoutAt",
+          "startedAt"
+        ],
+        "title": "BrowserSessionView",
+        "description": "View model for representing a browser session."
+      },
+      "CannotDeleteSkillWhileGeneratingError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Cannot delete skill while it is still generating"
+          }
+        },
+        "type": "object",
+        "title": "CannotDeleteSkillWhileGeneratingError",
+        "description": "Error response when a skill cannot be deleted while it is still generating"
+      },
+      "CannotRollbackPublicSkillError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Cannot rollback a public skill. Please make the skill private first."
+          }
+        },
+        "type": "object",
+        "title": "CannotRollbackPublicSkillError",
+        "description": "Error response when trying to rollback a public skill"
+      },
+      "ConcurrentSkillCreationsError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Concurrent skill creations are not allowed. Please wait for the current skill creation to finish or cancel it."
+          }
+        },
+        "type": "object",
+        "title": "ConcurrentSkillCreationsError",
+        "description": "Error response when concurrent skill creations are attempted"
+      },
+      "CreateBrowserSessionRequest": {
+        "properties": {
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile ID",
+            "description": "The ID of the profile to use for the session"
+          },
+          "proxyCountryCode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProxyCountryCode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proxy Country Code",
+            "description": "Country code for proxy location."
+          },
+          "timeout": {
+            "type": "integer",
+            "title": "Timeout",
+            "description": "The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.",
+            "default": 60,
+            "ge": 1,
+            "le": 240
+          },
+          "browserScreenWidth": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 6144.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Screen Width",
+            "description": "Custom screen width in pixels for the browser."
+          },
+          "browserScreenHeight": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3456.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Screen Height",
+            "description": "Custom screen height in pixels for the browser."
+          },
+          "allowResizing": {
+            "type": "boolean",
+            "title": "Allow Resizing",
+            "description": "Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).",
+            "default": false
+          },
+          "customProxy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CustomProxy"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Proxy",
+            "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers."
+          }
+        },
+        "type": "object",
+        "title": "CreateBrowserSessionRequest",
+        "description": "Request model for creating a browser session."
+      },
+      "CreateSessionRequest": {
+        "properties": {
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile ID",
+            "description": "The ID of the profile to use for the session"
+          },
+          "proxyCountryCode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProxyCountryCode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proxy Country Code",
+            "description": "Country code for proxy location."
+          },
+          "startUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start URL",
+            "description": "URL to navigate to when the session starts."
+          },
+          "browserScreenWidth": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 6144.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Screen Width",
+            "description": "Custom screen width in pixels for the browser."
+          },
+          "browserScreenHeight": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3456.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Screen Height",
+            "description": "Custom screen height in pixels for the browser."
+          },
+          "persistMemory": {
+            "type": "boolean",
+            "title": "Persist Memory",
+            "description": "If True (default), tasks in this session share memory and history with each other, allowing follow-up tasks to continue from previous context. If False, each task runs as a standalone task without any previous task context.",
+            "default": true
+          },
+          "keepAlive": {
+            "type": "boolean",
+            "title": "Keep Alive",
+            "description": "If True (default), the browser session stays alive after tasks complete, allowing follow-up tasks. If False, the session is closed immediately after task completion. Set to False for simple one-off tasks to reduce session idle time.",
+            "default": true
+          },
+          "customProxy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CustomProxy"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Proxy",
+            "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers."
+          }
+        },
+        "type": "object",
+        "title": "CreateSessionRequest",
+        "description": "Request model for creating a session."
+      },
+      "CreateSkillRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Optional title for the skill (will be generated if not provided)"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description for the skill (will be generated if not provided)"
+          },
+          "goal": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Goal",
+            "description": "Goal of the skill (description of what the skill does and what the user should expect from it)"
+          },
+          "agentPrompt": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Agentprompt",
+            "description": "Prompt for the agent to use when generating the skill automatically"
+          }
+        },
+        "type": "object",
+        "required": [
+          "goal",
+          "agentPrompt"
+        ],
+        "title": "CreateSkillRequest",
+        "description": "Request to create a new skill via automated generation."
+      },
+      "CreateSkillResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the created skill"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "CreateSkillResponse",
+        "description": "Response after creating a skill."
+      },
+      "CreateTaskRequest": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "maxLength": 50000,
+            "minLength": 1,
+            "title": "Task",
+            "description": "The task prompt/instruction for the agent."
+          },
+          "llm": {
+            "$ref": "#/components/schemas/SupportedLLMs",
+            "title": "LLM",
+            "description": "The LLM model to use for the agent.",
+            "default": "browser-use-2.0"
+          },
+          "startUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start URL",
+            "description": "The URL to start the task from."
+          },
+          "maxSteps": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Max Steps",
+            "description": "Maximum number of steps the agent can take before stopping.",
+            "default": 100
+          },
+          "structuredOutput": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structured Output",
+            "description": "The stringified JSON schema for the structured output."
+          },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session ID",
+            "description": "The ID of the session where the task will run."
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "The metadata for the task. Up to 10 key-value pairs."
+          },
+          "secrets": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secrets",
+            "description": "The secrets for the task. Allowed domains are not required for secrets to be injected, but are recommended."
+          },
+          "allowedDomains": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Domains",
+            "description": "The allowed domains for the task."
+          },
+          "opVaultId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "1Password Vault ID",
+            "description": "The ID of the 1Password vault to use for the task. This is used to inject secrets into the task."
+          },
+          "highlightElements": {
+            "type": "boolean",
+            "title": "Highlight Elements",
+            "description": "Tells the agent to highlight interactive elements on the page.",
+            "default": false
+          },
+          "flashMode": {
+            "type": "boolean",
+            "title": "Flash Mode",
+            "description": "Whether agent flash mode is enabled.",
+            "default": false
+          },
+          "thinking": {
+            "type": "boolean",
+            "title": "Thinking",
+            "description": "Whether agent thinking mode is enabled.",
+            "default": false
+          },
+          "vision": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string",
+                "const": "auto"
+              }
+            ],
+            "title": "Vision",
+            "description": "Whether agent vision capabilities are enabled. Set to 'auto' to let the agent decide based on the model capabilities.",
+            "default": true
+          },
+          "systemPromptExtension": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "System Prompt Extension",
+            "description": "Optional extension to the agent system prompt.",
+            "default": ""
+          },
+          "judge": {
+            "type": "boolean",
+            "title": "Judge",
+            "description": "Enable judge mode to evaluate task completion against ground truth.",
+            "default": false
+          },
+          "judgeGroundTruth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judge Ground Truth",
+            "description": "Expected answer for judge evaluation."
+          },
+          "judgeLlm": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SupportedLLMs"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judge LLM",
+            "description": "The LLM model to use for judging. If not provided, uses the default judge LLM."
+          },
+          "skillIds": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skill IDs",
+            "description": "List of skill IDs to enable for this task. Use ['*'] to enable all available skills for the project."
+          }
+        },
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "title": "CreateTaskRequest",
+        "description": "Request model for creating a task"
+      },
+      "CustomProxy": {
+        "properties": {
+          "host": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Host",
+            "description": "Host of the proxy."
+          },
+          "port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Port",
+            "description": "Port of the proxy."
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username",
+            "description": "Username for proxy authentication."
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password",
+            "description": "Password for proxy authentication."
+          }
+        },
+        "type": "object",
+        "required": [
+          "host",
+          "port"
+        ],
+        "title": "CustomProxy",
+        "description": "Request model for creating a custom proxy."
+      },
+      "DownloadUrlGenerationError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Failed to generate download URL"
+          }
+        },
+        "type": "object",
+        "title": "DownloadUrlGenerationError",
+        "description": "Error response when download URL generation fails"
+      },
+      "EnabledSkillsLimitExceededError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Enabled skills limit exceeded for your plan"
+          }
+        },
+        "type": "object",
+        "title": "EnabledSkillsLimitExceededError",
+        "description": "Error response when trying to enable more skills than allowed by plan"
+      },
+      "ExecuteSkillRequest": {
+        "properties": {
+          "parameters": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parameters",
+            "description": "Parameters to pass to the skill handler"
+          },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessionid",
+            "description": "Optional session ID (UUID) for IP persistence."
+          }
+        },
+        "type": "object",
+        "title": "ExecuteSkillRequest",
+        "description": "Request to execute a skill."
+      },
+      "ExecuteSkillResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the skill execution was successful"
+          },
+          "result": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result",
+            "description": "Output of the skill execution"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Error message if the skill execution failed"
+          },
+          "stderr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stderr",
+            "description": "Standard error output of the skill execution"
+          },
+          "latencyMs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency in ms",
+            "description": "Latency of the skill execution in milliseconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "ExecuteSkillResponse",
+        "description": "Response from executing a skill."
+      },
+      "FileView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the output file"
+          },
+          "fileName": {
+            "type": "string",
+            "title": "File Name",
+            "description": "Name of the output file"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "fileName"
+        ],
+        "title": "FileView",
+        "description": "View model for representing an output file generated by the agent"
+      },
+      "GenerationNotCancellableError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Generation is not cancellable"
+          }
+        },
+        "type": "object",
+        "title": "GenerationNotCancellableError",
+        "description": "Error response when generation is not cancellable"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InsufficientCreditsError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Insufficient credits"
+          }
+        },
+        "type": "object",
+        "title": "InsufficientCreditsError",
+        "description": "Error response when there are insufficient credits"
+      },
+      "InternalServerError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "An internal server error occurred"
+          }
+        },
+        "type": "object",
+        "title": "InternalServerError",
+        "description": "Error response for internal server errors"
+      },
+      "MarketplaceSkillListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceSkillResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of skills"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "MarketplaceSkillListResponse",
+        "description": "Response for listing skills."
+      },
+      "MarketplaceSkillResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the skill"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug",
+            "description": "URL-friendly slug for the skill"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Title of the skill (shows up in the public view)"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the skill (shows up in the public view)"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/SkillCategory"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "Categories of the skill"
+          },
+          "domains": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Domains",
+            "description": "Domains/websites this skill interacts with"
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterSchema"
+            },
+            "type": "array",
+            "title": "Parameters",
+            "description": "Input parameters of the skill"
+          },
+          "outputSchema": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Output Schema",
+            "description": "Output schema of the skill"
+          },
+          "currentVersion": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version",
+            "description": "Current version of the skill"
+          },
+          "isOfficial": {
+            "type": "boolean",
+            "title": "Is Official",
+            "description": "Whether the skill is official (verified by Browser Use)"
+          },
+          "cloneCount": {
+            "type": "integer",
+            "title": "Clone Count",
+            "description": "Number of times this skill has been cloned"
+          },
+          "iconUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon URL",
+            "description": "URL of the custom skill icon"
+          },
+          "firstPublishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "First Published At",
+            "description": "When the skill was first published"
+          },
+          "lastPublishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Published At",
+            "description": "When the skill was last published"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "description",
+          "categories",
+          "domains",
+          "parameters",
+          "outputSchema",
+          "currentVersion",
+          "isOfficial",
+          "cloneCount",
+          "firstPublishedAt",
+          "lastPublishedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "MarketplaceSkillResponse",
+        "description": "Skill information returned by the API."
+      },
+      "OutputFileNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Output file not found"
+          }
+        },
+        "type": "object",
+        "title": "OutputFileNotFoundError",
+        "description": "Error response when an output file is not found"
+      },
+      "ParameterSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ParameterType"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": true
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "default": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default"
+          },
+          "cookieDomain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cookiedomain"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type"
+        ],
+        "title": "ParameterSchema",
+        "description": "Schema for a skill parameter."
+      },
+      "ParameterType": {
+        "type": "string",
+        "enum": [
+          "string",
+          "number",
+          "boolean",
+          "object",
+          "array",
+          "cookie"
+        ],
+        "title": "ParameterType",
+        "description": "Type of a skill parameter."
+      },
+      "PlanInfo": {
+        "properties": {
+          "planName": {
+            "type": "string",
+            "title": "Plan Name",
+            "description": "The name of the plan"
+          },
+          "subscriptionStatus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Status",
+            "description": "The status of the subscription"
+          },
+          "subscriptionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription ID",
+            "description": "The ID of the subscription"
+          },
+          "subscriptionCurrentPeriodEnd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Current Period End",
+            "description": "The end of the current period"
+          },
+          "subscriptionCanceledAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Canceled At",
+            "description": "The date the subscription was canceled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "planName",
+          "subscriptionStatus",
+          "subscriptionId",
+          "subscriptionCurrentPeriodEnd",
+          "subscriptionCanceledAt"
+        ],
+        "title": "PlanInfo",
+        "description": "View model for plan information"
+      },
+      "ProfileCreateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Optional name for the profile"
+          }
+        },
+        "type": "object",
+        "title": "ProfileCreateRequest",
+        "description": "Request model for creating a new profile."
+      },
+      "ProfileListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileView"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of profile views for the current page"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "ProfileListResponse",
+        "description": "Response model for paginated profile list requests."
+      },
+      "ProfileNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Profile not found"
+          }
+        },
+        "type": "object",
+        "title": "ProfileNotFoundError",
+        "description": "Error response when a profile is not found"
+      },
+      "ProfileUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Optional name for the profile"
+          }
+        },
+        "type": "object",
+        "title": "ProfileUpdateRequest",
+        "description": "Request model for updating a profile."
+      },
+      "ProfileView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the profile"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Optional name for the profile"
+          },
+          "lastUsedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At",
+            "description": "Timestamp when the profile was last used"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Timestamp when the profile was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp when the profile was last updated"
+          },
+          "cookieDomains": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cookie Domains",
+            "description": "List of domain URLs that have cookies stored for this profile"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "ProfileView",
+        "description": "View model for representing a profile. A profile lets you preserve the login state between sessions.\n\nWe recommend that you create a separate profile for each user of your app."
+      },
+      "ProxyCountryCode": {
+        "type": "string",
+        "enum": [
+          "ad",
+          "ae",
+          "af",
+          "ag",
+          "ai",
+          "al",
+          "am",
+          "an",
+          "ao",
+          "aq",
+          "ar",
+          "as",
+          "at",
+          "au",
+          "aw",
+          "az",
+          "ba",
+          "bb",
+          "bd",
+          "be",
+          "bf",
+          "bg",
+          "bh",
+          "bi",
+          "bj",
+          "bl",
+          "bm",
+          "bn",
+          "bo",
+          "bq",
+          "br",
+          "bs",
+          "bt",
+          "bv",
+          "bw",
+          "by",
+          "bz",
+          "ca",
+          "cc",
+          "cd",
+          "cf",
+          "cg",
+          "ch",
+          "ck",
+          "cl",
+          "cm",
+          "co",
+          "cr",
+          "cs",
+          "cu",
+          "cv",
+          "cw",
+          "cx",
+          "cy",
+          "cz",
+          "de",
+          "dj",
+          "dk",
+          "dm",
+          "do",
+          "dz",
+          "ec",
+          "ee",
+          "eg",
+          "eh",
+          "er",
+          "es",
+          "et",
+          "fi",
+          "fj",
+          "fk",
+          "fm",
+          "fo",
+          "fr",
+          "ga",
+          "gd",
+          "ge",
+          "gf",
+          "gg",
+          "gh",
+          "gi",
+          "gl",
+          "gm",
+          "gn",
+          "gp",
+          "gq",
+          "gr",
+          "gs",
+          "gt",
+          "gu",
+          "gw",
+          "gy",
+          "hk",
+          "hm",
+          "hn",
+          "hr",
+          "ht",
+          "hu",
+          "id",
+          "ie",
+          "il",
+          "im",
+          "in",
+          "iq",
+          "ir",
+          "is",
+          "it",
+          "je",
+          "jm",
+          "jo",
+          "jp",
+          "ke",
+          "kg",
+          "kh",
+          "ki",
+          "km",
+          "kn",
+          "kp",
+          "kr",
+          "kw",
+          "ky",
+          "kz",
+          "la",
+          "lb",
+          "lc",
+          "li",
+          "lk",
+          "lr",
+          "ls",
+          "lt",
+          "lu",
+          "lv",
+          "ly",
+          "ma",
+          "mc",
+          "md",
+          "me",
+          "mf",
+          "mg",
+          "mh",
+          "mk",
+          "ml",
+          "mm",
+          "mn",
+          "mo",
+          "mp",
+          "mq",
+          "mr",
+          "ms",
+          "mt",
+          "mu",
+          "mv",
+          "mw",
+          "mx",
+          "my",
+          "mz",
+          "na",
+          "nc",
+          "ne",
+          "nf",
+          "ng",
+          "ni",
+          "nl",
+          "no",
+          "np",
+          "nr",
+          "nu",
+          "nz",
+          "om",
+          "pa",
+          "pe",
+          "pf",
+          "pg",
+          "ph",
+          "pk",
+          "pl",
+          "pm",
+          "pn",
+          "pr",
+          "ps",
+          "pt",
+          "pw",
+          "py",
+          "qa",
+          "re",
+          "ro",
+          "rs",
+          "ru",
+          "rw",
+          "sa",
+          "sb",
+          "sc",
+          "sd",
+          "se",
+          "sg",
+          "sh",
+          "si",
+          "sj",
+          "sk",
+          "sl",
+          "sm",
+          "sn",
+          "so",
+          "sr",
+          "ss",
+          "st",
+          "sv",
+          "sx",
+          "sy",
+          "sz",
+          "tc",
+          "td",
+          "tf",
+          "tg",
+          "th",
+          "tj",
+          "tk",
+          "tl",
+          "tm",
+          "tn",
+          "to",
+          "tr",
+          "tt",
+          "tv",
+          "tw",
+          "tz",
+          "ua",
+          "ug",
+          "uk",
+          "us",
+          "uy",
+          "uz",
+          "va",
+          "vc",
+          "ve",
+          "vg",
+          "vi",
+          "vn",
+          "vu",
+          "wf",
+          "ws",
+          "xk",
+          "ye",
+          "yt",
+          "za",
+          "zm",
+          "zw"
+        ],
+        "title": "ProxyCountryCode"
+      },
+      "RefineSkillRequest": {
+        "properties": {
+          "feedback": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Feedback",
+            "description": "Feedback describing what to improve"
+          },
+          "testOutput": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Testoutput",
+            "description": "Last skill test output to include in refinement context"
+          },
+          "testLogs": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Testlogs",
+            "description": "Last skill test logs to include in refinement context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feedback"
+        ],
+        "title": "RefineSkillRequest",
+        "description": "Request to refine an existing skill."
+      },
+      "RefineSkillResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the skill"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "RefineSkillResponse",
+        "description": "Response after requesting skill refinement."
+      },
+      "SessionHasRunningTaskError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Agent session already has a running task. Please wait for it to finish or stop it manually."
+          }
+        },
+        "type": "object",
+        "title": "SessionHasRunningTaskError",
+        "description": "Error response when session already has a running task"
+      },
+      "SessionItemView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the session"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SessionStatus",
+            "title": "Status",
+            "description": "Current status of the session (active/stopped)"
+          },
+          "liveUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live URL",
+            "description": "URL where the browser can be viewed live in real-time"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At",
+            "description": "Timestamp when the session was created and started"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At",
+            "description": "Timestamp when the session was stopped (None if still active)"
+          },
+          "persistMemory": {
+            "type": "boolean",
+            "title": "Persist Memory",
+            "description": "Whether tasks in this session share memory and history with each other"
+          },
+          "keepAlive": {
+            "type": "boolean",
+            "title": "Keep Alive",
+            "description": "Whether the browser session stays alive after tasks complete"
+          },
+          "proxyUsedMb": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Used MB",
+            "description": "Amount of proxy data used in MB",
+            "default": "0"
+          },
+          "proxyCost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Cost",
+            "description": "Cost of proxy usage in USD",
+            "default": "0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "startedAt",
+          "persistMemory",
+          "keepAlive"
+        ],
+        "title": "SessionItemView",
+        "description": "View model for representing a (browser) session."
+      },
+      "SessionListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SessionItemView"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of session views for the current page"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "SessionListResponse",
+        "description": "Response model for paginated session list requests."
+      },
+      "SessionNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Session not found"
+          }
+        },
+        "type": "object",
+        "title": "SessionNotFoundError",
+        "description": "Error response when a session is not found"
+      },
+      "SessionStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "stopped"
+        ],
+        "title": "SessionStatus",
+        "description": "Enumeration of possible agent session states\n\nAttributes:\n    ACTIVE: Agent session is currently active and running\n    STOPPED: Agent session has been stopped and is no longer active"
+      },
+      "SessionStoppedError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Browser session is stopped. Please start a new session and try again."
+          }
+        },
+        "type": "object",
+        "title": "SessionStoppedError",
+        "description": "Error response when trying to use a stopped session"
+      },
+      "SessionTimeoutLimitExceededError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Maximum session timeout is 4 hours (240 minutes)."
+          }
+        },
+        "type": "object",
+        "title": "SessionTimeoutLimitExceededError",
+        "description": "Error response when session timeout exceeds the maximum allowed limit"
+      },
+      "SessionUpdateAction": {
+        "type": "string",
+        "enum": [
+          "stop"
+        ],
+        "title": "SessionUpdateAction",
+        "description": "Available actions that can be performed on a session\n\nAttributes:\n    STOP: Stop the session and all its associated tasks (cannot be undone)"
+      },
+      "SessionView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the session"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SessionStatus",
+            "title": "Status",
+            "description": "Current status of the session (active/stopped)"
+          },
+          "liveUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live URL",
+            "description": "URL where the browser can be viewed live in real-time"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At",
+            "description": "Timestamp when the session was created and started"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At",
+            "description": "Timestamp when the session was stopped (None if still active)"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskItemView"
+            },
+            "type": "array",
+            "title": "Tasks",
+            "description": "List of tasks associated with this session"
+          },
+          "publicShareUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Public Share URL",
+            "description": "Optional URL to access the public share of the session"
+          },
+          "persistMemory": {
+            "type": "boolean",
+            "title": "Persist Memory",
+            "description": "Whether tasks in this session share memory and history with each other",
+            "default": true
+          },
+          "keepAlive": {
+            "type": "boolean",
+            "title": "Keep Alive",
+            "description": "Whether the browser session stays alive after tasks complete",
+            "default": true
+          },
+          "proxyUsedMb": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Used MB",
+            "description": "Amount of proxy data used in MB",
+            "default": "0"
+          },
+          "proxyCost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Cost",
+            "description": "Cost of proxy usage in USD",
+            "default": "0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "startedAt",
+          "tasks"
+        ],
+        "title": "SessionView",
+        "description": "View model for representing a (browser) session with its associated tasks."
+      },
+      "ShareNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Public share not found"
+          }
+        },
+        "type": "object",
+        "title": "ShareNotFoundError",
+        "description": "Error response when a public share is not found"
+      },
+      "ShareView": {
+        "properties": {
+          "shareToken": {
+            "type": "string",
+            "title": "Share Token",
+            "description": "Token to access the public share"
+          },
+          "shareUrl": {
+            "type": "string",
+            "title": "Share URL",
+            "description": "URL to access the public share"
+          },
+          "viewCount": {
+            "type": "integer",
+            "title": "View Count",
+            "description": "Number of times the public share has been viewed"
+          },
+          "lastViewedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Viewed At",
+            "description": "Timestamp of the last time the public share was viewed (None if never viewed)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shareToken",
+          "shareUrl",
+          "viewCount"
+        ],
+        "title": "ShareView",
+        "description": "View model for representing a public share of a session."
+      },
+      "SkillCategory": {
+        "type": "string",
+        "enum": [
+          "search",
+          "e_commerce",
+          "financial",
+          "news",
+          "real_estate",
+          "social_media",
+          "travel",
+          "marketplace",
+          "lead_generation",
+          "seo",
+          "jobs",
+          "developer",
+          "media",
+          "automation",
+          "integration",
+          "other"
+        ],
+        "title": "SkillCategory",
+        "description": "Skill category."
+      },
+      "SkillExecutionListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillExecutionView"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of executions"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "SkillExecutionListResponse",
+        "description": "Response for listing skill executions."
+      },
+      "SkillExecutionOutputResponse": {
+        "properties": {
+          "downloadUrl": {
+            "type": "string",
+            "title": "Downloadurl",
+            "description": "Presigned URL for downloading the execution output (valid for 5 minutes)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "downloadUrl"
+        ],
+        "title": "SkillExecutionOutputResponse",
+        "description": "Response containing presigned URL for downloading execution output."
+      },
+      "SkillExecutionView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Unique identifier for the execution"
+          },
+          "skillId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Skillid",
+            "description": "ID of the skill that was executed"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Execution status (running, completed, failed)"
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the execution succeeded"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Startedat",
+            "description": "When the execution started"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finishedat",
+            "description": "When the execution finished"
+          },
+          "latencyMs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latencyms",
+            "description": "Execution latency in milliseconds"
+          },
+          "hasOutput": {
+            "type": "boolean",
+            "title": "Hasoutput",
+            "description": "Whether output is available for download"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "skillId",
+          "status",
+          "success",
+          "startedAt",
+          "finishedAt",
+          "latencyMs",
+          "hasOutput"
+        ],
+        "title": "SkillExecutionView",
+        "description": "View for a skill execution."
+      },
+      "SkillListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of skills"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "SkillListResponse",
+        "description": "Response for listing skills."
+      },
+      "SkillNotFinishedError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Skill is not finished"
+          }
+        },
+        "type": "object",
+        "title": "SkillNotFinishedError",
+        "description": "Error response when skill is not finished"
+      },
+      "SkillNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Skill not found"
+          }
+        },
+        "type": "object",
+        "title": "SkillNotFoundError",
+        "description": "Error response when a skill is not found"
+      },
+      "SkillResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the skill"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug",
+            "description": "URL-friendly slug for the skill"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Title of the skill (shows up in the public view)"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the skill (shows up in the public view)"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/SkillCategory"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "Categories of the skill"
+          },
+          "domains": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Domains",
+            "description": "Domains/websites this skill interacts with"
+          },
+          "goal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goal",
+            "description": "Goal of the skill (not shown in the public view)"
+          },
+          "agentPrompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Prompt",
+            "description": "Prompt for the agent to use when generating the skill automatically (not shown in the public view)"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SkillsGenerationStatus",
+            "title": "Status",
+            "description": "Status of the skill"
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterSchema"
+            },
+            "type": "array",
+            "title": "Parameters",
+            "description": "Input parameters of the skill"
+          },
+          "outputSchema": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Output Schema",
+            "description": "Output schema of the skill"
+          },
+          "isEnabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether the skill is enabled"
+          },
+          "isPublic": {
+            "type": "boolean",
+            "title": "Is Public",
+            "description": "Whether the skill is publicly available"
+          },
+          "iconUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon URL",
+            "description": "URL of the custom skill icon"
+          },
+          "firstPublishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Published At",
+            "description": "When the skill was first published"
+          },
+          "lastPublishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Published At",
+            "description": "When the skill was last published"
+          },
+          "currentVersion": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version",
+            "description": "Current version of the skill"
+          },
+          "currentVersionStartedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version Started At",
+            "description": "When the current version started generating"
+          },
+          "currentVersionFinishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version Finished At",
+            "description": "When the current version finished generating"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code (base64 encoded) - ENTERPRISE ONLY",
+            "description": "Base64 encoded generated code (contact support@browser-use.com to get access) - ENTERPRISE ONLY"
+          },
+          "clonedFromSkillId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cloned From Skill ID",
+            "description": "Unique identifier for the skill this skill was cloned from"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "categories",
+          "domains",
+          "status",
+          "parameters",
+          "outputSchema",
+          "isEnabled",
+          "isPublic",
+          "currentVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "SkillResponse",
+        "description": "Skill information returned by the API."
+      },
+      "SkillsGenerationStatus": {
+        "type": "string",
+        "enum": [
+          "recording",
+          "generating",
+          "failed",
+          "finished",
+          "cancelled",
+          "timed_out"
+        ],
+        "title": "SkillsGenerationStatus",
+        "description": "Status of skill generation."
+      },
+      "SupportedLLMs": {
+        "type": "string",
+        "enum": [
+          "browser-use-llm",
+          "browser-use-2.0",
+          "gpt-4.1",
+          "gpt-4.1-mini",
+          "o4-mini",
+          "o3",
+          "gemini-2.5-flash",
+          "gemini-2.5-pro",
+          "gemini-3-pro-preview",
+          "gemini-3-flash-preview",
+          "gemini-flash-latest",
+          "gemini-flash-lite-latest",
+          "claude-sonnet-4-20250514",
+          "claude-sonnet-4-5-20250929",
+          "claude-opus-4-5-20251101",
+          "gpt-4o",
+          "gpt-4o-mini",
+          "llama-4-maverick-17b-128e-instruct",
+          "claude-3-7-sonnet-20250219"
+        ],
+        "title": "SupportedLLMs"
+      },
+      "TaskCreatedResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the created task"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session ID",
+            "description": "Session ID where the task was created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sessionId"
+        ],
+        "title": "TaskCreatedResponse",
+        "description": "Response model for creating a task"
+      },
+      "TaskItemView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the task"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session ID",
+            "description": "ID of the session this task belongs to"
+          },
+          "llm": {
+            "type": "string",
+            "title": "LLM",
+            "description": "The LLM model used for this task represented as a string"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task",
+            "description": "The task prompt/instruction given to the agent"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Naive UTC timestamp when the task was created"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At",
+            "description": "Naive UTC timestamp when the task was started (None if task has not started yet)"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At",
+            "description": "Naive UTC timestamp when the task completed (None if still running)"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata",
+            "description": "Optional additional metadata associated with the task set by the user",
+            "default": {}
+          },
+          "output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output",
+            "description": "Final output/result of the task"
+          },
+          "browserUseVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Use Version",
+            "description": "Version of browser-use used for this task (older tasks may not have this set)"
+          },
+          "isSuccess": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Success",
+            "description": "Whether the task was successful (self-reported by the agent)"
+          },
+          "judgement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judgement",
+            "description": "Stringified JSON object containing the full report from the judge"
+          },
+          "judgeVerdict": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judge Verdict",
+            "description": "Judge verdict - True if the judge found the task to be successful, False otherwise (None if judge is not enabled)"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost",
+            "description": "Total cost of the task in USD. This is the sum of all step costs incurred during task execution."
+          },
+          "suggestions": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggestions",
+            "description": "List of actionable suggestions for improving task configuration based on detected issues during execution."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sessionId",
+          "llm",
+          "task",
+          "status",
+          "createdAt"
+        ],
+        "title": "TaskItemView",
+        "description": "View model for representing a task with its execution details"
+      },
+      "TaskListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaskItemView"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of task views for the current page"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "TaskListResponse",
+        "description": "Response model for paginated task list requests."
+      },
+      "TaskLogFileResponse": {
+        "properties": {
+          "downloadUrl": {
+            "type": "string",
+            "title": "Download URL",
+            "description": "URL to download the log file"
+          }
+        },
+        "type": "object",
+        "required": [
+          "downloadUrl"
+        ],
+        "title": "TaskLogFileResponse",
+        "description": "Response model for log file requests"
+      },
+      "TaskNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Task not found"
+          }
+        },
+        "type": "object",
+        "title": "TaskNotFoundError",
+        "description": "Error response when a task is not found"
+      },
+      "TaskOutputFileResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the file"
+          },
+          "fileName": {
+            "type": "string",
+            "title": "File Name",
+            "description": "Name of the file"
+          },
+          "downloadUrl": {
+            "type": "string",
+            "title": "Download URL",
+            "description": "URL to download the file"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "fileName",
+          "downloadUrl"
+        ],
+        "title": "TaskOutputFileResponse",
+        "description": "Response model for output file requests."
+      },
+      "TaskStatus": {
+        "type": "string",
+        "enum": [
+          "created",
+          "started",
+          "finished",
+          "stopped"
+        ],
+        "title": "TaskStatus",
+        "description": "Enumeration of possible task execution states\n\nAttributes:\n        CREATED: Task has been created but not yet started.\n    STARTED: Task has been started and is currently running.\n    FINISHED: Task has finished and the agent has completed the task.\n    STOPPED: Task execution has been manually stopped (cannot be resumed)."
+      },
+      "TaskStatusView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the task"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus",
+            "title": "Status",
+            "description": "Current status of the task"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output",
+            "description": "Final output/result of the task (null while running)"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At",
+            "description": "Naive UTC timestamp when the task completed (null if still running)"
+          },
+          "isSuccess": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Success",
+            "description": "Whether the task was successful based on the agent's self-reported output"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost",
+            "description": "Total cost of the task in USD"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "TaskStatusView",
+        "description": "Lightweight view optimized for polling. Use GET /tasks/{id}/status for efficient polling\ninstead of GET /tasks/{id} which loads full step details."
+      },
+      "TaskStepView": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number",
+            "description": "Sequential step number within the task"
+          },
+          "memory": {
+            "type": "string",
+            "title": "Memory",
+            "description": "Agent's memory at this step"
+          },
+          "evaluationPreviousGoal": {
+            "type": "string",
+            "title": "Evaluation Previous Goal",
+            "description": "Agent's evaluation of the previous goal completion"
+          },
+          "nextGoal": {
+            "type": "string",
+            "title": "Next Goal",
+            "description": "The goal for the next step"
+          },
+          "url": {
+            "type": "string",
+            "title": "URL",
+            "description": "Current URL the browser is on for this step"
+          },
+          "screenshotUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenshot URL",
+            "description": "Optional URL to the screenshot taken at this step"
+          },
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Actions",
+            "description": "List of stringified json actions performed by the agent in this step"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "memory",
+          "evaluationPreviousGoal",
+          "nextGoal",
+          "url",
+          "actions"
+        ],
+        "title": "TaskStepView",
+        "description": "View model for representing a single step in a task's execution"
+      },
+      "TaskUpdateAction": {
+        "type": "string",
+        "enum": [
+          "stop",
+          "stop_task_and_session"
+        ],
+        "title": "TaskUpdateAction",
+        "description": "Available actions that can be performed on a task\n\nAttributes:\n    STOP: Stop the current task execution\n    STOP_TASK_AND_SESSION: Stop both the task and its parent session"
+      },
+      "TaskView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the task"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid"
+          },
+          "llm": {
+            "type": "string",
+            "title": "LLM",
+            "description": "The LLM model used for this task represented as a string"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task",
+            "description": "The task prompt/instruction given to the agent"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus",
+            "title": "Status",
+            "description": "Current status of the task execution"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Naive UTC timestamp when the task was created"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At",
+            "description": "Naive UTC timestamp when the task was started (None if task has not started yet)"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At",
+            "description": "Naive UTC timestamp when the task completed (None if still running)"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata",
+            "description": "Optional additional metadata associated with the task set by the user",
+            "default": {}
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/TaskStepView"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output",
+            "description": "Final output/result of the task"
+          },
+          "outputFiles": {
+            "items": {
+              "$ref": "#/components/schemas/FileView"
+            },
+            "type": "array",
+            "title": "Outputfiles"
+          },
+          "browserUseVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Use Version",
+            "description": "Version of browser-use used for this task (older tasks may not have this set)"
+          },
+          "isSuccess": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Success",
+            "description": "Whether the task was successful based on the agent's self-reported output (less reliable than the judge)"
+          },
+          "judgement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judgement",
+            "description": "Stringified JSON object containing the full report from the judge"
+          },
+          "judgeVerdict": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judge Verdict",
+            "description": "Judge verdict - True if the judge found the task to be successful, False otherwise (None if judge is not enabled)"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost",
+            "description": "Total cost of the task in USD. This is the sum of all step costs incurred during task execution."
+          },
+          "suggestions": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggestions",
+            "description": "List of actionable suggestions for improving task configuration based on detected issues during execution."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sessionId",
+          "llm",
+          "task",
+          "status",
+          "createdAt",
+          "steps",
+          "outputFiles"
+        ],
+        "title": "TaskView",
+        "description": "View model for representing a task with its execution details"
+      },
+      "TooManyConcurrentActiveSessionsError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Too many concurrent active sessions. Please wait for one to finish, kill one, or upgrade your plan."
+          }
+        },
+        "type": "object",
+        "title": "TooManyConcurrentActiveSessionsError",
+        "description": "Error response when user has too many concurrent active sessions"
+      },
+      "UnsupportedContentTypeError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Unsupported content type"
+          }
+        },
+        "type": "object",
+        "title": "UnsupportedContentTypeError",
+        "description": "Error response for unsupported content types"
+      },
+      "UpdateBrowserSessionRequest": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/BrowserSessionUpdateAction",
+            "title": "Action",
+            "description": "The action to perform on the session"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "UpdateBrowserSessionRequest",
+        "description": "Request model for updating browser session state."
+      },
+      "UpdateSessionRequest": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/SessionUpdateAction",
+            "title": "Action",
+            "description": "The action to perform on the session"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "UpdateSessionRequest",
+        "description": "Request model for updating session state."
+      },
+      "UpdateSkillRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Display name for the skill (shows up in the public view)"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Description of what the skill does (shows up in the public view)"
+          },
+          "categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SkillCategory"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categories",
+            "description": "Categories to assign to the skill"
+          },
+          "domains": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domains",
+            "description": "Domains/websites this skill interacts with"
+          },
+          "isEnabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isenabled",
+            "description": "Whether the skill is enabled for execution"
+          }
+        },
+        "type": "object",
+        "title": "UpdateSkillRequest",
+        "description": "Request to update skill metadata."
+      },
+      "UpdateTaskRequest": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/TaskUpdateAction",
+            "title": "Action",
+            "description": "The action to perform on the task"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "UpdateTaskRequest",
+        "description": "Request model for updating task state"
+      },
+      "UploadFilePresignedUrlResponse": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "URL",
+            "description": "The URL to upload the file to."
+          },
+          "method": {
+            "type": "string",
+            "const": "POST",
+            "title": "Method",
+            "description": "The HTTP method to use for the upload."
+          },
+          "fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Fields",
+            "description": "The form fields to include in the upload request."
+          },
+          "fileName": {
+            "type": "string",
+            "title": "File Name",
+            "description": "The name of the file to upload (should be referenced when user wants to use the file in a task)."
+          },
+          "expiresIn": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "The number of seconds until the presigned URL expires."
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "method",
+          "fields",
+          "fileName",
+          "expiresIn"
+        ],
+        "title": "UploadFilePresignedUrlResponse",
+        "description": "Response model for a presigned upload URL."
+      },
+      "UploadFileRequest": {
+        "properties": {
+          "fileName": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "File Name",
+            "description": "The name of the file to upload"
+          },
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "image/jpg",
+              "image/jpeg",
+              "image/png",
+              "image/gif",
+              "image/webp",
+              "image/svg+xml",
+              "application/pdf",
+              "application/msword",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "application/vnd.ms-excel",
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "text/plain",
+              "text/csv",
+              "text/markdown"
+            ],
+            "title": "Content Type",
+            "description": "The content type of the file to upload"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "maximum": 10485760.0,
+            "minimum": 1.0,
+            "title": "Sizebytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fileName",
+          "contentType",
+          "sizeBytes"
+        ],
+        "title": "UploadFileRequest",
+        "description": "Request model for uploading a file to the user's files bucket."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "app__endpoints__api__v2__skills__views__InsufficientCreditsError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Insufficient credits"
+          }
+        },
+        "type": "object",
+        "title": "InsufficientCreditsError",
+        "description": "Error response when there are insufficient credits"
+      },
+      "common__utils__errors__InsufficientCreditsError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "You have insufficient credits"
+          }
+        },
+        "type": "object",
+        "title": "InsufficientCreditsError",
+        "description": "Error response when user has insufficient credits"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Browser-Use-API-Key"
+      }
+    }
+  }
+}

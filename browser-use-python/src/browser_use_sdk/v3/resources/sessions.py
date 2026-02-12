@@ -1,0 +1,188 @@
+from __future__ import annotations
+
+from typing import Any, Dict, Optional
+
+from ..._core.http import AsyncHttpClient, SyncHttpClient
+from ...generated.v3.models import (
+    FileListResponse,
+    SessionListResponse,
+    SessionResponse,
+)
+
+
+class Sessions:
+    def __init__(self, http: SyncHttpClient) -> None:
+        self._http = http
+
+    def create(
+        self,
+        task: str,
+        *,
+        model: Optional[str] = None,
+        session_id: Optional[str] = None,
+        keep_alive: Optional[bool] = None,
+        max_cost_usd: Optional[float] = None,
+        profile_id: Optional[str] = None,
+        proxy_country_code: Optional[str] = None,
+        **extra: Any,
+    ) -> SessionResponse:
+        """Create a session and run a task."""
+        body: Dict[str, Any] = {"task": task}
+        if model is not None:
+            body["model"] = model
+        if session_id is not None:
+            body["sessionId"] = session_id
+        if keep_alive is not None:
+            body["keepAlive"] = keep_alive
+        if max_cost_usd is not None:
+            body["maxCostUsd"] = max_cost_usd
+        if profile_id is not None:
+            body["profileId"] = profile_id
+        if proxy_country_code is not None:
+            body["proxyCountryCode"] = proxy_country_code
+        body.update(extra)
+        return SessionResponse.model_validate(
+            self._http.request("POST", "/sessions", json=body)
+        )
+
+    def list(
+        self,
+        *,
+        page: Optional[int] = None,
+        page_size: Optional[int] = None,
+    ) -> SessionListResponse:
+        """List sessions for the authenticated project."""
+        return SessionListResponse.model_validate(
+            self._http.request(
+                "GET",
+                "/sessions",
+                params={
+                    "page": page,
+                    "page_size": page_size,
+                },
+            )
+        )
+
+    def get(self, session_id: str) -> SessionResponse:
+        """Get session details."""
+        return SessionResponse.model_validate(
+            self._http.request("GET", f"/sessions/{session_id}")
+        )
+
+    def stop(self, session_id: str) -> SessionResponse:
+        """Stop a session."""
+        return SessionResponse.model_validate(
+            self._http.request("POST", f"/sessions/{session_id}/stop")
+        )
+
+    def files(
+        self,
+        session_id: str,
+        *,
+        prefix: Optional[str] = None,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+        include_urls: Optional[bool] = None,
+    ) -> FileListResponse:
+        """List files in a session's workspace."""
+        return FileListResponse.model_validate(
+            self._http.request(
+                "GET",
+                f"/sessions/{session_id}/files",
+                params={
+                    "prefix": prefix,
+                    "limit": limit,
+                    "cursor": cursor,
+                    "includeUrls": include_urls,
+                },
+            )
+        )
+
+
+class AsyncSessions:
+    def __init__(self, http: AsyncHttpClient) -> None:
+        self._http = http
+
+    async def create(
+        self,
+        task: str,
+        *,
+        model: Optional[str] = None,
+        session_id: Optional[str] = None,
+        keep_alive: Optional[bool] = None,
+        max_cost_usd: Optional[float] = None,
+        profile_id: Optional[str] = None,
+        proxy_country_code: Optional[str] = None,
+        **extra: Any,
+    ) -> SessionResponse:
+        """Create a session and run a task."""
+        body: Dict[str, Any] = {"task": task}
+        if model is not None:
+            body["model"] = model
+        if session_id is not None:
+            body["sessionId"] = session_id
+        if keep_alive is not None:
+            body["keepAlive"] = keep_alive
+        if max_cost_usd is not None:
+            body["maxCostUsd"] = max_cost_usd
+        if profile_id is not None:
+            body["profileId"] = profile_id
+        if proxy_country_code is not None:
+            body["proxyCountryCode"] = proxy_country_code
+        body.update(extra)
+        return SessionResponse.model_validate(
+            await self._http.request("POST", "/sessions", json=body)
+        )
+
+    async def list(
+        self,
+        *,
+        page: Optional[int] = None,
+        page_size: Optional[int] = None,
+    ) -> SessionListResponse:
+        """List sessions for the authenticated project."""
+        return SessionListResponse.model_validate(
+            await self._http.request(
+                "GET",
+                "/sessions",
+                params={
+                    "page": page,
+                    "page_size": page_size,
+                },
+            )
+        )
+
+    async def get(self, session_id: str) -> SessionResponse:
+        """Get session details."""
+        return SessionResponse.model_validate(
+            await self._http.request("GET", f"/sessions/{session_id}")
+        )
+
+    async def stop(self, session_id: str) -> SessionResponse:
+        """Stop a session."""
+        return SessionResponse.model_validate(
+            await self._http.request("POST", f"/sessions/{session_id}/stop")
+        )
+
+    async def files(
+        self,
+        session_id: str,
+        *,
+        prefix: Optional[str] = None,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+        include_urls: Optional[bool] = None,
+    ) -> FileListResponse:
+        """List files in a session's workspace."""
+        return FileListResponse.model_validate(
+            await self._http.request(
+                "GET",
+                f"/sessions/{session_id}/files",
+                params={
+                    "prefix": prefix,
+                    "limit": limit,
+                    "cursor": cursor,
+                    "includeUrls": include_urls,
+                },
+            )
+        )

@@ -1,0 +1,220 @@
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  OPENAPI_V2: '{{.CLOUD_REPO_PATH}}/backend/spec/api/v2/openapi.json'
+  OPENAPI_V3: '{{.CLOUD_REPO_PATH}}/backend/spec/api/v3/openapi.json'
+  TS_SDK: browser-use-node
+  PY_SDK: browser-use-python
+
+tasks:
+  # ── OpenAPI Spec ──────────────────────────────────────────────
+  spec:pull:
+    desc: Pull fresh OpenAPI specs from running local backend
+    cmds:
+      - curl -sf {{.BACKEND_URL}}/api/v2/openapi.json | python3 -m json.tool > {{.OPENAPI_V2}}
+      - curl -sf {{.BACKEND_URL}}/api/v3/openapi.json | python3 -m json.tool > {{.OPENAPI_V3}}
+      - echo "Updated OpenAPI specs from {{.BACKEND_URL}}"
+
+  spec:diff:
+    desc: Show what changed in the OpenAPI specs
+    dir: '{{.CLOUD_REPO_PATH}}'
+    cmds:
+      - git diff --stat backend/spec/api/v2/openapi.json backend/spec/api/v3/openapi.json
+      - git diff backend/spec/api/v2/openapi.json backend/spec/api/v3/openapi.json
+
+  # ── Type Generation (deterministic, no AI) ────────────────────
+  gen:types:
+    desc: Generate v2 + v3 types for both TS and Python
+    cmds:
+      - task: gen:types:ts
+      - task: gen:types:py
+
+  gen:types:ts:
+    desc: Generate TypeScript types from OpenAPI (v2 + v3)
+    dir: '{{.TS_SDK}}'
+    cmds:
+      - npx openapi-typescript {{.OPENAPI_V2}} -o src/generated/v2/types.ts
+      - npx openapi-typescript {{.OPENAPI_V3}} -o src/generated/v3/types.ts
+      - echo "TypeScript types generated (v2 + v3)"
+
+  gen:types:py:
+    desc: Generate Python models from OpenAPI (v2 + v3)
+    cmds:
+      - |
+        datamodel-codegen \
+          --input {{.OPENAPI_V2}} \
+          --input-file-type openapi \
+          --output {{.PY_SDK}}/src/browser_use_sdk/generated/v2/models.py \
+          --output-model-type pydantic_v2.BaseModel \
+          --disable-timestamp
+      - |
+        datamodel-codegen \
+          --input {{.OPENAPI_V3}} \
+          --input-file-type openapi \
+          --output {{.PY_SDK}}/src/browser_use_sdk/generated/v3/models.py \
+          --output-model-type pydantic_v2.BaseModel \
+          --disable-timestamp
+      - echo "Python models generated (v2 + v3)"
+
+  # ── Build ─────────────────────────────────────────────────────
+  build:ts:
+    desc: Build TypeScript SDK (CJS + ESM)
+    dir: '{{.TS_SDK}}'
+    cmds:
+      - pnpm install --frozen-lockfile
+      - pnpm build
+
+  build:py:
+    desc: Build Python SDK
+    dir: '{{.PY_SDK}}'
+    cmds:
+      - uv build
+
+  build:
+    desc: Build both SDKs
+    cmds:
+      - task: build:ts
+      - task: build:py
+
+  # ── Type Check ────────────────────────────────────────────────
+  check:ts:
+    desc: Type-check TypeScript SDK
+    dir: '{{.TS_SDK}}'
+    cmds:
+      - pnpm tsc --noEmit
+
+  check:py:
+    desc: Type-check Python SDK
+    dir: '{{.PY_SDK}}'
+    cmds:
+      - uv run pyright src/
+
+  check:
+    desc: Type-check both SDKs
+    cmds:
+      - task: check:ts
+      - task: check:py
+
+  # ── Test ──────────────────────────────────────────────────────
+  test:ts:
+    desc: Run TypeScript tests
+    dir: '{{.TS_SDK}}'
+    cmds:
+      - pnpm test
+
+  test:py:
+    desc: Run Python vibe tests (no backend or API needed)
+    dir: '{{.PY_SDK}}'
+    cmds:
+      - uv run python -m pytest tests/ -m "not live and not prod"
+
+  test:
+    desc: Run all tests (vibe tests, no backend required)
+    cmds:
+      - task: test:ts
+      - task: test:py
+
+  test:live:ts:
+    desc: Run TypeScript live integration tests (requires running backend)
+    dir: '{{.TS_SDK}}'
+    cmds:
+      - npx tsx tests/live.test.ts
+
+  test:live:py:
+    desc: Run Python live integration tests (requires running backend)
+    dir: '{{.PY_SDK}}'
+    cmds:
+      - uv run python -m pytest tests/ -m live -v -s
+
+  test:live:
+    desc: Run all live integration tests (requires running backend)
+    cmds:
+      - task: test:live:ts
+      - task: test:live:py
+
+  test:prod:ts:
+    desc: Run TypeScript prod smoke tests (hits real API)
+    dir: '{{.TS_SDK}}'
+    cmds:
+      - npx tsx tests/prod.test.ts
+
+  test:prod:py:
+    desc: Run Python prod smoke tests (hits real API)
+    dir: '{{.PY_SDK}}'
+    cmds:
+      - uv run python -m pytest tests/ -m prod -v -s
+
+  test:prod:
+    desc: Run all prod smoke tests (hits real API, uses .env.prod)
+    cmds:
+      - task: test:prod:ts
+      - task: test:prod:py
+
+  # ── Version Management ────────────────────────────────────────
+  version:
+    desc: Show current versions
+    cmds:
+      - echo "TS {{.TS_SDK}}:" $(node -p "require('./{{.TS_SDK}}/package.json').version")
+      - echo "PY {{.PY_SDK}}:" $(cd {{.PY_SDK}} && python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+
+  version:bump:
+    desc: "Bump version (usage: task version:bump -- patch|minor|major)"
+    cmds:
+      - cd {{.TS_SDK}} && npm version {{.CLI_ARGS | default "patch"}} --no-git-tag-version
+      - echo "TODO: bump python version to match (use bump-my-version or manual edit)"
+      - task: version
+
+  # ── Publish ───────────────────────────────────────────────────
+  publish:ts:
+    desc: Publish TypeScript SDK to npm
+    dir: '{{.TS_SDK}}'
+    deps: [build:ts]
+    cmds:
+      - npm publish --access public
+
+  publish:py:
+    desc: Publish Python SDK to PyPI
+    dir: '{{.PY_SDK}}'
+    deps: [build:py]
+    cmds:
+      - uv publish
+
+  publish:
+    desc: Publish both SDKs
+    cmds:
+      - task: publish:ts
+      - task: publish:py
+
+  # ── Snapshots ─────────────────────────────────────────────────
+  snapshot:save:
+    desc: Save current OpenAPI specs as snapshots (run after successful generation)
+    cmds:
+      - cp {{.OPENAPI_V2}} snapshots/v2.json
+      - cp {{.OPENAPI_V3}} snapshots/v3.json
+      - echo "Snapshots saved"
+
+  snapshot:diff:
+    desc: Show what changed between snapshots and current specs
+    cmds:
+      - echo "=== v2 changes ==="
+      - diff snapshots/v2.json {{.OPENAPI_V2}} || true
+      - echo ""
+      - echo "=== v3 changes ==="
+      - diff snapshots/v3.json {{.OPENAPI_V3}} || true
+
+  # ── Full Pipeline ─────────────────────────────────────────────
+  update:
+    desc: "Full mechanical pipeline: spec -> types -> check"
+    cmds:
+      - task: spec:pull
+      - task: gen:types
+      - task: check
+      - echo ""
+      - echo "Types regenerated and type-checked."
+      - echo "Next steps:"
+      - echo "  1. /sdk build   -- regenerate SDK client code"
+      - echo "  2. /sdk test    -- vibe test against localhost"
+      - echo "  3. /sdk docs    -- update docs + drift check"
+      - echo "  4. git diff     -- review everything"
