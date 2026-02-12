@@ -20,6 +20,7 @@ def _build_create_body(
     browser_screen_height: Optional[int] = None,
     persist_memory: Optional[bool] = None,
     keep_alive: Optional[bool] = None,
+    custom_proxy: Optional[Dict[str, Any]] = None,
     **extra: Any,
 ) -> Dict[str, Any]:
     body: Dict[str, Any] = {}
@@ -37,6 +38,8 @@ def _build_create_body(
         body["persistMemory"] = persist_memory
     if keep_alive is not None:
         body["keepAlive"] = keep_alive
+    if custom_proxy is not None:
+        body["customProxy"] = custom_proxy
     body.update(extra)
     return body
 
@@ -55,6 +58,7 @@ class Sessions:
         browser_screen_height: Optional[int] = None,
         persist_memory: Optional[bool] = None,
         keep_alive: Optional[bool] = None,
+        custom_proxy: Optional[Dict[str, Any]] = None,
         **extra: Any,
     ) -> SessionItemView:
         """Create a new session."""
@@ -66,6 +70,7 @@ class Sessions:
             browser_screen_height=browser_screen_height,
             persist_memory=persist_memory,
             keep_alive=keep_alive,
+            custom_proxy=custom_proxy,
             **extra,
         )
         return SessionItemView.model_validate(
@@ -141,6 +146,7 @@ class AsyncSessions:
         browser_screen_height: Optional[int] = None,
         persist_memory: Optional[bool] = None,
         keep_alive: Optional[bool] = None,
+        custom_proxy: Optional[Dict[str, Any]] = None,
         **extra: Any,
     ) -> SessionItemView:
         """Create a new session."""
@@ -152,6 +158,7 @@ class AsyncSessions:
             browser_screen_height=browser_screen_height,
             persist_memory=persist_memory,
             keep_alive=keep_alive,
+            custom_proxy=custom_proxy,
             **extra,
         )
         return SessionItemView.model_validate(

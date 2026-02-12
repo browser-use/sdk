@@ -32,6 +32,7 @@ def _build_create_body(
     judge_ground_truth: Optional[str] = None,
     judge_llm: Optional[str] = None,
     skill_ids: Optional[List[str]] = None,
+    op_vault_id: Optional[str] = None,
     **extra: Any,
 ) -> Dict[str, Any]:
     body: Dict[str, Any] = {"task": task}
@@ -69,6 +70,8 @@ def _build_create_body(
         body["judgeLlm"] = judge_llm
     if skill_ids is not None:
         body["skillIds"] = skill_ids
+    if op_vault_id is not None:
+        body["opVaultId"] = op_vault_id
     body.update(extra)
     return body
 
@@ -98,6 +101,7 @@ class Tasks:
         judge_ground_truth: Optional[str] = None,
         judge_llm: Optional[str] = None,
         skill_ids: Optional[List[str]] = None,
+        op_vault_id: Optional[str] = None,
         **extra: Any,
     ) -> TaskCreatedResponse:
         """Create and start a new AI agent task."""
@@ -120,6 +124,7 @@ class Tasks:
             judge_ground_truth=judge_ground_truth,
             judge_llm=judge_llm,
             skill_ids=skill_ids,
+            op_vault_id=op_vault_id,
             **extra,
         )
         return TaskCreatedResponse.model_validate(
@@ -210,6 +215,7 @@ class AsyncTasks:
         judge_ground_truth: Optional[str] = None,
         judge_llm: Optional[str] = None,
         skill_ids: Optional[List[str]] = None,
+        op_vault_id: Optional[str] = None,
         **extra: Any,
     ) -> TaskCreatedResponse:
         """Create and start a new AI agent task."""
@@ -232,6 +238,7 @@ class AsyncTasks:
             judge_ground_truth=judge_ground_truth,
             judge_llm=judge_llm,
             skill_ids=skill_ids,
+            op_vault_id=op_vault_id,
             **extra,
         )
         return TaskCreatedResponse.model_validate(
