@@ -6,7 +6,11 @@ Authentication -- use profiles to stay logged in across sessions.
 3. Future sessions with the same profile are already logged in
 """
 import asyncio
+
+from dotenv import load_dotenv
 from browser_use_sdk import AsyncBrowserUse
+
+load_dotenv()
 
 PROFILE_ID = "your-profile-id"  # Create one with client.profiles.create()
 

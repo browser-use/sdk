@@ -4,6 +4,7 @@
  * Every session gets a residential proxy. You can choose the country.
  * Without a session, tasks auto-create one with a US proxy.
  */
+import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 
 async function main() {

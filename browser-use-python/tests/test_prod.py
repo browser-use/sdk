@@ -97,7 +97,7 @@ class TestTaskLifecycle:
             result = handle.complete(timeout=300, interval=3)
             assert result.output is not None
             assert len(result.output) > 0
-            assert result.status in ("finished", "stopped")
+            assert result.status.value in ("finished", "stopped")
         except Exception:
             # Clean up on failure
             try:

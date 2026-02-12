@@ -2,7 +2,11 @@
 Basic task -- run a task and get the result.
 """
 import asyncio
+
+from dotenv import load_dotenv
 from browser_use_sdk import AsyncBrowserUse
+
+load_dotenv()
 
 
 async def main():

@@ -4,17 +4,20 @@ Stealth mode -- use proxies for geo-specific browsing.
 Every session gets a residential proxy. You can choose the country.
 Without a session, tasks auto-create one with a US proxy.
 """
+
 import asyncio
+
+from dotenv import load_dotenv
 from browser_use_sdk import AsyncBrowserUse
+
+load_dotenv()
 
 
 async def main():
     client = AsyncBrowserUse()
 
     # Auto-session (US proxy by default)
-    us_handle = await client.run(
-        "Go to whatismyipaddress.com and tell me my location"
-    )
+    us_handle = await client.run("Go to whatismyipaddress.com and tell me my location")
     us_result = await us_handle.complete()
     print(f"US proxy: {us_result.output}")
 
@@ -23,6 +26,7 @@ async def main():
     de_handle = await client.run(
         "Go to whatismyipaddress.com and tell me my location",
         session_id=str(de_session.id),
+        keep_alive=False,
     )
     de_result = await de_handle.complete()
     print(f"DE proxy: {de_result.output}")

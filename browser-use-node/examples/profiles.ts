@@ -3,6 +3,7 @@
  *
  * Create a profile once, then reuse it. Login state carries over.
  */
+import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 
 async function main() {

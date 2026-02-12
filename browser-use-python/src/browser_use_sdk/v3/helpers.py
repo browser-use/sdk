@@ -26,7 +26,7 @@ class SessionHandle:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             result = self._sessions.get(self.id)
-            if result.status in _IDLE_OR_TERMINAL:
+            if result.status.value in _IDLE_OR_TERMINAL:
                 return result
             time.sleep(interval)
         raise TimeoutError(f"Session {self.id} did not complete within {timeout}s")
@@ -35,7 +35,7 @@ class SessionHandle:
         while True:
             result = self._sessions.get(self.id)
             yield result
-            if result.status in _IDLE_OR_TERMINAL:
+            if result.status.value in _IDLE_OR_TERMINAL:
                 return
             time.sleep(interval)
 
@@ -55,7 +55,7 @@ class AsyncSessionHandle:
         deadline = asyncio.get_event_loop().time() + timeout
         while asyncio.get_event_loop().time() < deadline:
             result = await self._sessions.get(self.id)
-            if result.status in _IDLE_OR_TERMINAL:
+            if result.status.value in _IDLE_OR_TERMINAL:
                 return result
             await asyncio.sleep(interval)
         raise TimeoutError(f"Session {self.id} did not complete within {timeout}s")
@@ -64,6 +64,6 @@ class AsyncSessionHandle:
         while True:
             result = await self._sessions.get(self.id)
             yield result
-            if result.status in _IDLE_OR_TERMINAL:
+            if result.status.value in _IDLE_OR_TERMINAL:
                 return
             await asyncio.sleep(interval)

@@ -4,7 +4,11 @@ Sessions -- run multiple tasks in the same browser session.
 Sessions let you chain tasks that share browser state (cookies, tabs, etc).
 """
 import asyncio
+
+from dotenv import load_dotenv
 from browser_use_sdk import AsyncBrowserUse
+
+load_dotenv()
 
 
 async def main():

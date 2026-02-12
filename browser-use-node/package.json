@@ -46,6 +46,7 @@
     "@types/node": "^25.2.3",
     "openapi-typescript": "^7.6.1",
     "tsup": "^8.4.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.3",
     "vitest": "^3.0.4"
   },
@@ -59,6 +60,7 @@
     "sdk"
   ],
   "dependencies": {
+    "dotenv": "^17.2.4",
     "zod": "^4.3.6"
   }
 }

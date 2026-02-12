@@ -1,6 +1,7 @@
 /**
  * Basic task — run a task and get the result.
  */
+import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 
 async function main() {

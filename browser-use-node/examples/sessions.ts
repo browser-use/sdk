@@ -3,6 +3,7 @@
  *
  * Sessions let you chain tasks that share browser state (cookies, tabs, etc).
  */
+import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 
 async function main() {

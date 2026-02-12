@@ -1,6 +1,7 @@
 /**
  * Structured output — get typed results using Zod schemas.
  */
+import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 import { z } from "zod";
 

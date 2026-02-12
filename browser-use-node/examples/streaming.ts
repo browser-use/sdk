@@ -1,6 +1,7 @@
 /**
  * Streaming — monitor task progress in real time.
  */
+import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 
 async function main() {

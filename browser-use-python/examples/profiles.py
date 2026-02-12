@@ -4,7 +4,11 @@ Profiles -- persist browser state (cookies, logins) across sessions.
 Create a profile once, then reuse it. Login state carries over.
 """
 import asyncio
+
+from dotenv import load_dotenv
 from browser_use_sdk import AsyncBrowserUse
+
+load_dotenv()
 
 
 async def main():

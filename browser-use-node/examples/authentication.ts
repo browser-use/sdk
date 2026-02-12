@@ -5,6 +5,7 @@
  * 2. Log in once in a session with that profile
  * 3. Future sessions with the same profile are already logged in
  */
+import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 
 async function main() {

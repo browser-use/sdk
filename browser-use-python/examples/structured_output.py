@@ -8,8 +8,11 @@ your model.
 import asyncio
 from typing import List
 
+from dotenv import load_dotenv
 from pydantic import BaseModel
 from browser_use_sdk import AsyncBrowserUse
+
+load_dotenv()
 
 
 class HackerNewsPost(BaseModel):

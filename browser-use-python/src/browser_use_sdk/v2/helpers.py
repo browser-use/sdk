@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from ..generated.v2.models import TaskCreatedResponse, TaskStatusView, TaskView
 from .resources.tasks import AsyncTasks, Tasks
 
-_TERMINAL_STATUSES = {"finished", "stopped", "failed"}
+_TERMINAL_STATUSES = {"finished", "stopped"}
 
 T = TypeVar("T")
 
@@ -45,7 +45,7 @@ class TaskHandle(Generic[T]):
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             status = self._tasks.status(self.id)
-            if status.status in _TERMINAL_STATUSES:
+            if status.status.value in _TERMINAL_STATUSES:
                 return self._tasks.get(self.id)
             time.sleep(interval)
         raise TimeoutError(f"Task {self.id} did not complete within {timeout}s")
@@ -55,7 +55,7 @@ class TaskHandle(Generic[T]):
         while True:
             status = self._tasks.status(self.id)
             yield status
-            if status.status in _TERMINAL_STATUSES:
+            if status.status.value in _TERMINAL_STATUSES:
                 return
             time.sleep(interval)
 
@@ -103,7 +103,7 @@ class AsyncTaskHandle(Generic[T]):
         deadline = asyncio.get_event_loop().time() + timeout
         while asyncio.get_event_loop().time() < deadline:
             status = await self._tasks.status(self.id)
-            if status.status in _TERMINAL_STATUSES:
+            if status.status.value in _TERMINAL_STATUSES:
                 return await self._tasks.get(self.id)
             await asyncio.sleep(interval)
         raise TimeoutError(f"Task {self.id} did not complete within {timeout}s")
@@ -113,7 +113,7 @@ class AsyncTaskHandle(Generic[T]):
         while True:
             status = await self._tasks.status(self.id)
             yield status
-            if status.status in _TERMINAL_STATUSES:
+            if status.status.value in _TERMINAL_STATUSES:
                 return
             await asyncio.sleep(interval)
 
