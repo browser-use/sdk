@@ -169,7 +169,15 @@ tasks:
     desc: "Bump version (usage: task version:bump -- patch|minor|major)"
     cmds:
       - cmd: cd {{.TS_SDK}} && npm version {{.CLI_ARGS | default "patch"}} --no-git-tag-version
-      - cmd: echo "TODO - bump python version to match (use bump-my-version or manual edit)"
+      - cmd: |
+          NEW_VERSION=$(node -p "require('./{{.TS_SDK}}/package.json').version")
+          cd {{.PY_SDK}} && sed -i '' "s/^version = \".*\"/version = \"${NEW_VERSION}\"/" pyproject.toml
+          echo "Python version bumped to ${NEW_VERSION}"
+      - cmd: |
+          NEW_VERSION=$(node -p "require('./{{.TS_SDK}}/package.json').version")
+          sed -i '' "s/| TypeScript | npm | [0-9]*\.[0-9]*\.[0-9]* |/| TypeScript | npm | ${NEW_VERSION} |/" README.md
+          sed -i '' "s/| Python | PyPI | [0-9]*\.[0-9]*\.[0-9]* |/| Python | PyPI | ${NEW_VERSION} |/" README.md
+          echo "README.md versions updated to ${NEW_VERSION}"
       - task: version
 
   # ── Publish ───────────────────────────────────────────────────
