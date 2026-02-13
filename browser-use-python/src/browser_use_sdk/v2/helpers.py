@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import time
 import asyncio
-from typing import Generator, AsyncGenerator, Generic, Optional, Type, TypeVar, overload
+from typing import AsyncGenerator, Generator, Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -27,7 +27,7 @@ class TaskHandle(Generic[T]):
         self,
         data: TaskCreatedResponse,
         tasks: Tasks,
-        output_schema: Optional[Type[T]] = None,
+        output_schema: type[T] | None = None,
     ) -> None:
         self.data = data
         self._tasks = tasks
@@ -59,7 +59,7 @@ class TaskHandle(Generic[T]):
                 return
             time.sleep(interval)
 
-    def parse_output(self, result: TaskView) -> Optional[T]:
+    def parse_output(self, result: TaskView) -> T | None:
         """Parse the task's output string using the structured output schema.
 
         Returns ``None`` if the task has no output. If no ``output_schema``
@@ -85,7 +85,7 @@ class AsyncTaskHandle(Generic[T]):
         self,
         data: TaskCreatedResponse,
         tasks: AsyncTasks,
-        output_schema: Optional[Type[T]] = None,
+        output_schema: type[T] | None = None,
     ) -> None:
         self.data = data
         self._tasks = tasks
@@ -117,7 +117,7 @@ class AsyncTaskHandle(Generic[T]):
                 return
             await asyncio.sleep(interval)
 
-    def parse_output(self, result: TaskView) -> Optional[T]:
+    def parse_output(self, result: TaskView) -> T | None:
         """Parse the task's output string using the structured output schema.
 
         Returns ``None`` if the task has no output. If no ``output_schema``

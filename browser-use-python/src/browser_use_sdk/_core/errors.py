@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 
 class BrowserUseError(Exception):
@@ -10,7 +10,7 @@ class BrowserUseError(Exception):
         self,
         status_code: int,
         message: str,
-        detail: Optional[Any] = None,
+        detail: Any = None,
     ) -> None:
         self.status_code = status_code
         self.message = message

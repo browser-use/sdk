@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v2.models import ProfileListResponse, ProfileView
@@ -10,16 +10,25 @@ class Profiles:
     def __init__(self, http: SyncHttpClient) -> None:
         self._http = http
 
-    def create(self, **kwargs: Any) -> ProfileView:
+    def create(
+        self,
+        *,
+        name: str | None = None,
+        **extra: Any,
+    ) -> ProfileView:
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        body.update(extra)
         return ProfileView.model_validate(
-            self._http.request("POST", "/profiles", json=kwargs)
+            self._http.request("POST", "/profiles", json=body)
         )
 
     def list(
         self,
         *,
-        page_size: Optional[int] = None,
-        page_number: Optional[int] = None,
+        page_size: int | None = None,
+        page_number: int | None = None,
     ) -> ProfileListResponse:
         return ProfileListResponse.model_validate(
             self._http.request(
@@ -37,9 +46,19 @@ class Profiles:
             self._http.request("GET", f"/profiles/{profile_id}")
         )
 
-    def update(self, profile_id: str, **kwargs: Any) -> ProfileView:
+    def update(
+        self,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        **extra: Any,
+    ) -> ProfileView:
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        body.update(extra)
         return ProfileView.model_validate(
-            self._http.request("PATCH", f"/profiles/{profile_id}", json=kwargs)
+            self._http.request("PATCH", f"/profiles/{profile_id}", json=body)
         )
 
     def delete(self, profile_id: str) -> None:
@@ -50,16 +69,25 @@ class AsyncProfiles:
     def __init__(self, http: AsyncHttpClient) -> None:
         self._http = http
 
-    async def create(self, **kwargs: Any) -> ProfileView:
+    async def create(
+        self,
+        *,
+        name: str | None = None,
+        **extra: Any,
+    ) -> ProfileView:
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        body.update(extra)
         return ProfileView.model_validate(
-            await self._http.request("POST", "/profiles", json=kwargs)
+            await self._http.request("POST", "/profiles", json=body)
         )
 
     async def list(
         self,
         *,
-        page_size: Optional[int] = None,
-        page_number: Optional[int] = None,
+        page_size: int | None = None,
+        page_number: int | None = None,
     ) -> ProfileListResponse:
         return ProfileListResponse.model_validate(
             await self._http.request(
@@ -77,9 +105,19 @@ class AsyncProfiles:
             await self._http.request("GET", f"/profiles/{profile_id}")
         )
 
-    async def update(self, profile_id: str, **kwargs: Any) -> ProfileView:
+    async def update(
+        self,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        **extra: Any,
+    ) -> ProfileView:
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        body.update(extra)
         return ProfileView.model_validate(
-            await self._http.request("PATCH", f"/profiles/{profile_id}", json=kwargs)
+            await self._http.request("PATCH", f"/profiles/{profile_id}", json=body)
         )
 
     async def delete(self, profile_id: str) -> None:

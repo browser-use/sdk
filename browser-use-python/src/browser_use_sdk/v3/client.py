@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Optional
+from typing import Any
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
 from .resources.sessions import AsyncSessions, Sessions
@@ -15,9 +15,9 @@ class BrowserUse:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         *,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
         timeout: float = 30.0,
     ) -> None:
         resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
@@ -36,11 +36,11 @@ class BrowserUse:
         self,
         task: str,
         *,
-        model: Optional[str] = None,
-        keep_alive: Optional[bool] = None,
-        max_cost_usd: Optional[float] = None,
-        profile_id: Optional[str] = None,
-        proxy_country_code: Optional[str] = None,
+        model: str | None = None,
+        keep_alive: bool | None = None,
+        max_cost_usd: float | None = None,
+        profile_id: str | None = None,
+        proxy_country_code: str | None = None,
         **extra: Any,
     ) -> SessionHandle:
         """Create a session and return a SessionHandle for polling/streaming.
@@ -76,9 +76,9 @@ class AsyncBrowserUse:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         *,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
         timeout: float = 30.0,
     ) -> None:
         resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
@@ -97,11 +97,11 @@ class AsyncBrowserUse:
         self,
         task: str,
         *,
-        model: Optional[str] = None,
-        keep_alive: Optional[bool] = None,
-        max_cost_usd: Optional[float] = None,
-        profile_id: Optional[str] = None,
-        proxy_country_code: Optional[str] = None,
+        model: str | None = None,
+        keep_alive: bool | None = None,
+        max_cost_usd: float | None = None,
+        profile_id: str | None = None,
+        proxy_country_code: str | None = None,
         **extra: Any,
     ) -> AsyncSessionHandle:
         """Create a session and return an AsyncSessionHandle for polling/streaming.

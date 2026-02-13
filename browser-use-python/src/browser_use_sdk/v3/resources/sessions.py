@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
@@ -18,16 +18,16 @@ class Sessions:
         self,
         task: str,
         *,
-        model: Optional[str] = None,
-        session_id: Optional[str] = None,
-        keep_alive: Optional[bool] = None,
-        max_cost_usd: Optional[float] = None,
-        profile_id: Optional[str] = None,
-        proxy_country_code: Optional[str] = None,
+        model: str | None = None,
+        session_id: str | None = None,
+        keep_alive: bool | None = None,
+        max_cost_usd: float | None = None,
+        profile_id: str | None = None,
+        proxy_country_code: str | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and run a task."""
-        body: Dict[str, Any] = {"task": task}
+        body: dict[str, Any] = {"task": task}
         if model is not None:
             body["model"] = model
         if session_id is not None:
@@ -48,8 +48,8 @@ class Sessions:
     def list(
         self,
         *,
-        page: Optional[int] = None,
-        page_size: Optional[int] = None,
+        page: int | None = None,
+        page_size: int | None = None,
     ) -> SessionListResponse:
         """List sessions for the authenticated project."""
         return SessionListResponse.model_validate(
@@ -79,10 +79,10 @@ class Sessions:
         self,
         session_id: str,
         *,
-        prefix: Optional[str] = None,
-        limit: Optional[int] = None,
-        cursor: Optional[str] = None,
-        include_urls: Optional[bool] = None,
+        prefix: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+        include_urls: bool | None = None,
     ) -> FileListResponse:
         """List files in a session's workspace."""
         return FileListResponse.model_validate(
@@ -107,16 +107,16 @@ class AsyncSessions:
         self,
         task: str,
         *,
-        model: Optional[str] = None,
-        session_id: Optional[str] = None,
-        keep_alive: Optional[bool] = None,
-        max_cost_usd: Optional[float] = None,
-        profile_id: Optional[str] = None,
-        proxy_country_code: Optional[str] = None,
+        model: str | None = None,
+        session_id: str | None = None,
+        keep_alive: bool | None = None,
+        max_cost_usd: float | None = None,
+        profile_id: str | None = None,
+        proxy_country_code: str | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and run a task."""
-        body: Dict[str, Any] = {"task": task}
+        body: dict[str, Any] = {"task": task}
         if model is not None:
             body["model"] = model
         if session_id is not None:
@@ -137,8 +137,8 @@ class AsyncSessions:
     async def list(
         self,
         *,
-        page: Optional[int] = None,
-        page_size: Optional[int] = None,
+        page: int | None = None,
+        page_size: int | None = None,
     ) -> SessionListResponse:
         """List sessions for the authenticated project."""
         return SessionListResponse.model_validate(
@@ -168,10 +168,10 @@ class AsyncSessions:
         self,
         session_id: str,
         *,
-        prefix: Optional[str] = None,
-        limit: Optional[int] = None,
-        cursor: Optional[str] = None,
-        include_urls: Optional[bool] = None,
+        prefix: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+        include_urls: bool | None = None,
     ) -> FileListResponse:
         """List files in a session's workspace."""
         return FileListResponse.model_validate(

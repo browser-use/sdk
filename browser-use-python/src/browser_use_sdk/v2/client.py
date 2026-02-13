@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union, overload
+from typing import Any, TypeVar, overload
 
 from pydantic import BaseModel
 
@@ -27,9 +27,9 @@ class BrowserUse:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         *,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
         timeout: float = 30.0,
     ) -> None:
         resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
@@ -56,11 +56,11 @@ class BrowserUse:
         self,
         task: str,
         *,
-        output_schema: Type[T],
-        session_id: Optional[str] = ...,
-        llm: Optional[str] = ...,
-        start_url: Optional[str] = ...,
-        max_steps: Optional[int] = ...,
+        output_schema: type[T],
+        session_id: str | None = ...,
+        llm: str | None = ...,
+        start_url: str | None = ...,
+        max_steps: int | None = ...,
         **extra: Any,
     ) -> TaskHandle[T]: ...
 
@@ -69,10 +69,10 @@ class BrowserUse:
         self,
         task: str,
         *,
-        session_id: Optional[str] = ...,
-        llm: Optional[str] = ...,
-        start_url: Optional[str] = ...,
-        max_steps: Optional[int] = ...,
+        session_id: str | None = ...,
+        llm: str | None = ...,
+        start_url: str | None = ...,
+        max_steps: int | None = ...,
         **extra: Any,
     ) -> TaskHandle[str]: ...
 
@@ -80,11 +80,11 @@ class BrowserUse:
         self,
         task: str,
         *,
-        output_schema: Optional[Type[Any]] = None,
-        session_id: Optional[str] = None,
-        llm: Optional[str] = None,
-        start_url: Optional[str] = None,
-        max_steps: Optional[int] = None,
+        output_schema: type[Any] | None = None,
+        session_id: str | None = None,
+        llm: str | None = None,
+        start_url: str | None = None,
+        max_steps: int | None = None,
         **extra: Any,
     ) -> TaskHandle[Any]:
         """Create a task and return a TaskHandle for polling/streaming.
@@ -136,9 +136,9 @@ class AsyncBrowserUse:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         *,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
         timeout: float = 30.0,
     ) -> None:
         resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
@@ -165,11 +165,11 @@ class AsyncBrowserUse:
         self,
         task: str,
         *,
-        output_schema: Type[T],
-        session_id: Optional[str] = ...,
-        llm: Optional[str] = ...,
-        start_url: Optional[str] = ...,
-        max_steps: Optional[int] = ...,
+        output_schema: type[T],
+        session_id: str | None = ...,
+        llm: str | None = ...,
+        start_url: str | None = ...,
+        max_steps: int | None = ...,
         **extra: Any,
     ) -> AsyncTaskHandle[T]: ...
 
@@ -178,10 +178,10 @@ class AsyncBrowserUse:
         self,
         task: str,
         *,
-        session_id: Optional[str] = ...,
-        llm: Optional[str] = ...,
-        start_url: Optional[str] = ...,
-        max_steps: Optional[int] = ...,
+        session_id: str | None = ...,
+        llm: str | None = ...,
+        start_url: str | None = ...,
+        max_steps: int | None = ...,
         **extra: Any,
     ) -> AsyncTaskHandle[str]: ...
 
@@ -189,11 +189,11 @@ class AsyncBrowserUse:
         self,
         task: str,
         *,
-        output_schema: Optional[Type[Any]] = None,
-        session_id: Optional[str] = None,
-        llm: Optional[str] = None,
-        start_url: Optional[str] = None,
-        max_steps: Optional[int] = None,
+        output_schema: type[Any] | None = None,
+        session_id: str | None = None,
+        llm: str | None = None,
+        start_url: str | None = None,
+        max_steps: int | None = None,
         **extra: Any,
     ) -> AsyncTaskHandle[Any]:
         """Create a task and return an AsyncTaskHandle for polling/streaming.

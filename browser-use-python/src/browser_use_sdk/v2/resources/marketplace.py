@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v2.models import (
@@ -18,12 +18,12 @@ class Marketplace:
     def list(
         self,
         *,
-        page_size: Optional[int] = None,
-        page_number: Optional[int] = None,
-        category: Optional[str] = None,
-        query: Optional[str] = None,
-        from_date: Optional[str] = None,
-        to_date: Optional[str] = None,
+        page_size: int | None = None,
+        page_number: int | None = None,
+        category: str | None = None,
+        query: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
     ) -> MarketplaceSkillListResponse:
         return MarketplaceSkillListResponse.model_validate(
             self._http.request(
@@ -50,10 +50,23 @@ class Marketplace:
             self._http.request("POST", f"/marketplace/skills/{skill_id}/clone")
         )
 
-    def execute(self, skill_id: str, **kwargs: Any) -> ExecuteSkillResponse:
+    def execute(
+        self,
+        skill_id: str,
+        *,
+        parameters: dict[str, Any] | None = None,
+        session_id: str | None = None,
+        **extra: Any,
+    ) -> ExecuteSkillResponse:
+        body: dict[str, Any] = {}
+        if parameters is not None:
+            body["parameters"] = parameters
+        if session_id is not None:
+            body["sessionId"] = session_id
+        body.update(extra)
         return ExecuteSkillResponse.model_validate(
             self._http.request(
-                "POST", f"/marketplace/skills/{skill_id}/execute", json=kwargs
+                "POST", f"/marketplace/skills/{skill_id}/execute", json=body
             )
         )
 
@@ -65,12 +78,12 @@ class AsyncMarketplace:
     async def list(
         self,
         *,
-        page_size: Optional[int] = None,
-        page_number: Optional[int] = None,
-        category: Optional[str] = None,
-        query: Optional[str] = None,
-        from_date: Optional[str] = None,
-        to_date: Optional[str] = None,
+        page_size: int | None = None,
+        page_number: int | None = None,
+        category: str | None = None,
+        query: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
     ) -> MarketplaceSkillListResponse:
         return MarketplaceSkillListResponse.model_validate(
             await self._http.request(
@@ -97,9 +110,22 @@ class AsyncMarketplace:
             await self._http.request("POST", f"/marketplace/skills/{skill_id}/clone")
         )
 
-    async def execute(self, skill_id: str, **kwargs: Any) -> ExecuteSkillResponse:
+    async def execute(
+        self,
+        skill_id: str,
+        *,
+        parameters: dict[str, Any] | None = None,
+        session_id: str | None = None,
+        **extra: Any,
+    ) -> ExecuteSkillResponse:
+        body: dict[str, Any] = {}
+        if parameters is not None:
+            body["parameters"] = parameters
+        if session_id is not None:
+            body["sessionId"] = session_id
+        body.update(extra)
         return ExecuteSkillResponse.model_validate(
             await self._http.request(
-                "POST", f"/marketplace/skills/{skill_id}/execute", json=kwargs
+                "POST", f"/marketplace/skills/{skill_id}/execute", json=body
             )
         )

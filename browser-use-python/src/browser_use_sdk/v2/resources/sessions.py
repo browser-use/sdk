@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v2.models import (
@@ -14,17 +14,17 @@ from ...generated.v2.models import (
 
 def _build_create_body(
     *,
-    profile_id: Optional[str] = None,
-    proxy_country_code: Optional[str] = None,
-    start_url: Optional[str] = None,
-    browser_screen_width: Optional[int] = None,
-    browser_screen_height: Optional[int] = None,
-    persist_memory: Optional[bool] = None,
-    keep_alive: Optional[bool] = None,
+    profile_id: str | None = None,
+    proxy_country_code: str | None = None,
+    start_url: str | None = None,
+    browser_screen_width: int | None = None,
+    browser_screen_height: int | None = None,
+    persist_memory: bool | None = None,
+    keep_alive: bool | None = None,
     custom_proxy: CustomProxy | None = None,
     **extra: Any,
-) -> Dict[str, Any]:
-    body: Dict[str, Any] = {}
+) -> dict[str, Any]:
+    body: dict[str, Any] = {}
     if profile_id is not None:
         body["profileId"] = profile_id
     if proxy_country_code is not None:
@@ -52,13 +52,13 @@ class Sessions:
     def create(
         self,
         *,
-        profile_id: Optional[str] = None,
-        proxy_country_code: Optional[str] = None,
-        start_url: Optional[str] = None,
-        browser_screen_width: Optional[int] = None,
-        browser_screen_height: Optional[int] = None,
-        persist_memory: Optional[bool] = None,
-        keep_alive: Optional[bool] = None,
+        profile_id: str | None = None,
+        proxy_country_code: str | None = None,
+        start_url: str | None = None,
+        browser_screen_width: int | None = None,
+        browser_screen_height: int | None = None,
+        persist_memory: bool | None = None,
+        keep_alive: bool | None = None,
         custom_proxy: CustomProxy | None = None,
         **extra: Any,
     ) -> SessionItemView:
@@ -81,9 +81,9 @@ class Sessions:
     def list(
         self,
         *,
-        page_size: Optional[int] = None,
-        page_number: Optional[int] = None,
-        filter_by: Optional[str] = None,
+        page_size: int | None = None,
+        page_number: int | None = None,
+        filter_by: str | None = None,
     ) -> SessionListResponse:
         """List sessions with optional filtering."""
         return SessionListResponse.model_validate(
@@ -140,13 +140,13 @@ class AsyncSessions:
     async def create(
         self,
         *,
-        profile_id: Optional[str] = None,
-        proxy_country_code: Optional[str] = None,
-        start_url: Optional[str] = None,
-        browser_screen_width: Optional[int] = None,
-        browser_screen_height: Optional[int] = None,
-        persist_memory: Optional[bool] = None,
-        keep_alive: Optional[bool] = None,
+        profile_id: str | None = None,
+        proxy_country_code: str | None = None,
+        start_url: str | None = None,
+        browser_screen_width: int | None = None,
+        browser_screen_height: int | None = None,
+        persist_memory: bool | None = None,
+        keep_alive: bool | None = None,
         custom_proxy: CustomProxy | None = None,
         **extra: Any,
     ) -> SessionItemView:
@@ -169,9 +169,9 @@ class AsyncSessions:
     async def list(
         self,
         *,
-        page_size: Optional[int] = None,
-        page_number: Optional[int] = None,
-        filter_by: Optional[str] = None,
+        page_size: int | None = None,
+        page_number: int | None = None,
+        filter_by: str | None = None,
     ) -> SessionListResponse:
         """List sessions with optional filtering."""
         return SessionListResponse.model_validate(

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any
 
 import httpx
 
@@ -53,11 +53,11 @@ class SyncHttpClient:
         method: str,
         path: str,
         *,
-        json: Optional[Any] = None,
-        params: Optional[Dict[str, Any]] = None,
+        json: Any = None,
+        params: dict[str, Any] | None = None,
     ) -> Any:
         params = _clean_params(params)
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(_MAX_RETRIES):
             try:
                 response = self._client.request(method, path, json=json, params=params)
@@ -101,11 +101,11 @@ class AsyncHttpClient:
         method: str,
         path: str,
         *,
-        json: Optional[Any] = None,
-        params: Optional[Dict[str, Any]] = None,
+        json: Any = None,
+        params: dict[str, Any] | None = None,
     ) -> Any:
         params = _clean_params(params)
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         for attempt in range(_MAX_RETRIES):
             try:
                 response = await self._client.request(method, path, json=json, params=params)
@@ -129,7 +129,7 @@ class AsyncHttpClient:
         await self._client.aclose()
 
 
-def _clean_params(params: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+def _clean_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
     """Remove None values from query params."""
     if params is None:
         return None
