@@ -55,3 +55,8 @@ task publish         # npm + pypi publish
 3. **Helpers are minimal.** `complete()` and `stream()` are ~20 lines each.
 4. **Python returns Pydantic models.** Full type safety, not dicts.
 5. **Everything is regeneratable.** Generate, audit, fix, ship.
+
+## Python SDK Rules
+
+- **Never use `Dict[str, Any]` for typed params.** If the OpenAPI spec defines a schema, use the generated Pydantic model (e.g. `SessionSettings`, `CustomProxy`). Only use `Dict[str, Any]` when the spec literally says `object` with no further schema.
+- **Use `X | None`, not `Optional[X]`.** Modern Python union syntax everywhere — hand-written code and generated code (via `--use-union-operator` flag).
