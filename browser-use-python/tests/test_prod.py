@@ -8,9 +8,7 @@ Does NOT override base_url -- hits the default prod endpoint.
 """
 from __future__ import annotations
 
-import time
 from pathlib import Path
-from typing import List
 
 import pytest
 from pydantic import BaseModel
@@ -91,20 +89,11 @@ class TestProfiles:
 # ── 3. Task lifecycle ──────────────────────────────────────────────────────
 
 class TestTaskLifecycle:
-    def test_run_and_complete(self, client):
-        handle = client.run("Return the exact text: hello world")
-        try:
-            result = handle.complete(timeout=300, interval=3)
-            assert result.output is not None
-            assert len(result.output) > 0
-            assert result.status.value in ("finished", "stopped")
-        except Exception:
-            # Clean up on failure
-            try:
-                client.tasks.stop(handle.id)
-            except Exception:
-                pass
-            raise
+    def test_run_returns_output(self, client):
+        """await run() returns output string directly."""
+        output = client.run("Return the exact text: hello world")
+        assert isinstance(output, str)
+        assert len(output) > 0
 
 
 # ── 4. Structured output ───────────────────────────────────────────────────
@@ -115,49 +104,36 @@ class MathResult(BaseModel):
 
 
 class TestStructuredOutput:
-    def test_parse_output(self, client):
-        handle = client.run(
+    def test_run_with_schema(self, client):
+        """run() with output_schema returns parsed model directly."""
+        result = client.run(
             "What is 7 * 8? Return the answer and a one-sentence explanation.",
             output_schema=MathResult,
         )
-        try:
-            result = handle.complete(timeout=300, interval=3)
-            assert result.output is not None
-
-            parsed = handle.parse_output(result)
-            assert parsed is not None
-            assert isinstance(parsed, MathResult)
-            assert isinstance(parsed.answer, int)
-            assert isinstance(parsed.explanation, str)
-            assert len(parsed.explanation) > 0
-        except Exception:
-            try:
-                client.tasks.stop(handle.id)
-            except Exception:
-                pass
-            raise
+        assert isinstance(result, MathResult)
+        assert isinstance(result.answer, int)
+        assert isinstance(result.explanation, str)
+        assert len(result.explanation) > 0
 
 
 # ── 5. Streaming ───────────────────────────────────────────────────────────
 
 class TestStreaming:
-    def test_stream_yields_statuses(self, client):
-        handle = client.run("Return the exact text: ping")
-        try:
-            count = 0
-            for status in handle.stream(interval=2):
-                assert str(status.id) == handle.id
-                assert hasattr(status, "status")
-                count += 1
-                if count > 20:
-                    break  # safety valve
-            assert count >= 1
-        except Exception:
-            try:
-                client.tasks.stop(handle.id)
-            except Exception:
-                pass
-            raise
+    def test_stream_yields_steps(self, client):
+        """stream() yields TaskStepView with step-by-step details."""
+        stream = client.stream("Return the exact text: ping")
+        count = 0
+        for step in stream:
+            assert hasattr(step, "number")
+            assert hasattr(step, "next_goal")
+            assert hasattr(step, "url")
+            count += 1
+            if count > 50:
+                break  # safety valve
+        assert count >= 1
+
+        # result should be populated after iteration
+        assert stream.result is not None
 
 
 # ── 6. Session lifecycle ───────────────────────────────────────────────────

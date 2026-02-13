@@ -12,17 +12,16 @@ load_dotenv()
 async def main():
     client = AsyncBrowserUse()
 
-    handle = await client.run(
+    # async for yields TaskStepView steps as they happen
+    run = client.run(
         "Go to wikipedia.org and find the featured article of the day."
     )
 
-    # stream() yields TaskStatusView on each poll
-    async for status in handle.stream(interval=2):
-        print(f"[{status.status}] Output: {status.output or '(running...)'}")
+    async for step in run:
+        print(f"[Step {step.number}] {step.next_goal} -- {step.url}")
 
-    # After the stream ends, get the full result
-    result = await client.tasks.get(handle.id)
-    print(f"\nFinal output: {result.output}")
+    # After iteration completes, .result holds the full TaskView
+    print(f"\nFinal output: {run.result.output}")
 
 
 asyncio.run(main())

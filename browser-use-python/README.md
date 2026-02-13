@@ -24,13 +24,11 @@ poetry add browser-use-sdk
 ## Quick Start
 
 ```python
-from browser_use_sdk import BrowserUse
+from browser_use_sdk import AsyncBrowserUse
 
-client = BrowserUse(api_key="YOUR_API_KEY")
-
-# Run a task and wait for completion
-result = client.run("Go to google.com and search for 'browser use'").complete()
-print(result.output)
+client = AsyncBrowserUse()
+output = await client.run("Go to google.com and search for 'browser use'")
+print(output)
 ```
 
 ## v2 API (default)
@@ -38,50 +36,47 @@ print(result.output)
 The default import gives you the v2 client with access to all resources:
 
 ```python
-from browser_use_sdk import BrowserUse, BrowserUseError
+from browser_use_sdk import AsyncBrowserUse, BrowserUseError
 
-client = BrowserUse(api_key="YOUR_API_KEY")
+client = AsyncBrowserUse()
 
-# Run (shortcut -- returns TaskHandle)
-handle = client.run("Navigate to example.com and get the title")
-result = handle.complete()
+# Run a task — returns output directly
+output = await client.run("Navigate to example.com and get the title")
 
 # Or use the tasks resource directly
-task = client.tasks.create("Navigate to example.com and get the title")
-result = client.tasks.get(str(task.id))
-client.tasks.stop(str(task.id))
+task = await client.tasks.create("Navigate to example.com and get the title")
+result = await client.tasks.get(str(task.id))
+await client.tasks.stop(str(task.id))
 
 # Sessions
-session = client.sessions.create()
-sessions = client.sessions.list(page_size=20)
-client.sessions.stop(str(session.id))
-client.sessions.delete(str(session.id))
+session = await client.sessions.create()
+sessions = await client.sessions.list(page_size=20)
+await client.sessions.stop(str(session.id))
+await client.sessions.delete(str(session.id))
 
 # Profiles
-profile = client.profiles.create(name="my-profile")
-client.profiles.update(str(profile.id), name="renamed")
-client.profiles.delete(str(profile.id))
+profile = await client.profiles.create(name="my-profile")
+await client.profiles.update(str(profile.id), name="renamed")
+await client.profiles.delete(str(profile.id))
 
 # Browsers
-browser = client.browsers.create()
-client.browsers.stop(str(browser.id))
+browser = await client.browsers.create()
+await client.browsers.stop(str(browser.id))
 
 # Billing
-account = client.billing.account()
-print(account.totalCreditsBalanceUsd)
+account = await client.billing.account()
+print(account.total_credits_balance_usd)
 
 # Skills
-skills = client.skills.list()
-client.skills.execute(skill_id, input="some input")
+skills = await client.skills.list()
+await client.skills.execute(skill_id, input="some input")
 
 # Marketplace
-marketplace_skills = client.marketplace.list()
+marketplace_skills = await client.marketplace.list()
 
 # Files
-url_info = client.files.session_url(session_id, file_name="doc.pdf", content_type="application/pdf", size_bytes=1024)
-output = client.files.task_output(task_id, file_id)
-
-client.close()
+url_info = await client.files.session_url(session_id, file_name="doc.pdf", content_type="application/pdf", size_bytes=1024)
+output = await client.files.task_output(task_id, file_id)
 ```
 
 ## Structured Output
@@ -90,19 +85,27 @@ Pass a Pydantic model to get typed results:
 
 ```python
 from pydantic import BaseModel
-from typing import List
-from browser_use_sdk import BrowserUse
-
-client = BrowserUse(api_key="YOUR_API_KEY")
+from browser_use_sdk import AsyncBrowserUse
 
 class Product(BaseModel):
     name: str
     price: float
 
-handle = client.run("Find the price of the MacBook Air", output_schema=Product)
-result = handle.complete()
-product = handle.parse_output(result)  # Product instance, fully typed
-print(f"{product.name}: ${product.price}")
+client = AsyncBrowserUse()
+product = await client.run("Find the price of the MacBook Air", output_schema=Product)
+print(f"{product.name}: ${product.price}")  # Product instance, fully typed
+```
+
+## Streaming
+
+`client.run()` returns a dual-purpose handle: `await` it for the output, or `async for` it for step-by-step progress.
+
+```python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+async for step in client.run("Scrape the front page of HN"):
+    print(f"[{step.number}] {step.next_goal} — {step.url}")
 ```
 
 ## v3 API (experimental)
@@ -110,79 +113,32 @@ print(f"{product.name}: ${product.price}")
 The v3 API uses a simplified session-based model:
 
 ```python
-from browser_use_sdk.v3 import BrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
-client = BrowserUse(api_key="YOUR_API_KEY")
-
-# Run and wait for completion
-result = client.run("Search for Browser Use on Google").complete()
-print(result.output)
+client = AsyncBrowserUse()
+output = await client.run("Search for Browser Use on Google")
+print(output)
 
 # Or use sessions resource directly
-session = client.sessions.create("Search for Browser Use on Google")
-result = client.sessions.get(str(session.id))
-files = client.sessions.files(str(session.id))
-client.sessions.stop(str(session.id))
-
-client.close()
+session = await client.sessions.create("Search for Browser Use on Google")
+result = await client.sessions.get(str(session.id))
+files = await client.sessions.files(str(session.id))
+await client.sessions.stop(str(session.id))
 ```
 
-## Async Usage
+## Sync Usage
 
-Every resource method has an async counterpart:
-
-```python
-import asyncio
-from browser_use_sdk import AsyncBrowserUse
-
-async def main():
-    async with AsyncBrowserUse(api_key="YOUR_API_KEY") as client:
-        handle = await client.run("Go to example.com")
-        result = await handle.complete()
-        print(result.output)
-
-asyncio.run(main())
-```
-
-Both v2 and v3 support context managers:
-
-```python
-async with AsyncBrowserUse(api_key="YOUR_API_KEY") as client:
-    task = await client.tasks.create(task="Go to example.com")
-```
-
-## Polling and Streaming
-
-### TaskHandle (v2)
-
-`client.run()` returns a `TaskHandle` for waiting or streaming:
+A synchronous client is also available:
 
 ```python
 from browser_use_sdk import BrowserUse
 
-client = BrowserUse(api_key="YOUR_API_KEY")
+client = BrowserUse()
+output = client.run("Go to example.com")
 
-# Block until the task reaches a terminal status
-handle = client.run("Scrape the front page of HN")
-result = handle.complete(timeout=300, interval=3)
-print(result.output)
-
-# Or iterate over intermediate states
-handle = client.run("Another task")
-for state in handle.stream(interval=5):
-    print(state.status)
-```
-
-### SessionHandle (v3)
-
-```python
-from browser_use_sdk.v3 import BrowserUse
-
-client = BrowserUse(api_key="YOUR_API_KEY")
-
-handle = client.run("Find the weather in SF")
-result = handle.complete(timeout=120)
-print(result.output)
+# Streaming (sync)
+for step in client.stream("Scrape the front page of HN"):
+    print(f"[{step.number}] {step.next_goal} — {step.url}")
 ```
 
 ## Error Handling
@@ -190,12 +146,11 @@ print(result.output)
 All non-2xx responses raise `BrowserUseError`:
 
 ```python
-from browser_use_sdk import BrowserUse, BrowserUseError
+from browser_use_sdk import AsyncBrowserUse, BrowserUseError
 
-client = BrowserUse(api_key="YOUR_API_KEY")
-
+client = AsyncBrowserUse()
 try:
-    client.tasks.get("nonexistent-id")
+    await client.tasks.get("nonexistent-id")
 except BrowserUseError as e:
     print(e.status_code)  # 404
     print(e.message)      # "Task not found"
@@ -268,7 +223,7 @@ on 429 (rate limit) and 5xx (server error) responses.
 
 ```python
 client = BrowserUse(
-    api_key="YOUR_API_KEY",
+    api_key="bu_...",
     base_url="https://custom-endpoint.example.com/api/v2",  # override base URL
     timeout=60.0,  # request timeout in seconds (default: 30)
 )

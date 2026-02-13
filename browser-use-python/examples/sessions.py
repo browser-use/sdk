@@ -20,20 +20,18 @@ async def main():
     print(f"Watch live: {session.live_url}")
 
     # Run a task in this session
-    handle = await client.run(
+    output1 = await client.run(
         "Go to google.co.uk and search for 'browser automation'",
         session_id=str(session.id),
     )
-    result = await handle.complete()
-    print(f"Task 1: {result.output}")
+    print(f"Task 1: {output1}")
 
     # Run another task in the same session (browser state is preserved)
-    handle2 = await client.run(
+    output2 = await client.run(
         "Click on the first search result and summarize the page",
         session_id=str(session.id),
     )
-    result2 = await handle2.complete()
-    print(f"Task 2: {result2.output}")
+    print(f"Task 2: {output2}")
 
     # Clean up
     await client.sessions.stop(str(session.id))

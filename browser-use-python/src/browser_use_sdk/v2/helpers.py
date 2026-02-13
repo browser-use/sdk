@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import json
-import time
 import asyncio
-from typing import AsyncGenerator, Generator, Generic, TypeVar
+import time
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
-from ..generated.v2.models import TaskCreatedResponse, TaskStatusView, TaskView
+from ..generated.v2.models import TaskCreatedResponse, TaskStepView, TaskView
 from .resources.tasks import AsyncTasks, Tasks
 
 _TERMINAL_STATUSES = {"finished", "stopped", "failed"}
@@ -15,12 +15,62 @@ _TERMINAL_STATUSES = {"finished", "stopped", "failed"}
 T = TypeVar("T")
 
 
-class TaskHandle(Generic[T]):
-    """Wraps a created task and provides polling helpers.
+def _parse_output(output: str | None, output_schema: type[Any] | None) -> Any:
+    """Parse raw output string into the target type."""
+    if output is None:
+        return None
+    if output_schema is not None and issubclass(output_schema, BaseModel):
+        return output_schema.model_validate_json(output)
+    return output
 
-    When created with an ``output_schema`` (a Pydantic BaseModel subclass),
-    :meth:`parse_output` will deserialise the task's ``output`` string into
-    a typed model instance.
+
+def _poll_output(
+    tasks: Tasks,
+    task_id: str,
+    output_schema: type[Any] | None,
+    *,
+    timeout: float = 300,
+    interval: float = 2,
+) -> Any:
+    """Poll lightweight status endpoint until terminal, return parsed output."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        status = tasks.status(task_id)
+        if status.status.value in _TERMINAL_STATUSES:
+            result = tasks.get(task_id)
+            return _parse_output(result.output, output_schema)
+        time.sleep(interval)
+    raise TimeoutError(f"Task {task_id} did not complete within {timeout}s")
+
+
+async def _async_poll_output(
+    tasks: AsyncTasks,
+    task_id: str,
+    output_schema: type[Any] | None,
+    *,
+    timeout: float = 300,
+    interval: float = 2,
+) -> Any:
+    """Poll lightweight status endpoint until terminal, return parsed output."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        status = await tasks.status(task_id)
+        if status.status.value in _TERMINAL_STATUSES:
+            result = await tasks.get(task_id)
+            return _parse_output(result.output, output_schema)
+        await asyncio.sleep(interval)
+    raise TimeoutError(f"Task {task_id} did not complete within {timeout}s")
+
+
+class TaskStream(Generic[T]):
+    """Iterable that polls the full task and yields new steps as they appear.
+
+    After iteration, ``.result`` contains the full ``TaskView``.
+
+    Usage::
+
+        for step in client.stream("Go to google.com"):
+            print(f"[{step.number}] {step.next_goal}")
     """
 
     def __init__(
@@ -28,109 +78,124 @@ class TaskHandle(Generic[T]):
         data: TaskCreatedResponse,
         tasks: Tasks,
         output_schema: type[T] | None = None,
+        *,
+        timeout: float = 300,
+        interval: float = 2,
     ) -> None:
-        self.data = data
+        self.task_id = str(data.id)
         self._tasks = tasks
         self._output_schema = output_schema
+        self._timeout = timeout
+        self._interval = interval
+        self.result: TaskView | None = None
 
     @property
-    def id(self) -> str:
-        return str(self.data.id)
+    def output(self) -> str | None:
+        """Final output (available after iteration completes)."""
+        return self.result.output if self.result else None
 
-    def complete(self, *, timeout: float = 300, interval: float = 2) -> TaskView:
-        """Poll until the task reaches a terminal status, then return the full TaskView.
+    def __iter__(self) -> Iterator[TaskStepView]:
+        seen = 0
+        deadline = time.monotonic() + self._timeout
 
-        Uses the lightweight status endpoint for polling.
-        """
-        deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
-            status = self._tasks.status(self.id)
-            if status.status.value in _TERMINAL_STATUSES:
-                return self._tasks.get(self.id)
-            time.sleep(interval)
-        raise TimeoutError(f"Task {self.id} did not complete within {timeout}s")
+            task = self._tasks.get(self.task_id)
 
-    def stream(self, *, interval: float = 2) -> Generator[TaskStatusView, None, None]:
-        """Yield lightweight task status on each poll until terminal."""
-        while True:
-            status = self._tasks.status(self.id)
-            yield status
-            if status.status.value in _TERMINAL_STATUSES:
+            for i in range(seen, len(task.steps)):
+                yield task.steps[i]
+            seen = len(task.steps)
+
+            if task.status.value in _TERMINAL_STATUSES:
+                self.result = task
                 return
-            time.sleep(interval)
 
-    def parse_output(self, result: TaskView) -> T | None:
-        """Parse the task's output string using the structured output schema.
+            time.sleep(self._interval)
 
-        Returns ``None`` if the task has no output. If no ``output_schema``
-        was provided, returns the raw output string.
-
-        Args:
-            result: A TaskView (from complete() or tasks.get()).
-
-        Returns:
-            Parsed model instance, raw string, or None.
-        """
-        if result.output is None:
-            return None
-        if self._output_schema is not None and issubclass(self._output_schema, BaseModel):
-            return self._output_schema.model_validate_json(result.output)  # type: ignore[return-value]
-        return result.output  # type: ignore[return-value]
+        raise TimeoutError(
+            f"Task {self.task_id} did not complete within {self._timeout}s"
+        )
 
 
-class AsyncTaskHandle(Generic[T]):
-    """Async variant of TaskHandle."""
+class AsyncTaskRun(Generic[T]):
+    """Lazy async task handle returned by ``client.run()``.
+
+    - ``await client.run(...)`` polls the lightweight status endpoint, returns the output.
+    - ``async for step in client.run(...)`` polls the full task, yields new steps.
+
+    Usage::
+
+        # Simple
+        output = await client.run("Find the top HN post")
+
+        # Step-by-step
+        async for step in client.run("Go to google.com"):
+            print(f"[{step.number}] {step.next_goal}")
+    """
 
     def __init__(
         self,
-        data: TaskCreatedResponse,
+        create_fn: Callable[[], Awaitable[TaskCreatedResponse]],
         tasks: AsyncTasks,
         output_schema: type[T] | None = None,
+        *,
+        timeout: float = 300,
+        interval: float = 2,
     ) -> None:
-        self.data = data
+        self._create_fn = create_fn
         self._tasks = tasks
         self._output_schema = output_schema
+        self._timeout = timeout
+        self._interval = interval
+        self._task_id: str | None = None
+        self.result: TaskView | None = None
 
     @property
-    def id(self) -> str:
-        return str(self.data.id)
+    def task_id(self) -> str | None:
+        """Task ID (available after creation resolves)."""
+        return self._task_id
 
-    async def complete(self, *, timeout: float = 300, interval: float = 2) -> TaskView:
-        """Poll until the task reaches a terminal status, then return the full TaskView.
+    @property
+    def output(self) -> str | None:
+        """Final output (available after awaiting or iterating to completion)."""
+        return self.result.output if self.result else None
 
-        Uses the lightweight status endpoint for polling.
-        """
-        deadline = time.monotonic() + timeout
+    async def _ensure_task_id(self) -> str:
+        if self._task_id is None:
+            data: TaskCreatedResponse = await self._create_fn()
+            self._task_id = str(data.id)
+        return self._task_id
+
+    def __await__(self):  # type: ignore[override]
+        return self._wait_for_output().__await__()
+
+    async def _wait_for_output(self) -> T:
+        task_id = await self._ensure_task_id()
+        return await _async_poll_output(
+            self._tasks,
+            task_id,
+            self._output_schema,
+            timeout=self._timeout,
+            interval=self._interval,
+        )
+
+    async def __aiter__(self) -> AsyncIterator[TaskStepView]:
+        task_id = await self._ensure_task_id()
+        seen = 0
+        deadline = time.monotonic() + self._timeout
+
         while time.monotonic() < deadline:
-            status = await self._tasks.status(self.id)
-            if status.status.value in _TERMINAL_STATUSES:
-                return await self._tasks.get(self.id)
-            await asyncio.sleep(interval)
-        raise TimeoutError(f"Task {self.id} did not complete within {timeout}s")
+            task = await self._tasks.get(task_id)
 
-    async def stream(self, *, interval: float = 2) -> AsyncGenerator[TaskStatusView, None]:
-        """Yield lightweight task status on each poll until terminal."""
-        while True:
-            status = await self._tasks.status(self.id)
-            yield status
-            if status.status.value in _TERMINAL_STATUSES:
+            for i in range(seen, len(task.steps)):
+                yield task.steps[i]
+            seen = len(task.steps)
+
+            if task.status.value in _TERMINAL_STATUSES:
+                self.result = task
                 return
-            await asyncio.sleep(interval)
 
-    def parse_output(self, result: TaskView) -> T | None:
-        """Parse the task's output string using the structured output schema.
+            await asyncio.sleep(self._interval)
 
-        Returns ``None`` if the task has no output. If no ``output_schema``
-        was provided, returns the raw output string.
-
-        Args:
-            result: A TaskView (from complete() or tasks.get()).
-
-        Returns:
-            Parsed model instance, raw string, or None.
-        """
-        if result.output is None:
-            return None
-        if self._output_schema is not None and issubclass(self._output_schema, BaseModel):
-            return self._output_schema.model_validate_json(result.output)  # type: ignore[return-value]
-        return result.output  # type: ignore[return-value]
+        raise TimeoutError(
+            f"Task {task_id} did not complete within {self._timeout}s"
+        )

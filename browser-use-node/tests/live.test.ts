@@ -330,58 +330,73 @@ await test("v3 sessions.list()", async () => {
   assert(Array.isArray(list.sessions), "sessions should be an array");
 });
 
-// ── TaskHandle ──────────────────────────────────────────────────────────────
+// ── TaskRun ─────────────────────────────────────────────────────────────────
 
 console.log("\n=== Helper Tests ===\n");
 
-await test("v2 client.run() returns TaskHandle with correct API", async () => {
-  const handle = v2.run({ task: "Go to google.com" });
-  assert(handle !== undefined, "No handle returned");
-  assert(typeof handle.complete === "function", "handle.complete should be a function");
-  assert(typeof handle.stream === "function", "handle.stream should be a function");
-  assert(typeof handle.created === "function", "handle.created should be a function");
+await test("v2 client.run() returns TaskRun that is PromiseLike and AsyncIterable", async () => {
+  const run = v2.run("Go to google.com");
+  assert(run !== undefined, "No run returned");
+  assert(typeof run.then === "function", "run should be PromiseLike (has .then)");
+  assert(typeof run[Symbol.asyncIterator] === "function", "run should be AsyncIterable");
+  assert(run.taskId === null, "taskId should be null before creation resolves");
 
-  // Verify created() returns a task
-  const created = await handle.created();
-  assert(created.id !== undefined, "created() should return an object with an id");
-
-  // Stop the task to clean up
-  try { await v2.tasks.stop(created.id); } catch { /* might already be done */ }
+  // Let the task create, then get the taskId
+  // We need to trigger the creation by starting iteration or awaiting
+  // Stop the task to clean up — first wait briefly for creation
+  await new Promise((r) => setTimeout(r, 2000));
+  if (run.taskId) {
+    try { await v2.tasks.stop(run.taskId); } catch { /* might already be done */ }
+  }
 });
 
-await test("v2 TaskHandle.complete() polls to terminal state", async () => {
-  const handle = v2.run({ task: "Go to google.com" });
-  const created = await handle.created();
+await test("v2 await client.run() returns output string", async () => {
+  const run = v2.run("Go to google.com and return the page title", { timeout: 120_000 });
 
-  // Stop it immediately
-  await v2.tasks.stop(created.id);
+  // Stop the task immediately after creation resolves
+  await new Promise((r) => setTimeout(r, 2000));
+  if (run.taskId) {
+    await v2.tasks.stop(run.taskId);
+  }
 
-  // Now complete() should resolve quickly since task is stopped
-  const result = await handle.complete({ timeout: 30_000, interval: 500 });
-  assert(result.id === created.id, "Wrong task returned");
+  // await resolves to the output string (or null if stopped before output)
+  const output = await run;
+  assert(output === null || typeof output === "string", `Expected string or null, got ${typeof output}`);
+
+  // After resolution, .result should have the full TaskView
+  assert(run.result !== null, "result should be populated after await");
   assert(
-    result.status === "stopped" || result.status === "finished" || result.status === "failed",
-    `Expected terminal status, got: ${result.status}`,
+    run.result!.status === "stopped" || run.result!.status === "finished" || run.result!.status === "failed",
+    `Expected terminal status, got: ${run.result!.status}`,
   );
 });
 
-await test("v2 TaskHandle.stream() yields intermediate states", async () => {
-  const handle = v2.run({ task: "Go to google.com" });
-  const created = await handle.created();
+await test("v2 for-await client.run() yields TaskStepView objects", async () => {
+  const run = v2.run("Go to google.com", { timeout: 30_000, interval: 500 });
 
-  // Stop it quickly
+  // Stop it soon so the test finishes quickly
   setTimeout(async () => {
-    try { await v2.tasks.stop(created.id); } catch { /* ignore */ }
-  }, 1000);
+    if (run.taskId) {
+      try { await v2.tasks.stop(run.taskId); } catch { /* ignore */ }
+    }
+  }, 3000);
 
   let count = 0;
-  for await (const state of handle.stream({ interval: 500 })) {
+  for await (const step of run) {
     count++;
-    assert(state.id === created.id, "Wrong task in stream");
+    assert(typeof step.number === "number", "step.number should be a number");
+    assert(typeof step.nextGoal === "string", "step.nextGoal should be a string");
+    assert(typeof step.url === "string", "step.url should be a string");
+    assert(Array.isArray(step.actions), "step.actions should be an array");
     if (count > 10) break; // safety valve
   }
-  // Stream might yield 0 states if task stopped immediately
-  assert(count >= 0, "Stream should have yielded states");
+  // Iteration may yield 0 steps if task stopped immediately
+  assert(count >= 0, "Iteration should not throw");
+
+  // After iteration, .result should be populated (if task reached terminal state)
+  if (count > 0 && run.result) {
+    assert(typeof run.result.id === "string", "result.id should be a string");
+  }
 });
 
 // ── Summary ─────────────────────────────────────────────────────────────────

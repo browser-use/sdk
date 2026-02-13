@@ -215,37 +215,61 @@ class TestV2Errors:
         assert err.detail is not None
 
 
-# ── V2 Run + TaskHandle ──────────────────────────────────────────────────────
+# ── V2 Run + Stream ─────────────────────────────────────────────────────────
 
-class TestV2TaskHandle:
-    def test_run_returns_handle(self, v2):
-        handle = v2.run("Go to google.com")
-        assert handle is not None
-        assert handle.id is not None
-        assert hasattr(handle, "complete")
-        assert hasattr(handle, "stream")
-        # Clean up
-        try:
-            v2.tasks.stop(handle.id)
-        except Exception:
+class TestV2Run:
+    def test_run_returns_output_string(self, v2):
+        """client.run() blocks and returns the output string directly."""
+        # Create a task, stop it immediately so we get a quick result
+        task = v2.tasks.create("Go to google.com")
+        tid = str(task.id)
+        v2.tasks.stop(tid)
+        time.sleep(1)
+
+        # run() should block and return a string (or None if stopped before output)
+        output = v2.run("Go to google.com", max_steps=1)
+        assert output is None or isinstance(output, str)
+
+    def test_stream_yields_steps(self, v2):
+        """client.stream() returns iterable of TaskStepView objects."""
+        stream = v2.stream("Go to google.com")
+        assert stream is not None
+        assert hasattr(stream, "task_id")
+        assert stream.task_id is not None
+
+        # Stop the task quickly so the test finishes
+        v2.tasks.stop(stream.task_id)
+        time.sleep(0.5)
+
+        steps = list(stream)
+        # May yield 0 steps if task stopped before any steps executed
+        for step in steps:
+            assert hasattr(step, "number")
+            assert isinstance(step.number, int)
+            assert hasattr(step, "next_goal")
+            assert isinstance(step.next_goal, str)
+            assert hasattr(step, "url")
+            assert isinstance(step.url, str)
+            assert hasattr(step, "actions")
+            assert isinstance(step.actions, list)
+
+        # After iteration, stream.result should be populated
+        if steps:
+            assert stream.result is not None
+            assert hasattr(stream.result, "id")
+
+    def test_stream_exposes_result_after_iteration(self, v2):
+        """After iterating a stream, .result contains the full TaskView."""
+        stream = v2.stream("Go to google.com")
+        v2.tasks.stop(stream.task_id)
+        time.sleep(0.5)
+
+        # Consume the stream
+        for _ in stream:
             pass
 
-    def test_complete_polls(self, v2):
-        handle = v2.run("Go to google.com")
-        # Stop immediately
-        v2.tasks.stop(handle.id)
-        result = handle.complete(timeout=30, interval=0.5)
-        assert str(result.id) == handle.id
-        assert result.status in ("stopped", "finished")
-
-    def test_stream_yields(self, v2):
-        handle = v2.run("Go to google.com")
-        # Stop soon
-        v2.tasks.stop(handle.id)
-        time.sleep(0.5)
-        states = list(handle.stream(interval=0.5))
-        assert len(states) >= 1
-        assert str(states[-1].id) == handle.id
+        assert stream.result is not None
+        assert stream.result.status.value in ("stopped", "finished", "failed")
 
 
 # ── V3 Tests ─────────────────────────────────────────────────────────────────

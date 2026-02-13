@@ -1,10 +1,10 @@
 export { BrowserUse } from "./v2/client.js";
-export type { BrowserUseOptions } from "./v2/client.js";
+export type { BrowserUseOptions, RunTaskOptions } from "./v2/client.js";
 
 export { BrowserUseError } from "./core/errors.js";
 
-export { TaskHandle } from "./v2/helpers.js";
-export type { PollOptions } from "./v2/helpers.js";
+export { TaskRun } from "./v2/helpers.js";
+export type { RunOptions } from "./v2/helpers.js";
 
 export { Billing } from "./v2/resources/billing.js";
 export { Tasks } from "./v2/resources/tasks.js";

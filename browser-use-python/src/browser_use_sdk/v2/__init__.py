@@ -1,4 +1,4 @@
 from .client import AsyncBrowserUse, BrowserUse
-from .helpers import AsyncTaskHandle, TaskHandle
+from .helpers import AsyncTaskRun, TaskStream
 
-__all__ = ["BrowserUse", "AsyncBrowserUse", "TaskHandle", "AsyncTaskHandle"]
+__all__ = ["BrowserUse", "AsyncBrowserUse", "TaskStream", "AsyncTaskRun"]

@@ -6,7 +6,7 @@ import { BrowserUse } from "browser-use-sdk";
 import { z } from "zod";
 
 async function main() {
-  const client = new BrowserUse({ apiKey: process.env.BROWSER_USE_API_KEY! });
+  const client = new BrowserUse();
 
   // Define your output schema with Zod
   const HackerNewsResult = z.object({
@@ -20,16 +20,14 @@ async function main() {
   });
 
   // Pass the schema — JSON Schema conversion and parsing happen automatically
-  const handle = client.run({
-    task: "Find the top 10 Hacker News posts. Return title, url, and score for each.",
-    schema: HackerNewsResult,
-  });
+  const parsed = await client.run(
+    "Find the top 10 Hacker News posts. Return title, url, and score for each.",
+    { schema: HackerNewsResult },
+  );
 
-  const result = await handle.complete();
-
-  // result.parsed is fully typed: { posts: { title: string, url: string, score: number }[] } | null
-  if (result.parsed) {
-    for (const post of result.parsed.posts) {
+  // parsed is fully typed: { posts: { title: string, url: string, score: number }[] }
+  if (parsed) {
+    for (const post of parsed.posts) {
       console.log(`${post.score} - ${post.title}`);
       console.log(`  ${post.url}\n`);
     }

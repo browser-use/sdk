@@ -8,17 +8,21 @@ import { Profiles } from "./resources/profiles.js";
 import { Sessions } from "./resources/sessions.js";
 import { Skills } from "./resources/skills.js";
 import { Tasks } from "./resources/tasks.js";
-import { TaskHandle } from "./helpers.js";
+import { TaskRun } from "./helpers.js";
 import type { CreateTaskBody } from "./resources/tasks.js";
+import type { RunOptions } from "./helpers.js";
 
 const DEFAULT_BASE_URL = "https://api.browser-use.com/api/v2";
 
 export interface BrowserUseOptions {
-  apiKey: string;
+  apiKey?: string;
   baseUrl?: string;
   maxRetries?: number;
   timeout?: number;
 }
+
+export type RunTaskOptions = Partial<Omit<CreateTaskBody, "task">> &
+  RunOptions & { schema?: z.ZodType };
 
 export class BrowserUse {
   readonly billing: Billing;
@@ -32,9 +36,16 @@ export class BrowserUse {
 
   private readonly http: HttpClient;
 
-  constructor(options: BrowserUseOptions) {
+  constructor(options: BrowserUseOptions = {}) {
+    const apiKey =
+      options.apiKey ?? process.env.BROWSER_USE_API_KEY ?? "";
+    if (!apiKey) {
+      throw new Error(
+        "No API key provided. Pass apiKey or set BROWSER_USE_API_KEY.",
+      );
+    }
     this.http = new HttpClient({
-      apiKey: options.apiKey,
+      apiKey,
       baseUrl: options.baseUrl ?? DEFAULT_BASE_URL,
       maxRetries: options.maxRetries,
       timeout: options.timeout,
@@ -51,34 +62,30 @@ export class BrowserUse {
   }
 
   /**
-   * Create a task and return a TaskHandle for polling/streaming.
-   *
-   * Pass a Zod `schema` to get auto-parsed typed output from `complete()`.
-   * The schema is automatically converted to JSON Schema for the API and
-   * used for client-side validation of the response.
+   * Run an AI agent task.
    *
    * ```ts
-   * // Without structured output
-   * const handle = client.run({ task: "Find the top HN post" });
-   * const result = await handle.complete();
-   * console.log(result.output); // string | null
+   * // Simple — just get the output
+   * const output = await client.run("Find the top HN post");
    *
-   * // With structured output (Zod)
-   * import { z } from "zod";
-   * const Product = z.object({ name: z.string(), price: z.number() });
-   * const handle = client.run({ task: "Find product info", schema: Product });
-   * const result = await handle.complete();
-   * console.log(result.parsed); // { name: string, price: number } | null
+   * // Structured output (Zod)
+   * const data = await client.run("Find product info", { schema: ProductSchema });
+   *
+   * // Step-by-step progress
+   * for await (const step of client.run("Go to google.com")) {
+   *   console.log(`[${step.number}] ${step.nextGoal}`);
+   * }
    * ```
    */
-  run(body: CreateTaskBody): TaskHandle<string>;
-  run<T extends z.ZodType>(body: CreateTaskBody & { schema: T }): TaskHandle<z.output<T>>;
-  run(body: CreateTaskBody & { schema?: z.ZodType }): TaskHandle<any> {
-    const { schema, ...rest } = body;
+  run(task: string, options?: Omit<RunTaskOptions, "schema">): TaskRun<string>;
+  run<T extends z.ZodType>(task: string, options: RunTaskOptions & { schema: T }): TaskRun<z.output<T>>;
+  run(task: string, options?: RunTaskOptions): TaskRun<any> {
+    const { schema, timeout, interval, ...rest } = options ?? {};
+    const body: CreateTaskBody = { task, ...rest };
     if (schema) {
-      rest.structuredOutput = JSON.stringify(z.toJSONSchema(schema));
+      body.structuredOutput = JSON.stringify(z.toJSONSchema(schema));
     }
-    const promise = this.tasks.create(rest);
-    return new TaskHandle(promise, this.tasks, schema);
+    const promise = this.tasks.create(body);
+    return new TaskRun(promise, this.tasks, schema, { timeout, interval });
   }
 }

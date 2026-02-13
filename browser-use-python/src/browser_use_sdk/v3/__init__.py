@@ -1,5 +1,5 @@
 from .client import AsyncBrowserUse, BrowserUse
-from .helpers import AsyncSessionHandle, SessionHandle
+from .helpers import AsyncSessionRun
 
 from ..generated.v3.models import (
     FileInfo,
@@ -12,8 +12,7 @@ __all__ = [
     # Client
     "BrowserUse",
     "AsyncBrowserUse",
-    "SessionHandle",
-    "AsyncSessionHandle",
+    "AsyncSessionRun",
     # Response models
     "FileInfo",
     "FileListResponse",

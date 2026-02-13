@@ -7,7 +7,7 @@ import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 
 async function main() {
-  const client = new BrowserUse({ apiKey: process.env.BROWSER_USE_API_KEY! });
+  const client = new BrowserUse();
 
   // Create a session with a UK proxy
   const session = await client.sessions.create({
@@ -17,20 +17,18 @@ async function main() {
   console.log(`Watch live: ${session.liveUrl}`);
 
   // Run a task in this session
-  const handle = client.run({
-    task: "Go to google.co.uk and search for 'browser automation'",
-    sessionId: session.id,
-  });
-  const result = await handle.complete();
-  console.log("Task 1:", result.output);
+  const output1 = await client.run(
+    "Go to google.co.uk and search for 'browser automation'",
+    { sessionId: session.id },
+  );
+  console.log("Task 1:", output1);
 
   // Run another task in the same session (browser state is preserved)
-  const handle2 = client.run({
-    task: "Click on the first search result and summarize the page",
-    sessionId: session.id,
-  });
-  const result2 = await handle2.complete();
-  console.log("Task 2:", result2.output);
+  const output2 = await client.run(
+    "Click on the first search result and summarize the page",
+    { sessionId: session.id },
+  );
+  console.log("Task 2:", output2);
 
   // Clean up
   await client.sessions.stop(session.id);

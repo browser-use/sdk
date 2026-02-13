@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Awaitable
 from typing import Any
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
 from .resources.sessions import AsyncSessions, Sessions
-from .helpers import AsyncSessionHandle, SessionHandle
+from .helpers import AsyncSessionRun, _poll_output
+from ..generated.v3.models import SessionResponse
 
 _V3_BASE_URL = "https://api.browser-use.com/api/v3"
 
@@ -42,14 +44,8 @@ class BrowserUse:
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
         **extra: Any,
-    ) -> SessionHandle:
-        """Create a session and return a SessionHandle for polling/streaming.
-
-        Example::
-
-            handle = client.run("Find the top HN post")
-            result = handle.complete()
-        """
+    ) -> str | None:
+        """Run a task and block until complete. Returns the output string."""
         data = self.sessions.create(
             task,
             model=model,
@@ -59,9 +55,10 @@ class BrowserUse:
             proxy_country_code=proxy_country_code,
             **extra,
         )
-        return SessionHandle(data, self.sessions)
+        return _poll_output(self.sessions, str(data.id))
 
     def close(self) -> None:
+        """Close the underlying HTTP client."""
         self._http.close()
 
     def __enter__(self) -> BrowserUse:
@@ -93,7 +90,7 @@ class AsyncBrowserUse:
         )
         self.sessions = AsyncSessions(self._http)
 
-    async def run(
+    def run(
         self,
         task: str,
         *,
@@ -103,30 +100,21 @@ class AsyncBrowserUse:
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
         **extra: Any,
-    ) -> AsyncSessionHandle:
-        """Create a session and return an AsyncSessionHandle for polling/streaming.
+    ) -> AsyncSessionRun:
+        """Run a task. Await the result for the output string."""
+        def create_fn() -> Awaitable[SessionResponse]:
+            return self.sessions.create(
+                task,
+                model=model,
+                keep_alive=keep_alive,
+                max_cost_usd=max_cost_usd,
+                profile_id=profile_id,
+                proxy_country_code=proxy_country_code,
+                **extra,
+            )
 
-        Example::
-
-            handle = await client.run("Find the top HN post")
-            result = await handle.complete()
-        """
-        data = await self.sessions.create(
-            task,
-            model=model,
-            keep_alive=keep_alive,
-            max_cost_usd=max_cost_usd,
-            profile_id=profile_id,
-            proxy_country_code=proxy_country_code,
-            **extra,
-        )
-        return AsyncSessionHandle(data, self.sessions)
+        return AsyncSessionRun(create_fn, self.sessions)
 
     async def close(self) -> None:
+        """Close the underlying HTTP client."""
         await self._http.close()
-
-    async def __aenter__(self) -> AsyncBrowserUse:
-        return self
-
-    async def __aexit__(self, *args: object) -> None:
-        await self.close()

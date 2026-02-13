@@ -3,89 +3,123 @@ import type { components } from "../generated/v2/types.js";
 import type { Tasks } from "./resources/tasks.js";
 
 type TaskCreatedResponse = components["schemas"]["TaskCreatedResponse"];
-type TaskStatusView = components["schemas"]["TaskStatusView"];
+type TaskStepView = components["schemas"]["TaskStepView"];
 type TaskView = components["schemas"]["TaskView"];
 
 const TERMINAL_STATUSES = new Set(["finished", "stopped", "failed"]);
 
-export interface PollOptions {
+export interface RunOptions {
   /** Maximum time to wait in milliseconds. Default: 300_000 (5 min). */
   timeout?: number;
   /** Polling interval in milliseconds. Default: 2_000. */
   interval?: number;
 }
 
-export class TaskHandle<T = string> {
-  private readonly createPromise: Promise<TaskCreatedResponse>;
-  private readonly tasks: Tasks;
-  private readonly schema?: z.ZodType<T>;
+/**
+ * Lazy task handle returned by `client.run()`.
+ *
+ * - `await client.run(...)` polls the lightweight status endpoint, returns the output.
+ * - `for await (const step of client.run(...))` polls the full task, yields new steps.
+ */
+export class TaskRun<T = string> implements PromiseLike<T> {
+  private readonly _createPromise: Promise<TaskCreatedResponse>;
+  private readonly _tasks: Tasks;
+  private readonly _schema?: z.ZodType<T>;
+  private readonly _timeout: number;
+  private readonly _interval: number;
+
+  private _taskId: string | null = null;
+  private _result: TaskView | null = null;
 
   constructor(
     createPromise: Promise<TaskCreatedResponse>,
     tasks: Tasks,
     schema?: z.ZodType<T>,
+    options?: RunOptions,
   ) {
-    this.createPromise = createPromise;
-    this.tasks = tasks;
-    this.schema = schema;
+    this._createPromise = createPromise;
+    this._tasks = tasks;
+    this._schema = schema;
+    this._timeout = options?.timeout ?? 300_000;
+    this._interval = options?.interval ?? 2_000;
   }
 
-  /** Get the raw creation response. */
-  async created(): Promise<TaskCreatedResponse> {
-    return this.createPromise;
+  /** Task ID (available after creation resolves). */
+  get taskId(): string | null {
+    return this._taskId;
   }
 
-  /**
-   * Poll until the task reaches a terminal status and return the final TaskView.
-   * When a Zod schema was provided, the result includes a `parsed` property
-   * with the validated output (or null if parsing fails or there is no output).
-   */
-  async complete(opts?: PollOptions): Promise<TaskView & { parsed: T | null }> {
-    const timeout = opts?.timeout ?? 300_000;
-    const interval = opts?.interval ?? 2_000;
-    const created = await this.createPromise;
-    const taskId = created.id;
-    const deadline = Date.now() + timeout;
+  /** Full task result (available after awaiting or iterating to completion). */
+  get result(): TaskView | null {
+    return this._result;
+  }
+
+  /** Enable `await client.run(...)` — polls status endpoint, returns output. */
+  then<R1 = T, R2 = never>(
+    onFulfilled?: ((value: T) => R1 | PromiseLike<R1>) | null,
+    onRejected?: ((reason: unknown) => R2 | PromiseLike<R2>) | null,
+  ): Promise<R1 | R2> {
+    return this._waitForOutput().then(onFulfilled, onRejected);
+  }
+
+  /** Enable `for await (const step of client.run(...))` — polls full task, yields new steps. */
+  async *[Symbol.asyncIterator](): AsyncGenerator<TaskStepView> {
+    const taskId = await this._ensureTaskId();
+    let seen = 0;
+    const deadline = Date.now() + this._timeout;
 
     while (Date.now() < deadline) {
-      const status = await this.tasks.status(taskId);
+      const task = await this._tasks.get(taskId);
+
+      for (let i = seen; i < task.steps.length; i++) {
+        yield task.steps[i];
+      }
+      seen = task.steps.length;
+
+      if (TERMINAL_STATUSES.has(task.status)) {
+        this._result = task;
+        return;
+      }
+
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      await new Promise((r) => setTimeout(r, Math.min(this._interval, remaining)));
+    }
+
+    throw new Error(`Task ${taskId} did not complete within ${this._timeout}ms`);
+  }
+
+  private async _ensureTaskId(): Promise<string> {
+    if (this._taskId) return this._taskId;
+    const created = await this._createPromise;
+    this._taskId = created.id;
+    return this._taskId;
+  }
+
+  /** Poll lightweight status endpoint until terminal, return parsed output. */
+  private async _waitForOutput(): Promise<T> {
+    const taskId = await this._ensureTaskId();
+    const deadline = Date.now() + this._timeout;
+
+    while (Date.now() < deadline) {
+      const status = await this._tasks.status(taskId);
       if (TERMINAL_STATUSES.has(status.status)) {
-        const task = await this.tasks.get(taskId);
-        return Object.assign(task, { parsed: this._parse(task.output) });
+        this._result = await this._tasks.get(taskId);
+        return this._parseOutput(this._result.output);
       }
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
-      await new Promise((resolve) => setTimeout(resolve, Math.min(interval, remaining)));
+      await new Promise((r) => setTimeout(r, Math.min(this._interval, remaining)));
     }
 
-    throw new Error(`Task ${taskId} did not complete within ${timeout}ms`);
+    throw new Error(`Task ${taskId} did not complete within ${this._timeout}ms`);
   }
 
-  /**
-   * Yield lightweight task status on each poll until it reaches a terminal status.
-   */
-  async *stream(opts?: Pick<PollOptions, "interval">): AsyncGenerator<TaskStatusView, TaskView & { parsed: T | null }> {
-    const interval = opts?.interval ?? 2_000;
-    const created = await this.createPromise;
-    const taskId = created.id;
-
-    while (true) {
-      const status = await this.tasks.status(taskId);
-      if (TERMINAL_STATUSES.has(status.status)) {
-        const task = await this.tasks.get(taskId);
-        return Object.assign(task, { parsed: this._parse(task.output) });
-      }
-      yield status;
-      await new Promise((resolve) => setTimeout(resolve, interval));
-    }
-  }
-
-  /** @internal Parse raw output using the Zod schema (if provided). */
-  private _parse(output: string | null | undefined): T | null {
-    if (output == null) return null;
-    if (!this.schema) return output as unknown as T;
-    const result = this.schema.safeParse(JSON.parse(output));
-    if (!result.success) return null;
+  private _parseOutput(output: string | null | undefined): T {
+    if (output == null) return null as T;
+    if (!this._schema) return output as unknown as T;
+    const result = this._schema.safeParse(JSON.parse(output));
+    if (!result.success) return null as T;
     return result.data;
   }
 }

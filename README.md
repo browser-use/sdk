@@ -26,8 +26,8 @@ npm install browser-use-sdk
 ```typescript
 import { BrowserUse } from "browser-use-sdk";
 
-const client = new BrowserUse({ apiKey: "bu_..." });
-const result = await client.run({ task: "Go to google.com" }).complete();
+const client = new BrowserUse();
+const output = await client.run("Go to google.com");
 ```
 
 ### Python
@@ -37,11 +37,13 @@ pip install browser-use-sdk
 ```
 
 ```python
-from browser_use_sdk import BrowserUse
+from browser_use_sdk import AsyncBrowserUse
 
-client = BrowserUse(api_key="bu_...")
-result = client.run("Go to google.com").complete()
+client = AsyncBrowserUse()
+output = await client.run("Go to google.com")
 ```
+
+
 
 ## V3 (Experimental)
 

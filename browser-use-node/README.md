@@ -21,11 +21,11 @@ The default import exposes the **v2** API client.
 ```ts
 import { BrowserUse } from "browser-use-sdk";
 
-const client = new BrowserUse({ apiKey: process.env.BROWSER_USE_API_KEY! });
+const client = new BrowserUse();
 
-// Run a task and wait for completion
-const result = await client.run({ task: "Find the top post on Hacker News" }).complete();
-console.log(result.output);
+// Run a task and get the output
+const output = await client.run("Find the top post on Hacker News");
+console.log(output);
 ```
 
 ## V3 (Experimental)
@@ -35,41 +35,51 @@ The v3 API uses a unified session model. Import from `browser-use-sdk/v3`:
 ```ts
 import { BrowserUse } from "browser-use-sdk/v3";
 
-const client = new BrowserUse({ apiKey: process.env.BROWSER_USE_API_KEY! });
+const client = new BrowserUse();
 
-const result = await client.run({ task: "Find the top post on HN" }).complete();
-console.log(result.output);
+const output = await client.run("Find the top post on HN");
+console.log(output);
 ```
 
 ## Client Options
 
 ```ts
 const client = new BrowserUse({
-  apiKey: "bu_...",           // Required
+  apiKey: "bu_...",           // Or set BROWSER_USE_API_KEY env var
   baseUrl: "https://...",     // Override API base URL
   maxRetries: 3,              // Retry on 429/5xx (default: 3)
   timeout: 30_000,            // Request timeout in ms (default: 30s)
 });
 ```
 
-## Polling and Streaming
+## Structured Output
 
-Both `client.run()` (v2) and `client.run()` (v3) return a handle with two patterns:
-
-### Wait for Completion
+Pass a Zod schema to get typed results:
 
 ```ts
-const handle = client.run({ task: "Search for AI news" });
-const result = await handle.complete({ timeout: 120_000, interval: 3_000 });
+import { z } from "zod";
+
+const Product = z.object({ name: z.string(), price: z.number() });
+
+const product = await client.run("Find the price of the MacBook Air", { schema: Product });
+console.log(`${product.name}: $${product.price}`); // fully typed
 ```
 
-### Stream Progress
+## Polling and Streaming
+
+`client.run()` returns a dual-purpose handle: `await` it for the output, or `for await...of` it for step-by-step progress.
+
+### Wait for Output
 
 ```ts
-const handle = client.run({ task: "Search for AI news" });
+const output = await client.run("Search for AI news");
+```
 
-for await (const state of handle.stream({ interval: 2_000 })) {
-  console.log(`Status: ${state.status}`);
+### Stream Steps
+
+```ts
+for await (const step of client.run("Search for AI news")) {
+  console.log(`[${step.number}] ${step.nextGoal} — ${step.url}`);
 }
 ```
 

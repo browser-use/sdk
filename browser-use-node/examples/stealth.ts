@@ -8,25 +8,23 @@ import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 
 async function main() {
-  const client = new BrowserUse({ apiKey: process.env.BROWSER_USE_API_KEY! });
+  const client = new BrowserUse();
 
   // Auto-session (US proxy by default)
-  const usTask = client.run({
-    task: "Go to whatismyipaddress.com and tell me my location",
-  });
-  const usResult = await usTask.complete();
-  console.log("US proxy:", usResult.output);
+  const usOutput = await client.run(
+    "Go to whatismyipaddress.com and tell me my location",
+  );
+  console.log("US proxy:", usOutput);
 
   // Custom proxy — Germany
   const deSession = await client.sessions.create({
     proxyCountryCode: "de",
   });
-  const deTask = client.run({
-    task: "Go to whatismyipaddress.com and tell me my location",
-    sessionId: deSession.id,
-  });
-  const deResult = await deTask.complete();
-  console.log("DE proxy:", deResult.output);
+  const deOutput = await client.run(
+    "Go to whatismyipaddress.com and tell me my location",
+    { sessionId: deSession.id },
+  );
+  console.log("DE proxy:", deOutput);
 
   await client.sessions.stop(deSession.id);
 }

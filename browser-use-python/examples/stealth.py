@@ -17,19 +17,17 @@ async def main():
     client = AsyncBrowserUse()
 
     # Auto-session (US proxy by default)
-    us_handle = await client.run("Go to whatismyipaddress.com and tell me my location")
-    us_result = await us_handle.complete()
-    print(f"US proxy: {us_result.output}")
+    us_output = await client.run("Go to whatismyipaddress.com and tell me my location")
+    print(f"US proxy: {us_output}")
 
     # Custom proxy -- Germany
     de_session = await client.sessions.create(proxy_country_code="de")
-    de_handle = await client.run(
+    de_output = await client.run(
         "Go to whatismyipaddress.com and tell me my location",
         session_id=str(de_session.id),
         keep_alive=False,
     )
-    de_result = await de_handle.complete()
-    print(f"DE proxy: {de_result.output}")
+    print(f"DE proxy: {de_output}")
 
     await client.sessions.stop(str(de_session.id))
 

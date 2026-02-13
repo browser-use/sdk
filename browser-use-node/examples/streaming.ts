@@ -5,21 +5,22 @@ import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 
 async function main() {
-  const client = new BrowserUse({ apiKey: process.env.BROWSER_USE_API_KEY! });
+  const client = new BrowserUse();
 
-  const handle = client.run({
-    task: "Go to wikipedia.org and find the featured article of the day.",
-  });
-
-  // stream() yields TaskStatusView on each poll
-  for await (const status of handle.stream({ interval: 2_000 })) {
-    console.log(`[${status.status}] Step output:`, status.output ?? "(running...)");
+  // for-await iterates TaskStepView objects as the task progresses
+  for await (const step of client.run(
+    "Go to wikipedia.org and find the featured article of the day.",
+  )) {
+    console.log(`[${step.number}] ${step.nextGoal} — ${step.url}`);
   }
 
-  // After the stream ends, get the full result
-  const created = await handle.created();
-  const result = await client.tasks.get(created.id);
-  console.log("\nFinal output:", result.output);
+  // After the loop ends, the task is complete.
+  // To also get the final output, capture the run handle:
+  const task = client.run("Summarize the wikipedia.org main page.");
+  for await (const step of task) {
+    console.log(`[${step.number}] ${step.nextGoal} — ${step.url}`);
+  }
+  console.log("\nFinal output:", task.result!.output);
 }
 
 main();

@@ -22,12 +22,11 @@ async def main():
     session = await client.sessions.create(profile_id=PROFILE_ID)
 
     # Run an authenticated task
-    handle = await client.run(
+    output = await client.run(
         "Go to my LinkedIn profile and get my connection count",
         session_id=str(session.id),
     )
-    result = await handle.complete()
-    print(result.output)
+    print(output)
 
     await client.sessions.stop(str(session.id))
 

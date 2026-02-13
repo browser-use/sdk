@@ -99,67 +99,53 @@ await test("profiles CRUD lifecycle", async () => {
   cleanups.pop();
 });
 
-// 3. Task lifecycle — run a trivial task, complete(), verify output
-await test("run() + complete() returns output", async () => {
-  const handle = client.run({ task: "Return the exact text: hello world" });
-  const created = await handle.created();
-  assert(created.id !== undefined, "No task id");
-  cleanups.push(async () => {
-    try { await client.tasks.stop(created.id); } catch {}
-  });
+// 3. Task lifecycle — await run() directly, verify output
+await test("await run() returns output string", async () => {
+  const run = client.run("Return the exact text: hello world");
+  const output = await run;
+  assert(typeof output === "string", `Expected string, got ${typeof output}`);
+  assert(output.length > 0, "Output should not be empty");
 
-  const result = await handle.complete({ timeout: 300_000, interval: 3_000 });
-  assert(result.output !== null && result.output !== undefined, "Output should not be null");
-  assert(result.output!.length > 0, "Output should not be empty");
+  // result should be populated after awaiting
+  assert(run.result !== null, "result should be set after await");
   assert(
-    result.status === "finished" || result.status === "stopped",
-    `Expected terminal status, got ${result.status}`,
+    run.result!.status === "finished" || run.result!.status === "stopped",
+    `Expected terminal status, got ${run.result!.status}`,
   );
-  cleanups.pop();
 });
 
-// 4. Structured output — verify complete() returns parsed data via Zod schema
+// 4. Structured output — await run() with schema, verify typed result
 await test("structured output parses correctly", async () => {
   const MathResult = z.object({
     answer: z.number(),
     explanation: z.string(),
   });
 
-  const handle = client.run({
-    task: "What is 7 * 8? Return the answer and a one-sentence explanation.",
-    schema: MathResult,
-  });
+  const parsed = await client.run(
+    "What is 7 * 8? Return the answer and a one-sentence explanation.",
+    { schema: MathResult },
+  );
 
-  const created = await handle.created();
-  cleanups.push(async () => {
-    try { await client.tasks.stop(created.id); } catch {}
-  });
-
-  const result = await handle.complete({ timeout: 300_000, interval: 3_000 });
-  assert(result.output !== null && result.output !== undefined, "No output");
-  assert(result.parsed !== null, "parsed should not be null");
-  assert(typeof result.parsed!.answer === "number", `answer should be number, got ${typeof result.parsed!.answer}`);
-  assert(typeof result.parsed!.explanation === "string", `explanation should be string, got ${typeof result.parsed!.explanation}`);
-  cleanups.pop();
+  assert(parsed !== null, "parsed should not be null");
+  assert(typeof parsed.answer === "number", `answer should be number, got ${typeof parsed.answer}`);
+  assert(typeof parsed.explanation === "string", `explanation should be string, got ${typeof parsed.explanation}`);
 });
 
-// 5. Streaming — verify stream() yields at least 1 status
-await test("stream() yields status updates", async () => {
-  const handle = client.run({ task: "Return the exact text: ping" });
-  const created = await handle.created();
-  cleanups.push(async () => {
-    try { await client.tasks.stop(created.id); } catch {}
-  });
-
+// 5. Streaming — for-await yields step-by-step progress
+await test("for-await yields TaskStepView steps", async () => {
+  const run = client.run("Return the exact text: ping");
   let count = 0;
-  for await (const status of handle.stream({ interval: 2_000 })) {
-    assert(status.id === created.id, "Wrong task id in stream");
-    assert(typeof status.status === "string", "status.status should be string");
+  for await (const step of run) {
+    assert(typeof step.number === "number", "step.number should be number");
+    assert(typeof step.nextGoal === "string", "step.nextGoal should be string");
+    assert(typeof step.url === "string", "step.url should be string");
     count++;
-    if (count > 20) break; // safety valve
+    if (count > 50) break; // safety valve
   }
-  assert(count >= 1, "Stream should yield at least 1 status");
-  cleanups.pop();
+  assert(count >= 1, "Should yield at least 1 step");
+
+  // result should be populated after iteration
+  assert(run.result !== null, "result should be set after iteration");
 });
 
 // 6. Session lifecycle

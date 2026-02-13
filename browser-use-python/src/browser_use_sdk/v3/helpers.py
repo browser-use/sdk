@@ -2,68 +2,79 @@ from __future__ import annotations
 
 import time
 import asyncio
-from typing import Generator, AsyncGenerator
+from collections.abc import Awaitable, Callable
 
 from ..generated.v3.models import SessionResponse
 from .resources.sessions import AsyncSessions, Sessions
 
-_TERMINAL_STATUSES = {"stopped", "timed_out", "error"}
-_IDLE_OR_TERMINAL = _TERMINAL_STATUSES | {"idle"}
+_TERMINAL_STATUSES = {"idle", "stopped", "timed_out", "error"}
 
 
-class SessionHandle:
-    """Wraps a created v3 session and provides polling helpers."""
+def _poll_output(
+    sessions: Sessions,
+    session_id: str,
+    *,
+    timeout: float = 300,
+    interval: float = 2,
+) -> str | None:
+    """Poll session status until terminal, return output."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        session = sessions.get(session_id)
+        if session.status.value in _TERMINAL_STATUSES:
+            return session.output
+        time.sleep(interval)
+    raise TimeoutError(f"Session {session_id} did not complete within {timeout}s")
 
-    def __init__(self, data: SessionResponse, sessions: Sessions) -> None:
-        self.data = data
+
+async def _async_poll_output(
+    sessions: AsyncSessions,
+    session_id: str,
+    *,
+    timeout: float = 300,
+    interval: float = 2,
+) -> str | None:
+    """Async poll session status until terminal, return output."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        session = await sessions.get(session_id)
+        if session.status.value in _TERMINAL_STATUSES:
+            return session.output
+        await asyncio.sleep(interval)
+    raise TimeoutError(f"Session {session_id} did not complete within {timeout}s")
+
+
+class AsyncSessionRun:
+    """Lazy async session handle — awaitable, returns output on await."""
+
+    def __init__(
+        self,
+        create_fn: Callable[[], Awaitable[SessionResponse]],
+        sessions: AsyncSessions,
+        *,
+        timeout: float = 300,
+        interval: float = 2,
+    ) -> None:
+        self._create_fn = create_fn
         self._sessions = sessions
+        self._timeout = timeout
+        self._interval = interval
+        self.session_id: str | None = None
+        self.result: SessionResponse | None = None
 
-    @property
-    def id(self) -> str:
-        return str(self.data.id)
-
-    def complete(self, *, timeout: float = 300, interval: float = 2) -> SessionResponse:
-        deadline = time.monotonic() + timeout
+    async def _wait_for_output(self) -> str | None:
+        data = await self._create_fn()
+        self.session_id = str(data.id)
+        deadline = time.monotonic() + self._timeout
         while time.monotonic() < deadline:
-            result = self._sessions.get(self.id)
-            if result.status.value in _IDLE_OR_TERMINAL:
-                return result
-            time.sleep(interval)
-        raise TimeoutError(f"Session {self.id} did not complete within {timeout}s")
+            session = await self._sessions.get(self.session_id)
+            if session.status.value in _TERMINAL_STATUSES:
+                self.result = session
+                return session.output
+            await asyncio.sleep(self._interval)
+        raise TimeoutError(
+            f"Session {self.session_id} did not complete within {self._timeout}s"
+        )
 
-    def stream(self, *, interval: float = 2) -> Generator[SessionResponse, None, None]:
-        while True:
-            result = self._sessions.get(self.id)
-            yield result
-            if result.status.value in _IDLE_OR_TERMINAL:
-                return
-            time.sleep(interval)
-
-
-class AsyncSessionHandle:
-    """Async variant of SessionHandle."""
-
-    def __init__(self, data: SessionResponse, sessions: AsyncSessions) -> None:
-        self.data = data
-        self._sessions = sessions
-
-    @property
-    def id(self) -> str:
-        return str(self.data.id)
-
-    async def complete(self, *, timeout: float = 300, interval: float = 2) -> SessionResponse:
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            result = await self._sessions.get(self.id)
-            if result.status.value in _IDLE_OR_TERMINAL:
-                return result
-            await asyncio.sleep(interval)
-        raise TimeoutError(f"Session {self.id} did not complete within {timeout}s")
-
-    async def stream(self, *, interval: float = 2) -> AsyncGenerator[SessionResponse, None]:
-        while True:
-            result = await self._sessions.get(self.id)
-            yield result
-            if result.status.value in _IDLE_OR_TERMINAL:
-                return
-            await asyncio.sleep(interval)
+    def __await__(self):
+        return self._wait_for_output().__await__()

@@ -1,12 +1,11 @@
 """
 Structured output -- get typed results using Pydantic models.
 
-The SDK automatically converts your Pydantic model to a JSON schema
-for the API, and parse_output() deserialises the response back into
-your model.
+Pass output_schema to run() and the SDK handles JSON schema conversion
+and response parsing automatically.
 """
+
 import asyncio
-from typing import List
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -22,22 +21,18 @@ class HackerNewsPost(BaseModel):
 
 
 class SearchResult(BaseModel):
-    posts: List[HackerNewsPost]
+    posts: list[HackerNewsPost]
 
 
 async def main():
     client = AsyncBrowserUse()
 
-    # Pass output_schema -- the SDK handles the rest
-    handle = await client.run(
+    # await run() with output_schema returns a fully typed Pydantic model
+    parsed = await client.run(
         "Find the top 10 Hacker News posts. Return title, url, and score for each.",
         output_schema=SearchResult,
     )
 
-    result = await handle.complete()
-
-    # parse_output() returns a fully typed SearchResult instance
-    parsed = handle.parse_output(result)
     if parsed is not None:
         for post in parsed.posts:
             print(f"{post.score} - {post.title}")

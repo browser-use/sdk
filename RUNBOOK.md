@@ -66,5 +66,5 @@ Follow existing patterns in the codebase. Read before writing.
 - **pnpm lockfile**: May go stale when package.json is updated. Run `pnpm install` before `pnpm install --frozen-lockfile`.
 - **openapi-typescript**: Generates `components["schemas"]["TypeName"]` pattern, not direct exports. Resource files use local type aliases.
 - **Python SDK type safety**: All resource methods return Pydantic model instances (via `model_validate()`), NOT dicts.
-- **Structured output**: V2 only. Python auto-converts Pydantic models via `output_schema`. TS requires manual JSON schema string + `outputSchema`.
-- **Polling**: `TaskHandle.complete()` polls with `tasks.status()` (lightweight), then fetches full `tasks.get()` on terminal.
+- **Structured output**: V2 only. Python auto-converts Pydantic models via `output_schema`. TS uses Zod schemas via `{ schema }` option.
+- **Polling**: `await client.run()` polls `tasks.status()` (lightweight). `for await`/`for step in client.stream()` polls full `tasks.get()` and yields new `TaskStepView` steps.

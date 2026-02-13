@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Awaitable
 from typing import Any, TypeVar, overload
 
 from pydantic import BaseModel
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
+from ..generated.v2.models import SessionSettings, TaskCreatedResponse
 from .resources.billing import AsyncBilling, Billing
 from .resources.browsers import AsyncBrowsers, Browsers
 from .resources.files import AsyncFiles, Files
@@ -15,7 +17,7 @@ from .resources.profiles import AsyncProfiles, Profiles
 from .resources.sessions import AsyncSessions, Sessions
 from .resources.skills import AsyncSkills, Skills
 from .resources.tasks import AsyncTasks, Tasks
-from .helpers import AsyncTaskHandle, TaskHandle
+from .helpers import AsyncTaskRun, TaskStream, _poll_output
 
 _V2_BASE_URL = "https://api.browser-use.com/api/v2"
 
@@ -61,8 +63,22 @@ class BrowserUse:
         llm: str | None = ...,
         start_url: str | None = ...,
         max_steps: int | None = ...,
+        metadata: dict[str, str] | None = ...,
+        secrets: dict[str, str] | None = ...,
+        allowed_domains: list[str] | None = ...,
+        highlight_elements: bool | None = ...,
+        flash_mode: bool | None = ...,
+        thinking: bool | None = ...,
+        vision: bool | str | None = ...,
+        system_prompt_extension: str | None = ...,
+        judge: bool | None = ...,
+        judge_ground_truth: str | None = ...,
+        judge_llm: str | None = ...,
+        skill_ids: list[str] | None = ...,
+        op_vault_id: str | None = ...,
+        session_settings: SessionSettings | None = ...,
         **extra: Any,
-    ) -> TaskHandle[T]: ...
+    ) -> T: ...
 
     @overload
     def run(
@@ -73,8 +89,22 @@ class BrowserUse:
         llm: str | None = ...,
         start_url: str | None = ...,
         max_steps: int | None = ...,
+        metadata: dict[str, str] | None = ...,
+        secrets: dict[str, str] | None = ...,
+        allowed_domains: list[str] | None = ...,
+        highlight_elements: bool | None = ...,
+        flash_mode: bool | None = ...,
+        thinking: bool | None = ...,
+        vision: bool | str | None = ...,
+        system_prompt_extension: str | None = ...,
+        judge: bool | None = ...,
+        judge_ground_truth: str | None = ...,
+        judge_llm: str | None = ...,
+        skill_ids: list[str] | None = ...,
+        op_vault_id: str | None = ...,
+        session_settings: SessionSettings | None = ...,
         **extra: Any,
-    ) -> TaskHandle[str]: ...
+    ) -> str: ...
 
     def run(
         self,
@@ -85,18 +115,27 @@ class BrowserUse:
         llm: str | None = None,
         start_url: str | None = None,
         max_steps: int | None = None,
+        metadata: dict[str, str] | None = None,
+        secrets: dict[str, str] | None = None,
+        allowed_domains: list[str] | None = None,
+        highlight_elements: bool | None = None,
+        flash_mode: bool | None = None,
+        thinking: bool | None = None,
+        vision: bool | str | None = None,
+        system_prompt_extension: str | None = None,
+        judge: bool | None = None,
+        judge_ground_truth: str | None = None,
+        judge_llm: str | None = None,
+        skill_ids: list[str] | None = None,
+        op_vault_id: str | None = None,
+        session_settings: SessionSettings | None = None,
         **extra: Any,
-    ) -> TaskHandle[Any]:
-        """Create a task and return a TaskHandle for polling/streaming.
-
-        When ``output_schema`` is a Pydantic BaseModel subclass, the SDK
-        automatically converts it to a JSON schema string for the API and
-        the returned handle can parse the output via ``handle.parse_output()``.
+    ) -> Any:
+        """Run an AI agent task. Blocks until complete, returns the output.
 
         Example::
 
-            handle = client.run("Find the top HN post")
-            result = handle.complete()
+            output = client.run("Find the top HN post")
 
         With structured output::
 
@@ -104,9 +143,7 @@ class BrowserUse:
                 name: str
                 price: float
 
-            handle = client.run("Find product info", output_schema=Product)
-            result = handle.complete()
-            product = handle.parse_output(result)  # Product instance
+            product = client.run("Find product info", output_schema=Product)
         """
         if output_schema is not None and issubclass(output_schema, BaseModel):
             extra["structured_output"] = json.dumps(output_schema.model_json_schema())
@@ -117,9 +154,135 @@ class BrowserUse:
             llm=llm,
             start_url=start_url,
             max_steps=max_steps,
+            metadata=metadata,
+            secrets=secrets,
+            allowed_domains=allowed_domains,
+            highlight_elements=highlight_elements,
+            flash_mode=flash_mode,
+            thinking=thinking,
+            vision=vision,
+            system_prompt_extension=system_prompt_extension,
+            judge=judge,
+            judge_ground_truth=judge_ground_truth,
+            judge_llm=judge_llm,
+            skill_ids=skill_ids,
+            op_vault_id=op_vault_id,
+            session_settings=session_settings,
             **extra,
         )
-        return TaskHandle(data, self.tasks, output_schema)
+        return _poll_output(self.tasks, str(data.id), output_schema)
+
+    @overload
+    def stream(
+        self,
+        task: str,
+        *,
+        output_schema: type[T],
+        session_id: str | None = ...,
+        llm: str | None = ...,
+        start_url: str | None = ...,
+        max_steps: int | None = ...,
+        metadata: dict[str, str] | None = ...,
+        secrets: dict[str, str] | None = ...,
+        allowed_domains: list[str] | None = ...,
+        highlight_elements: bool | None = ...,
+        flash_mode: bool | None = ...,
+        thinking: bool | None = ...,
+        vision: bool | str | None = ...,
+        system_prompt_extension: str | None = ...,
+        judge: bool | None = ...,
+        judge_ground_truth: str | None = ...,
+        judge_llm: str | None = ...,
+        skill_ids: list[str] | None = ...,
+        op_vault_id: str | None = ...,
+        session_settings: SessionSettings | None = ...,
+        **extra: Any,
+    ) -> TaskStream[T]: ...
+
+    @overload
+    def stream(
+        self,
+        task: str,
+        *,
+        session_id: str | None = ...,
+        llm: str | None = ...,
+        start_url: str | None = ...,
+        max_steps: int | None = ...,
+        metadata: dict[str, str] | None = ...,
+        secrets: dict[str, str] | None = ...,
+        allowed_domains: list[str] | None = ...,
+        highlight_elements: bool | None = ...,
+        flash_mode: bool | None = ...,
+        thinking: bool | None = ...,
+        vision: bool | str | None = ...,
+        system_prompt_extension: str | None = ...,
+        judge: bool | None = ...,
+        judge_ground_truth: str | None = ...,
+        judge_llm: str | None = ...,
+        skill_ids: list[str] | None = ...,
+        op_vault_id: str | None = ...,
+        session_settings: SessionSettings | None = ...,
+        **extra: Any,
+    ) -> TaskStream[str]: ...
+
+    def stream(
+        self,
+        task: str,
+        *,
+        output_schema: type[Any] | None = None,
+        session_id: str | None = None,
+        llm: str | None = None,
+        start_url: str | None = None,
+        max_steps: int | None = None,
+        metadata: dict[str, str] | None = None,
+        secrets: dict[str, str] | None = None,
+        allowed_domains: list[str] | None = None,
+        highlight_elements: bool | None = None,
+        flash_mode: bool | None = None,
+        thinking: bool | None = None,
+        vision: bool | str | None = None,
+        system_prompt_extension: str | None = None,
+        judge: bool | None = None,
+        judge_ground_truth: str | None = None,
+        judge_llm: str | None = None,
+        skill_ids: list[str] | None = None,
+        op_vault_id: str | None = None,
+        session_settings: SessionSettings | None = None,
+        **extra: Any,
+    ) -> TaskStream[Any]:
+        """Run a task and yield steps as they happen.
+
+        Example::
+
+            for step in client.stream("Go to google.com"):
+                print(f"[{step.number}] {step.next_goal}")
+        """
+        if output_schema is not None and issubclass(output_schema, BaseModel):
+            extra["structured_output"] = json.dumps(output_schema.model_json_schema())
+
+        data = self.tasks.create(
+            task,
+            session_id=session_id,
+            llm=llm,
+            start_url=start_url,
+            max_steps=max_steps,
+            metadata=metadata,
+            secrets=secrets,
+            allowed_domains=allowed_domains,
+            highlight_elements=highlight_elements,
+            flash_mode=flash_mode,
+            thinking=thinking,
+            vision=vision,
+            system_prompt_extension=system_prompt_extension,
+            judge=judge,
+            judge_ground_truth=judge_ground_truth,
+            judge_llm=judge_llm,
+            skill_ids=skill_ids,
+            op_vault_id=op_vault_id,
+            session_settings=session_settings,
+            **extra,
+        )
+        return TaskStream(data, self.tasks, output_schema)
 
     def close(self) -> None:
         self._http.close()
@@ -161,7 +324,7 @@ class AsyncBrowserUse:
         self.marketplace = AsyncMarketplace(self._http)
 
     @overload
-    async def run(
+    def run(
         self,
         task: str,
         *,
@@ -170,11 +333,25 @@ class AsyncBrowserUse:
         llm: str | None = ...,
         start_url: str | None = ...,
         max_steps: int | None = ...,
+        metadata: dict[str, str] | None = ...,
+        secrets: dict[str, str] | None = ...,
+        allowed_domains: list[str] | None = ...,
+        highlight_elements: bool | None = ...,
+        flash_mode: bool | None = ...,
+        thinking: bool | None = ...,
+        vision: bool | str | None = ...,
+        system_prompt_extension: str | None = ...,
+        judge: bool | None = ...,
+        judge_ground_truth: str | None = ...,
+        judge_llm: str | None = ...,
+        skill_ids: list[str] | None = ...,
+        op_vault_id: str | None = ...,
+        session_settings: SessionSettings | None = ...,
         **extra: Any,
-    ) -> AsyncTaskHandle[T]: ...
+    ) -> AsyncTaskRun[T]: ...
 
     @overload
-    async def run(
+    def run(
         self,
         task: str,
         *,
@@ -182,10 +359,24 @@ class AsyncBrowserUse:
         llm: str | None = ...,
         start_url: str | None = ...,
         max_steps: int | None = ...,
+        metadata: dict[str, str] | None = ...,
+        secrets: dict[str, str] | None = ...,
+        allowed_domains: list[str] | None = ...,
+        highlight_elements: bool | None = ...,
+        flash_mode: bool | None = ...,
+        thinking: bool | None = ...,
+        vision: bool | str | None = ...,
+        system_prompt_extension: str | None = ...,
+        judge: bool | None = ...,
+        judge_ground_truth: str | None = ...,
+        judge_llm: str | None = ...,
+        skill_ids: list[str] | None = ...,
+        op_vault_id: str | None = ...,
+        session_settings: SessionSettings | None = ...,
         **extra: Any,
-    ) -> AsyncTaskHandle[str]: ...
+    ) -> AsyncTaskRun[str]: ...
 
-    async def run(
+    def run(
         self,
         task: str,
         *,
@@ -194,41 +385,64 @@ class AsyncBrowserUse:
         llm: str | None = None,
         start_url: str | None = None,
         max_steps: int | None = None,
+        metadata: dict[str, str] | None = None,
+        secrets: dict[str, str] | None = None,
+        allowed_domains: list[str] | None = None,
+        highlight_elements: bool | None = None,
+        flash_mode: bool | None = None,
+        thinking: bool | None = None,
+        vision: bool | str | None = None,
+        system_prompt_extension: str | None = None,
+        judge: bool | None = None,
+        judge_ground_truth: str | None = None,
+        judge_llm: str | None = None,
+        skill_ids: list[str] | None = None,
+        op_vault_id: str | None = None,
+        session_settings: SessionSettings | None = None,
         **extra: Any,
-    ) -> AsyncTaskHandle[Any]:
-        """Create a task and return an AsyncTaskHandle for polling/streaming.
+    ) -> AsyncTaskRun[Any]:
+        """Run an AI agent task.
 
-        When ``output_schema`` is a Pydantic BaseModel subclass, the SDK
-        automatically converts it to a JSON schema string for the API and
-        the returned handle can parse the output via ``handle.parse_output()``.
+        ``await client.run(...)`` polls the status endpoint, returns the output.
+        ``async for step in client.run(...)`` polls the full task, yields steps.
 
         Example::
 
-            handle = await client.run("Find the top HN post")
-            result = await handle.complete()
+            output = await client.run("Find the top HN post")
 
-        With structured output::
+        Step-by-step::
 
-            class Product(BaseModel):
-                name: str
-                price: float
-
-            handle = await client.run("Find product info", output_schema=Product)
-            result = await handle.complete()
-            product = handle.parse_output(result)  # Product instance
+            async for step in client.run("Go to google.com"):
+                print(f"[{step.number}] {step.next_goal}")
         """
         if output_schema is not None and issubclass(output_schema, BaseModel):
             extra["structured_output"] = json.dumps(output_schema.model_json_schema())
 
-        data = await self.tasks.create(
-            task,
-            session_id=session_id,
-            llm=llm,
-            start_url=start_url,
-            max_steps=max_steps,
-            **extra,
-        )
-        return AsyncTaskHandle(data, self.tasks, output_schema)
+        def create_fn() -> Awaitable[TaskCreatedResponse]:
+            return self.tasks.create(
+                task,
+                session_id=session_id,
+                llm=llm,
+                start_url=start_url,
+                max_steps=max_steps,
+                metadata=metadata,
+                secrets=secrets,
+                allowed_domains=allowed_domains,
+                highlight_elements=highlight_elements,
+                flash_mode=flash_mode,
+                thinking=thinking,
+                vision=vision,
+                system_prompt_extension=system_prompt_extension,
+                judge=judge,
+                judge_ground_truth=judge_ground_truth,
+                judge_llm=judge_llm,
+                skill_ids=skill_ids,
+                op_vault_id=op_vault_id,
+                session_settings=session_settings,
+                **extra,
+            )
+
+        return AsyncTaskRun(create_fn, self.tasks, output_schema)
 
     async def close(self) -> None:
         await self._http.close()

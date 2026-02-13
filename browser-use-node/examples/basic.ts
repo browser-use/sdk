@@ -5,24 +5,19 @@ import "dotenv/config";
 import { BrowserUse } from "browser-use-sdk";
 
 async function main() {
-  const client = new BrowserUse({ apiKey: process.env.BROWSER_USE_API_KEY! });
+  const client = new BrowserUse();
 
-  // Option 1: Quick — run() returns a TaskHandle you can await
-  const handle = client.run({
-    task: "Search for the top 10 Hacker News posts and return the title and url.",
-  });
-  const result = await handle.complete();
-  console.log(result.output);
+  // Quick — run() with await returns the output string directly
+  const output = await client.run(
+    "Search for the top 10 Hacker News posts and return the title and url.",
+  );
+  console.log(output);
 
-  // Option 2: Direct — use the tasks resource
-  const task = await client.tasks.create({
-    task: "What is the current price of Bitcoin?",
-  });
-  console.log("Task created:", task.id);
-
-  // Poll for result
-  const finished = await client.tasks.get(task.id);
-  console.log(finished.output);
+  // You can also access the full TaskView via .result after awaiting
+  const run = client.run("What is the current price of Bitcoin?");
+  const output2 = await run;
+  console.log(output2);
+  console.log("Task ID:", run.result!.id);
 }
 
 main();
