@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Dict, List, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
@@ -235,7 +235,7 @@ class EnabledSkillsLimitExceededError(BaseModel):
 
 
 class ExecuteSkillRequest(BaseModel):
-    parameters: dict[str, Any] | None = Field(
+    parameters: Dict[str, Any] | None = Field(
         None, description='Parameters to pass to the skill handler', title='Parameters'
     )
     session_id: UUID | None = Field(
@@ -281,7 +281,7 @@ class GenerationNotCancellableError(BaseModel):
 
 
 class InsufficientCreditsError(BaseModel):
-    detail: str | None = Field('Insufficient credits', title='Detail')
+    detail: str | None = Field('You have insufficient credits', title='Detail')
 
 
 class InternalServerError(BaseModel):
@@ -376,7 +376,7 @@ class ProfileView(BaseModel):
         description='Timestamp when the profile was last updated',
         title='Updated At',
     )
-    cookie_domains: list[str] | None = Field(
+    cookie_domains: List[str] | None = Field(
         None,
         alias='cookieDomains',
         description='List of domain URLs that have cookies stored for this profile',
@@ -670,6 +670,33 @@ class SessionNotFoundError(BaseModel):
     detail: str | None = Field('Session not found', title='Detail')
 
 
+class SessionSettings(BaseModel):
+    profile_id: UUID | None = Field(
+        None,
+        alias='profileId',
+        description='Browser profile ID for persistent browser state (cookies, local storage, etc.).',
+        title='Profile ID',
+    )
+    proxy_country_code: ProxyCountryCode | None = Field(
+        None,
+        alias='proxyCountryCode',
+        description='Proxy country code for geo-targeted browsing. If set, proxy is enabled with that country. If session_settings is provided but proxy_country_code is not set, proxy is disabled.',
+        title='Proxy Country Code',
+    )
+    browser_screen_width: BrowserScreenWidth | None = Field(
+        None,
+        alias='browserScreenWidth',
+        description='Custom screen width in pixels for the browser.',
+        title='Browser Screen Width',
+    )
+    browser_screen_height: BrowserScreenHeight | None = Field(
+        None,
+        alias='browserScreenHeight',
+        description='Custom screen height in pixels for the browser.',
+        title='Browser Screen Height',
+    )
+
+
 class SessionStatus(Enum):
     active = 'active'
     stopped = 'stopped'
@@ -952,7 +979,7 @@ class TaskStepView(BaseModel):
         description='Optional URL to the screenshot taken at this step',
         title='Screenshot URL',
     )
-    actions: list[str] = Field(
+    actions: List[str] = Field(
         ...,
         description='List of stringified json actions performed by the agent in this step',
         title='Actions',
@@ -1008,16 +1035,16 @@ class TaskView(BaseModel):
         description='Naive UTC timestamp when the task completed (None if still running)',
         title='Finished At',
     )
-    metadata: dict[str, Any] | None = Field(
+    metadata: Dict[str, Any] | None = Field(
         {},
         description='Optional additional metadata associated with the task set by the user',
         title='Metadata',
     )
-    steps: list[TaskStepView] = Field(..., title='Steps')
+    steps: List[TaskStepView] = Field(..., title='Steps')
     output: str | None = Field(
         None, description='Final output/result of the task', title='Output'
     )
-    output_files: list[FileView] = Field(..., alias='outputFiles', title='Outputfiles')
+    output_files: List[FileView] = Field(..., alias='outputFiles', title='Outputfiles')
     browser_use_version: str | None = Field(
         None,
         alias='browserUseVersion',
@@ -1046,7 +1073,7 @@ class TaskView(BaseModel):
         description='Total cost of the task in USD. This is the sum of all step costs incurred during task execution.',
         title='Cost',
     )
-    suggestions: list[dict[str, Any]] | None = Field(
+    suggestions: List[Dict[str, Any]] | None = Field(
         None,
         description='List of actionable suggestions for improving task configuration based on detected issues during execution.',
         title='Suggestions',
@@ -1105,10 +1132,10 @@ class UpdateSkillRequest(BaseModel):
         description='Description of what the skill does (shows up in the public view)',
         title='Description',
     )
-    categories: list[SkillCategory] | None = Field(
+    categories: List[SkillCategory] | None = Field(
         None, description='Categories to assign to the skill', title='Categories'
     )
-    domains: list[str] | None = Field(
+    domains: List[str] | None = Field(
         None, description='Domains/websites this skill interacts with', title='Domains'
     )
     is_enabled: bool | None = Field(
@@ -1130,7 +1157,7 @@ class UploadFilePresignedUrlResponse(BaseModel):
     method: Literal['POST'] = Field(
         ..., description='The HTTP method to use for the upload.', title='Method'
     )
-    fields: dict[str, str] = Field(
+    fields: Dict[str, str] = Field(
         ...,
         description='The form fields to include in the upload request.',
         title='Fields',
@@ -1191,17 +1218,17 @@ class UploadFileRequest(BaseModel):
 
 
 class ValidationError(BaseModel):
-    loc: list[str | int] = Field(..., title='Location')
+    loc: List[str | int] = Field(..., title='Location')
     msg: str = Field(..., title='Message')
     type: str = Field(..., title='Error Type')
 
 
-class AppEndpointsApiV2SkillsViewsInsufficientCreditsError(BaseModel):
+class AppEndpointsApiV2MarketplaceSkillsViewsInsufficientCreditsError(BaseModel):
     detail: str | None = Field('Insufficient credits', title='Detail')
 
 
-class CommonUtilsErrorsInsufficientCreditsError(BaseModel):
-    detail: str | None = Field('You have insufficient credits', title='Detail')
+class AppEndpointsApiV2SkillsViewsInsufficientCreditsError(BaseModel):
+    detail: str | None = Field('Insufficient credits', title='Detail')
 
 
 class AccountView(BaseModel):
@@ -1302,7 +1329,7 @@ class BrowserSessionItemView(BaseModel):
 
 
 class BrowserSessionListResponse(BaseModel):
-    items: list[BrowserSessionItemView] = Field(
+    items: List[BrowserSessionItemView] = Field(
         ...,
         description='List of browser session views for the current page',
         title='Items',
@@ -1455,17 +1482,17 @@ class CreateTaskRequest(BaseModel):
         description='The ID of the session where the task will run.',
         title='Session ID',
     )
-    metadata: dict[str, str] | None = Field(
+    metadata: Dict[str, str] | None = Field(
         None,
         description='The metadata for the task. Up to 10 key-value pairs.',
         title='Metadata',
     )
-    secrets: dict[str, str] | None = Field(
+    secrets: Dict[str, str] | None = Field(
         None,
         description='The secrets for the task. Allowed domains are not required for secrets to be injected, but are recommended.',
         title='Secrets',
     )
-    allowed_domains: list[str] | None = Field(
+    allowed_domains: List[str] | None = Field(
         None,
         alias='allowedDomains',
         description='The allowed domains for the task.',
@@ -1476,6 +1503,12 @@ class CreateTaskRequest(BaseModel):
         alias='opVaultId',
         description='The ID of the 1Password vault to use for the task. This is used to inject secrets into the task.',
         title='1Password Vault ID',
+    )
+    session_settings: SessionSettings | None = Field(
+        None,
+        alias='sessionSettings',
+        description='Session configuration for auto-created sessions. Only applies when session_id is not provided. Ignored when using an existing session.',
+        title='Session Settings',
     )
     highlight_elements: bool | None = Field(
         False,
@@ -1492,7 +1525,7 @@ class CreateTaskRequest(BaseModel):
     thinking: bool | None = Field(
         False, description='Whether agent thinking mode is enabled.', title='Thinking'
     )
-    vision: bool | Literal['auto'] | None = Field(
+    vision: bool | str | None = Field(
         True,
         description="Whether agent vision capabilities are enabled. Set to 'auto' to let the agent decide based on the model capabilities.",
         title='Vision',
@@ -1521,7 +1554,7 @@ class CreateTaskRequest(BaseModel):
         description='The LLM model to use for judging. If not provided, uses the default judge LLM.',
         title='Judge LLM',
     )
-    skill_ids: list[str] | None = Field(
+    skill_ids: List[str] | None = Field(
         None,
         alias='skillIds',
         description="List of skill IDs to enable for this task. Use ['*'] to enable all available skills for the project.",
@@ -1530,7 +1563,7 @@ class CreateTaskRequest(BaseModel):
 
 
 class HTTPValidationError(BaseModel):
-    detail: list[ValidationError] | None = Field(None, title='Detail')
+    detail: List[ValidationError] | None = Field(None, title='Detail')
 
 
 class ParameterSchema(BaseModel):
@@ -1543,7 +1576,7 @@ class ParameterSchema(BaseModel):
 
 
 class ProfileListResponse(BaseModel):
-    items: list[ProfileView] = Field(
+    items: List[ProfileView] = Field(
         ..., description='List of profile views for the current page', title='Items'
     )
     total_items: int = Field(
@@ -1617,7 +1650,7 @@ class SessionItemView(BaseModel):
 
 
 class SessionListResponse(BaseModel):
-    items: list[SessionItemView] = Field(
+    items: List[SessionItemView] = Field(
         ..., description='List of session views for the current page', title='Items'
     )
     total_items: int = Field(
@@ -1635,7 +1668,7 @@ class SessionListResponse(BaseModel):
 
 
 class SkillExecutionListResponse(BaseModel):
-    items: list[SkillExecutionView] = Field(
+    items: List[SkillExecutionView] = Field(
         ..., description='List of executions', title='Items'
     )
     total_items: int = Field(
@@ -1667,10 +1700,10 @@ class SkillResponse(BaseModel):
         description='Description of the skill (shows up in the public view)',
         title='Description',
     )
-    categories: list[SkillCategory] = Field(
+    categories: List[SkillCategory] = Field(
         ..., description='Categories of the skill', title='Categories'
     )
-    domains: list[str] = Field(
+    domains: List[str] = Field(
         ..., description='Domains/websites this skill interacts with', title='Domains'
     )
     goal: str | None = Field(
@@ -1687,10 +1720,10 @@ class SkillResponse(BaseModel):
     status: SkillsGenerationStatus = Field(
         ..., description='Status of the skill', title='Status'
     )
-    parameters: list[ParameterSchema] = Field(
+    parameters: List[ParameterSchema] = Field(
         ..., description='Input parameters of the skill', title='Parameters'
     )
-    output_schema: dict[str, Any] = Field(
+    output_schema: Dict[str, Any] = Field(
         ...,
         alias='outputSchema',
         description='Output schema of the skill',
@@ -1798,7 +1831,7 @@ class TaskItemView(BaseModel):
         description='Naive UTC timestamp when the task completed (None if still running)',
         title='Finished At',
     )
-    metadata: dict[str, Any] | None = Field(
+    metadata: Dict[str, Any] | None = Field(
         {},
         description='Optional additional metadata associated with the task set by the user',
         title='Metadata',
@@ -1834,7 +1867,7 @@ class TaskItemView(BaseModel):
         description='Total cost of the task in USD. This is the sum of all step costs incurred during task execution.',
         title='Cost',
     )
-    suggestions: list[dict[str, Any]] | None = Field(
+    suggestions: List[Dict[str, Any]] | None = Field(
         None,
         description='List of actionable suggestions for improving task configuration based on detected issues during execution.',
         title='Suggestions',
@@ -1842,7 +1875,7 @@ class TaskItemView(BaseModel):
 
 
 class TaskListResponse(BaseModel):
-    items: list[TaskItemView] = Field(
+    items: List[TaskItemView] = Field(
         ..., description='List of task views for the current page', title='Items'
     )
     total_items: int = Field(
@@ -1872,16 +1905,16 @@ class MarketplaceSkillResponse(BaseModel):
         description='Description of the skill (shows up in the public view)',
         title='Description',
     )
-    categories: list[SkillCategory] = Field(
+    categories: List[SkillCategory] = Field(
         ..., description='Categories of the skill', title='Categories'
     )
-    domains: list[str] = Field(
+    domains: List[str] = Field(
         ..., description='Domains/websites this skill interacts with', title='Domains'
     )
-    parameters: list[ParameterSchema] = Field(
+    parameters: List[ParameterSchema] = Field(
         ..., description='Input parameters of the skill', title='Parameters'
     )
-    output_schema: dict[str, Any] = Field(
+    output_schema: Dict[str, Any] = Field(
         ...,
         alias='outputSchema',
         description='Output schema of the skill',
@@ -1959,7 +1992,7 @@ class SessionView(BaseModel):
         description='Timestamp when the session was stopped (None if still active)',
         title='Finished At',
     )
-    tasks: list[TaskItemView] = Field(
+    tasks: List[TaskItemView] = Field(
         ..., description='List of tasks associated with this session', title='Tasks'
     )
     public_share_url: str | None = Field(
@@ -1997,7 +2030,7 @@ class SessionView(BaseModel):
 
 
 class SkillListResponse(BaseModel):
-    items: list[SkillResponse] = Field(..., description='List of skills', title='Items')
+    items: List[SkillResponse] = Field(..., description='List of skills', title='Items')
     total_items: int = Field(
         ...,
         alias='totalItems',
@@ -2013,7 +2046,7 @@ class SkillListResponse(BaseModel):
 
 
 class MarketplaceSkillListResponse(BaseModel):
-    items: list[MarketplaceSkillResponse] = Field(
+    items: List[MarketplaceSkillResponse] = Field(
         ..., description='List of skills', title='Items'
     )
     total_items: int = Field(

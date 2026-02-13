@@ -50,6 +50,7 @@ tasks:
           --output-model-type pydantic_v2.BaseModel \
           --snake-case-field \
           --field-constraints \
+          --use-union-operator \
           --disable-timestamp
       - |
         datamodel-codegen \
@@ -59,6 +60,7 @@ tasks:
           --output-model-type pydantic_v2.BaseModel \
           --snake-case-field \
           --field-constraints \
+          --use-union-operator \
           --disable-timestamp
       - echo "Python models generated (v2 + v3)"
 

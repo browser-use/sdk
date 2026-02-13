@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v2.models import (
+    CustomProxy,
     SessionItemView,
     SessionListResponse,
     SessionView,
@@ -20,7 +21,7 @@ def _build_create_body(
     browser_screen_height: Optional[int] = None,
     persist_memory: Optional[bool] = None,
     keep_alive: Optional[bool] = None,
-    custom_proxy: Optional[Dict[str, Any]] = None,
+    custom_proxy: CustomProxy | None = None,
     **extra: Any,
 ) -> Dict[str, Any]:
     body: Dict[str, Any] = {}
@@ -39,7 +40,7 @@ def _build_create_body(
     if keep_alive is not None:
         body["keepAlive"] = keep_alive
     if custom_proxy is not None:
-        body["customProxy"] = custom_proxy
+        body["customProxy"] = custom_proxy.model_dump(by_alias=True, exclude_none=True)
     body.update(extra)
     return body
 
@@ -58,7 +59,7 @@ class Sessions:
         browser_screen_height: Optional[int] = None,
         persist_memory: Optional[bool] = None,
         keep_alive: Optional[bool] = None,
-        custom_proxy: Optional[Dict[str, Any]] = None,
+        custom_proxy: CustomProxy | None = None,
         **extra: Any,
     ) -> SessionItemView:
         """Create a new session."""
@@ -146,7 +147,7 @@ class AsyncSessions:
         browser_screen_height: Optional[int] = None,
         persist_memory: Optional[bool] = None,
         keep_alive: Optional[bool] = None,
-        custom_proxy: Optional[Dict[str, Any]] = None,
+        custom_proxy: CustomProxy | None = None,
         **extra: Any,
     ) -> SessionItemView:
         """Create a new session."""

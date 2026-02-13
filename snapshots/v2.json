@@ -192,7 +192,7 @@
           "Tasks"
         ],
         "summary": "Create Task",
-        "description": "Create and start a new task.\n\nYou can either:\n1. Start a new task without a sessionId (auto-creates a session with US proxy by default).\n   Note: Tasks without a sessionId are one-off tasks that automatically close the session\n   upon completion (keep_alive=false).\n2. Start a new task in an existing session (reuse for follow-up tasks or custom configuration)\n\nImportant: Proxy configuration (proxyCountryCode) and other session settings (like keep_alive) are\nsession-level settings, not task-level settings. For full control over session configuration,\ncreate a session first via POST /sessions with your desired settings, then pass that sessionId\nwhen creating tasks.",
+        "description": "Create and start a new task.\n\nYou can either:\n1. Start a new task without a sessionId (auto-creates a session with US proxy by default).\n   Note: Tasks without a sessionId are one-off tasks that automatically close the session\n   upon completion (keep_alive=false). Use sessionSettings to configure the auto-created\n   session (e.g. proxyCountryCode, profileId, screen dimensions).\n2. Start a new task in an existing session (reuse for follow-up tasks or custom configuration)\n\nNote: Without sessionSettings, a US proxy is enabled by default. Providing sessionSettings\noverrides defaults \u2014 proxy is only enabled if proxyCountryCode is set. For full control over\nsession configuration (e.g. keep_alive), create a session first via POST /sessions with your\ndesired settings, then pass that sessionId when creating tasks.",
         "operationId": "create_task_tasks_post",
         "security": [
           {
@@ -1387,7 +1387,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/common__utils__errors__InsufficientCreditsError"
+                  "$ref": "#/components/schemas/InsufficientCreditsError"
                 }
               }
             }
@@ -3076,7 +3076,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InsufficientCreditsError"
+                  "$ref": "#/components/schemas/app__endpoints__api__v2__marketplace__skills__views__InsufficientCreditsError"
                 }
               }
             }
@@ -3808,6 +3808,18 @@
             "title": "1Password Vault ID",
             "description": "The ID of the 1Password vault to use for the task. This is used to inject secrets into the task."
           },
+          "sessionSettings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SessionSettings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Settings",
+            "description": "Session configuration for auto-created sessions. Only applies when session_id is not provided. Ignored when using an existing session."
+          },
           "highlightElements": {
             "type": "boolean",
             "title": "Highlight Elements",
@@ -4117,12 +4129,12 @@
           "detail": {
             "type": "string",
             "title": "Detail",
-            "default": "Insufficient credits"
+            "default": "You have insufficient credits"
           }
         },
         "type": "object",
         "title": "InsufficientCreditsError",
-        "description": "Error response when there are insufficient credits"
+        "description": "Error response when user has insufficient credits"
       },
       "InternalServerError": {
         "properties": {
@@ -5057,6 +5069,66 @@
         "type": "object",
         "title": "SessionNotFoundError",
         "description": "Error response when a session is not found"
+      },
+      "SessionSettings": {
+        "properties": {
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile ID",
+            "description": "Browser profile ID for persistent browser state (cookies, local storage, etc.)."
+          },
+          "proxyCountryCode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProxyCountryCode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proxy Country Code",
+            "description": "Proxy country code for geo-targeted browsing. If set, proxy is enabled with that country. If session_settings is provided but proxy_country_code is not set, proxy is disabled."
+          },
+          "browserScreenWidth": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 6144.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Screen Width",
+            "description": "Custom screen width in pixels for the browser."
+          },
+          "browserScreenHeight": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3456.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Screen Height",
+            "description": "Custom screen height in pixels for the browser."
+          }
+        },
+        "type": "object",
+        "title": "SessionSettings",
+        "description": "Session configuration for auto-created sessions.\nThese settings only apply when no session_id is provided."
       },
       "SessionStatus": {
         "type": "string",
@@ -6616,7 +6688,7 @@
         ],
         "title": "ValidationError"
       },
-      "app__endpoints__api__v2__skills__views__InsufficientCreditsError": {
+      "app__endpoints__api__v2__marketplace__skills__views__InsufficientCreditsError": {
         "properties": {
           "detail": {
             "type": "string",
@@ -6628,17 +6700,17 @@
         "title": "InsufficientCreditsError",
         "description": "Error response when there are insufficient credits"
       },
-      "common__utils__errors__InsufficientCreditsError": {
+      "app__endpoints__api__v2__skills__views__InsufficientCreditsError": {
         "properties": {
           "detail": {
             "type": "string",
             "title": "Detail",
-            "default": "You have insufficient credits"
+            "default": "Insufficient credits"
           }
         },
         "type": "object",
         "title": "InsufficientCreditsError",
-        "description": "Error response when user has insufficient credits"
+        "description": "Error response when there are insufficient credits"
       }
     },
     "securitySchemes": {

@@ -44,13 +44,14 @@ export interface paths {
          *     You can either:
          *     1. Start a new task without a sessionId (auto-creates a session with US proxy by default).
          *        Note: Tasks without a sessionId are one-off tasks that automatically close the session
-         *        upon completion (keep_alive=false).
+         *        upon completion (keep_alive=false). Use sessionSettings to configure the auto-created
+         *        session (e.g. proxyCountryCode, profileId, screen dimensions).
          *     2. Start a new task in an existing session (reuse for follow-up tasks or custom configuration)
          *
-         *     Important: Proxy configuration (proxyCountryCode) and other session settings (like keep_alive) are
-         *     session-level settings, not task-level settings. For full control over session configuration,
-         *     create a session first via POST /sessions with your desired settings, then pass that sessionId
-         *     when creating tasks.
+         *     Note: Without sessionSettings, a US proxy is enabled by default. Providing sessionSettings
+         *     overrides defaults — proxy is only enabled if proxyCountryCode is set. For full control over
+         *     session configuration (e.g. keep_alive), create a session first via POST /sessions with your
+         *     desired settings, then pass that sessionId when creating tasks.
          */
         post: operations["create_task_tasks_post"];
         delete?: never;
@@ -1096,6 +1097,11 @@ export interface components {
              */
             opVaultId?: string | null;
             /**
+             * Session Settings
+             * @description Session configuration for auto-created sessions. Only applies when session_id is not provided. Ignored when using an existing session.
+             */
+            sessionSettings?: components["schemas"]["SessionSettings"] | null;
+            /**
              * Highlight Elements
              * @description Tells the agent to highlight interactive elements on the page.
              * @default false
@@ -1279,12 +1285,12 @@ export interface components {
         };
         /**
          * InsufficientCreditsError
-         * @description Error response when there are insufficient credits
+         * @description Error response when user has insufficient credits
          */
         InsufficientCreditsError: {
             /**
              * Detail
-             * @default Insufficient credits
+             * @default You have insufficient credits
              */
             detail: string;
         };
@@ -1726,6 +1732,33 @@ export interface components {
              * @default Session not found
              */
             detail: string;
+        };
+        /**
+         * SessionSettings
+         * @description Session configuration for auto-created sessions.
+         *     These settings only apply when no session_id is provided.
+         */
+        SessionSettings: {
+            /**
+             * Profile ID
+             * @description Browser profile ID for persistent browser state (cookies, local storage, etc.).
+             */
+            profileId?: string | null;
+            /**
+             * Proxy Country Code
+             * @description Proxy country code for geo-targeted browsing. If set, proxy is enabled with that country. If session_settings is provided but proxy_country_code is not set, proxy is disabled.
+             */
+            proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
+            /**
+             * Browser Screen Width
+             * @description Custom screen width in pixels for the browser.
+             */
+            browserScreenWidth?: number | null;
+            /**
+             * Browser Screen Height
+             * @description Custom screen height in pixels for the browser.
+             */
+            browserScreenHeight?: number | null;
         };
         /**
          * SessionStatus
@@ -2677,7 +2710,7 @@ export interface components {
          * InsufficientCreditsError
          * @description Error response when there are insufficient credits
          */
-        app__endpoints__api__v2__skills__views__InsufficientCreditsError: {
+        app__endpoints__api__v2__marketplace__skills__views__InsufficientCreditsError: {
             /**
              * Detail
              * @default Insufficient credits
@@ -2686,12 +2719,12 @@ export interface components {
         };
         /**
          * InsufficientCreditsError
-         * @description Error response when user has insufficient credits
+         * @description Error response when there are insufficient credits
          */
-        common__utils__errors__InsufficientCreditsError: {
+        app__endpoints__api__v2__skills__views__InsufficientCreditsError: {
             /**
              * Detail
-             * @default You have insufficient credits
+             * @default Insufficient credits
              */
             detail: string;
         };
@@ -3576,7 +3609,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["common__utils__errors__InsufficientCreditsError"];
+                    "application/json": components["schemas"]["InsufficientCreditsError"];
                 };
             };
             /** @description Request validation failed */
@@ -4597,7 +4630,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InsufficientCreditsError"];
+                    "application/json": components["schemas"]["app__endpoints__api__v2__marketplace__skills__views__InsufficientCreditsError"];
                 };
             };
             /** @description Skill not found, no code available, or project not found */

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import List
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
@@ -33,7 +34,7 @@ class FileInfo(BaseModel):
 
 
 class FileListResponse(BaseModel):
-    files: list[FileInfo] = Field(..., title='Files')
+    files: List[FileInfo] = Field(..., title='Files')
     next_cursor: str | None = Field(None, alias='nextCursor', title='Nextcursor')
     has_more: bool | None = Field(False, alias='hasMore', title='Hasmore')
 
@@ -359,17 +360,17 @@ class SessionResponse(BaseModel):
 
 
 class ValidationError(BaseModel):
-    loc: list[str | int] = Field(..., title='Location')
+    loc: List[str | int] = Field(..., title='Location')
     msg: str = Field(..., title='Message')
     type: str = Field(..., title='Error Type')
 
 
 class HTTPValidationError(BaseModel):
-    detail: list[ValidationError] | None = Field(None, title='Detail')
+    detail: List[ValidationError] | None = Field(None, title='Detail')
 
 
 class SessionListResponse(BaseModel):
-    sessions: list[SessionResponse] = Field(..., title='Sessions')
+    sessions: List[SessionResponse] = Field(..., title='Sessions')
     total: int = Field(..., title='Total')
     page: int = Field(..., title='Page')
     page_size: int = Field(..., alias='pageSize', title='Pagesize')
