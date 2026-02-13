@@ -161,13 +161,13 @@ tasks:
     desc: Show current versions
     cmds:
       - echo "TS {{.TS_SDK}}:" $(node -p "require('./{{.TS_SDK}}/package.json').version")
-      - echo "PY {{.PY_SDK}}:" $(cd {{.PY_SDK}} && python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+      - echo "PY {{.PY_SDK}}:" $(cd {{.PY_SDK}} && uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
 
   version:bump:
     desc: "Bump version (usage: task version:bump -- patch|minor|major)"
     cmds:
-      - cd {{.TS_SDK}} && npm version {{.CLI_ARGS | default "patch"}} --no-git-tag-version
-      - echo "TODO: bump python version to match (use bump-my-version or manual edit)"
+      - cmd: cd {{.TS_SDK}} && npm version {{.CLI_ARGS | default "patch"}} --no-git-tag-version
+      - cmd: echo "TODO - bump python version to match (use bump-my-version or manual edit)"
       - task: version
 
   # ── Publish ───────────────────────────────────────────────────

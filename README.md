@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="static/sdks-banner.png" alt="Browser Use SDKs" />
+</p>
+
 # Browser Use SDKs
 
 Official SDKs for the [Browser Use](https://browser-use.com) cloud API.
@@ -54,19 +58,10 @@ from browser_use_sdk.v3 import BrowserUse
 Requires [Task](https://taskfile.dev) runner.
 
 ```bash
-cd sdks
-
-# Regenerate types from OpenAPI specs
-task gen:types
-
-# Build both SDKs
-task build
-
-# Type-check both SDKs
-task check
-
-# Run tests
-task test
+task gen:types   # regenerate types from OpenAPI specs
+task build       # build both SDKs
+task check       # type-check both SDKs
+task test        # run tests
 ```
 
 See [RUNBOOK.md](RUNBOOK.md) for the full update workflow.
