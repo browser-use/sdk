@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from ..generated.v2.models import TaskCreatedResponse, TaskStatusView, TaskView
 from .resources.tasks import AsyncTasks, Tasks
 
-_TERMINAL_STATUSES = {"finished", "stopped"}
+_TERMINAL_STATUSES = {"finished", "stopped", "failed"}
 
 T = TypeVar("T")
 
@@ -37,7 +37,7 @@ class TaskHandle(Generic[T]):
     def id(self) -> str:
         return str(self.data.id)
 
-    def complete(self, *, timeout: float = 300, interval: float = 3) -> TaskView:
+    def complete(self, *, timeout: float = 300, interval: float = 2) -> TaskView:
         """Poll until the task reaches a terminal status, then return the full TaskView.
 
         Uses the lightweight status endpoint for polling.
@@ -50,7 +50,7 @@ class TaskHandle(Generic[T]):
             time.sleep(interval)
         raise TimeoutError(f"Task {self.id} did not complete within {timeout}s")
 
-    def stream(self, *, interval: float = 3) -> Generator[TaskStatusView, None, None]:
+    def stream(self, *, interval: float = 2) -> Generator[TaskStatusView, None, None]:
         """Yield lightweight task status on each poll until terminal."""
         while True:
             status = self._tasks.status(self.id)
@@ -95,20 +95,20 @@ class AsyncTaskHandle(Generic[T]):
     def id(self) -> str:
         return str(self.data.id)
 
-    async def complete(self, *, timeout: float = 300, interval: float = 3) -> TaskView:
+    async def complete(self, *, timeout: float = 300, interval: float = 2) -> TaskView:
         """Poll until the task reaches a terminal status, then return the full TaskView.
 
         Uses the lightweight status endpoint for polling.
         """
-        deadline = asyncio.get_event_loop().time() + timeout
-        while asyncio.get_event_loop().time() < deadline:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
             status = await self._tasks.status(self.id)
             if status.status.value in _TERMINAL_STATUSES:
                 return await self._tasks.get(self.id)
             await asyncio.sleep(interval)
         raise TimeoutError(f"Task {self.id} did not complete within {timeout}s")
 
-    async def stream(self, *, interval: float = 3) -> AsyncGenerator[TaskStatusView, None]:
+    async def stream(self, *, interval: float = 2) -> AsyncGenerator[TaskStatusView, None]:
         """Yield lightweight task status on each poll until terminal."""
         while True:
             status = await self._tasks.status(self.id)

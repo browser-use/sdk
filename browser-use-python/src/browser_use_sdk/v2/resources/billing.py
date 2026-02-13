@@ -9,6 +9,7 @@ class Billing:
         self._http = http
 
     def account(self) -> AccountView:
+        """Get account billing information."""
         return AccountView.model_validate(
             self._http.request("GET", "/billing/account")
         )
@@ -19,6 +20,7 @@ class AsyncBilling:
         self._http = http
 
     async def account(self) -> AccountView:
+        """Get account billing information."""
         return AccountView.model_validate(
             await self._http.request("GET", "/billing/account")
         )

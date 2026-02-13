@@ -25,6 +25,7 @@ class Marketplace:
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> MarketplaceSkillListResponse:
+        """List marketplace skills."""
         return MarketplaceSkillListResponse.model_validate(
             self._http.request(
                 "GET",
@@ -41,11 +42,13 @@ class Marketplace:
         )
 
     def get(self, slug: str) -> MarketplaceSkillResponse:
+        """Get marketplace skill details."""
         return MarketplaceSkillResponse.model_validate(
             self._http.request("GET", f"/marketplace/skills/{slug}")
         )
 
     def clone(self, skill_id: str) -> SkillResponse:
+        """Clone a marketplace skill to your account."""
         return SkillResponse.model_validate(
             self._http.request("POST", f"/marketplace/skills/{skill_id}/clone")
         )
@@ -58,6 +61,7 @@ class Marketplace:
         session_id: str | None = None,
         **extra: Any,
     ) -> ExecuteSkillResponse:
+        """Execute a marketplace skill."""
         body: dict[str, Any] = {}
         if parameters is not None:
             body["parameters"] = parameters
@@ -85,6 +89,7 @@ class AsyncMarketplace:
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> MarketplaceSkillListResponse:
+        """List marketplace skills."""
         return MarketplaceSkillListResponse.model_validate(
             await self._http.request(
                 "GET",
@@ -101,11 +106,13 @@ class AsyncMarketplace:
         )
 
     async def get(self, slug: str) -> MarketplaceSkillResponse:
+        """Get marketplace skill details."""
         return MarketplaceSkillResponse.model_validate(
             await self._http.request("GET", f"/marketplace/skills/{slug}")
         )
 
     async def clone(self, skill_id: str) -> SkillResponse:
+        """Clone a marketplace skill to your account."""
         return SkillResponse.model_validate(
             await self._http.request("POST", f"/marketplace/skills/{skill_id}/clone")
         )
@@ -118,6 +125,7 @@ class AsyncMarketplace:
         session_id: str | None = None,
         **extra: Any,
     ) -> ExecuteSkillResponse:
+        """Execute a marketplace skill."""
         body: dict[str, Any] = {}
         if parameters is not None:
             body["parameters"] = parameters

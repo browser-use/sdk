@@ -57,6 +57,7 @@ class Browsers:
         custom_proxy: CustomProxy | None = None,
         **extra: Any,
     ) -> BrowserSessionItemView:
+        """Create a new standalone browser session."""
         body = _build_create_body(
             profile_id=profile_id,
             proxy_country_code=proxy_country_code,
@@ -78,6 +79,7 @@ class Browsers:
         page_number: int | None = None,
         filter_by: str | None = None,
     ) -> BrowserSessionListResponse:
+        """List browser sessions with optional filtering."""
         return BrowserSessionListResponse.model_validate(
             self._http.request(
                 "GET",
@@ -91,11 +93,13 @@ class Browsers:
         )
 
     def get(self, session_id: str) -> BrowserSessionView:
+        """Get detailed browser session information."""
         return BrowserSessionView.model_validate(
             self._http.request("GET", f"/browsers/{session_id}")
         )
 
     def stop(self, session_id: str) -> BrowserSessionView:
+        """Stop a running browser session."""
         return BrowserSessionView.model_validate(
             self._http.request(
                 "PATCH", f"/browsers/{session_id}", json={"action": "stop"}
@@ -119,6 +123,7 @@ class AsyncBrowsers:
         custom_proxy: CustomProxy | None = None,
         **extra: Any,
     ) -> BrowserSessionItemView:
+        """Create a new standalone browser session."""
         body = _build_create_body(
             profile_id=profile_id,
             proxy_country_code=proxy_country_code,
@@ -140,6 +145,7 @@ class AsyncBrowsers:
         page_number: int | None = None,
         filter_by: str | None = None,
     ) -> BrowserSessionListResponse:
+        """List browser sessions with optional filtering."""
         return BrowserSessionListResponse.model_validate(
             await self._http.request(
                 "GET",
@@ -153,11 +159,13 @@ class AsyncBrowsers:
         )
 
     async def get(self, session_id: str) -> BrowserSessionView:
+        """Get detailed browser session information."""
         return BrowserSessionView.model_validate(
             await self._http.request("GET", f"/browsers/{session_id}")
         )
 
     async def stop(self, session_id: str) -> BrowserSessionView:
+        """Stop a running browser session."""
         return BrowserSessionView.model_validate(
             await self._http.request(
                 "PATCH", f"/browsers/{session_id}", json={"action": "stop"}

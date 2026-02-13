@@ -16,6 +16,7 @@ class Profiles:
         name: str | None = None,
         **extra: Any,
     ) -> ProfileView:
+        """Create a new browser profile."""
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
@@ -30,6 +31,7 @@ class Profiles:
         page_size: int | None = None,
         page_number: int | None = None,
     ) -> ProfileListResponse:
+        """List browser profiles."""
         return ProfileListResponse.model_validate(
             self._http.request(
                 "GET",
@@ -42,6 +44,7 @@ class Profiles:
         )
 
     def get(self, profile_id: str) -> ProfileView:
+        """Get browser profile details."""
         return ProfileView.model_validate(
             self._http.request("GET", f"/profiles/{profile_id}")
         )
@@ -53,6 +56,7 @@ class Profiles:
         name: str | None = None,
         **extra: Any,
     ) -> ProfileView:
+        """Update a browser profile."""
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
@@ -62,6 +66,7 @@ class Profiles:
         )
 
     def delete(self, profile_id: str) -> None:
+        """Delete a browser profile."""
         self._http.request("DELETE", f"/profiles/{profile_id}")
 
 
@@ -75,6 +80,7 @@ class AsyncProfiles:
         name: str | None = None,
         **extra: Any,
     ) -> ProfileView:
+        """Create a new browser profile."""
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
@@ -89,6 +95,7 @@ class AsyncProfiles:
         page_size: int | None = None,
         page_number: int | None = None,
     ) -> ProfileListResponse:
+        """List browser profiles."""
         return ProfileListResponse.model_validate(
             await self._http.request(
                 "GET",
@@ -101,6 +108,7 @@ class AsyncProfiles:
         )
 
     async def get(self, profile_id: str) -> ProfileView:
+        """Get browser profile details."""
         return ProfileView.model_validate(
             await self._http.request("GET", f"/profiles/{profile_id}")
         )
@@ -112,6 +120,7 @@ class AsyncProfiles:
         name: str | None = None,
         **extra: Any,
     ) -> ProfileView:
+        """Update a browser profile."""
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name

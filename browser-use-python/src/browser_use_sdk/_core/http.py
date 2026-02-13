@@ -8,7 +8,7 @@ import httpx
 
 from .errors import BrowserUseError
 
-_RETRY_STATUSES = {429, 500, 502, 503, 504}
+_RETRY_STATUSES = {429}
 _MAX_RETRIES = 3
 _BACKOFF_BASE = 0.5
 
@@ -63,11 +63,11 @@ class SyncHttpClient:
                 response = self._client.request(method, path, json=json, params=params)
             except httpx.TransportError as exc:
                 last_exc = exc
-                time.sleep(_BACKOFF_BASE * (2 ** attempt))
+                time.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
                 continue
 
             if _should_retry(response.status_code) and attempt < _MAX_RETRIES - 1:
-                time.sleep(_BACKOFF_BASE * (2 ** attempt))
+                time.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
                 continue
 
             _raise_for_status(response)
@@ -111,11 +111,11 @@ class AsyncHttpClient:
                 response = await self._client.request(method, path, json=json, params=params)
             except httpx.TransportError as exc:
                 last_exc = exc
-                await asyncio.sleep(_BACKOFF_BASE * (2 ** attempt))
+                await asyncio.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
                 continue
 
             if _should_retry(response.status_code) and attempt < _MAX_RETRIES - 1:
-                await asyncio.sleep(_BACKOFF_BASE * (2 ** attempt))
+                await asyncio.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
                 continue
 
             _raise_for_status(response)

@@ -56,7 +56,16 @@ task publish         # npm + pypi publish
 4. **Python returns Pydantic models.** Full type safety, not dicts.
 5. **Everything is regeneratable.** Generate, audit, fix, ship.
 
+## SDK Rules (both TS and Python)
+
+- **Every method with a request body MUST accept `**extra`** (Python) or spread extra fields (TS) for forward-compatibility. No exceptions.
+- **Both SDKs must stay in sync.** Same retry logic, same polling defaults (2s interval, 300s timeout), same terminal statuses, same backoff cap (10s). When changing behavior in one SDK, change both.
+- **Only retry HTTP 429.** Do not retry 5xx errors.
+- **Every public method needs a docstring** (Python) or JSDoc (TS). One-liner, imperative style.
+- **Re-export all user-facing types** from top-level `__init__.py` / `index.ts`. Users should never need to import from `generated/` directly.
+
 ## Python SDK Rules
 
 - **Never use `Dict[str, Any]` for typed params.** If the OpenAPI spec defines a schema, use the generated Pydantic model (e.g. `SessionSettings`, `CustomProxy`). Only use `Dict[str, Any]` when the spec literally says `object` with no further schema.
 - **Use `X | None`, not `Optional[X]`.** Modern Python union syntax everywhere — hand-written code and generated code (via `--use-union-operator` flag).
+- **No `Optional`, `Dict`, `List`, `Union` imports from `typing`** in hand-written code. Use built-in `dict`, `list`, `X | Y` syntax (with `from __future__ import annotations`).

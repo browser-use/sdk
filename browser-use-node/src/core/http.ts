@@ -74,7 +74,7 @@ export class HttpClient {
         }
 
         const shouldRetry =
-          (response.status === 429 || response.status >= 500) &&
+          response.status === 429 &&
           attempt < this.maxRetries;
 
         if (shouldRetry) {

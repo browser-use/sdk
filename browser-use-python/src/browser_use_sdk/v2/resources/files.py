@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v2.models import (
     TaskOutputFileResponse,
@@ -18,17 +20,20 @@ class Files:
         file_name: str,
         content_type: str,
         size_bytes: int,
+        **extra: Any,
     ) -> UploadFilePresignedUrlResponse:
         """Generate a presigned URL for uploading files to an agent session."""
+        body: dict[str, Any] = {
+            "fileName": file_name,
+            "contentType": content_type,
+            "sizeBytes": size_bytes,
+        }
+        body.update(extra)
         return UploadFilePresignedUrlResponse.model_validate(
             self._http.request(
                 "POST",
                 f"/files/sessions/{session_id}/presigned-url",
-                json={
-                    "fileName": file_name,
-                    "contentType": content_type,
-                    "sizeBytes": size_bytes,
-                },
+                json=body,
             )
         )
 
@@ -39,17 +44,20 @@ class Files:
         file_name: str,
         content_type: str,
         size_bytes: int,
+        **extra: Any,
     ) -> UploadFilePresignedUrlResponse:
         """Generate a presigned URL for uploading files to a browser session."""
+        body: dict[str, Any] = {
+            "fileName": file_name,
+            "contentType": content_type,
+            "sizeBytes": size_bytes,
+        }
+        body.update(extra)
         return UploadFilePresignedUrlResponse.model_validate(
             self._http.request(
                 "POST",
                 f"/files/browsers/{session_id}/presigned-url",
-                json={
-                    "fileName": file_name,
-                    "contentType": content_type,
-                    "sizeBytes": size_bytes,
-                },
+                json=body,
             )
         )
 
@@ -74,17 +82,20 @@ class AsyncFiles:
         file_name: str,
         content_type: str,
         size_bytes: int,
+        **extra: Any,
     ) -> UploadFilePresignedUrlResponse:
         """Generate a presigned URL for uploading files to an agent session."""
+        body: dict[str, Any] = {
+            "fileName": file_name,
+            "contentType": content_type,
+            "sizeBytes": size_bytes,
+        }
+        body.update(extra)
         return UploadFilePresignedUrlResponse.model_validate(
             await self._http.request(
                 "POST",
                 f"/files/sessions/{session_id}/presigned-url",
-                json={
-                    "fileName": file_name,
-                    "contentType": content_type,
-                    "sizeBytes": size_bytes,
-                },
+                json=body,
             )
         )
 
@@ -95,17 +106,20 @@ class AsyncFiles:
         file_name: str,
         content_type: str,
         size_bytes: int,
+        **extra: Any,
     ) -> UploadFilePresignedUrlResponse:
         """Generate a presigned URL for uploading files to a browser session."""
+        body: dict[str, Any] = {
+            "fileName": file_name,
+            "contentType": content_type,
+            "sizeBytes": size_bytes,
+        }
+        body.update(extra)
         return UploadFilePresignedUrlResponse.model_validate(
             await self._http.request(
                 "POST",
                 f"/files/browsers/{session_id}/presigned-url",
-                json={
-                    "fileName": file_name,
-                    "contentType": content_type,
-                    "sizeBytes": size_bytes,
-                },
+                json=body,
             )
         )
 
