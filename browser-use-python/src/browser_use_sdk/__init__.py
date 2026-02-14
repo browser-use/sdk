@@ -6,7 +6,7 @@ For v3, use ``from browser_use_sdk.v3 import BrowserUse``.
 
 from ._core.errors import BrowserUseError
 from .v2.client import AsyncBrowserUse, BrowserUse
-from .v2.helpers import AsyncTaskRun, TaskStream
+from .v2.helpers import AsyncTaskRun, TaskResult, TaskStream
 
 from .generated.v2.models import (
     AccountView,
@@ -58,6 +58,7 @@ __all__ = [
     "BrowserUseError",
     "TaskStream",
     "AsyncTaskRun",
+    "TaskResult",
     # Response models
     "AccountView",
     "BrowserSessionItemView",

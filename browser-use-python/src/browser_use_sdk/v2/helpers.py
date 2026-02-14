@@ -10,9 +10,26 @@ from pydantic import BaseModel
 from ..generated.v2.models import TaskCreatedResponse, TaskStepView, TaskView
 from .resources.tasks import AsyncTasks, Tasks
 
-_TERMINAL_STATUSES = {"finished", "stopped", "failed"}
+TERMINAL_STATUSES = {"finished", "stopped", "failed"}
 
 T = TypeVar("T")
+
+
+class TaskResult(Generic[T]):
+    """Task result with typed output. All TaskView fields accessible directly (e.g. result.id, result.steps)."""
+
+    task: TaskView
+    output: T
+
+    def __init__(self, task: TaskView, output: T) -> None:
+        self.task = task
+        self.output = output
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.task, name)
+
+    def __repr__(self) -> str:
+        return f"TaskResult(id={self.task.id}, status={self.task.status.value}, output={self.output!r})"
 
 
 def _parse_output(output: str | None, output_schema: type[Any] | None) -> Any:
@@ -31,14 +48,14 @@ def _poll_output(
     *,
     timeout: float = 300,
     interval: float = 2,
-) -> Any:
-    """Poll lightweight status endpoint until terminal, return parsed output."""
+) -> TaskResult[Any]:
+    """Poll lightweight status endpoint until terminal, return TaskResult."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         status = tasks.status(task_id)
-        if status.status.value in _TERMINAL_STATUSES:
+        if status.status.value in TERMINAL_STATUSES:
             result = tasks.get(task_id)
-            return _parse_output(result.output, output_schema)
+            return TaskResult(result, _parse_output(result.output, output_schema))
         time.sleep(interval)
     raise TimeoutError(f"Task {task_id} did not complete within {timeout}s")
 
@@ -50,14 +67,14 @@ async def _async_poll_output(
     *,
     timeout: float = 300,
     interval: float = 2,
-) -> Any:
-    """Poll lightweight status endpoint until terminal, return parsed output."""
+) -> TaskResult[Any]:
+    """Poll lightweight status endpoint until terminal, return TaskResult."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         status = await tasks.status(task_id)
-        if status.status.value in _TERMINAL_STATUSES:
+        if status.status.value in TERMINAL_STATUSES:
             result = await tasks.get(task_id)
-            return _parse_output(result.output, output_schema)
+            return TaskResult(result, _parse_output(result.output, output_schema))
         await asyncio.sleep(interval)
     raise TimeoutError(f"Task {task_id} did not complete within {timeout}s")
 
@@ -65,7 +82,7 @@ async def _async_poll_output(
 class TaskStream(Generic[T]):
     """Iterable that polls the full task and yields new steps as they appear.
 
-    After iteration, ``.result`` contains the full ``TaskView``.
+    After iteration, ``.result`` contains the ``TaskResult``.
 
     Usage::
 
@@ -87,11 +104,11 @@ class TaskStream(Generic[T]):
         self._output_schema = output_schema
         self._timeout = timeout
         self._interval = interval
-        self.result: TaskView | None = None
+        self.result: TaskResult[T] | None = None
 
     @property
-    def output(self) -> str | None:
-        """Final output (available after iteration completes)."""
+    def output(self) -> T | None:
+        """Final typed output (available after iteration completes)."""
         return self.result.output if self.result else None
 
     def __iter__(self) -> Iterator[TaskStepView]:
@@ -105,8 +122,8 @@ class TaskStream(Generic[T]):
                 yield task.steps[i]
             seen = len(task.steps)
 
-            if task.status.value in _TERMINAL_STATUSES:
-                self.result = task
+            if task.status.value in TERMINAL_STATUSES:
+                self.result = TaskResult(task, _parse_output(task.output, self._output_schema))
                 return
 
             time.sleep(self._interval)
@@ -119,13 +136,14 @@ class TaskStream(Generic[T]):
 class AsyncTaskRun(Generic[T]):
     """Lazy async task handle returned by ``client.run()``.
 
-    - ``await client.run(...)`` polls the lightweight status endpoint, returns the output.
+    - ``await client.run(...)`` polls the lightweight status endpoint, returns a ``TaskResult``.
     - ``async for step in client.run(...)`` polls the full task, yields new steps.
 
     Usage::
 
         # Simple
-        output = await client.run("Find the top HN post")
+        result = await client.run("Find the top HN post")
+        print(result.output)
 
         # Step-by-step
         async for step in client.run("Go to google.com"):
@@ -147,7 +165,7 @@ class AsyncTaskRun(Generic[T]):
         self._timeout = timeout
         self._interval = interval
         self._task_id: str | None = None
-        self.result: TaskView | None = None
+        self.result: TaskResult[T] | None = None
 
     @property
     def task_id(self) -> str | None:
@@ -155,8 +173,8 @@ class AsyncTaskRun(Generic[T]):
         return self._task_id
 
     @property
-    def output(self) -> str | None:
-        """Final output (available after awaiting or iterating to completion)."""
+    def output(self) -> T | None:
+        """Final typed output (available after awaiting or iterating to completion)."""
         return self.result.output if self.result else None
 
     async def _ensure_task_id(self) -> str:
@@ -168,15 +186,17 @@ class AsyncTaskRun(Generic[T]):
     def __await__(self):  # type: ignore[override]
         return self._wait_for_output().__await__()
 
-    async def _wait_for_output(self) -> T:
+    async def _wait_for_output(self) -> TaskResult[T]:
         task_id = await self._ensure_task_id()
-        return await _async_poll_output(
+        result = await _async_poll_output(
             self._tasks,
             task_id,
             self._output_schema,
             timeout=self._timeout,
             interval=self._interval,
         )
+        self.result = result
+        return result
 
     async def __aiter__(self) -> AsyncIterator[TaskStepView]:
         task_id = await self._ensure_task_id()
@@ -190,8 +210,8 @@ class AsyncTaskRun(Generic[T]):
                 yield task.steps[i]
             seen = len(task.steps)
 
-            if task.status.value in _TERMINAL_STATUSES:
-                self.result = task
+            if task.status.value in TERMINAL_STATUSES:
+                self.result = TaskResult(task, _parse_output(task.output, self._output_schema))
                 return
 
             await asyncio.sleep(self._interval)

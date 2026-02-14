@@ -27,8 +27,9 @@ poetry add browser-use-sdk
 from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-output = await client.run("Go to google.com and search for 'browser use'")
-print(output)
+result = await client.run("Go to google.com and search for 'browser use'")
+print(result.output)
+print(result.id, result.status)
 ```
 
 ## v2 API (default)
@@ -40,8 +41,7 @@ from browser_use_sdk import AsyncBrowserUse, BrowserUseError
 
 client = AsyncBrowserUse()
 
-# Run a task — returns output directly
-output = await client.run("Navigate to example.com and get the title")
+result = await client.run("Navigate to example.com and get the title")
 
 # Or use the tasks resource directly
 task = await client.tasks.create("Navigate to example.com and get the title")
@@ -92,8 +92,8 @@ class Product(BaseModel):
     price: float
 
 client = AsyncBrowserUse()
-product = await client.run("Find the price of the MacBook Air", output_schema=Product)
-print(f"{product.name}: ${product.price}")  # Product instance, fully typed
+result = await client.run("Find the price of the MacBook Air", schema=Product)
+print(f"{result.output.name}: ${result.output.price}")
 ```
 
 ## Streaming
@@ -134,7 +134,7 @@ A synchronous client is also available:
 from browser_use_sdk import BrowserUse
 
 client = BrowserUse()
-output = client.run("Go to example.com")
+result = client.run("Go to example.com")
 
 # Streaming (sync)
 for step in client.stream("Scrape the front page of HN"):
@@ -172,6 +172,7 @@ on 429 (rate limit) and 5xx (server error) responses.
 | tasks         | `get(id)`           | `GET /tasks/{id}`                             |
 | tasks         | `stop(id)`          | `PATCH /tasks/{id}`                           |
 | tasks         | `status(id)`        | `GET /tasks/{id}/status`                      |
+| tasks         | `wait(id, **kw)`    | Poll until terminal, return TaskView          |
 | tasks         | `logs(id)`          | `GET /tasks/{id}/logs`                        |
 | sessions      | `create(**kw)`      | `POST /sessions`                              |
 | sessions      | `list(**kw)`        | `GET /sessions`                               |

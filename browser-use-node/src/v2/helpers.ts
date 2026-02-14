@@ -6,7 +6,10 @@ type TaskCreatedResponse = components["schemas"]["TaskCreatedResponse"];
 type TaskStepView = components["schemas"]["TaskStepView"];
 type TaskView = components["schemas"]["TaskView"];
 
-const TERMINAL_STATUSES = new Set(["finished", "stopped", "failed"]);
+export const TERMINAL_STATUSES = new Set(["finished", "stopped", "failed"]);
+
+/** Task result with typed output. All TaskView fields are directly accessible. */
+export type TaskResult<T = string | null> = Omit<TaskView, "output"> & { output: T };
 
 export interface RunOptions {
   /** Maximum time to wait in milliseconds. Default: 300_000 (5 min). */
@@ -18,10 +21,10 @@ export interface RunOptions {
 /**
  * Lazy task handle returned by `client.run()`.
  *
- * - `await client.run(...)` polls the lightweight status endpoint, returns the output.
+ * - `await client.run(...)` polls the lightweight status endpoint, returns a `TaskResult`.
  * - `for await (const step of client.run(...))` polls the full task, yields new steps.
  */
-export class TaskRun<T = string> implements PromiseLike<T> {
+export class TaskRun<T = string> implements PromiseLike<TaskResult<T>> {
   private readonly _createPromise: Promise<TaskCreatedResponse>;
   private readonly _tasks: Tasks;
   private readonly _schema?: z.ZodType<T>;
@@ -29,7 +32,7 @@ export class TaskRun<T = string> implements PromiseLike<T> {
   private readonly _interval: number;
 
   private _taskId: string | null = null;
-  private _result: TaskView | null = null;
+  private _result: TaskResult<T> | null = null;
 
   constructor(
     createPromise: Promise<TaskCreatedResponse>,
@@ -50,13 +53,13 @@ export class TaskRun<T = string> implements PromiseLike<T> {
   }
 
   /** Full task result (available after awaiting or iterating to completion). */
-  get result(): TaskView | null {
+  get result(): TaskResult<T> | null {
     return this._result;
   }
 
-  /** Enable `await client.run(...)` — polls status endpoint, returns output. */
-  then<R1 = T, R2 = never>(
-    onFulfilled?: ((value: T) => R1 | PromiseLike<R1>) | null,
+  /** Enable `await client.run(...)` — polls status endpoint, returns TaskResult. */
+  then<R1 = TaskResult<T>, R2 = never>(
+    onFulfilled?: ((value: TaskResult<T>) => R1 | PromiseLike<R1>) | null,
     onRejected?: ((reason: unknown) => R2 | PromiseLike<R2>) | null,
   ): Promise<R1 | R2> {
     return this._waitForOutput().then(onFulfilled, onRejected);
@@ -77,7 +80,7 @@ export class TaskRun<T = string> implements PromiseLike<T> {
       seen = task.steps.length;
 
       if (TERMINAL_STATUSES.has(task.status)) {
-        this._result = task;
+        this._result = this._buildResult(task);
         return;
       }
 
@@ -96,16 +99,17 @@ export class TaskRun<T = string> implements PromiseLike<T> {
     return this._taskId;
   }
 
-  /** Poll lightweight status endpoint until terminal, return parsed output. */
-  private async _waitForOutput(): Promise<T> {
+  /** Poll lightweight status endpoint until terminal, return TaskResult. */
+  private async _waitForOutput(): Promise<TaskResult<T>> {
     const taskId = await this._ensureTaskId();
     const deadline = Date.now() + this._timeout;
 
     while (Date.now() < deadline) {
       const status = await this._tasks.status(taskId);
       if (TERMINAL_STATUSES.has(status.status)) {
-        this._result = await this._tasks.get(taskId);
-        return this._parseOutput(this._result.output);
+        const task = await this._tasks.get(taskId);
+        this._result = this._buildResult(task);
+        return this._result;
       }
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
@@ -113,6 +117,11 @@ export class TaskRun<T = string> implements PromiseLike<T> {
     }
 
     throw new Error(`Task ${taskId} did not complete within ${this._timeout}ms`);
+  }
+
+  private _buildResult(task: TaskView): TaskResult<T> {
+    const output = this._parseOutput(task.output);
+    return { ...task, output };
   }
 
   private _parseOutput(output: string | null | undefined): T {

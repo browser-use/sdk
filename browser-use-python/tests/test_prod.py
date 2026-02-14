@@ -89,11 +89,18 @@ class TestProfiles:
 # ── 3. Task lifecycle ──────────────────────────────────────────────────────
 
 class TestTaskLifecycle:
-    def test_run_returns_output(self, client):
-        """await run() returns output string directly."""
-        output = client.run("Return the exact text: hello world")
-        assert isinstance(output, str)
-        assert len(output) > 0
+    def test_run_returns_task_result(self, client):
+        """run() returns TaskResult with output and metadata."""
+        from browser_use_sdk import TaskResult
+
+        result = client.run("Return the exact text: hello world")
+        assert isinstance(result, TaskResult)
+        assert isinstance(result.output, str)
+        assert len(result.output) > 0
+        assert result.id is not None
+        assert result.status is not None
+        assert hasattr(result, "steps")
+        assert result.task is not None
 
 
 # ── 4. Structured output ───────────────────────────────────────────────────
@@ -105,15 +112,19 @@ class MathResult(BaseModel):
 
 class TestStructuredOutput:
     def test_run_with_schema(self, client):
-        """run() with output_schema returns parsed model directly."""
+        """run() with schema returns TaskResult with parsed model."""
+        from browser_use_sdk import TaskResult
+
         result = client.run(
             "What is 7 * 8? Return the answer and a one-sentence explanation.",
-            output_schema=MathResult,
+            schema=MathResult,
         )
-        assert isinstance(result, MathResult)
-        assert isinstance(result.answer, int)
-        assert isinstance(result.explanation, str)
-        assert len(result.explanation) > 0
+        assert isinstance(result, TaskResult)
+        assert isinstance(result.output, MathResult)
+        assert isinstance(result.output.answer, int)
+        assert isinstance(result.output.explanation, str)
+        assert len(result.output.explanation) > 0
+        assert result.id is not None
 
 
 # ── 5. Streaming ───────────────────────────────────────────────────────────
@@ -121,6 +132,8 @@ class TestStructuredOutput:
 class TestStreaming:
     def test_stream_yields_steps(self, client):
         """stream() yields TaskStepView with step-by-step details."""
+        from browser_use_sdk import TaskResult
+
         stream = client.stream("Return the exact text: ping")
         count = 0
         for step in stream:
@@ -132,8 +145,10 @@ class TestStreaming:
                 break  # safety valve
         assert count >= 1
 
-        # result should be populated after iteration
+        # result should be a TaskResult after iteration
         assert stream.result is not None
+        assert isinstance(stream.result, TaskResult)
+        assert stream.result.id is not None
 
 
 # ── 6. Session lifecycle ───────────────────────────────────────────────────

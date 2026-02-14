@@ -2,15 +2,36 @@ from __future__ import annotations
 
 import time
 import asyncio
+from datetime import datetime
+from enum import Enum
 from typing import Any
+from uuid import UUID
 
 import httpx
+from pydantic import BaseModel
 
 from .errors import BrowserUseError
 
 _RETRY_STATUSES = {429}
 _MAX_RETRIES = 3
 _BACKOFF_BASE = 0.5
+
+
+def _clean_json(data: Any) -> Any:
+    """Prepare data for JSON serialization."""
+    if isinstance(data, dict):
+        return {k: _clean_json(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [_clean_json(v) for v in data]
+    if isinstance(data, BaseModel):
+        return data.model_dump(by_alias=True, exclude_none=True)
+    if isinstance(data, Enum):
+        return data.value
+    if isinstance(data, UUID):
+        return str(data)
+    if isinstance(data, datetime):
+        return data.isoformat()
+    return data
 
 
 def _should_retry(status_code: int) -> bool:
@@ -56,6 +77,7 @@ class SyncHttpClient:
         json: Any = None,
         params: dict[str, Any] | None = None,
     ) -> Any:
+        json = _clean_json(json) if json is not None else None
         params = _clean_params(params)
         last_exc: Exception | None = None
         for attempt in range(_MAX_RETRIES):
@@ -104,6 +126,7 @@ class AsyncHttpClient:
         json: Any = None,
         params: dict[str, Any] | None = None,
     ) -> Any:
+        json = _clean_json(json) if json is not None else None
         params = _clean_params(params)
         last_exc: Exception | None = None
         for attempt in range(_MAX_RETRIES):
@@ -130,7 +153,7 @@ class AsyncHttpClient:
 
 
 def _clean_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Remove None values from query params."""
+    """Remove None values and stringify query params."""
     if params is None:
         return None
-    return {k: v for k, v in params.items() if v is not None}
+    return {k: str(v) for k, v in params.items() if v is not None}

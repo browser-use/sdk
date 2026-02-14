@@ -17,7 +17,7 @@ from .resources.profiles import AsyncProfiles, Profiles
 from .resources.sessions import AsyncSessions, Sessions
 from .resources.skills import AsyncSkills, Skills
 from .resources.tasks import AsyncTasks, Tasks
-from .helpers import AsyncTaskRun, TaskStream, _poll_output
+from .helpers import AsyncTaskRun, TaskResult, TaskStream, _poll_output
 
 _V2_BASE_URL = "https://api.browser-use.com/api/v2"
 
@@ -58,6 +58,33 @@ class BrowserUse:
         self,
         task: str,
         *,
+        schema: type[T],
+        session_id: str | None = ...,
+        llm: str | None = ...,
+        start_url: str | None = ...,
+        max_steps: int | None = ...,
+        metadata: dict[str, str] | None = ...,
+        secrets: dict[str, str] | None = ...,
+        allowed_domains: list[str] | None = ...,
+        highlight_elements: bool | None = ...,
+        flash_mode: bool | None = ...,
+        thinking: bool | None = ...,
+        vision: bool | str | None = ...,
+        system_prompt_extension: str | None = ...,
+        judge: bool | None = ...,
+        judge_ground_truth: str | None = ...,
+        judge_llm: str | None = ...,
+        skill_ids: list[str] | None = ...,
+        op_vault_id: str | None = ...,
+        session_settings: SessionSettings | None = ...,
+        **extra: Any,
+    ) -> TaskResult[T]: ...
+
+    @overload
+    def run(
+        self,
+        task: str,
+        *,
         output_schema: type[T],
         session_id: str | None = ...,
         llm: str | None = ...,
@@ -78,7 +105,7 @@ class BrowserUse:
         op_vault_id: str | None = ...,
         session_settings: SessionSettings | None = ...,
         **extra: Any,
-    ) -> T: ...
+    ) -> TaskResult[T]: ...
 
     @overload
     def run(
@@ -104,12 +131,13 @@ class BrowserUse:
         op_vault_id: str | None = ...,
         session_settings: SessionSettings | None = ...,
         **extra: Any,
-    ) -> str: ...
+    ) -> TaskResult[str]: ...
 
     def run(
         self,
         task: str,
         *,
+        schema: type[Any] | None = None,
         output_schema: type[Any] | None = None,
         session_id: str | None = None,
         llm: str | None = None,
@@ -131,22 +159,10 @@ class BrowserUse:
         session_settings: SessionSettings | None = None,
         **extra: Any,
     ) -> Any:
-        """Run an AI agent task. Blocks until complete, returns the output.
-
-        Example::
-
-            output = client.run("Find the top HN post")
-
-        With structured output::
-
-            class Product(BaseModel):
-                name: str
-                price: float
-
-            product = client.run("Find product info", output_schema=Product)
-        """
-        if output_schema is not None and issubclass(output_schema, BaseModel):
-            extra["structured_output"] = json.dumps(output_schema.model_json_schema())
+        """Run an AI agent task. Blocks until complete, returns a TaskResult."""
+        resolved_schema = schema or output_schema
+        if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
+            extra["structured_output"] = json.dumps(resolved_schema.model_json_schema())
 
         data = self.tasks.create(
             task,
@@ -170,7 +186,34 @@ class BrowserUse:
             session_settings=session_settings,
             **extra,
         )
-        return _poll_output(self.tasks, str(data.id), output_schema)
+        return _poll_output(self.tasks, str(data.id), resolved_schema)
+
+    @overload
+    def stream(
+        self,
+        task: str,
+        *,
+        schema: type[T],
+        session_id: str | None = ...,
+        llm: str | None = ...,
+        start_url: str | None = ...,
+        max_steps: int | None = ...,
+        metadata: dict[str, str] | None = ...,
+        secrets: dict[str, str] | None = ...,
+        allowed_domains: list[str] | None = ...,
+        highlight_elements: bool | None = ...,
+        flash_mode: bool | None = ...,
+        thinking: bool | None = ...,
+        vision: bool | str | None = ...,
+        system_prompt_extension: str | None = ...,
+        judge: bool | None = ...,
+        judge_ground_truth: str | None = ...,
+        judge_llm: str | None = ...,
+        skill_ids: list[str] | None = ...,
+        op_vault_id: str | None = ...,
+        session_settings: SessionSettings | None = ...,
+        **extra: Any,
+    ) -> TaskStream[T]: ...
 
     @overload
     def stream(
@@ -229,6 +272,7 @@ class BrowserUse:
         self,
         task: str,
         *,
+        schema: type[Any] | None = None,
         output_schema: type[Any] | None = None,
         session_id: str | None = None,
         llm: str | None = None,
@@ -250,15 +294,10 @@ class BrowserUse:
         session_settings: SessionSettings | None = None,
         **extra: Any,
     ) -> TaskStream[Any]:
-        """Run a task and yield steps as they happen.
-
-        Example::
-
-            for step in client.stream("Go to google.com"):
-                print(f"[{step.number}] {step.next_goal}")
-        """
-        if output_schema is not None and issubclass(output_schema, BaseModel):
-            extra["structured_output"] = json.dumps(output_schema.model_json_schema())
+        """Run a task and yield steps as they happen."""
+        resolved_schema = schema or output_schema
+        if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
+            extra["structured_output"] = json.dumps(resolved_schema.model_json_schema())
 
         data = self.tasks.create(
             task,
@@ -282,7 +321,7 @@ class BrowserUse:
             session_settings=session_settings,
             **extra,
         )
-        return TaskStream(data, self.tasks, output_schema)
+        return TaskStream(data, self.tasks, resolved_schema)
 
     def close(self) -> None:
         self._http.close()
@@ -322,6 +361,33 @@ class AsyncBrowserUse:
         self.browsers = AsyncBrowsers(self._http)
         self.skills = AsyncSkills(self._http)
         self.marketplace = AsyncMarketplace(self._http)
+
+    @overload
+    def run(
+        self,
+        task: str,
+        *,
+        schema: type[T],
+        session_id: str | None = ...,
+        llm: str | None = ...,
+        start_url: str | None = ...,
+        max_steps: int | None = ...,
+        metadata: dict[str, str] | None = ...,
+        secrets: dict[str, str] | None = ...,
+        allowed_domains: list[str] | None = ...,
+        highlight_elements: bool | None = ...,
+        flash_mode: bool | None = ...,
+        thinking: bool | None = ...,
+        vision: bool | str | None = ...,
+        system_prompt_extension: str | None = ...,
+        judge: bool | None = ...,
+        judge_ground_truth: str | None = ...,
+        judge_llm: str | None = ...,
+        skill_ids: list[str] | None = ...,
+        op_vault_id: str | None = ...,
+        session_settings: SessionSettings | None = ...,
+        **extra: Any,
+    ) -> AsyncTaskRun[T]: ...
 
     @overload
     def run(
@@ -380,6 +446,7 @@ class AsyncBrowserUse:
         self,
         task: str,
         *,
+        schema: type[Any] | None = None,
         output_schema: type[Any] | None = None,
         session_id: str | None = None,
         llm: str | None = None,
@@ -401,22 +468,10 @@ class AsyncBrowserUse:
         session_settings: SessionSettings | None = None,
         **extra: Any,
     ) -> AsyncTaskRun[Any]:
-        """Run an AI agent task.
-
-        ``await client.run(...)`` polls the status endpoint, returns the output.
-        ``async for step in client.run(...)`` polls the full task, yields steps.
-
-        Example::
-
-            output = await client.run("Find the top HN post")
-
-        Step-by-step::
-
-            async for step in client.run("Go to google.com"):
-                print(f"[{step.number}] {step.next_goal}")
-        """
-        if output_schema is not None and issubclass(output_schema, BaseModel):
-            extra["structured_output"] = json.dumps(output_schema.model_json_schema())
+        """Run an AI agent task. ``await`` for a TaskResult, or ``async for`` for steps."""
+        resolved_schema = schema or output_schema
+        if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
+            extra["structured_output"] = json.dumps(resolved_schema.model_json_schema())
 
         def create_fn() -> Awaitable[TaskCreatedResponse]:
             return self.tasks.create(
@@ -442,7 +497,7 @@ class AsyncBrowserUse:
                 **extra,
             )
 
-        return AsyncTaskRun(create_fn, self.tasks, output_schema)
+        return AsyncTaskRun(create_fn, self.tasks, resolved_schema)
 
     async def close(self) -> None:
         await self._http.close()

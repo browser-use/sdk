@@ -1,5 +1,6 @@
 import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v2/types.js";
+import { TERMINAL_STATUSES } from "../helpers.js";
 
 /** User-facing body: only `task` is required; everything else has API defaults. */
 export type CreateTaskBody = Pick<components["schemas"]["CreateTaskRequest"], "task"> &
@@ -55,5 +56,24 @@ export class Tasks {
   /** Get secure download URL for task execution logs. */
   logs(taskId: string): Promise<TaskLogFileResponse> {
     return this.http.get<TaskLogFileResponse>(`/tasks/${taskId}/logs`);
+  }
+
+  /** Poll until a task reaches a terminal status, then return the full TaskView. */
+  async wait(taskId: string, opts?: { timeout?: number; interval?: number }): Promise<TaskView> {
+    const timeout = opts?.timeout ?? 300_000;
+    const interval = opts?.interval ?? 2_000;
+    const deadline = Date.now() + timeout;
+
+    while (Date.now() < deadline) {
+      const status = await this.status(taskId);
+      if (TERMINAL_STATUSES.has(status.status)) {
+        return this.get(taskId);
+      }
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      await new Promise((r) => setTimeout(r, Math.min(interval, remaining)));
+    }
+
+    throw new Error(`Task ${taskId} did not complete within ${timeout}ms`);
   }
 }

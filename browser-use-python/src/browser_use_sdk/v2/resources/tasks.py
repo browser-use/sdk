@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import time
 from typing import Any
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
@@ -11,6 +13,8 @@ from ...generated.v2.models import (
     TaskStatusView,
     TaskView,
 )
+
+_TERMINAL_STATUSES = {"finished", "stopped", "failed"}
 
 
 def _build_create_body(
@@ -195,6 +199,16 @@ class Tasks:
             self._http.request("GET", f"/tasks/{task_id}/logs")
         )
 
+    def wait(self, task_id: str, *, timeout: float = 300, interval: float = 2) -> TaskView:
+        """Poll until a task reaches a terminal status, then return the full TaskView."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            status = self.status(task_id)
+            if status.status.value in _TERMINAL_STATUSES:
+                return self.get(task_id)
+            time.sleep(interval)
+        raise TimeoutError(f"Task {task_id} did not complete within {timeout}s")
+
 
 class AsyncTasks:
     def __init__(self, http: AsyncHttpClient) -> None:
@@ -312,3 +326,13 @@ class AsyncTasks:
         return TaskLogFileResponse.model_validate(
             await self._http.request("GET", f"/tasks/{task_id}/logs")
         )
+
+    async def wait(self, task_id: str, *, timeout: float = 300, interval: float = 2) -> TaskView:
+        """Poll until a task reaches a terminal status, then return the full TaskView."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            status = await self.status(task_id)
+            if status.status.value in _TERMINAL_STATUSES:
+                return await self.get(task_id)
+            await asyncio.sleep(interval)
+        raise TimeoutError(f"Task {task_id} did not complete within {timeout}s")

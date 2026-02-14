@@ -99,19 +99,22 @@ await test("profiles CRUD lifecycle", async () => {
   cleanups.pop();
 });
 
-// 3. Task lifecycle — await run() directly, verify output
-await test("await run() returns output string", async () => {
+// 3. Task lifecycle — await run() directly, verify TaskResult
+await test("await run() returns TaskResult with output and metadata", async () => {
   const run = client.run("Return the exact text: hello world");
-  const output = await run;
-  assert(typeof output === "string", `Expected string, got ${typeof output}`);
-  assert(output.length > 0, "Output should not be empty");
-
-  // result should be populated after awaiting
-  assert(run.result !== null, "result should be set after await");
+  const result = await run;
+  assert(typeof result.output === "string", `Expected string output, got ${typeof result.output}`);
+  assert(result.output.length > 0, "Output should not be empty");
+  assert(typeof result.id === "string", "result.id should be a string");
+  assert(Array.isArray(result.steps), "result.steps should be an array");
   assert(
-    run.result!.status === "finished" || run.result!.status === "stopped",
-    `Expected terminal status, got ${run.result!.status}`,
+    result.status === "finished" || result.status === "stopped",
+    `Expected terminal status, got ${result.status}`,
   );
+
+  // .result on the run handle should match
+  assert(run.result !== null, "run.result should be set after await");
+  assert(run.result!.id === result.id, "run.result should match awaited result");
 });
 
 // 4. Structured output — await run() with schema, verify typed result
@@ -121,14 +124,15 @@ await test("structured output parses correctly", async () => {
     explanation: z.string(),
   });
 
-  const parsed = await client.run(
+  const result = await client.run(
     "What is 7 * 8? Return the answer and a one-sentence explanation.",
     { schema: MathResult },
   );
 
-  assert(parsed !== null, "parsed should not be null");
-  assert(typeof parsed.answer === "number", `answer should be number, got ${typeof parsed.answer}`);
-  assert(typeof parsed.explanation === "string", `explanation should be string, got ${typeof parsed.explanation}`);
+  assert(result.output !== null, "output should not be null");
+  assert(typeof result.output.answer === "number", `answer should be number, got ${typeof result.output.answer}`);
+  assert(typeof result.output.explanation === "string", `explanation should be string, got ${typeof result.output.explanation}`);
+  assert(typeof result.id === "string", "result.id should be a string");
 });
 
 // 5. Streaming — for-await yields step-by-step progress
@@ -144,8 +148,10 @@ await test("for-await yields TaskStepView steps", async () => {
   }
   assert(count >= 1, "Should yield at least 1 step");
 
-  // result should be populated after iteration
+  // result should be a TaskResult after iteration
   assert(run.result !== null, "result should be set after iteration");
+  assert(typeof run.result!.id === "string", "result.id should be a string");
+  assert(typeof run.result!.output === "string", "result.output should be a string");
 });
 
 // 6. Session lifecycle

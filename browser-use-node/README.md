@@ -23,9 +23,9 @@ import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
 
-// Run a task and get the output
-const output = await client.run("Find the top post on Hacker News");
-console.log(output);
+const result = await client.run("Find the top post on Hacker News");
+console.log(result.output);
+console.log(result.id, result.status);
 ```
 
 ## V3 (Experimental)
@@ -61,18 +61,19 @@ import { z } from "zod";
 
 const Product = z.object({ name: z.string(), price: z.number() });
 
-const product = await client.run("Find the price of the MacBook Air", { schema: Product });
-console.log(`${product.name}: $${product.price}`); // fully typed
+const result = await client.run("Find the price of the MacBook Air", { schema: Product });
+console.log(`${result.output.name}: $${result.output.price}`);
 ```
 
 ## Polling and Streaming
 
 `client.run()` returns a dual-purpose handle: `await` it for the output, or `for await...of` it for step-by-step progress.
 
-### Wait for Output
+### Wait for Result
 
 ```ts
-const output = await client.run("Search for AI news");
+const result = await client.run("Search for AI news");
+console.log(result.output, result.id, result.status);
 ```
 
 ### Stream Steps
@@ -100,6 +101,7 @@ for await (const step of client.run("Search for AI news")) {
 | `tasks.get(taskId)`         | Get detailed task information           |
 | `tasks.stop(taskId)`        | Stop a running task                     |
 | `tasks.status(taskId)`      | Lightweight status for polling          |
+| `tasks.wait(taskId, opts?)` | Poll until terminal, return TaskView    |
 | `tasks.logs(taskId)`        | Get download URL for task logs          |
 
 ### Sessions

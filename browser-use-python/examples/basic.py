@@ -12,11 +12,11 @@ load_dotenv()
 async def main():
     client = AsyncBrowserUse()
 
-    # await run() polls until complete, returns the output string directly
-    output = await client.run(
+    result = await client.run(
         "Search for the top 10 Hacker News posts and return the title and url."
     )
-    print(output)
+    print(result.output)
+    print(result.id, result.status, len(result.steps))
 
 
 asyncio.run(main())
