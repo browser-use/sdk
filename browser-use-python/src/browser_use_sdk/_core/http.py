@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from .errors import BrowserUseError
 
 _RETRY_STATUSES = {429}
-_MAX_RETRIES = 3
+_DEFAULT_MAX_RETRIES = 3
 _BACKOFF_BASE = 0.5
 
 
@@ -62,7 +62,9 @@ class SyncHttpClient:
         base_url: str,
         api_key: str,
         timeout: float = 30.0,
+        max_retries: int = _DEFAULT_MAX_RETRIES,
     ) -> None:
+        self._max_retries = max_retries
         self._client = httpx.Client(
             base_url=base_url,
             headers={"X-Browser-Use-API-Key": api_key},
@@ -80,16 +82,16 @@ class SyncHttpClient:
         json = _clean_json(json) if json is not None else None
         params = _clean_params(params)
         last_exc: Exception | None = None
-        for attempt in range(_MAX_RETRIES):
+        for attempt in range(self._max_retries + 1):
+            if attempt > 0:
+                time.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
             try:
                 response = self._client.request(method, path, json=json, params=params)
             except httpx.TransportError as exc:
                 last_exc = exc
-                time.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
                 continue
 
-            if _should_retry(response.status_code) and attempt < _MAX_RETRIES - 1:
-                time.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
+            if _should_retry(response.status_code) and attempt < self._max_retries:
                 continue
 
             _raise_for_status(response)
@@ -111,7 +113,9 @@ class AsyncHttpClient:
         base_url: str,
         api_key: str,
         timeout: float = 30.0,
+        max_retries: int = _DEFAULT_MAX_RETRIES,
     ) -> None:
+        self._max_retries = max_retries
         self._client = httpx.AsyncClient(
             base_url=base_url,
             headers={"X-Browser-Use-API-Key": api_key},
@@ -129,16 +133,16 @@ class AsyncHttpClient:
         json = _clean_json(json) if json is not None else None
         params = _clean_params(params)
         last_exc: Exception | None = None
-        for attempt in range(_MAX_RETRIES):
+        for attempt in range(self._max_retries + 1):
+            if attempt > 0:
+                await asyncio.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
             try:
                 response = await self._client.request(method, path, json=json, params=params)
             except httpx.TransportError as exc:
                 last_exc = exc
-                await asyncio.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
                 continue
 
-            if _should_retry(response.status_code) and attempt < _MAX_RETRIES - 1:
-                await asyncio.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
+            if _should_retry(response.status_code) and attempt < self._max_retries:
                 continue
 
             _raise_for_status(response)

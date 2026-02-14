@@ -158,7 +158,7 @@ except BrowserUseError as e:
 ```
 
 Retries are automatic: the SDK retries up to 3 times with exponential backoff
-on 429 (rate limit) and 5xx (server error) responses.
+on 429 (rate limit) responses.
 
 ## Resource Methods
 

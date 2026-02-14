@@ -99,10 +99,14 @@ export class HttpClient {
           /* ignore parse errors */
         }
         const message =
-          typeof errorBody === "object" &&
-          errorBody !== null &&
-          "detail" in errorBody
-            ? String((errorBody as Record<string, unknown>).detail)
+          typeof errorBody === "object" && errorBody !== null
+            ? String(
+                "message" in errorBody
+                  ? (errorBody as Record<string, unknown>).message
+                  : "detail" in errorBody
+                    ? (errorBody as Record<string, unknown>).detail
+                    : `HTTP ${response.status}`,
+              )
             : `HTTP ${response.status}`;
         throw new BrowserUseError(response.status, message, errorBody);
       } catch (error) {

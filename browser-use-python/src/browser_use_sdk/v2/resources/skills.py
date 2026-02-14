@@ -274,9 +274,11 @@ class AsyncSkills:
         )
 
     async def delete(self, skill_id: str) -> None:
+        """Delete a skill."""
         await self._http.request("DELETE", f"/skills/{skill_id}")
 
     async def cancel(self, skill_id: str) -> SkillResponse:
+        """Cancel a skill generation."""
         return SkillResponse.model_validate(
             await self._http.request("POST", f"/skills/{skill_id}/cancel")
         )
@@ -289,6 +291,7 @@ class AsyncSkills:
         session_id: str | None = None,
         **extra: Any,
     ) -> ExecuteSkillResponse:
+        """Execute a skill."""
         body: dict[str, Any] = {}
         if parameters is not None:
             body["parameters"] = parameters
@@ -308,6 +311,7 @@ class AsyncSkills:
         test_logs: str | None = None,
         **extra: Any,
     ) -> RefineSkillResponse:
+        """Refine a skill with feedback."""
         body: dict[str, Any] = {"feedback": feedback}
         if test_output is not None:
             body["testOutput"] = test_output
@@ -319,6 +323,7 @@ class AsyncSkills:
         )
 
     async def rollback(self, skill_id: str) -> SkillResponse:
+        """Rollback a skill to the previous version."""
         return SkillResponse.model_validate(
             await self._http.request("POST", f"/skills/{skill_id}/rollback")
         )
@@ -330,6 +335,7 @@ class AsyncSkills:
         page_size: int | None = None,
         page_number: int | None = None,
     ) -> SkillExecutionListResponse:
+        """List skill executions."""
         return SkillExecutionListResponse.model_validate(
             await self._http.request(
                 "GET",
@@ -342,6 +348,7 @@ class AsyncSkills:
         )
 
     async def execution_output(self, skill_id: str, execution_id: str) -> SkillExecutionOutputResponse:
+        """Get skill execution output."""
         return SkillExecutionOutputResponse.model_validate(
             await self._http.request(
                 "GET",

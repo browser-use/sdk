@@ -127,8 +127,6 @@ export class TaskRun<T = string> implements PromiseLike<TaskResult<T>> {
   private _parseOutput(output: string | null | undefined): T {
     if (output == null) return null as T;
     if (!this._schema) return output as unknown as T;
-    const result = this._schema.safeParse(JSON.parse(output));
-    if (!result.success) return null as T;
-    return result.data;
+    return this._schema.parse(JSON.parse(output));
   }
 }

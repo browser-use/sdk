@@ -130,4 +130,5 @@ class AsyncProfiles:
         )
 
     async def delete(self, profile_id: str) -> None:
+        """Delete a browser profile."""
         await self._http.request("DELETE", f"/profiles/{profile_id}")

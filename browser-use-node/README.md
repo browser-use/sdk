@@ -47,7 +47,7 @@ console.log(output);
 const client = new BrowserUse({
   apiKey: "bu_...",           // Or set BROWSER_USE_API_KEY env var
   baseUrl: "https://...",     // Override API base URL
-  maxRetries: 3,              // Retry on 429/5xx (default: 3)
+  maxRetries: 3,              // Retry on 429 (default: 3)
   timeout: 30_000,            // Request timeout in ms (default: 30s)
 });
 ```
@@ -199,14 +199,14 @@ try {
 }
 ```
 
-The client automatically retries on `429` (rate limit) and `5xx` (server errors) with exponential backoff.
+The client automatically retries on `429` (rate limit) with exponential backoff.
 
 ## TypeScript
 
 Types are re-exported from `browser-use-sdk` and `browser-use-sdk/v3`. The SDK ships with full type definitions for all request/response shapes.
 
 ```ts
-import type { CreateTaskRequest, TaskView } from "browser-use-sdk";
+import type { TaskView, CreateTaskRequest } from "browser-use-sdk";
 ```
 
 ## License
