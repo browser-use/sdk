@@ -1,0 +1,104 @@
+instances:
+  - url: https://browser-use.docs.buildwithfern.com
+    custom-domain: docs.cloud.browser-use.com
+title: Browser Use Cloud Docs
+
+favicon: docs/assets/favicon.ico
+
+layout:
+  searchbar-placement: header
+  page-width: full
+  tabs-placement: header
+  disable-header: false
+
+navbar-links:
+  - type: filled
+    text: "Cloud Dashboard"
+    url: "https://cloud.browser-use.com"
+  - type: outlined
+    text: "Status"
+    url: "https://status.browser-use.com"
+
+navigation:
+  - section: Get Started
+    skip-slug: true
+    contents:
+      - page: Introduction
+        path: docs/pages/introduction.mdx
+        icon: fa-solid fa-house
+      - page: LLM Quickstart
+        path: docs/pages/llm-quickstart.mdx
+        icon: fa-solid fa-brain
+      - page: Models & Pricing
+        path: docs/pages/pricing.mdx
+        icon: fa-solid fa-dollar-sign
+
+  - section: Guides
+    collapsed: false
+    contents:
+      - page: Overview
+        path: docs/pages/guides/overview.mdx
+        icon: fa-solid fa-lightbulb
+      - page: Tasks
+        path: docs/pages/guides/tasks.mdx
+        icon: fa-solid fa-play
+      - page: Sessions & Profiles
+        path: docs/pages/guides/sessions.mdx
+        icon: fa-solid fa-browser
+      - page: Browser Infrastructure
+        path: docs/pages/guides/browser-api.mdx
+        icon: fa-solid fa-globe
+      - page: Proxies & Stealth
+        path: docs/pages/guides/proxies-and-stealth.mdx
+        icon: fa-solid fa-mask
+      - page: Skills
+        path: docs/pages/guides/skills.mdx
+        icon: fa-solid fa-wand-magic-sparkles
+      - page: Authentication & 2FA
+        path: docs/pages/guides/authentication.mdx
+        icon: fa-solid fa-key
+      - page: MCP Server
+        path: docs/pages/guides/mcp-server.mdx
+        icon: fa-solid fa-plug
+      - page: Webhooks
+        path: docs/pages/guides/webhooks.mdx
+        icon: fa-solid fa-webhook
+
+  - section: Resources
+    skip-slug: true
+    contents:
+      - page: Examples
+        path: docs/pages/examples.mdx
+        icon: fa-solid fa-code
+      - page: Troubleshooting & FAQ
+        path: docs/pages/faq.mdx
+        icon: fa-solid fa-circle-question
+
+  - section: API Reference
+    collapsed: false
+    contents:
+      - api: API v2 (Stable)
+        api-name: v2
+      - api: API v3 (Experimental)
+        api-name: v3
+
+colors:
+  accentPrimary: "#FE750E"
+  background: "#09090B"
+
+typography:
+  headingsFont:
+    name: "Geist"
+  bodyFont:
+    name: "Geist"
+  codeFont:
+    name: "Geist Mono"
+
+logo:
+  dark: docs/assets/logo-dark.svg
+  light: docs/assets/logo-light.svg
+  height: 25
+
+analytics:
+  posthog:
+    api-key: phc_F8JMNjW1i2KbGUTaW1unnDdLSPCoyc52SGRU0JecaUh

@@ -1,0 +1,15 @@
+api:
+  specs:
+    - openapi: ../snapshots/v2.json
+      origin: https://api.browser-use.com/api/v2/openapi.json
+  environments:
+    production: "https://api.browser-use.com/api/v2"
+  default-environment: production
+
+auth-schemes:
+  api-key:
+    name: "Browser Use API Key Authentication"
+    header: "X-Browser-Use-API-Key"
+    type: "string"
+    prefix: ""
+    env: "BROWSER_USE_API_KEY"

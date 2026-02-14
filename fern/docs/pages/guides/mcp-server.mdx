@@ -1,0 +1,74 @@
+---
+title: MCP Server
+subtitle: Use Browser Use from Claude, Cursor, Windsurf, or any MCP client.
+---
+
+Browser Use provides a [Model Context Protocol](https://modelcontextprotocol.io) server at `https://api.browser-use.com/mcp`.
+
+## Claude Code
+
+```bash
+claude mcp add --transport http browser-use https://api.browser-use.com/mcp
+```
+
+## Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "url": "https://api.browser-use.com/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Cursor
+
+Add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "url": "https://api.browser-use.com/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Windsurf
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "serverUrl": "https://api.browser-use.com/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Available tools
+
+| Tool | Description | Cost |
+|------|-------------|------|
+| `browser_task` | Run a full automation task | $0.006/step |
+| `execute_skill` | Run a skill | $0.01 |
+| `list_skills` | List available skills | Free |
+| `get_cookies` | Extract cookies for auth | Free |
+| `list_browser_profiles` | List profiles | Free |
+| `monitor_task` | Check task progress | Free |

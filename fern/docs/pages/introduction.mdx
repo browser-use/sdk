@@ -1,0 +1,128 @@
+---
+title: Browser Use Cloud
+subtitle: You know the open-source library. Here's what cloud adds.
+---
+
+<Cards>
+  <Card title="Stealth Browsers" icon="fa-solid fa-shield-halved">
+    Anti-detect, CAPTCHA solving, proxies in 195+ countries.
+  </Card>
+  <Card title="Browser Use LLM" icon="fa-solid fa-brain">
+    Custom models for browser automation. 15x cheaper, 6x faster.
+  </Card>
+  <Card title="Skills" icon="fa-solid fa-wand-magic-sparkles">
+    Turn websites into deterministic API endpoints.
+  </Card>
+  <Card title="Infinite Scale" icon="fa-solid fa-arrow-up-right-dots">
+    One API key. No Docker. 10 tasks or 10,000 — same code.
+  </Card>
+</Cards>
+
+**Every browser comes with:** anti-fingerprinting, automatic CAPTCHA solving, cookie/ad blocking, Cloudflare bypass, and residential proxies. No configuration needed.
+
+## 1. Install & configure
+
+<CodeBlocks>
+  <CodeBlock title="Python">
+    ```bash
+    pip install browser-use-sdk
+    ```
+  </CodeBlock>
+  <CodeBlock title="TypeScript">
+    ```bash
+    npm install browser-use-sdk
+    ```
+  </CodeBlock>
+</CodeBlocks>
+
+Get a key at [cloud.browser-use.com](https://cloud.browser-use.com), then:
+
+```bash
+export BROWSER_USE_API_KEY=your_key
+```
+
+## 2. Run your first task
+
+<CodeBlocks>
+  <CodeBlock title="Python">
+    ```python
+    import asyncio
+    from browser_use_sdk import AsyncBrowserUse
+
+    async def main():
+        client = AsyncBrowserUse()
+        result = await client.run("What is the top post on Hacker News right now?")
+        print(result.output)
+
+    asyncio.run(main())
+    ```
+  </CodeBlock>
+  <CodeBlock title="TypeScript">
+    ```typescript
+    import { BrowserUse } from "browser-use-sdk";
+
+    const client = new BrowserUse();
+    const result = await client.run("What is the top post on Hacker News right now?");
+    console.log(result.output);
+    ```
+  </CodeBlock>
+</CodeBlocks>
+
+## 3. Get structured data
+
+Define a schema and get validated, typed data back.
+
+<CodeBlocks>
+  <CodeBlock title="Python">
+    ```python
+    import asyncio
+    from browser_use_sdk import AsyncBrowserUse
+    from pydantic import BaseModel
+
+    class Post(BaseModel):
+        title: str
+        url: str
+        points: int
+
+    async def main():
+        client = AsyncBrowserUse()
+        result = await client.run(
+            "Get the top 3 posts from Hacker News",
+            output_schema=list[Post],
+        )
+        for post in result.output:
+            print(f"{post.title} ({post.points} pts)")
+
+    asyncio.run(main())
+    ```
+  </CodeBlock>
+  <CodeBlock title="TypeScript">
+    ```typescript
+    import { BrowserUse } from "browser-use-sdk";
+    import { z } from "zod";
+
+    const Post = z.object({
+      title: z.string(),
+      url: z.string(),
+      points: z.number(),
+    });
+
+    const client = new BrowserUse();
+    const result = await client.run("Get the top 3 posts from Hacker News", {
+      schema: z.array(Post),
+    });
+    result.output.forEach((post) => console.log(`${post.title} (${post.points} pts)`));
+    ```
+  </CodeBlock>
+</CodeBlocks>
+
+That's it. See [Tasks](/guides/tasks) for streaming, parameters, and more, or browse [Examples](/examples) for copy-paste recipes.
+
+<Cards>
+  <Card title="LLM Quickstart" icon="fa-solid fa-brain" href="/llm-quickstart">
+    Paste one blob into your AI editor. Your agent knows the entire API.
+  </Card>
+  <Card title="Overview" icon="fa-solid fa-lightbulb" href="/guides/overview">
+    Four ways to automate the web — pick the one that fits.
+  </Card>
+</Cards>
