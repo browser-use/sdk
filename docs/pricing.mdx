@@ -1,0 +1,186 @@
+---
+title: "Models and Pricing"
+description: "Browser Use Cloud API pricing structure and cost breakdown."
+icon: "dollar-sign"
+mode: "wide"
+---
+
+## Pricing Overview
+
+| Product | Pay As You Go | Business/Scaleup | Notes |
+| ------- | ------------- | ---------------- | ----- |
+| **AI Agent Tasks** | \$0.01 init + per-step | 25% off per-step | See LLM pricing below |
+| **Browser Sessions** | \$0.06/hour | \$0.03/hour (50% off) | Charged upfront, unused time refunded |
+| **Skill Creation** | \$2.00/skill | \$1.00/skill (50% off) | Refunded if cancelled, refinements free |
+| **Skill Execution** | \$0.02/call | \$0.01/call (50% off) | Per API call |
+| **Proxy Data** | \$10/GB | \$4-5/GB (50-60% off) | Metered by data transfer |
+
+---
+
+## AI Agent Task Pricing
+
+Task pricing consists of two components:
+
+1. **Task Initialization Cost**: \$0.01 per started task
+2. **Task Step Cost**: Additional cost based on the specific model used for each step
+
+### LLM Model Step Pricing
+
+| Model | API String | Cost per Step |
+| ----- | ---------- | ------------- |
+| Browser Use 2.0 | `browser-use-2.0` | \$0.006 |
+| Browser Use LLM | `browser-use-llm` | \$0.002 |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
+| O3 | `o3` | \$0.03 |
+| Gemini 2.5 Pro | `gemini-2.5-pro` | \$0.03 |
+| Gemini 2.5 Flash | `gemini-2.5-flash` | \$0.005 |
+
+**Browser Use 2.0** is the default — custom-trained for browser automation. 15x cheaper and 6x faster than frontier models (~3s/step vs ~8s/step).
+
+Use it by default (no configuration needed), or pass `llm` explicitly:
+
+<CodeGroup>
+```python Python
+result = await client.run("...", llm="browser-use-2.0")
+```
+```typescript TypeScript
+const result = await client.run("...", { llm: "browser-use-2.0" });
+```
+</CodeGroup>
+
+**ChatBrowserUse** — the chat completion API endpoint. Always routes to the best frontier model as determined by Browser Use benchmarks. Includes batching, caching, and cost optimizations.
+
+### Example Cost Calculation
+
+Using Browser Use 2.0 for a 10 step task:
+
+- Task initialization: \$0.01
+- 10 steps x \$0.006 per step = \$0.06
+- **Total cost: \$0.07**
+
+Using Browser Use LLM for a 10 step task:
+
+- Task initialization: \$0.01
+- 10 steps x \$0.002 per step = \$0.02
+- **Total cost: \$0.03** (~33 tasks per dollar)
+
+---
+
+## Browser Session Pricing
+
+Browser sessions (direct CDP access) are billed separately from AI agent tasks. **Business and Scaleup subscribers get 50% off browser session costs.**
+
+| Plan | Hourly Rate | Per Minute |
+| ---- | ----------- | ---------- |
+| Pay As You Go | \$0.06/hour | \$0.001/min |
+| Business/Scaleup | \$0.03/hour | \$0.0005/min |
+
+| Item | Details |
+| ---- | ------- |
+| Minimum charge | 1 minute |
+| Billing | Charged upfront |
+| Refunds | Proportional refund when stopped early |
+
+### How Browser Session Billing Works
+
+1. **Upfront charge**: Full amount charged when session starts based on timeout duration
+2. **Proportional refund**: Unused time refunded when you stop the session
+3. **Minimum billing**: At least 1 minute is charged
+
+**Example (Pay As You Go)**: You start a 60-minute session (\$0.06 charged). You stop after 30 minutes. You receive a \$0.03 refund.
+
+**Example (Business)**: Same scenario costs only \$0.03 upfront, with \$0.015 refund for unused time.
+
+### Timeout Limits
+
+All plans support up to **4 hours (240 minutes)** per browser session.
+
+---
+
+## Skill Pricing
+
+| Item | Pay As You Go | Business/Scaleup |
+| ---- | ------------- | ---------------- |
+| Skill creation | \$2.00 per skill | \$1.00 per skill (50% off) |
+| Skill execution | \$0.02 per API call | \$0.01 per API call (50% off) |
+| Skill refinement | Free | Free |
+| Minimum balance to create | \$2.00 | \$2.00 |
+| Minimum balance to execute | \$0.10 | \$0.10 |
+
+### How Skill Creation Billing Works
+
+1. **Upfront charge**: Charged when you start creating a skill
+2. **Refund on cancellation**: Full refund if you cancel before generation completes
+3. **Refinements are free**: Iterating on an existing skill costs nothing
+
+---
+
+## Proxy Pricing
+
+Proxy usage is charged per GB of data transferred. **Business and Scaleup subscribers get 50% off proxy costs.**
+
+| Plan | Proxy Cost |
+| ---- | ---------- |
+| Pay As You Go | \$10/GB |
+| Business | \$5/GB (50% off) |
+| Scaleup | \$4/GB (60% off) |
+
+<Note>
+Proxy is automatically enabled when you set `proxyCountryCode` on a session. Data usage is metered and charged based on actual transfer.
+</Note>
+
+---
+
+## Plan Comparison
+
+| Feature | Pay As You Go | Business | Scaleup |
+| ------- | ------------- | -------- | ------- |
+| Monthly price | \$0 | \$500 | \$2,500 |
+| Signup credits | \$1-10* | \$500 | \$2,500 |
+| Concurrent sessions | 3 | 250 | 500 |
+| Profiles | 5 | Unlimited | Unlimited |
+| Active skills | 5 | 100 | 1,000 |
+| **Proxy cost** | \$10/GB | \$5/GB (50% off) | \$4/GB (60% off) |
+| **Browser sessions** | \$0.06/hr | \$0.03/hr (50% off) | \$0.03/hr (50% off) |
+| Browser session timeout | 4 hours | 4 hours | 4 hours |
+| Team members | 1 | 5 | Unlimited |
+| Priority support | — | Yes | Yes |
+| Dedicated Slack | — | — | Yes |
+| Custom SLAs | — | — | Yes |
+
+*Pay As You Go signup credits: \$10 for OAuth signups (Google, GitHub), \$1 for email/password signups.
+
+<Note>
+**Save up to 50% on usage costs!** Business and Scaleup subscribers get 25% off LLM step costs, plus 50% off skill execution, browser sessions, and proxy data. Upgrade to maximize your credits.
+</Note>
+
+Annual billing: Business \$4,800/yr, Scaleup \$24,000/yr.
+
+---
+
+## Credit Top-Ups (Pay As You Go)
+
+Purchase additional credits at any time — no subscription required. Credits never expire.
+
+| Amount | Price |
+| ------ | ----- |
+| \$25 | \$25 |
+| \$50 | \$50 |
+| \$100 | \$100 |
+| \$500 | \$500 |
+
+---
+
+### Estimated Monthly Usage
+
+Based on included credits:
+
+| Resource | Business | Scaleup |
+| -------- | -------- | ------- |
+| Browser Use 2.0 agent runs | ~2,000 | ~10,000 |
+| Browser Use LLM agent runs | ~10,000 | ~50,000 |
+| Remote browser hours | ~16,000 | ~80,000 |
+
+**Enterprise** — custom pricing, dedicated browser pool, on-prem deployment, BAA, zero data retention. [Contact us](https://cloud.browser-use.com).
+
+[Get started →](https://cloud.browser-use.com)

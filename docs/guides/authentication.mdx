@@ -1,0 +1,79 @@
+---
+title: Authentication & 2FA
+description: Profile sync, secrets, and 1Password with TOTP/2FA.
+icon: key
+---
+
+## Profile Sync (easiest)
+
+Upload your local browser cookies to a cloud profile. Log in locally once, then every task with that profile is already authenticated.
+
+```bash
+export BROWSER_USE_API_KEY=your_key
+curl -fsSL https://browser-use.com/profile.sh | sh
+```
+
+The interactive script walks you through selecting a local browser profile and uploading it. See [Sessions & Profiles](/guides/sessions#profiles) for more on managing profiles.
+
+## Secrets
+
+Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Log into GitHub and star the browser-use/browser-use repo",
+    secrets={"github.com": "username:password123"},
+    allowed_domains=["github.com"],
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Log into GitHub and star the browser-use/browser-use repo",
+  {
+    secrets: { "github.com": "username:password123" },
+    allowedDomains: ["github.com"],
+  },
+);
+```
+</CodeGroup>
+
+## 1Password integration
+
+Connect a 1Password vault so the agent can autofill credentials and TOTP/2FA codes — without ever seeing raw passwords.
+
+1. Create a dedicated vault in 1Password
+2. Create a [service account token](https://developer.1password.com/docs/service-accounts)
+3. Connect it at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings)
+4. Pass the vault ID in your task:
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Log into my Jira account and create a new ticket",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net"],
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Log into my Jira account and create a new ticket",
+  {
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net"],
+  },
+);
+```
+</CodeGroup>
+
+The agent auto-fills passwords and TOTP/2FA codes from your vault. Raw credentials never appear in logs or task output.
+
+<Info>
+  **Domain restrictions:** Use `allowed_domains` with any auth method to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`, `http*://example.com`.
+</Info>
