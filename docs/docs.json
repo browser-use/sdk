@@ -107,5 +107,87 @@
     "posthog": {
       "apiKey": "phc_F8JMNjW1i2KbGUTaW1unnDdLSPCoyc52SGRU0JecaUh"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/get-started/human-quickstart",
+      "destination": "/introduction"
+    },
+    {
+      "source": "/human-quickstart",
+      "destination": "/introduction"
+    },
+    {
+      "source": "/get-started/llm-quickstart",
+      "destination": "/llm-quickstart"
+    },
+    {
+      "source": "/get-started/models-and-pricing",
+      "destination": "/pricing"
+    },
+    {
+      "source": "/get-started/pricing",
+      "destination": "/pricing"
+    },
+    {
+      "source": "/concepts/overview",
+      "destination": "/guides/overview"
+    },
+    {
+      "source": "/concepts/task",
+      "destination": "/guides/tasks"
+    },
+    {
+      "source": "/concepts/skills",
+      "destination": "/guides/skills"
+    },
+    {
+      "source": "/concepts/session",
+      "destination": "/guides/sessions"
+    },
+    {
+      "source": "/concepts/profile",
+      "destination": "/guides/sessions"
+    },
+    {
+      "source": "/concepts/file",
+      "destination": "/guides/tasks"
+    },
+    {
+      "source": "/concepts/browser",
+      "destination": "/guides/browser-api"
+    },
+    {
+      "source": "/usage/structured-output",
+      "destination": "/guides/tasks"
+    },
+    {
+      "source": "/usage/streaming-response",
+      "destination": "/guides/tasks"
+    },
+    {
+      "source": "/usage/streaming",
+      "destination": "/guides/tasks"
+    },
+    {
+      "source": "/usage/mcp-server",
+      "destination": "/guides/mcp-server"
+    },
+    {
+      "source": "/usage/stealth",
+      "destination": "/guides/proxies-and-stealth"
+    },
+    {
+      "source": "/usage/safety",
+      "destination": "/guides/tasks"
+    },
+    {
+      "source": "/usage/webhooks",
+      "destination": "/guides/webhooks"
+    },
+    {
+      "source": "/usage/authentication",
+      "destination": "/guides/authentication"
+    }
+  ]
 }
