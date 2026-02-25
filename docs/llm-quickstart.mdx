@@ -21,7 +21,7 @@ Your agent will be able to write Browser Use Cloud code immediately.
 
 ## Setup
 Set `BROWSER_USE_API_KEY` env var, or pass `api_key`/`apiKey` to the constructor.
-Get a key at https://cloud.browser-use.com
+Get a key at https://cloud.browser-use.com/settings?tab=api-keys
 
 ## Python SDK
 
@@ -141,7 +141,6 @@ for await (const step of client.run("Go to google.com")) {
 - **Proxies**: set `proxy_country_code` on session. 195+ countries. CAPTCHAs handled automatically
 - **Stealth**: on by default. Anti-detect, CAPTCHA solving, ad blocking
 - **Browser Use LLM**: default model, optimized for browser tasks. 15× cheaper
-- **ChatBrowserUse**: the chat completion API endpoint, always routes to the best model
 - **Vision**: agent can take screenshots. Enable with `vision=True`
 - **1Password**: auto-fill passwords and 2FA/TOTP codes with `op_vault_id`
 ````

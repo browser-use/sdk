@@ -6,7 +6,7 @@ icon: circle-question
 
 ## Task is slow
 
-- **Switch models.** Browser Use LLM is ~3s/step. Frontier models (Claude, GPT) are 6-8s/step. See [Models & Pricing](/pricing#llm-models).
+- **Switch models.** Browser Use LLM is ~3s/step. Frontier models (Claude, Gemini, O3) are 6-8s/step. See [Models & Pricing](/pricing).
 - **Set a start URL.** Skip navigation steps: `start_url="https://example.com/page"`.
 - **Use a closer proxy.** Proxy distance adds latency. If your target site is in the US, use `proxy_country_code="us"`.
 
@@ -38,4 +38,4 @@ Stealth is on by default (anti-fingerprinting, CAPTCHA solving, Cloudflare bypas
 
 ## Rate limited (429 errors)
 
-The SDK auto-retries 429 responses with exponential backoff (up to 10s). If you're consistently hitting limits, you may need to upgrade your plan for more concurrent sessions. See [Pricing](/pricing#plans).
+The SDK auto-retries 429 responses with exponential backoff (up to 10s). If you're consistently hitting limits, you may need to upgrade your plan for more concurrent sessions. See [Pricing](/pricing).

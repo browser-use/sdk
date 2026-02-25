@@ -1,5 +1,5 @@
 ---
-title: Tasks
+title: Agent Tasks
 description: Run AI agent tasks, get structured output, stream progress.
 icon: play
 ---
@@ -182,12 +182,19 @@ for (const file of result.outputFiles) {
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `task` | `str` | What you want the agent to do. 1-50,000 characters. |
-| `llm` | `str` | Model override. Default: Browser Use LLM. See [Models & Pricing](/pricing#llm-models). |
+| `llm` | `str` | Model override. Default: Browser Use 2.0. See [Models & Pricing](/pricing). |
 | `output_schema` / `schema` | Pydantic / Zod | Schema for structured output. |
 | `session_id` | `str` | Reuse an existing session. Omit for auto-session. |
-| `start_url` | `str` | Initial page URL. |
+| `start_url` | `str` | Initial page URL. Saves steps — send the agent directly there. |
 | `secrets` | `dict` | Domain-specific credentials. See [Authentication](/guides/authentication). |
 | `allowed_domains` | `list[str]` | Restrict agent to these domains only. |
 | `session_settings` | `SessionSettings` | Proxy, profile, browser config. See [Sessions](/guides/sessions). |
-
-See the [API Reference](/api-reference) for the full parameter list.
+| `flash_mode` | `bool` | Faster but less careful navigation. |
+| `thinking` | `bool` | Enable extended reasoning. |
+| `vision` | `bool \| str` | Enable screenshots for the agent. |
+| `highlight_elements` | `bool` | Highlight interactive elements on the page. |
+| `system_prompt_extension` | `str` | Append custom instructions to the system prompt. |
+| `judge` | `bool` | Enable quality judge to verify output. |
+| `skill_ids` | `list[str]` | Skills the agent can use during the task. |
+| `op_vault_id` | `str` | 1Password vault ID for auto-fill credentials and 2FA. See [Authentication](/guides/authentication#1password-integration). |
+| `metadata` | `dict[str, str]` | Custom metadata attached to the task. |
