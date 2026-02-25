@@ -2,6 +2,8 @@ import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v3/types.js";
 
 type RunTaskRequest = components["schemas"]["RunTaskRequest"];
+/** Like RunTaskRequest but only `task` is required; fields with server defaults are optional. */
+export type CreateSessionBody = Pick<RunTaskRequest, "task"> & Partial<Omit<RunTaskRequest, "task">>;
 type SessionResponse = components["schemas"]["SessionResponse"];
 type SessionListResponse = components["schemas"]["SessionListResponse"];
 type FileListResponse = components["schemas"]["FileListResponse"];
@@ -22,7 +24,7 @@ export class Sessions {
   constructor(private readonly http: HttpClient) {}
 
   /** Create a session and run a task. */
-  create(body: RunTaskRequest): Promise<SessionResponse> {
+  create(body: CreateSessionBody): Promise<SessionResponse> {
     return this.http.post<SessionResponse>("/sessions", body);
   }
 

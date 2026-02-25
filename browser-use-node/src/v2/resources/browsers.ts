@@ -1,7 +1,8 @@
 import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v2/types.js";
 
-type CreateBrowserSessionRequest = components["schemas"]["CreateBrowserSessionRequest"];
+/** All fields are optional (server applies defaults); body itself is required by the spec. */
+export type CreateBrowserBody = Partial<components["schemas"]["CreateBrowserSessionRequest"]>;
 type BrowserSessionItemView = components["schemas"]["BrowserSessionItemView"];
 type BrowserSessionListResponse = components["schemas"]["BrowserSessionListResponse"];
 type BrowserSessionView = components["schemas"]["BrowserSessionView"];
@@ -17,7 +18,7 @@ export class Browsers {
   constructor(private readonly http: HttpClient) {}
 
   /** Create a new browser session. */
-  create(body?: CreateBrowserSessionRequest): Promise<BrowserSessionItemView> {
+  create(body: CreateBrowserBody = {}): Promise<BrowserSessionItemView> {
     return this.http.post<BrowserSessionItemView>("/browsers", body);
   }
 

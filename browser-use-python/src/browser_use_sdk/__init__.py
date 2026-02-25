@@ -48,6 +48,7 @@ from .generated.v2.models import (
     TaskOutputFileResponse,
     TaskStatusView,
     TaskStepView,
+    TaskItemView,
     TaskView,
     UpdateBrowserSessionRequest,
     UpdateSessionRequest,
@@ -108,6 +109,7 @@ __all__ = [
     "TaskOutputFileResponse",
     "TaskStatusView",
     "TaskStepView",
+    "TaskItemView",
     "TaskView",
     "UploadFilePresignedUrlResponse",
     # Input models

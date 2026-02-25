@@ -1,5 +1,6 @@
 from .client import AsyncBrowserUse, BrowserUse
 from .helpers import AsyncSessionRun, SessionResult
+from .._core.errors import BrowserUseError
 
 from ..generated.v3.models import (
     BuAgentSessionStatus,
@@ -18,6 +19,7 @@ __all__ = [
     "AsyncBrowserUse",
     "AsyncSessionRun",
     "SessionResult",
+    "BrowserUseError",
     # Response models
     "FileInfo",
     "FileListResponse",

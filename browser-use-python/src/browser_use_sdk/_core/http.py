@@ -81,15 +81,10 @@ class SyncHttpClient:
     ) -> Any:
         json = _clean_json(json) if json is not None else None
         params = _clean_params(params)
-        last_exc: Exception | None = None
         for attempt in range(self._max_retries + 1):
             if attempt > 0:
                 time.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
-            try:
-                response = self._client.request(method, path, json=json, params=params)
-            except httpx.TransportError as exc:
-                last_exc = exc
-                continue
+            response = self._client.request(method, path, json=json, params=params)
 
             if _should_retry(response.status_code) and attempt < self._max_retries:
                 continue
@@ -99,7 +94,7 @@ class SyncHttpClient:
                 return None
             return response.json()
 
-        raise last_exc  # type: ignore[misc]
+        _raise_for_status(response)  # type: ignore[possibly-undefined]
 
     def close(self) -> None:
         self._client.close()
@@ -132,15 +127,10 @@ class AsyncHttpClient:
     ) -> Any:
         json = _clean_json(json) if json is not None else None
         params = _clean_params(params)
-        last_exc: Exception | None = None
         for attempt in range(self._max_retries + 1):
             if attempt > 0:
                 await asyncio.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
-            try:
-                response = await self._client.request(method, path, json=json, params=params)
-            except httpx.TransportError as exc:
-                last_exc = exc
-                continue
+            response = await self._client.request(method, path, json=json, params=params)
 
             if _should_retry(response.status_code) and attempt < self._max_retries:
                 continue
@@ -150,7 +140,7 @@ class AsyncHttpClient:
                 return None
             return response.json()
 
-        raise last_exc  # type: ignore[misc]
+        _raise_for_status(response)  # type: ignore[possibly-undefined]
 
     async def close(self) -> None:
         await self._client.aclose()

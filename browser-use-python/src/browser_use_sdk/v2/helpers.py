@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from ..generated.v2.models import TaskCreatedResponse, TaskStepView, TaskView
 from .resources.tasks import AsyncTasks, Tasks
 
-TERMINAL_STATUSES = {"finished", "stopped", "failed"}
+TERMINAL_STATUSES = {"finished", "stopped"}
 
 T = TypeVar("T")
 

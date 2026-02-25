@@ -45,8 +45,6 @@ export class HttpClient {
       headers["Content-Type"] = "application/json";
     }
 
-    let lastError: unknown;
-
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       if (attempt > 0) {
         const delay = Math.min(1000 * 2 ** (attempt - 1), 10_000);
@@ -54,14 +52,19 @@ export class HttpClient {
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+      const timeoutId = options?.signal
+        ? undefined
+        : setTimeout(() => controller.abort(), this.timeout);
+
+      // Combine user signal with internal timeout when both are present
+      const signal = options?.signal ?? controller.signal;
 
       try {
         const response = await fetch(url.toString(), {
           method,
           headers,
           body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
-          signal: options?.signal ?? controller.signal,
+          signal,
         });
 
         clearTimeout(timeoutId);
@@ -78,17 +81,6 @@ export class HttpClient {
           attempt < this.maxRetries;
 
         if (shouldRetry) {
-          let errorBody: unknown;
-          try {
-            errorBody = await response.json();
-          } catch {
-            /* ignore parse errors */
-          }
-          lastError = new BrowserUseError(
-            response.status,
-            `HTTP ${response.status}`,
-            errorBody,
-          );
           continue;
         }
 
@@ -111,17 +103,11 @@ export class HttpClient {
         throw new BrowserUseError(response.status, message, errorBody);
       } catch (error) {
         clearTimeout(timeoutId);
-        if (error instanceof BrowserUseError) {
-          throw error;
-        }
-        lastError = error;
-        if (attempt >= this.maxRetries) {
-          throw error;
-        }
+        throw error;
       }
     }
 
-    throw lastError;
+    throw new Error("Unreachable: retry loop exhausted");
   }
 
   get<T>(path: string, query?: Record<string, unknown>): Promise<T> {
