@@ -136,6 +136,15 @@ class Sessions:
         """Remove public share for a session."""
         self._http.request("DELETE", f"/sessions/{session_id}/public-share")
 
+    # Deprecated aliases for older browser-use versions (<=0.11.x)
+    create_session = create
+    list_sessions = list
+    get_session = get
+    update_session = update
+    delete_session = delete
+    create_session_public_share = create_share
+    delete_session_public_share = delete_share
+
 
 class AsyncSessions:
     def __init__(self, http: AsyncHttpClient) -> None:
@@ -226,3 +235,12 @@ class AsyncSessions:
     async def delete_share(self, session_id: str) -> None:
         """Remove public share for a session."""
         await self._http.request("DELETE", f"/sessions/{session_id}/public-share")
+
+    # Deprecated aliases for older browser-use versions (<=0.11.x)
+    create_session = create
+    list_sessions = list
+    get_session = get
+    update_session = update
+    delete_session = delete
+    create_session_public_share = create_share
+    delete_session_public_share = delete_share

@@ -185,6 +185,10 @@ class Skills:
             )
         )
 
+    # Deprecated aliases for older browser-use versions (<=0.11.x)
+    list_skills = list
+    execute_skill = execute
+
 
 class AsyncSkills:
     def __init__(self, http: AsyncHttpClient) -> None:
@@ -356,3 +360,7 @@ class AsyncSkills:
                 f"/skills/{skill_id}/executions/{execution_id}/output",
             )
         )
+
+    # Deprecated aliases for older browser-use versions (<=0.11.x)
+    list_skills = list
+    execute_skill = execute

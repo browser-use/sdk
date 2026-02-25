@@ -69,6 +69,13 @@ class Profiles:
         """Delete a browser profile."""
         self._http.request("DELETE", f"/profiles/{profile_id}")
 
+    # Deprecated aliases for older browser-use versions (<=0.11.x)
+    create_profile = create
+    list_profiles = list
+    get_profile = get
+    update_profile = update
+    delete_browser_profile = delete
+
 
 class AsyncProfiles:
     def __init__(self, http: AsyncHttpClient) -> None:
@@ -132,3 +139,10 @@ class AsyncProfiles:
     async def delete(self, profile_id: str) -> None:
         """Delete a browser profile."""
         await self._http.request("DELETE", f"/profiles/{profile_id}")
+
+    # Deprecated aliases for older browser-use versions (<=0.11.x)
+    create_profile = create
+    list_profiles = list
+    get_profile = get
+    update_profile = update
+    delete_browser_profile = delete

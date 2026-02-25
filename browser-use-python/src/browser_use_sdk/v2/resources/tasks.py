@@ -211,6 +211,13 @@ class Tasks:
             time.sleep(interval)
         raise TimeoutError(f"Task {task_id} did not complete within {timeout}s")
 
+    # Deprecated aliases for older browser-use versions (<=0.11.x)
+    create_task = create
+    get_task = get
+    list_tasks = list
+    update_task = update
+    get_task_logs = logs
+
 
 class AsyncTasks:
     def __init__(self, http: AsyncHttpClient) -> None:
@@ -337,3 +344,10 @@ class AsyncTasks:
                 return await self.get(task_id)
             await asyncio.sleep(interval)
         raise TimeoutError(f"Task {task_id} did not complete within {timeout}s")
+
+    # Deprecated aliases for older browser-use versions (<=0.11.x)
+    create_task = create
+    get_task = get
+    list_tasks = list
+    update_task = update
+    get_task_logs = logs
