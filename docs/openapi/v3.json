@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Browser Use Public API v3",
-    "summary": "Browser Use session-based agent API (v3)",
+    "title": "BU Agent API",
+    "summary": "Browser Use session-based agent API",
     "version": "3.0.0"
   },
   "servers": [

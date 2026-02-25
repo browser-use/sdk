@@ -80,7 +80,7 @@
             }
           },
           {
-            "group": "API v3 (Experimental)",
+            "group": "BU Agent API (Experimental)",
             "openapi": {
               "source": "openapi/v3.json",
               "directory": "api-v3"
