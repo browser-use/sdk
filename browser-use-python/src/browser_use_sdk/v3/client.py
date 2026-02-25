@@ -43,9 +43,10 @@ class BrowserUse:
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
+        output_schema: dict[str, Any] | None = None,
         **extra: Any,
-    ) -> str | None:
-        """Run a task and block until complete. Returns the output string."""
+    ) -> Any:
+        """Run a task and block until complete. Returns the output."""
         data = self.sessions.create(
             task,
             model=model,
@@ -53,6 +54,7 @@ class BrowserUse:
             max_cost_usd=max_cost_usd,
             profile_id=profile_id,
             proxy_country_code=proxy_country_code,
+            output_schema=output_schema,
             **extra,
         )
         return _poll_output(self.sessions, str(data.id))
@@ -99,9 +101,10 @@ class AsyncBrowserUse:
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
+        output_schema: dict[str, Any] | None = None,
         **extra: Any,
     ) -> AsyncSessionRun:
-        """Run a task. Await the result for the output string."""
+        """Run a task. Await the result for the output."""
         def create_fn() -> Awaitable[SessionResponse]:
             return self.sessions.create(
                 task,
@@ -110,6 +113,7 @@ class AsyncBrowserUse:
                 max_cost_usd=max_cost_usd,
                 profile_id=profile_id,
                 proxy_country_code=proxy_country_code,
+                output_schema=output_schema,
                 **extra,
             )
 

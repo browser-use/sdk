@@ -42,7 +42,7 @@ export class BrowserUse {
   }
 
   /**
-   * Create a session and run a task. `await` the result for the output string.
+   * Create a session and run a task. `await` the result for the output.
    *
    * ```ts
    * const output = await client.run("Find the top HN post");

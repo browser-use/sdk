@@ -2058,7 +2058,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__endpoints__api__v2__skills__views__InsufficientCreditsError"
+                  "$ref": "#/components/schemas/InsufficientCreditsError"
                 }
               }
             }
@@ -2491,7 +2491,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__endpoints__api__v2__skills__views__InsufficientCreditsError"
+                  "$ref": "#/components/schemas/InsufficientCreditsError"
                 }
               }
             }
@@ -3076,7 +3076,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__endpoints__api__v2__marketplace__skills__views__InsufficientCreditsError"
+                  "$ref": "#/components/schemas/InsufficientCreditsError"
                 }
               }
             }
@@ -4129,12 +4129,12 @@
           "detail": {
             "type": "string",
             "title": "Detail",
-            "default": "You have insufficient credits"
+            "default": "Insufficient credits"
           }
         },
         "type": "object",
         "title": "InsufficientCreditsError",
-        "description": "Error response when user has insufficient credits"
+        "description": "Error response when there are insufficient credits"
       },
       "InternalServerError": {
         "properties": {
@@ -5795,6 +5795,7 @@
           "gemini-flash-lite-latest",
           "claude-sonnet-4-20250514",
           "claude-sonnet-4-5-20250929",
+          "claude-sonnet-4-6",
           "claude-opus-4-5-20251101",
           "gpt-4o",
           "gpt-4o-mini",
@@ -6687,30 +6688,6 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "app__endpoints__api__v2__marketplace__skills__views__InsufficientCreditsError": {
-        "properties": {
-          "detail": {
-            "type": "string",
-            "title": "Detail",
-            "default": "Insufficient credits"
-          }
-        },
-        "type": "object",
-        "title": "InsufficientCreditsError",
-        "description": "Error response when there are insufficient credits"
-      },
-      "app__endpoints__api__v2__skills__views__InsufficientCreditsError": {
-        "properties": {
-          "detail": {
-            "type": "string",
-            "title": "Detail",
-            "default": "Insufficient credits"
-          }
-        },
-        "type": "object",
-        "title": "InsufficientCreditsError",
-        "description": "Error response when there are insufficient credits"
       }
     },
     "securitySchemes": {

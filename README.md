@@ -10,8 +10,8 @@ Official SDKs for the [Browser Use](https://browser-use.com) cloud API.
 
 | Package | Language | Registry | Version |
 |---------|----------|----------|---------|
-| [browser-use-sdk](browser-use-node/) | TypeScript | npm | 3.0.1 |
-| [browser-use-sdk](browser-use-python/) | Python | PyPI | 3.0.1 |
+| [browser-use-sdk](browser-use-node/) | TypeScript | npm | 3.0.2 |
+| [browser-use-sdk](browser-use-python/) | Python | PyPI | 3.0.2 |
 
 Both packages support **v2** (default, stable) and **v3** (experimental, via subpath import).
 

@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List
+from typing import Any, Dict, List
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
@@ -308,6 +308,9 @@ class RunTaskRequest(BaseModel):
     )
     profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
     proxy_country_code: ProxyCountryCode | None = Field(None, alias='proxyCountryCode')
+    output_schema: Dict[str, Any] | None = Field(
+        None, alias='outputSchema', title='Outputschema'
+    )
 
 
 class SessionResponse(BaseModel):
@@ -318,7 +321,7 @@ class SessionResponse(BaseModel):
     status: BuAgentSessionStatus
     model: BuModel
     title: str | None = Field(None, title='Title')
-    output: str | None = Field(None, title='Output')
+    output: Any = Field(None, title='Output')
     live_url: str | None = Field(None, alias='liveUrl', title='Liveurl')
     profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
     proxy_country_code: ProxyCountryCode | None = Field(None, alias='proxyCountryCode')

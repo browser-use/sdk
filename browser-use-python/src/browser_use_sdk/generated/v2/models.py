@@ -281,7 +281,7 @@ class GenerationNotCancellableError(BaseModel):
 
 
 class InsufficientCreditsError(BaseModel):
-    detail: str | None = Field('You have insufficient credits', title='Detail')
+    detail: str | None = Field('Insufficient credits', title='Detail')
 
 
 class InternalServerError(BaseModel):
@@ -850,6 +850,7 @@ class SupportedLLMs(Enum):
     gemini_flash_lite_latest = 'gemini-flash-lite-latest'
     claude_sonnet_4_20250514 = 'claude-sonnet-4-20250514'
     claude_sonnet_4_5_20250929 = 'claude-sonnet-4-5-20250929'
+    claude_sonnet_4_6 = 'claude-sonnet-4-6'
     claude_opus_4_5_20251101 = 'claude-opus-4-5-20251101'
     gpt_4o = 'gpt-4o'
     gpt_4o_mini = 'gpt-4o-mini'
@@ -1221,14 +1222,6 @@ class ValidationError(BaseModel):
     loc: List[str | int] = Field(..., title='Location')
     msg: str = Field(..., title='Message')
     type: str = Field(..., title='Error Type')
-
-
-class AppEndpointsApiV2MarketplaceSkillsViewsInsufficientCreditsError(BaseModel):
-    detail: str | None = Field('Insufficient credits', title='Detail')
-
-
-class AppEndpointsApiV2SkillsViewsInsufficientCreditsError(BaseModel):
-    detail: str | None = Field('Insufficient credits', title='Detail')
 
 
 class AccountView(BaseModel):

@@ -1285,12 +1285,12 @@ export interface components {
         };
         /**
          * InsufficientCreditsError
-         * @description Error response when user has insufficient credits
+         * @description Error response when there are insufficient credits
          */
         InsufficientCreditsError: {
             /**
              * Detail
-             * @default You have insufficient credits
+             * @default Insufficient credits
              */
             detail: string;
         };
@@ -2181,7 +2181,7 @@ export interface components {
          * SupportedLLMs
          * @enum {string}
          */
-        SupportedLLMs: "browser-use-llm" | "browser-use-2.0" | "gpt-4.1" | "gpt-4.1-mini" | "o4-mini" | "o3" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-3-pro-preview" | "gemini-3-flash-preview" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "claude-sonnet-4-20250514" | "claude-sonnet-4-5-20250929" | "claude-opus-4-5-20251101" | "gpt-4o" | "gpt-4o-mini" | "llama-4-maverick-17b-128e-instruct" | "claude-3-7-sonnet-20250219";
+        SupportedLLMs: "browser-use-llm" | "browser-use-2.0" | "gpt-4.1" | "gpt-4.1-mini" | "o4-mini" | "o3" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-3-pro-preview" | "gemini-3-flash-preview" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "claude-sonnet-4-20250514" | "claude-sonnet-4-5-20250929" | "claude-sonnet-4-6" | "claude-opus-4-5-20251101" | "gpt-4o" | "gpt-4o-mini" | "llama-4-maverick-17b-128e-instruct" | "claude-3-7-sonnet-20250219";
         /**
          * TaskCreatedResponse
          * @description Response model for creating a task
@@ -2705,28 +2705,6 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
-        };
-        /**
-         * InsufficientCreditsError
-         * @description Error response when there are insufficient credits
-         */
-        app__endpoints__api__v2__marketplace__skills__views__InsufficientCreditsError: {
-            /**
-             * Detail
-             * @default Insufficient credits
-             */
-            detail: string;
-        };
-        /**
-         * InsufficientCreditsError
-         * @description Error response when there are insufficient credits
-         */
-        app__endpoints__api__v2__skills__views__InsufficientCreditsError: {
-            /**
-             * Detail
-             * @default Insufficient credits
-             */
-            detail: string;
         };
     };
     responses: never;
@@ -3988,7 +3966,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["app__endpoints__api__v2__skills__views__InsufficientCreditsError"];
+                    "application/json": components["schemas"]["InsufficientCreditsError"];
                 };
             };
             /** @description Validation Error */
@@ -4288,7 +4266,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["app__endpoints__api__v2__skills__views__InsufficientCreditsError"];
+                    "application/json": components["schemas"]["InsufficientCreditsError"];
                 };
             };
             /** @description Skill not found, no code available, or project not found */
@@ -4630,7 +4608,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["app__endpoints__api__v2__marketplace__skills__views__InsufficientCreditsError"];
+                    "application/json": components["schemas"]["InsufficientCreditsError"];
                 };
             };
             /** @description Skill not found, no code available, or project not found */

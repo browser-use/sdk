@@ -177,6 +177,10 @@ export interface components {
             /** Profileid */
             profileId?: string | null;
             proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
+            /** Outputschema */
+            outputSchema?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** SessionListResponse */
         SessionListResponse: {
@@ -201,7 +205,7 @@ export interface components {
             /** Title */
             title?: string | null;
             /** Output */
-            output?: string | null;
+            output?: unknown | null;
             /** Liveurl */
             liveUrl?: string | null;
             /** Profileid */

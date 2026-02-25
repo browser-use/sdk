@@ -24,6 +24,7 @@ class Sessions:
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
+        output_schema: dict[str, Any] | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and run a task."""
@@ -40,6 +41,8 @@ class Sessions:
             body["profileId"] = profile_id
         if proxy_country_code is not None:
             body["proxyCountryCode"] = proxy_country_code
+        if output_schema is not None:
+            body["outputSchema"] = output_schema
         body.update(extra)
         return SessionResponse.model_validate(
             self._http.request("POST", "/sessions", json=body)
@@ -113,6 +116,7 @@ class AsyncSessions:
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
+        output_schema: dict[str, Any] | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and run a task."""
@@ -129,6 +133,8 @@ class AsyncSessions:
             body["profileId"] = profile_id
         if proxy_country_code is not None:
             body["proxyCountryCode"] = proxy_country_code
+        if output_schema is not None:
+            body["outputSchema"] = output_schema
         body.update(extra)
         return SessionResponse.model_validate(
             await self._http.request("POST", "/sessions", json=body)

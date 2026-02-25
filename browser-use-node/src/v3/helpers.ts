@@ -13,10 +13,10 @@ export interface RunOptions {
 }
 
 /**
- * Dual-purpose session handle: `await` it for the output string,
+ * Dual-purpose session handle: `await` it for the output value,
  * or access `.result` for the full SessionResponse after resolution.
  */
-export class SessionRun implements PromiseLike<string | null> {
+export class SessionRun implements PromiseLike<unknown> {
   private readonly _createPromise: Promise<SessionResponse>;
   private readonly _sessions: Sessions;
   private readonly _timeout: number;
@@ -46,9 +46,9 @@ export class SessionRun implements PromiseLike<string | null> {
   }
 
   /** Enable `await client.run(...)` — polls until terminal, returns output. */
-  then<R1 = string | null, R2 = never>(
+  then<R1 = unknown, R2 = never>(
     onFulfilled?:
-      | ((value: string | null) => R1 | PromiseLike<R1>)
+      | ((value: unknown) => R1 | PromiseLike<R1>)
       | null,
     onRejected?: ((reason: unknown) => R2 | PromiseLike<R2>) | null,
   ): Promise<R1 | R2> {
@@ -62,7 +62,7 @@ export class SessionRun implements PromiseLike<string | null> {
     return this._sessionId;
   }
 
-  private async _waitForOutput(): Promise<string | null> {
+  private async _waitForOutput(): Promise<unknown> {
     const sessionId = await this._ensureSessionId();
     const deadline = Date.now() + this._timeout;
 

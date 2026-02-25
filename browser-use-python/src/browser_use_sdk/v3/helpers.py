@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 import asyncio
 from collections.abc import Awaitable, Callable
+from typing import Any
 
 from ..generated.v3.models import SessionResponse
 from .resources.sessions import AsyncSessions, Sessions
@@ -16,7 +17,7 @@ def _poll_output(
     *,
     timeout: float = 300,
     interval: float = 2,
-) -> str | None:
+) -> Any:
     """Poll session status until terminal, return output."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -33,7 +34,7 @@ async def _async_poll_output(
     *,
     timeout: float = 300,
     interval: float = 2,
-) -> str | None:
+) -> Any:
     """Async poll session status until terminal, return output."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -62,7 +63,7 @@ class AsyncSessionRun:
         self.session_id: str | None = None
         self.result: SessionResponse | None = None
 
-    async def _wait_for_output(self) -> str | None:
+    async def _wait_for_output(self) -> Any:
         data = await self._create_fn()
         self.session_id = str(data.id)
         deadline = time.monotonic() + self._timeout
