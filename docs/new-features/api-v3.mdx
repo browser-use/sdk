@@ -1,0 +1,89 @@
+---
+title: API V3 Agent (Experimental)
+description: A new, more powerful browser agent built from scratch.
+icon: rocket
+---
+
+<Note>
+  API V3 is experimental. The interface may change.
+</Note>
+
+## What is it?
+
+A completely new agent built from scratch — way more powerful than V2 at general web intelligence. Think **Claude Code for the browser**: web scraping, data extraction, file manipulation, and complex multi-step workflows.
+
+**Example:** *"Here's a CSV with 50 people. For each person, find their LinkedIn profile, extract their current title and company, and return an enriched CSV."*
+
+The V3 agent handles the entire pipeline in a single task.
+
+## Quick start
+
+Same package, different import path:
+
+<CodeGroup>
+```python Python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse()
+    result = await client.run("Find the top 3 trending repos on GitHub today")
+    print(result.output)
+
+asyncio.run(main())
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const result = await client.run("Find the top 3 trending repos on GitHub today");
+console.log(result.output);
+```
+</CodeGroup>
+
+### Structured output
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+from pydantic import BaseModel
+
+class Contact(BaseModel):
+    name: str
+    title: str
+    company: str
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Find the founding team of Browser Use on LinkedIn",
+    output_schema=Contact,
+)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { z } from "zod";
+
+const Contact = z.object({
+  name: z.string(),
+  title: z.string(),
+  company: z.string(),
+});
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Find the founding team of Browser Use on LinkedIn",
+  { schema: Contact },
+);
+console.log(result.output);
+```
+</CodeGroup>
+
+<CardGroup cols={2}>
+  <Card title="API V3 Reference" icon="code" href="/api-v3/sessions/create-session">
+    Full endpoint reference.
+  </Card>
+  <Card title="Agent Tasks (V2)" icon="play" href="/guides/tasks">
+    V2 task guide.
+  </Card>
+</CardGroup>
