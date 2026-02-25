@@ -1,0 +1,233 @@
+---
+title: Authentication & 2FA
+description: Profile sync, secrets, and 1Password with TOTP/2FA.
+icon: key
+---
+
+The easiest way to handle authentication is to sync your local browser cookies (where you're already logged in) to a Browser Profile in the Cloud. This lets you run tasks with your existing login states without managing credentials.
+
+## Sync Local Cookies to Cloud
+
+Sync your local cookies where you're already logged in:
+
+```bash
+export BROWSER_USE_API_KEY=your_key && curl -fsSL https://browser-use.com/profile.sh | sh
+```
+
+This opens a browser where you log into your accounts. After syncing, you'll receive a `profile_id`.
+
+<Note>
+  Make sure you're logged into all the accounts you want to use before syncing.
+</Note>
+
+## View Your Synced Profiles
+
+Visit [cloud.browser-use.com/settings?tab=profiles](https://cloud.browser-use.com/settings?tab=profiles) to see all your synced local profiles.
+
+## Using Your Profile in Tasks
+
+Once you have a `profile_id`, use it to run tasks with your authentication:
+
+### 1. Create a Session with Your Profile
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+session = await client.sessions.create(profile_id="profile_abc123")
+print(session.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const session = await client.sessions.create({ profileId: "profile_abc123" });
+console.log(session.id);
+```
+</CodeGroup>
+
+### 2. Run a Task with the Session
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Go to my LinkedIn profile and get my connection count",
+    session_id=session.id,
+)
+print(result.output)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Go to my LinkedIn profile and get my connection count",
+  { sessionId: session.id },
+);
+console.log(result.output);
+```
+</CodeGroup>
+
+### Complete Example
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+# 1. Create session with synced profile
+session = await client.sessions.create(profile_id="profile_abc123")
+
+# 2. Run authenticated tasks
+result = await client.run("Check my GitHub notifications", session_id=session.id)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+
+// 1. Create session with synced profile
+const session = await client.sessions.create({ profileId: "profile_abc123" });
+
+// 2. Run authenticated tasks
+const result = await client.run("Check my GitHub notifications", {
+  sessionId: session.id,
+});
+console.log(result.output);
+```
+</CodeGroup>
+
+<Tip>
+  Your profile preserves all login states, so subsequent tasks in the same session will remain authenticated.
+</Tip>
+
+## Secrets
+
+Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Log into GitHub and star the browser-use/browser-use repo",
+    secrets={"github.com": "username:password123"},
+    allowed_domains=["github.com"],
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Log into GitHub and star the browser-use/browser-use repo",
+  {
+    secrets: { "github.com": "username:password123" },
+    allowedDomains: ["github.com"],
+  },
+);
+```
+</CodeGroup>
+
+<Info>
+  **Domain restrictions:** Use `allowed_domains` with any auth method to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`, `http*://example.com`.
+</Info>
+
+---
+
+## 1Password Integration
+
+Browser Use Cloud integrates with 1Password, allowing the agent to securely access your credentials directly from a vault and handle logins automatically — including 2FA codes stored in 1Password.
+
+### Setup
+
+#### 1. Create a Dedicated Vault
+
+Create a new vault in 1Password specifically for Browser Use:
+
+1. Open 1Password and go to your vaults
+2. Create a new vault (e.g., "Browser Use" or "Automation")
+3. Add the credentials you want the agent to access (usernames, passwords, and 2FA/TOTP codes)
+
+<Note>
+  We recommend using a dedicated vault rather than sharing your main vault. This gives you granular control over which credentials the agent can access.
+</Note>
+
+#### 2. Create a Service Account Token
+
+Generate a service account token that Browser Use will use to read from your vault:
+
+1. Go to [1Password Developer Tools - Service Accounts](https://my.1password.eu/developer-tools/active/service-accounts)
+2. Click **New Service Account**
+3. Give it a descriptive name (e.g., "Browser Use Cloud")
+4. Grant **read access** to the dedicated vault you created
+5. Copy the generated service account token
+
+<Warning>
+  Store your service account token securely. It provides read access to your vault and should be treated like a password.
+</Warning>
+
+#### 3. Connect to Browser Use Cloud
+
+Add your 1Password token to Browser Use Cloud:
+
+1. Go to [Browser Use Cloud Settings - Secrets](https://cloud.browser-use.com/settings?tab=secrets)
+2. Click **Create Integration**
+3. Paste your service account token
+4. Save the integration
+
+Once connected, Browser Use Cloud can securely access the vaults shared with that service account.
+
+#### 4. Run Tasks with Vault Access
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Log into my Jira account and create a new ticket",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net"],
+)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Log into my Jira account and create a new ticket",
+  {
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net"],
+  },
+);
+console.log(result.output);
+```
+</CodeGroup>
+
+You can also use 1Password from the Cloud Chat directly:
+
+1. Go to [cloud.browser-use.com](https://cloud.browser-use.com/)
+2. Select the 1Password vault you want to use for the task
+3. Enter your task (e.g., "Log into my X account and check my notifications")
+4. The agent will automatically retrieve credentials from your vault and handle the login
+
+<Tip>
+  If your 1Password entry includes a TOTP/2FA code, the agent will automatically use it during login — no manual intervention required.
+</Tip>
+
+### How It Works
+
+When the agent encounters a login form:
+
+1. It identifies the service (e.g., Twitter, GitHub, LinkedIn)
+2. Retrieves matching credentials from your connected 1Password vault
+3. Fills in the username and password
+4. If 2FA is required and a TOTP code is stored, it generates and enters the code automatically
+
+<Note>
+  The agent never sees your actual credentials. It only receives a placeholder indicating it has access to a credential. The actual username, password, and 2FA codes are filled in programmatically — keeping your secrets hidden from the AI model.
+</Note>

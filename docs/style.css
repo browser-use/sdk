@@ -1,0 +1,24 @@
+th {
+  text-align: left;
+}
+
+/* API Reference sidebar: gray active state instead of orange */
+#sidebar-content:has(.method-nav-pill) .bg-primary\/10 {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+#sidebar-content:has(.method-nav-pill) .text-primary {
+  color: rgb(55, 65, 81);
+}
+
+.dark #sidebar-content:has(.method-nav-pill) .bg-primary\/10 {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark #sidebar-content:has(.method-nav-pill) .text-primary {
+  color: rgb(209, 213, 219);
+}
+
+#sidebar-content:has(.method-nav-pill) .\[text-shadow\:-0\.2px_0_0_currentColor\,0\.2px_0_0_currentColor\] {
+  text-shadow: none;
+}

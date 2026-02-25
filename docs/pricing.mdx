@@ -1,14 +1,13 @@
 ---
 title: "Models and Pricing"
-subtitle: "Browser Use Cloud API pricing structure and cost breakdown."
+description: "Browser Use Cloud API pricing structure and cost breakdown."
 icon: "dollar-sign"
-mode: "wide"
 ---
 
 ## Pricing Overview
 
 | Product | Pay As You Go | Business/Scaleup | Notes |
-| ------- | --------- | ---------------- | ----- |
+| ------- | ------------- | ---------------- | ----- |
 | **AI Agent Tasks** | \$0.01 init + per-step | 25% off per-step | See LLM pricing below |
 | **Browser Sessions** | \$0.06/hour | \$0.03/hour (50% off) | Charged upfront, unused time refunded |
 | **Skill Creation** | \$2.00/skill | \$1.00/skill (50% off) | Refunded if cancelled, refinements free |
@@ -30,29 +29,26 @@ Task pricing consists of two components:
 | ----- | ---------- | ------------- |
 | Browser Use 2.0 | `browser-use-2.0` | \$0.006 |
 | Browser Use LLM | `browser-use-llm` | \$0.002 |
-| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
 | O3 | `o3` | \$0.03 |
-| Gemini 2.5 Pro | `gemini-2.5-pro` | \$0.03 |
-| Gemini 2.5 Flash | `gemini-2.5-flash` | \$0.005 |
+| Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$0.03 |
+| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.015 |
+| Gemini Flash Latest | `gemini-flash-latest` | \$0.0075 |
+| Gemini Flash Lite Latest | `gemini-flash-lite-latest` | \$0.005 |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$0.05 |
 
 **Browser Use 2.0** is the default — custom-trained for browser automation. 15x cheaper and 6x faster than frontier models (~3s/step vs ~8s/step).
 
 Use it by default (no configuration needed), or pass `llm` explicitly:
 
-<CodeBlocks>
-  <CodeBlock title="Python">
-    ```python
-    result = await client.run("...", llm="browser-use-2.0")
-    ```
-  </CodeBlock>
-  <CodeBlock title="TypeScript">
-    ```typescript
-    const result = await client.run("...", { llm: "browser-use-2.0" });
-    ```
-  </CodeBlock>
-</CodeBlocks>
-
-**ChatBrowserUse** — the chat completion API endpoint. Always routes to the best frontier model as determined by Browser Use benchmarks. Includes batching, caching, and cost optimizations.
+<CodeGroup>
+```python Python
+result = await client.run("...", llm="browser-use-2.0")
+```
+```typescript TypeScript
+const result = await client.run("...", { llm: "browser-use-2.0" });
+```
+</CodeGroup>
 
 ### Example Cost Calculation
 
@@ -135,56 +131,6 @@ Proxy is automatically enabled when you set `proxyCountryCode` on a session. Dat
 
 ---
 
-## Plan Comparison
+**Scaleup & Enterprise** — [contact us](https://browser-use.com/pricing) to get started. We sign ZDR (zero data retention), no-training, HIPAA, BAA, and custom compliance contracts. Includes dedicated browser pool, on-prem deployment options, and custom SLAs.
 
-| Feature | Pay As You Go | Business | Scaleup |
-| ------- | --------- | -------- | ------- |
-| Monthly price | \$0 | \$500 | \$2,500 |
-| Signup credits | \$1-10* | \$500 | \$2,500 |
-| Concurrent sessions | 3 | 250 | 500 |
-| Profiles | 5 | Unlimited | Unlimited |
-| Active skills | 5 | 100 | 1,000 |
-| **Proxy cost** | \$10/GB | \$5/GB (50% off) | \$4/GB (60% off) |
-| **Browser sessions** | \$0.06/hr | \$0.03/hr (50% off) | \$0.03/hr (50% off) |
-| Browser session timeout | 4 hours | 4 hours | 4 hours |
-| Team members | 1 | 5 | Unlimited |
-| Priority support | — | Yes | Yes |
-| Dedicated Slack | — | — | Yes |
-| Custom SLAs | — | — | Yes |
-
-*Pay As You Go signup credits: \$10 for OAuth signups (Google, GitHub), \$1 for email/password signups.
-
-<Note>
-**Save up to 50% on usage costs!** Business and Scaleup subscribers get 25% off LLM step costs, plus 50% off skill execution, browser sessions, and proxy data. Upgrade to maximize your credits.
-</Note>
-
-Annual billing: Business \$4,800/yr, Scaleup \$24,000/yr.
-
----
-
-## Credit Top-Ups (Pay As You Go)
-
-Purchase additional credits at any time — no subscription required. Credits never expire.
-
-| Amount | Price |
-| ------ | ----- |
-| \$25 | \$25 |
-| \$50 | \$50 |
-| \$100 | \$100 |
-| \$500 | \$500 |
-
----
-
-### Estimated Monthly Usage
-
-Based on included credits:
-
-| Resource | Business | Scaleup |
-| -------- | -------- | ------- |
-| Browser Use 2.0 agent runs | ~2,000 | ~10,000 |
-| Browser Use LLM agent runs | ~10,000 | ~50,000 |
-| Remote browser hours | ~16,000 | ~80,000 |
-
-**Enterprise** — custom pricing, dedicated browser pool, on-prem deployment, BAA, zero data retention. [Contact us](https://cloud.browser-use.com).
-
-[Get started →](https://cloud.browser-use.com)
+[See plans & pricing →](https://browser-use.com/pricing)

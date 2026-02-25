@@ -219,16 +219,23 @@ tasks:
       - diff snapshots/v3.json {{.OPENAPI_V3}} || true
 
   # ── Docs ─────────────────────────────────────────────────────
-  docs:dev:
-    desc: Start Fern docs dev server
-    dir: fern
+  docs:sync:
+    desc: Copy OpenAPI specs into docs for Mintlify
     cmds:
-      - fern docs dev
+      - cp snapshots/v2.json docs/openapi/v2.json
+      - cp snapshots/v3.json docs/openapi/v3.json
+
+  docs:dev:
+    desc: Start Mintlify docs dev server
+    deps: [docs:sync]
+    dir: docs
+    cmds:
+      - mint dev
 
   docs:install:
-    desc: Install Fern CLI globally
+    desc: Install Mintlify CLI globally
     cmds:
-      - npm install -g fern-api
+      - npm install -g mintlify
 
   # ── Full Pipeline ─────────────────────────────────────────────
   update:

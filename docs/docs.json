@@ -1,0 +1,111 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "aspen",
+  "name": "Browser Use Cloud",
+  "colors": {
+    "primary": "#FE750E",
+    "light": "#FE750E",
+    "dark": "#FE750E"
+  },
+  "background": {
+    "color": {
+      "light": "#FFFFFF",
+      "dark": "#09090B"
+    }
+  },
+  "favicon": "/favicon.ico",
+  "appearance": {
+    "default": "dark"
+  },
+  "contextual": {
+    "options": ["copy", "view"]
+  },
+  "fonts": {
+    "family": "Geist"
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "api": {
+    "playground": {
+      "display": "interactive"
+    },
+    "examples": {
+      "languages": ["javascript", "curl", "python"],
+      "required": true
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "llm-quickstart", "pricing"]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/overview",
+              "guides/tasks",
+              "guides/sessions",
+              "guides/browser-api",
+              "guides/proxies-and-stealth",
+              "guides/skills",
+              "guides/authentication",
+              "guides/mcp-server",
+              "guides/webhooks"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": ["examples", "faq"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "API v2 (Stable)",
+            "openapi": {
+              "source": "openapi/v2.json",
+              "directory": "api-v2"
+            }
+          },
+          {
+            "group": "API v3 (Experimental)",
+            "openapi": {
+              "source": "openapi/v3.json",
+              "directory": "api-v3"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      { "label": "Status", "href": "https://status.browser-use.com" }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Cloud Dashboard",
+      "href": "https://cloud.browser-use.com"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/browser_use",
+      "github": "https://github.com/browser-use/browser-use",
+      "linkedin": "https://linkedin.com/company/browser-use"
+    }
+  },
+  "integrations": {
+    "posthog": {
+      "apiKey": "phc_F8JMNjW1i2KbGUTaW1unnDdLSPCoyc52SGRU0JecaUh"
+    }
+  }
+}

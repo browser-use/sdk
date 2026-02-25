@@ -1,0 +1,152 @@
+---
+title: Sessions & Profiles
+description: Stateful browsers, persistent login state, profile sync.
+icon: browser
+---
+
+## Sessions
+
+A session is a stateful browser environment. By default, `run()` creates one automatically. Create one manually to run multiple tasks in the same browser.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+# Create a session
+session = await client.sessions.create(proxy_country_code="us")
+
+# Run multiple tasks in the same browser
+result1 = await client.run("Log into example.com with user@test.com", session_id=session.id)
+result2 = await client.run("Now go to settings and change the timezone", session_id=session.id)
+
+# Clean up
+await client.sessions.stop(session.id)
+await client.sessions.delete(session.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+
+const session = await client.sessions.create({ proxyCountryCode: "us" });
+
+const result1 = await client.run("Log into example.com with user@test.com", {
+  sessionId: session.id,
+});
+const result2 = await client.run("Now go to settings and change the timezone", {
+  sessionId: session.id,
+});
+
+await client.sessions.stop(session.id);
+await client.sessions.delete(session.id);
+```
+</CodeGroup>
+
+### Live view & recording
+
+Every session has a `liveUrl` for real-time monitoring. You can also create a shareable public link.
+
+<CodeGroup>
+```python Python
+session = await client.sessions.create()
+print(session.live_url)  # private debug URL — watch the agent live
+
+# Create a public share link (for recording/sharing)
+share = await client.sessions.create_share(session.id)
+print(share.url)  # shareable URL anyone can view
+```
+```typescript TypeScript
+const session = await client.sessions.create();
+console.log(session.liveUrl);
+
+const share = await client.sessions.createShare(session.id);
+console.log(share.url);
+```
+</CodeGroup>
+
+### When to use sessions
+
+- **Auto-session (default):** Simple one-off tasks. `run()` creates and cleans up a session for you with a US proxy.
+- **Manual session:** Multi-step workflows, custom proxy location, or when you need the live URL for debugging.
+
+See [Browser Infrastructure](/guides/browser-api) for the full list of session parameters (`profile_id`, `proxy_country_code`, `browser_screen_width`, etc.).
+
+---
+
+## Profile Sync
+
+The easiest way to authenticate: sync your local browser cookies to the cloud.
+
+```bash
+export BROWSER_USE_API_KEY=your_key
+curl -fsSL https://browser-use.com/profile.sh | sh
+```
+
+The interactive script walks you through selecting a local browser profile and uploading it. After sync, create a session with that profile and the agent is already logged into all your sites.
+
+## Profiles
+
+A profile is persistent browser state — cookies, localStorage, saved passwords. Login once, and the state survives across sessions.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+# Create a profile
+profile = await client.profiles.create(name="work-account")
+
+# Use it in a session — login state persists
+session = await client.sessions.create(profile_id=profile.id)
+await client.run("Log into slack.com", session_id=session.id)
+await client.sessions.stop(session.id)
+
+# Next session with same profile — already logged in
+session2 = await client.sessions.create(profile_id=profile.id)
+await client.run("Post 'hello' in #general on Slack", session_id=session2.id)
+await client.sessions.stop(session2.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+
+const profile = await client.profiles.create({ name: "work-account" });
+
+const session = await client.sessions.create({ profileId: profile.id });
+await client.run("Log into slack.com", { sessionId: session.id });
+await client.sessions.stop(session.id);
+
+const session2 = await client.sessions.create({ profileId: profile.id });
+await client.run("Post 'hello' in #general on Slack", { sessionId: session2.id });
+await client.sessions.stop(session2.id);
+```
+</CodeGroup>
+
+### Manage profiles
+
+<CodeGroup>
+```python Python
+profiles = await client.profiles.list()
+await client.profiles.update(profile.id, name="renamed")
+await client.profiles.delete(profile.id)
+```
+```typescript TypeScript
+const profiles = await client.profiles.list();
+await client.profiles.update(profile.id, { name: "renamed" });
+await client.profiles.delete(profile.id);
+```
+</CodeGroup>
+
+### Usage patterns
+
+- **Per-user profiles:** Create one profile per end-user. Store the profile ID in your database.
+- **Per-site profiles:** Separate profiles for different services (e.g., "linkedin", "github", "jira").
+- **Warm-up profiles:** Pre-login to common services once, then every automation starts already authenticated.
+
+<Tip>
+  Refresh profiles older than 7 days to keep login state fresh. Cookies expire.
+</Tip>

@@ -1,0 +1,121 @@
+---
+title: Webhooks
+description: Get notified when tasks complete.
+icon: webhook
+---
+
+Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.browser-use.com/settings?tab=webhooks).
+
+## Events
+
+| Event | When |
+|-------|------|
+| `agent.task.status_update` | Task started, finished, or stopped |
+| `test` | Webhook test ping |
+
+## Payload
+
+```json
+{
+  "type": "agent.task.status_update",
+  "timestamp": "2025-01-15T10:30:00Z",
+  "payload": {
+    "taskId": "task_abc123",
+    "status": "finished",
+    "sessionId": "session_xyz"
+  }
+}
+```
+
+Possible `status` values: `started`, `finished`, `stopped`.
+
+## Signature verification
+
+Every webhook includes an `X-Webhook-Signature` header. Verify it to ensure the request is authentic.
+
+<CodeGroup>
+```python Python
+import hashlib
+import hmac
+
+def verify_webhook(payload: bytes, signature: str, secret: str) -> bool:
+    expected = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
+```
+```typescript TypeScript
+import { createHmac, timingSafeEqual } from "crypto";
+
+function verifyWebhook(payload: string, signature: string, secret: string): boolean {
+  const expected = createHmac("sha256", secret).update(payload).digest("hex");
+  if (expected.length !== signature.length) return false;
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+}
+```
+</CodeGroup>
+
+## Example: Express webhook handler
+
+```typescript
+import express from "express";
+import { createHmac, timingSafeEqual } from "crypto";
+
+const app = express();
+app.use(express.raw({ type: "application/json" }));
+
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
+
+app.post("/webhook", (req, res) => {
+  const signature = req.headers["x-webhook-signature"] as string;
+  const expected = createHmac("sha256", WEBHOOK_SECRET).update(req.body).digest("hex");
+
+  if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
+    return res.status(401).send("Invalid signature");
+  }
+
+  const event = JSON.parse(req.body.toString());
+
+  if (event.type === "agent.task.status_update") {
+    const { taskId, status, sessionId } = event.payload;
+    console.log(`Task ${taskId} is now ${status}`);
+  }
+
+  res.status(200).send("OK");
+});
+
+app.listen(3000);
+```
+
+## Example: FastAPI webhook handler
+
+```python
+from fastapi import FastAPI, Request, HTTPException
+import hashlib
+import hmac
+import os
+
+app = FastAPI()
+
+WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
+
+@app.post("/webhook")
+async def handle_webhook(request: Request):
+    body = await request.body()
+    signature = request.headers.get("x-webhook-signature", "")
+    expected = hmac.new(WEBHOOK_SECRET.encode(), body, hashlib.sha256).hexdigest()
+
+    if not hmac.compare_digest(expected, signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
+    event = await request.json()
+
+    if event["type"] == "agent.task.status_update":
+        task_id = event["payload"]["taskId"]
+        status = event["payload"]["status"]
+        print(f"Task {task_id} is now {status}")
+
+    return {"status": "ok"}
+```
+
+<Tip>
+  For local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose your local server: `ngrok http 3000`. Then set the ngrok URL as your webhook endpoint in the dashboard.
+</Tip>

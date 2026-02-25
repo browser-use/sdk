@@ -1,99 +1,90 @@
 ---
 title: Overview
-subtitle: Four ways to automate the web — pick the one that fits.
+description: Four ways to automate the web — pick the one that fits.
+icon: lightbulb
 ---
 
 Browser Use Cloud gives you four approaches: **AI Agent Tasks**, **Direct Browser Control**, **Skills**, and the **Open Source Library** with cloud browsers.
 
-<Frame>![Browser Use Cloud Overview](../../assets/concepts-overview.png)</Frame>
+<Frame>
+  <img src="/images/concepts-overview.png" alt="Browser Use Cloud Overview" style={{ borderRadius: '0.5rem' }} />
+</Frame>
 
 ## When to use what
 
 | Use case | Approach | Best for |
-|----------|----------|----------|
+| -------- | -------- | -------- |
 | "Do this for me" | **AI Agent Tasks** | Most users. Natural language in, structured data out. |
 | Repeated extraction, production API | **Skills** | High-volume, deterministic. $0.02/call. |
 | Custom Playwright/Puppeteer scripts | **Browser Infrastructure** | Developers who want raw CDP access with stealth infra. |
 | Already using the open-source library | **Open Source + Cloud** | Keep your agent code, swap in cloud browsers. |
 
-<Callout intent="tip">
+<Tip>
   Start with **Tasks** — it's the fastest path to value. Move to **Skills** when you need a repeatable, production-grade endpoint.
-</Callout>
+</Tip>
 
 ## AI Agent Tasks
 
 Give natural language instructions — the AI operates the browser for you.
 
-<CodeBlocks>
-  <CodeBlock title="Python">
-    ```python
-    from browser_use_sdk import AsyncBrowserUse
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
 
-    client = AsyncBrowserUse()
-    result = await client.run("Search for top 10 Hacker News posts")
-    print(result.output)
-    ```
-  </CodeBlock>
-  <CodeBlock title="TypeScript">
-    ```typescript
-    import { BrowserUse } from "browser-use-sdk";
+client = AsyncBrowserUse()
+result = await client.run("Search for top 10 Hacker News posts")
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
 
-    const client = new BrowserUse();
-    const result = await client.run("Search for top 10 Hacker News posts");
-    console.log(result.output);
-    ```
-  </CodeBlock>
-</CodeBlocks>
+const client = new BrowserUse();
+const result = await client.run("Search for top 10 Hacker News posts");
+console.log(result.output);
+```
+</CodeGroup>
 
 ## Direct Browser Control
 
 Full programmatic access via Chrome DevTools Protocol. Write your own automation with Playwright, Puppeteer, or Selenium.
 
-<CodeBlocks>
-  <CodeBlock title="Python">
-    ```python
-    from browser_use_sdk import AsyncBrowserUse
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
 
-    client = AsyncBrowserUse()
-    browser = await client.browsers.create(proxy_country_code="us")
-    # Connect via browser.cdp_url with Playwright/Puppeteer/Selenium
-    ```
-  </CodeBlock>
-  <CodeBlock title="TypeScript">
-    ```typescript
-    import { BrowserUse } from "browser-use-sdk";
+client = AsyncBrowserUse()
+browser = await client.browsers.create(proxy_country_code="us")
+# Connect via browser.cdp_url with Playwright/Puppeteer/Selenium
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
 
-    const client = new BrowserUse();
-    const browser = await client.browsers.create({ proxyCountryCode: "us" });
-    // Connect via browser.cdpUrl with Playwright/Puppeteer/Selenium
-    ```
-  </CodeBlock>
-</CodeBlocks>
+const client = new BrowserUse();
+const browser = await client.browsers.create({ proxyCountryCode: "us" });
+// Connect via browser.cdpUrl with Playwright/Puppeteer/Selenium
+```
+</CodeGroup>
 
 ## Skills
 
 Describe what you need in plain text — get a production-ready API endpoint you can call repeatedly.
 
-<CodeBlocks>
-  <CodeBlock title="Python">
-    ```python
-    from browser_use_sdk import AsyncBrowserUse
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
 
-    client = AsyncBrowserUse()
-    result = await client.skills.execute(skill_id, parameters={"X": 10})
-    print(result)
-    ```
-  </CodeBlock>
-  <CodeBlock title="TypeScript">
-    ```typescript
-    import { BrowserUse } from "browser-use-sdk";
+client = AsyncBrowserUse()
+result = await client.skills.execute(skill_id, parameters={"X": 10})
+print(result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
 
-    const client = new BrowserUse();
-    const result = await client.skills.execute(skillId, { parameters: { X: 10 } });
-    console.log(result);
-    ```
-  </CodeBlock>
-</CodeBlocks>
+const client = new BrowserUse();
+const result = await client.skills.execute(skillId, { parameters: { X: 10 } });
+console.log(result);
+```
+</CodeGroup>
 
 ## Open Source Library
 
@@ -127,14 +118,14 @@ You can also pass `cloud_proxy_country_code` and `cloud_profile_id` for geo-rout
 - **Profile** — persistent browser state (cookies, localStorage). Login once, reuse across sessions.
 - **Skill** — a website interaction turned into a deterministic API endpoint. Create once, call forever.
 
-<Cards>
-  <Card title="Tasks" icon="fa-solid fa-play" href="/guides/tasks">
+<CardGroup cols={2}>
+  <Card title="Tasks" icon="play" href="/guides/tasks">
     Structured output, streaming, and parameters.
   </Card>
-  <Card title="Skills" icon="fa-solid fa-wand-magic-sparkles" href="/guides/skills">
+  <Card title="Skills" icon="wand-magic-sparkles" href="/guides/skills">
     Turn websites into reliable APIs.
   </Card>
-  <Card title="Browser Infrastructure" icon="fa-solid fa-globe" href="/guides/browser-api">
+  <Card title="Browser Infrastructure" icon="globe" href="/guides/browser-api">
     Direct CDP access with stealth browsers.
   </Card>
-</Cards>
+</CardGroup>

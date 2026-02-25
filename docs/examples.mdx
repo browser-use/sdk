@@ -1,0 +1,349 @@
+---
+title: Examples
+description: Copy-paste-run recipes for common use cases.
+icon: code
+---
+
+## Extract structured data
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+from pydantic import BaseModel
+
+class Product(BaseModel):
+    name: str
+    price: float
+    rating: float
+
+class ProductList(BaseModel):
+    items: list[Product]
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Get the top 3 results for 'wireless headphones' on Amazon",
+    output_schema=ProductList,
+)
+for p in result.output.items:
+    print(f"{p.name}: ${p.price} ({p.rating}★)")
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+import { z } from "zod";
+
+const Product = z.object({ name: z.string(), price: z.number(), rating: z.number() });
+const client = new BrowserUse();
+const result = await client.run(
+  "Get the top 3 results for 'wireless headphones' on Amazon",
+  { schema: z.array(Product) },
+);
+result.output.forEach((p) => console.log(`${p.name}: $${p.price} (${p.rating}★)`));
+```
+</CodeGroup>
+
+~8-12 steps with Browser Use 2.0. See [Pricing](/pricing) for cost per model.
+
+---
+
+## Stream task progress
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+async for step in client.run("Find the cheapest flight from NYC to London on Google Flights"):
+    print(f"Step {step.number}: {step.next_goal}")
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+for await (const step of client.run("Find the cheapest flight from NYC to London on Google Flights")) {
+  console.log(`Step ${step.number}: ${step.nextGoal}`);
+}
+```
+</CodeGroup>
+
+---
+
+## Follow-up tasks (same session)
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+session = await client.sessions.create()
+
+await client.run("Go to linkedin.com and search for 'AI engineer' in San Francisco", session_id=session.id)
+result = await client.run("Now filter by 'Past week' and get the first 5 job titles", session_id=session.id)
+print(result.output)
+
+await client.sessions.stop(session.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const session = await client.sessions.create();
+
+await client.run("Go to linkedin.com and search for 'AI engineer' in San Francisco", {
+  sessionId: session.id,
+});
+const result = await client.run("Now filter by 'Past week' and get the first 5 job titles", {
+  sessionId: session.id,
+});
+console.log(result.output);
+
+await client.sessions.stop(session.id);
+```
+</CodeGroup>
+
+---
+
+## Authenticated site (profile + secrets)
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Go to my GitHub notifications and summarize the unread ones",
+    session_settings={"profileId": "your-profile-id"},
+    secrets={"github.com": "backup-token-if-needed"},
+    allowed_domains=["github.com"],
+)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Go to my GitHub notifications and summarize the unread ones",
+  {
+    sessionSettings: { profileId: "your-profile-id" },
+    secrets: { "github.com": "backup-token-if-needed" },
+    allowedDomains: ["github.com"],
+  },
+);
+console.log(result.output);
+```
+</CodeGroup>
+
+---
+
+## Proxy scraping (geo-specific)
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+from pydantic import BaseModel
+
+class Price(BaseModel):
+    product: str
+    price: str
+    currency: str
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Get the price of MacBook Air M4 on the Apple Store",
+    output_schema=Price,
+    session_settings={"proxyCountryCode": "jp"},
+)
+print(result.output)  # Price(product='MacBook Air M4', price='164,800', currency='JPY')
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+import { z } from "zod";
+
+const Price = z.object({ product: z.string(), price: z.string(), currency: z.string() });
+const client = new BrowserUse();
+const result = await client.run(
+  "Get the price of MacBook Air M4 on the Apple Store",
+  { schema: Price, sessionSettings: { proxyCountryCode: "jp" } },
+);
+console.log(result.output);
+```
+</CodeGroup>
+
+---
+
+## File download from task
+
+<CodeGroup>
+```python Python
+import httpx
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run("Download the latest PDF report from example.com/reports")
+
+task = await client.tasks.get(result.id)
+for file in task.output_files:
+    output = await client.files.task_output(result.id, file.id)
+    async with httpx.AsyncClient() as http:
+        resp = await http.get(output.presigned_url)
+    with open(file.name, "wb") as f:
+        f.write(resp.content)
+    print(f"Saved {file.name}")
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+import { writeFileSync } from "fs";
+
+const client = new BrowserUse();
+const result = await client.run("Download the latest PDF report from example.com/reports");
+
+const task = await client.tasks.get(result.id);
+for (const file of task.outputFiles) {
+  const output = await client.files.taskOutput(result.id, file.id);
+  const resp = await fetch(output.presignedUrl);
+  writeFileSync(file.name, Buffer.from(await resp.arrayBuffer()));
+  console.log(`Saved ${file.name}`);
+}
+```
+</CodeGroup>
+
+---
+
+## Skill execution
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.skills.execute(
+    "your-skill-id",
+    parameters={"url": "https://amazon.com/dp/B0CHWRXH8B"},
+)
+print(result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.skills.execute("your-skill-id", {
+  parameters: { url: "https://amazon.com/dp/B0CHWRXH8B" },
+});
+console.log(result);
+```
+</CodeGroup>
+
+See [Pricing](/pricing) for skill execution costs.
+
+---
+
+## Parallel extraction
+
+<CodeGroup>
+```python Python
+import asyncio
+from browser_use_sdk import AsyncBrowserUse
+from pydantic import BaseModel
+
+class Company(BaseModel):
+    name: str
+    description: str
+    employee_count: str
+
+urls = [
+    "https://linkedin.com/company/openai",
+    "https://linkedin.com/company/anthropic",
+    "https://linkedin.com/company/google",
+]
+
+async def extract(client, url):
+    return await client.run(f"Get company info from {url}", output_schema=Company)
+
+async def main():
+    client = AsyncBrowserUse()
+    results = await asyncio.gather(*[extract(client, url) for url in urls])
+    for r in results:
+        print(r.output)
+
+asyncio.run(main())
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+import { z } from "zod";
+
+const Company = z.object({ name: z.string(), description: z.string(), employeeCount: z.string() });
+const urls = [
+  "https://linkedin.com/company/openai",
+  "https://linkedin.com/company/anthropic",
+  "https://linkedin.com/company/google",
+];
+
+const client = new BrowserUse();
+const results = await Promise.all(
+  urls.map((url) => client.run(`Get company info from ${url}`, { schema: Company })),
+);
+results.forEach((r) => console.log(r.output));
+```
+</CodeGroup>
+
+---
+
+## Direct browser (Playwright)
+
+```python
+from playwright.async_api import async_playwright
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+browser = await client.browsers.create(proxy_country_code="us")
+
+async with async_playwright() as p:
+    b = await p.chromium.connect_over_cdp(browser.cdp_url)
+    page = b.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    await page.screenshot(path="screenshot.png")
+    await b.close()
+
+await client.browsers.stop(browser.id)
+```
+
+See [Pricing](/pricing) for browser session costs.
+
+---
+
+## 1Password login with 2FA
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Log into Jira and create a bug ticket titled 'Login page broken'",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net"],
+)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Log into Jira and create a bug ticket titled 'Login page broken'",
+  {
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net"],
+  },
+);
+console.log(result.output);
+```
+</CodeGroup>
+
+Passwords and TOTP/2FA codes auto-filled from your vault. Raw credentials never appear in logs.
+
+---
+
+## n8n Integration
+
+Use Browser Use as an HTTP node in [n8n](https://n8n.io) workflows. POST to `https://api.browser-use.com/api/v2/tasks` with your API key in the `X-Browser-Use-API-Key` header, then poll `GET /api/v2/tasks/{id}` until `status` is `finished`. Or use [Webhooks](/guides/webhooks) to receive completion events directly.

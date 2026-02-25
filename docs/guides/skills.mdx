@@ -1,0 +1,98 @@
+---
+title: Skills
+description: Turn any website into a reliable API endpoint.
+icon: wand-magic-sparkles
+---
+
+A skill turns a website interaction into a reusable, reliable API. Describe what you need, Browser Use builds the automation, you call it like a function.
+
+## How skills work
+
+Every skill has two parts:
+
+- **Goal** — the full specification: what parameters it accepts, what data it returns, and the complete scope of work. If you want to extract data from 100 listings, the goal describes extracting from *all* of them.
+
+- **Demonstration** (`agent_prompt`) — shows *how* to perform the task, but only once. Think of it like onboarding a new colleague: you wouldn't walk them through all 100 listings. You'd show the first one or two and say "keep going like this for the rest." The demonstration navigates the site, triggers the necessary network requests, and the system builds the actual endpoint logic from that recording.
+
+<Tip>
+  The demonstration only needs to trigger the right network requests — it doesn't need to complete the full task. If extracting from many pages, just open the first item and maybe paginate once. The system handles the rest.
+</Tip>
+
+## Create a skill
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+skill = await client.skills.create(
+    goal="Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
+    agent_prompt="Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
+)
+print(skill.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const skill = await client.skills.create({
+  goal: "Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
+  agentPrompt: "Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
+});
+console.log(skill.id);
+```
+</CodeGroup>
+
+Skill creation takes ~30 seconds. You can also create skills visually from the [Cloud Dashboard](https://cloud.browser-use.com/skills) — record yourself performing the task, or let the agent demonstrate it.
+
+## Execute a skill
+
+<CodeGroup>
+```python Python
+result = await client.skills.execute(
+    skill.id,
+    parameters={"X": 10},
+)
+print(result)
+```
+```typescript TypeScript
+const result = await client.skills.execute(skill.id, {
+  parameters: { X: 10 },
+});
+console.log(result);
+```
+</CodeGroup>
+
+## Refine with feedback
+
+If execution isn't quite right, iterate for free:
+
+<CodeGroup>
+```python Python
+await client.skills.refine(skill.id, feedback="Also extract the product description and available colors")
+```
+```typescript TypeScript
+await client.skills.refine(skill.id, {
+  feedback: "Also extract the product description and available colors",
+});
+```
+</CodeGroup>
+
+## Marketplace
+
+Browse and use community-created skills.
+
+<CodeGroup>
+```python Python
+skills = await client.marketplace.list()
+my_skill = await client.marketplace.clone(skill_id)
+result = await client.marketplace.execute(skill_id, parameters={...})
+```
+```typescript TypeScript
+const skills = await client.marketplace.list();
+const mySkill = await client.marketplace.clone(skillId);
+const result = await client.marketplace.execute(skillId, { parameters: { ... } });
+```
+</CodeGroup>
+
+See [Models & Pricing](/pricing) for skill costs.

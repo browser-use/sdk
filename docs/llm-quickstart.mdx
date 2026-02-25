@@ -1,15 +1,16 @@
 ---
 title: LLM Quickstart
-subtitle: Copy one blob into your AI editor. Your agent knows the entire API.
+description: Copy one blob into your AI editor. Your agent knows the entire API.
+icon: brain
 ---
 
 Paste the following into **Cursor**, **Claude Code**, **Windsurf**, or any coding agent. It contains the full SDK reference — every method, every parameter, working examples.
 
 Your agent will be able to write Browser Use Cloud code immediately.
 
-<Callout intent="tip">
+<Tip>
   In Claude Code: save this as `CLOUD.md` in your project root. In Cursor: paste into a `.cursorrules` file or chat context.
-</Callout>
+</Tip>
 
 ````markdown
 # Browser Use Cloud SDK
@@ -20,7 +21,7 @@ Your agent will be able to write Browser Use Cloud code immediately.
 
 ## Setup
 Set `BROWSER_USE_API_KEY` env var, or pass `api_key`/`apiKey` to the constructor.
-Get a key at https://cloud.browser-use.com
+Get a key at https://cloud.browser-use.com/settings?tab=api-keys
 
 ## Python SDK
 
@@ -114,7 +115,7 @@ console.log(result.output);
 
 // Structured output (Zod)
 const Product = z.object({ name: z.string(), price: z.number() });
-const result = await client.run("Get product info", { schema: Product });
+const typed = await client.run("Get product info", { schema: Product });
 
 // Stream steps
 for await (const step of client.run("Go to google.com")) {
@@ -140,7 +141,6 @@ for await (const step of client.run("Go to google.com")) {
 - **Proxies**: set `proxy_country_code` on session. 195+ countries. CAPTCHAs handled automatically
 - **Stealth**: on by default. Anti-detect, CAPTCHA solving, ad blocking
 - **Browser Use LLM**: default model, optimized for browser tasks. 15× cheaper
-- **ChatBrowserUse**: the chat completion API endpoint, always routes to the best model
 - **Vision**: agent can take screenshots. Enable with `vision=True`
 - **1Password**: auto-fill passwords and 2FA/TOTP codes with `op_vault_id`
 ````

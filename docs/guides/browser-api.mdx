@@ -1,0 +1,147 @@
+---
+title: Browser Infrastructure
+description: Direct CDP access to stealth browsers. Use with Playwright, Puppeteer, or Selenium.
+icon: globe
+---
+
+The Browser API gives you a raw Chrome DevTools Protocol (CDP) connection to Browser Use's stealth infrastructure. No agent — you write the automation code, we provide the undetectable browser with proxies and CAPTCHA handling.
+
+## Create a browser session
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+browser = await client.browsers.create(proxy_country_code="us")
+print(browser.cdp_url)   # ws://...
+print(browser.live_url)  # debug view
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create({ proxyCountryCode: "us" });
+console.log(browser.cdpUrl);
+console.log(browser.liveUrl);
+```
+</CodeGroup>
+
+## Connect with Playwright
+
+<CodeGroup>
+```python Python
+from playwright.async_api import async_playwright
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+browser = await client.browsers.create()
+
+async with async_playwright() as p:
+    b = await p.chromium.connect_over_cdp(browser.cdp_url)
+    page = b.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    print(await page.title())
+    await b.close()
+
+await client.browsers.stop(browser.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+import { chromium } from "playwright";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create();
+
+const pw = await chromium.connectOverCDP(browser.cdpUrl);
+const page = pw.contexts()[0].pages()[0];
+await page.goto("https://example.com");
+console.log(await page.title());
+await pw.close();
+
+await client.browsers.stop(browser.id);
+```
+</CodeGroup>
+
+## Connect with Puppeteer
+
+```typescript
+import puppeteer from "puppeteer-core";
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create();
+
+const pw = await puppeteer.connect({ browserWSEndpoint: browser.cdpUrl });
+const [page] = await pw.pages();
+await page.goto("https://example.com");
+console.log(await page.title());
+await pw.close();
+
+await client.browsers.stop(browser.id);
+```
+
+## Connect with Selenium
+
+```python
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+browser = await client.browsers.create()
+
+options = Options()
+options.debugger_address = browser.cdp_url.replace("ws://", "").replace("/devtools/browser/", "")
+driver = webdriver.Chrome(options=options)
+driver.get("https://example.com")
+print(driver.title)
+driver.quit()
+
+await client.browsers.stop(browser.id)
+```
+
+## Manage sessions
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+# List active sessions
+sessions = await client.browsers.list()
+
+# Get a specific session
+session = await client.browsers.get(browser_id)
+
+# Stop a session
+await client.browsers.stop(browser_id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+
+const sessions = await client.browsers.list();
+const session = await client.browsers.get(browserId);
+await client.browsers.stop(browserId);
+```
+</CodeGroup>
+
+<Warning>
+  Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
+</Warning>
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `profile_id` | `str` | Load a saved browser profile (cookies, localStorage). |
+| `proxy_country_code` | `str` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
+| `timeout` | `int` | Session timeout in minutes. Max: 240 (4 hours). |
+| `browser_screen_width` | `int` | Browser width in pixels. |
+| `browser_screen_height` | `int` | Browser height in pixels. |
+| `custom_proxy` | `CustomProxy` | Bring your own proxy (HTTP or SOCKS5). See [Proxies](/guides/proxies-and-stealth#custom-proxy). |
+
+See [Models & Pricing](/pricing) for browser session and proxy costs.
