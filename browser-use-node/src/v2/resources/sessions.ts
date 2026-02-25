@@ -7,6 +7,7 @@ type SessionItemView = components["schemas"]["SessionItemView"];
 type SessionListResponse = components["schemas"]["SessionListResponse"];
 type SessionView = components["schemas"]["SessionView"];
 type ShareView = components["schemas"]["ShareView"];
+type UpdateSessionRequest = components["schemas"]["UpdateSessionRequest"];
 
 export interface SessionListParams {
   pageSize?: number;
@@ -32,9 +33,14 @@ export class Sessions {
     return this.http.get<SessionView>(`/sessions/${sessionId}`);
   }
 
+  /** Update a session (generic PATCH). */
+  update(sessionId: string, body: UpdateSessionRequest): Promise<SessionView> {
+    return this.http.patch<SessionView>(`/sessions/${sessionId}`, body);
+  }
+
   /** Stop a session and all its running tasks. */
   stop(sessionId: string): Promise<SessionView> {
-    return this.http.patch<SessionView>(`/sessions/${sessionId}`, { action: "stop" });
+    return this.update(sessionId, { action: "stop" });
   }
 
   /** Delete a session with all its tasks. */

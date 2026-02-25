@@ -11,10 +11,11 @@ from ...generated.v2.models import (
     TaskListResponse,
     TaskLogFileResponse,
     TaskStatusView,
+    TaskUpdateAction,
     TaskView,
 )
 
-_TERMINAL_STATUSES = {"finished", "stopped", "failed"}
+_TERMINAL_STATUSES = {"finished", "stopped"}
 
 
 def _build_create_body(
@@ -173,19 +174,20 @@ class Tasks:
             self._http.request("GET", f"/tasks/{task_id}")
         )
 
-    def stop(self, task_id: str) -> TaskView:
-        """Stop a running task."""
+    def update(self, task_id: str, *, action: TaskUpdateAction | str, **extra: Any) -> TaskView:
+        """Update a task (generic PATCH)."""
+        body: dict[str, Any] = {"action": action, **extra}
         return TaskView.model_validate(
-            self._http.request("PATCH", f"/tasks/{task_id}", json={"action": "stop"})
+            self._http.request("PATCH", f"/tasks/{task_id}", json=body)
         )
 
-    def stop_task_and_session(self, task_id: str) -> TaskView:
+    def stop(self, task_id: str, **extra: Any) -> TaskView:
+        """Stop a running task."""
+        return self.update(task_id, action=TaskUpdateAction.stop, **extra)
+
+    def stop_task_and_session(self, task_id: str, **extra: Any) -> TaskView:
         """Stop a running task and its associated browser session."""
-        return TaskView.model_validate(
-            self._http.request(
-                "PATCH", f"/tasks/{task_id}", json={"action": "stop_task_and_session"}
-            )
-        )
+        return self.update(task_id, action=TaskUpdateAction.stop_task_and_session, **extra)
 
     def status(self, task_id: str) -> TaskStatusView:
         """Get lightweight task status (optimized for polling)."""
@@ -299,21 +301,20 @@ class AsyncTasks:
             await self._http.request("GET", f"/tasks/{task_id}")
         )
 
-    async def stop(self, task_id: str) -> TaskView:
-        """Stop a running task."""
+    async def update(self, task_id: str, *, action: TaskUpdateAction | str, **extra: Any) -> TaskView:
+        """Update a task (generic PATCH)."""
+        body: dict[str, Any] = {"action": action, **extra}
         return TaskView.model_validate(
-            await self._http.request("PATCH", f"/tasks/{task_id}", json={"action": "stop"})
+            await self._http.request("PATCH", f"/tasks/{task_id}", json=body)
         )
 
-    async def stop_task_and_session(self, task_id: str) -> TaskView:
+    async def stop(self, task_id: str, **extra: Any) -> TaskView:
+        """Stop a running task."""
+        return await self.update(task_id, action=TaskUpdateAction.stop, **extra)
+
+    async def stop_task_and_session(self, task_id: str, **extra: Any) -> TaskView:
         """Stop a running task and its associated browser session."""
-        return TaskView.model_validate(
-            await self._http.request(
-                "PATCH",
-                f"/tasks/{task_id}",
-                json={"action": "stop_task_and_session"},
-            )
-        )
+        return await self.update(task_id, action=TaskUpdateAction.stop_task_and_session, **extra)
 
     async def status(self, task_id: str) -> TaskStatusView:
         """Get lightweight task status (optimized for polling)."""

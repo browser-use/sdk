@@ -6,7 +6,7 @@ type TaskCreatedResponse = components["schemas"]["TaskCreatedResponse"];
 type TaskStepView = components["schemas"]["TaskStepView"];
 type TaskView = components["schemas"]["TaskView"];
 
-export const TERMINAL_STATUSES = new Set(["finished", "stopped", "failed"]);
+export const TERMINAL_STATUSES = new Set(["finished", "stopped"]);
 
 /** Task result with typed output. All TaskView fields are directly accessible. */
 export type TaskResult<T = string | null> = Omit<TaskView, "output"> & { output: T };

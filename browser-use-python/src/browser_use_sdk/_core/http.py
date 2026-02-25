@@ -160,4 +160,12 @@ def _clean_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
     """Remove None values and stringify query params."""
     if params is None:
         return None
-    return {k: str(v) for k, v in params.items() if v is not None}
+    cleaned: dict[str, str] = {}
+    for k, v in params.items():
+        if v is None:
+            continue
+        if isinstance(v, bool):
+            cleaned[k] = "true" if v else "false"
+        else:
+            cleaned[k] = str(v)
+    return cleaned

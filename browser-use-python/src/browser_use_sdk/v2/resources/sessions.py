@@ -7,6 +7,7 @@ from ...generated.v2.models import (
     CustomProxy,
     SessionItemView,
     SessionListResponse,
+    SessionUpdateAction,
     SessionView,
     ShareView,
 )
@@ -104,13 +105,16 @@ class Sessions:
             self._http.request("GET", f"/sessions/{session_id}")
         )
 
-    def stop(self, session_id: str) -> SessionView:
-        """Stop a session and all its running tasks."""
+    def update(self, session_id: str, *, action: SessionUpdateAction | str, **extra: Any) -> SessionView:
+        """Update a session (generic PATCH)."""
+        body: dict[str, Any] = {"action": action, **extra}
         return SessionView.model_validate(
-            self._http.request(
-                "PATCH", f"/sessions/{session_id}", json={"action": "stop"}
-            )
+            self._http.request("PATCH", f"/sessions/{session_id}", json=body)
         )
+
+    def stop(self, session_id: str, **extra: Any) -> SessionView:
+        """Stop a session and all its running tasks."""
+        return self.update(session_id, action=SessionUpdateAction.stop, **extra)
 
     def delete(self, session_id: str) -> None:
         """Delete a session with all its tasks."""
@@ -192,13 +196,16 @@ class AsyncSessions:
             await self._http.request("GET", f"/sessions/{session_id}")
         )
 
-    async def stop(self, session_id: str) -> SessionView:
-        """Stop a session and all its running tasks."""
+    async def update(self, session_id: str, *, action: SessionUpdateAction | str, **extra: Any) -> SessionView:
+        """Update a session (generic PATCH)."""
+        body: dict[str, Any] = {"action": action, **extra}
         return SessionView.model_validate(
-            await self._http.request(
-                "PATCH", f"/sessions/{session_id}", json={"action": "stop"}
-            )
+            await self._http.request("PATCH", f"/sessions/{session_id}", json=body)
         )
+
+    async def stop(self, session_id: str, **extra: Any) -> SessionView:
+        """Stop a session and all its running tasks."""
+        return await self.update(session_id, action=SessionUpdateAction.stop, **extra)
 
     async def delete(self, session_id: str) -> None:
         """Delete a session with all its tasks."""

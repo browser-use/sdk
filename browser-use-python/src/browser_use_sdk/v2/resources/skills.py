@@ -257,6 +257,7 @@ class AsyncSkills:
         is_enabled: bool | None = None,
         **extra: Any,
     ) -> SkillResponse:
+        """Update a skill."""
         body: dict[str, Any] = {}
         if title is not None:
             body["title"] = title

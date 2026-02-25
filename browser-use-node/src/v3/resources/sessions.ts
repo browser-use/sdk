@@ -14,7 +14,7 @@ export interface SessionListParams {
 export interface SessionFilesParams {
   prefix?: string;
   limit?: number;
-  cursor?: string;
+  cursor?: string | null;
   includeUrls?: boolean;
 }
 

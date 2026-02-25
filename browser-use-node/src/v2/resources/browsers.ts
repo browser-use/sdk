@@ -5,6 +5,7 @@ type CreateBrowserSessionRequest = components["schemas"]["CreateBrowserSessionRe
 type BrowserSessionItemView = components["schemas"]["BrowserSessionItemView"];
 type BrowserSessionListResponse = components["schemas"]["BrowserSessionListResponse"];
 type BrowserSessionView = components["schemas"]["BrowserSessionView"];
+type UpdateBrowserSessionRequest = components["schemas"]["UpdateBrowserSessionRequest"];
 
 export interface BrowserListParams {
   pageSize?: number;
@@ -16,7 +17,7 @@ export class Browsers {
   constructor(private readonly http: HttpClient) {}
 
   /** Create a new browser session. */
-  create(body: CreateBrowserSessionRequest): Promise<BrowserSessionItemView> {
+  create(body?: CreateBrowserSessionRequest): Promise<BrowserSessionItemView> {
     return this.http.post<BrowserSessionItemView>("/browsers", body);
   }
 
@@ -33,8 +34,13 @@ export class Browsers {
     return this.http.get<BrowserSessionView>(`/browsers/${sessionId}`);
   }
 
+  /** Update a browser session (generic PATCH). */
+  update(sessionId: string, body: UpdateBrowserSessionRequest): Promise<BrowserSessionView> {
+    return this.http.patch<BrowserSessionView>(`/browsers/${sessionId}`, body);
+  }
+
   /** Stop a browser session. */
   stop(sessionId: string): Promise<BrowserSessionView> {
-    return this.http.patch<BrowserSessionView>(`/browsers/${sessionId}`, { action: "stop" });
+    return this.update(sessionId, { action: "stop" });
   }
 }

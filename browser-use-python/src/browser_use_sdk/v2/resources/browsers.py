@@ -6,6 +6,7 @@ from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v2.models import (
     BrowserSessionItemView,
     BrowserSessionListResponse,
+    BrowserSessionUpdateAction,
     BrowserSessionView,
     CustomProxy,
 )
@@ -98,13 +99,16 @@ class Browsers:
             self._http.request("GET", f"/browsers/{session_id}")
         )
 
-    def stop(self, session_id: str) -> BrowserSessionView:
-        """Stop a running browser session."""
+    def update(self, session_id: str, *, action: BrowserSessionUpdateAction | str, **extra: Any) -> BrowserSessionView:
+        """Update a browser session (generic PATCH)."""
+        body: dict[str, Any] = {"action": action, **extra}
         return BrowserSessionView.model_validate(
-            self._http.request(
-                "PATCH", f"/browsers/{session_id}", json={"action": "stop"}
-            )
+            self._http.request("PATCH", f"/browsers/{session_id}", json=body)
         )
+
+    def stop(self, session_id: str, **extra: Any) -> BrowserSessionView:
+        """Stop a running browser session."""
+        return self.update(session_id, action=BrowserSessionUpdateAction.stop, **extra)
 
 
 class AsyncBrowsers:
@@ -164,10 +168,13 @@ class AsyncBrowsers:
             await self._http.request("GET", f"/browsers/{session_id}")
         )
 
-    async def stop(self, session_id: str) -> BrowserSessionView:
-        """Stop a running browser session."""
+    async def update(self, session_id: str, *, action: BrowserSessionUpdateAction | str, **extra: Any) -> BrowserSessionView:
+        """Update a browser session (generic PATCH)."""
+        body: dict[str, Any] = {"action": action, **extra}
         return BrowserSessionView.model_validate(
-            await self._http.request(
-                "PATCH", f"/browsers/{session_id}", json={"action": "stop"}
-            )
+            await self._http.request("PATCH", f"/browsers/{session_id}", json=body)
         )
+
+    async def stop(self, session_id: str, **extra: Any) -> BrowserSessionView:
+        """Stop a running browser session."""
+        return await self.update(session_id, action=BrowserSessionUpdateAction.stop, **extra)

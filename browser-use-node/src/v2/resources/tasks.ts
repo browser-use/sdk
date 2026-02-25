@@ -10,6 +10,7 @@ type TaskListResponse = components["schemas"]["TaskListResponse"];
 type TaskLogFileResponse = components["schemas"]["TaskLogFileResponse"];
 type TaskStatusView = components["schemas"]["TaskStatusView"];
 type TaskView = components["schemas"]["TaskView"];
+type UpdateTaskRequest = components["schemas"]["UpdateTaskRequest"];
 
 export interface TaskListParams {
   pageSize?: number;
@@ -38,14 +39,19 @@ export class Tasks {
     return this.http.get<TaskView>(`/tasks/${taskId}`);
   }
 
+  /** Update a task (generic PATCH). */
+  update(taskId: string, body: UpdateTaskRequest): Promise<TaskView> {
+    return this.http.patch<TaskView>(`/tasks/${taskId}`, body);
+  }
+
   /** Stop a running task. */
   stop(taskId: string): Promise<TaskView> {
-    return this.http.patch<TaskView>(`/tasks/${taskId}`, { action: "stop" });
+    return this.update(taskId, { action: "stop" });
   }
 
   /** Stop a running task and its associated browser session. */
   stopTaskAndSession(taskId: string): Promise<TaskView> {
-    return this.http.patch<TaskView>(`/tasks/${taskId}`, { action: "stop_task_and_session" });
+    return this.update(taskId, { action: "stop_task_and_session" });
   }
 
   /** Get lightweight task status (optimized for polling). */
