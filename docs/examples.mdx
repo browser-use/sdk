@@ -16,12 +16,15 @@ class Product(BaseModel):
     price: float
     rating: float
 
+class ProductList(BaseModel):
+    items: list[Product]
+
 client = AsyncBrowserUse()
 result = await client.run(
     "Get the top 3 results for 'wireless headphones' on Amazon",
-    output_schema=list[Product],
+    output_schema=ProductList,
 )
-for p in result.output:
+for p in result.output.items:
     print(f"{p.name}: ${p.price} ({p.rating}★)")
 ```
 ```typescript TypeScript

@@ -115,7 +115,7 @@ console.log(result.output);
 
 // Structured output (Zod)
 const Product = z.object({ name: z.string(), price: z.number() });
-const result = await client.run("Get product info", { schema: Product });
+const typed = await client.run("Get product info", { schema: Product });
 
 // Stream steps
 for await (const step of client.run("Go to google.com")) {
