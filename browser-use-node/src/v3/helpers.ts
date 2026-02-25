@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import type { components } from "../generated/v3/types.js";
 import type { Sessions } from "./resources/sessions.js";
 
@@ -12,25 +13,31 @@ export interface RunOptions {
   interval?: number;
 }
 
+/** Session result with typed output. All SessionResponse fields are directly accessible. */
+export type SessionResult<T = string | null> = Omit<SessionResponse, "output"> & { output: T };
+
 /**
- * Dual-purpose session handle: `await` it for the output value,
- * or access `.result` for the full SessionResponse after resolution.
+ * Dual-purpose session handle: `await` it for a typed SessionResult,
+ * or access `.result` for the full SessionResult after resolution.
  */
-export class SessionRun implements PromiseLike<unknown> {
+export class SessionRun<T = string> implements PromiseLike<SessionResult<T>> {
   private readonly _createPromise: Promise<SessionResponse>;
   private readonly _sessions: Sessions;
+  private readonly _schema?: z.ZodType<T>;
   private readonly _timeout: number;
   private readonly _interval: number;
   private _sessionId: string | null = null;
-  private _result: SessionResponse | null = null;
+  private _result: SessionResult<T> | null = null;
 
   constructor(
     createPromise: Promise<SessionResponse>,
     sessions: Sessions,
+    schema?: z.ZodType<T>,
     options?: RunOptions,
   ) {
     this._createPromise = createPromise;
     this._sessions = sessions;
+    this._schema = schema;
     this._timeout = options?.timeout ?? 300_000;
     this._interval = options?.interval ?? 2_000;
   }
@@ -40,15 +47,15 @@ export class SessionRun implements PromiseLike<unknown> {
     return this._sessionId;
   }
 
-  /** The full SessionResponse, available after polling completes. */
-  get result(): SessionResponse | null {
+  /** The full SessionResult, available after polling completes. */
+  get result(): SessionResult<T> | null {
     return this._result;
   }
 
-  /** Enable `await client.run(...)` — polls until terminal, returns output. */
-  then<R1 = unknown, R2 = never>(
+  /** Enable `await client.run(...)` — polls until terminal, returns SessionResult. */
+  then<R1 = SessionResult<T>, R2 = never>(
     onFulfilled?:
-      | ((value: unknown) => R1 | PromiseLike<R1>)
+      | ((value: SessionResult<T>) => R1 | PromiseLike<R1>)
       | null,
     onRejected?: ((reason: unknown) => R2 | PromiseLike<R2>) | null,
   ): Promise<R1 | R2> {
@@ -62,15 +69,18 @@ export class SessionRun implements PromiseLike<unknown> {
     return this._sessionId;
   }
 
-  private async _waitForOutput(): Promise<unknown> {
+  /** Poll session until terminal, return SessionResult. */
+  private async _waitForOutput(): Promise<SessionResult<T>> {
     const sessionId = await this._ensureSessionId();
     const deadline = Date.now() + this._timeout;
 
     while (Date.now() < deadline) {
       const session = await this._sessions.get(sessionId);
       if (TERMINAL_STATUSES.has(session.status)) {
-        this._result = session;
-        return session.output ?? null;
+        const { output, ...rest } = session;
+        const parsed = this._parseOutput(output);
+        this._result = { ...rest, output: parsed } as SessionResult<T>;
+        return this._result;
       }
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
@@ -82,5 +92,12 @@ export class SessionRun implements PromiseLike<unknown> {
     throw new Error(
       `Session ${sessionId} did not complete within ${this._timeout}ms`,
     );
+  }
+
+  private _parseOutput(output: unknown): T {
+    if (output == null) return null as T;
+    if (!this._schema) return output as unknown as T;
+    const raw = typeof output === "string" ? JSON.parse(output) : output;
+    return this._schema.parse(raw);
   }
 }

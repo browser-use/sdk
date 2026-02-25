@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { HttpClient } from "../core/http.js";
 import { Sessions } from "./resources/sessions.js";
 import { SessionRun } from "./helpers.js";
@@ -16,7 +17,7 @@ export interface BrowserUseOptions {
 }
 
 export type RunSessionOptions = Partial<Omit<RunTaskRequest, "task">> &
-  RunOptions;
+  RunOptions & { schema?: z.ZodType };
 
 export class BrowserUse {
   readonly sessions: Sessions;
@@ -42,16 +43,27 @@ export class BrowserUse {
   }
 
   /**
-   * Create a session and run a task. `await` the result for the output.
+   * Create a session and run a task. `await` the result for a typed SessionResult.
    *
    * ```ts
-   * const output = await client.run("Find the top HN post");
+   * // Simple — just get the output
+   * const result = await client.run("Find the top HN post");
+   * console.log(result.output);
+   *
+   * // Structured output (Zod)
+   * const result = await client.run("Find product info", { schema: ProductSchema });
+   * console.log(result.output.name); // fully typed
    * ```
    */
-  run(task: string, options?: RunSessionOptions): SessionRun {
-    const { timeout, interval, ...rest } = options ?? {};
+  run(task: string, options?: Omit<RunSessionOptions, "schema">): SessionRun<string>;
+  run<T extends z.ZodType>(task: string, options: RunSessionOptions & { schema: T }): SessionRun<z.output<T>>;
+  run(task: string, options?: RunSessionOptions): SessionRun<any> {
+    const { schema, timeout, interval, ...rest } = options ?? {};
     const body = { task, ...rest } as RunTaskRequest;
+    if (schema) {
+      body.outputSchema = z.toJSONSchema(schema) as Record<string, unknown>;
+    }
     const promise = this.sessions.create(body);
-    return new SessionRun(promise, this.sessions, { timeout, interval });
+    return new SessionRun(promise, this.sessions, schema, { timeout, interval });
   }
 }
