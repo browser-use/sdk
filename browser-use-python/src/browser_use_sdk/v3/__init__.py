@@ -7,10 +7,16 @@ from ..generated.v3.models import (
     BuModel,
     FileInfo,
     FileListResponse,
+    FileUploadItem,
+    FileUploadRequest,
+    FileUploadResponse,
+    FileUploadResponseItem,
     ProxyCountryCode,
     RunTaskRequest,
     SessionListResponse,
     SessionResponse,
+    StopSessionRequest,
+    StopStrategy,
 )
 
 __all__ = [
@@ -23,12 +29,18 @@ __all__ = [
     # Response models
     "FileInfo",
     "FileListResponse",
+    "FileUploadResponse",
+    "FileUploadResponseItem",
     "SessionListResponse",
     "SessionResponse",
     # Input models
+    "FileUploadItem",
+    "FileUploadRequest",
     "RunTaskRequest",
+    "StopSessionRequest",
     # Enums
     "BuAgentSessionStatus",
     "BuModel",
     "ProxyCountryCode",
+    "StopStrategy",
 ]

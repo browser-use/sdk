@@ -185,6 +185,31 @@ export interface paths {
         patch: operations["update_session_sessions__session_id__patch"];
         trace?: never;
     };
+    "/sessions/{session_id}/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Purge Session
+         * @description Immediately purge all data for a session (ZDR projects only).
+         *
+         *     Redacts PII from database records and deletes all S3 objects (screenshots,
+         *     output files, uploaded files, logs, history, downloads, agent state) for the
+         *     given session. This is the same cleanup the ZDR cron performs, but on-demand
+         *     and scoped to a single session with no grace period.
+         */
+        post: operations["purge_session_sessions__session_id__purge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/{session_id}/public-share": {
         parameters: {
             query?: never;
@@ -3231,6 +3256,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+        };
+    };
+    purge_session_sessions__session_id__purge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Project is not ZDR-enabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotFoundError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

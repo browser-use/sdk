@@ -62,4 +62,9 @@ export class Sessions {
   deleteShare(sessionId: string): Promise<void> {
     return this.http.delete<void>(`/sessions/${sessionId}/public-share`);
   }
+
+  /** Purge all session data (ZDR projects only). */
+  purge(sessionId: string): Promise<void> {
+    return this.http.post<void>(`/sessions/${sessionId}/purge`);
+  }
 }

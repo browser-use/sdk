@@ -39,6 +39,35 @@ class FileListResponse(BaseModel):
     has_more: bool | None = Field(False, alias='hasMore', title='Hasmore')
 
 
+class FileUploadItem(BaseModel):
+    name: str = Field(
+        ...,
+        description='Filename, e.g. "data.csv"',
+        max_length=255,
+        min_length=1,
+        title='Name',
+    )
+    content_type: str | None = Field(
+        'application/octet-stream',
+        alias='contentType',
+        description='MIME type, e.g. "text/csv"',
+        max_length=255,
+        title='Contenttype',
+    )
+
+
+class FileUploadRequest(BaseModel):
+    files: List[FileUploadItem] = Field(..., max_length=10, min_length=1, title='Files')
+
+
+class FileUploadResponseItem(BaseModel):
+    name: str = Field(..., title='Name')
+    upload_url: str = Field(..., alias='uploadUrl', title='Uploadurl')
+    path: str = Field(
+        ..., description='S3-relative path, e.g. "uploads/data.csv"', title='Path'
+    )
+
+
 class ProxyCountryCode(Enum):
     ad = 'ad'
     ae = 'ae'
@@ -299,7 +328,7 @@ class MaxCostUsd(RootModel[str]):
 
 
 class RunTaskRequest(BaseModel):
-    task: str = Field(..., title='Task')
+    task: str | None = Field(None, title='Task')
     model: BuModel | None = BuModel.bu_mini
     session_id: UUID | None = Field(None, alias='sessionId', title='Sessionid')
     keep_alive: bool | None = Field(False, alias='keepAlive', title='Keepalive')
@@ -362,10 +391,19 @@ class SessionResponse(BaseModel):
     updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
 
 
+class StopStrategy(Enum):
+    task = 'task'
+    session = 'session'
+
+
 class ValidationError(BaseModel):
     loc: List[str | int] = Field(..., title='Location')
     msg: str = Field(..., title='Message')
     type: str = Field(..., title='Error Type')
+
+
+class FileUploadResponse(BaseModel):
+    files: List[FileUploadResponseItem] = Field(..., title='Files')
 
 
 class HTTPValidationError(BaseModel):
@@ -377,3 +415,7 @@ class SessionListResponse(BaseModel):
     total: int = Field(..., title='Total')
     page: int = Field(..., title='Page')
     page_size: int = Field(..., alias='pageSize', title='Pagesize')
+
+
+class StopSessionRequest(BaseModel):
+    strategy: StopStrategy | None = StopStrategy.session

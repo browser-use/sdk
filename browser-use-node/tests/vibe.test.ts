@@ -75,6 +75,7 @@ function v2EndpointToSdkMethod(
   if (method === "get" && path === "/sessions/{session_id}/public-share") return { resource: "sessions", method: "getShare" };
   if (method === "post" && path === "/sessions/{session_id}/public-share") return { resource: "sessions", method: "createShare" };
   if (method === "delete" && path === "/sessions/{session_id}/public-share") return { resource: "sessions", method: "deleteShare" };
+  if (method === "post" && path === "/sessions/{session_id}/purge") return { resource: "sessions", method: "purge" };
 
   // Files
   if (method === "post" && path === "/files/sessions/{session_id}/presigned-url") return { resource: "files", method: "sessionUrl" };
@@ -124,8 +125,10 @@ function v3EndpointToSdkMethod(
   if (method === "post" && path === "/sessions") return { resource: "sessions", method: "create" };
   if (method === "get" && path === "/sessions") return { resource: "sessions", method: "list" };
   if (method === "get" && path === "/sessions/{session_id}") return { resource: "sessions", method: "get" };
+  if (method === "delete" && path === "/sessions/{session_id}") return { resource: "sessions", method: "delete" };
   if (method === "post" && path === "/sessions/{session_id}/stop") return { resource: "sessions", method: "stop" };
   if (method === "get" && path === "/sessions/{session_id}/files") return { resource: "sessions", method: "files" };
+  if (method === "post" && path === "/sessions/{session_id}/files/upload") return { resource: "sessions", method: "uploadFiles" };
 
   return null;
 }

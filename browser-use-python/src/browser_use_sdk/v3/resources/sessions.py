@@ -5,6 +5,8 @@ from typing import Any
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
     FileListResponse,
+    FileUploadItem,
+    FileUploadResponse,
     SessionListResponse,
     SessionResponse,
 )
@@ -16,7 +18,7 @@ class Sessions:
 
     def create(
         self,
-        task: str,
+        task: str | None = None,
         *,
         model: str | None = None,
         session_id: str | None = None,
@@ -27,8 +29,10 @@ class Sessions:
         output_schema: dict[str, Any] | None = None,
         **extra: Any,
     ) -> SessionResponse:
-        """Create a session and run a task."""
-        body: dict[str, Any] = {"task": task}
+        """Create a session and optionally dispatch a task."""
+        body: dict[str, Any] = {}
+        if task is not None:
+            body["task"] = task
         if model is not None:
             body["model"] = model
         if session_id is not None:
@@ -72,10 +76,35 @@ class Sessions:
             self._http.request("GET", f"/sessions/{session_id}")
         )
 
-    def stop(self, session_id: str) -> SessionResponse:
-        """Stop a session."""
+    def stop(self, session_id: str, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
+        """Stop a session or the running task."""
+        body: dict[str, Any] | None = None
+        if strategy is not None or extra:
+            body = {}
+            if strategy is not None:
+                body["strategy"] = strategy
+            body.update(extra)
         return SessionResponse.model_validate(
-            self._http.request("POST", f"/sessions/{session_id}/stop")
+            self._http.request("POST", f"/sessions/{session_id}/stop", json=body)
+        )
+
+    def delete(self, session_id: str) -> None:
+        """Soft-delete a session."""
+        self._http.request("DELETE", f"/sessions/{session_id}")
+
+    def upload_files(
+        self,
+        session_id: str,
+        files: list[FileUploadItem],
+        **extra: Any,
+    ) -> FileUploadResponse:
+        """Get presigned upload URLs for session files."""
+        body: dict[str, Any] = {
+            "files": [f.model_dump(by_alias=True, exclude_none=True) for f in files],
+        }
+        body.update(extra)
+        return FileUploadResponse.model_validate(
+            self._http.request("POST", f"/sessions/{session_id}/files/upload", json=body)
         )
 
     def files(
@@ -108,7 +137,7 @@ class AsyncSessions:
 
     async def create(
         self,
-        task: str,
+        task: str | None = None,
         *,
         model: str | None = None,
         session_id: str | None = None,
@@ -119,8 +148,10 @@ class AsyncSessions:
         output_schema: dict[str, Any] | None = None,
         **extra: Any,
     ) -> SessionResponse:
-        """Create a session and run a task."""
-        body: dict[str, Any] = {"task": task}
+        """Create a session and optionally dispatch a task."""
+        body: dict[str, Any] = {}
+        if task is not None:
+            body["task"] = task
         if model is not None:
             body["model"] = model
         if session_id is not None:
@@ -164,10 +195,35 @@ class AsyncSessions:
             await self._http.request("GET", f"/sessions/{session_id}")
         )
 
-    async def stop(self, session_id: str) -> SessionResponse:
-        """Stop a session."""
+    async def stop(self, session_id: str, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
+        """Stop a session or the running task."""
+        body: dict[str, Any] | None = None
+        if strategy is not None or extra:
+            body = {}
+            if strategy is not None:
+                body["strategy"] = strategy
+            body.update(extra)
         return SessionResponse.model_validate(
-            await self._http.request("POST", f"/sessions/{session_id}/stop")
+            await self._http.request("POST", f"/sessions/{session_id}/stop", json=body)
+        )
+
+    async def delete(self, session_id: str) -> None:
+        """Soft-delete a session."""
+        await self._http.request("DELETE", f"/sessions/{session_id}")
+
+    async def upload_files(
+        self,
+        session_id: str,
+        files: list[FileUploadItem],
+        **extra: Any,
+    ) -> FileUploadResponse:
+        """Get presigned upload URLs for session files."""
+        body: dict[str, Any] = {
+            "files": [f.model_dump(by_alias=True, exclude_none=True) for f in files],
+        }
+        body.update(extra)
+        return FileUploadResponse.model_validate(
+            await self._http.request("POST", f"/sessions/{session_id}/files/upload", json=body)
         )
 
     async def files(

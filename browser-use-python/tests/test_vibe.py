@@ -62,6 +62,7 @@ _V2_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/sessions/{session_id}/public-share"): ("sessions", "get_share"),
     ("post", "/sessions/{session_id}/public-share"): ("sessions", "create_share"),
     ("delete", "/sessions/{session_id}/public-share"): ("sessions", "delete_share"),
+    ("post", "/sessions/{session_id}/purge"): ("sessions", "purge"),
     # files
     ("post", "/files/sessions/{session_id}/presigned-url"): ("files", "session_url"),
     ("post", "/files/browsers/{session_id}/presigned-url"): ("files", "browser_url"),
@@ -100,8 +101,10 @@ _V3_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("post", "/sessions"): ("sessions", "create"),
     ("get", "/sessions"): ("sessions", "list"),
     ("get", "/sessions/{session_id}"): ("sessions", "get"),
+    ("delete", "/sessions/{session_id}"): ("sessions", "delete"),
     ("post", "/sessions/{session_id}/stop"): ("sessions", "stop"),
     ("get", "/sessions/{session_id}/files"): ("sessions", "files"),
+    ("post", "/sessions/{session_id}/files/upload"): ("sessions", "upload_files"),
 }
 
 _HTTP_METHODS = {"get", "post", "put", "patch", "delete", "head", "options"}

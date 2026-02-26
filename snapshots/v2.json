@@ -850,6 +850,61 @@
         }
       }
     },
+    "/sessions/{session_id}/purge": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Purge Session",
+        "description": "Immediately purge all data for a session (ZDR projects only).\n\nRedacts PII from database records and deletes all S3 objects (screenshots,\noutput files, uploaded files, logs, history, downloads, agent state) for the\ngiven session. This is the same cleanup the ZDR cron performs, but on-demand\nand scoped to a single session with no grace period.",
+        "operationId": "purge_session_sessions__session_id__purge_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Project is not ZDR-enabled"
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sessions/{session_id}/public-share": {
       "get": {
         "tags": [

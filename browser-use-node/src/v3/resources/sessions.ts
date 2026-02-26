@@ -2,11 +2,14 @@ import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v3/types.js";
 
 type RunTaskRequest = components["schemas"]["RunTaskRequest"];
-/** Like RunTaskRequest but only `task` is required; fields with server defaults are optional. */
-export type CreateSessionBody = Pick<RunTaskRequest, "task"> & Partial<Omit<RunTaskRequest, "task">>;
+/** All fields optional — omit `task` to create an idle session. */
+export type CreateSessionBody = Partial<RunTaskRequest>;
 type SessionResponse = components["schemas"]["SessionResponse"];
 type SessionListResponse = components["schemas"]["SessionListResponse"];
 type FileListResponse = components["schemas"]["FileListResponse"];
+type StopSessionRequest = components["schemas"]["StopSessionRequest"];
+type FileUploadRequest = components["schemas"]["FileUploadRequest"];
+type FileUploadResponse = components["schemas"]["FileUploadResponse"];
 
 export interface SessionListParams {
   page?: number;
@@ -23,8 +26,8 @@ export interface SessionFilesParams {
 export class Sessions {
   constructor(private readonly http: HttpClient) {}
 
-  /** Create a session and run a task. */
-  create(body: CreateSessionBody): Promise<SessionResponse> {
+  /** Create a session and optionally dispatch a task. */
+  create(body?: CreateSessionBody): Promise<SessionResponse> {
     return this.http.post<SessionResponse>("/sessions", body);
   }
 
@@ -38,9 +41,19 @@ export class Sessions {
     return this.http.get<SessionResponse>(`/sessions/${sessionId}`);
   }
 
-  /** Stop a session. */
-  stop(sessionId: string): Promise<SessionResponse> {
-    return this.http.post<SessionResponse>(`/sessions/${sessionId}/stop`);
+  /** Stop a session or the running task. */
+  stop(sessionId: string, body?: StopSessionRequest): Promise<SessionResponse> {
+    return this.http.post<SessionResponse>(`/sessions/${sessionId}/stop`, body);
+  }
+
+  /** Soft-delete a session. */
+  delete(sessionId: string): Promise<void> {
+    return this.http.delete<void>(`/sessions/${sessionId}`);
+  }
+
+  /** Get presigned upload URLs for session files. */
+  uploadFiles(sessionId: string, body: FileUploadRequest): Promise<FileUploadResponse> {
+    return this.http.post<FileUploadResponse>(`/sessions/${sessionId}/files/upload`, body);
   }
 
   /** List files in a session's workspace. */

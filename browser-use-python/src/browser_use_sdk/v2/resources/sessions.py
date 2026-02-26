@@ -136,6 +136,10 @@ class Sessions:
         """Remove public share for a session."""
         self._http.request("DELETE", f"/sessions/{session_id}/public-share")
 
+    def purge(self, session_id: str) -> None:
+        """Purge all session data (ZDR projects only)."""
+        self._http.request("POST", f"/sessions/{session_id}/purge")
+
     # Deprecated aliases for older browser-use versions (<=0.11.x)
     create_session = create
     list_sessions = list
@@ -235,6 +239,10 @@ class AsyncSessions:
     async def delete_share(self, session_id: str) -> None:
         """Remove public share for a session."""
         await self._http.request("DELETE", f"/sessions/{session_id}/public-share")
+
+    async def purge(self, session_id: str) -> None:
+        """Purge all session data (ZDR projects only)."""
+        await self._http.request("POST", f"/sessions/{session_id}/purge")
 
     # Deprecated aliases for older browser-use versions (<=0.11.x)
     create_session = create

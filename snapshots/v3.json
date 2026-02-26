@@ -18,7 +18,7 @@
           "Sessions"
         ],
         "summary": "Create Session",
-        "description": "Run a task in a session.\n\n- Without session_id: creates a new session, starts a sandbox, and dispatches the task.\n- With session_id: dispatches the task to an existing idle session.\n\nIf keep_alive is false (default), the session auto-stops when the task finishes.\nIf keep_alive is true, the session stays idle after the task, ready for follow-ups.",
+        "description": "Create a session and/or dispatch a task.\n\n- Without session_id, without task: creates a new idle session (e.g. for file uploads).\n- Without session_id, with task: creates a new session and dispatches the task.\n- With session_id, with task: dispatches the task to an existing idle session.\n- With session_id, without task: 422 \u2014 task is required when targeting an existing session.\n\nIf keep_alive is false (default), the session auto-stops when the task finishes.\nIf keep_alive is true, the session stays idle after the task, ready for follow-ups.",
         "operationId": "create_session_sessions_post",
         "security": [
           {
@@ -166,6 +166,46 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Delete Session",
+        "description": "Soft-delete a session. Stops the sandbox first if still running.",
+        "operationId": "delete_session_sessions__session_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/sessions/{session_id}/stop": {
@@ -174,7 +214,7 @@
           "Sessions"
         ],
         "summary": "Stop Session",
-        "description": "Stop a session, destroy sandbox and browser. Session remains queryable.",
+        "description": "Stop a session or the running task.\n\n- strategy=session (default): destroy sandbox entirely, session \u2192 stopped.\n- strategy=task: stop the running query, session stays alive (\u2192 idle).",
         "operationId": "stop_session_sessions__session_id__stop_post",
         "security": [
           {
@@ -193,6 +233,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/StopSessionRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -313,6 +370,65 @@
           }
         }
       }
+    },
+    "/sessions/{session_id}/files/upload": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Upload Session Files",
+        "description": "Get presigned PUT URLs for uploading files to a session's workspace.\n\nFiles are placed under ``uploads/`` in the session's S3 prefix. After\nreceiving the URLs, PUT each file directly to S3 using the returned\n``uploadUrl`` with the matching ``Content-Type`` header.",
+        "operationId": "upload_session_files_sessions__session_id__files_upload_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUploadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -405,6 +521,91 @@
         ],
         "title": "FileListResponse",
         "description": "Paginated file listing with optional presigned download URLs."
+      },
+      "FileUploadItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Filename, e.g. \"data.csv\""
+          },
+          "contentType": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Contenttype",
+            "description": "MIME type, e.g. \"text/csv\"",
+            "default": "application/octet-stream"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "FileUploadItem",
+        "description": "A single file to upload."
+      },
+      "FileUploadRequest": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileUploadItem"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "FileUploadRequest",
+        "description": "Request body for generating presigned upload URLs."
+      },
+      "FileUploadResponse": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileUploadResponseItem"
+            },
+            "type": "array",
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "FileUploadResponse",
+        "description": "Presigned upload URLs for the requested files."
+      },
+      "FileUploadResponseItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "uploadUrl": {
+            "type": "string",
+            "title": "Uploadurl"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "S3-relative path, e.g. \"uploads/data.csv\""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "uploadUrl",
+          "path"
+        ],
+        "title": "FileUploadResponseItem",
+        "description": "Presigned upload URL for a single file."
       },
       "HTTPValidationError": {
         "properties": {
@@ -675,7 +876,14 @@
       "RunTaskRequest": {
         "properties": {
           "task": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Task"
           },
           "model": {
@@ -750,11 +958,8 @@
           }
         },
         "type": "object",
-        "required": [
-          "task"
-        ],
         "title": "RunTaskRequest",
-        "description": "Unified request for creating a session or dispatching a task.\n\n- Without session_id: creates a new session + dispatches the task\n- With session_id: dispatches the task to an existing session"
+        "description": "Unified request for creating a session or dispatching a task.\n\n- Without session_id + without task: creates a new idle session (for file uploads, etc.)\n- Without session_id + with task: creates a new session and dispatches the task\n- With session_id + with task: dispatches the task to an existing idle session\n- With session_id + without task: 422 (task required when dispatching to existing session)"
       },
       "SessionListResponse": {
         "properties": {
@@ -919,6 +1124,24 @@
           "updatedAt"
         ],
         "title": "SessionResponse"
+      },
+      "StopSessionRequest": {
+        "properties": {
+          "strategy": {
+            "$ref": "#/components/schemas/StopStrategy",
+            "default": "session"
+          }
+        },
+        "type": "object",
+        "title": "StopSessionRequest"
+      },
+      "StopStrategy": {
+        "type": "string",
+        "enum": [
+          "task",
+          "session"
+        ],
+        "title": "StopStrategy"
       },
       "ValidationError": {
         "properties": {

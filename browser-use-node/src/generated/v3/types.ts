@@ -19,10 +19,12 @@ export interface paths {
         put?: never;
         /**
          * Create Session
-         * @description Run a task in a session.
+         * @description Create a session and/or dispatch a task.
          *
-         *     - Without session_id: creates a new session, starts a sandbox, and dispatches the task.
-         *     - With session_id: dispatches the task to an existing idle session.
+         *     - Without session_id, without task: creates a new idle session (e.g. for file uploads).
+         *     - Without session_id, with task: creates a new session and dispatches the task.
+         *     - With session_id, with task: dispatches the task to an existing idle session.
+         *     - With session_id, without task: 422 — task is required when targeting an existing session.
          *
          *     If keep_alive is false (default), the session auto-stops when the task finishes.
          *     If keep_alive is true, the session stays idle after the task, ready for follow-ups.
@@ -48,7 +50,11 @@ export interface paths {
         get: operations["get_session_sessions__session_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Session
+         * @description Soft-delete a session. Stops the sandbox first if still running.
+         */
+        delete: operations["delete_session_sessions__session_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -65,7 +71,10 @@ export interface paths {
         put?: never;
         /**
          * Stop Session
-         * @description Stop a session, destroy sandbox and browser. Session remains queryable.
+         * @description Stop a session or the running task.
+         *
+         *     - strategy=session (default): destroy sandbox entirely, session → stopped.
+         *     - strategy=task: stop the running query, session stays alive (→ idle).
          */
         post: operations["stop_session_sessions__session_id__stop_post"];
         delete?: never;
@@ -91,6 +100,30 @@ export interface paths {
         get: operations["list_session_files_sessions__session_id__files_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{session_id}/files/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Session Files
+         * @description Get presigned PUT URLs for uploading files to a session's workspace.
+         *
+         *     Files are placed under ``uploads/`` in the session's S3 prefix. After
+         *     receiving the URLs, PUT each file directly to S3 using the returned
+         *     ``uploadUrl`` with the matching ``Content-Type`` header.
+         */
+        post: operations["upload_session_files_sessions__session_id__files_upload_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -143,6 +176,54 @@ export interface components {
              */
             hasMore: boolean;
         };
+        /**
+         * FileUploadItem
+         * @description A single file to upload.
+         */
+        FileUploadItem: {
+            /**
+             * Name
+             * @description Filename, e.g. "data.csv"
+             */
+            name: string;
+            /**
+             * Contenttype
+             * @description MIME type, e.g. "text/csv"
+             * @default application/octet-stream
+             */
+            contentType: string;
+        };
+        /**
+         * FileUploadRequest
+         * @description Request body for generating presigned upload URLs.
+         */
+        FileUploadRequest: {
+            /** Files */
+            files: components["schemas"]["FileUploadItem"][];
+        };
+        /**
+         * FileUploadResponse
+         * @description Presigned upload URLs for the requested files.
+         */
+        FileUploadResponse: {
+            /** Files */
+            files: components["schemas"]["FileUploadResponseItem"][];
+        };
+        /**
+         * FileUploadResponseItem
+         * @description Presigned upload URL for a single file.
+         */
+        FileUploadResponseItem: {
+            /** Name */
+            name: string;
+            /** Uploadurl */
+            uploadUrl: string;
+            /**
+             * Path
+             * @description S3-relative path, e.g. "uploads/data.csv"
+             */
+            path: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -157,12 +238,14 @@ export interface components {
          * RunTaskRequest
          * @description Unified request for creating a session or dispatching a task.
          *
-         *     - Without session_id: creates a new session + dispatches the task
-         *     - With session_id: dispatches the task to an existing session
+         *     - Without session_id + without task: creates a new idle session (for file uploads, etc.)
+         *     - Without session_id + with task: creates a new session and dispatches the task
+         *     - With session_id + with task: dispatches the task to an existing idle session
+         *     - With session_id + without task: 422 (task required when dispatching to existing session)
          */
         RunTaskRequest: {
             /** Task */
-            task: string;
+            task?: string | null;
             /** @default bu-mini */
             model: components["schemas"]["BuModel"];
             /** Sessionid */
@@ -254,6 +337,16 @@ export interface components {
              */
             updatedAt: string;
         };
+        /** StopSessionRequest */
+        StopSessionRequest: {
+            /** @default session */
+            strategy: components["schemas"]["StopStrategy"];
+        };
+        /**
+         * StopStrategy
+         * @enum {string}
+         */
+        StopStrategy: "task" | "session";
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -368,7 +461,7 @@ export interface operations {
             };
         };
     };
-    stop_session_sessions__session_id__stop_post: {
+    delete_session_sessions__session_id__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -378,6 +471,39 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stop_session_sessions__session_id__stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StopSessionRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -422,6 +548,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FileListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_session_files_sessions__session_id__files_upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FileUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileUploadResponse"];
                 };
             };
             /** @description Validation Error */
