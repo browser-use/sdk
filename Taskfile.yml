@@ -191,9 +191,10 @@ tasks:
   publish:py:
     desc: Publish Python SDK to PyPI
     dir: '{{.PY_SDK}}'
-    deps: [build:py]
     cmds:
-      - uv publish
+      - rm -rf dist/
+      - task: build:py
+      - uv publish --token {{.PYPI_TOKEN}}
 
   publish:
     desc: Publish both SDKs
