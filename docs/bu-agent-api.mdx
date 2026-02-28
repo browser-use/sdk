@@ -254,6 +254,7 @@ const client = new BrowserUse({
 - **Live URL**: every session has a `live_url` for real-time browser monitoring
 - **File I/O**: upload files to a session before a task, download from workspace after. Max 10 files per upload, presigned URLs expire in 60s (downloads)
 - **Stop strategies**: `strategy="session"` (default) destroys sandbox. `strategy="task"` stops task only
+- **Integrations**: the agent can automatically discover and use third-party service integrations (email, Slack, calendars, etc.). When a task involves an external service, just describe the action — the agent will find the right integration and handle auth
 ````
 
 <CardGroup cols={2}>
