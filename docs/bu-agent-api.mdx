@@ -38,7 +38,7 @@ Get a key at https://cloud.browser-use.com/settings?tab=api-keys
 ## Python SDK
 
 ```python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse, FileUploadItem
 from pydantic import BaseModel
 
 client = AsyncBrowserUse()
@@ -181,6 +181,7 @@ except BrowserUseError as e:
 
 ```typescript
 import { BrowserUse } from "browser-use-sdk/v3";
+import { readFileSync } from "fs";
 import { z } from "zod";
 
 const client = new BrowserUse();
