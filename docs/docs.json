@@ -46,10 +46,6 @@
             "pages": ["introduction", "llm-quickstart", "pricing"]
           },
           {
-            "group": "New Features",
-            "pages": ["bu-agent-api"]
-          },
-          {
             "group": "Guides",
             "pages": [
               "guides/overview",
@@ -62,6 +58,10 @@
               "guides/mcp-server",
               "guides/webhooks"
             ]
+          },
+          {
+            "group": "New Features",
+            "pages": ["new-features/api-v3"]
           },
           {
             "group": "Resources",

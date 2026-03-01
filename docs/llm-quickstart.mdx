@@ -4,7 +4,7 @@ description: Copy one blob into your AI editor. Your agent knows the entire API.
 icon: brain
 ---
 
-Paste the following into **Claude Code**, **Codex**, **Cursor**, or any coding agent. It contains the full SDK reference — every method, every parameter, working examples.
+Paste the following into **Claude Code**, **Codex**, **Cursor**, or any coding agent. It contains the full SDK reference for both BU Agent API (v3 Experimental) and v2 API — every method, every parameter, working examples.
 
 Your agent will be able to write Browser Use Cloud code immediately.
 
@@ -15,6 +15,10 @@ Your agent will be able to write Browser Use Cloud code immediately.
 ````markdown
 # Browser Use Cloud SDK
 
+Both APIs are in the same package (`browser-use-sdk`):
+- **BU Agent API (v3 Experimental)** — `browser-use-sdk/v3`
+- **Browser Use Cloud v2** — `browser-use-sdk`
+
 ## Install
 - Python: `pip install browser-use-sdk`
 - TypeScript: `npm install browser-use-sdk`
@@ -23,7 +27,235 @@ Your agent will be able to write Browser Use Cloud code immediately.
 Set `BROWSER_USE_API_KEY` env var, or pass `api_key`/`apiKey` to the constructor.
 Get a key at https://cloud.browser-use.com/settings?tab=api-keys
 
-## Python SDK
+---
+
+# BU Agent API (v3 Experimental)
+
+## Python SDK (v3)
+
+```python
+from browser_use_sdk.v3 import AsyncBrowserUse, FileUploadItem
+from pydantic import BaseModel
+
+client = AsyncBrowserUse()
+
+# Run a task (await for result)
+result = await client.run("Find the top HN post")  # -> SessionResult[str]
+print(result.output)   # str
+print(result.id)       # session UUID
+print(result.status)   # BuAgentSessionStatus (e.g. idle, stopped)
+
+# Structured output
+class Product(BaseModel):
+    name: str
+    price: float
+
+result = await client.run("Get product info from amazon.com/dp/...", output_schema=Product)
+print(result.output)  # Product(name=..., price=...)
+```
+
+### Constructor
+```python
+# Async client (recommended)
+client = AsyncBrowserUse(api_key="...", base_url="...", timeout=30.0)
+
+# Sync client (blocking, no async/await needed)
+from browser_use_sdk.v3 import BrowserUse
+client = BrowserUse(api_key="...", base_url="...", timeout=30.0)
+
+# Context manager (sync only)
+with BrowserUse() as client:
+    result = client.run("Find the top HN post")
+```
+- `api_key: str` — default: `BROWSER_USE_API_KEY` env var
+- `base_url: str` — default: `https://api.browser-use.com/api/v3`
+- `timeout: float` — HTTP request timeout in seconds (default: `30.0`). Not the polling timeout.
+
+### run() parameters (v3)
+All optional keyword arguments:
+- `model: str` — `"bu-mini"` (default) or `"bu-max"` (more capable)
+- `output_schema: type[BaseModel]` — Pydantic model for structured output (alias: `schema`)
+- `session_id: str` — reuse an existing session
+- `keep_alive: bool` — keep session idle after task for follow-ups (default: `False`)
+- `max_cost_usd: float` — cost cap in USD; agent stops if exceeded
+- `profile_id: str` — persistent browser profile (cookies, localStorage)
+- `proxy_country_code: str` — residential proxy country (e.g. `"us"`, `"de"`)
+
+`run()` returns an `AsyncSessionRun` (async) or `SessionResult` (sync):
+- **AsyncSessionRun**: awaitable. After `await`, gives a `SessionResult`. Also has `.session_id`, `.result`, `.output` properties.
+- Polling defaults: interval **2 seconds**, timeout **300 seconds** (5 min). Raises `TimeoutError` if exceeded.
+- Terminal statuses: `idle`, `stopped`, `timed_out`, `error`.
+
+### SessionResult fields
+- `output` — typed output (`str` or Pydantic model)
+- `id` — session UUID
+- `status` — `created`, `idle`, `running`, `stopped`, `timed_out`, `error`
+- `model` — `bu-mini` or `bu-max`
+- `title` — auto-generated title (or `None`)
+- `live_url` — real-time browser monitoring URL
+- `profile_id`, `proxy_country_code`, `max_cost_usd` — echo of request params
+- `total_input_tokens`, `total_output_tokens` — token usage
+- `llm_cost_usd`, `proxy_cost_usd`, `proxy_used_mb`, `total_cost_usd` — cost breakdown (strings)
+- `created_at`, `updated_at` — timestamps
+
+### Resources (v3)
+```python
+# Sessions — reusable browser environments
+session = await client.sessions.create(proxy_country_code="us")
+result1 = await client.run("Log into example.com", session_id=str(session.id), keep_alive=True)
+result2 = await client.run("Now click settings", session_id=str(session.id))
+await client.sessions.stop(str(session.id))
+
+# Sessions with profiles — persistent login state (cookies, localStorage)
+session = await client.sessions.create(profile_id="your-profile-uuid")
+
+# Files — upload to a session before running a task
+upload_resp = await client.sessions.upload_files(
+    str(session.id),
+    files=[FileUploadItem(name="data.csv", content_type="text/csv")],
+)
+# PUT each file to upload_resp.files[i].upload_url with matching Content-Type header
+# Each FileUploadResponseItem has: .name, .upload_url, .path (S3-relative)
+
+# Files — list/download from session workspace
+file_list = await client.sessions.files(
+    str(session.id),
+    include_urls=True,    # presigned download URLs (60s expiry)
+    prefix="outputs/",    # filter by path prefix
+    limit=50,             # max per page (default 50, max 100)
+    cursor=None,          # pagination cursor from previous response
+)
+# Each FileInfo has: .path, .size, .last_modified, .url
+# FileListResponse has: .files, .next_cursor, .has_more
+
+# Session management
+sessions_list = await client.sessions.list(page=1, page_size=20)
+# SessionListResponse has: .sessions, .total, .page, .page_size
+details = await client.sessions.get(str(session.id))
+await client.sessions.stop(str(session.id), strategy="task")     # stop task only, keep session
+await client.sessions.stop(str(session.id), strategy="session")  # destroy sandbox (default)
+await client.sessions.delete(str(session.id))
+
+# Cost tracking (on any SessionResult)
+print(result.total_cost_usd, result.llm_cost_usd, result.proxy_cost_usd)
+print(result.total_input_tokens, result.total_output_tokens)
+
+# Cleanup
+await client.close()  # or client.close() for sync
+```
+
+### sessions.create() parameters (v3)
+Creates a session and optionally dispatches a task. All optional:
+- `task: str` — omit to create an idle session (e.g. for file uploads first)
+- `model: str` — `"bu-mini"` (default) or `"bu-max"`
+- `session_id: str` — dispatch to an existing idle session instead of creating new
+- `keep_alive: bool` — keep session alive after task (default: `False`)
+- `max_cost_usd: float` — cost cap in USD
+- `profile_id: str` — browser profile to load
+- `proxy_country_code: str` — residential proxy country
+- `output_schema: dict` — JSON Schema for structured output (prefer `run()` with Pydantic/Zod instead)
+
+### FileUploadItem fields
+- `name: str` — filename, e.g. `"data.csv"` (required)
+- `content_type: str` — MIME type, e.g. `"text/csv"` (default: `"application/octet-stream"`)
+
+### Error handling (v3)
+```python
+from browser_use_sdk.v3 import AsyncBrowserUse, BrowserUseError
+
+try:
+    result = await client.run("Do something")
+except TimeoutError:
+    print("SDK polling timed out (5 min default)")
+except BrowserUseError as e:
+    print(f"API error: {e}")
+```
+
+## TypeScript SDK (v3)
+
+```typescript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { readFileSync } from "fs";
+import { z } from "zod";
+
+const client = new BrowserUse();
+
+const result = await client.run("Find the top HN post");
+console.log(result.output);
+
+// Structured output (Zod)
+const Product = z.object({ name: z.string(), price: z.number() });
+const typed = await client.run("Get product info", { schema: Product });
+
+// Resources: client.sessions
+const session = await client.sessions.create({ proxyCountryCode: "us" });
+await client.run("Log in", { sessionId: session.id, keepAlive: true });
+await client.run("Click settings", { sessionId: session.id });
+await client.sessions.stop(session.id);
+
+// File upload
+const upload = await client.sessions.uploadFiles(session.id, {
+  files: [{ name: "data.csv", contentType: "text/csv" }],
+});
+await fetch(upload.files[0].uploadUrl, { method: "PUT", body: readFileSync("data.csv") });
+
+// File listing
+const files = await client.sessions.files(session.id, {
+  includeUrls: true, prefix: "outputs/", limit: 50, cursor: null,
+});
+
+// Session management
+const list = await client.sessions.list({ page: 1, page_size: 20 });
+const details = await client.sessions.get(session.id);
+await client.sessions.stop(session.id, { strategy: "task" });
+await client.sessions.delete(session.id);
+```
+
+### Constructor options (v3)
+```typescript
+const client = new BrowserUse({
+  apiKey: "...",       // default: process.env.BROWSER_USE_API_KEY
+  baseUrl: "...",      // default: https://api.browser-use.com/api/v3
+  maxRetries: 2,       // retry count for 429 errors
+  timeout: 30_000,     // HTTP request timeout in ms (not polling timeout)
+});
+```
+
+### run() options (v3, second argument)
+- `model` — `"bu-mini"` (default) or `"bu-max"`
+- `schema` — Zod schema for structured output
+- `sessionId` — reuse an existing session
+- `keepAlive` — keep session alive after task (default: `false`)
+- `maxCostUsd` — cost cap in USD
+- `profileId` — persistent browser profile UUID
+- `proxyCountryCode` — residential proxy country code
+- `outputSchema` — raw JSON Schema object (prefer `schema` with Zod)
+- `timeout` — max polling time in ms (default: `300_000`)
+- `interval` — polling interval in ms (default: `2_000`)
+
+`run()` returns a `SessionRun<T>` — awaitable. After `await`, gives a `SessionResult<T>`. Also has `.sessionId` and `.result` properties.
+
+## Key concepts (v3)
+- **Task**: text prompt → agent browses → returns output
+- **Session**: stateful browser sandbox. Auto-created by default, or create manually for follow-up tasks
+- **Profile**: persistent browser state (cookies, localStorage). Survives across sessions
+- **Profile Sync**: upload local cookies to cloud: `curl -fsSL https://browser-use.com/profile.sh | sh`
+- **Proxies**: set `proxy_country_code` on session or `run()`. 195+ countries. CAPTCHAs handled automatically
+- **Stealth**: on by default. Anti-detect, CAPTCHA solving, ad blocking
+- **Models**: `bu-mini` (default, faster/cheaper) and `bu-max` (more capable)
+- **Cost control**: set `max_cost_usd` to cap spending. Check `total_cost_usd` on the result
+- **Autonomous execution**: the agent decides how many steps to take. There is no max steps parameter
+- **keep_alive**: if `true`, session stays idle after task for follow-ups. If `false` (default), session auto-stops
+- **Live URL**: every session has a `live_url` for real-time browser monitoring
+- **File I/O**: upload files to a session before a task, download from workspace after. Max 10 files per upload, presigned URLs expire in 60s (downloads)
+- **Stop strategies**: `strategy="session"` (default) destroys sandbox. `strategy="task"` stops task only
+- **Integrations**: the agent can automatically discover and use third-party service integrations (email, Slack, calendars, etc.). When a task involves an external service, just describe the action — the agent will find the right integration and handle auth
+
+---
+
+# Browser Use Cloud v2 SDK
+
+## Python SDK (v2)
 
 ```python
 from browser_use_sdk import AsyncBrowserUse
@@ -50,7 +282,7 @@ async for step in client.run("Go to google.com and search for 'browser use'"):
     print(f"[{step.number}] {step.next_goal} — {step.url}")
 ```
 
-### run() parameters
+### run() parameters (v2)
 All optional keyword arguments:
 - `session_id: str` — reuse an existing session
 - `llm: str` — model override (default: Browser Use LLM)
@@ -70,7 +302,7 @@ All optional keyword arguments:
 - `op_vault_id: str` — 1Password vault ID for 2FA/credentials
 - `metadata: dict[str, str]` — custom metadata
 
-### Resources
+### Resources (v2)
 ```python
 # Sessions — reusable browser environments
 session = await client.sessions.create(proxy_country_code="us")
@@ -102,7 +334,7 @@ result = await client.marketplace.execute(skill_id, parameters={...})
 account = await client.billing.account()
 ```
 
-## TypeScript SDK
+## TypeScript SDK (v2)
 
 ```typescript
 import { BrowserUse } from "browser-use-sdk";
@@ -126,14 +358,14 @@ for await (const step of client.run("Go to google.com")) {
 // client.browsers, client.files, client.skills, client.marketplace, client.billing
 ```
 
-### run() options (second argument)
+### run() options (v2, second argument)
 - `sessionId`, `llm`, `startUrl`, `maxSteps`, `schema` (Zod)
 - `secrets`, `allowedDomains`, `sessionSettings`
 - `flashMode`, `thinking`, `vision`, `highlightElements`
 - `systemPromptExtension`, `judge`, `skillIds`, `opVaultId`
 - `timeout` (ms, default 300000), `interval` (ms, default 2000)
 
-## Key concepts
+## Key concepts (v2)
 - **Task**: text prompt → agent browses → returns output
 - **Session**: stateful browser. Auto-created by default, or create manually for follow-up tasks
 - **Profile**: persistent browser state (cookies, localStorage). Survives across sessions
