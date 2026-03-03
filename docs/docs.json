@@ -37,54 +37,64 @@
     }
   },
   "navigation": {
-    "tabs": [
+    "versions": [
       {
-        "tab": "Docs",
-        "groups": [
+        "version": "Cloud",
+        "tabs": [
           {
-            "group": "Get Started",
-            "pages": ["introduction", "llm-quickstart", "pricing"]
-          },
-          {
-            "group": "Guides",
-            "pages": [
-              "guides/overview",
-              "guides/tasks",
-              "guides/sessions",
-              "guides/browser-api",
-              "guides/proxies-and-stealth",
-              "guides/skills",
-              "guides/authentication",
-              "guides/mcp-server",
-              "guides/webhooks"
+            "tab": "Docs",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": ["introduction", "llm-quickstart", "new-features/api-v3", "pricing"]
+              },
+              {
+                "group": "Guides",
+                "pages": [
+                  "guides/overview",
+                  "guides/tasks",
+                  "guides/sessions",
+                  "guides/browser-api",
+                  "guides/proxies-and-stealth",
+                  "guides/skills",
+                  "guides/authentication",
+                  "guides/mcp-server",
+                  "guides/webhooks"
+                ]
+              },
+              {
+                "group": "Resources",
+                "pages": ["examples", "faq"]
+              }
             ]
           },
           {
-            "group": "New Features",
-            "pages": ["new-features/api-v3"]
-          },
-          {
-            "group": "Resources",
-            "pages": ["examples", "faq"]
+            "tab": "API Reference",
+            "groups": [
+              {
+                "group": "API v2 (Stable)",
+                "openapi": {
+                  "source": "openapi/v2.json",
+                  "directory": "api-v2"
+                }
+              },
+              {
+                "group": "BU Agent API (Experimental)",
+                "openapi": {
+                  "source": "openapi/v3.json",
+                  "directory": "api-v3"
+                }
+              }
+            ]
           }
         ]
       },
       {
-        "tab": "API Reference",
+        "version": "Open Source",
         "groups": [
           {
-            "group": "API v2 (Stable)",
-            "openapi": {
-              "source": "openapi/v2.json",
-              "directory": "api-v2"
-            }
-          },
-          {
-            "group": "BU Agent API (Experimental)",
-            "openapi": {
-              "source": "openapi/v3.json",
-              "directory": "api-v3"
-            }
+            "group": "Open Source",
+            "pages": ["open-source"]
           }
         ]
       }
@@ -192,6 +202,10 @@
     {
       "source": "/usage/authentication",
       "destination": "/guides/authentication"
+    },
+    {
+      "source": "/open-source",
+      "destination": "https://docs.browser-use.com/introduction"
     }
   ]
 }
