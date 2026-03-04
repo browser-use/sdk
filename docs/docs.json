@@ -29,7 +29,7 @@
   },
   "errors": {
     "404": {
-      "redirect": "/start"
+      "redirect": true
     }
   },
   "api": {
