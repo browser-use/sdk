@@ -27,6 +27,13 @@
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
   },
+  "errors": {
+    "404": {
+      "redirect": false,
+      "title": "Page Not Found",
+      "description": "The page you're looking for doesn't exist. Browse the [full sitemap](https://docs.cloud.browser-use.com/sitemap.xml) or go back to the [introduction](/)."
+    }
+  },
   "api": {
     "playground": {
       "display": "interactive"
