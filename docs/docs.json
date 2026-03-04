@@ -262,10 +262,6 @@
     {
       "source": "/examples",
       "destination": "/tips/data/structured-output"
-    },
-    {
-      "source": "/:slug*",
-      "destination": "/sitemap.xml"
     }
   ]
 }
