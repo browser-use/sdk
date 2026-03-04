@@ -1,0 +1,61 @@
+---
+title: Embed Live View
+description: Embed the agent's live browser view in your app using an iframe.
+---
+
+Every session has a `liveUrl` — a real-time view of the agent's browser. Embed it in your app so users can watch the agent work.
+
+The live view URL has no `X-Frame-Options` header and sets `access-control-allow-origin: *`, so iframe embedding works out of the box.
+
+## Get the live URL
+
+Create a session first to get the `liveUrl`, then run a task in that session.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+# Create session — liveUrl is available immediately
+session = await client.sessions.create()
+print(session.live_url)  # embed this in an iframe
+
+# Run a task in the session
+result = await client.run(
+    "Search for flights from NYC to London",
+    session_id=session.id,
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+
+// Create session — liveUrl is available immediately
+const session = await client.sessions.create();
+console.log(session.liveUrl); // embed this in an iframe
+
+// Run a task in the session
+const result = await client.run(
+  "Search for flights from NYC to London",
+  { sessionId: session.id },
+);
+```
+</CodeGroup>
+
+## Embed in HTML
+
+```html
+<iframe
+  src="{live_url}"
+  width="1280"
+  height="720"
+  allow="autoplay"
+  style="border: none; border-radius: 8px;"
+></iframe>
+```
+
+<Tip>
+  The live view updates in real time. No polling or WebSocket setup needed on your end.
+</Tip>

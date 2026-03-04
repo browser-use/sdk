@@ -64,7 +64,52 @@
               },
               {
                 "group": "Resources",
-                "pages": ["examples", "faq"]
+                "pages": [
+                  {
+                    "group": "Tips",
+                    "pages": [
+                      {
+                        "group": "Authentication",
+                        "pages": [
+                          "tips/authentication/profiles-and-secrets",
+                          "tips/authentication/1password-2fa",
+                          "tips/authentication/social-media"
+                        ]
+                      },
+                      {
+                        "group": "Live View",
+                        "pages": [
+                          "tips/live-view/iframe-embed",
+                          "tips/live-view/human-takeover"
+                        ]
+                      },
+                      {
+                        "group": "Parallel",
+                        "pages": [
+                          "tips/parallel/concurrent-extraction",
+                          "tips/parallel/shared-config"
+                        ]
+                      },
+                      {
+                        "group": "Data",
+                        "pages": [
+                          "tips/data/structured-output",
+                          "tips/data/file-downloads",
+                          "tips/data/geo-scraping",
+                          "tips/data/streaming"
+                        ]
+                      },
+                      {
+                        "group": "Integrations",
+                        "pages": [
+                          "tips/integrations/playwright",
+                          "tips/integrations/n8n"
+                        ]
+                      }
+                    ]
+                  },
+                  "faq"
+                ]
               }
             ]
           },
@@ -206,6 +251,10 @@
     {
       "source": "/open-source",
       "destination": "https://docs.browser-use.com/introduction"
+    },
+    {
+      "source": "/examples",
+      "destination": "/tips/data/structured-output"
     }
   ]
 }

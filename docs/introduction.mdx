@@ -108,7 +108,69 @@ result.output.forEach((post) => console.log(`${post.title} (${post.points} pts)`
 ```
 </CodeGroup>
 
-That's it. See [Tasks](/guides/tasks) for streaming, parameters, and more, or browse [Examples](/examples) for copy-paste recipes.
+## 4. Watch it run
+
+Every session has a `liveUrl` — a real-time view of the browser. Use it for debugging, embedding in your app, or handing control to a human mid-task.
+
+<CodeGroup>
+```python Python
+client = AsyncBrowserUse()
+session = await client.sessions.create()
+print(session.live_url)  # open this or embed in an iframe
+
+result = await client.run(
+    "Get the top 3 posts from Hacker News",
+    session_id=session.id,
+)
+```
+```typescript TypeScript
+const client = new BrowserUse();
+const session = await client.sessions.create();
+console.log(session.liveUrl); // open this or embed in an iframe
+
+const result = await client.run("Get the top 3 posts from Hacker News", {
+  sessionId: session.id,
+});
+```
+</CodeGroup>
+
+## 5. Add profiles, proxies, and 1Password
+
+Use saved browser profiles for authenticated sites, residential proxies for geo-specific content, and 1Password for auto-filling credentials and 2FA codes.
+
+<CodeGroup>
+```python Python
+client = AsyncBrowserUse()
+
+session = await client.sessions.create(
+    profile_id="your-profile-id",       # saved cookies & localStorage
+    proxy_country_code="us",             # residential proxy
+)
+
+result = await client.run(
+    "Get my latest order status",
+    session_id=session.id,
+    op_vault_id="your-vault-id",         # 1Password auto-fill
+    allowed_domains=["*.example.com"],    # restrict agent navigation
+)
+```
+```typescript TypeScript
+const client = new BrowserUse();
+
+const session = await client.sessions.create({
+  profileId: "your-profile-id",       // saved cookies & localStorage
+  proxyCountryCode: "us",             // residential proxy
+});
+
+const result = await client.run("Get my latest order status", {
+  sessionId: session.id,
+  opVaultId: "your-vault-id",         // 1Password auto-fill
+  allowedDomains: ["*.example.com"],  // restrict agent navigation
+});
+```
+</CodeGroup>
+
+See [Tasks](/guides/tasks) for all parameters, or browse [Tips](/tips/data/structured-output) for copy-paste recipes.
 
 <CardGroup cols={2}>
   <Card title="LLM Quickstart" icon="brain" href="/llm-quickstart">
