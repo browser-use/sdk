@@ -24,9 +24,10 @@ async def run_task(client, instruction):
         profile_id=profile_id,
         proxy_country_code=proxy_country_code,
     )
-    result = await client.run(instruction, session_id=session.id)
-    await client.sessions.stop(session.id)
-    return result
+    try:
+        return await client.run(instruction, session_id=session.id)
+    finally:
+        await client.sessions.stop(session.id)
 
 async def main():
     client = AsyncBrowserUse()
@@ -52,9 +53,11 @@ const client = new BrowserUse();
 
 async function runTask(instruction: string) {
   const session = await client.sessions.create({ profileId, proxyCountryCode });
-  const result = await client.run(instruction, { sessionId: session.id });
-  await client.sessions.stop(session.id);
-  return result;
+  try {
+    return await client.run(instruction, { sessionId: session.id });
+  } finally {
+    await client.sessions.stop(session.id);
+  }
 }
 
 const results = await Promise.all(tasks.map(runTask));

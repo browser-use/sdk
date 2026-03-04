@@ -5,7 +5,7 @@ description: Embed the agent's live browser view in your app using an iframe.
 
 Every session has a `liveUrl` — a real-time view of the agent's browser. Embed it in your app so users can watch the agent work.
 
-The live view URL has no `X-Frame-Options` header and sets `access-control-allow-origin: *`, so iframe embedding works out of the box.
+The live view URL has no `X-Frame-Options` or CSP `frame-ancestors` restrictions, so iframe embedding works out of the box.
 
 ## Get the live URL
 
