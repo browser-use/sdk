@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "BU Agent API",
-    "summary": "Browser Use session-based agent API",
+    "title": "Browser Use Public API v3",
+    "summary": "Browser Use session-based agent API (v3)",
     "version": "3.0.0"
   },
   "servers": [
@@ -18,7 +18,7 @@
           "Sessions"
         ],
         "summary": "Create Session",
-        "description": "Run a task in a session.\n\n- Without session_id: creates a new session, starts a sandbox, and dispatches the task.\n- With session_id: dispatches the task to an existing idle session.\n\nIf keep_alive is false (default), the session auto-stops when the task finishes.\nIf keep_alive is true, the session stays idle after the task, ready for follow-ups.",
+        "description": "Create a session and/or dispatch a task.\n\n- Without session_id, without task: creates a new idle session (e.g. for file uploads).\n- Without session_id, with task: creates a new session and dispatches the task.\n- With session_id, with task: dispatches the task to an existing idle session.\n- With session_id, without task: 422 \u2014 task is required when targeting an existing session.\n\nIf keep_alive is false (default), the session auto-stops when the task finishes.\nIf keep_alive is true, the session stays idle after the task, ready for follow-ups.",
         "operationId": "create_session_sessions_post",
         "security": [
           {
@@ -166,16 +166,14 @@
             }
           }
         }
-      }
-    },
-    "/sessions/{session_id}/stop": {
-      "post": {
+      },
+      "delete": {
         "tags": [
           "Sessions"
         ],
-        "summary": "Stop Session",
-        "description": "Stop a session, destroy sandbox and browser. Session remains queryable.",
-        "operationId": "stop_session_sessions__session_id__stop_post",
+        "summary": "Delete Session",
+        "description": "Soft-delete a session. Stops the sandbox first if still running.",
+        "operationId": "delete_session_sessions__session_id__delete",
         "security": [
           {
             "APIKeyHeader": []
@@ -194,12 +192,170 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}/stop": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Stop Session",
+        "description": "Stop a session or the running task.\n\n- strategy=session (default): destroy sandbox entirely, session \u2192 stopped.\n- strategy=task: stop the running query, session stays alive (\u2192 idle).",
+        "operationId": "stop_session_sessions__session_id__stop_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/StopSessionRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}/messages": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "List Session Messages",
+        "description": "Return messages for a session with cursor-based pagination (chronological order).",
+        "operationId": "list_session_messages_sessions__session_id__messages_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cursor: return messages after this message ID",
+              "title": "After"
+            },
+            "description": "Cursor: return messages after this message ID"
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cursor: return messages before this message ID",
+              "title": "Before"
+            },
+            "description": "Cursor: return messages before this message ID"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageListResponse"
                 }
               }
             }
@@ -288,6 +444,16 @@
               "default": false,
               "title": "Includeurls"
             }
+          },
+          {
+            "name": "shallow",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Shallow"
+            }
           }
         ],
         "responses": {
@@ -297,6 +463,593 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FileListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}/files/upload": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Upload Session Files",
+        "description": "Get presigned PUT URLs for uploading files to a session's workspace.\n\nFiles are placed under ``uploads/`` in the session's S3 prefix. After\nreceiving the URLs, PUT each file directly to S3 using the returned\n``uploadUrl`` with the matching ``Content-Type`` header.",
+        "operationId": "upload_session_files_sessions__session_id__files_upload_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUploadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces": {
+      "get": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "List Workspaces",
+        "description": "Get paginated list of workspaces.",
+        "operationId": "list_workspaces_workspaces_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Create Workspace",
+        "description": "Create a new workspace for persistent shared file storage across sessions.",
+        "operationId": "create_workspace_workspaces_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}": {
+      "get": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Get Workspace",
+        "description": "Get workspace details.",
+        "operationId": "get_workspace_workspaces__workspace_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Update Workspace",
+        "description": "Update a workspace's name.",
+        "operationId": "update_workspace_workspaces__workspace_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Delete Workspace",
+        "description": "Delete a workspace and its S3 data.",
+        "operationId": "delete_workspace_workspaces__workspace_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/files": {
+      "get": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "List Workspace Files",
+        "description": "List files in a workspace's S3 prefix.",
+        "operationId": "list_workspace_files_workspaces__workspace_id__files_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "prefix",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Prefix"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "includeUrls",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Includeurls"
+            }
+          },
+          {
+            "name": "shallow",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Shallow"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Delete Workspace File",
+        "description": "Delete a single file from a workspace.",
+        "operationId": "delete_workspace_file_workspaces__workspace_id__files_delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Relative file path to delete",
+              "title": "Path"
+            },
+            "description": "Relative file path to delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/size": {
+      "get": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Get Workspace Size",
+        "description": "Get current storage usage for a workspace.",
+        "operationId": "get_workspace_size_workspaces__workspace_id__size_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/files/upload": {
+      "post": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Upload Workspace Files",
+        "description": "Get presigned PUT URLs for uploading files to a workspace.",
+        "operationId": "upload_workspace_files_workspaces__workspace_id__files_upload_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "prefix",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Directory prefix to upload into (e.g. \"uploads/\")",
+              "default": "",
+              "title": "Prefix"
+            },
+            "description": "Directory prefix to upload into (e.g. \"uploads/\")"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUploadResponse"
                 }
               }
             }
@@ -382,6 +1135,14 @@
             "type": "array",
             "title": "Files"
           },
+          "folders": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Folders",
+            "description": "Immediate sub-folder names at this prefix level"
+          },
           "nextCursor": {
             "anyOf": [
               {
@@ -406,6 +1167,104 @@
         "title": "FileListResponse",
         "description": "Paginated file listing with optional presigned download URLs."
       },
+      "FileUploadItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Filename, e.g. \"data.csv\""
+          },
+          "contentType": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Contenttype",
+            "description": "MIME type, e.g. \"text/csv\"",
+            "default": "application/octet-stream"
+          },
+          "size": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size",
+            "description": "File size in bytes (required for workspace uploads)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "FileUploadItem",
+        "description": "A single file to upload."
+      },
+      "FileUploadRequest": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileUploadItem"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "FileUploadRequest",
+        "description": "Request body for generating presigned upload URLs."
+      },
+      "FileUploadResponse": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/FileUploadResponseItem"
+            },
+            "type": "array",
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "FileUploadResponse",
+        "description": "Presigned upload URLs for the requested files."
+      },
+      "FileUploadResponseItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "uploadUrl": {
+            "type": "string",
+            "title": "Uploadurl"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "S3-relative path, e.g. \"uploads/data.csv\""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "uploadUrl",
+          "path"
+        ],
+        "title": "FileUploadResponseItem",
+        "description": "Presigned upload URL for a single file."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -418,6 +1277,68 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "MessageListResponse": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/MessageResponse"
+            },
+            "type": "array",
+            "title": "Messages"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore"
+          }
+        },
+        "type": "object",
+        "required": [
+          "messages",
+          "hasMore"
+        ],
+        "title": "MessageListResponse"
+      },
+      "MessageResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "data": {
+            "type": "string",
+            "title": "Data"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sessionId",
+          "role",
+          "data",
+          "hidden",
+          "createdAt"
+        ],
+        "title": "MessageResponse"
       },
       "ProxyCountryCode": {
         "type": "string",
@@ -675,7 +1596,14 @@
       "RunTaskRequest": {
         "properties": {
           "task": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Task"
           },
           "model": {
@@ -726,6 +1654,18 @@
             ],
             "title": "Profileid"
           },
+          "workspaceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspaceid"
+          },
           "proxyCountryCode": {
             "anyOf": [
               {
@@ -735,14 +1675,23 @@
                 "type": "null"
               }
             ]
+          },
+          "outputSchema": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputschema"
           }
         },
         "type": "object",
-        "required": [
-          "task"
-        ],
         "title": "RunTaskRequest",
-        "description": "Unified request for creating a session or dispatching a task.\n\n- Without session_id: creates a new session + dispatches the task\n- With session_id: dispatches the task to an existing session"
+        "description": "Unified request for creating a session or dispatching a task.\n\n- Without session_id + without task: creates a new idle session (for file uploads, etc.)\n- Without session_id + with task: creates a new session and dispatches the task\n- With session_id + with task: dispatches the task to an existing idle session\n- With session_id + without task: 422 (task required when dispatching to existing session)"
       },
       "SessionListResponse": {
         "properties": {
@@ -801,14 +1750,24 @@
           },
           "output": {
             "anyOf": [
-              {
-                "type": "string"
-              },
+              {},
               {
                 "type": "null"
               }
             ],
             "title": "Output"
+          },
+          "outputSchema": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputschema"
           },
           "liveUrl": {
             "anyOf": [
@@ -832,6 +1791,18 @@
               }
             ],
             "title": "Profileid"
+          },
+          "workspaceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspaceid"
           },
           "proxyCountryCode": {
             "anyOf": [
@@ -910,6 +1881,24 @@
         ],
         "title": "SessionResponse"
       },
+      "StopSessionRequest": {
+        "properties": {
+          "strategy": {
+            "$ref": "#/components/schemas/StopStrategy",
+            "default": "session"
+          }
+        },
+        "type": "object",
+        "title": "StopSessionRequest"
+      },
+      "StopStrategy": {
+        "type": "string",
+        "enum": [
+          "task",
+          "session"
+        ],
+        "title": "StopStrategy"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -942,6 +1931,124 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WorkspaceCreateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Optional name for the workspace"
+          }
+        },
+        "type": "object",
+        "title": "WorkspaceCreateRequest",
+        "description": "Request model for creating a new workspace."
+      },
+      "WorkspaceListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceView"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of workspace views for the current page"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "WorkspaceListResponse",
+        "description": "Response model for paginated workspace list requests."
+      },
+      "WorkspaceUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Optional name for the workspace"
+          }
+        },
+        "type": "object",
+        "title": "WorkspaceUpdateRequest",
+        "description": "Request model for updating a workspace."
+      },
+      "WorkspaceView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the workspace"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Optional name for the workspace"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Timestamp when the workspace was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp when the workspace was last updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "WorkspaceView",
+        "description": "View model for a workspace \u2014 persistent shared storage across sessions."
       }
     },
     "securitySchemes": {

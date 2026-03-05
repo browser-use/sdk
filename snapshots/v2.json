@@ -3304,6 +3304,19 @@
             "title": "Browser Cost",
             "description": "Cost of browser session hosting in USD",
             "default": "0"
+          },
+          "agentSessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Session ID",
+            "description": "ID of the agent session that created this browser (None for standalone BaaS sessions)"
           }
         },
         "type": "object",
@@ -3451,6 +3464,19 @@
             "title": "Browser Cost",
             "description": "Cost of browser session hosting in USD",
             "default": "0"
+          },
+          "agentSessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Session ID",
+            "description": "ID of the agent session that created this browser (None for standalone BaaS sessions)"
           }
         },
         "type": "object",

@@ -3,11 +3,12 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 
 class BuAgentSessionStatus(Enum):
@@ -27,16 +28,28 @@ class BuModel(Enum):
 class FileInfo(BaseModel):
     path: str = Field(..., title='Path')
     size: int = Field(..., title='Size')
-    last_modified: AwareDatetime = Field(
-        ..., alias='lastModified', title='Lastmodified'
-    )
+    last_modified: datetime = Field(..., alias='lastModified', title='Lastmodified')
     url: str | None = Field(None, title='Url')
 
 
 class FileListResponse(BaseModel):
     files: List[FileInfo] = Field(..., title='Files')
+    folders: List[str] | None = Field(
+        None,
+        description='Immediate sub-folder names at this prefix level',
+        title='Folders',
+    )
     next_cursor: str | None = Field(None, alias='nextCursor', title='Nextcursor')
     has_more: bool | None = Field(False, alias='hasMore', title='Hasmore')
+
+
+class Size(RootModel[int]):
+    root: int = Field(
+        ...,
+        description='File size in bytes (required for workspace uploads)',
+        ge=1,
+        title='Size',
+    )
 
 
 class FileUploadItem(BaseModel):
@@ -54,6 +67,11 @@ class FileUploadItem(BaseModel):
         max_length=255,
         title='Contenttype',
     )
+    size: Size | None = Field(
+        None,
+        description='File size in bytes (required for workspace uploads)',
+        title='Size',
+    )
 
 
 class FileUploadRequest(BaseModel):
@@ -66,6 +84,15 @@ class FileUploadResponseItem(BaseModel):
     path: str = Field(
         ..., description='S3-relative path, e.g. "uploads/data.csv"', title='Path'
     )
+
+
+class MessageResponse(BaseModel):
+    id: UUID = Field(..., title='Id')
+    session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
+    role: str = Field(..., title='Role')
+    data: str = Field(..., title='Data')
+    hidden: bool = Field(False, title='Hidden')
+    created_at: datetime = Field(..., alias='createdAt', title='Createdat')
 
 
 class ProxyCountryCode(Enum):
@@ -336,6 +363,7 @@ class RunTaskRequest(BaseModel):
         None, alias='maxCostUsd', title='Maxcostusd'
     )
     profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
+    workspace_id: UUID | None = Field(None, alias='workspaceId', title='Workspaceid')
     proxy_country_code: ProxyCountryCode | None = Field(None, alias='proxyCountryCode')
     output_schema: Dict[str, Any] | None = Field(
         None, alias='outputSchema', title='Outputschema'
@@ -351,8 +379,12 @@ class SessionResponse(BaseModel):
     model: BuModel
     title: str | None = Field(None, title='Title')
     output: Any = Field(None, title='Output')
+    output_schema: Dict[str, Any] | None = Field(
+        None, alias='outputSchema', title='Outputschema'
+    )
     live_url: str | None = Field(None, alias='liveUrl', title='Liveurl')
     profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
+    workspace_id: UUID | None = Field(None, alias='workspaceId', title='Workspaceid')
     proxy_country_code: ProxyCountryCode | None = Field(None, alias='proxyCountryCode')
     max_cost_usd: MaxCostUsd | None = Field(
         None, alias='maxCostUsd', title='Maxcostusd'
@@ -387,8 +419,8 @@ class SessionResponse(BaseModel):
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Totalcostusd',
     )
-    created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
-    updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
+    created_at: datetime = Field(..., alias='createdAt', title='Createdat')
+    updated_at: datetime = Field(..., alias='updatedAt', title='Updatedat')
 
 
 class StopStrategy(Enum):
@@ -402,12 +434,54 @@ class ValidationError(BaseModel):
     type: str = Field(..., title='Error Type')
 
 
+class Name(RootModel[str]):
+    root: str = Field(
+        ..., description='Optional name for the workspace', max_length=100, title='Name'
+    )
+
+
+class WorkspaceCreateRequest(BaseModel):
+    name: Name | None = Field(
+        None, description='Optional name for the workspace', title='Name'
+    )
+
+
+class WorkspaceUpdateRequest(BaseModel):
+    name: Name | None = Field(
+        None, description='Optional name for the workspace', title='Name'
+    )
+
+
+class WorkspaceView(BaseModel):
+    id: UUID = Field(..., description='Unique identifier for the workspace', title='ID')
+    name: str | None = Field(
+        None, description='Optional name for the workspace', title='Name'
+    )
+    created_at: datetime = Field(
+        ...,
+        alias='createdAt',
+        description='Timestamp when the workspace was created',
+        title='Created At',
+    )
+    updated_at: datetime = Field(
+        ...,
+        alias='updatedAt',
+        description='Timestamp when the workspace was last updated',
+        title='Updated At',
+    )
+
+
 class FileUploadResponse(BaseModel):
     files: List[FileUploadResponseItem] = Field(..., title='Files')
 
 
 class HTTPValidationError(BaseModel):
     detail: List[ValidationError] | None = Field(None, title='Detail')
+
+
+class MessageListResponse(BaseModel):
+    messages: List[MessageResponse] = Field(..., title='Messages')
+    has_more: bool = Field(..., alias='hasMore', title='Hasmore')
 
 
 class SessionListResponse(BaseModel):
@@ -419,3 +493,21 @@ class SessionListResponse(BaseModel):
 
 class StopSessionRequest(BaseModel):
     strategy: StopStrategy | None = StopStrategy.session
+
+
+class WorkspaceListResponse(BaseModel):
+    items: List[WorkspaceView] = Field(
+        ..., description='List of workspace views for the current page', title='Items'
+    )
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
+    )
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
+    )

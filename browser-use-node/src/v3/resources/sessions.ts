@@ -10,6 +10,7 @@ type FileListResponse = components["schemas"]["FileListResponse"];
 type StopSessionRequest = components["schemas"]["StopSessionRequest"];
 type FileUploadRequest = components["schemas"]["FileUploadRequest"];
 type FileUploadResponse = components["schemas"]["FileUploadResponse"];
+type MessageListResponse = components["schemas"]["MessageListResponse"];
 
 export interface SessionListParams {
   page?: number;
@@ -21,6 +22,13 @@ export interface SessionFilesParams {
   limit?: number;
   cursor?: string | null;
   includeUrls?: boolean;
+  shallow?: boolean;
+}
+
+export interface SessionMessagesParams {
+  after?: string | null;
+  before?: string | null;
+  limit?: number;
 }
 
 export class Sessions {
@@ -60,6 +68,14 @@ export class Sessions {
   files(sessionId: string, params?: SessionFilesParams): Promise<FileListResponse> {
     return this.http.get<FileListResponse>(
       `/sessions/${sessionId}/files`,
+      params as Record<string, unknown>,
+    );
+  }
+
+  /** List messages for a session with cursor-based pagination. */
+  messages(sessionId: string, params?: SessionMessagesParams): Promise<MessageListResponse> {
+    return this.http.get<MessageListResponse>(
+      `/sessions/${sessionId}/messages`,
       params as Record<string, unknown>,
     );
   }

@@ -850,6 +850,61 @@
         }
       }
     },
+    "/sessions/{session_id}/purge": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Purge Session",
+        "description": "Immediately purge all data for a session (ZDR projects only).\n\nRedacts PII from database records and deletes all S3 objects (screenshots,\noutput files, uploaded files, logs, history, downloads, agent state) for the\ngiven session. This is the same cleanup the ZDR cron performs, but on-demand\nand scoped to a single session with no grace period.",
+        "operationId": "purge_session_sessions__session_id__purge_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Project is not ZDR-enabled"
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sessions/{session_id}/public-share": {
       "get": {
         "tags": [
@@ -2058,7 +2113,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__endpoints__api__v2__skills__views__InsufficientCreditsError"
+                  "$ref": "#/components/schemas/InsufficientCreditsError"
                 }
               }
             }
@@ -2491,7 +2546,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__endpoints__api__v2__skills__views__InsufficientCreditsError"
+                  "$ref": "#/components/schemas/InsufficientCreditsError"
                 }
               }
             }
@@ -3076,7 +3131,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__endpoints__api__v2__marketplace__skills__views__InsufficientCreditsError"
+                  "$ref": "#/components/schemas/InsufficientCreditsError"
                 }
               }
             }
@@ -3249,6 +3304,19 @@
             "title": "Browser Cost",
             "description": "Cost of browser session hosting in USD",
             "default": "0"
+          },
+          "agentSessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Session ID",
+            "description": "ID of the agent session that created this browser (None for standalone BaaS sessions)"
           }
         },
         "type": "object",
@@ -3396,6 +3464,19 @@
             "title": "Browser Cost",
             "description": "Cost of browser session hosting in USD",
             "default": "0"
+          },
+          "agentSessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Session ID",
+            "description": "ID of the agent session that created this browser (None for standalone BaaS sessions)"
           }
         },
         "type": "object",
@@ -4129,12 +4210,12 @@
           "detail": {
             "type": "string",
             "title": "Detail",
-            "default": "You have insufficient credits"
+            "default": "Insufficient credits"
           }
         },
         "type": "object",
         "title": "InsufficientCreditsError",
-        "description": "Error response when user has insufficient credits"
+        "description": "Error response when there are insufficient credits"
       },
       "InternalServerError": {
         "properties": {
@@ -5795,6 +5876,7 @@
           "gemini-flash-lite-latest",
           "claude-sonnet-4-20250514",
           "claude-sonnet-4-5-20250929",
+          "claude-sonnet-4-6",
           "claude-opus-4-5-20251101",
           "gpt-4o",
           "gpt-4o-mini",
@@ -6687,30 +6769,6 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "app__endpoints__api__v2__marketplace__skills__views__InsufficientCreditsError": {
-        "properties": {
-          "detail": {
-            "type": "string",
-            "title": "Detail",
-            "default": "Insufficient credits"
-          }
-        },
-        "type": "object",
-        "title": "InsufficientCreditsError",
-        "description": "Error response when there are insufficient credits"
-      },
-      "app__endpoints__api__v2__skills__views__InsufficientCreditsError": {
-        "properties": {
-          "detail": {
-            "type": "string",
-            "title": "Detail",
-            "default": "Insufficient credits"
-          }
-        },
-        "type": "object",
-        "title": "InsufficientCreditsError",
-        "description": "Error response when there are insufficient credits"
       }
     },
     "securitySchemes": {

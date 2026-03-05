@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
 from .resources.sessions import AsyncSessions, Sessions
+from .resources.workspaces import AsyncWorkspaces, Workspaces
 from .helpers import AsyncSessionRun, SessionResult, _poll_output
 from ..generated.v3.models import SessionResponse
 
@@ -37,6 +38,7 @@ class BrowserUse:
             timeout=timeout,
         )
         self.sessions = Sessions(self._http)
+        self.workspaces = Workspaces(self._http)
 
     @overload
     def run(
@@ -50,6 +52,7 @@ class BrowserUse:
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
+        workspace_id: str | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -65,6 +68,7 @@ class BrowserUse:
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
+        workspace_id: str | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -79,6 +83,7 @@ class BrowserUse:
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
+        workspace_id: str | None = ...,
         **extra: Any,
     ) -> SessionResult[str]: ...
 
@@ -94,6 +99,7 @@ class BrowserUse:
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
+        workspace_id: str | None = None,
         **extra: Any,
     ) -> Any:
         """Run a task and block until complete. Returns a SessionResult."""
@@ -111,6 +117,7 @@ class BrowserUse:
             profile_id=profile_id,
             proxy_country_code=proxy_country_code,
             output_schema=schema_dict,
+            workspace_id=workspace_id,
             **extra,
         )
         return _poll_output(self.sessions, str(data.id), resolved_schema)
@@ -147,6 +154,7 @@ class AsyncBrowserUse:
             timeout=timeout,
         )
         self.sessions = AsyncSessions(self._http)
+        self.workspaces = AsyncWorkspaces(self._http)
 
     @overload
     def run(
@@ -160,6 +168,7 @@ class AsyncBrowserUse:
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
+        workspace_id: str | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -175,6 +184,7 @@ class AsyncBrowserUse:
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
+        workspace_id: str | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -189,6 +199,7 @@ class AsyncBrowserUse:
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
+        workspace_id: str | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[str]: ...
 
@@ -204,6 +215,7 @@ class AsyncBrowserUse:
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
+        workspace_id: str | None = None,
         **extra: Any,
     ) -> AsyncSessionRun[Any]:
         """Run a task. Await the result for a SessionResult."""
@@ -222,6 +234,7 @@ class AsyncBrowserUse:
                 profile_id=profile_id,
                 proxy_country_code=proxy_country_code,
                 output_schema=schema_dict,
+                workspace_id=workspace_id,
                 **extra,
             )
 
