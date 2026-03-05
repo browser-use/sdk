@@ -80,6 +80,7 @@ All optional keyword arguments:
 - `max_cost_usd: float` — cost cap in USD; agent stops if exceeded
 - `profile_id: str` — persistent browser profile (cookies, localStorage)
 - `proxy_country_code: str` — residential proxy country (e.g. `"us"`, `"de"`)
+- `workspace_id: str` — attach a workspace for persistent file storage
 
 `run()` returns an `AsyncSessionRun` (async) or `SessionResult` (sync):
 - **AsyncSessionRun**: awaitable. After `await`, gives a `SessionResult`. Also has `.session_id`, `.result`, `.output` properties.
@@ -140,6 +141,28 @@ await client.sessions.delete(str(session.id))
 print(result.total_cost_usd, result.llm_cost_usd, result.proxy_cost_usd)
 print(result.total_input_tokens, result.total_output_tokens)
 
+# Workspaces — persistent file storage across sessions
+workspace = await client.workspaces.create(name="my-workspace")
+result = await client.run("Save results to output.csv", workspace_id=str(workspace.id))
+
+# Workspace files
+files = await client.workspaces.files(str(workspace.id), include_urls=True)
+for f in files.files:
+    print(f.path, f.size, f.url)
+await client.workspaces.delete_file(str(workspace.id), path="output.csv")
+
+# Workspace management
+workspaces_list = await client.workspaces.list()
+# WorkspaceListResponse has: .items, .total_items, .page_number, .page_size
+ws = await client.workspaces.get(str(workspace.id))
+await client.workspaces.update(str(workspace.id), name="renamed")
+await client.workspaces.delete(str(workspace.id))
+
+# Session messages — retrieve full conversation history
+msgs = await client.sessions.messages(str(session.id), limit=50, after=None, before=None)
+# MessageListResponse has: .messages (list of MessageResponse)
+# Each MessageResponse has: .id, .role ("user"/"assistant"/"tool"), .data (JSON string)
+
 # Cleanup
 await client.close()  # or client.close() for sync
 ```
@@ -154,6 +177,7 @@ Creates a session and optionally dispatches a task. All optional:
 - `profile_id: str` — browser profile to load
 - `proxy_country_code: str` — residential proxy country
 - `output_schema: dict` — JSON Schema for structured output (prefer `run()` with Pydantic/Zod instead)
+- `workspace_id: str` — attach a workspace for persistent file storage
 
 ### FileUploadItem fields
 - `name: str` — filename, e.g. `"data.csv"` (required)
@@ -209,6 +233,21 @@ const list = await client.sessions.list({ page: 1, page_size: 20 });
 const details = await client.sessions.get(session.id);
 await client.sessions.stop(session.id, { strategy: "task" });
 await client.sessions.delete(session.id);
+
+// Workspaces — persistent file storage across sessions
+const workspace = await client.workspaces.create({ name: "my-workspace" });
+await client.run("Save results to output.csv", { workspaceId: workspace.id });
+
+const wsFiles = await client.workspaces.files(workspace.id, { includeUrls: true });
+await client.workspaces.deleteFile(workspace.id, "output.csv");
+await client.workspaces.update(workspace.id, { name: "renamed" });
+await client.workspaces.delete(workspace.id);
+
+// Session messages
+const msgs = await client.sessions.messages(session.id, { limit: 50 });
+for (const m of msgs.messages) {
+  console.log(`[${m.role}] ${m.data}`);
+}
 ```
 
 ### Constructor options (v3)
@@ -229,6 +268,7 @@ const client = new BrowserUse({
 - `maxCostUsd` — cost cap in USD
 - `profileId` — persistent browser profile UUID
 - `proxyCountryCode` — residential proxy country code
+- `workspaceId` — attach a workspace for persistent file storage
 - `outputSchema` — raw JSON Schema object (prefer `schema` with Zod)
 - `timeout` — max polling time in ms (default: `300_000`)
 - `interval` — polling interval in ms (default: `2_000`)
@@ -247,6 +287,8 @@ const client = new BrowserUse({
 - **Autonomous execution**: the agent decides how many steps to take. There is no max steps parameter
 - **keep_alive**: if `true`, session stays idle after task for follow-ups. If `false` (default), session auto-stops
 - **Live URL**: every session has a `live_url` for real-time browser monitoring
+- **Workspaces**: persistent file storage across sessions. Create a workspace, attach to tasks via `workspace_id`, list/delete files. CRUD: `client.workspaces.create/get/update/list/delete`
+- **Session messages**: `client.sessions.messages(session_id)` returns the full conversation history (user, assistant, tool messages). Supports cursor-based pagination with `after`/`before`/`limit`
 - **File I/O**: upload files to a session before a task, download from workspace after. Max 10 files per upload, presigned URLs expire in 60s (downloads)
 - **Stop strategies**: `strategy="session"` (default) destroys sandbox. `strategy="task"` stops task only
 - **Integrations**: the agent can automatically discover and use third-party service integrations (email, Slack, calendars, etc.). When a task involves an external service, just describe the action — the agent will find the right integration and handle auth
