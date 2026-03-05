@@ -64,6 +64,10 @@
                 ]
               },
               {
+                "group": "Tutorials",
+                "pages": ["tutorials/chat-ui"]
+              },
+              {
                 "group": "Resources",
                 "pages": [
                   {

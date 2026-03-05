@@ -1,0 +1,262 @@
+---
+title: Chat UI
+description: Build a chat interface for Browser Use with Next.js and the SDK.
+icon: messages
+---
+
+This tutorial walks through the [chat-ui-example](https://github.com/browser-use/chat-ui-example) — a Next.js app that lets users chat with a Browser Use agent in real time. We'll focus on the SDK integration, not the UI components.
+
+The app has two pages:
+
+1. **Home** — the user types a task, the app creates a session and sends the task.
+2. **Session** — the app polls for messages and lets the user send follow-ups.
+
+All SDK calls live in a single file: `src/lib/api.ts`.
+
+## Setup: SDK Clients
+
+The app uses both SDK versions — v3 for the agent session API and v2 for profiles (which aren't on v3 yet).
+
+```typescript api.ts
+import { BrowserUse as BrowserUseV3 } from "browser-use-sdk/v3";
+import { BrowserUse as BrowserUseV2 } from "browser-use-sdk";
+
+const apiKey = process.env.NEXT_PUBLIC_BROWSER_USE_API_KEY ?? "";
+const v3 = new BrowserUseV3({ apiKey });
+const v2 = new BrowserUseV2({ apiKey });
+```
+
+<Warning>
+  `NEXT_PUBLIC_` exposes the key to the browser. In production, move SDK calls to server actions or API routes.
+</Warning>
+
+---
+
+## Section 1: Home Page — Creating a Session
+
+### API layer
+
+Two functions handle session creation:
+
+```typescript api.ts
+export async function createSession(opts: {
+  model: string;
+  profileId?: string;
+  workspaceId?: string;
+  proxyCountryCode?: string;
+}) {
+  return v3.sessions.create({
+    model: opts.model as "bu-mini" | "bu-max",
+    keepAlive: true,
+    ...(opts.profileId && { profileId: opts.profileId }),
+    ...(opts.workspaceId && { workspaceId: opts.workspaceId }),
+    ...(opts.proxyCountryCode && { proxyCountryCode: opts.proxyCountryCode as any }),
+  });
+}
+
+export async function sendTask(sessionId: string, task: string) {
+  return v3.sessions.create({ sessionId, task, keepAlive: true });
+}
+```
+
+Key details:
+
+- **`keepAlive: true`** keeps the session open after the task completes so the user can send follow-ups.
+- **`createSession`** creates the browser without a task — the session starts idle.
+- **`sendTask`** calls `sessions.create()` again with the existing `sessionId` and a `task` to start the agent.
+
+The settings dropdowns are populated by two list calls:
+
+```typescript api.ts
+export async function listProfiles() {
+  return v2.profiles.list({ pageSize: 100 });
+}
+
+export async function listWorkspaces() {
+  return v3.workspaces.list({ pageSize: 100 });
+}
+```
+
+### Page flow
+
+The home page calls these functions in sequence — create the session, navigate immediately, then fire-and-forget the task:
+
+```typescript page.tsx
+async function handleSend(message: string) {
+  setIsCreating(true);
+  try {
+    // 1. Create an idle session
+    const session = await createSession({
+      model,
+      ...(profileId && { profileId }),
+      ...(workspaceId && { workspaceId }),
+      ...(proxyCountryCode && { proxyCountryCode }),
+    });
+
+    // 2. Navigate to the session page immediately
+    router.push(`/session/${session.id}`);
+
+    // 3. Fire-and-forget the first task
+    sendTask(session.id, message).catch((err) =>
+      console.error("Failed to dispatch task:", err)
+    );
+  } catch (err) {
+    setError(err instanceof Error ? err.message : String(err));
+    setIsCreating(false);
+  }
+}
+```
+
+This pattern gives instant navigation — the user sees the session page (with the live browser view) while the task is still being dispatched.
+
+---
+
+## Section 2: Messages Interface — Polling & Follow-ups
+
+### API layer
+
+The session page needs three more SDK calls:
+
+```typescript api.ts
+export async function getSession(id: string) {
+  return v3.sessions.get(id);
+}
+
+export async function getMessages(id: string, limit = 100) {
+  return v3.sessions.messages(id, { limit });
+}
+
+export async function stopTask(id: string) {
+  await v3.sessions.stop(id, { strategy: "task" });
+}
+```
+
+- **`getSession`** returns the session status (`created`, `idle`, `running`, `stopped`, `timed_out`, `error`) and the `liveUrl`.
+- **`getMessages`** returns the conversation history — user messages, agent thoughts, and tool calls.
+- **`stopTask`** stops only the current task (not the session) using `strategy: "task"`, so the user can send another task.
+
+### Polling with React Query
+
+The session context sets up two parallel polls using [TanStack Query](https://tanstack.com/query):
+
+```typescript session-context.tsx
+const TERMINAL = new Set(["stopped", "error", "timed_out"]);
+
+// Poll session status every 1s, stop when terminal
+const { data: session } = useQuery({
+  queryKey: ["session", sessionId],
+  queryFn: () => api.getSession(sessionId),
+  refetchInterval: (query) => {
+    const s = query.state.data?.status;
+    return s && TERMINAL.has(s) ? false : 1000;
+  },
+});
+
+const isTerminal = !!session && TERMINAL.has(session.status);
+const isActive = !!session && !isTerminal;
+
+// Poll messages every 1s while session is active
+const { data: rawResponse, isLoading } = useQuery({
+  queryKey: ["messages", sessionId],
+  queryFn: () => api.getMessages(sessionId),
+  refetchInterval: isActive ? 1000 : false,
+});
+```
+
+Both polls run at 1-second intervals and automatically stop when the session reaches a terminal status.
+
+### Sending follow-ups
+
+Follow-up messages reuse the same `sendTask` function from the home page. The context adds optimistic updates so the user's message appears instantly:
+
+```typescript session-context.tsx
+const sendMessage = useCallback(async (task: string) => {
+  // Optimistic: show the message immediately
+  const tempMsg = {
+    id: `opt-${Date.now()}`,
+    role: "user",
+    content: task,
+    createdAt: new Date().toISOString(),
+  };
+  setOptimistic((prev) => [...prev, tempMsg]);
+
+  try {
+    await api.sendTask(sessionId, task);
+  } catch (err) {
+    // Roll back on failure
+    setOptimistic((prev) => prev.filter((m) => m.id !== tempMsg.id));
+  }
+}, [sessionId]);
+```
+
+Optimistic messages are automatically filtered out once the server returns the real message with matching content.
+
+### Stopping a task
+
+```typescript session-context.tsx
+const stopTask = useCallback(async () => {
+  await api.stopTask(sessionId);
+}, [sessionId]);
+```
+
+The session page wires `stopTask` to a stop button that appears while the agent is running. Since we used `strategy: "task"`, the session stays alive for follow-ups.
+
+### Session page
+
+The session page consumes everything through the context provider:
+
+```typescript session/[id]/page.tsx
+export default function SessionPageWrapper() {
+  const params = useParams<{ id: string }>();
+  return (
+    <SessionProvider sessionId={params.id}>
+      <SessionPage />
+    </SessionProvider>
+  );
+}
+
+function SessionPage() {
+  const { session, turns, isBusy, isTerminal, isSending, sendMessage, stopTask } =
+    useSession();
+
+  return (
+    <div className="flex h-screen w-full overflow-hidden">
+      {/* Chat column */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <ChatMessages turns={turns} isBusy={isBusy} />
+        <ChatInput
+          onSend={sendMessage}
+          isProcessing={isBusy || isSending}
+          onStop={stopTask}
+          disabled={isTerminal}
+          placeholder={isTerminal ? "Session has ended" : "Send a follow-up…"}
+        />
+      </div>
+
+      {/* Live browser view */}
+      <BrowserPanel
+        liveUrl={session?.liveUrl}
+        turns={turns}
+        isSessionEnded={isTerminal}
+      />
+    </div>
+  );
+}
+```
+
+---
+
+## Summary
+
+The full SDK surface used by this app:
+
+| Method | Purpose |
+|--------|---------|
+| `v3.sessions.create()` | Create a session, send tasks |
+| `v3.sessions.get()` | Poll session status |
+| `v3.sessions.messages()` | Poll conversation messages |
+| `v3.sessions.stop()` | Stop the current task |
+| `v3.workspaces.list()` | Populate workspace dropdown |
+| `v2.profiles.list()` | Populate profile dropdown |
+
+The complete source is at [github.com/browser-use/chat-ui-example](https://github.com/browser-use/chat-ui-example).
