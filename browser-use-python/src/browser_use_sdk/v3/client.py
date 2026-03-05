@@ -168,6 +168,7 @@ class AsyncBrowserUse:
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
+        workspace_id: str | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -183,6 +184,7 @@ class AsyncBrowserUse:
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
+        workspace_id: str | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -197,6 +199,7 @@ class AsyncBrowserUse:
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
+        workspace_id: str | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[str]: ...
 
