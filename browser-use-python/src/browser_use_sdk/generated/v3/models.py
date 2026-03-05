@@ -91,7 +91,7 @@ class MessageResponse(BaseModel):
     session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
     role: str = Field(..., title='Role')
     data: str = Field(..., title='Data')
-    hidden: bool = Field(..., title='Hidden')
+    hidden: bool = Field(False, title='Hidden')
     created_at: datetime = Field(..., alias='createdAt', title='Createdat')
 
 
