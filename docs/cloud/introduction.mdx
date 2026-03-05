@@ -1,0 +1,182 @@
+---
+title: Browser Use Cloud
+description: You know the open-source library. Here's what cloud adds.
+icon: house
+---
+
+<CardGroup cols={2}>
+  <Card title="Stealth Browsers" icon="shield-halved" href="/cloud/guides/proxies-and-stealth">
+    Anti-detect, CAPTCHA solving, proxies in 195+ countries.
+  </Card>
+  <Card title="Browser Use LLM" icon="brain" href="/cloud/pricing">
+    Custom models for browser automation. 15x cheaper, 6x faster.
+  </Card>
+  <Card title="Skills" icon="wand-magic-sparkles" href="/cloud/guides/skills">
+    Turn websites into deterministic API endpoints.
+  </Card>
+  <Card title="Infinite Scale" icon="arrow-up-right-dots" href="/cloud/guides/tasks">
+    One API key. No Docker. 10 tasks or 10,000 — same code.
+  </Card>
+</CardGroup>
+
+**Every browser comes with:** anti-fingerprinting, automatic CAPTCHA solving, cookie/ad blocking, Cloudflare bypass, and residential proxies. No configuration needed.
+
+## 1. Install & configure
+
+<CodeGroup>
+```bash Python
+pip install browser-use-sdk
+```
+```bash TypeScript
+npm install browser-use-sdk
+```
+</CodeGroup>
+
+Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys), then:
+
+```bash
+export BROWSER_USE_API_KEY=your_key
+```
+
+## 2. Run your first task
+
+<CodeGroup>
+```python Python
+import asyncio
+from browser_use_sdk import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse()
+    result = await client.run("What is the top post on Hacker News right now?")
+    print(result.output)
+
+asyncio.run(main())
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run("What is the top post on Hacker News right now?");
+console.log(result.output);
+```
+</CodeGroup>
+
+## 3. Get structured data
+
+Define a schema and get validated, typed data back.
+
+<CodeGroup>
+```python Python
+import asyncio
+from browser_use_sdk import AsyncBrowserUse
+from pydantic import BaseModel
+
+class Post(BaseModel):
+    title: str
+    url: str
+    points: int
+
+class PostList(BaseModel):
+    items: list[Post]
+
+async def main():
+    client = AsyncBrowserUse()
+    result = await client.run(
+        "Get the top 3 posts from Hacker News",
+        output_schema=PostList,
+    )
+    for post in result.output.items:
+        print(f"{post.title} ({post.points} pts)")
+
+asyncio.run(main())
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+import { z } from "zod";
+
+const Post = z.object({
+  title: z.string(),
+  url: z.string(),
+  points: z.number(),
+});
+
+const client = new BrowserUse();
+const result = await client.run("Get the top 3 posts from Hacker News", {
+  schema: z.array(Post),
+});
+result.output.forEach((post) => console.log(`${post.title} (${post.points} pts)`));
+```
+</CodeGroup>
+
+## 4. Watch it run
+
+Every session has a `liveUrl` — a real-time view of the browser. Use it for debugging, embedding in your app, or handing control to a human mid-task.
+
+<CodeGroup>
+```python Python
+client = AsyncBrowserUse()
+session = await client.sessions.create()
+print(session.live_url)  # open this or embed in an iframe
+
+result = await client.run(
+    "Get the top 3 posts from Hacker News",
+    session_id=session.id,
+)
+```
+```typescript TypeScript
+const client = new BrowserUse();
+const session = await client.sessions.create();
+console.log(session.liveUrl); // open this or embed in an iframe
+
+const result = await client.run("Get the top 3 posts from Hacker News", {
+  sessionId: session.id,
+});
+```
+</CodeGroup>
+
+## 5. Add profiles, proxies, and 1Password
+
+Use saved browser profiles for authenticated sites, residential proxies for geo-specific content, and 1Password for auto-filling credentials and 2FA codes.
+
+<CodeGroup>
+```python Python
+client = AsyncBrowserUse()
+
+session = await client.sessions.create(
+    profile_id="your-profile-id",       # saved cookies & localStorage
+    proxy_country_code="us",             # residential proxy
+)
+
+result = await client.run(
+    "Get my latest order status",
+    session_id=session.id,
+    op_vault_id="your-vault-id",         # 1Password auto-fill
+    allowed_domains=["*.example.com"],    # restrict agent navigation
+)
+```
+```typescript TypeScript
+const client = new BrowserUse();
+
+const session = await client.sessions.create({
+  profileId: "your-profile-id",       // saved cookies & localStorage
+  proxyCountryCode: "us",             // residential proxy
+});
+
+const result = await client.run("Get my latest order status", {
+  sessionId: session.id,
+  opVaultId: "your-vault-id",         // 1Password auto-fill
+  allowedDomains: ["*.example.com"],  // restrict agent navigation
+});
+```
+</CodeGroup>
+
+See [Tasks](/cloud/guides/tasks) for all parameters, or browse [Tips](/cloud/tips/data/structured-output) for copy-paste recipes.
+
+<CardGroup cols={2}>
+  <Card title="LLM Quickstart" icon="brain" href="/cloud/llm-quickstart">
+    Paste one blob into your AI editor. Your agent knows the entire API.
+  </Card>
+  <Card title="Overview" icon="lightbulb" href="/cloud/guides/overview">
+    Four ways to automate the web — pick the one that fits.
+  </Card>
+</CardGroup>
