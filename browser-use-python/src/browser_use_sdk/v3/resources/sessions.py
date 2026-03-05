@@ -7,6 +7,7 @@ from ...generated.v3.models import (
     FileListResponse,
     FileUploadItem,
     FileUploadResponse,
+    MessageListResponse,
     SessionListResponse,
     SessionResponse,
 )
@@ -27,6 +28,7 @@ class Sessions:
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
         output_schema: dict[str, Any] | None = None,
+        workspace_id: str | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -47,6 +49,8 @@ class Sessions:
             body["proxyCountryCode"] = proxy_country_code
         if output_schema is not None:
             body["outputSchema"] = output_schema
+        if workspace_id is not None:
+            body["workspaceId"] = workspace_id
         body.update(extra)
         return SessionResponse.model_validate(
             self._http.request("POST", "/sessions", json=body)
@@ -115,6 +119,7 @@ class Sessions:
         limit: int | None = None,
         cursor: str | None = None,
         include_urls: bool | None = None,
+        shallow: bool | None = None,
     ) -> FileListResponse:
         """List files in a session's workspace."""
         return FileListResponse.model_validate(
@@ -126,6 +131,28 @@ class Sessions:
                     "limit": limit,
                     "cursor": cursor,
                     "includeUrls": include_urls,
+                    "shallow": shallow,
+                },
+            )
+        )
+
+    def messages(
+        self,
+        session_id: str,
+        *,
+        after: str | None = None,
+        before: str | None = None,
+        limit: int | None = None,
+    ) -> MessageListResponse:
+        """List messages for a session with cursor-based pagination."""
+        return MessageListResponse.model_validate(
+            self._http.request(
+                "GET",
+                f"/sessions/{session_id}/messages",
+                params={
+                    "after": after,
+                    "before": before,
+                    "limit": limit,
                 },
             )
         )
@@ -146,6 +173,7 @@ class AsyncSessions:
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
         output_schema: dict[str, Any] | None = None,
+        workspace_id: str | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -166,6 +194,8 @@ class AsyncSessions:
             body["proxyCountryCode"] = proxy_country_code
         if output_schema is not None:
             body["outputSchema"] = output_schema
+        if workspace_id is not None:
+            body["workspaceId"] = workspace_id
         body.update(extra)
         return SessionResponse.model_validate(
             await self._http.request("POST", "/sessions", json=body)
@@ -234,6 +264,7 @@ class AsyncSessions:
         limit: int | None = None,
         cursor: str | None = None,
         include_urls: bool | None = None,
+        shallow: bool | None = None,
     ) -> FileListResponse:
         """List files in a session's workspace."""
         return FileListResponse.model_validate(
@@ -245,6 +276,28 @@ class AsyncSessions:
                     "limit": limit,
                     "cursor": cursor,
                     "includeUrls": include_urls,
+                    "shallow": shallow,
+                },
+            )
+        )
+
+    async def messages(
+        self,
+        session_id: str,
+        *,
+        after: str | None = None,
+        before: str | None = None,
+        limit: int | None = None,
+    ) -> MessageListResponse:
+        """List messages for a session with cursor-based pagination."""
+        return MessageListResponse.model_validate(
+            await self._http.request(
+                "GET",
+                f"/sessions/{session_id}/messages",
+                params={
+                    "after": after,
+                    "before": before,
+                    "limit": limit,
                 },
             )
         )

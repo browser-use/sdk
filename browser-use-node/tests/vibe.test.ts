@@ -127,8 +127,20 @@ function v3EndpointToSdkMethod(
   if (method === "get" && path === "/sessions/{session_id}") return { resource: "sessions", method: "get" };
   if (method === "delete" && path === "/sessions/{session_id}") return { resource: "sessions", method: "delete" };
   if (method === "post" && path === "/sessions/{session_id}/stop") return { resource: "sessions", method: "stop" };
+  if (method === "get" && path === "/sessions/{session_id}/messages") return { resource: "sessions", method: "messages" };
   if (method === "get" && path === "/sessions/{session_id}/files") return { resource: "sessions", method: "files" };
   if (method === "post" && path === "/sessions/{session_id}/files/upload") return { resource: "sessions", method: "uploadFiles" };
+
+  // Workspaces
+  if (method === "get" && path === "/workspaces") return { resource: "workspaces", method: "list" };
+  if (method === "post" && path === "/workspaces") return { resource: "workspaces", method: "create" };
+  if (method === "get" && path === "/workspaces/{workspace_id}") return { resource: "workspaces", method: "get" };
+  if (method === "patch" && path === "/workspaces/{workspace_id}") return { resource: "workspaces", method: "update" };
+  if (method === "delete" && path === "/workspaces/{workspace_id}") return { resource: "workspaces", method: "delete" };
+  if (method === "get" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "files" };
+  if (method === "delete" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "deleteFile" };
+  if (method === "get" && path === "/workspaces/{workspace_id}/size") return { resource: "workspaces", method: "size" };
+  if (method === "post" && path === "/workspaces/{workspace_id}/files/upload") return { resource: "workspaces", method: "uploadFiles" };
 
   return null;
 }

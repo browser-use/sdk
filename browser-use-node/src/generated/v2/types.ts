@@ -790,6 +790,11 @@ export interface components {
              * @default 0
              */
             browserCost: string;
+            /**
+             * Agent Session ID
+             * @description ID of the agent session that created this browser (None for standalone BaaS sessions)
+             */
+            agentSessionId?: string | null;
         };
         /**
          * BrowserSessionListResponse
@@ -897,6 +902,11 @@ export interface components {
              * @default 0
              */
             browserCost: string;
+            /**
+             * Agent Session ID
+             * @description ID of the agent session that created this browser (None for standalone BaaS sessions)
+             */
+            agentSessionId?: string | null;
         };
         /**
          * CannotDeleteSkillWhileGeneratingError
