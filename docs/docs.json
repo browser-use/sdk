@@ -61,6 +61,7 @@
               "cloud/guides/overview",
               "cloud/guides/tasks",
               "cloud/guides/sessions",
+              "cloud/guides/workspaces",
               "cloud/guides/browser-api",
               "cloud/guides/proxies-and-stealth",
               "cloud/guides/skills",
@@ -68,6 +69,10 @@
               "cloud/guides/mcp-server",
               "cloud/guides/webhooks"
             ]
+          },
+          {
+            "group": "Tutorials",
+            "pages": ["cloud/tutorials/chat-ui"]
           },
           {
             "group": "Resources",
@@ -444,6 +449,9 @@
     {"source": "/guides/authentication", "destination": "/cloud/guides/authentication"},
     {"source": "/guides/mcp-server", "destination": "/cloud/guides/mcp-server"},
     {"source": "/guides/webhooks", "destination": "/cloud/guides/webhooks"},
+    {"source": "/guides/workspaces", "destination": "/cloud/guides/workspaces"},
+
+    {"source": "/tutorials/chat-ui", "destination": "/cloud/tutorials/chat-ui"},
 
     {"source": "/new-features/api-v3", "destination": "/cloud/new-features/api-v3"},
 

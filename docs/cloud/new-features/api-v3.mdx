@@ -75,9 +75,58 @@ console.log(result.output);
 ```
 </CodeGroup>
 
+### Workspaces
+
+Workspaces are persistent file storage that lives across sessions. Attach a workspace to a task and the agent can read and write files in it.
+
+<CodeGroup>
+```python Python
+workspace = await client.workspaces.create(name="my-workspace")
+result = await client.run("Save results to output.csv", workspace_id=str(workspace.id))
+
+files = await client.workspaces.files(str(workspace.id))
+for f in files.files:
+    print(f.path, f.size)
+```
+```typescript TypeScript
+const workspace = await client.workspaces.create({ name: "my-workspace" });
+const result = await client.run("Save results to output.csv", { workspaceId: workspace.id });
+
+const files = await client.workspaces.files(workspace.id);
+for (const f of files.files) {
+  console.log(f.path, f.size);
+}
+```
+</CodeGroup>
+
+See the full [Workspaces guide](/guides/workspaces) for CRUD, file management, and more.
+
+### Session messages
+
+Retrieve the full message history for a session — useful for debugging or building custom UIs.
+
+<CodeGroup>
+```python Python
+msgs = await client.sessions.messages(session_id, limit=50)
+for m in msgs.messages:
+    print(f"[{m.role}] {m.data[:200]}")
+```
+```typescript TypeScript
+const msgs = await client.sessions.messages(sessionId, { limit: 50 });
+for (const m of msgs.messages) {
+  console.log(`[${m.role}] ${m.data.slice(0, 200)}`);
+}
+```
+</CodeGroup>
+
+Use `after` and `before` cursors for pagination through large message histories.
+
 <CardGroup cols={2}>
   <Card title="BU Agent API Reference" icon="code" href="/cloud/api-v3/sessions/create-session">
     Full endpoint reference.
+  </Card>
+  <Card title="Workspaces Guide" icon="folder" href="/cloud/guides/workspaces">
+    Persistent file storage across sessions.
   </Card>
   <Card title="Agent Tasks" icon="play" href="/cloud/guides/tasks">
     Task guide.

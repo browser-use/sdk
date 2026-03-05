@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { HttpClient } from "../core/http.js";
 import { Sessions } from "./resources/sessions.js";
+import { Workspaces } from "./resources/workspaces.js";
 import { SessionRun } from "./helpers.js";
 import type { components } from "../generated/v3/types.js";
 import type { RunOptions } from "./helpers.js";
@@ -21,6 +22,7 @@ export type RunSessionOptions = Partial<Omit<RunTaskRequest, "task">> &
 
 export class BrowserUse {
   readonly sessions: Sessions;
+  readonly workspaces: Workspaces;
 
   private readonly http: HttpClient;
 
@@ -40,6 +42,7 @@ export class BrowserUse {
     });
 
     this.sessions = new Sessions(this.http);
+    this.workspaces = new Workspaces(this.http);
   }
 
   /**

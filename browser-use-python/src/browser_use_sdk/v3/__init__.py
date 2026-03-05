@@ -11,12 +11,18 @@ from ..generated.v3.models import (
     FileUploadRequest,
     FileUploadResponse,
     FileUploadResponseItem,
+    MessageListResponse,
+    MessageResponse,
     ProxyCountryCode,
     RunTaskRequest,
     SessionListResponse,
     SessionResponse,
     StopSessionRequest,
     StopStrategy,
+    WorkspaceCreateRequest,
+    WorkspaceListResponse,
+    WorkspaceUpdateRequest,
+    WorkspaceView,
 )
 
 __all__ = [
@@ -31,13 +37,19 @@ __all__ = [
     "FileListResponse",
     "FileUploadResponse",
     "FileUploadResponseItem",
+    "MessageListResponse",
+    "MessageResponse",
     "SessionListResponse",
     "SessionResponse",
+    "WorkspaceListResponse",
+    "WorkspaceView",
     # Input models
     "FileUploadItem",
     "FileUploadRequest",
     "RunTaskRequest",
     "StopSessionRequest",
+    "WorkspaceCreateRequest",
+    "WorkspaceUpdateRequest",
     # Enums
     "BuAgentSessionStatus",
     "BuModel",
