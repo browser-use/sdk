@@ -7,7 +7,10 @@ export { SessionRun } from "./v3/helpers.js";
 export type { RunOptions, SessionResult } from "./v3/helpers.js";
 
 export { Sessions } from "./v3/resources/sessions.js";
-export type { CreateSessionBody, SessionListParams, SessionFilesParams } from "./v3/resources/sessions.js";
+export type { CreateSessionBody, SessionListParams, SessionFilesParams, SessionMessagesParams } from "./v3/resources/sessions.js";
+
+export { Workspaces } from "./v3/resources/workspaces.js";
+export type { WorkspaceListParams, WorkspaceFilesParams } from "./v3/resources/workspaces.js";
 
 export type { components as V3Types } from "./generated/v3/types.js";
 
@@ -28,6 +31,16 @@ export type RunTaskRequest = S["RunTaskRequest"];
 export type StopSessionRequest = S["StopSessionRequest"];
 export type FileUploadRequest = S["FileUploadRequest"];
 export type FileUploadItem = S["FileUploadItem"];
+
+// Workspace models
+export type WorkspaceView = S["WorkspaceView"];
+export type WorkspaceCreateRequest = S["WorkspaceCreateRequest"];
+export type WorkspaceUpdateRequest = S["WorkspaceUpdateRequest"];
+export type WorkspaceListResponse = S["WorkspaceListResponse"];
+
+// Message models
+export type MessageResponse = S["MessageResponse"];
+export type MessageListResponse = S["MessageListResponse"];
 
 // Enums / string unions
 export type BuAgentSessionStatus = S["BuAgentSessionStatus"];

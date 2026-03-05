@@ -7,6 +7,7 @@ from ...generated.v3.models import (
     FileListResponse,
     FileUploadItem,
     FileUploadResponse,
+    MessageListResponse,
     SessionListResponse,
     SessionResponse,
 )
@@ -25,6 +26,7 @@ class Sessions:
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
+        workspace_id: str | None = None,
         proxy_country_code: str | None = None,
         output_schema: dict[str, Any] | None = None,
         **extra: Any,
@@ -43,6 +45,8 @@ class Sessions:
             body["maxCostUsd"] = max_cost_usd
         if profile_id is not None:
             body["profileId"] = profile_id
+        if workspace_id is not None:
+            body["workspaceId"] = workspace_id
         if proxy_country_code is not None:
             body["proxyCountryCode"] = proxy_country_code
         if output_schema is not None:
@@ -115,6 +119,7 @@ class Sessions:
         limit: int | None = None,
         cursor: str | None = None,
         include_urls: bool | None = None,
+        shallow: bool | None = None,
     ) -> FileListResponse:
         """List files in a session's workspace."""
         return FileListResponse.model_validate(
@@ -126,6 +131,28 @@ class Sessions:
                     "limit": limit,
                     "cursor": cursor,
                     "includeUrls": include_urls,
+                    "shallow": shallow,
+                },
+            )
+        )
+
+    def messages(
+        self,
+        session_id: str,
+        *,
+        after: str | None = None,
+        before: str | None = None,
+        limit: int | None = None,
+    ) -> MessageListResponse:
+        """List session messages with cursor-based pagination."""
+        return MessageListResponse.model_validate(
+            self._http.request(
+                "GET",
+                f"/sessions/{session_id}/messages",
+                params={
+                    "after": after,
+                    "before": before,
+                    "limit": limit,
                 },
             )
         )
@@ -144,6 +171,7 @@ class AsyncSessions:
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
+        workspace_id: str | None = None,
         proxy_country_code: str | None = None,
         output_schema: dict[str, Any] | None = None,
         **extra: Any,
@@ -162,6 +190,8 @@ class AsyncSessions:
             body["maxCostUsd"] = max_cost_usd
         if profile_id is not None:
             body["profileId"] = profile_id
+        if workspace_id is not None:
+            body["workspaceId"] = workspace_id
         if proxy_country_code is not None:
             body["proxyCountryCode"] = proxy_country_code
         if output_schema is not None:
@@ -234,6 +264,7 @@ class AsyncSessions:
         limit: int | None = None,
         cursor: str | None = None,
         include_urls: bool | None = None,
+        shallow: bool | None = None,
     ) -> FileListResponse:
         """List files in a session's workspace."""
         return FileListResponse.model_validate(
@@ -245,6 +276,28 @@ class AsyncSessions:
                     "limit": limit,
                     "cursor": cursor,
                     "includeUrls": include_urls,
+                    "shallow": shallow,
+                },
+            )
+        )
+
+    async def messages(
+        self,
+        session_id: str,
+        *,
+        after: str | None = None,
+        before: str | None = None,
+        limit: int | None = None,
+    ) -> MessageListResponse:
+        """List session messages with cursor-based pagination."""
+        return MessageListResponse.model_validate(
+            await self._http.request(
+                "GET",
+                f"/sessions/{session_id}/messages",
+                params={
+                    "after": after,
+                    "before": before,
+                    "limit": limit,
                 },
             )
         )

@@ -83,6 +83,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/{session_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Session Messages
+         * @description Return messages for a session with cursor-based pagination (chronological order).
+         */
+        get: operations["list_session_messages_sessions__session_id__messages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/{session_id}/files": {
         parameters: {
             query?: never;
@@ -130,6 +150,122 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workspaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Workspaces
+         * @description Get paginated list of workspaces.
+         */
+        get: operations["list_workspaces_workspaces_get"];
+        put?: never;
+        /**
+         * Create Workspace
+         * @description Create a new workspace for persistent shared file storage across sessions.
+         */
+        post: operations["create_workspace_workspaces_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Workspace
+         * @description Get workspace details.
+         */
+        get: operations["get_workspace_workspaces__workspace_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Workspace
+         * @description Delete a workspace and its S3 data.
+         */
+        delete: operations["delete_workspace_workspaces__workspace_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Workspace
+         * @description Update a workspace's name.
+         */
+        patch: operations["update_workspace_workspaces__workspace_id__patch"];
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Workspace Files
+         * @description List files in a workspace's S3 prefix.
+         */
+        get: operations["list_workspace_files_workspaces__workspace_id__files_get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Workspace File
+         * @description Delete a single file from a workspace.
+         */
+        delete: operations["delete_workspace_file_workspaces__workspace_id__files_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/size": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Workspace Size
+         * @description Get current storage usage for a workspace.
+         */
+        get: operations["get_workspace_size_workspaces__workspace_id__size_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspaces/{workspace_id}/files/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Workspace Files
+         * @description Get presigned PUT URLs for uploading files to a workspace.
+         */
+        post: operations["upload_workspace_files_workspaces__workspace_id__files_upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -168,6 +304,11 @@ export interface components {
         FileListResponse: {
             /** Files */
             files: components["schemas"]["FileInfo"][];
+            /**
+             * Folders
+             * @description Immediate sub-folder names at this prefix level
+             */
+            folders?: string[];
             /** Nextcursor */
             nextCursor?: string | null;
             /**
@@ -192,6 +333,11 @@ export interface components {
              * @default application/octet-stream
              */
             contentType: string;
+            /**
+             * Size
+             * @description File size in bytes (required for workspace uploads)
+             */
+            size?: number | null;
         };
         /**
          * FileUploadRequest
@@ -229,6 +375,37 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** MessageListResponse */
+        MessageListResponse: {
+            /** Messages */
+            messages: components["schemas"]["MessageResponse"][];
+            /** Hasmore */
+            hasMore: boolean;
+        };
+        /** MessageResponse */
+        MessageResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Role */
+            role: string;
+            /** Data */
+            data: string;
+            /** Hidden */
+            hidden: boolean;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
         /**
          * ProxyCountryCode
          * @enum {string}
@@ -259,6 +436,8 @@ export interface components {
             maxCostUsd?: number | string | null;
             /** Profileid */
             profileId?: string | null;
+            /** Workspaceid */
+            workspaceId?: string | null;
             proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
             /** Outputschema */
             outputSchema?: {
@@ -289,10 +468,16 @@ export interface components {
             title?: string | null;
             /** Output */
             output?: unknown | null;
+            /** Outputschema */
+            outputSchema?: {
+                [key: string]: unknown;
+            } | null;
             /** Liveurl */
             liveUrl?: string | null;
             /** Profileid */
             profileId?: string | null;
+            /** Workspaceid */
+            workspaceId?: string | null;
             proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
             /** Maxcostusd */
             maxCostUsd?: string | null;
@@ -355,6 +540,83 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /**
+         * WorkspaceCreateRequest
+         * @description Request model for creating a new workspace.
+         */
+        WorkspaceCreateRequest: {
+            /**
+             * Name
+             * @description Optional name for the workspace
+             */
+            name?: string | null;
+        };
+        /**
+         * WorkspaceListResponse
+         * @description Response model for paginated workspace list requests.
+         */
+        WorkspaceListResponse: {
+            /**
+             * Items
+             * @description List of workspace views for the current page
+             */
+            items: components["schemas"]["WorkspaceView"][];
+            /**
+             * Total Items
+             * @description Total number of items in the list
+             */
+            totalItems: number;
+            /**
+             * Page Number
+             * @description Page number
+             */
+            pageNumber: number;
+            /**
+             * Page Size
+             * @description Number of items per page
+             */
+            pageSize: number;
+        };
+        /**
+         * WorkspaceUpdateRequest
+         * @description Request model for updating a workspace.
+         */
+        WorkspaceUpdateRequest: {
+            /**
+             * Name
+             * @description Optional name for the workspace
+             */
+            name?: string | null;
+        };
+        /**
+         * WorkspaceView
+         * @description View model for a workspace — persistent shared storage across sessions.
+         */
+        WorkspaceView: {
+            /**
+             * ID
+             * Format: uuid
+             * @description Unique identifier for the workspace
+             */
+            id: string;
+            /**
+             * Name
+             * @description Optional name for the workspace
+             */
+            name?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Timestamp when the workspace was created
+             */
+            createdAt: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description Timestamp when the workspace was last updated
+             */
+            updatedAt: string;
         };
     };
     responses: never;
@@ -525,6 +787,43 @@ export interface operations {
             };
         };
     };
+    list_session_messages_sessions__session_id__messages_get: {
+        parameters: {
+            query?: {
+                /** @description Cursor: return messages after this message ID */
+                after?: string | null;
+                /** @description Cursor: return messages before this message ID */
+                before?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_session_files_sessions__session_id__files_get: {
         parameters: {
             query?: {
@@ -532,6 +831,7 @@ export interface operations {
                 limit?: number;
                 cursor?: string | null;
                 includeUrls?: boolean;
+                shallow?: boolean;
             };
             header?: never;
             path: {
@@ -567,6 +867,304 @@ export interface operations {
             header?: never;
             path: {
                 session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FileUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileUploadResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_workspaces_workspaces_get: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                pageNumber?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_workspace_workspaces_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_workspace_workspaces__workspace_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_workspace_workspaces__workspace_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_workspace_workspaces__workspace_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_workspace_files_workspaces__workspace_id__files_get: {
+        parameters: {
+            query?: {
+                prefix?: string;
+                limit?: number;
+                cursor?: string | null;
+                includeUrls?: boolean;
+                shallow?: boolean;
+            };
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_workspace_file_workspaces__workspace_id__files_delete: {
+        parameters: {
+            query: {
+                /** @description Relative file path to delete */
+                path: string;
+            };
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_workspace_size_workspaces__workspace_id__size_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_workspace_files_workspaces__workspace_id__files_upload_post: {
+        parameters: {
+            query?: {
+                /** @description Directory prefix to upload into (e.g. "uploads/") */
+                prefix?: string;
+            };
+            header?: never;
+            path: {
+                workspace_id: string;
             };
             cookie?: never;
         };

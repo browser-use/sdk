@@ -103,8 +103,19 @@ _V3_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/sessions/{session_id}"): ("sessions", "get"),
     ("delete", "/sessions/{session_id}"): ("sessions", "delete"),
     ("post", "/sessions/{session_id}/stop"): ("sessions", "stop"),
+    ("get", "/sessions/{session_id}/messages"): ("sessions", "messages"),
     ("get", "/sessions/{session_id}/files"): ("sessions", "files"),
     ("post", "/sessions/{session_id}/files/upload"): ("sessions", "upload_files"),
+    # Workspaces
+    ("get", "/workspaces"): ("workspaces", "list"),
+    ("post", "/workspaces"): ("workspaces", "create"),
+    ("get", "/workspaces/{workspace_id}"): ("workspaces", "get"),
+    ("patch", "/workspaces/{workspace_id}"): ("workspaces", "update"),
+    ("delete", "/workspaces/{workspace_id}"): ("workspaces", "delete"),
+    ("get", "/workspaces/{workspace_id}/files"): ("workspaces", "files"),
+    ("delete", "/workspaces/{workspace_id}/files"): ("workspaces", "delete_file"),
+    ("get", "/workspaces/{workspace_id}/size"): ("workspaces", "get_size"),
+    ("post", "/workspaces/{workspace_id}/files/upload"): ("workspaces", "upload_files"),
 }
 
 _HTTP_METHODS = {"get", "post", "put", "patch", "delete", "head", "options"}
@@ -199,23 +210,33 @@ class TestV3Coverage:
         assert not missing, f"Unmapped v3 endpoints: {missing}"
 
     def test_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v3.resources import sessions
+        from browser_use_sdk.v3.resources import sessions, workspaces
 
-        for _, method_name in _V3_MAP.values():
-            assert hasattr(sessions.Sessions, method_name), (
-                f"Sessions missing method '{method_name}'"
+        _v3_sync_classes: Dict[str, type] = {
+            "sessions": sessions.Sessions,
+            "workspaces": workspaces.Workspaces,
+        }
+        for resource_attr, method_name in _V3_MAP.values():
+            cls = _v3_sync_classes[resource_attr]
+            assert hasattr(cls, method_name), (
+                f"{cls.__name__} missing method '{method_name}'"
             )
 
     def test_async_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v3.resources import sessions
+        from browser_use_sdk.v3.resources import sessions, workspaces
 
-        for _, method_name in _V3_MAP.values():
-            assert hasattr(sessions.AsyncSessions, method_name), (
-                f"AsyncSessions missing method '{method_name}'"
+        _v3_async_classes: Dict[str, type] = {
+            "sessions": sessions.AsyncSessions,
+            "workspaces": workspaces.AsyncWorkspaces,
+        }
+        for resource_attr, method_name in _V3_MAP.values():
+            cls = _v3_async_classes[resource_attr]
+            assert hasattr(cls, method_name), (
+                f"{cls.__name__} missing method '{method_name}'"
             )
-            method = getattr(sessions.AsyncSessions, method_name)
+            method = getattr(cls, method_name)
             assert inspect.iscoroutinefunction(method), (
-                f"AsyncSessions.{method_name} should be async"
+                f"{cls.__name__}.{method_name} should be async"
             )
 
 

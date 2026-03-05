@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
 from .resources.sessions import AsyncSessions, Sessions
+from .resources.workspaces import AsyncWorkspaces, Workspaces as WorkspacesResource
 from .helpers import AsyncSessionRun, SessionResult, _poll_output
 from ..generated.v3.models import SessionResponse
 
@@ -37,6 +38,7 @@ class BrowserUse:
             timeout=timeout,
         )
         self.sessions = Sessions(self._http)
+        self.workspaces = WorkspacesResource(self._http)
 
     @overload
     def run(
@@ -147,6 +149,7 @@ class AsyncBrowserUse:
             timeout=timeout,
         )
         self.sessions = AsyncSessions(self._http)
+        self.workspaces = AsyncWorkspaces(self._http)
 
     @overload
     def run(
