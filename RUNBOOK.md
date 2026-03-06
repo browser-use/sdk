@@ -57,7 +57,7 @@ Follow existing patterns in the codebase. Read before writing.
 
 ## Learnings
 
-<!-- AI appends notes here after each run -->
+{/* AI appends notes here after each run */}
 
 - **Pydantic regex**: `datamodel-codegen` generates `constr` patterns with lookaheads that need `ConfigDict(regex_engine="python-re")`
 - **Enum defaults**: `datamodel-codegen` (all versions) outputs string literals for enum defaults. Must patch to enum members post-generation or pyright fails.

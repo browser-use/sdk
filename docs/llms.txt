@@ -3,7 +3,7 @@
 > AI-powered browser automation. Run tasks with natural language, get structured data back.
 
 Browser Use has two products:
-- **Browser Use Cloud** — hosted API. No infrastructure to manage. Stealth browsers, CAPTCHA solving, residential proxies.
+- **Browser Use Cloud** — SDK and API. State-of-the-art speed and accuracy. Stealth browsers, CAPTCHA solving, proxies, scalable infrastructure.
 - **Browser Use Open Source** — Python library. Self-hosted. Bring your own LLM.
 
 ## Quick Start (Cloud)

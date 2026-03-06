@@ -208,13 +208,6 @@
                 ]
               },
               {
-                "group": "Skills",
-                "icon": "star",
-                "pages": [
-                  "open-source/customize/skills/basics"
-                ]
-              },
-              {
                 "group": "Integration",
                 "icon": "plug",
                 "pages": [
@@ -364,7 +357,8 @@
     {"source": "/customize/tools/add", "destination": "/open-source/customize/tools/add"},
     {"source": "/customize/tools/remove", "destination": "/open-source/customize/tools/remove"},
     {"source": "/customize/tools/response", "destination": "/open-source/customize/tools/response"},
-    {"source": "/customize/skills/basics", "destination": "/open-source/customize/skills/basics"},
+    {"source": "/customize/skills/basics", "destination": "/cloud/guides/skills"},
+    {"source": "/open-source/customize/skills/basics", "destination": "/cloud/guides/skills"},
     {"source": "/customize/integrations/docs-mcp", "destination": "/open-source/customize/integrations/docs-mcp"},
     {"source": "/customize/integrations/mcp-server", "destination": "/open-source/customize/integrations/mcp-server"},
     {"source": "/customize/hooks", "destination": "/open-source/customize/hooks"},
