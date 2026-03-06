@@ -56,7 +56,7 @@ return ActionResult(
 ```
 We save the full `extracted_content` to files which the LLM can read in future steps.
 
-### 3. Dont show long content, remember subset in context
+### 3. Don't show long content, remember subset in context
 ```python
 return ActionResult(
     extracted_content="[500 lines of product data...]",      # The LLM never sees this because `long_term_memory` overrides it and `include_extracted_content_only_once` is not used

@@ -37,7 +37,7 @@ asyncio.run(main())
 
 ## How It Works
 
-1. **Persistent Browser**: `BrowserProfile(keep_alive=True)` prevents browser from closing between tasks
+1. **Persistent Browser**: `Browser(keep_alive=True)` prevents browser from closing between tasks
 2. **Task Chaining**: Use `agent.add_new_task()` to add follow-up tasks
 3. **Context Preservation**: Agent maintains memory and browser state across tasks
 4. **Interactive Flow**: Perfect for conversational interfaces 
