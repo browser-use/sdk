@@ -2,6 +2,72 @@ th {
   text-align: left;
 }
 
+/* API method badges */
+.method-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+.method-get {
+  background-color: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+.dark .method-get {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.method-post {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+.dark .method-post {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.method-patch {
+  background-color: rgba(234, 179, 8, 0.12);
+  color: #ca8a04;
+}
+.dark .method-patch {
+  background-color: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+}
+
+.method-delete {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+.dark .method-delete {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* Remove layout gaps on large screens */
+.max-w-8xl {
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (min-width: 1024px) {
+  html body div #body-content {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  #navbar > div:last-child {
+    padding-left: 1rem;
+  }
+}
+
 /* API Reference sidebar: gray active state instead of orange */
 #sidebar-content:has(.method-nav-pill) .bg-primary\/10 {
   background-color: rgba(0, 0, 0, 0.06);
@@ -21,4 +87,10 @@ th {
 
 #sidebar-content:has(.method-nav-pill) .\[text-shadow\:-0\.2px_0_0_currentColor\,0\.2px_0_0_currentColor\] {
   text-shadow: none;
+}
+
+/* Remove orange ring from product switcher dropdown */
+[data-radix-popper-content-wrapper] * {
+  outline: none;
+  --tw-ring-color: transparent;
 }

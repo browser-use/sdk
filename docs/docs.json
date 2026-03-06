@@ -45,99 +45,109 @@
           "light": "#FE750E",
           "dark": "#FE750E"
         },
-        "groups": [
+        "tabs": [
           {
-            "group": "Get Started",
-            "pages": [
-              "cloud/introduction",
-              "cloud/llm-quickstart",
-              "cloud/new-features/api-v3",
-              "cloud/pricing"
-            ]
-          },
-          {
-            "group": "Guides",
-            "pages": [
-              "cloud/guides/overview",
-              "cloud/guides/tasks",
-              "cloud/guides/sessions",
-              "cloud/guides/workspaces",
-              "cloud/guides/browser-api",
-              "cloud/guides/proxies-and-stealth",
-              "cloud/guides/skills",
-              "cloud/guides/authentication",
-              "cloud/guides/mcp-server",
-              "cloud/guides/webhooks"
-            ]
-          },
-          {
-            "group": "Tutorials",
-            "pages": ["cloud/tutorials/chat-ui"]
-          },
-          {
-            "group": "Resources",
-            "pages": [
+            "tab": "Docs",
+            "groups": [
               {
-                "group": "Tips",
+                "group": "Get Started",
                 "pages": [
-                  {
-                    "group": "Authentication",
-                    "pages": [
-                      "cloud/tips/authentication/profiles-and-secrets",
-                      "cloud/tips/authentication/1password-2fa",
-                      "cloud/tips/authentication/social-media"
-                    ]
-                  },
-                  {
-                    "group": "Live View",
-                    "pages": [
-                      "cloud/tips/live-view/iframe-embed",
-                      "cloud/tips/live-view/human-takeover"
-                    ]
-                  },
-                  {
-                    "group": "Parallel",
-                    "pages": [
-                      "cloud/tips/parallel/concurrent-extraction",
-                      "cloud/tips/parallel/shared-config"
-                    ]
-                  },
-                  {
-                    "group": "Data",
-                    "pages": [
-                      "cloud/tips/data/structured-output",
-                      "cloud/tips/data/file-downloads",
-                      "cloud/tips/data/geo-scraping",
-                      "cloud/tips/data/streaming"
-                    ]
-                  },
-                  {
-                    "group": "Integrations",
-                    "pages": [
-                      "cloud/tips/integrations/playwright",
-                      "cloud/tips/integrations/n8n"
-                    ]
-                  }
+                  "cloud/introduction",
+                  "cloud/quickstart",
+                  "cloud/llm-quickstart",
+                  "cloud/new-features/api-v3",
+                  "cloud/pricing"
                 ]
               },
-              "cloud/faq"
+              {
+                "group": "Concepts",
+                "pages": [
+                  "cloud/guides/tasks",
+                  "cloud/guides/sessions",
+                  "cloud/guides/workspaces",
+                  "cloud/guides/browser-api",
+                  "cloud/guides/proxies-and-stealth",
+                  "cloud/guides/skills",
+                  "cloud/guides/authentication",
+                  "cloud/guides/mcp-server",
+                  "cloud/guides/webhooks"
+                ]
+              },
+              {
+                "group": "Tutorials",
+                "pages": ["cloud/tutorials/chat-ui"]
+              },
+              {
+                "group": "Resources",
+                "pages": [
+                  {
+                    "group": "Tips",
+                    "pages": [
+                      {
+                        "group": "Authentication",
+                        "pages": [
+                          "cloud/tips/authentication/profiles-and-secrets",
+                          "cloud/tips/authentication/1password-2fa",
+                          "cloud/tips/authentication/social-media"
+                        ]
+                      },
+                      {
+                        "group": "Live View",
+                        "pages": [
+                          "cloud/tips/live-view/iframe-embed",
+                          "cloud/tips/live-view/human-takeover"
+                        ]
+                      },
+                      {
+                        "group": "Parallel",
+                        "pages": [
+                          "cloud/tips/parallel/concurrent-extraction",
+                          "cloud/tips/parallel/shared-config"
+                        ]
+                      },
+                      {
+                        "group": "Data",
+                        "pages": [
+                          "cloud/tips/data/structured-output",
+                          "cloud/tips/data/file-downloads",
+                          "cloud/tips/data/geo-scraping",
+                          "cloud/tips/data/streaming"
+                        ]
+                      },
+                      {
+                        "group": "Integrations",
+                        "pages": [
+                          "cloud/tips/integrations/playwright",
+                          "cloud/tips/integrations/n8n"
+                        ]
+                      }
+                    ]
+                  },
+                  "cloud/faq"
+                ]
+              }
             ]
           },
           {
-            "group": "API Reference",
-            "pages": [
+            "tab": "API Reference",
+            "href": "cloud/api-reference",
+            "groups": [
               {
-                "group": "API v2 (Stable)",
-                "openapi": {
-                  "source": "cloud/openapi/v2.json",
-                  "directory": "cloud/api-v2"
-                }
+                "group": "Overview",
+                "pages": ["cloud/api-reference"]
               },
               {
                 "group": "BU Agent API (Experimental)",
                 "openapi": {
                   "source": "cloud/openapi/v3.json",
                   "directory": "cloud/api-v3"
+                }
+              },
+              {
+                "group": "API v2 (Stable)",
+                "openapi": {
+                  "source": "cloud/openapi/v2.json",
+                  "directory": "cloud/api-v2"
                 }
               }
             ]
@@ -440,7 +450,8 @@
     {"source": "/open-source", "destination": "/open-source/introduction"},
     {"source": "/examples", "destination": "/cloud/tips/data/structured-output"},
 
-    {"source": "/guides/overview", "destination": "/cloud/guides/overview"},
+    {"source": "/guides/overview", "destination": "/cloud/introduction"},
+    {"source": "/cloud/guides/overview", "destination": "/cloud/introduction"},
     {"source": "/guides/tasks", "destination": "/cloud/guides/tasks"},
     {"source": "/guides/sessions", "destination": "/cloud/guides/sessions"},
     {"source": "/guides/browser-api", "destination": "/cloud/guides/browser-api"},

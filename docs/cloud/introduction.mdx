@@ -1,182 +1,132 @@
 ---
-title: Browser Use Cloud
-description: You know the open-source library. Here's what cloud adds.
+title: Introduction
+description: Browser Use Cloud is an API for AI-powered browser automation. The fastest web agent — 6x lower latency, 15x cheaper, with stealth browsers and CAPTCHA solving built in.
 icon: house
+mode: wide
 ---
 
-<CardGroup cols={2}>
-  <Card title="Stealth Browsers" icon="shield-halved" href="/cloud/guides/proxies-and-stealth">
-    Anti-detect, CAPTCHA solving, proxies in 195+ countries.
-  </Card>
-  <Card title="Browser Use LLM" icon="brain" href="/cloud/pricing">
-    Custom models for browser automation. 15x cheaper, 6x faster.
-  </Card>
-  <Card title="Skills" icon="wand-magic-sparkles" href="/cloud/guides/skills">
-    Turn websites into deterministic API endpoints.
-  </Card>
-  <Card title="Infinite Scale" icon="arrow-up-right-dots" href="/cloud/guides/tasks">
-    One API key. No Docker. 10 tasks or 10,000 — same code.
-  </Card>
-</CardGroup>
+Browser Use Cloud gives you four approaches: **AI Agent Tasks**, **Direct Browser Control**, **Skills**, and the **Open Source Library** with cloud browsers.
 
-**Every browser comes with:** anti-fingerprinting, automatic CAPTCHA solving, cookie/ad blocking, Cloudflare bypass, and residential proxies. No configuration needed.
+<Frame>
+  <img src="/cloud/images/concepts-overview.png" alt="Browser Use Cloud Overview" style={{ borderRadius: '0.5rem' }} />
+</Frame>
 
-## 1. Install & configure
+## When to use what
+
+| Use case | Approach | Best for |
+| -------- | -------- | -------- |
+| "Do this for me" | **AI Agent Tasks** | Most users. Natural language in, structured data out. |
+| Repeated extraction, production API | **Skills** | High-volume, deterministic. $0.02/call. |
+| Custom Playwright/Puppeteer scripts | **Browser Infrastructure** | Developers who want raw CDP access with stealth infra. |
+| Already using the open-source library | **Open Source + Cloud** | Keep your agent code, swap in cloud browsers. |
+
+<Tip>
+  Start with **Tasks** — it's the fastest path to value. Move to **Skills** when you need a repeatable, production-grade endpoint.
+</Tip>
+
+## AI Agent Tasks
+
+Give natural language instructions — the AI operates the browser for you.
 
 <CodeGroup>
-```bash Python
-pip install browser-use-sdk
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run("Search for top 10 Hacker News posts")
+print(result.output)
 ```
-```bash TypeScript
-npm install browser-use-sdk
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run("Search for top 10 Hacker News posts");
+console.log(result.output);
 ```
 </CodeGroup>
 
-Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys), then:
+## Direct Browser Control
+
+Full programmatic access via Chrome DevTools Protocol. Write your own automation with Playwright, Puppeteer, or Selenium.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+browser = await client.browsers.create(proxy_country_code="us")
+# Connect via browser.cdp_url with Playwright/Puppeteer/Selenium
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create({ proxyCountryCode: "us" });
+// Connect via browser.cdpUrl with Playwright/Puppeteer/Selenium
+```
+</CodeGroup>
+
+## Skills
+
+Describe what you need in plain text — get a production-ready API endpoint you can call repeatedly.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.skills.execute(skill_id, parameters={"X": 10})
+print(result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.skills.execute(skillId, { parameters: { X: 10 } });
+console.log(result);
+```
+</CodeGroup>
+
+## Open Source Library
+
+Already using the [open-source browser-use](https://github.com/browser-use/browser-use) Python library? Point it at cloud browsers with one flag — get stealth infra, proxies, and CAPTCHA solving without changing your agent code.
+
+```python
+from browser_use import Agent, Browser
+from langchain_openai import ChatOpenAI
+
+# Just set use_cloud=True — everything else stays the same
+browser = Browser(use_cloud=True)
+
+agent = Agent(
+    task="Find the top 3 trending repos on GitHub",
+    llm=ChatOpenAI(model="gpt-4o"),
+    browser=browser,
+)
+result = await agent.run()
+```
 
 ```bash
 export BROWSER_USE_API_KEY=your_key
 ```
 
-## 2. Run your first task
+You can also pass `cloud_proxy_country_code` and `cloud_profile_id` for geo-routing and persistent login state. See the [open-source docs](/open-source/customize/browser/remote) for full options.
 
-<CodeGroup>
-```python Python
-import asyncio
-from browser_use_sdk import AsyncBrowserUse
+## Core concepts
 
-async def main():
-    client = AsyncBrowserUse()
-    result = await client.run("What is the top post on Hacker News right now?")
-    print(result.output)
-
-asyncio.run(main())
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
-
-const client = new BrowserUse();
-const result = await client.run("What is the top post on Hacker News right now?");
-console.log(result.output);
-```
-</CodeGroup>
-
-## 3. Get structured data
-
-Define a schema and get validated, typed data back.
-
-<CodeGroup>
-```python Python
-import asyncio
-from browser_use_sdk import AsyncBrowserUse
-from pydantic import BaseModel
-
-class Post(BaseModel):
-    title: str
-    url: str
-    points: int
-
-class PostList(BaseModel):
-    items: list[Post]
-
-async def main():
-    client = AsyncBrowserUse()
-    result = await client.run(
-        "Get the top 3 posts from Hacker News",
-        output_schema=PostList,
-    )
-    for post in result.output.items:
-        print(f"{post.title} ({post.points} pts)")
-
-asyncio.run(main())
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
-import { z } from "zod";
-
-const Post = z.object({
-  title: z.string(),
-  url: z.string(),
-  points: z.number(),
-});
-
-const client = new BrowserUse();
-const result = await client.run("Get the top 3 posts from Hacker News", {
-  schema: z.array(Post),
-});
-result.output.forEach((post) => console.log(`${post.title} (${post.points} pts)`));
-```
-</CodeGroup>
-
-## 4. Watch it run
-
-Every session has a `liveUrl` — a real-time view of the browser. Use it for debugging, embedding in your app, or handing control to a human mid-task.
-
-<CodeGroup>
-```python Python
-client = AsyncBrowserUse()
-session = await client.sessions.create()
-print(session.live_url)  # open this or embed in an iframe
-
-result = await client.run(
-    "Get the top 3 posts from Hacker News",
-    session_id=session.id,
-)
-```
-```typescript TypeScript
-const client = new BrowserUse();
-const session = await client.sessions.create();
-console.log(session.liveUrl); // open this or embed in an iframe
-
-const result = await client.run("Get the top 3 posts from Hacker News", {
-  sessionId: session.id,
-});
-```
-</CodeGroup>
-
-## 5. Add profiles, proxies, and 1Password
-
-Use saved browser profiles for authenticated sites, residential proxies for geo-specific content, and 1Password for auto-filling credentials and 2FA codes.
-
-<CodeGroup>
-```python Python
-client = AsyncBrowserUse()
-
-session = await client.sessions.create(
-    profile_id="your-profile-id",       # saved cookies & localStorage
-    proxy_country_code="us",             # residential proxy
-)
-
-result = await client.run(
-    "Get my latest order status",
-    session_id=session.id,
-    op_vault_id="your-vault-id",         # 1Password auto-fill
-    allowed_domains=["*.example.com"],    # restrict agent navigation
-)
-```
-```typescript TypeScript
-const client = new BrowserUse();
-
-const session = await client.sessions.create({
-  profileId: "your-profile-id",       // saved cookies & localStorage
-  proxyCountryCode: "us",             // residential proxy
-});
-
-const result = await client.run("Get my latest order status", {
-  sessionId: session.id,
-  opVaultId: "your-vault-id",         // 1Password auto-fill
-  allowedDomains: ["*.example.com"],  // restrict agent navigation
-});
-```
-</CodeGroup>
-
-See [Tasks](/cloud/guides/tasks) for all parameters, or browse [Tips](/cloud/tips/data/structured-output) for copy-paste recipes.
+- **Task** — a natural language prompt the AI agent executes. The main thing you'll use.
+- **Session** — a stateful browser environment. Auto-created by default, or create one manually for multi-step workflows.
+- **Profile** — persistent browser state (cookies, localStorage). Login once, reuse across sessions.
+- **Skill** — a website interaction turned into a deterministic API endpoint. Create once, call forever.
 
 <CardGroup cols={2}>
-  <Card title="LLM Quickstart" icon="brain" href="/cloud/llm-quickstart">
-    Paste one blob into your AI editor. Your agent knows the entire API.
+  <Card title="Tasks" icon="play" href="/cloud/guides/tasks">
+    Structured output, streaming, and parameters.
   </Card>
-  <Card title="Overview" icon="lightbulb" href="/cloud/guides/overview">
-    Four ways to automate the web — pick the one that fits.
+  <Card title="Skills" icon="wand-magic-sparkles" href="/cloud/guides/skills">
+    Turn websites into reliable APIs.
+  </Card>
+  <Card title="Browser Infrastructure" icon="globe" href="/cloud/guides/browser-api">
+    Direct CDP access with stealth browsers.
   </Card>
 </CardGroup>

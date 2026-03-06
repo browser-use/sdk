@@ -1,0 +1,143 @@
+---
+title: API Reference
+description: REST API reference for Browser Use Cloud — the fastest AI browser automation API. 20 steps per minute, stealth infrastructure, and custom models 15x cheaper than GPT-4o.
+mode: wide
+---
+
+## Authentication
+
+All endpoints require an API key via the `x-api-key` header.
+
+Get your key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys), or set it as `BROWSER_USE_API_KEY` in your environment.
+
+## API Versions
+
+<CardGroup cols={2}>
+  <Card title="BU Agent API (v3)" icon="bolt" href="/cloud/api-v3/create-session">
+    **Recommended for new projects.** Session-based agent API with simplified resource model.
+
+    Base URL: `https://api.browser-use.com/api/v3`
+
+    **Resources:** Sessions, Messages, Files, Workspaces
+
+    - Create sessions with optional tasks
+    - Structured output via JSON Schema
+    - File upload/download per session
+    - Persistent workspaces across sessions
+    - Models: `bu-mini` (default) and `bu-max`
+  </Card>
+  <Card title="Cloud API v2 (Stable)" icon="shield-check" href="/cloud/api-v2/get-account-billing">
+    **Full-featured stable API.** Task-based with extended resources.
+
+    Base URL: `https://api.browser-use.com/api/v2`
+
+    **Resources:** Tasks, Sessions, Profiles, Browsers, Skills, Marketplace, Billing
+
+    - Run tasks with streaming step logs
+    - Browser profiles for persistent state
+    - Direct CDP browser access
+    - Skills: turn websites into API endpoints
+    - Skill marketplace
+  </Card>
+</CardGroup>
+
+## SDKs
+
+Both APIs ship in a single package. Install once, import by version.
+
+<CodeGroup>
+```bash npm
+npm install browser-use-sdk
+```
+```bash pip
+pip install browser-use-sdk
+```
+</CodeGroup>
+
+<CodeGroup>
+```typescript v3 (TypeScript)
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const result = await client.run("Find the top HN post");
+console.log(result.output);
+```
+```python v3 (Python)
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run("Find the top HN post")
+print(result.output)
+```
+```typescript v2 (TypeScript)
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run("Find the top HN post");
+console.log(result.output);
+```
+```python v2 (Python)
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run("Find the top HN post")
+print(result.output)
+```
+</CodeGroup>
+
+## Endpoint Overview
+
+### BU Agent API (v3)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| <span className="method-badge method-post">POST</span> | `/sessions` | Create a session and/or dispatch a task |
+| <span className="method-badge method-get">GET</span> | `/sessions` | List sessions |
+| <span className="method-badge method-get">GET</span> | `/sessions/{id}` | Get session details |
+| <span className="method-badge method-delete">DELETE</span> | `/sessions/{id}` | Delete a session |
+| <span className="method-badge method-post">POST</span> | `/sessions/{id}/stop` | Stop a session or its running task |
+| <span className="method-badge method-get">GET</span> | `/sessions/{id}/messages` | Get session message history |
+| <span className="method-badge method-get">GET</span> | `/sessions/{id}/files` | List files in session workspace |
+| <span className="method-badge method-post">POST</span> | `/sessions/{id}/files/upload` | Get presigned upload URLs |
+| <span className="method-badge method-post">POST</span> | `/workspaces` | Create a persistent workspace |
+| <span className="method-badge method-get">GET</span> | `/workspaces` | List workspaces |
+| <span className="method-badge method-get">GET</span> | `/workspaces/{id}` | Get workspace details |
+| <span className="method-badge method-patch">PATCH</span> | `/workspaces/{id}` | Update workspace metadata |
+| <span className="method-badge method-delete">DELETE</span> | `/workspaces/{id}` | Delete a workspace |
+| <span className="method-badge method-get">GET</span> | `/workspaces/{id}/files` | List workspace files |
+| <span className="method-badge method-get">GET</span> | `/workspaces/{id}/size` | Get workspace storage usage |
+| <span className="method-badge method-post">POST</span> | `/workspaces/{id}/files/upload` | Upload files to workspace |
+
+### Cloud API v2 (Stable)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| <span className="method-badge method-get">GET</span> | `/billing/account` | Get account info and credit balance |
+| <span className="method-badge method-get">GET</span> | `/tasks` | List tasks |
+| <span className="method-badge method-post">POST</span> | `/tasks` | Create and run a task |
+| <span className="method-badge method-get">GET</span> | `/tasks/{id}` | Get task details |
+| <span className="method-badge method-get">GET</span> | `/tasks/{id}/status` | Poll task status |
+| <span className="method-badge method-get">GET</span> | `/tasks/{id}/logs` | Get task step logs |
+| <span className="method-badge method-get">GET</span> | `/sessions` | List sessions |
+| <span className="method-badge method-post">POST</span> | `/sessions` | Create a session |
+| <span className="method-badge method-get">GET</span> | `/sessions/{id}` | Get session details |
+| <span className="method-badge method-post">POST</span> | `/sessions/{id}/purge` | Purge session data |
+| <span className="method-badge method-get">GET</span> | `/profiles` | List browser profiles |
+| <span className="method-badge method-post">POST</span> | `/profiles` | Create a browser profile |
+| <span className="method-badge method-get">GET</span> | `/profiles/{id}` | Get profile details |
+| <span className="method-badge method-delete">DELETE</span> | `/profiles/{id}` | Delete a profile |
+| <span className="method-badge method-post">POST</span> | `/browsers` | Create a CDP browser |
+| <span className="method-badge method-get">GET</span> | `/browsers/{id}` | Get browser details |
+| <span className="method-badge method-post">POST</span> | `/skills` | Create a skill |
+| <span className="method-badge method-get">GET</span> | `/skills` | List skills |
+| <span className="method-badge method-get">GET</span> | `/skills/{id}` | Get skill details |
+| <span className="method-badge method-post">POST</span> | `/skills/{id}/execute` | Execute a skill |
+| <span className="method-badge method-post">POST</span> | `/skills/{id}/refine` | Refine a skill |
+| <span className="method-badge method-post">POST</span> | `/skills/{id}/cancel` | Cancel skill training |
+| <span className="method-badge method-post">POST</span> | `/skills/{id}/rollback` | Rollback skill version |
+| <span className="method-badge method-get">GET</span> | `/skills/{id}/executions` | List skill executions |
+| <span className="method-badge method-get">GET</span> | `/skills/{id}/executions/{eid}/output` | Get execution output |
+| <span className="method-badge method-get">GET</span> | `/marketplace/skills` | Browse marketplace skills |
+| <span className="method-badge method-get">GET</span> | `/marketplace/skills/{slug}` | Get marketplace skill |
+| <span className="method-badge method-post">POST</span> | `/marketplace/skills/{id}/clone` | Clone a marketplace skill |
+| <span className="method-badge method-post">POST</span> | `/marketplace/skills/{id}/execute` | Execute a marketplace skill |
