@@ -90,7 +90,7 @@ th {
 }
 
 /* Remove orange ring from product switcher dropdown */
-[data-radix-popper-content-wrapper] * {
+#navbar [data-radix-popper-content-wrapper] * {
   outline: none;
   --tw-ring-color: transparent;
 }
