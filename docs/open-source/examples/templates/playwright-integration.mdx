@@ -141,15 +141,17 @@ async def start_chrome_with_debug_port(port: int = 9222):
 	return process
 
 
+playwright_instance = None
+
 async def connect_playwright_to_cdp(cdp_url: str):
 	"""
 	Connect Playwright to the same Chrome instance Browser-Use is using.
 	This enables custom actions to use Playwright functions.
 	"""
-	global playwright_browser, playwright_page
+	global playwright_browser, playwright_page, playwright_instance
 
-	playwright = await async_playwright().start()
-	playwright_browser = await playwright.chromium.connect_over_cdp(cdp_url)
+	playwright_instance = await async_playwright().start()
+	playwright_browser = await playwright_instance.chromium.connect_over_cdp(cdp_url)
 
 	# Get or create a page
 	if playwright_browser and playwright_browser.contexts and playwright_browser.contexts[0].pages:
@@ -376,6 +378,9 @@ async def main():
 		# Clean up resources
 		if playwright_browser:
 			await playwright_browser.close()
+
+		if playwright_instance:
+			await playwright_instance.stop()
 
 		if chrome_process:
 			chrome_process.terminate()

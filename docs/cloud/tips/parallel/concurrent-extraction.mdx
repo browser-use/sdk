@@ -3,7 +3,7 @@ title: Parallel Extraction
 description: Run multiple extraction tasks concurrently with asyncio.gather or Promise.all.
 ---
 
-When you need to extract the same kind of data from multiple URLs, run tasks in parallel. Each task gets its own browser session — they don't interfere with each other.
+When you need to extract the same kind of data from multiple URLs, run tasks in parallel. Each task gets its own browser session — they do not interfere with each other.
 
 <CodeGroup>
 ```python Python
@@ -61,5 +61,5 @@ results.forEach((r) => console.log(r.output));
 </CodeGroup>
 
 <Tip>
-  Each `run()` call auto-creates its own session. No need to manage sessions manually for independent tasks.
+  Each `run()` call automatically creates its own session. There is no need to manage sessions manually for independent tasks.
 </Tip>

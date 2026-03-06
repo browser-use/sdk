@@ -12,10 +12,10 @@ Every skill has two parts:
 
 - **Goal** — the full specification: what parameters it accepts, what data it returns, and the complete scope of work. If you want to extract data from 100 listings, the goal describes extracting from *all* of them.
 
-- **Demonstration** (`agent_prompt`) — shows *how* to perform the task, but only once. Think of it like onboarding a new colleague: you wouldn't walk them through all 100 listings. You'd show the first one or two and say "keep going like this for the rest." The demonstration navigates the site, triggers the necessary network requests, and the system builds the actual endpoint logic from that recording.
+- **Demonstration** (`agent_prompt`) — shows *how* to perform the task, but only once. Think of it like onboarding a new colleague: you would not walk them through all 100 listings. You would show the first one or two and say "keep going like this for the rest." The demonstration navigates the site, triggers the necessary network requests, and the system builds the actual endpoint logic from that recording.
 
 <Tip>
-  The demonstration only needs to trigger the right network requests — it doesn't need to complete the full task. If extracting from many pages, just open the first item and maybe paginate once. The system handles the rest.
+  The demonstration only needs to trigger the right network requests — it does not need to complete the full task. If extracting from many pages, open the first item and maybe paginate once. The system handles the rest.
 </Tip>
 
 ## Create a skill
@@ -65,7 +65,7 @@ console.log(result);
 
 ## Refine with feedback
 
-If execution isn't quite right, iterate for free:
+If execution is not quite right, iterate for free:
 
 <CodeGroup>
 ```python Python

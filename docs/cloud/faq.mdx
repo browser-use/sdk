@@ -14,7 +14,7 @@ icon: circle-question
 
 - **Check the live URL.** Create a [session](/cloud/guides/sessions) manually and watch what the agent does via `session.live_url`.
 - **Simplify instructions.** Break complex tasks into smaller steps. Run multiple tasks in the same session.
-- **Add a start URL.** Don't make the agent search for a site — send it directly there.
+- **Add a start URL.** Do not make the agent search for a site — send it directly there.
 
 ## Need to log in to a site
 
@@ -26,7 +26,7 @@ Three options, from easiest to most secure:
 
 ## Getting blocked by a website
 
-Stealth is on by default (anti-fingerprinting, CAPTCHA solving, Cloudflare bypass). If you're still blocked:
+Stealth is on by default (anti-fingerprinting, CAPTCHA solving, Cloudflare bypass). If you are still blocked:
 
 - **Try a different proxy country.** Some sites geo-restrict. Use `proxy_country_code` to match the target region.
 - **Slow down.** Use `flash_mode=False` for more careful navigation.
@@ -38,4 +38,4 @@ Stealth is on by default (anti-fingerprinting, CAPTCHA solving, Cloudflare bypas
 
 ## Rate limited (429 errors)
 
-The SDK auto-retries 429 responses with exponential backoff (up to 10s). If you're consistently hitting limits, you may need to upgrade your plan for more concurrent sessions. See [Pricing](/cloud/pricing).
+The SDK auto-retries 429 responses with exponential backoff (up to 10s). If you are consistently hitting limits, you may need to upgrade your plan for more concurrent sessions. See [Pricing](/cloud/pricing).

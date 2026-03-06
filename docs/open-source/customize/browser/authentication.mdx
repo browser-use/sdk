@@ -18,7 +18,7 @@ Browser-Use supports multiple authentication strategies depending on your use ca
 
 ## Real Browser Profiles
 
-Connect to your existing Chrome browser to reuse your authenticated sessions. No need to handle logins, cookies, or 2FA - if you're logged in on Chrome, the agent is, too.
+Connect to your existing Chrome browser to reuse your authenticated sessions. No need to handle logins, cookies, or 2FA - if you are logged in on Chrome, the agent is, too.
 
 <Info>
 See [Real Browser](/open-source/customize/browser/real-browser) for more details and platform paths.
@@ -46,7 +46,7 @@ await agent.run()
 
 ## Storage State Persistence
 
-Export cookies and localStorage from an authenticated browser, then load them in headless mode. Useful for production/CI where you can't use a real browser profile.
+Export cookies and localStorage from an authenticated browser, then load them in headless mode. Useful for production/CI where you cannot use a real browser profile.
 
 <Info>
 See [Browser Parameters](/open-source/customize/browser/all-parameters#user-data--profiles) for all storage options.
@@ -88,7 +88,7 @@ When you provide a `storage_state` path, Browser-Use automatically:
 browser = Browser(storage_state='session.json')
 ```
 
-The file is created if it doesn't exist, and new cookies are merged with existing ones on each save.
+The file is created if it does not exist, and new cookies are merged with existing ones on each save.
 
 ### Storage State Format
 
@@ -131,7 +131,7 @@ See [Sensitive Data](/open-source/examples/templates/sensitive-data) for more on
 
 ### How It Works
 
-1. Get the TOTP secret key when setting up 2FA (usually shown as "manual entry" or "can't scan QR code")
+1. Get the TOTP secret key when setting up 2FA (usually shown as "manual entry" or "cannot scan QR code")
 2. Pass the secret with `bu_2fa_code` suffix in `sensitive_data`
 3. When the agent inputs `bu_2fa_code`, it generates a fresh 6-digit code
 

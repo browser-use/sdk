@@ -152,16 +152,16 @@ Use cloud browser profiles to maintain persistent login sessions across tasks. P
 List available profiles with `list_browser_profiles`, then pass the `profile_id` to `browser_task`.
 
 ### Real-time Task Monitoring
-Use `monitor_task` to check task progress while it's running. The tool returns immediately with the current status, latest step details, and agent reasoning. Call it repeatedly to track progress live.
+Use `monitor_task` to check task progress while it is running. The tool returns immediately with the current status, latest step details, and agent reasoning. Call it repeatedly to track progress live.
 
 ### Conversational Progress Summaries
-When you monitor tasks, the AI automatically interprets step data into natural language updates, explaining what the browser has completed and what it's currently working on.
+When you monitor tasks, the AI automatically interprets step data into natural language updates, explaining what the browser has completed and what it is currently working on.
 
 ## Troubleshooting
 
 **Connection issues?**
 - Verify your API key is correct
-- Check you're using the right headers
+- Check that you are using the right headers
 
 **Task taking too long?**
 - Check the live_url to see progress
@@ -327,13 +327,13 @@ asyncio.run(use_browser_mcp())
 #### Common Issues
 
 **"CLI addon is not installed" Error**
-Make sure you're using `--from 'browser-use[cli]'` in your uvx command:
+Make sure you are using `--from 'browser-use[cli]'` in your uvx command:
 ```bash
 uvx --from 'browser-use[cli]' browser-use --mcp
 ```
 
 **"spawn uvx ENOENT" Error (macOS/Linux)**
-Claude Desktop can't find `uvx` in its PATH. Use the full path in your config:
+Claude Desktop cannot find `uvx` in its PATH. Use the full path in your config:
 - Run `which uvx` in terminal to find the location
 - Update your config to use the full path (e.g., `/Users/your-username/.local/bin/uvx`)
 
