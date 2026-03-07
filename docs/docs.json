@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "aspen",
-  "name": "Browser Use Cloud",
+  "name": "Browser Use",
   "colors": {
     "primary": "#FE750E",
     "light": "#FE750E",
@@ -25,7 +25,8 @@
   },
   "logo": {
     "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "dark": "/logo/dark.svg",
+    "href": "/cloud/introduction"
   },
   "api": {
     "playground": {
@@ -37,35 +38,45 @@
     }
   },
   "navigation": {
-    "versions": [
+    "products": [
       {
-        "version": "Cloud",
+        "product": "Cloud",
+        "icon": "cloud",
+        "color": {
+          "light": "#FE750E",
+          "dark": "#FE750E"
+        },
         "tabs": [
           {
             "tab": "Docs",
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["introduction", "llm-quickstart", "new-features/api-v3", "pricing"]
+                "pages": [
+                  "cloud/introduction",
+                  "cloud/quickstart",
+                  "cloud/coding-agent-quickstart",
+                  "cloud/new-features/api-v3",
+                  "cloud/pricing"
+                ]
               },
               {
-                "group": "Guides",
+                "group": "Concepts",
                 "pages": [
-                  "guides/overview",
-                  "guides/tasks",
-                  "guides/sessions",
-                  "guides/workspaces",
-                  "guides/browser-api",
-                  "guides/proxies-and-stealth",
-                  "guides/skills",
-                  "guides/authentication",
-                  "guides/mcp-server",
-                  "guides/webhooks"
+                  "cloud/guides/tasks",
+                  "cloud/guides/sessions",
+                  "cloud/guides/workspaces",
+                  "cloud/guides/browser-api",
+                  "cloud/guides/proxies-and-stealth",
+                  "cloud/guides/skills",
+                  "cloud/guides/authentication",
+                  "cloud/guides/mcp-server",
+                  "cloud/guides/webhooks"
                 ]
               },
               {
                 "group": "Tutorials",
-                "pages": ["tutorials/chat-ui"]
+                "pages": ["cloud/tutorials/chat-ui"]
               },
               {
                 "group": "Resources",
@@ -76,63 +87,68 @@
                       {
                         "group": "Authentication",
                         "pages": [
-                          "tips/authentication/profiles-and-secrets",
-                          "tips/authentication/1password-2fa",
-                          "tips/authentication/social-media"
+                          "cloud/tips/authentication/profiles-and-secrets",
+                          "cloud/tips/authentication/1password-2fa",
+                          "cloud/tips/authentication/social-media"
                         ]
                       },
                       {
                         "group": "Live View",
                         "pages": [
-                          "tips/live-view/iframe-embed",
-                          "tips/live-view/human-takeover"
+                          "cloud/tips/live-view/iframe-embed",
+                          "cloud/tips/live-view/human-takeover"
                         ]
                       },
                       {
                         "group": "Parallel",
                         "pages": [
-                          "tips/parallel/concurrent-extraction",
-                          "tips/parallel/shared-config"
+                          "cloud/tips/parallel/concurrent-extraction",
+                          "cloud/tips/parallel/shared-config"
                         ]
                       },
                       {
                         "group": "Data",
                         "pages": [
-                          "tips/data/structured-output",
-                          "tips/data/file-downloads",
-                          "tips/data/geo-scraping",
-                          "tips/data/streaming"
+                          "cloud/tips/data/structured-output",
+                          "cloud/tips/data/file-downloads",
+                          "cloud/tips/data/geo-scraping",
+                          "cloud/tips/data/streaming"
                         ]
                       },
                       {
                         "group": "Integrations",
                         "pages": [
-                          "tips/integrations/playwright",
-                          "tips/integrations/n8n"
+                          "cloud/tips/integrations/playwright",
+                          "cloud/tips/integrations/n8n"
                         ]
                       }
                     ]
                   },
-                  "faq"
+                  "cloud/faq"
                 ]
               }
             ]
           },
           {
             "tab": "API Reference",
+            "href": "cloud/api-reference",
             "groups": [
               {
-                "group": "API v2 (Stable)",
-                "openapi": {
-                  "source": "openapi/v2.json",
-                  "directory": "api-v2"
-                }
+                "group": "Overview",
+                "pages": ["cloud/api-reference"]
               },
               {
                 "group": "BU Agent API (Experimental)",
                 "openapi": {
-                  "source": "openapi/v3.json",
-                  "directory": "api-v3"
+                  "source": "cloud/openapi/v3.json",
+                  "directory": "cloud/api-v3"
+                }
+              },
+              {
+                "group": "API v2 (Stable)",
+                "openapi": {
+                  "source": "cloud/openapi/v2.json",
+                  "directory": "cloud/api-v2"
                 }
               }
             ]
@@ -140,11 +156,159 @@
         ]
       },
       {
-        "version": "Open Source",
+        "product": "Open Source",
+        "icon": "code",
+        "color": {
+          "light": "#2563EB",
+          "dark": "#2563EB"
+        },
         "groups": [
           {
-            "group": "Open Source",
-            "pages": ["open-source"]
+            "group": "Get Started",
+            "pages": [
+              "open-source/introduction",
+              "open-source/quickstart",
+              "open-source/coding-agent-quickstart",
+              "open-source/supported-models"
+            ]
+          },
+          {
+            "group": "Customize",
+            "pages": [
+              {
+                "group": "Agent",
+                "icon": "robot",
+                "isDefaultOpen": true,
+                "pages": [
+                  "open-source/customize/agent/basics",
+                  "open-source/customize/agent/prompting-guide",
+                  "open-source/customize/agent/output-format",
+                  "open-source/customize/agent/all-parameters"
+                ]
+              },
+              {
+                "group": "Browser",
+                "icon": "window",
+                "pages": [
+                  "open-source/customize/browser/basics",
+                  "open-source/customize/browser/authentication",
+                  "open-source/customize/browser/real-browser",
+                  "open-source/customize/browser/remote",
+                  "open-source/customize/browser/all-parameters"
+                ]
+              },
+              {
+                "group": "Tools",
+                "icon": "wrench",
+                "pages": [
+                  "open-source/customize/tools/basics",
+                  "open-source/customize/tools/available",
+                  "open-source/customize/tools/add",
+                  "open-source/customize/tools/remove",
+                  "open-source/customize/tools/response"
+                ]
+              },
+              {
+                "group": "Integration",
+                "icon": "plug",
+                "pages": [
+                  "open-source/customize/integrations/docs-mcp",
+                  "open-source/customize/integrations/mcp-server"
+                ]
+              },
+              {
+                "group": "Legacy",
+                "icon": "box-archive",
+                "pages": [
+                  {
+                    "group": "Code Agent",
+                    "pages": [
+                      "open-source/legacy/code-agent/basics",
+                      "open-source/legacy/code-agent/output-format",
+                      "open-source/legacy/code-agent/exporting",
+                      "open-source/legacy/code-agent/all-parameters",
+                      "open-source/legacy/code-agent/example-products"
+                    ]
+                  },
+                  {
+                    "group": "Actor",
+                    "pages": [
+                      "open-source/legacy/actor/basics",
+                      "open-source/legacy/actor/examples",
+                      "open-source/legacy/actor/all-parameters"
+                    ]
+                  },
+                  {
+                    "group": "Sandbox",
+                    "pages": [
+                      "open-source/legacy/sandbox/quickstart",
+                      "open-source/legacy/sandbox/events",
+                      "open-source/legacy/sandbox/all-parameters"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              {
+                "group": "Templates",
+                "icon": "folder",
+                "pages": [
+                  "open-source/examples/templates/fast-agent",
+                  "open-source/examples/templates/follow-up-tasks",
+                  "open-source/examples/templates/parallel-browser",
+                  "open-source/examples/templates/playwright-integration",
+                  "open-source/examples/templates/sensitive-data",
+                  "open-source/examples/templates/secure",
+                  "open-source/examples/templates/more-examples"
+                ]
+              },
+              {
+                "group": "Apps",
+                "icon": "box-open",
+                "pages": [
+                  "open-source/examples/apps/ad-use",
+                  "open-source/examples/apps/vibetest-use",
+                  "open-source/examples/apps/news-use",
+                  "open-source/examples/apps/msg-use"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              {
+                "group": "Contribution",
+                "icon": "github",
+                "isDefaultOpen": true,
+                "pages": [
+                  "open-source/development/setup/local-setup",
+                  "open-source/development/setup/contribution-guide"
+                ]
+              },
+              {
+                "group": "Advanced",
+                "icon": "gear",
+                "pages": [
+                  "open-source/customize/hooks"
+                ]
+              },
+              {
+                "group": "Monitoring",
+                "icon": "chart-mixed",
+                "pages": [
+                  "open-source/development/monitoring/observability",
+                  "open-source/development/monitoring/openlit",
+                  "open-source/development/monitoring/telemetry",
+                  "open-source/development/monitoring/costs"
+                ]
+              },
+              "open-source/development/get-help"
+            ]
           }
         ]
       }
@@ -152,6 +316,8 @@
   },
   "navbar": {
     "links": [
+      { "label": "Github", "href": "https://github.com/browser-use/browser-use" },
+      { "label": "Discord", "href": "https://link.browser-use.com/discord" },
       { "label": "Status", "href": "https://status.browser-use.com" }
     ],
     "primary": {
@@ -173,93 +339,170 @@
     }
   },
   "redirects": [
-    {
-      "source": "/get-started/human-quickstart",
-      "destination": "/introduction"
-    },
-    {
-      "source": "/human-quickstart",
-      "destination": "/introduction"
-    },
-    {
-      "source": "/get-started/llm-quickstart",
-      "destination": "/llm-quickstart"
-    },
-    {
-      "source": "/get-started/models-and-pricing",
-      "destination": "/pricing"
-    },
-    {
-      "source": "/get-started/pricing",
-      "destination": "/pricing"
-    },
-    {
-      "source": "/concepts/overview",
-      "destination": "/guides/overview"
-    },
-    {
-      "source": "/concepts/task",
-      "destination": "/guides/tasks"
-    },
-    {
-      "source": "/concepts/skills",
-      "destination": "/guides/skills"
-    },
-    {
-      "source": "/concepts/session",
-      "destination": "/guides/sessions"
-    },
-    {
-      "source": "/concepts/profile",
-      "destination": "/guides/sessions"
-    },
-    {
-      "source": "/concepts/file",
-      "destination": "/guides/tasks"
-    },
-    {
-      "source": "/concepts/browser",
-      "destination": "/guides/browser-api"
-    },
-    {
-      "source": "/usage/structured-output",
-      "destination": "/guides/tasks"
-    },
-    {
-      "source": "/usage/streaming-response",
-      "destination": "/guides/tasks"
-    },
-    {
-      "source": "/usage/streaming",
-      "destination": "/guides/tasks"
-    },
-    {
-      "source": "/usage/mcp-server",
-      "destination": "/guides/mcp-server"
-    },
-    {
-      "source": "/usage/stealth",
-      "destination": "/guides/proxies-and-stealth"
-    },
-    {
-      "source": "/usage/safety",
-      "destination": "/guides/tasks"
-    },
-    {
-      "source": "/usage/webhooks",
-      "destination": "/guides/webhooks"
-    },
-    {
-      "source": "/usage/authentication",
-      "destination": "/guides/authentication"
-    },
-    {
-      "source": "/open-source",
-      "destination": "https://docs.browser-use.com/introduction"
-    },
-    {
-      "source": "/examples",
-      "destination": "/tips/data/structured-output"
-    }
+    {"source": "/", "destination": "/cloud/introduction"},
+    {"source": "/introduction", "destination": "/cloud/introduction"},
+    {"source": "/quickstart", "destination": "/open-source/quickstart"},
+    {"source": "/quickstart_llm", "destination": "/open-source/coding-agent-quickstart"},
+    {"source": "/supported-models", "destination": "/open-source/supported-models"},
+
+    {"source": "/customize/agent/basics", "destination": "/open-source/customize/agent/basics"},
+    {"source": "/customize/agent/prompting-guide", "destination": "/open-source/customize/agent/prompting-guide"},
+    {"source": "/customize/agent/output-format", "destination": "/open-source/customize/agent/output-format"},
+    {"source": "/customize/agent/all-parameters", "destination": "/open-source/customize/agent/all-parameters"},
+    {"source": "/customize/browser/basics", "destination": "/open-source/customize/browser/basics"},
+    {"source": "/customize/browser/authentication", "destination": "/open-source/customize/browser/authentication"},
+    {"source": "/customize/browser/real-browser", "destination": "/open-source/customize/browser/real-browser"},
+    {"source": "/customize/browser/remote", "destination": "/open-source/customize/browser/remote"},
+    {"source": "/customize/browser/all-parameters", "destination": "/open-source/customize/browser/all-parameters"},
+    {"source": "/customize/tools/basics", "destination": "/open-source/customize/tools/basics"},
+    {"source": "/customize/tools/available", "destination": "/open-source/customize/tools/available"},
+    {"source": "/customize/tools/add", "destination": "/open-source/customize/tools/add"},
+    {"source": "/customize/tools/remove", "destination": "/open-source/customize/tools/remove"},
+    {"source": "/customize/tools/response", "destination": "/open-source/customize/tools/response"},
+    {"source": "/customize/skills/basics", "destination": "/cloud/guides/skills"},
+
+    {"source": "/customize/integrations/docs-mcp", "destination": "/open-source/customize/integrations/docs-mcp"},
+    {"source": "/customize/integrations/mcp-server", "destination": "/open-source/customize/integrations/mcp-server"},
+    {"source": "/customize/hooks", "destination": "/open-source/customize/hooks"},
+
+    {"source": "/legacy/code-agent/basics", "destination": "/open-source/legacy/code-agent/basics"},
+    {"source": "/legacy/code-agent/output-format", "destination": "/open-source/legacy/code-agent/output-format"},
+    {"source": "/legacy/code-agent/exporting", "destination": "/open-source/legacy/code-agent/exporting"},
+    {"source": "/legacy/code-agent/all-parameters", "destination": "/open-source/legacy/code-agent/all-parameters"},
+    {"source": "/legacy/code-agent/example-products", "destination": "/open-source/legacy/code-agent/example-products"},
+    {"source": "/legacy/actor/basics", "destination": "/open-source/legacy/actor/basics"},
+    {"source": "/legacy/actor/examples", "destination": "/open-source/legacy/actor/examples"},
+    {"source": "/legacy/actor/all-parameters", "destination": "/open-source/legacy/actor/all-parameters"},
+    {"source": "/legacy/sandbox/quickstart", "destination": "/open-source/legacy/sandbox/quickstart"},
+    {"source": "/legacy/sandbox/events", "destination": "/open-source/legacy/sandbox/events"},
+    {"source": "/legacy/sandbox/all-parameters", "destination": "/open-source/legacy/sandbox/all-parameters"},
+
+    {"source": "/examples/templates/fast-agent", "destination": "/open-source/examples/templates/fast-agent"},
+    {"source": "/examples/templates/follow-up-tasks", "destination": "/open-source/examples/templates/follow-up-tasks"},
+    {"source": "/examples/templates/parallel-browser", "destination": "/open-source/examples/templates/parallel-browser"},
+    {"source": "/examples/templates/playwright-integration", "destination": "/open-source/examples/templates/playwright-integration"},
+    {"source": "/examples/templates/sensitive-data", "destination": "/open-source/examples/templates/sensitive-data"},
+    {"source": "/examples/templates/secure", "destination": "/open-source/examples/templates/secure"},
+    {"source": "/examples/templates/more-examples", "destination": "/open-source/examples/templates/more-examples"},
+    {"source": "/examples/apps/ad-use", "destination": "/open-source/examples/apps/ad-use"},
+    {"source": "/examples/apps/vibetest-use", "destination": "/open-source/examples/apps/vibetest-use"},
+    {"source": "/examples/apps/news-use", "destination": "/open-source/examples/apps/news-use"},
+    {"source": "/examples/apps/msg-use", "destination": "/open-source/examples/apps/msg-use"},
+
+    {"source": "/development/setup/local-setup", "destination": "/open-source/development/setup/local-setup"},
+    {"source": "/development/setup/contribution-guide", "destination": "/open-source/development/setup/contribution-guide"},
+    {"source": "/development/get-help", "destination": "/open-source/development/get-help"},
+    {"source": "/development/monitoring/observability", "destination": "/open-source/development/monitoring/observability"},
+    {"source": "/development/monitoring/openlit", "destination": "/open-source/development/monitoring/openlit"},
+    {"source": "/development/monitoring/telemetry", "destination": "/open-source/development/monitoring/telemetry"},
+    {"source": "/development/monitoring/costs", "destination": "/open-source/development/monitoring/costs"},
+    {"source": "/development/n8n-integration", "destination": "/open-source/development/n8n-integration"},
+    {"source": "/development/roadmap", "destination": "/open-source/development/roadmap"},
+
+    {"source": "/use-cloud", "destination": "/cloud/introduction"},
+    {"source": "/cloud", "destination": "/cloud/introduction"},
+    {"source": "/use-claude", "destination": "/cloud/introduction"},
+    {"source": "/production", "destination": "/open-source/legacy/sandbox/quickstart"},
+    {"source": "/customize/code-agent/basics", "destination": "/open-source/legacy/code-agent/basics"},
+    {"source": "/customize/code-agent/output-format", "destination": "/open-source/legacy/code-agent/output-format"},
+    {"source": "/customize/code-agent/exporting", "destination": "/open-source/legacy/code-agent/exporting"},
+    {"source": "/customize/code-agent/all-parameters", "destination": "/open-source/legacy/code-agent/all-parameters"},
+    {"source": "/customize/code-agent/example-products", "destination": "/open-source/legacy/code-agent/example-products"},
+    {"source": "/customize/actor/basics", "destination": "/open-source/legacy/actor/basics"},
+    {"source": "/customize/actor/examples", "destination": "/open-source/legacy/actor/examples"},
+    {"source": "/customize/actor/all-parameters", "destination": "/open-source/legacy/actor/all-parameters"},
+    {"source": "/customize/sandbox/quickstart", "destination": "/open-source/legacy/sandbox/quickstart"},
+    {"source": "/customize/sandbox/events", "destination": "/open-source/legacy/sandbox/events"},
+    {"source": "/customize/sandbox/all-parameters", "destination": "/open-source/legacy/sandbox/all-parameters"},
+    {"source": "/customize/supported-models", "destination": "/open-source/supported-models"},
+    {"source": "/customize/agent/supported-models", "destination": "/open-source/supported-models"},
+    {"source": "/customize/agent-settings", "destination": "/open-source/customize/agent/all-parameters"},
+    {"source": "/customize/browser-settings", "destination": "/open-source/customize/browser/all-parameters"},
+    {"source": "/customize/custom-functions", "destination": "/open-source/customize/tools/add"},
+    {"source": "/customize/system-prompt", "destination": "/open-source/customize/agent/all-parameters"},
+    {"source": "/development/evaluations", "destination": "/open-source/development/setup/contribution-guide"},
+    {"source": "/cli", "destination": "/open-source/quickstart"},
+    {"source": "/development/local-setup", "destination": "/open-source/development/setup/local-setup"},
+    {"source": "/development/contribution-guide", "destination": "/open-source/development/setup/contribution-guide"},
+    {"source": "/development/telemetry", "destination": "/open-source/development/monitoring/telemetry"},
+    {"source": "/development/observability", "destination": "/open-source/development/monitoring/observability"},
+    {"source": "/development/hooks", "destination": "/open-source/customize/hooks"},
+    {"source": "/customize/mcp-server", "destination": "/open-source/customize/integrations/mcp-server"},
+    {"source": "/customize/examples/chain-agents", "destination": "/open-source/examples/templates/follow-up-tasks"},
+    {"source": "/customize/examples/fast-agent", "destination": "/open-source/examples/templates/fast-agent"},
+    {"source": "/customize/examples/follow-up-tasks", "destination": "/open-source/examples/templates/follow-up-tasks"},
+    {"source": "/customize/examples/parallel-browser", "destination": "/open-source/examples/templates/parallel-browser"},
+    {"source": "/customize/examples/playwright-integration", "destination": "/open-source/examples/templates/playwright-integration"},
+    {"source": "/customize/examples/sensitive-data", "destination": "/open-source/examples/templates/sensitive-data"},
+    {"source": "/customize/examples/secure", "destination": "/open-source/examples/templates/secure"},
+    {"source": "/customize/examples/more-examples", "destination": "/open-source/examples/templates/more-examples"},
+    {"source": "/customize/examples/ad-use", "destination": "/open-source/examples/apps/ad-use"},
+    {"source": "/customize/examples/vibetest-use", "destination": "/open-source/examples/apps/vibetest-use"},
+    {"source": "/customize/examples/prompting-guide", "destination": "/open-source/customize/agent/prompting-guide"},
+
+    {"source": "/pricing", "destination": "/cloud/pricing"},
+    {"source": "/llm-quickstart", "destination": "/cloud/coding-agent-quickstart"},
+    {"source": "/cloud/llm-quickstart", "destination": "/cloud/coding-agent-quickstart"},
+    {"source": "/faq", "destination": "/cloud/faq"},
+    {"source": "/open-source", "destination": "/open-source/introduction"},
+    {"source": "/examples", "destination": "/cloud/tips/data/structured-output"},
+
+    {"source": "/guides/overview", "destination": "/cloud/introduction"},
+    {"source": "/cloud/guides/overview", "destination": "/cloud/introduction"},
+    {"source": "/guides/tasks", "destination": "/cloud/guides/tasks"},
+    {"source": "/guides/sessions", "destination": "/cloud/guides/sessions"},
+    {"source": "/guides/browser-api", "destination": "/cloud/guides/browser-api"},
+    {"source": "/guides/proxies-and-stealth", "destination": "/cloud/guides/proxies-and-stealth"},
+    {"source": "/guides/skills", "destination": "/cloud/guides/skills"},
+    {"source": "/guides/authentication", "destination": "/cloud/guides/authentication"},
+    {"source": "/guides/mcp-server", "destination": "/cloud/guides/mcp-server"},
+    {"source": "/guides/webhooks", "destination": "/cloud/guides/webhooks"},
+    {"source": "/guides/workspaces", "destination": "/cloud/guides/workspaces"},
+
+    {"source": "/tutorials/chat-ui", "destination": "/cloud/tutorials/chat-ui"},
+
+    {"source": "/new-features/api-v3", "destination": "/cloud/new-features/api-v3"},
+
+    {"source": "/tips/authentication/profiles-and-secrets", "destination": "/cloud/tips/authentication/profiles-and-secrets"},
+    {"source": "/tips/authentication/1password-2fa", "destination": "/cloud/tips/authentication/1password-2fa"},
+    {"source": "/tips/authentication/social-media", "destination": "/cloud/tips/authentication/social-media"},
+    {"source": "/tips/live-view/iframe-embed", "destination": "/cloud/tips/live-view/iframe-embed"},
+    {"source": "/tips/live-view/human-takeover", "destination": "/cloud/tips/live-view/human-takeover"},
+    {"source": "/tips/parallel/concurrent-extraction", "destination": "/cloud/tips/parallel/concurrent-extraction"},
+    {"source": "/tips/parallel/shared-config", "destination": "/cloud/tips/parallel/shared-config"},
+    {"source": "/tips/data/structured-output", "destination": "/cloud/tips/data/structured-output"},
+    {"source": "/tips/data/file-downloads", "destination": "/cloud/tips/data/file-downloads"},
+    {"source": "/tips/data/geo-scraping", "destination": "/cloud/tips/data/geo-scraping"},
+    {"source": "/tips/data/streaming", "destination": "/cloud/tips/data/streaming"},
+    {"source": "/tips/integrations/playwright", "destination": "/cloud/tips/integrations/playwright"},
+    {"source": "/tips/integrations/n8n", "destination": "/cloud/tips/integrations/n8n"},
+
+    {"source": "/api-v2/*", "destination": "/cloud/api-v2"},
+    {"source": "/api-v3/*", "destination": "/cloud/api-v3"},
+
+    {"source": "/get-started/human-quickstart", "destination": "/cloud/quickstart"},
+    {"source": "/human-quickstart", "destination": "/cloud/quickstart"},
+    {"source": "/get-started/llm-quickstart", "destination": "/cloud/coding-agent-quickstart"},
+    {"source": "/open-source/quickstart_llm", "destination": "/open-source/coding-agent-quickstart"},
+    {"source": "/get-started/models-and-pricing", "destination": "/cloud/pricing"},
+    {"source": "/get-started/pricing", "destination": "/cloud/pricing"},
+    {"source": "/concepts/overview", "destination": "/cloud/quickstart"},
+    {"source": "/concepts/task", "destination": "/cloud/guides/tasks"},
+    {"source": "/concepts/skills", "destination": "/cloud/guides/skills"},
+    {"source": "/concepts/session", "destination": "/cloud/guides/sessions"},
+    {"source": "/concepts/profile", "destination": "/cloud/guides/sessions"},
+    {"source": "/concepts/file", "destination": "/cloud/guides/tasks"},
+    {"source": "/concepts/browser", "destination": "/cloud/guides/browser-api"},
+    {"source": "/usage/structured-output", "destination": "/cloud/guides/tasks"},
+    {"source": "/usage/streaming-response", "destination": "/cloud/guides/tasks"},
+    {"source": "/usage/streaming", "destination": "/cloud/guides/tasks"},
+    {"source": "/usage/mcp-server", "destination": "/cloud/guides/mcp-server"},
+    {"source": "/usage/stealth", "destination": "/cloud/guides/proxies-and-stealth"},
+    {"source": "/usage/safety", "destination": "/cloud/guides/tasks"},
+    {"source": "/usage/webhooks", "destination": "/cloud/guides/webhooks"},
+    {"source": "/usage/authentication", "destination": "/cloud/guides/authentication"},
+    {"source": "/api-reference/browser-profiles/get-browser-profile", "destination": "/cloud/api-v2"},
+    {"source": "/cloud/v2/quickstart", "destination": "/cloud/quickstart"},
+    {"source": "/cloud/v1/*", "destination": "/cloud/introduction"}
   ]
 }
