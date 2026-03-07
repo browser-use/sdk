@@ -208,7 +208,8 @@ tasks:
     cmds:
       - cp {{.OPENAPI_V2}} snapshots/v2.json
       - cp {{.OPENAPI_V3}} snapshots/v3.json
-      - echo "Snapshots saved"
+      - task: docs:sync
+      - echo "Snapshots saved and docs synced"
 
   snapshot:diff:
     desc: Show what changed between snapshots and current specs
@@ -240,11 +241,12 @@ tasks:
 
   # ── Full Pipeline ─────────────────────────────────────────────
   update:
-    desc: "Full mechanical pipeline: spec -> types -> check"
+    desc: "Full mechanical pipeline: spec -> types -> check -> docs"
     cmds:
       - task: spec:pull
       - task: gen:types
       - task: check
+      - task: docs:sync
       - echo ""
       - echo "Types regenerated and type-checked."
       - echo "Next steps:"
