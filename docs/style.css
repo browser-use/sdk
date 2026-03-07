@@ -50,24 +50,6 @@ th {
   color: #f87171;
 }
 
-/* Remove layout gaps on large screens */
-.max-w-8xl {
-  max-width: 100%;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-@media (min-width: 1024px) {
-  html body div #body-content {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  #navbar > div:last-child {
-    padding-left: 1rem;
-  }
-}
-
 /* API Reference sidebar: gray active state instead of orange */
 #sidebar-content:has(.method-nav-pill) .bg-primary\/10 {
   background-color: rgba(0, 0, 0, 0.06);
@@ -89,8 +71,28 @@ th {
   text-shadow: none;
 }
 
-/* Remove orange ring from product switcher dropdown */
-#navbar [data-radix-popper-content-wrapper] * {
+/* Remove ring/border from product switcher dropdown */
+[data-radix-popper-content-wrapper] * {
   outline: none;
   --tw-ring-color: transparent;
+  --tw-ring-offset-color: transparent;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+[data-radix-popper-content-wrapper] [data-highlighted] {
+  outline: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+
+
+/* Open Source pages: blue accent */
+html[data-product="open-source"] {
+  --primary: 37 99 235 !important;
+  --primary-light: 37 99 235 !important;
+  --primary-dark: 96 165 250 !important;
 }

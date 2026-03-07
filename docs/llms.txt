@@ -6,6 +6,16 @@ Browser Use has two products:
 - **Browser Use Cloud** — SDK and API. State-of-the-art speed and accuracy. Stealth browsers, CAPTCHA solving, proxies, scalable infrastructure.
 - **Browser Use Open Source** — Python library. Self-hosted. Bring your own LLM.
 
+## Documentation
+
+### Cloud
+- [Cloud Documentation Index](/cloud/llms.txt): Concise page index for all cloud docs.
+- [Cloud Full Reference](/cloud/llms-full.txt): Complete cloud documentation with full page content.
+
+### Open Source
+- [Open Source Documentation Index](/open-source/llms.txt): Concise page index for all open-source docs.
+- [Open Source Full Reference](/open-source/llms-full.txt): Complete open-source documentation with full page content.
+
 ## Quick Start (Cloud)
 
 Install:
@@ -19,8 +29,8 @@ export BROWSER_USE_API_KEY=your_key
 Get a key at: https://cloud.browser-use.com/settings?tab=api-keys
 
 Two API versions in one package:
-- **BU Agent API (v3)** — recommended for new projects. `from browser_use_sdk.v3 import AsyncBrowserUse`
-- **Cloud API v2** — stable, full-featured. `from browser_use_sdk import AsyncBrowserUse`
+- **BU Agent API (v3)** — recommended for new projects. More accurate agents, long-running tasks, file uploads, workspaces. Superset of v2. `from browser_use_sdk.v3 import AsyncBrowserUse`
+- **Cloud API v2** — stable. `from browser_use_sdk import AsyncBrowserUse`
 
 ### Minimal example (v3 Python)
 ```python
@@ -244,43 +254,5 @@ result = await agent.run()
 
 ## Full SDK Reference
 
-For the complete SDK reference with every method, parameter, and response type, see the LLM Quickstart page. It is designed to be copy-pasted into AI coding agents:
-https://docs.browser-use.com/cloud/llm-quickstart
-
-## Cloud Documentation
-
-- [Introduction](https://docs.browser-use.com/cloud/introduction): What Browser Use Cloud is. Four approaches to browser automation.
-- [Quickstart](https://docs.browser-use.com/cloud/quickstart): Get running in 5 minutes with Python or TypeScript.
-- [LLM Quickstart](https://docs.browser-use.com/cloud/llm-quickstart): Complete SDK reference blob for AI coding agents. Every method, every parameter.
-- [BU Agent API (v3)](https://docs.browser-use.com/cloud/new-features/api-v3): Next-generation agent API for web scraping, data extraction, and multi-step workflows.
-- [Tasks](https://docs.browser-use.com/cloud/guides/tasks): Run AI agent tasks, structured output, streaming.
-- [Sessions & Profiles](https://docs.browser-use.com/cloud/guides/sessions): Stateful browsers, persistent login state, profile sync.
-- [Workspaces](https://docs.browser-use.com/cloud/guides/workspaces): Persistent file storage across sessions. Upload inputs, download outputs.
-- [Authentication](https://docs.browser-use.com/cloud/guides/authentication): Profile sync, secrets, 1Password with TOTP/2FA.
-- [Browser Infrastructure](https://docs.browser-use.com/cloud/guides/browser-api): Direct CDP access to stealth browsers for Playwright/Puppeteer/Selenium.
-- [Skills](https://docs.browser-use.com/cloud/guides/skills): Turn websites into deterministic API endpoints.
-- [Proxies & Stealth](https://docs.browser-use.com/cloud/guides/proxies-and-stealth): Anti-detect browsers, CAPTCHA solving, 195+ country residential proxies.
-- [MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server): Use Browser Use from Claude, Cursor, Windsurf, or any MCP client.
-- [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks): Get notified when tasks complete.
-- [Structured Output](https://docs.browser-use.com/cloud/tips/data/structured-output): Extract typed data with Pydantic or Zod schemas.
-- [Streaming](https://docs.browser-use.com/cloud/tips/data/streaming): Stream agent steps in real time.
-- [Parallel Extraction](https://docs.browser-use.com/cloud/tips/parallel/concurrent-extraction): Run multiple tasks concurrently.
-- [Playwright Integration](https://docs.browser-use.com/cloud/tips/integrations/playwright): Connect Playwright to cloud browsers via CDP.
-- [Pricing](https://docs.browser-use.com/cloud/pricing): Models, pricing, and cost breakdown.
-- [API Reference](https://docs.browser-use.com/cloud/api-reference): Full REST API endpoint overview for v2 and v3.
-- [FAQ](https://docs.browser-use.com/cloud/faq): Common issues and quick fixes.
-
-## Open Source Documentation
-
-- [Introduction](https://docs.browser-use.com/open-source/introduction): Self-hosted browser automation with any LLM.
-- [Quickstart](https://docs.browser-use.com/open-source/quickstart): Install and run your first agent.
-- [Supported Models](https://docs.browser-use.com/open-source/supported-models): Compatible LLMs (GPT-4o, Claude, Gemini, etc.).
-- [Agent Basics](https://docs.browser-use.com/open-source/customize/agent/basics): Configure the agent.
-- [Agent Parameters](https://docs.browser-use.com/open-source/customize/agent/all-parameters): Complete agent configuration reference.
-- [Prompting Guide](https://docs.browser-use.com/open-source/customize/agent/prompting-guide): Write effective agent prompts.
-- [Browser Basics](https://docs.browser-use.com/open-source/customize/browser/basics): Browser configuration.
-- [Browser Authentication](https://docs.browser-use.com/open-source/customize/browser/authentication): Login with profiles, storage state, 2FA.
-- [Remote Browsers](https://docs.browser-use.com/open-source/customize/browser/remote): Connect to cloud or remote browsers.
-- [Custom Tools](https://docs.browser-use.com/open-source/customize/tools/add): Add custom tools to the agent.
-- [Available Tools](https://docs.browser-use.com/open-source/customize/tools/available): Built-in tools reference.
-- [MCP Server](https://docs.browser-use.com/open-source/customize/integrations/mcp-server): Use as an MCP server.
+For the complete SDK reference with every method, parameter, and response type, see the Coding Agent Quickstart page. It is designed to be copy-pasted into AI coding agents:
+https://docs.browser-use.com/cloud/coding-agent-quickstart
