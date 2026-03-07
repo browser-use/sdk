@@ -795,6 +795,11 @@ export interface components {
              * @description ID of the agent session that created this browser (None for standalone BaaS sessions)
              */
             agentSessionId?: string | null;
+            /**
+             * Recording URL
+             * @description Presigned URL to download the session recording (available after session ends, if recording was enabled)
+             */
+            recordingUrl?: string | null;
         };
         /**
          * BrowserSessionListResponse
@@ -907,6 +912,11 @@ export interface components {
              * @description ID of the agent session that created this browser (None for standalone BaaS sessions)
              */
             agentSessionId?: string | null;
+            /**
+             * Recording URL
+             * @description Presigned URL to download the session recording (available after session ends, if recording was enabled)
+             */
+            recordingUrl?: string | null;
         };
         /**
          * CannotDeleteSkillWhileGeneratingError
@@ -983,6 +993,12 @@ export interface components {
              * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
+            /**
+             * Enable Recording
+             * @description If True, enables session recording. Defaults to False.
+             * @default false
+             */
+            enableRecording: boolean;
         };
         /**
          * CreateSessionRequest
@@ -1031,6 +1047,12 @@ export interface components {
              * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
+            /**
+             * Enable Recording
+             * @description If True, enables session recording. Defaults to False.
+             * @default false
+             */
+            enableRecording: boolean;
         };
         /**
          * CreateSkillRequest
@@ -1698,6 +1720,11 @@ export interface components {
              */
             liveUrl?: string | null;
             /**
+             * Recording URL
+             * @description Presigned URL to download the session recording (available after session ends, if recording was enabled)
+             */
+            recordingUrl?: string | null;
+            /**
              * Started At
              * Format: date-time
              * @description Timestamp when the session was created and started
@@ -1794,6 +1821,12 @@ export interface components {
              * @description Custom screen height in pixels for the browser.
              */
             browserScreenHeight?: number | null;
+            /**
+             * Enable Recording
+             * @description If True, enables session recording. Defaults to False.
+             * @default false
+             */
+            enableRecording: boolean;
         };
         /**
          * SessionStatus
@@ -1857,6 +1890,11 @@ export interface components {
              * @description URL where the browser can be viewed live in real-time
              */
             liveUrl?: string | null;
+            /**
+             * Recording URL
+             * @description Presigned URL to download the session recording (available after session ends, if recording was enabled)
+             */
+            recordingUrl?: string | null;
             /**
              * Started At
              * Format: date-time

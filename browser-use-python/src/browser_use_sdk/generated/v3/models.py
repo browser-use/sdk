@@ -3,12 +3,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
 class BuAgentSessionStatus(Enum):
@@ -28,7 +27,9 @@ class BuModel(Enum):
 class FileInfo(BaseModel):
     path: str = Field(..., title='Path')
     size: int = Field(..., title='Size')
-    last_modified: datetime = Field(..., alias='lastModified', title='Lastmodified')
+    last_modified: AwareDatetime = Field(
+        ..., alias='lastModified', title='Lastmodified'
+    )
     url: str | None = Field(None, title='Url')
 
 
@@ -91,8 +92,7 @@ class MessageResponse(BaseModel):
     session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
     role: str = Field(..., title='Role')
     data: str = Field(..., title='Data')
-    hidden: bool = Field(False, title='Hidden')
-    created_at: datetime = Field(..., alias='createdAt', title='Createdat')
+    created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
 
 
 class ProxyCountryCode(Enum):
@@ -419,8 +419,8 @@ class SessionResponse(BaseModel):
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Totalcostusd',
     )
-    created_at: datetime = Field(..., alias='createdAt', title='Createdat')
-    updated_at: datetime = Field(..., alias='updatedAt', title='Updatedat')
+    created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
+    updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
 
 
 class StopStrategy(Enum):
@@ -457,13 +457,13 @@ class WorkspaceView(BaseModel):
     name: str | None = Field(
         None, description='Optional name for the workspace', title='Name'
     )
-    created_at: datetime = Field(
+    created_at: AwareDatetime = Field(
         ...,
         alias='createdAt',
         description='Timestamp when the workspace was created',
         title='Created At',
     )
-    updated_at: datetime = Field(
+    updated_at: AwareDatetime = Field(
         ...,
         alias='updatedAt',
         description='Timestamp when the workspace was last updated',

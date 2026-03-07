@@ -3,12 +3,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
 class AccountNotFoundError(BaseModel):
@@ -46,19 +45,19 @@ class BrowserSessionView(BaseModel):
         description='Chrome DevTools Protocol URL for browser automation',
         title='CDP URL',
     )
-    timeout_at: datetime = Field(
+    timeout_at: AwareDatetime = Field(
         ...,
         alias='timeoutAt',
         description='Timestamp when the session will timeout',
         title='Timeout At',
     )
-    started_at: datetime = Field(
+    started_at: AwareDatetime = Field(
         ...,
         alias='startedAt',
         description='Timestamp when the session was created and started',
         title='Started At',
     )
-    finished_at: datetime | None = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
         alias='finishedAt',
         description='Timestamp when the session was stopped (None if still active)',
@@ -90,6 +89,12 @@ class BrowserSessionView(BaseModel):
         alias='agentSessionId',
         description='ID of the agent session that created this browser (None for standalone BaaS sessions)',
         title='Agent Session ID',
+    )
+    recording_url: str | None = Field(
+        None,
+        alias='recordingUrl',
+        description='Presigned URL to download the session recording (available after session ends, if recording was enabled)',
+        title='Recording URL',
     )
 
 
@@ -365,19 +370,19 @@ class ProfileView(BaseModel):
     name: str | None = Field(
         None, description='Optional name for the profile', title='Name'
     )
-    last_used_at: datetime | None = Field(
+    last_used_at: AwareDatetime | None = Field(
         None,
         alias='lastUsedAt',
         description='Timestamp when the profile was last used',
         title='Last Used At',
     )
-    created_at: datetime = Field(
+    created_at: AwareDatetime = Field(
         ...,
         alias='createdAt',
         description='Timestamp when the profile was created',
         title='Created At',
     )
-    updated_at: datetime = Field(
+    updated_at: AwareDatetime = Field(
         ...,
         alias='updatedAt',
         description='Timestamp when the profile was last updated',
@@ -702,6 +707,12 @@ class SessionSettings(BaseModel):
         description='Custom screen height in pixels for the browser.',
         title='Browser Screen Height',
     )
+    enable_recording: bool | None = Field(
+        False,
+        alias='enableRecording',
+        description='If True, enables session recording. Defaults to False.',
+        title='Enable Recording',
+    )
 
 
 class SessionStatus(Enum):
@@ -749,7 +760,7 @@ class ShareView(BaseModel):
         description='Number of times the public share has been viewed',
         title='View Count',
     )
-    last_viewed_at: datetime | None = Field(
+    last_viewed_at: AwareDatetime | None = Field(
         None,
         alias='lastViewedAt',
         description='Timestamp of the last time the public share was viewed (None if never viewed)',
@@ -799,13 +810,13 @@ class SkillExecutionView(BaseModel):
     success: bool = Field(
         ..., description='Whether the execution succeeded', title='Success'
     )
-    started_at: datetime = Field(
+    started_at: AwareDatetime = Field(
         ...,
         alias='startedAt',
         description='When the execution started',
         title='Startedat',
     )
-    finished_at: datetime | None = Field(
+    finished_at: AwareDatetime | None = Field(
         ...,
         alias='finishedAt',
         description='When the execution finished',
@@ -944,7 +955,7 @@ class TaskStatusView(BaseModel):
         description='Final output/result of the task (null while running)',
         title='Output',
     )
-    finished_at: datetime | None = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
         alias='finishedAt',
         description='Naive UTC timestamp when the task completed (null if still running)',
@@ -1025,19 +1036,19 @@ class TaskView(BaseModel):
     status: TaskStatus = Field(
         ..., description='Current status of the task execution', title='Status'
     )
-    created_at: datetime = Field(
+    created_at: AwareDatetime = Field(
         ...,
         alias='createdAt',
         description='Naive UTC timestamp when the task was created',
         title='Created At',
     )
-    started_at: datetime | None = Field(
+    started_at: AwareDatetime | None = Field(
         None,
         alias='startedAt',
         description='Naive UTC timestamp when the task was started (None if task has not started yet)',
         title='Started At',
     )
-    finished_at: datetime | None = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
         alias='finishedAt',
         description='Naive UTC timestamp when the task completed (None if still running)',
@@ -1287,19 +1298,19 @@ class BrowserSessionItemView(BaseModel):
         description='Chrome DevTools Protocol URL for browser automation',
         title='CDP URL',
     )
-    timeout_at: datetime = Field(
+    timeout_at: AwareDatetime = Field(
         ...,
         alias='timeoutAt',
         description='Timestamp when the session will timeout',
         title='Timeout At',
     )
-    started_at: datetime = Field(
+    started_at: AwareDatetime = Field(
         ...,
         alias='startedAt',
         description='Timestamp when the session was created and started',
         title='Started At',
     )
-    finished_at: datetime | None = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
         alias='finishedAt',
         description='Timestamp when the session was stopped (None if still active)',
@@ -1331,6 +1342,12 @@ class BrowserSessionItemView(BaseModel):
         alias='agentSessionId',
         description='ID of the agent session that created this browser (None for standalone BaaS sessions)',
         title='Agent Session ID',
+    )
+    recording_url: str | None = Field(
+        None,
+        alias='recordingUrl',
+        description='Presigned URL to download the session recording (available after session ends, if recording was enabled)',
+        title='Recording URL',
     )
 
 
@@ -1396,6 +1413,12 @@ class CreateBrowserSessionRequest(BaseModel):
         description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers.',
         title='Custom Proxy',
     )
+    enable_recording: bool | None = Field(
+        False,
+        alias='enableRecording',
+        description='If True, enables session recording. Defaults to False.',
+        title='Enable Recording',
+    )
 
 
 class CreateSessionRequest(BaseModel):
@@ -1446,6 +1469,12 @@ class CreateSessionRequest(BaseModel):
         alias='customProxy',
         description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers.',
         title='Custom Proxy',
+    )
+    enable_recording: bool | None = Field(
+        False,
+        alias='enableRecording',
+        description='If True, enables session recording. Defaults to False.',
+        title='Enable Recording',
     )
 
 
@@ -1615,13 +1644,19 @@ class SessionItemView(BaseModel):
         description='URL where the browser can be viewed live in real-time',
         title='Live URL',
     )
-    started_at: datetime = Field(
+    recording_url: str | None = Field(
+        None,
+        alias='recordingUrl',
+        description='Presigned URL to download the session recording (available after session ends, if recording was enabled)',
+        title='Recording URL',
+    )
+    started_at: AwareDatetime = Field(
         ...,
         alias='startedAt',
         description='Timestamp when the session was created and started',
         title='Started At',
     )
-    finished_at: datetime | None = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
         alias='finishedAt',
         description='Timestamp when the session was stopped (None if still active)',
@@ -1753,13 +1788,13 @@ class SkillResponse(BaseModel):
         description='URL of the custom skill icon',
         title='Icon URL',
     )
-    first_published_at: datetime | None = Field(
+    first_published_at: AwareDatetime | None = Field(
         None,
         alias='firstPublishedAt',
         description='When the skill was first published',
         title='First Published At',
     )
-    last_published_at: datetime | None = Field(
+    last_published_at: AwareDatetime | None = Field(
         None,
         alias='lastPublishedAt',
         description='When the skill was last published',
@@ -1771,13 +1806,13 @@ class SkillResponse(BaseModel):
         description='Current version of the skill',
         title='Current Version',
     )
-    current_version_started_at: datetime | None = Field(
+    current_version_started_at: AwareDatetime | None = Field(
         None,
         alias='currentVersionStartedAt',
         description='When the current version started generating',
         title='Current Version Started At',
     )
-    current_version_finished_at: datetime | None = Field(
+    current_version_finished_at: AwareDatetime | None = Field(
         None,
         alias='currentVersionFinishedAt',
         description='When the current version finished generating',
@@ -1794,10 +1829,10 @@ class SkillResponse(BaseModel):
         description='Unique identifier for the skill this skill was cloned from',
         title='Cloned From Skill ID',
     )
-    created_at: datetime = Field(
+    created_at: AwareDatetime = Field(
         ..., alias='createdAt', description='Creation timestamp', title='Created At'
     )
-    updated_at: datetime = Field(
+    updated_at: AwareDatetime = Field(
         ..., alias='updatedAt', description='Last update timestamp', title='Updated At'
     )
 
@@ -1819,19 +1854,19 @@ class TaskItemView(BaseModel):
         ..., description='The task prompt/instruction given to the agent', title='Task'
     )
     status: TaskStatus
-    created_at: datetime = Field(
+    created_at: AwareDatetime = Field(
         ...,
         alias='createdAt',
         description='Naive UTC timestamp when the task was created',
         title='Created At',
     )
-    started_at: datetime | None = Field(
+    started_at: AwareDatetime | None = Field(
         None,
         alias='startedAt',
         description='Naive UTC timestamp when the task was started (None if task has not started yet)',
         title='Started At',
     )
-    finished_at: datetime | None = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
         alias='finishedAt',
         description='Naive UTC timestamp when the task completed (None if still running)',
@@ -1950,22 +1985,22 @@ class MarketplaceSkillResponse(BaseModel):
         description='URL of the custom skill icon',
         title='Icon URL',
     )
-    first_published_at: datetime = Field(
+    first_published_at: AwareDatetime = Field(
         ...,
         alias='firstPublishedAt',
         description='When the skill was first published',
         title='First Published At',
     )
-    last_published_at: datetime = Field(
+    last_published_at: AwareDatetime = Field(
         ...,
         alias='lastPublishedAt',
         description='When the skill was last published',
         title='Last Published At',
     )
-    created_at: datetime = Field(
+    created_at: AwareDatetime = Field(
         ..., alias='createdAt', description='Creation timestamp', title='Created At'
     )
-    updated_at: datetime = Field(
+    updated_at: AwareDatetime = Field(
         ..., alias='updatedAt', description='Last update timestamp', title='Updated At'
     )
 
@@ -1986,13 +2021,19 @@ class SessionView(BaseModel):
         description='URL where the browser can be viewed live in real-time',
         title='Live URL',
     )
-    started_at: datetime = Field(
+    recording_url: str | None = Field(
+        None,
+        alias='recordingUrl',
+        description='Presigned URL to download the session recording (available after session ends, if recording was enabled)',
+        title='Recording URL',
+    )
+    started_at: AwareDatetime = Field(
         ...,
         alias='startedAt',
         description='Timestamp when the session was created and started',
         title='Started At',
     )
-    finished_at: datetime | None = Field(
+    finished_at: AwareDatetime | None = Field(
         None,
         alias='finishedAt',
         description='Timestamp when the session was stopped (None if still active)',
