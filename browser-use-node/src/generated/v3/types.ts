@@ -398,8 +398,6 @@ export interface components {
             role: string;
             /** Data */
             data: string;
-            /** Hidden */
-            hidden: boolean;
             /**
              * Createdat
              * Format: date-time

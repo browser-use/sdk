@@ -621,7 +621,8 @@
                 "$ref": "#/components/schemas/CreateSessionRequest",
                 "default": {
                   "persistMemory": true,
-                  "keepAlive": true
+                  "keepAlive": true,
+                  "enableRecording": false
                 }
               }
             }
@@ -3317,6 +3318,18 @@
             ],
             "title": "Agent Session ID",
             "description": "ID of the agent session that created this browser (None for standalone BaaS sessions)"
+          },
+          "recordingUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recording URL",
+            "description": "Presigned URL to download the session recording (available after session ends, if recording was enabled)"
           }
         },
         "type": "object",
@@ -3477,6 +3490,18 @@
             ],
             "title": "Agent Session ID",
             "description": "ID of the agent session that created this browser (None for standalone BaaS sessions)"
+          },
+          "recordingUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recording URL",
+            "description": "Presigned URL to download the session recording (available after session ends, if recording was enabled)"
           }
         },
         "type": "object",
@@ -3605,6 +3630,12 @@
             ],
             "title": "Custom Proxy",
             "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers."
+          },
+          "enableRecording": {
+            "type": "boolean",
+            "title": "Enable Recording",
+            "description": "If True, enables session recording. Defaults to False.",
+            "default": false
           }
         },
         "type": "object",
@@ -3701,6 +3732,12 @@
             ],
             "title": "Custom Proxy",
             "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers."
+          },
+          "enableRecording": {
+            "type": "boolean",
+            "title": "Enable Recording",
+            "description": "If True, enables session recording. Defaults to False.",
+            "default": false
           }
         },
         "type": "object",
@@ -5048,6 +5085,18 @@
             "title": "Live URL",
             "description": "URL where the browser can be viewed live in real-time"
           },
+          "recordingUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recording URL",
+            "description": "Presigned URL to download the session recording (available after session ends, if recording was enabled)"
+          },
           "startedAt": {
             "type": "string",
             "format": "date-time",
@@ -5205,6 +5254,12 @@
             ],
             "title": "Browser Screen Height",
             "description": "Custom screen height in pixels for the browser."
+          },
+          "enableRecording": {
+            "type": "boolean",
+            "title": "Enable Recording",
+            "description": "If True, enables session recording. Defaults to False.",
+            "default": false
           }
         },
         "type": "object",
@@ -5276,6 +5331,18 @@
             ],
             "title": "Live URL",
             "description": "URL where the browser can be viewed live in real-time"
+          },
+          "recordingUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recording URL",
+            "description": "Presigned URL to download the session recording (available after session ends, if recording was enabled)"
           },
           "startedAt": {
             "type": "string",

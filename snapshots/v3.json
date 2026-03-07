@@ -1319,10 +1319,6 @@
             "type": "string",
             "title": "Data"
           },
-          "hidden": {
-            "type": "boolean",
-            "title": "Hidden"
-          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -1335,7 +1331,6 @@
           "sessionId",
           "role",
           "data",
-          "hidden",
           "createdAt"
         ],
         "title": "MessageResponse"
