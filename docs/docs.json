@@ -56,8 +56,13 @@
                   "cloud/introduction",
                   "cloud/quickstart",
                   "cloud/coding-agent-quickstart",
-                  "cloud/new-features/api-v3",
                   "cloud/pricing"
+                ]
+              },
+              {
+                "group": "New Features",
+                "pages": [
+                  "cloud/new-features/api-v3"
                 ]
               },
               {
