@@ -2,16 +2,21 @@
 
 > AI-powered browser automation. Run tasks with natural language, get structured data back.
 
-**Recommended: Use the BU Agent API (v3) for new projects.** V3 provides more accurate agents, long-running tasks, file uploads, and persistent workspaces. V3 is a superset of v2. Import from `browser_use_sdk.v3` (Python) or `browser-use-sdk/v3` (TypeScript).
+Browser Use has two products: **Browser Use Cloud** (managed SDK and API) and **Browser Use Open Source** (self-hosted Python library). They are separate products with separate documentation.
 
-Browser Use has two products. The full documentation for each is available at:
+## Browser Use Cloud (Recommended)
 
-- **Browser Use Cloud**: [/cloud/llms-full.txt](https://docs.browser-use.com/cloud/llms-full.txt) — Complete cloud SDK and API reference with all pages.
-- **Browser Use Open Source**: [/open-source/llms-full.txt](https://docs.browser-use.com/open-source/llms-full.txt) — Complete open-source library reference with all pages.
+SDK and API for browser automation with a state-of-the-art model, stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure. Available in Python and TypeScript.
 
-For concise page indexes:
-- [/cloud/llms.txt](https://docs.browser-use.com/cloud/llms.txt) — Cloud documentation index.
-- [/open-source/llms.txt](https://docs.browser-use.com/open-source/llms.txt) — Open-source documentation index.
+**Use the BU Agent API (v3) for new projects.** V3 provides more accurate agents, long-running tasks, file uploads, and persistent workspaces. V3 is a superset of v2.
 
-For the SDK quick-start reference (designed for AI coding agents):
+- [Cloud Full Reference](https://docs.browser-use.com/cloud/llms-full.txt) — Complete cloud SDK and API documentation with all pages.
+- [Cloud Documentation Index](https://docs.browser-use.com/cloud/llms.txt) — Concise page index.
 - [Coding Agent Quickstart](https://docs.browser-use.com/cloud/coding-agent-quickstart) — Every SDK method, parameter, and response type in one page.
+
+## Browser Use Open Source
+
+Self-hosted Python library. Bring your own LLM and run on your own infrastructure.
+
+- [Open Source Full Reference](https://docs.browser-use.com/open-source/llms-full.txt) — Complete open-source library documentation with all pages.
+- [Open Source Documentation Index](https://docs.browser-use.com/open-source/llms.txt) — Concise page index.
