@@ -8,15 +8,252 @@ Browser Use has two products: **Browser Use Cloud** (managed SDK and API) and **
 
 SDK and API for browser automation with a state-of-the-art model, stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure. Available in Python and TypeScript.
 
-**Use the BU Agent API (v3) for new projects.** V3 provides more accurate agents, long-running tasks, file uploads, and persistent workspaces. V3 is a superset of v2.
-
-- [Cloud Documentation Index](https://docs.browser-use.com/cloud/llms.txt) — Concise page index.
-- [Cloud Full Reference](https://docs.browser-use.com/cloud/llms-full.txt) — Complete cloud SDK and API documentation with all pages.
-- [Coding Agent Quickstart](https://docs.browser-use.com/cloud/coding-agent-quickstart) — Every SDK method, parameter, and response type in one page.
+- [Cloud Documentation Index](/cloud/llms.txt): Concise page index for all cloud docs.
+- [Cloud Full Reference](/cloud/llms-full.txt): Complete cloud documentation with full page content.
+- [Coding Agent Quickstart](https://docs.browser-use.com/cloud/coding-agent-quickstart): Every SDK method, parameter, and response type in one page.
 
 ## Browser Use Open Source
 
 Self-hosted Python library. Bring your own LLM and run on your own infrastructure.
 
-- [Open Source Documentation Index](https://docs.browser-use.com/open-source/llms.txt) — Concise page index.
-- [Open Source Full Reference](https://docs.browser-use.com/open-source/llms-full.txt) — Complete open-source library documentation with all pages.
+- [Open Source Documentation Index](/open-source/llms.txt): Concise page index for all open-source docs.
+- [Open Source Full Reference](/open-source/llms-full.txt): Complete open-source documentation with full page content.
+
+## Quick Start (Cloud)
+
+Install:
+- Python: `pip install browser-use-sdk`
+- TypeScript: `npm install browser-use-sdk`
+
+Set your API key:
+```
+export BROWSER_USE_API_KEY=your_key
+```
+Get a key at: https://cloud.browser-use.com/settings?tab=api-keys
+
+Two API versions in one package:
+- **BU Agent API (v3)** — recommended for new projects. More accurate agents, long-running tasks, file uploads, workspaces. Superset of v2. `from browser_use_sdk.v3 import AsyncBrowserUse`
+- **Cloud API v2** — stable. `from browser_use_sdk import AsyncBrowserUse`
+
+### Minimal example (v3 Python)
+```python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse()
+    result = await client.run("Find the top 3 Hacker News posts")
+    print(result.output)
+    await client.close()
+
+asyncio.run(main())
+```
+
+### Minimal example (v3 TypeScript)
+```typescript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const result = await client.run("Find the top 3 Hacker News posts");
+console.log(result.output);
+```
+
+### Structured output (v3 Python)
+```python
+from pydantic import BaseModel
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+class Product(BaseModel):
+    name: str
+    price: float
+
+client = AsyncBrowserUse()
+result = await client.run("Get product info from amazon.com/dp/...", output_schema=Product)
+print(result.output)  # Product(name=..., price=...)
+```
+
+### Structured output (v3 TypeScript)
+```typescript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { z } from "zod";
+
+const client = new BrowserUse();
+const Product = z.object({ name: z.string(), price: z.number() });
+const result = await client.run("Get product info", { schema: Product });
+```
+
+### Key run() parameters (v3)
+- `model` — `"bu-mini"` (default, faster) or `"bu-max"` (more capable)
+- `output_schema` / `schema` — Pydantic model (Python) or Zod schema (TypeScript) for structured output
+- `session_id` / `sessionId` — reuse an existing session for multi-step workflows
+- `keep_alive` / `keepAlive` — keep session alive after task (default: false)
+- `profile_id` / `profileId` — persistent browser profile (cookies, localStorage)
+- `proxy_country_code` / `proxyCountryCode` — residential proxy country code (e.g. "us", "de")
+- `max_cost_usd` / `maxCostUsd` — cost cap in USD
+
+### SessionResult fields (what run() returns)
+- `output` — the result (string or your structured type)
+- `id` — session UUID
+- `status` — `created`, `idle`, `running`, `stopped`, `timed_out`, `error`
+- `live_url` — real-time browser monitoring URL
+- `total_cost_usd`, `llm_cost_usd`, `proxy_cost_usd` — cost breakdown
+- `total_input_tokens`, `total_output_tokens` — token usage
+
+### Sessions (multi-step workflows, v3)
+```python
+client = AsyncBrowserUse()
+session = await client.sessions.create(proxy_country_code="us")
+result1 = await client.run("Log into example.com", session_id=str(session.id), keep_alive=True)
+result2 = await client.run("Now click settings", session_id=str(session.id))
+await client.sessions.stop(str(session.id))
+```
+
+### File upload and download (v3)
+```python
+from browser_use_sdk.v3 import AsyncBrowserUse, FileUploadItem
+import httpx
+
+client = AsyncBrowserUse()
+
+# Create a session (no task yet)
+session = await client.sessions.create()
+
+# Get presigned upload URLs
+upload_resp = await client.sessions.upload_files(
+    str(session.id),
+    files=[FileUploadItem(name="data.csv", content_type="text/csv")],
+)
+
+# Upload the file via PUT to the presigned URL
+async with httpx.AsyncClient() as http:
+    await http.put(
+        upload_resp.files[0].upload_url,
+        content=open("data.csv", "rb").read(),
+        headers={"Content-Type": "text/csv"},
+    )
+
+# Run a task that uses the uploaded file
+result = await client.run(
+    "Read data.csv and create a summary report",
+    session_id=str(session.id),
+)
+
+# Download output files
+file_list = await client.sessions.files(str(session.id), include_urls=True)
+for f in file_list.files:
+    print(f.path, f.size, f.url)  # .url is a presigned download URL (60s expiry)
+```
+
+### Workspaces (persistent file storage across sessions, v3)
+```python
+client = AsyncBrowserUse()
+
+# Create a workspace
+workspace = await client.workspaces.create(name="my-workspace")
+
+# Run a task with the workspace attached
+result = await client.run(
+    "Create a file called report.md with a summary",
+    workspace_id=str(workspace.id),
+)
+
+# List files in workspace
+files = await client.workspaces.files(str(workspace.id), include_urls=True)
+for f in files.files:
+    print(f.path, f.url)
+
+# Workspaces persist across sessions — reuse workspace_id in future tasks
+```
+
+### Profiles (persistent login state, v3)
+Profile sync uploads your local browser cookies to the cloud. Run this in your terminal:
+```bash
+curl -fsSL https://browser-use.com/profile.sh | sh
+```
+Then use the profile ID in your code:
+```python
+client = AsyncBrowserUse()
+# Use a synced profile — agent starts already logged in
+result = await client.run(
+    "Go to dashboard and extract recent orders",
+    profile_id="your-profile-uuid",
+)
+```
+In v2, you can also create profiles programmatically:
+```python
+from browser_use_sdk import AsyncBrowserUse
+client = AsyncBrowserUse()
+profile = await client.profiles.create(name="my-profile")
+session = await client.sessions.create(profile_id=profile.id)
+```
+
+### Streaming task steps (v2 only)
+```python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+async for step in client.run("Go to google.com and search for 'browser use'"):
+    print(f"[Step {step.number}] {step.next_goal} — {step.url}")
+# After iteration completes, the final step contains the result
+```
+
+### Parallel extraction
+```python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+URLS = ["https://example.com/page1", "https://example.com/page2", "https://example.com/page3"]
+
+async def scrape(client, url):
+    return await client.run(f"Extract the main content from {url}")
+
+async def main():
+    client = AsyncBrowserUse()
+    results = await asyncio.gather(*[scrape(client, url) for url in URLS])
+    for r in results:
+        print(r.output)
+    await client.close()
+
+asyncio.run(main())
+```
+
+### Error handling (v3)
+```python
+from browser_use_sdk.v3 import AsyncBrowserUse, BrowserUseError
+
+try:
+    result = await client.run("Do something")
+except TimeoutError:
+    print("Polling timed out (5 min default)")
+except BrowserUseError as e:
+    print(f"API error: {e}")
+```
+
+## Quick Start (Open Source)
+
+Install: `pip install browser-use`
+
+```python
+from browser_use import Agent, ChatBrowserUse
+
+agent = Agent(
+    task="Find the top 3 trending repos on GitHub",
+    llm=ChatBrowserUse(),
+)
+result = await agent.run()
+print(result.final_result())
+```
+
+Use cloud browsers with open source (stealth + proxies, no infra):
+```python
+from browser_use import Agent, Browser, ChatBrowserUse
+
+browser = Browser(use_cloud=True)  # requires BROWSER_USE_API_KEY
+agent = Agent(task="...", llm=ChatBrowserUse(), browser=browser)
+result = await agent.run()
+```
+
+## Full SDK Reference
+
+For the complete SDK reference with every method, parameter, and response type, see the Coding Agent Quickstart page. It is designed to be copy-pasted into AI coding agents:
+https://docs.browser-use.com/cloud/coding-agent-quickstart
