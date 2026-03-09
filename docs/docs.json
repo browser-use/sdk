@@ -506,7 +506,7 @@
     {"source": "/usage/safety", "destination": "/cloud/guides/tasks"},
     {"source": "/usage/webhooks", "destination": "/cloud/guides/webhooks"},
     {"source": "/usage/authentication", "destination": "/cloud/guides/authentication"},
-    {"source": "/api-reference/browser-profiles/get-browser-profile", "destination": "/cloud/api-v2"},
+    {"source": "/api-reference/*", "destination": "/cloud/api-reference"},
     {"source": "/cloud/v2/quickstart", "destination": "/cloud/quickstart"},
     {"source": "/cloud/v1/*", "destination": "/cloud/introduction"}
   ]
