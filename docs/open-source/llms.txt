@@ -1,0 +1,91 @@
+# Browser Use Open Source
+
+> Self-hosted browser automation with any LLM. Python library for AI-powered web agents.
+
+For full page content with code examples, see [/open-source/llms-full.txt](https://docs.browser-use.com/open-source/llms-full.txt).
+
+## Get Started
+
+- [Introduction](https://docs.browser-use.com/open-source/introduction): Overview of the open-source browser automation library.
+- [Human Quickstart](https://docs.browser-use.com/open-source/quickstart): Install and run your first agent with step-by-step instructions.
+- [Coding Agent Quickstart](https://docs.browser-use.com/open-source/coding-agent-quickstart): Quick-start reference designed for AI coding agents.
+- [Supported Models](https://docs.browser-use.com/open-source/supported-models): Compatible LLMs including GPT-4o, Claude, Gemini, DeepSeek, and more.
+
+## Customize
+
+### Agent
+- [Agent Basics](https://docs.browser-use.com/open-source/customize/agent/basics): Configure the agent with tasks, LLMs, and browser instances.
+- [Prompting Guide](https://docs.browser-use.com/open-source/customize/agent/prompting-guide): Write effective agent prompts for reliable results.
+- [Output Format](https://docs.browser-use.com/open-source/customize/agent/output-format): Understanding agent return values and result extraction.
+- [All Agent Parameters](https://docs.browser-use.com/open-source/customize/agent/all-parameters): Complete reference for all agent configuration options.
+
+### Browser
+- [Browser Basics](https://docs.browser-use.com/open-source/customize/browser/basics): Browser configuration and setup.
+- [Authentication](https://docs.browser-use.com/open-source/customize/browser/authentication): Login to websites using real browser profiles, storage state, and 2FA codes.
+- [Real Browser](https://docs.browser-use.com/open-source/customize/browser/real-browser): Connect your existing Chrome browser to preserve authentication.
+- [Remote Browser](https://docs.browser-use.com/open-source/customize/browser/remote): Connect to cloud or remote browsers.
+- [All Browser Parameters](https://docs.browser-use.com/open-source/customize/browser/all-parameters): Complete reference for all browser configuration options.
+
+### Tools
+- [Tools Basics](https://docs.browser-use.com/open-source/customize/tools/basics): Tools are the functions the agent uses to interact with the browser.
+- [Available Tools](https://docs.browser-use.com/open-source/customize/tools/available): Built-in tools reference and source code.
+- [Add Custom Tools](https://docs.browser-use.com/open-source/customize/tools/add): Add custom tools to extend agent capabilities.
+- [Remove Tools](https://docs.browser-use.com/open-source/customize/tools/remove): Exclude default tools from the agent.
+- [Tool Response](https://docs.browser-use.com/open-source/customize/tools/response): Customize tool response handling.
+
+### Integration
+- [Documentation MCP](https://docs.browser-use.com/open-source/customize/integrations/docs-mcp): Add browser-use documentation context to Claude Code and other MCP clients.
+- [MCP Server](https://docs.browser-use.com/open-source/customize/integrations/mcp-server): Connect AI models to Browser Use through the Model Context Protocol.
+
+## Examples
+
+### Templates
+- [Fast Agent](https://docs.browser-use.com/open-source/examples/templates/fast-agent): Optimize agent performance for maximum speed.
+- [Follow-up Tasks](https://docs.browser-use.com/open-source/examples/templates/follow-up-tasks): Chain tasks with the same browser session.
+- [Parallel Agents](https://docs.browser-use.com/open-source/examples/templates/parallel-browser): Run multiple agents in parallel with separate browser instances.
+- [Playwright Integration](https://docs.browser-use.com/open-source/examples/templates/playwright-integration): Advanced Playwright and Browser-Use interop example.
+- [Sensitive Data](https://docs.browser-use.com/open-source/examples/templates/sensitive-data): Handle secrets securely without sending PII to the LLM.
+- [Secure Setup](https://docs.browser-use.com/open-source/examples/templates/secure): Azure OpenAI with data privacy and security configuration.
+- [More Examples](https://docs.browser-use.com/open-source/examples/templates/more-examples): Additional examples and use cases on GitHub.
+
+### Apps
+- [Ad-Use (Ad Generator)](https://docs.browser-use.com/open-source/examples/apps/ad-use): Generate Instagram image ads and TikTok video ads from landing pages.
+- [Vibetest-Use (Automated QA)](https://docs.browser-use.com/open-source/examples/apps/vibetest-use): Multi-agent tests to catch UI bugs, broken links, and accessibility issues.
+- [News-Use (News Monitor)](https://docs.browser-use.com/open-source/examples/apps/news-use): Monitor news websites and extract articles with sentiment analysis.
+- [Msg-Use (WhatsApp Sender)](https://docs.browser-use.com/open-source/examples/apps/msg-use): AI-powered WhatsApp message scheduler using browser agents.
+
+## Development
+
+### Contribution
+- [Local Setup](https://docs.browser-use.com/open-source/development/setup/local-setup): Set up the development environment.
+- [Contribution Guide](https://docs.browser-use.com/open-source/development/setup/contribution-guide): How to contribute to Browser Use.
+
+### Advanced
+- [Lifecycle Hooks](https://docs.browser-use.com/open-source/customize/hooks): Customize agent behavior with lifecycle hooks.
+
+### Monitoring
+- [Observability](https://docs.browser-use.com/open-source/development/monitoring/observability): Trace agent execution and capture browser session recordings.
+- [OpenLIT](https://docs.browser-use.com/open-source/development/monitoring/openlit): Complete observability with OpenLIT tracing.
+- [Telemetry](https://docs.browser-use.com/open-source/development/monitoring/telemetry): Understanding Browser Use telemetry.
+- [Costs](https://docs.browser-use.com/open-source/development/monitoring/costs): Track token usage and API costs.
+
+- [Get Help](https://docs.browser-use.com/open-source/development/get-help): Community support with 20k+ developers.
+
+## Legacy
+
+### Code Agent
+- [Code Agent Basics](https://docs.browser-use.com/open-source/legacy/code-agent/basics): Write Python code locally with browser automation.
+- [Output Format](https://docs.browser-use.com/open-source/legacy/code-agent/output-format): Understanding CodeAgent return values.
+- [Exporting Sessions](https://docs.browser-use.com/open-source/legacy/code-agent/exporting): Save sessions as Jupyter notebooks or Python scripts.
+- [All Parameters](https://docs.browser-use.com/open-source/legacy/code-agent/all-parameters): Complete CodeAgent configuration reference.
+- [Example: Extract Products](https://docs.browser-use.com/open-source/legacy/code-agent/example-products): Collect products and save to CSV.
+
+### Actor
+- [Actor Basics](https://docs.browser-use.com/open-source/legacy/actor/basics): Low-level Playwright-like browser automation with full CDP control.
+- [Actor Examples](https://docs.browser-use.com/open-source/legacy/actor/examples): Forms, JavaScript, mouse operations, and AI features.
+- [All Parameters](https://docs.browser-use.com/open-source/legacy/actor/all-parameters): Complete Browser Actor API reference.
+
+### Sandbox
+- [Sandbox Quickstart](https://docs.browser-use.com/open-source/legacy/sandbox/quickstart): Run browser automation in the cloud.
+- [Events](https://docs.browser-use.com/open-source/legacy/sandbox/events): Monitor execution with callbacks.
+- [All Parameters](https://docs.browser-use.com/open-source/legacy/sandbox/all-parameters): Sandbox configuration reference.

@@ -31,3 +31,9 @@ build/
 
 # Mintlify
 docs/.mintlify/
+
+# Claude Code
+.claude/skills/
+
+# Personal notes
+reagan_*
