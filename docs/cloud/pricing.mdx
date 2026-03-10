@@ -31,7 +31,7 @@ Task pricing consists of two components:
 | Browser Use LLM | `browser-use-llm` | \$0.002 |
 | O3 | `o3` | \$0.03 |
 | Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$0.03 |
-| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.015 |
+| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.01 |
 | Gemini Flash Latest | `gemini-flash-latest` | \$0.0075 |
 | Gemini Flash Lite Latest | `gemini-flash-lite-latest` | \$0.005 |
 | Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
@@ -63,6 +63,19 @@ Using Browser Use LLM for a 10 step task:
 - Task initialization: \$0.01
 - 10 steps x \$0.002 per step = \$0.02
 - **Total cost: \$0.03** (~33 tasks per dollar)
+
+---
+
+## V3 API Pricing (Token-Based)
+
+V3 uses token-based billing instead of flat per-step costs.
+
+| Model | Input per 1M | Output per 1M |
+| ----- | ------------ | ------------- |
+| BU Mini (Gemini 3 Flash) | ~\$0.72 | ~\$4.20 |
+| BU Max (Claude Sonnet 4.6) | ~\$3.60 | ~\$18.00 |
+
+Includes a 1.2x markup over raw provider costs. Task initialization (\$0.01) and browser sessions are billed separately.
 
 ---
 
