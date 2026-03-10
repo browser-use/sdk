@@ -1,0 +1,17 @@
+{
+  "name": "ux-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npx tsx run.ts"
+  },
+  "dependencies": {
+    "browser-use-sdk": "workspace:*",
+    "zod": "^3.23.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
