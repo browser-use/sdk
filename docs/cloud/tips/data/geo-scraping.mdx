@@ -1,0 +1,56 @@
+---
+title: Geo-Specific Scraping
+description: Scrape location-dependent content using residential proxies in 195+ countries.
+---
+
+Prices, availability, and content often vary by country. Use `proxy_country_code` to route the browser through a residential proxy in the target region — the site sees a local visitor.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+from pydantic import BaseModel
+
+class Price(BaseModel):
+    product: str
+    price: str
+    currency: str
+
+client = AsyncBrowserUse()
+
+# Create session with Japanese proxy
+session = await client.sessions.create(proxy_country_code="jp")
+
+result = await client.run(
+    "Go to apple.com/jp and get the price of MacBook Air",
+    session_id=session.id,
+    output_schema=Price,
+)
+print(result.output)  # Price(product='MacBook Air', price='148,800', currency='JPY')
+
+await client.sessions.stop(session.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+import { z } from "zod";
+
+const Price = z.object({ product: z.string(), price: z.string(), currency: z.string() });
+const client = new BrowserUse();
+
+// Create session with Japanese proxy
+const session = await client.sessions.create({ proxyCountryCode: "jp" });
+
+const result = await client.run(
+  "Go to apple.com/jp and get the price of MacBook Air",
+  { sessionId: session.id, schema: Price },
+);
+console.log(result.output);
+
+await client.sessions.stop(session.id);
+```
+</CodeGroup>
+
+<Tip>
+  Combine with [structured output](/cloud/tips/data/structured-output) to extract prices as typed objects for easy comparison across regions.
+</Tip>
+
+See [Proxies & Stealth](/cloud/guides/proxies-and-stealth) for the full list of supported country codes.

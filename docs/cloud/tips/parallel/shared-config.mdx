@@ -1,0 +1,74 @@
+---
+title: Parallel Browsers with Shared Auth
+description: Run concurrent sessions that share the same profile and proxy for authenticated parallel tasks.
+---
+
+Spin up N concurrent sessions with the same `profileId` and `proxyCountryCode` — they all share the same login state (cookies). Useful when you need to parallelize work across an authenticated site.
+
+<CodeGroup>
+```python Python
+import asyncio
+from browser_use_sdk import AsyncBrowserUse
+
+profile_id = "your-profile-id"
+proxy_country_code = "us"
+
+tasks = [
+    "Go to the analytics dashboard and export the weekly report",
+    "Go to the team settings and list all members",
+    "Go to the billing page and get the current plan details",
+]
+
+async def run_task(client, instruction):
+    session = await client.sessions.create(
+        profile_id=profile_id,
+        proxy_country_code=proxy_country_code,
+    )
+    try:
+        return await client.run(instruction, session_id=session.id)
+    finally:
+        await client.sessions.stop(session.id)
+
+async def main():
+    client = AsyncBrowserUse()
+    results = await asyncio.gather(*[run_task(client, t) for t in tasks])
+    for r in results:
+        print(r.output)
+
+asyncio.run(main())
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const profileId = "your-profile-id";
+const proxyCountryCode = "us";
+
+const tasks = [
+  "Go to the analytics dashboard and export the weekly report",
+  "Go to the team settings and list all members",
+  "Go to the billing page and get the current plan details",
+];
+
+const client = new BrowserUse();
+
+async function runTask(instruction: string) {
+  const session = await client.sessions.create({ profileId, proxyCountryCode });
+  try {
+    return await client.run(instruction, { sessionId: session.id });
+  } finally {
+    await client.sessions.stop(session.id);
+  }
+}
+
+const results = await Promise.all(tasks.map(runTask));
+results.forEach((r) => console.log(r.output));
+```
+</CodeGroup>
+
+<Warning>
+  Profile state is read from a snapshot when each session starts. Concurrent sessions will not see changes made by other sessions until the profile is saved and reloaded. This works well for read-heavy tasks but may not suit workflows that modify profile state.
+</Warning>
+
+<Tip>
+  Combine with [structured output](/cloud/tips/data/structured-output) to extract typed data from each parallel task.
+</Tip>

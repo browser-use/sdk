@@ -1,0 +1,22 @@
+# Browser Use — Full Documentation
+
+> AI-powered browser automation. Run tasks with natural language, get structured data back.
+
+Browser Use has two products: **Browser Use Cloud** (managed SDK and API) and **Browser Use Open Source** (self-hosted Python library). They are separate products with separate documentation.
+
+## Browser Use Cloud (Recommended)
+
+SDK and API for browser automation with a state-of-the-art model, stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure. Available in Python and TypeScript.
+
+**Use the BU Agent API (v3) for new projects.** V3 provides more accurate agents, long-running tasks, file uploads, and persistent workspaces. V3 is a superset of v2.
+
+- [Cloud Full Reference](https://docs.browser-use.com/cloud/llms-full.txt) — Complete cloud SDK and API documentation with all pages.
+- [Cloud Documentation Index](https://docs.browser-use.com/cloud/llms.txt) — Concise page index.
+- [Coding Agent Quickstart](https://docs.browser-use.com/cloud/coding-agent-quickstart) — Every SDK method, parameter, and response type in one page.
+
+## Browser Use Open Source
+
+Self-hosted Python library. Bring your own LLM and run on your own infrastructure.
+
+- [Open Source Full Reference](https://docs.browser-use.com/open-source/llms-full.txt) — Complete open-source library documentation with all pages.
+- [Open Source Documentation Index](https://docs.browser-use.com/open-source/llms.txt) — Concise page index.
