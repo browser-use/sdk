@@ -57,9 +57,9 @@ const result = await client.run("Get the price of iPhone 16 on amazon.de", {
 
 Common country codes: `us`, `gb`, `de`, `fr`, `jp`, `au`, `br`, `in`, `kr`, `ca`, `es`, `it`, `nl`, `se`, `sg`.
 
-<Info>
+<Note color="#FFC107">
   The default is always `us`. This applies to auto-sessions (`run()` without a `session_id`), manually created sessions, and browser sessions — unless you explicitly set a different country code.
-</Info>
+</Note>
 
 ## Custom proxy
 
@@ -97,10 +97,10 @@ Proxy is a session-level setting. All tasks in the same session use the same pro
 ## Disabling proxies
 
 <Warning>
-  Disabling the proxy is not recommended. Residential proxies are a core part of Browser Use's stealth infrastructure and significantly reduce the chance of being blocked or fingerprinted. Only disable them if you have a specific reason (e.g. testing against localhost, or your target site allowlists your server IP).
+  Only disable proxies for localhost testing or sites that allowlist your server IP. They reduce blocks and fingerprinting.
 </Warning>
 
-To opt out of the built-in proxy, pass `proxyCountryCode` as `null` explicitly. This works for sessions, tasks (via `sessionSettings`), and browser sessions.
+To disable the built-in proxy, set `proxyCountryCode` to `null` on sessions, tasks (via `sessionSettings`), or browser sessions.
 
 <CodeGroup>
 ```python Python
