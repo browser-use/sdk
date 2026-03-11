@@ -308,6 +308,12 @@ export interface paths {
         /**
          * List Profiles
          * @description Get paginated list of profiles.
+         *
+         *     Use the `query` parameter to search profiles by name or user_id.
+         *     This is useful when you have many profiles and need to find a specific user.
+         *
+         *     Example: If you set `user_id` to your internal user identifier when creating profiles,
+         *     you can later search for that user by passing their identifier as the `query` parameter.
          */
         get: operations["list_profiles_profiles_get"];
         put?: never;
@@ -318,7 +324,8 @@ export interface paths {
          *     They are most commonly used to allow users to preserve the log-in state in the agent between tasks.
          *     You'd normally create one profile per user and then use it for all their tasks.
          *
-         *     You can create a new profile by calling this endpoint.
+         *     You can set a `user_id` when creating a profile to associate it with a user in your system.
+         *     This allows you to later search for the profile using the GET /profiles endpoint with a query parameter.
          */
         post: operations["create_profile_profiles_post"];
         delete?: never;
@@ -963,9 +970,10 @@ export interface components {
             profileId?: string | null;
             /**
              * Proxy Country Code
-             * @description Country code for proxy location.
+             * @description Country code for proxy location. Defaults to US. Set to null to disable proxy.
+             * @default us
              */
-            proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
+            proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
             /**
              * Timeout
              * @description The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.
@@ -1012,9 +1020,10 @@ export interface components {
             profileId?: string | null;
             /**
              * Proxy Country Code
-             * @description Country code for proxy location.
+             * @description Country code for proxy location. Defaults to US. Set to null to disable proxy.
+             * @default us
              */
-            proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
+            proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
             /**
              * Start URL
              * @description URL to navigate to when the session starts.
@@ -1559,6 +1568,11 @@ export interface components {
              * @description Optional name for the profile
              */
             name?: string | null;
+            /**
+             * User ID
+             * @description Your internal user identifier for this profile. Use this to associate a profile with a user in your system.
+             */
+            userId?: string | null;
         };
         /**
          * ProfileListResponse
@@ -1607,12 +1621,18 @@ export interface components {
              * @description Optional name for the profile
              */
             name?: string | null;
+            /**
+             * User ID
+             * @description Your internal user identifier for this profile. Use this to associate a profile with a user in your system.
+             */
+            userId?: string | null;
         };
         /**
          * ProfileView
          * @description View model for representing a profile. A profile lets you preserve the login state between sessions.
          *
          *     We recommend that you create a separate profile for each user of your app.
+         *     You can assign a user_id to each profile to easily identify which user the profile belongs to.
          */
         ProfileView: {
             /**
@@ -1621,6 +1641,11 @@ export interface components {
              * @description Unique identifier for the profile
              */
             id: string;
+            /**
+             * User ID
+             * @description Your internal user identifier for this profile. Use this to associate a profile with a user in your system.
+             */
+            userId?: string | null;
             /**
              * Name
              * @description Optional name for the profile
@@ -1808,9 +1833,10 @@ export interface components {
             profileId?: string | null;
             /**
              * Proxy Country Code
-             * @description Proxy country code for geo-targeted browsing. If set, proxy is enabled with that country. If session_settings is provided but proxy_country_code is not set, proxy is disabled.
+             * @description Proxy country code for geo-targeted browsing. Defaults to US. Set to null to disable proxy.
+             * @default us
              */
-            proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
+            proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
             /**
              * Browser Screen Width
              * @description Custom screen width in pixels for the browser.
@@ -3650,6 +3676,7 @@ export interface operations {
             query?: {
                 pageSize?: number;
                 pageNumber?: number;
+                query?: string | null;
             };
             header?: never;
             path?: never;

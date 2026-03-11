@@ -19,7 +19,7 @@ Every Browser Use Cloud session runs on stealth infrastructure. No configuration
 
 ## Country proxies
 
-Route traffic through residential proxies in 195+ countries. Set on the session or inline via `session_settings`.
+A US residential proxy is always active by default — no configuration needed. To route through a different country, set `proxyCountryCode` on the session or inline via `sessionSettings`.
 
 <CodeGroup>
 ```python Python
@@ -27,7 +27,7 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
-# Via session
+# Via session — US proxy is the default, override to route through Germany
 session = await client.sessions.create(proxy_country_code="de")
 result = await client.run("Get the price of iPhone 16 on amazon.de", session_id=session.id)
 
@@ -42,7 +42,7 @@ import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
 
-// Via session
+// Via session — US proxy is the default, override to route through Germany
 const session = await client.sessions.create({ proxyCountryCode: "de" });
 const result = await client.run("Get the price of iPhone 16 on amazon.de", {
   sessionId: session.id,
@@ -58,7 +58,7 @@ const result = await client.run("Get the price of iPhone 16 on amazon.de", {
 Common country codes: `us`, `gb`, `de`, `fr`, `jp`, `au`, `br`, `in`, `kr`, `ca`, `es`, `it`, `nl`, `se`, `sg`.
 
 <Info>
-  Auto-sessions (when you don't pass a `session_id`) use a US proxy by default.
+  The default is always `us`. This applies to auto-sessions (`run()` without a `session_id`), manually created sessions, and browser sessions — unless you explicitly set a different country code.
 </Info>
 
 ## Custom proxy
@@ -93,3 +93,73 @@ const session = await client.sessions.create({
 </CodeGroup>
 
 Proxy is a session-level setting. All tasks in the same session use the same proxy. See [Models & Pricing](/pricing) for proxy costs.
+
+## Disabling proxies
+
+<Warning>
+  Disabling the proxy is not recommended. Residential proxies are a core part of Browser Use's stealth infrastructure and significantly reduce the chance of being blocked or fingerprinted. Only disable them if you have a specific reason (e.g. testing against localhost, or your target site allowlists your server IP).
+</Warning>
+
+To opt out of the built-in proxy, pass `proxyCountryCode` as `null` explicitly. This works for sessions, tasks (via `sessionSettings`), and browser sessions.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse, SessionSettings
+
+client = AsyncBrowserUse()
+
+# Session — no proxy
+session = await client.sessions.create(proxy_country_code=None)
+
+# Task with inline session settings — no proxy
+result = await client.run(
+    "Go to http://localhost:3000 and check the homepage",
+    session_settings=SessionSettings(proxy_country_code=None),
+)
+
+# Browser session — no proxy
+browser = await client.browsers.create(proxy_country_code=None)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+
+// Session — no proxy
+const session = await client.sessions.create({ proxyCountryCode: null });
+
+// Task with inline session settings — no proxy
+const result = await client.run("Go to http://localhost:3000 and check the homepage", {
+  sessionSettings: { proxyCountryCode: null },
+});
+
+// Browser session — no proxy
+const browser = await client.browsers.create({ proxyCountryCode: null });
+```
+</CodeGroup>
+
+For the V3 API:
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Go to http://localhost:3000 and check the homepage",
+    proxy_country_code=None,
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const result = await client.run("Go to http://localhost:3000 and check the homepage", {
+  proxyCountryCode: null,
+});
+```
+</CodeGroup>
+
+<Info>
+  The US proxy is active by default on every session. To disable it for an auto-session (v2), pass `sessionSettings` with `proxyCountryCode: null` — omitting `sessionSettings` entirely leaves the default US proxy on.
+</Info>

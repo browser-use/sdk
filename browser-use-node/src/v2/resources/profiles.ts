@@ -9,6 +9,7 @@ type ProfileView = components["schemas"]["ProfileView"];
 export interface ProfileListParams {
   pageSize?: number;
   pageNumber?: number;
+  query?: string;
 }
 
 export class Profiles {
