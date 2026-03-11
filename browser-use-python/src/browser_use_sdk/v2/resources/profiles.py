@@ -14,12 +14,15 @@ class Profiles:
         self,
         *,
         name: str | None = None,
+        user_id: str | None = None,
         **extra: Any,
     ) -> ProfileView:
         """Create a new browser profile."""
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
+        if user_id is not None:
+            body["userId"] = user_id
         body.update(extra)
         return ProfileView.model_validate(
             self._http.request("POST", "/profiles", json=body)
@@ -30,6 +33,7 @@ class Profiles:
         *,
         page_size: int | None = None,
         page_number: int | None = None,
+        query: str | None = None,
     ) -> ProfileListResponse:
         """List browser profiles."""
         return ProfileListResponse.model_validate(
@@ -39,6 +43,7 @@ class Profiles:
                 params={
                     "pageSize": page_size,
                     "pageNumber": page_number,
+                    "query": query,
                 },
             )
         )
@@ -54,12 +59,15 @@ class Profiles:
         profile_id: str,
         *,
         name: str | None = None,
+        user_id: str | None = None,
         **extra: Any,
     ) -> ProfileView:
         """Update a browser profile."""
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
+        if user_id is not None:
+            body["userId"] = user_id
         body.update(extra)
         return ProfileView.model_validate(
             self._http.request("PATCH", f"/profiles/{profile_id}", json=body)
@@ -85,12 +93,15 @@ class AsyncProfiles:
         self,
         *,
         name: str | None = None,
+        user_id: str | None = None,
         **extra: Any,
     ) -> ProfileView:
         """Create a new browser profile."""
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
+        if user_id is not None:
+            body["userId"] = user_id
         body.update(extra)
         return ProfileView.model_validate(
             await self._http.request("POST", "/profiles", json=body)
@@ -101,6 +112,7 @@ class AsyncProfiles:
         *,
         page_size: int | None = None,
         page_number: int | None = None,
+        query: str | None = None,
     ) -> ProfileListResponse:
         """List browser profiles."""
         return ProfileListResponse.model_validate(
@@ -110,6 +122,7 @@ class AsyncProfiles:
                 params={
                     "pageSize": page_size,
                     "pageNumber": page_number,
+                    "query": query,
                 },
             )
         )
@@ -125,12 +138,15 @@ class AsyncProfiles:
         profile_id: str,
         *,
         name: str | None = None,
+        user_id: str | None = None,
         **extra: Any,
     ) -> ProfileView:
         """Update a browser profile."""
         body: dict[str, Any] = {}
         if name is not None:
             body["name"] = name
+        if user_id is not None:
+            body["userId"] = user_id
         body.update(extra)
         return ProfileView.model_validate(
             await self._http.request("PATCH", f"/profiles/{profile_id}", json=body)

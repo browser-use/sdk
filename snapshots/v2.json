@@ -620,6 +620,7 @@
               "schema": {
                 "$ref": "#/components/schemas/CreateSessionRequest",
                 "default": {
+                  "proxyCountryCode": "us",
                   "persistMemory": true,
                   "keepAlive": true,
                   "enableRecording": false
@@ -1351,7 +1352,7 @@
           "Profiles"
         ],
         "summary": "List Profiles",
-        "description": "Get paginated list of profiles.",
+        "description": "Get paginated list of profiles.\n\nUse the `query` parameter to search profiles by name or user_id.\nThis is useful when you have many profiles and need to find a specific user.\n\nExample: If you set `user_id` to your internal user identifier when creating profiles,\nyou can later search for that user by passing their identifier as the `query` parameter.",
         "operationId": "list_profiles_profiles_get",
         "security": [
           {
@@ -1380,6 +1381,23 @@
               "minimum": 1,
               "default": 1,
               "title": "Pagenumber"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
             }
           }
         ],
@@ -1411,7 +1429,7 @@
           "Profiles"
         ],
         "summary": "Create Profile",
-        "description": "Profiles allow you to preserve the state of the browser between tasks.\n\nThey are most commonly used to allow users to preserve the log-in state in the agent between tasks.\nYou'd normally create one profile per user and then use it for all their tasks.\n\nYou can create a new profile by calling this endpoint.",
+        "description": "Profiles allow you to preserve the state of the browser between tasks.\n\nThey are most commonly used to allow users to preserve the log-in state in the agent between tasks.\nYou'd normally create one profile per user and then use it for all their tasks.\n\nYou can set a `user_id` when creating a profile to associate it with a user in your system.\nThis allows you to later search for the profile using the GET /profiles endpoint with a query parameter.",
         "operationId": "create_profile_profiles_post",
         "security": [
           {
@@ -3575,7 +3593,8 @@
               }
             ],
             "title": "Proxy Country Code",
-            "description": "Country code for proxy location."
+            "description": "Country code for proxy location. Defaults to US. Set to null to disable proxy.",
+            "default": "us"
           },
           "timeout": {
             "type": "integer",
@@ -3667,7 +3686,8 @@
               }
             ],
             "title": "Proxy Country Code",
-            "description": "Country code for proxy location."
+            "description": "Country code for proxy location. Defaults to US. Set to null to disable proxy.",
+            "default": "us"
           },
           "startUrl": {
             "anyOf": [
@@ -4595,6 +4615,19 @@
             ],
             "title": "Name",
             "description": "Optional name for the profile"
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User ID",
+            "description": "Your internal user identifier for this profile. Use this to associate a profile with a user in your system."
           }
         },
         "type": "object",
@@ -4663,6 +4696,19 @@
             ],
             "title": "Name",
             "description": "Optional name for the profile"
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User ID",
+            "description": "Your internal user identifier for this profile. Use this to associate a profile with a user in your system."
           }
         },
         "type": "object",
@@ -4676,6 +4722,18 @@
             "format": "uuid",
             "title": "ID",
             "description": "Unique identifier for the profile"
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User ID",
+            "description": "Your internal user identifier for this profile. Use this to associate a profile with a user in your system."
           },
           "name": {
             "anyOf": [
@@ -4737,7 +4795,7 @@
           "updatedAt"
         ],
         "title": "ProfileView",
-        "description": "View model for representing a profile. A profile lets you preserve the login state between sessions.\n\nWe recommend that you create a separate profile for each user of your app."
+        "description": "View model for representing a profile. A profile lets you preserve the login state between sessions.\n\nWe recommend that you create a separate profile for each user of your app.\nYou can assign a user_id to each profile to easily identify which user the profile belongs to."
       },
       "ProxyCountryCode": {
         "type": "string",
@@ -5225,7 +5283,8 @@
               }
             ],
             "title": "Proxy Country Code",
-            "description": "Proxy country code for geo-targeted browsing. If set, proxy is enabled with that country. If session_settings is provided but proxy_country_code is not set, proxy is disabled."
+            "description": "Proxy country code for geo-targeted browsing. Defaults to US. Set to null to disable proxy.",
+            "default": "us"
           },
           "browserScreenWidth": {
             "anyOf": [

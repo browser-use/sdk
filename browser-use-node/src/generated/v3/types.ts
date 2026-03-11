@@ -436,11 +436,17 @@ export interface components {
             profileId?: string | null;
             /** Workspaceid */
             workspaceId?: string | null;
-            proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
+            /** @default us */
+            proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
             /** Outputschema */
             outputSchema?: {
                 [key: string]: unknown;
             } | null;
+            /**
+             * Enablescheduledtasks
+             * @default false
+             */
+            enableScheduledTasks: boolean;
         };
         /** SessionListResponse */
         SessionListResponse: {
