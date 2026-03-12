@@ -83,7 +83,7 @@ await browser.close();
 The browser is automatically created when you connect and automatically stopped when the WebSocket disconnects. No need to call any API to start or stop the browser.
 
 <Tip>
-  CDP discovery endpoints (`/json/version`, `/json/list`) are supported on the WebSocket URL for tools that use auto-discovery.
+  CDP discovery endpoints (`/json/version`, `/json/list`) are also exposed over HTTPS for tools that use HTTP auto-discovery.
 </Tip>
 
 ## SDK
