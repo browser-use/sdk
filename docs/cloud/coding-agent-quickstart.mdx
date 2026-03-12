@@ -319,8 +319,9 @@ url_info = await client.files.session_url(session_id, file_name="input.pdf", con
 output = await client.files.task_output(task_id, file_id)
 
 # Browser API — direct CDP access
-browser = await client.browsers.create(proxy_country_code="de")
+browser = await client.browsers.create(proxy_country_code="us")
 # Connect via browser.cdp_url with Playwright/Puppeteer/Selenium
+# Or skip the SDK entirely: wss://connect.browser-use.com?apiKey=KEY&proxyCountryCode=us
 
 # Skills — turn websites into APIs
 skill = await client.skills.create(goal="Extract product data from Amazon", agent_prompt="...")

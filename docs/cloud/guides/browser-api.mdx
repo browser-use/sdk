@@ -1,12 +1,95 @@
 ---
 title: Browser Infrastructure
-description: "Direct Chrome DevTools Protocol (CDP) access to stealth browsers. Connect with Playwright, Puppeteer, or Selenium."
+description: "Direct Chrome DevTools Protocol (CDP) access to stealth browsers. Connect via WebSocket URL or SDK with Playwright, Puppeteer, or Selenium."
 icon: globe
 ---
 
 The Browser API gives you a raw Chrome DevTools Protocol (CDP) connection to Browser Use's stealth infrastructure. No agent — you write the automation code, we provide the undetectable browser with proxies and CAPTCHA handling.
 
-## Create a browser session
+There are two ways to connect:
+
+- **WebSocket URL** — single `wss://` URL, no SDK needed. Pass config as query params, browser auto-stops on disconnect.
+- **SDK** — create a browser via the API, get a `cdp_url`, connect with your framework of choice.
+
+## WebSocket URL (no SDK)
+
+Connect to a cloud browser with a single WebSocket URL. All configuration is passed as query parameters — no SDK or REST calls needed.
+
+<Tip>
+  This is the simplest way to get a CDP connection. Just point Playwright, Puppeteer, or any CDP client at the URL.
+</Tip>
+
+### Playwright
+
+<CodeGroup>
+```python Python
+from playwright.async_api import async_playwright
+
+WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
+
+async with async_playwright() as p:
+    browser = await p.chromium.connect_over_cdp(WSS_URL)
+    page = browser.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    print(await page.title())
+    await browser.close()
+# Browser is automatically stopped when the WebSocket disconnects
+```
+```typescript TypeScript
+import { chromium } from "playwright";
+
+const WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us";
+
+const browser = await chromium.connectOverCDP(WSS_URL);
+const page = browser.contexts()[0].pages()[0];
+await page.goto("https://example.com");
+console.log(await page.title());
+await browser.close();
+// Browser is automatically stopped when the WebSocket disconnects
+```
+</CodeGroup>
+
+### Puppeteer
+
+```typescript
+import puppeteer from "puppeteer-core";
+
+const WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us";
+
+const browser = await puppeteer.connect({ browserWSEndpoint: WSS_URL });
+const [page] = await browser.pages();
+await page.goto("https://example.com");
+console.log(await page.title());
+await browser.close();
+// Browser is automatically stopped when the WebSocket disconnects
+```
+
+### Query parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `apiKey` | `string` | **Required.** Your Browser Use API key. |
+| `proxyCountryCode` | `string` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
+| `profileId` | `string` | Load a saved browser profile (cookies, localStorage). |
+| `timeout` | `int` | Session timeout in minutes. Max: 240 (4 hours). |
+| `browserScreenWidth` | `int` | Browser width in pixels. |
+| `browserScreenHeight` | `int` | Browser height in pixels. |
+| `customProxy.host` | `string` | Custom proxy host. |
+| `customProxy.port` | `int` | Custom proxy port. |
+| `customProxy.username` | `string` | Username for the custom proxy. |
+| `customProxy.password` | `string` | Password for the custom proxy. |
+
+### How it works
+
+The browser is automatically created when you connect and automatically stopped when the WebSocket disconnects. No need to call any API to start or stop the browser.
+
+<Tip>
+  CDP discovery endpoints are also exposed over HTTPS for tools that use HTTP auto-discovery — e.g. `https://connect.browser-use.com/json/version?apiKey=YOUR_API_KEY`.
+</Tip>
+
+## SDK
+
+### Create a browser session
 
 <CodeGroup>
 ```python Python
@@ -27,7 +110,7 @@ console.log(browser.liveUrl);
 ```
 </CodeGroup>
 
-## Connect with Playwright
+### Connect with Playwright
 
 <CodeGroup>
 ```python Python
@@ -63,7 +146,7 @@ await client.browsers.stop(browser.id);
 ```
 </CodeGroup>
 
-## Connect with Puppeteer
+### Connect with Puppeteer
 
 ```typescript
 import puppeteer from "puppeteer-core";
@@ -81,7 +164,7 @@ await pw.close();
 await client.browsers.stop(browser.id);
 ```
 
-## Connect with Selenium
+### Connect with Selenium
 
 ```python
 from selenium import webdriver
@@ -101,7 +184,7 @@ driver.quit()
 await client.browsers.stop(browser.id)
 ```
 
-## Manage sessions
+### Manage sessions
 
 <CodeGroup>
 ```python Python
@@ -133,7 +216,7 @@ await client.browsers.stop(browserId);
   Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
 </Warning>
 
-## Parameters
+### Parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
