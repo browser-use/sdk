@@ -55,7 +55,7 @@
                 "pages": [
                   "cloud/introduction",
                   "cloud/quickstart",
-                  "cloud/coding-agent-quickstart",
+                  "cloud/llm-quickstart",
                   "cloud/pricing"
                 ]
               },
@@ -173,7 +173,7 @@
             "pages": [
               "open-source/introduction",
               "open-source/quickstart",
-              "open-source/coding-agent-quickstart",
+              "open-source/llm-quickstart",
               "open-source/supported-models"
             ]
           },
@@ -347,7 +347,7 @@
     {"source": "/", "destination": "/cloud/introduction"},
     {"source": "/introduction", "destination": "/cloud/introduction"},
     {"source": "/quickstart", "destination": "/open-source/quickstart"},
-    {"source": "/quickstart_llm", "destination": "/open-source/coding-agent-quickstart"},
+    {"source": "/quickstart_llm", "destination": "/open-source/llm-quickstart"},
     {"source": "/supported-models", "destination": "/open-source/supported-models"},
 
     {"source": "/customize/agent/basics", "destination": "/open-source/customize/agent/basics"},
@@ -446,8 +446,9 @@
     {"source": "/customize/examples/prompting-guide", "destination": "/open-source/customize/agent/prompting-guide"},
 
     {"source": "/pricing", "destination": "/cloud/pricing"},
-    {"source": "/llm-quickstart", "destination": "/cloud/coding-agent-quickstart"},
-    {"source": "/cloud/llm-quickstart", "destination": "/cloud/coding-agent-quickstart"},
+    {"source": "/cloud/coding-agent-quickstart", "destination": "/cloud/llm-quickstart"},
+    {"source": "/open-source/coding-agent-quickstart", "destination": "/open-source/llm-quickstart"},
+    {"source": "/coding-agent-quickstart", "destination": "/cloud/llm-quickstart"},
     {"source": "/faq", "destination": "/cloud/faq"},
     {"source": "/open-source", "destination": "/open-source/introduction"},
     {"source": "/examples", "destination": "/cloud/tips/data/structured-output"},
@@ -487,8 +488,8 @@
 
     {"source": "/get-started/human-quickstart", "destination": "/cloud/quickstart"},
     {"source": "/human-quickstart", "destination": "/cloud/quickstart"},
-    {"source": "/get-started/llm-quickstart", "destination": "/cloud/coding-agent-quickstart"},
-    {"source": "/open-source/quickstart_llm", "destination": "/open-source/coding-agent-quickstart"},
+    {"source": "/get-started/llm-quickstart", "destination": "/cloud/llm-quickstart"},
+    {"source": "/open-source/quickstart_llm", "destination": "/open-source/llm-quickstart"},
     {"source": "/get-started/models-and-pricing", "destination": "/cloud/pricing"},
     {"source": "/get-started/pricing", "destination": "/cloud/pricing"},
     {"source": "/concepts/overview", "destination": "/cloud/quickstart"},
