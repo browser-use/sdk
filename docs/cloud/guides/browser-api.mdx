@@ -74,16 +74,17 @@ await browser.close();
 | `timeout` | `int` | Session timeout in minutes. Max: 240 (4 hours). |
 | `browserScreenWidth` | `int` | Browser width in pixels. |
 | `browserScreenHeight` | `int` | Browser height in pixels. |
-| `proxyUrl` | `string` | Custom proxy URL (HTTP or SOCKS5). |
-| `proxyUsername` | `string` | Username for the custom proxy. |
-| `proxyPassword` | `string` | Password for the custom proxy. |
+| `customProxy.url` | `string` | Custom proxy URL (HTTP or SOCKS5). |
+| `customProxy.username` | `string` | Username for the custom proxy. |
+| `customProxy.password` | `string` | Password for the custom proxy. |
 
 ### How it works
 
 The browser is automatically created when you connect and automatically stopped when the WebSocket disconnects. No need to call any API to start or stop the browser.
 
 <Tip>
-  CDP discovery endpoints (`/json/version`, `/json/list`) are also exposed over HTTPS for tools that use HTTP auto-discovery.
+  CDP discovery endpoints are also exposed over HTTPS for tools that use HTTP auto-discovery:
+  `https://connect.browser-use.com/json/version?apiKey=YOUR_API_KEY`
 </Tip>
 
 ## SDK
