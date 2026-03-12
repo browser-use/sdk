@@ -64,22 +64,9 @@ await browser.close();
 // Browser is automatically stopped when the WebSocket disconnects
 ```
 
-### Selenium
-
-```python
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-
-WSS_URL = "connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
-
-options = Options()
-options.debugger_address = WSS_URL
-driver = webdriver.Chrome(options=options)
-driver.get("https://example.com")
-print(driver.title)
-driver.quit()
-# Browser is automatically stopped when the connection closes
-```
+<Note>
+  Selenium requires `host:port` for its debugger address and cannot pass query parameters like `apiKey`. Use the [SDK approach](#connect-with-selenium) for Selenium connections.
+</Note>
 
 ### Query parameters
 
