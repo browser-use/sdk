@@ -142,7 +142,7 @@ If your login flow redirects through an identity provider (e.g., Okta, Auth0), i
 ```python Python
 result = await client.run(
     "Log into the company portal and download the Q4 report",
-    secrets={"portal.example.com": "username:password123"},
+    secrets={"username": "user@company.com", "password": "password123"},
     allowed_domains=["portal.example.com", "*.okta.com"],
 )
 ```
@@ -150,7 +150,7 @@ result = await client.run(
 const result = await client.run(
   "Log into the company portal and download the Q4 report",
   {
-    secrets: { "portal.example.com": "username:password123" },
+    secrets: { username: "user@company.com", password: "password123" },
     allowedDomains: ["portal.example.com", "*.okta.com"],
   },
 );
