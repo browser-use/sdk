@@ -1,0 +1,262 @@
+---
+title: "CLI"
+description: "Control browsers from the command line with navigation, interaction, cookies, JavaScript execution, and agent tasks."
+icon: "terminal"
+---
+
+The Browser Use CLI provides direct browser control without writing Python code. Install the package and run commands to navigate, interact, manage cookies, and execute agent tasks.
+
+## Installation
+
+```bash
+pip install browser-use
+```
+
+Verify the installation:
+
+```bash
+browser-use --help
+```
+
+## Commands
+
+### Navigation
+
+Navigate to a URL:
+
+```bash
+browser-use navigate --url "https://example.com"
+```
+
+Go back or forward:
+
+```bash
+browser-use back
+browser-use forward
+```
+
+Refresh the current page:
+
+```bash
+browser-use refresh
+```
+
+### Interaction
+
+Click an element by selector:
+
+```bash
+browser-use click --selector "#submit-button"
+```
+
+Type text into an input field:
+
+```bash
+browser-use type --selector "#search" --text "browser automation"
+```
+
+Scroll the page:
+
+```bash
+browser-use scroll --direction down --amount 500
+```
+
+Take a screenshot:
+
+```bash
+browser-use screenshot --output screenshot.png
+```
+
+### Cookies
+
+Export cookies to a file:
+
+```bash
+browser-use cookies export --output cookies.json
+```
+
+Import cookies from a file:
+
+```bash
+browser-use cookies import --input cookies.json
+```
+
+Clear all cookies:
+
+```bash
+browser-use cookies clear
+```
+
+### Wait
+
+Wait for an element to appear:
+
+```bash
+browser-use wait --selector "#loading" --state hidden
+```
+
+Wait for a specific duration (in milliseconds):
+
+```bash
+browser-use wait --timeout 3000
+```
+
+### JavaScript
+
+Execute JavaScript in the browser:
+
+```bash
+browser-use js --code "document.title"
+```
+
+Execute JavaScript from a file:
+
+```bash
+browser-use js --file script.js
+```
+
+## Agent tasks
+
+Run an AI agent to complete a task:
+
+```bash
+browser-use agent --task "Find the top post on Hacker News"
+```
+
+Specify a model:
+
+```bash
+browser-use agent --task "Search for flights to Paris" --model gpt-4.1-mini
+```
+
+Use a custom prompt:
+
+```bash
+browser-use agent --task "Fill out the contact form" --system-prompt "Be concise and efficient"
+```
+
+## Cloud sessions
+
+Connect to a Browser Use Cloud session:
+
+```bash
+browser-use cloud connect --session-id <session-id>
+```
+
+Create a new cloud session:
+
+```bash
+browser-use cloud create
+```
+
+List active sessions:
+
+```bash
+browser-use cloud list
+```
+
+<Note>
+Cloud sessions require a `BROWSER_USE_API_KEY`. Set it in your environment or `.env` file.
+</Note>
+
+## Tunnels
+
+Expose your local browser to the cloud:
+
+```bash
+browser-use tunnel start
+```
+
+Stop an active tunnel:
+
+```bash
+browser-use tunnel stop
+```
+
+Check tunnel status:
+
+```bash
+browser-use tunnel status
+```
+
+## Profile management
+
+Create a browser profile:
+
+```bash
+browser-use profile create --name "work"
+```
+
+List available profiles:
+
+```bash
+browser-use profile list
+```
+
+Use a specific profile:
+
+```bash
+browser-use navigate --url "https://example.com" --profile "work"
+```
+
+Delete a profile:
+
+```bash
+browser-use profile delete --name "work"
+```
+
+## Usage examples
+
+### Complete workflow
+
+Navigate, interact, and extract data:
+
+```bash
+# Start browser and navigate
+browser-use navigate --url "https://news.ycombinator.com"
+
+# Click on a link
+browser-use click --selector ".titleline a"
+
+# Take a screenshot
+browser-use screenshot --output page.png
+
+# Extract page title with JavaScript
+browser-use js --code "document.title"
+```
+
+### Authentication with cookies
+
+Save and restore login state:
+
+```bash
+# Navigate and log in manually or with agent
+browser-use agent --task "Log in to example.com with username demo"
+
+# Export cookies for later use
+browser-use cookies export --output auth-cookies.json
+
+# In a new session, restore cookies
+browser-use cookies import --input auth-cookies.json
+browser-use navigate --url "https://example.com/dashboard"
+```
+
+### Cloud-based automation
+
+Run tasks in the cloud:
+
+```bash
+# Create a cloud session with a profile
+browser-use cloud create --profile "authenticated-user"
+
+# Run an agent task in the cloud
+browser-use agent --task "Extract data from dashboard" --cloud
+```
+
+## Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `BROWSER_USE_API_KEY` | API key for cloud features |
+| `BROWSER_USE_HEADLESS` | Run browser in headless mode (`true`/`false`) |
+| `BROWSER_USE_PROFILE` | Default profile to use |
