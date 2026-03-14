@@ -134,6 +134,29 @@ const result = await client.run(
   **Domain restrictions:** Use `allowed_domains` with any auth method to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`, `http*://example.com`.
 </Info>
 
+### Multiple Domains (OAuth/SSO Redirects)
+
+If your login flow redirects through an identity provider (e.g., Okta, Auth0), include both domains:
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Log into the company portal and download the Q4 report",
+    secrets={"portal.example.com": "username:password123"},
+    allowed_domains=["portal.example.com", "*.okta.com"],
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Log into the company portal and download the Q4 report",
+  {
+    secrets: { "portal.example.com": "username:password123" },
+    allowedDomains: ["portal.example.com", "*.okta.com"],
+  },
+);
+```
+</CodeGroup>
+
 ---
 
 ## 1Password Integration
@@ -205,6 +228,27 @@ const result = await client.run(
   },
 );
 console.log(result.output);
+```
+</CodeGroup>
+
+For login flows with SSO/OAuth redirects, include all required domains:
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Log into Jira and create a ticket for the Q4 release",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net", "*.okta.com"],
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Log into Jira and create a ticket for the Q4 release",
+  {
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net", "*.okta.com"],
+  },
+);
 ```
 </CodeGroup>
 
