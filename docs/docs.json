@@ -81,7 +81,17 @@
               },
               {
                 "group": "Tutorials",
-                "pages": ["cloud/tutorials/chat-ui"]
+                "pages": [
+                  "cloud/tutorials/chat-ui",
+                  {
+                    "group": "Integrations",
+                    "pages": [
+                      "cloud/tutorials/integrations/openclaw",
+                      "cloud/tutorials/integrations/n8n",
+                      "cloud/tutorials/integrations/playwright"
+                    ]
+                  }
+                ]
               },
               {
                 "group": "Resources",
@@ -118,13 +128,6 @@
                           "cloud/tips/data/file-downloads",
                           "cloud/tips/data/geo-scraping",
                           "cloud/tips/data/streaming"
-                        ]
-                      },
-                      {
-                        "group": "Integrations",
-                        "pages": [
-                          "cloud/tips/integrations/playwright",
-                          "cloud/tips/integrations/n8n"
                         ]
                       }
                     ]
