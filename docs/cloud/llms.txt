@@ -3,6 +3,8 @@
 - [API Reference](https://docs.browser-use.com/cloud/api-reference): Complete REST API reference for v2 and v3. Endpoints, authentication, SDKs, and request/response examples.
 - [Coding Agent Quickstart](https://docs.browser-use.com/cloud/coding-agent-quickstart): Complete Cloud SDK reference for AI coding agents. Copy one blob into Claude Code, Cursor, or Copilot for instant API integration.
 - [Troubleshooting & FAQ](https://docs.browser-use.com/cloud/faq): Fix common issues — slow tasks, failed agents, login problems, blocked sites, and unexpected costs.
+
+## Guides
 - [Authentication & 2FA](https://docs.browser-use.com/cloud/guides/authentication): Authenticate browser automation tasks using profile sync, domain-scoped secrets, and the 1Password integration with TOTP/2FA.
 - [Browser Infrastructure](https://docs.browser-use.com/cloud/guides/browser-api): Direct Chrome DevTools Protocol (CDP) access to stealth browsers. Connect via WebSocket URL or SDK with Playwright, Puppeteer, or Selenium.
 - [MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server): Run browser automation tasks from your AI coding assistant. Connect to Claude, Cursor, Windsurf, or any MCP client.
@@ -13,21 +15,35 @@
 - [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks): Receive real-time notifications when tasks complete. Configure webhook endpoints for async task monitoring.
 - [Workspaces](https://docs.browser-use.com/cloud/guides/workspaces): Persistent file storage across sessions. Upload input files, download results, and share data across tasks.
 - [Browser Use Cloud](https://docs.browser-use.com/cloud/introduction): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
+
+## New Features
 - [BU Agent API (Experimental)](https://docs.browser-use.com/cloud/new-features/api-v3): BU Agent API (v3) — a next-generation AI browser agent for web scraping, data extraction, file manipulation, and multi-step workflows in a single API call.
 - [Models and Pricing](https://docs.browser-use.com/cloud/pricing): Cloud API pricing, models, and cost breakdown.
 - [Quickstart](https://docs.browser-use.com/cloud/quickstart): Install the SDK, set your API key, and run your first AI browser automation task with Python or TypeScript.
+
+## Tips > Authentication
 - [1Password Login with 2FA](https://docs.browser-use.com/cloud/tips/authentication/1password-2fa): Auto-fill passwords and TOTP codes from your 1Password vault during agent tasks.
 - [Profiles & Secrets](https://docs.browser-use.com/cloud/tips/authentication/profiles-and-secrets): Run tasks on authenticated sites using saved browser profiles and domain-scoped credentials.
 - [Social Media Platforms](https://docs.browser-use.com/cloud/tips/authentication/social-media): Use browser profiles and residential proxies to automate social media and job platforms reliably.
+
+## Tips > Data
 - [File Downloads](https://docs.browser-use.com/cloud/tips/data/file-downloads): Download files the agent saves during a task — PDFs, CSVs, images, and more.
 - [Geo-Specific Scraping](https://docs.browser-use.com/cloud/tips/data/geo-scraping): Scrape location-dependent content using residential proxies in 195+ countries.
 - [Stream Task Progress](https://docs.browser-use.com/cloud/tips/data/streaming): Stream agent steps in real time as the task executes.
 - [Structured Output](https://docs.browser-use.com/cloud/tips/data/structured-output): Extract typed data from any website using Pydantic models or Zod schemas.
+
+## Tips > Live View
 - [Human Takeover](https://docs.browser-use.com/cloud/tips/live-view/human-takeover): Combine human judgment with agent automation — hand control back and forth in the same session.
 - [Embed Live View](https://docs.browser-use.com/cloud/tips/live-view/iframe-embed): Embed the agent's live browser view in your app using an iframe.
+
+## Tips > Parallel
 - [Parallel Extraction](https://docs.browser-use.com/cloud/tips/parallel/concurrent-extraction): Run multiple extraction tasks concurrently with asyncio.gather or Promise.all.
 - [Parallel Browsers with Shared Auth](https://docs.browser-use.com/cloud/tips/parallel/shared-config): Run concurrent sessions that share the same profile and proxy for authenticated parallel tasks.
+
+## Tutorials
 - [Chat UI](https://docs.browser-use.com/cloud/tutorials/chat-ui): Build a chat interface for Browser Use with Next.js and the SDK.
+
+## Tutorials > Integrations
 - [n8n](https://docs.browser-use.com/cloud/tutorials/integrations/n8n): Use Browser Use as an HTTP node in n8n workflows.
 - [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
 - [Playwright](https://docs.browser-use.com/cloud/tutorials/integrations/playwright): Connect Playwright to a cloud browser via CDP for full programmatic control.

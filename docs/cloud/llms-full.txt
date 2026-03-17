@@ -3025,7 +3025,7 @@ Open `~/.openclaw/openclaw.json` and add a `browser-use` profile:
     remoteCdpHandshakeTimeoutMs: 5000,
     profiles: {
       "browser-use": {
-        cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&profileId=<PROFILE_ID>&proxyCountryCode=us",
+        cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
         color: "#ff750e",
       },
     },
@@ -3087,7 +3087,7 @@ Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to navig
 
 For the complete CLI reference and advanced features like cloud browsers, tunnels, sessions, and Python execution, see the [README](https://github.com/browser-use/browser-use/blob/main/browser_use/skill_cli/README.md) and the [Browser Use docs](https://docs.browser-use.com).
 
-# Direct Browser (Playwright)
+# Playwright
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/playwright
 
 Need lower-level control than an agent task? Create a cloud browser and connect directly via Chrome DevTools Protocol (CDP). You get a stealth browser with residential proxy — use it with Playwright, Puppeteer, or any CDP client.
@@ -3098,30 +3098,34 @@ When to use this:
 - You want to combine agent tasks with manual browser automation
 
 ```python
+import asyncio
 from playwright.async_api import async_playwright
 from browser_use_sdk import AsyncBrowserUse
 
-client = AsyncBrowserUse()
-browser = await client.browsers.create(proxy_country_code="us")
+async def main():
+    client = AsyncBrowserUse()
+    browser = await client.browsers.create(proxy_country_code="us")
 
-async with async_playwright() as p:
-    b = await p.chromium.connect_over_cdp(browser.cdp_url)
-    page = b.contexts[0].pages[0]
-    await page.goto("https://example.com")
-    await page.screenshot(path="screenshot.png")
-    await b.close()
+    async with async_playwright() as p:
+        b = await p.chromium.connect_over_cdp(browser.cdp_url)
+        page = b.contexts[0].pages[0]
+        await page.goto("https://example.com")
+        await page.screenshot(path="screenshot.png")
+        await b.close()
 
-await client.browsers.stop(browser.id)
+    await client.browsers.stop(browser.id)
+
+asyncio.run(main())
 ```
 
 See [Browser Infrastructure](/cloud/guides/browser-api) for the full browser API and [Pricing](/cloud/pricing) for browser session costs.
 
-# n8n Integration
+# n8n
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/n8n
 
 Browser Use works with [n8n](https://n8n.io) as a standard HTTP integration — no custom nodes needed.
 
-**Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v2/tasks` with your API key in the `X-Browser-Use-API-Key` header. Then poll `GET /api/v2/tasks/{id}` until `status` is `finished`.
+**Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v2/tasks` with your API key in the `X-Browser-Use-API-Key` header. Then poll `GET /api/v2/tasks/{task_id}/status` until `status` is `finished` or `stopped`.
 
 For event-driven workflows, use [Webhooks](/cloud/guides/webhooks) to receive completion events directly instead of polling.
 
