@@ -19,14 +19,15 @@ async def main():
     client = AsyncBrowserUse()
     browser = await client.browsers.create(proxy_country_code="us")
 
-    async with async_playwright() as p:
-        b = await p.chromium.connect_over_cdp(browser.cdp_url)
-        page = b.contexts[0].pages[0]
-        await page.goto("https://example.com")
-        await page.screenshot(path="screenshot.png")
-        await b.close()
-
-    await client.browsers.stop(browser.id)
+    try:
+        async with async_playwright() as p:
+            b = await p.chromium.connect_over_cdp(browser.cdp_url)
+            page = b.contexts[0].pages[0]
+            await page.goto("https://example.com")
+            await page.screenshot(path="screenshot.png")
+            await b.close()
+    finally:
+        await client.browsers.stop(browser.id)
 
 asyncio.run(main())
 ```

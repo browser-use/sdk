@@ -3,6 +3,9 @@
 - [API Reference](https://docs.browser-use.com/cloud/api-reference): Complete REST API reference for v2 and v3. Endpoints, authentication, SDKs, and request/response examples.
 - [Coding Agent Quickstart](https://docs.browser-use.com/cloud/coding-agent-quickstart): Complete Cloud SDK reference for AI coding agents. Copy one blob into Claude Code, Cursor, or Copilot for instant API integration.
 - [Troubleshooting & FAQ](https://docs.browser-use.com/cloud/faq): Fix common issues — slow tasks, failed agents, login problems, blocked sites, and unexpected costs.
+- [Browser Use Cloud](https://docs.browser-use.com/cloud/introduction): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
+- [Models and Pricing](https://docs.browser-use.com/cloud/pricing): Cloud API pricing, models, and cost breakdown.
+- [Quickstart](https://docs.browser-use.com/cloud/quickstart): Install the SDK, set your API key, and run your first AI browser automation task with Python or TypeScript.
 
 ## Guides
 - [Authentication & 2FA](https://docs.browser-use.com/cloud/guides/authentication): Authenticate browser automation tasks using profile sync, domain-scoped secrets, and the 1Password integration with TOTP/2FA.
@@ -14,12 +17,9 @@
 - [Tasks](https://docs.browser-use.com/cloud/guides/tasks): Run AI browser automation tasks with structured output, configurable models, real-time streaming, cost controls, and natural language instructions.
 - [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks): Receive real-time notifications when tasks complete. Configure webhook endpoints for async task monitoring.
 - [Workspaces](https://docs.browser-use.com/cloud/guides/workspaces): Persistent file storage across sessions. Upload input files, download results, and share data across tasks.
-- [Browser Use Cloud](https://docs.browser-use.com/cloud/introduction): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
 
 ## New Features
 - [BU Agent API (Experimental)](https://docs.browser-use.com/cloud/new-features/api-v3): BU Agent API (v3) — a next-generation AI browser agent for web scraping, data extraction, file manipulation, and multi-step workflows in a single API call.
-- [Models and Pricing](https://docs.browser-use.com/cloud/pricing): Cloud API pricing, models, and cost breakdown.
-- [Quickstart](https://docs.browser-use.com/cloud/quickstart): Install the SDK, set your API key, and run your first AI browser automation task with Python or TypeScript.
 
 ## Tips > Authentication
 - [1Password Login with 2FA](https://docs.browser-use.com/cloud/tips/authentication/1password-2fa): Auto-fill passwords and TOTP codes from your 1Password vault during agent tasks.

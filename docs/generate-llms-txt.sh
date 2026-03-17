@@ -17,7 +17,13 @@ generate() {
 
   local prev_group=""
 
-  find "$dir" -name '*.mdx' -type f | sort | while read -r file; do
+  # Sort by parent directory first, then filename, so files in the same
+  # directory are always contiguous (prevents root-level pages from being
+  # listed under a nested subdirectory heading).
+  find "$dir" -name '*.mdx' -type f | while read -r f; do
+    rel="${f#"$dir/"}"
+    printf '%s\t%s\n' "$(dirname "$rel")" "$f"
+  done | sort -t$'\t' -k1,1 -k2,2 | cut -f2 | while read -r file; do
     # Extract frontmatter title and description
     title=""
     description=""

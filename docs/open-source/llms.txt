@@ -1,6 +1,13 @@
 # open-source docs
 
 - [Coding Agent Quickstart](https://docs.browser-use.com/open-source/coding-agent-quickstart): Complete Python SDK reference for AI coding agents. Paste into Claude Code, Cursor, or Copilot for instant integration.
+- [Development](https://docs.browser-use.com/open-source/development): Preview changes locally to update your docs
+- [Browser Use Open Source](https://docs.browser-use.com/open-source/introduction): Python library for AI browser automation with 79k+ GitHub stars. Connect any LLM and run locally or self-hosted.
+- [Human Quickstart](https://docs.browser-use.com/open-source/quickstart): Install and run your first AI browser agent in minutes. Python setup with pip, environment variables, and a working example.
+- [Supported Models](https://docs.browser-use.com/open-source/supported-models): Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider.
+
+## Customize
+- [Lifecycle Hooks](https://docs.browser-use.com/open-source/customize/hooks): Hook into agent lifecycle events — before/after actions, navigation, extraction, and error handling callbacks.
 
 ## Customize > Agent
 - [All Parameters](https://docs.browser-use.com/open-source/customize/agent/all-parameters): Complete reference for all agent configuration options — LLM settings, prompts, tools, output format, and callbacks.
@@ -15,9 +22,6 @@
 - [Real Browser](https://docs.browser-use.com/open-source/customize/browser/real-browser): Connect to your existing Chrome browser to preserve login sessions, cookies, and extensions for authenticated tasks.
 - [Remote Browser](https://docs.browser-use.com/open-source/customize/browser/remote): Connect to remote browsers via CDP — use with the Cloud, Browserbase, or any remote Chrome instance.
 
-## Customize
-- [Lifecycle Hooks](https://docs.browser-use.com/open-source/customize/hooks): Hook into agent lifecycle events — before/after actions, navigation, extraction, and error handling callbacks.
-
 ## Customize > Integrations
 - [Documentation MCP](https://docs.browser-use.com/open-source/customize/integrations/docs-mcp): Add documentation context to Claude Code and other MCP clients for AI-assisted browser automation development.
 - [MCP Server](https://docs.browser-use.com/open-source/customize/integrations/mcp-server): Run as a Model Context Protocol server. Connect AI models to browser automation through the MCP standard.
@@ -31,20 +35,17 @@
 - [Overview](https://docs.browser-use.com/open-source/customize/tools/basics): Learn about built-in browser actions and custom tools.
 - [Remove Tools](https://docs.browser-use.com/open-source/customize/tools/remove): Exclude default tools to restrict agent capabilities.
 - [Response Format](https://docs.browser-use.com/open-source/customize/tools/response): Customize how tools return data to the agent. Control response formatting, extraction, and content filtering.
-- [Development](https://docs.browser-use.com/open-source/development): Preview changes locally to update your docs
 
 ## Development
 - [Get Help](https://docs.browser-use.com/open-source/development/get-help): Get help — join 20k+ developers on Discord, search GitHub issues, or ask the community.
+- [n8n Integration](https://docs.browser-use.com/open-source/development/n8n-integration): Learn how to integrate Browser Use with n8n workflows
+- [Roadmap](https://docs.browser-use.com/open-source/development/roadmap): Future plans and upcoming features for Browser Use.
 
 ## Development > Monitoring
 - [Costs](https://docs.browser-use.com/open-source/development/monitoring/costs): Track token usage and API costs for your browser automation tasks
 - [Observability](https://docs.browser-use.com/open-source/development/monitoring/observability): Trace agent execution steps and capture browser session recordings.
 - [OpenLIT](https://docs.browser-use.com/open-source/development/monitoring/openlit): Complete observability with OpenLIT tracing.
 - [Telemetry](https://docs.browser-use.com/open-source/development/monitoring/telemetry): Understanding Browser Use's telemetry
-
-## Development
-- [n8n Integration](https://docs.browser-use.com/open-source/development/n8n-integration): Learn how to integrate Browser Use with n8n workflows
-- [Roadmap](https://docs.browser-use.com/open-source/development/roadmap): Future plans and upcoming features for Browser Use.
 
 ## Development > Setup
 - [Contribution Guide](https://docs.browser-use.com/open-source/development/setup/contribution-guide): How to contribute — code standards, PR process, testing requirements, and submitting your first pull request.
@@ -64,7 +65,6 @@
 - [Playwright Integration](https://docs.browser-use.com/open-source/examples/templates/playwright-integration): Advanced example showing Playwright and Browser-Use working together
 - [Secure Setup](https://docs.browser-use.com/open-source/examples/templates/secure): Azure OpenAI with data privacy and security configuration.
 - [Sensitive Data](https://docs.browser-use.com/open-source/examples/templates/sensitive-data): Handle secret information securely and avoid sending PII & passwords to the LLM.
-- [Browser Use Open Source](https://docs.browser-use.com/open-source/introduction): Python library for AI browser automation with 79k+ GitHub stars. Connect any LLM and run locally or self-hosted.
 
 ## Legacy > Actor
 - [All Parameters](https://docs.browser-use.com/open-source/legacy/actor/all-parameters): Complete API reference for Browser Actor classes, methods, and parameters including BrowserSession, Page, Element, and Mouse
@@ -82,5 +82,3 @@
 - [All Parameters](https://docs.browser-use.com/open-source/legacy/sandbox/all-parameters): Sandbox configuration reference
 - [Events](https://docs.browser-use.com/open-source/legacy/sandbox/events): Monitor execution with callbacks
 - [Quickstart](https://docs.browser-use.com/open-source/legacy/sandbox/quickstart): Run browser automation in the cloud
-- [Human Quickstart](https://docs.browser-use.com/open-source/quickstart): Install and run your first AI browser agent in minutes. Python setup with pip, environment variables, and a working example.
-- [Supported Models](https://docs.browser-use.com/open-source/supported-models): Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider.
