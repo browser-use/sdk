@@ -1987,7 +1987,7 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
 
 | Event | When |
 |-------|------|
-| `agent.task.status_update` | Task started, finished, or stopped |
+| `agent.task.status_update` | Task status changes (`started`, `finished`, or `stopped`) |
 | `test` | Webhook test ping |
 
 ## Payload
@@ -1997,33 +1997,60 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
   "type": "agent.task.status_update",
   "timestamp": "2025-01-15T10:30:00Z",
   "payload": {
-    "taskId": "task_abc123",
+    "task_id": "task_abc123",
+    "session_id": "session_xyz",
     "status": "finished",
-    "sessionId": "session_xyz"
+    "metadata": {}
   }
 }
 ```
 
-Possible `status` values: `started`, `finished`, `stopped`.
-
 ## Signature verification
 
-Every webhook includes an `X-Webhook-Signature` header. Verify it to ensure the request is authentic.
+Every webhook request includes two headers:
+
+- `X-Browser-Use-Signature` — HMAC-SHA256 signature of the payload
+- `X-Browser-Use-Timestamp` — Unix timestamp (seconds) when the request was sent
+
+The signature is computed over `{timestamp}.{body}`, where `body` is the JSON-serialized payload with keys sorted alphabetically and no extra whitespace. Verify it to ensure the request is authentic and to prevent replay attacks.
 
 ```python Python
 import hashlib
 import hmac
+import json
+import time
 
-def verify_webhook(payload: bytes, signature: str, secret: str) -> bool:
-    expected = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
+def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
+    # Reject requests older than 5 minutes
+    if abs(time.time() - int(timestamp)) > 300:
+        return False
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, signature)
 ```
 ```typescript TypeScript
 import { createHmac, timingSafeEqual } from "crypto";
 
-function verifyWebhook(payload: string, signature: string, secret: string): boolean {
-  const expected = createHmac("sha256", secret).update(payload).digest("hex");
-  if (expected.length !== signature.length) return false;
+function sortKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortKeys);
+  if (obj !== null && typeof obj === "object") {
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
+  }
+  return obj;
+}
+
+function verifyWebhook(body: string, signature: string, timestamp: string, secret: string): boolean {
+  // Reject requests older than 5 minutes
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) return false;
+  const payload = JSON.parse(body);
+  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
+  const expected = createHmac("sha256", secret).update(message).digest("hex");
   return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 }
 ```
@@ -2039,19 +2066,41 @@ app.use(express.raw({ type: "application/json" }));
 
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
 
+function sortKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortKeys);
+  if (obj !== null && typeof obj === "object") {
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
+  }
+  return obj;
+}
+
 app.post("/webhook", (req, res) => {
-  const signature = req.headers["x-webhook-signature"] as string;
-  const expected = createHmac("sha256", WEBHOOK_SECRET).update(req.body).digest("hex");
+  const signature = req.headers["x-browser-use-signature"] as string;
+  const timestamp = req.headers["x-browser-use-timestamp"] as string;
+
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
+    return res.status(401).send("Request too old");
+  }
+
+  const body = req.body.toString();
+  const payload = JSON.parse(body);
+  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
+  const expected = createHmac("sha256", WEBHOOK_SECRET).update(message).digest("hex");
 
   if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
     return res.status(401).send("Invalid signature");
   }
 
-  const event = JSON.parse(req.body.toString());
+  const event = JSON.parse(body);
 
   if (event.type === "agent.task.status_update") {
-    const { taskId, status, sessionId } = event.payload;
-    console.log(`Task ${taskId} is now ${status}`);
+    const { task_id, status, session_id } = event.payload;
+    console.log(`Task ${task_id} is now ${status}`);
   }
 
   res.status(200).send("OK");
@@ -2066,7 +2115,9 @@ app.listen(3000);
 from fastapi import FastAPI, Request, HTTPException
 import hashlib
 import hmac
+import json
 import os
+import time
 
 app = FastAPI()
 
@@ -2075,8 +2126,16 @@ WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
 @app.post("/webhook")
 async def handle_webhook(request: Request):
     body = await request.body()
-    signature = request.headers.get("x-webhook-signature", "")
-    expected = hmac.new(WEBHOOK_SECRET.encode(), body, hashlib.sha256).hexdigest()
+    signature = request.headers.get("x-browser-use-signature", "")
+    timestamp = request.headers.get("x-browser-use-timestamp", "")
+
+    # Reject requests older than 5 minutes
+    if abs(time.time() - int(timestamp)) > 300:
+        raise HTTPException(status_code=401, detail="Request too old")
+
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
 
     if not hmac.compare_digest(expected, signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
@@ -2084,7 +2143,7 @@ async def handle_webhook(request: Request):
     event = await request.json()
 
     if event["type"] == "agent.task.status_update":
-        task_id = event["payload"]["taskId"]
+        task_id = event["payload"]["task_id"]
         status = event["payload"]["status"]
         print(f"Task {task_id} is now {status}")
 
@@ -2994,7 +3053,7 @@ for await (const step of client.run("Find the cheapest flight from NYC to London
 > **Tip:** The same `run()` method returns either a final result or an async iterator depending on how you call it. No separate streaming API needed.
 
 # Direct Browser (Playwright)
-Source: https://docs.browser-use.com/cloud/tips/integrations/playwright
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/playwright
 
 Need lower-level control than an agent task? Create a cloud browser and connect directly via Chrome DevTools Protocol (CDP). You get a stealth browser with residential proxy — use it with Playwright, Puppeteer, or any CDP client.
 
@@ -3004,30 +3063,129 @@ When to use this:
 - You want to combine agent tasks with manual browser automation
 
 ```python
+import asyncio
 from playwright.async_api import async_playwright
 from browser_use_sdk import AsyncBrowserUse
 
-client = AsyncBrowserUse()
-browser = await client.browsers.create(proxy_country_code="us")
+async def main():
+    client = AsyncBrowserUse()
+    browser = await client.browsers.create(proxy_country_code="us")
 
-async with async_playwright() as p:
-    b = await p.chromium.connect_over_cdp(browser.cdp_url)
-    page = b.contexts[0].pages[0]
-    await page.goto("https://example.com")
-    await page.screenshot(path="screenshot.png")
-    await b.close()
+    try:
+        async with async_playwright() as p:
+            b = await p.chromium.connect_over_cdp(browser.cdp_url)
+            page = b.contexts[0].pages[0]
+            await page.goto("https://example.com")
+            await page.screenshot(path="screenshot.png")
+            await b.close()
+    finally:
+        await client.browsers.stop(browser.id)
 
-await client.browsers.stop(browser.id)
+asyncio.run(main())
 ```
 
 See [Browser Infrastructure](/cloud/guides/browser-api) for the full browser API and [Pricing](/cloud/pricing) for browser session costs.
 
+# OpenClaw
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/openclaw
+
+[OpenClaw](https://openclaw.ai) is a self-hosted gateway that connects chat apps like WhatsApp, Telegram, and Discord to AI coding agents. Add Browser Use and those agents get full browser automation — anti-detect profiles, CAPTCHA solving, residential proxies in 195+ countries, and stealth browsing out of the box.
+
+Two ways to set it up: connect a Browser Use cloud browser to OpenClaw's native browser tool via CDP, or install the Browser Use CLI as a skill.
+
+## Option 1: Cloud Browser via CDP
+
+OpenClaw has a built-in browser tool with its own CLI commands (`openclaw browser`). By default, it controls a local Chromium instance. You can point it at a Browser Use cloud browser instead by configuring a remote CDP profile.
+
+Browser Use exposes a WebSocket CDP URL. OpenClaw connects to it like any remote browser — no SDK or extra dependencies needed.
+
+### Setup
+
+**1. Get your API key**
+
+Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and copy your API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys).
+
+**2. Add a Browser Use profile**
+
+Open `~/.openclaw/openclaw.json` and add a `browser-use` profile:
+
+```json5
+{
+  browser: {
+    enabled: true,
+    defaultProfile: "browser-use",
+    remoteCdpTimeoutMs: 3000,
+    remoteCdpHandshakeTimeoutMs: 5000,
+    profiles: {
+      "browser-use": {
+        cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
+        color: "#ff750e",
+      },
+    },
+  },
+}
+```
+
+Replace `<BROWSER_USE_API_KEY>` with your actual key. All Browser Use session parameters can be passed as query params in the `cdpUrl`:
+
+- `timeout` — session duration in minutes (max 240)
+- `profileId` — load a saved browser profile with persistent cookies and localStorage
+- `proxyCountryCode` — route traffic through a specific country (e.g. `us`, `de`, `jp`)
+
+**3. Use it**
+
+OpenClaw's browser commands now run against a Browser Use cloud browser:
+
+```bash
+openclaw browser --browser-profile browser-use open https://example.com
+openclaw browser --browser-profile browser-use snapshot
+openclaw browser --browser-profile browser-use screenshot
+```
+
+If you set `defaultProfile` to `"browser-use"` in the config (as shown above), you can drop the `--browser-profile` flag:
+
+```bash
+openclaw browser open https://example.com
+openclaw browser snapshot
+openclaw browser screenshot
+```
+
+## Option 2: Browser Use CLI
+
+The Browser Use CLI is a standalone tool that gives any OpenClaw agent browser automation through a SKILL.md file. The agent reads the skill and learns to use the CLI commands directly. It's available on [skills.sh](https://skills.sh/browser-use/browser-use/browser-use) and [ClawHub](https://clawhub.ai/ShawnPana/browser-use).
+
+### Setup
+
+**1. Install the CLI**
+
+```bash
+curl -fsSL https://browser-use.com/cli/install.sh | bash
+```
+
+**2. Verify the installation**
+
+```bash
+browser-use doctor
+```
+
+**3. Install the skill**
+
+Ask your OpenClaw agent to install it directly from [ClawHub](https://clawhub.ai/ShawnPana/browser-use), or install from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use):
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill browser-use
+```
+
+Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to navigate pages, click elements, fill forms, take screenshots, extract data, and more. The skill file teaches the agent the full command set.
+
+For the complete CLI reference and advanced features like cloud browsers, tunnels, sessions, and Python execution, see the [README](https://github.com/browser-use/browser-use/blob/main/browser_use/skill_cli/README.md) and the [Browser Use docs](https://docs.browser-use.com).
+
 # n8n Integration
-Source: https://docs.browser-use.com/cloud/tips/integrations/n8n
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/n8n
 
 Browser Use works with [n8n](https://n8n.io) as a standard HTTP integration — no custom nodes needed.
 
-**Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v2/tasks` with your API key in the `X-Browser-Use-API-Key` header. Then poll `GET /api/v2/tasks/{id}` until `status` is `finished`.
+**Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v2/tasks` with your API key in the `X-Browser-Use-API-Key` header. Then poll `GET /api/v2/tasks/{task_id}/status` until `status` is `finished` or `stopped`.
 
 For event-driven workflows, use [Webhooks](/cloud/guides/webhooks) to receive completion events directly instead of polling.
 
