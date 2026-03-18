@@ -15,15 +15,7 @@ generate() {
   echo "# ${section} docs" > "$out"
   echo "" >> "$out"
 
-  local prev_group=""
-
-  # Sort by parent directory first, then filename, so files in the same
-  # directory are always contiguous (prevents root-level pages from being
-  # listed under a nested subdirectory heading).
-  find "$dir" -name '*.mdx' -type f | while read -r f; do
-    rel="${f#"$dir/"}"
-    printf '%s\t%s\n' "$(dirname "$rel")" "$f"
-  done | sort -t$'\t' -k1,1 -k2,2 | cut -f2 | while read -r file; do
+  find "$dir" -name '*.mdx' -type f | sort | while read -r file; do
     # Extract frontmatter title and description
     title=""
     description=""
@@ -58,31 +50,6 @@ generate() {
     # Build slug from file path (strip base dir and .mdx extension)
     slug="${file#"$SCRIPT_DIR/"}"
     slug="${slug%.mdx}"
-
-    # Derive group heading from parent directory
-    local rel_path="${file#"$dir/"}"
-    local group_path
-    group_path="$(dirname "$rel_path")"
-    if [[ "$group_path" != "$prev_group" ]]; then
-      # Convert path like "customize/agent" to "Customize > Agent"
-      local heading=""
-      IFS='/' read -ra parts <<< "$group_path"
-      for part in "${parts[@]}"; do
-        # Capitalize first letter, replace hyphens with spaces
-        local label
-        label="$(echo "$part" | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1')"
-        if [[ -n "$heading" ]]; then
-          heading="${heading} > ${label}"
-        else
-          heading="$label"
-        fi
-      done
-      if [[ "$heading" != "." ]]; then
-        echo "" >> "$out"
-        echo "## ${heading}" >> "$out"
-      fi
-      prev_group="$group_path"
-    fi
 
     if [[ -n "$title" ]]; then
       if [[ -n "$description" ]]; then
