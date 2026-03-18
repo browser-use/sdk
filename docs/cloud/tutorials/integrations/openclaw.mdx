@@ -1,0 +1,95 @@
+---
+title: OpenClaw
+description: Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
+---
+
+[OpenClaw](https://openclaw.ai) is a self-hosted gateway that connects chat apps like WhatsApp, Telegram, and Discord to AI coding agents. Add Browser Use and those agents get full browser automation — anti-detect profiles, CAPTCHA solving, residential proxies in 195+ countries, and stealth browsing out of the box.
+
+Two ways to set it up: connect a Browser Use cloud browser to OpenClaw's native browser tool via CDP, or install the Browser Use CLI as a skill.
+
+## Option 1: Cloud Browser via CDP
+
+OpenClaw has a built-in browser tool with its own CLI commands (`openclaw browser`). By default, it controls a local Chromium instance. You can point it at a Browser Use cloud browser instead by configuring a remote CDP profile.
+
+Browser Use exposes a WebSocket CDP URL. OpenClaw connects to it like any remote browser — no SDK or extra dependencies needed.
+
+### Setup
+
+**1. Get your API key**
+
+Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and copy your API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys).
+
+**2. Add a Browser Use profile**
+
+Open `~/.openclaw/openclaw.json` and add a `browser-use` profile:
+
+```json5
+{
+  browser: {
+    enabled: true,
+    defaultProfile: "browser-use",
+    remoteCdpTimeoutMs: 3000,
+    remoteCdpHandshakeTimeoutMs: 5000,
+    profiles: {
+      "browser-use": {
+        cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
+        color: "#ff750e",
+      },
+    },
+  },
+}
+```
+
+Replace `<BROWSER_USE_API_KEY>` with your actual key. All Browser Use session parameters can be passed as query params in the `cdpUrl`:
+
+- `timeout` — session duration in minutes (max 240)
+- `profileId` — load a saved browser profile with persistent cookies and localStorage
+- `proxyCountryCode` — route traffic through a specific country (e.g. `us`, `de`, `jp`)
+
+**3. Use it**
+
+OpenClaw's browser commands now run against a Browser Use cloud browser:
+
+```bash
+openclaw browser --browser-profile browser-use open https://example.com
+openclaw browser --browser-profile browser-use snapshot
+openclaw browser --browser-profile browser-use screenshot
+```
+
+If you set `defaultProfile` to `"browser-use"` in the config (as shown above), you can drop the `--browser-profile` flag:
+
+```bash
+openclaw browser open https://example.com
+openclaw browser snapshot
+openclaw browser screenshot
+```
+
+## Option 2: Browser Use CLI
+
+The Browser Use CLI is a standalone tool that gives any OpenClaw agent browser automation through a SKILL.md file. The agent reads the skill and learns to use the CLI commands directly. It's available on [skills.sh](https://skills.sh/browser-use/browser-use/browser-use) and [ClawHub](https://clawhub.ai/ShawnPana/browser-use).
+
+### Setup
+
+**1. Install the CLI**
+
+```bash
+curl -fsSL https://browser-use.com/cli/install.sh | bash
+```
+
+**2. Verify the installation**
+
+```bash
+browser-use doctor
+```
+
+**3. Install the skill**
+
+Ask your OpenClaw agent to install it directly from [ClawHub](https://clawhub.ai/ShawnPana/browser-use), or install from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use):
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill browser-use
+```
+
+Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to navigate pages, click elements, fill forms, take screenshots, extract data, and more. The skill file teaches the agent the full command set.
+
+For the complete CLI reference and advanced features like cloud browsers, tunnels, sessions, and Python execution, see the [README](https://github.com/browser-use/browser-use/blob/main/browser_use/skill_cli/README.md) and the [Browser Use docs](https://docs.browser-use.com).

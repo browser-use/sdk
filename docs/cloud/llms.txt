@@ -51,9 +51,11 @@ For full page content with code examples, see [/cloud/llms-full.txt](https://doc
 - [Geo-Specific Scraping](https://docs.browser-use.com/cloud/tips/data/geo-scraping): Scrape location-dependent content using residential proxies in 195+ countries.
 - [Streaming](https://docs.browser-use.com/cloud/tips/data/streaming): Stream agent steps in real time as the task executes.
 
-### Integrations
-- [Playwright](https://docs.browser-use.com/cloud/tips/integrations/playwright): Connect Playwright to a cloud browser via CDP for full programmatic control.
-- [n8n](https://docs.browser-use.com/cloud/tips/integrations/n8n): Use Browser Use as an HTTP node in n8n workflows.
+## Integrations
+
+- [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
+- [n8n](https://docs.browser-use.com/cloud/tutorials/integrations/n8n): Use Browser Use as an HTTP node in n8n workflows.
+- [Playwright](https://docs.browser-use.com/cloud/tutorials/integrations/playwright): Connect Playwright to a cloud browser via CDP for full programmatic control.
 
 ## Resources
 

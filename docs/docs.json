@@ -84,6 +84,14 @@
                 "pages": ["cloud/tutorials/chat-ui"]
               },
               {
+                "group": "Integrations",
+                "pages": [
+                  "cloud/tutorials/integrations/openclaw",
+                  "cloud/tutorials/integrations/n8n",
+                  "cloud/tutorials/integrations/playwright"
+                ]
+              },
+              {
                 "group": "Resources",
                 "pages": [
                   {
@@ -118,13 +126,6 @@
                           "cloud/tips/data/file-downloads",
                           "cloud/tips/data/geo-scraping",
                           "cloud/tips/data/streaming"
-                        ]
-                      },
-                      {
-                        "group": "Integrations",
-                        "pages": [
-                          "cloud/tips/integrations/playwright",
-                          "cloud/tips/integrations/n8n"
                         ]
                       }
                     ]
@@ -479,8 +480,10 @@
     {"source": "/tips/data/file-downloads", "destination": "/cloud/tips/data/file-downloads"},
     {"source": "/tips/data/geo-scraping", "destination": "/cloud/tips/data/geo-scraping"},
     {"source": "/tips/data/streaming", "destination": "/cloud/tips/data/streaming"},
-    {"source": "/tips/integrations/playwright", "destination": "/cloud/tips/integrations/playwright"},
-    {"source": "/tips/integrations/n8n", "destination": "/cloud/tips/integrations/n8n"},
+    {"source": "/tips/integrations/playwright", "destination": "/cloud/tutorials/integrations/playwright"},
+    {"source": "/tips/integrations/n8n", "destination": "/cloud/tutorials/integrations/n8n"},
+    {"source": "/cloud/tips/integrations/playwright", "destination": "/cloud/tutorials/integrations/playwright"},
+    {"source": "/cloud/tips/integrations/n8n", "destination": "/cloud/tutorials/integrations/n8n"},
 
     {"source": "/api-v2/*", "destination": "/cloud/api-v2"},
     {"source": "/api-v3/*", "destination": "/cloud/api-v3"},
