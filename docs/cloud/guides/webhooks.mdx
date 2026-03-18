@@ -46,7 +46,11 @@ import time
 
 def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
     # Reject requests older than 5 minutes
-    if abs(time.time() - int(timestamp)) > 300:
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        return False
+    if abs(time.time() - ts) > 300:
         return False
     payload = json.loads(body)
     message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
@@ -155,7 +159,11 @@ async def handle_webhook(request: Request):
     timestamp = request.headers.get("x-browser-use-timestamp", "")
 
     # Reject requests older than 5 minutes
-    if abs(time.time() - int(timestamp)) > 300:
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid timestamp")
+    if abs(time.time() - ts) > 300:
         raise HTTPException(status_code=401, detail="Request too old")
 
     payload = json.loads(body)
