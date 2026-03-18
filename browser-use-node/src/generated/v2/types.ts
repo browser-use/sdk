@@ -998,7 +998,7 @@ export interface components {
             allowResizing: boolean;
             /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available on the Custom Enterprise plan.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
@@ -1053,7 +1053,7 @@ export interface components {
             keepAlive: boolean;
             /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available for Business and Scaleup subscribers.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available on the Custom Enterprise plan.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
@@ -2549,6 +2549,11 @@ export interface components {
              * @description List of stringified json actions performed by the agent in this step
              */
             actions: string[];
+            /**
+             * Duration
+             * @description Duration of the step in seconds. Calculated as the time elapsed from the previous step completion (or task start for the first step) to this step completion.
+             */
+            duration?: number | null;
         };
         /**
          * TaskUpdateAction

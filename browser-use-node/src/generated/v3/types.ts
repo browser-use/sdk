@@ -399,6 +399,18 @@ export interface components {
             /** Data */
             data: string;
             /**
+             * Type
+             * @description Coarse category: user_message, assistant_message, browser_action, file_operation, code_execution, integration, planning, completion, browser_action_result, browser_action_error, etc.
+             * @default
+             */
+            type: string;
+            /**
+             * Summary
+             * @description One-liner human-readable description of the message (e.g. "Navigating to google.com", "Clicking element #5").
+             * @default
+             */
+            summary: string;
+            /**
              * Createdat
              * Format: date-time
              */
@@ -447,6 +459,11 @@ export interface components {
              * @default false
              */
             enableScheduledTasks: boolean;
+            /**
+             * Enablerecording
+             * @default false
+             */
+            enableRecording: boolean;
         };
         /** SessionListResponse */
         SessionListResponse: {
@@ -476,8 +493,19 @@ export interface components {
             outputSchema?: {
                 [key: string]: unknown;
             } | null;
+            /**
+             * Stepcount
+             * @default 0
+             */
+            stepCount: number;
+            /** Laststepsummary */
+            lastStepSummary?: string | null;
+            /** Istasksuccessful */
+            isTaskSuccessful?: boolean | null;
             /** Liveurl */
             liveUrl?: string | null;
+            /** Recordingurl */
+            recordingUrl?: string | null;
             /** Profileid */
             profileId?: string | null;
             /** Workspaceid */
@@ -510,6 +538,11 @@ export interface components {
              * @default 0
              */
             proxyCostUsd: string;
+            /**
+             * Browsercostusd
+             * @default 0
+             */
+            browserCostUsd: string;
             /**
              * Totalcostusd
              * @default 0

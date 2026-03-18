@@ -68,3 +68,4 @@ Follow existing patterns in the codebase. Read before writing.
 - **Python SDK type safety**: All resource methods return Pydantic model instances (via `model_validate()`), NOT dicts.
 - **Structured output**: V2 only. Python auto-converts Pydantic models via `output_schema`. TS uses Zod schemas via `{ schema }` option.
 - **Polling**: `await client.run()` polls `tasks.status()` (lightweight). `for await`/`for step in client.stream()` polls full `tasks.get()` and yields new `TaskStepView` steps.
+- **docs/openapi dir**: `task snapshot:save` calls `task docs:sync` which requires `docs/openapi/` to exist. Create it with `mkdir -p docs/openapi` if missing (e.g., on fresh clone).
