@@ -14,7 +14,7 @@ Source: https://docs.browser-use.com/open-source/quickstart
 
 To get started with Browser Use you need to install the package and create an `.env` file with your API key.
 
-> **Note:** `ChatBrowserUse` offers the [fastest and most cost-effective models](https://browser-use.com/posts/speed-matters/), completing tasks 3-5x faster. Get started with $10 of [free LLM credits](https://cloud.browser-use.com/new-api-key).
+> **Note:** `ChatBrowserUse` offers the [fastest and most cost-effective models](https://browser-use.com/posts/speed-matters/), completing tasks 3-5x faster. New users get 5 free tasks. Get your API key [here](https://cloud.browser-use.com/new-api-key).
 
 ## 1. Installing Browser-Use
 
@@ -36,7 +36,7 @@ uvx browser-use install
 ## 2. Choose your favorite LLM
 Create a `.env` file and add your API key. 
 
-> **Note:** We recommend using ChatBrowserUse which is optimized for browser automation tasks (highest accuracy + fastest speed + lowest token cost). Do not have one? We provide you **$10** to try it out [here](https://cloud.browser-use.com/new-api-key).
+> **Note:** We recommend using ChatBrowserUse which is optimized for browser automation tasks (highest accuracy + fastest speed + lowest token cost). Get your API key [here](https://cloud.browser-use.com/new-api-key) — new users get 5 free tasks.
 
 ```bash .env
 touch .env
@@ -50,7 +50,7 @@ Then add your API key to the file.
 ```bash Browser Use
 # add your key to .env file
 BROWSER_USE_API_KEY=
-# Get 10$ of free credits at https://cloud.browser-use.com/new-api-key
+# Get your API key at https://cloud.browser-use.com/new-api-key - new users get 5 free tasks
 ```
 ```bash Google
 # add your key to .env file
@@ -202,7 +202,7 @@ Required environment variables:
 BROWSER_USE_API_KEY=
 ```
 
-Get your API key from the [Browser Use Cloud](https://cloud.browser-use.com/new-api-key). New signups get $10 free credit via OAuth or $1 via email.
+Get your API key from the [Browser Use Cloud](https://cloud.browser-use.com/new-api-key). New users get 5 free tasks to try it out.
 
 #### Available Models
 
@@ -1957,7 +1957,7 @@ Remember to add your API key to `.env`:
 BROWSER_USE_API_KEY=your-api-key
 ```
 
-> **Note:** Get your API key on [cloud](https://cloud.browser-use.com/new-api-key) - new signups get \$10 free.
+> **Note:** Get your API key on [cloud](https://cloud.browser-use.com/new-api-key) - new users get 5 free tasks.
 
 ## Cookie Handling
 
@@ -4076,7 +4076,7 @@ BROWSER_USE_API_KEY=your-api-key
 ```
 
 > **Note:** CodeAgent currently only works with [ChatBrowserUse](/open-source/supported-models) which is optimized for this use case.
-> Do not have one? We provide you $10 to try it out [here](https://cloud.browser-use.com/new-api-key).
+> Get your API key [here](https://cloud.browser-use.com/new-api-key) — new users get 5 free tasks.
 
 ## When to Use
 
@@ -4772,7 +4772,7 @@ Source: https://docs.browser-use.com/open-source/legacy/sandbox/quickstart
 
 Sandboxes are the **easiest way to run Browser-Use in production**. We handle agents, browsers, persistence, auth, cookies, and LLMs. It is also the **fastest way to deploy** - the agent runs right next to the browser, so latency is minimal.
 
-> **Note:** Get your API key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key) - new signups get $10 free.
+> **Note:** Get your API key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key) - new users get 5 free tasks.
 
 ## Basic Example
 
