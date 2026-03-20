@@ -428,20 +428,18 @@ echo $env:PATH
 Kill zombie processes:
 ```powershell
 # Find browser-use Python processes
-tasklist | findstr python
+wmic process where "name='python.exe' and commandline like '%browser%use%'" get processid
 
 # Kill by PID
 taskkill /PID <pid> /F
-
-# Or kill all Python
-taskkill /IM python.exe /F
 ```
 </Accordion>
 
 <Accordion title="Stale virtual environment">
 Delete and reinstall:
 ```powershell
-taskkill /IM python.exe /F
+# Kill browser-use Python processes
+wmic process where "name='python.exe' and commandline like '%browser%use%'" call terminate
 Remove-Item -Recurse -Force "$env:USERPROFILE\.browser-use-env"
 # Then run installer again
 ```
