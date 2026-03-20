@@ -175,7 +175,8 @@
               "open-source/introduction",
               "open-source/quickstart",
               "open-source/coding-agent-quickstart",
-              "open-source/supported-models"
+              "open-source/supported-models",
+              "open-source/browser-use-cli"
             ]
           },
           {
