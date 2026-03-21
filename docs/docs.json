@@ -228,16 +228,6 @@
                 "icon": "box-archive",
                 "pages": [
                   {
-                    "group": "Code Agent",
-                    "pages": [
-                      "open-source/legacy/code-agent/basics",
-                      "open-source/legacy/code-agent/output-format",
-                      "open-source/legacy/code-agent/exporting",
-                      "open-source/legacy/code-agent/all-parameters",
-                      "open-source/legacy/code-agent/example-products"
-                    ]
-                  },
-                  {
                     "group": "Actor",
                     "pages": [
                       "open-source/legacy/actor/basics",
@@ -372,11 +362,6 @@
     {"source": "/customize/integrations/mcp-server", "destination": "/open-source/customize/integrations/mcp-server"},
     {"source": "/customize/hooks", "destination": "/open-source/customize/hooks"},
 
-    {"source": "/legacy/code-agent/basics", "destination": "/open-source/legacy/code-agent/basics"},
-    {"source": "/legacy/code-agent/output-format", "destination": "/open-source/legacy/code-agent/output-format"},
-    {"source": "/legacy/code-agent/exporting", "destination": "/open-source/legacy/code-agent/exporting"},
-    {"source": "/legacy/code-agent/all-parameters", "destination": "/open-source/legacy/code-agent/all-parameters"},
-    {"source": "/legacy/code-agent/example-products", "destination": "/open-source/legacy/code-agent/example-products"},
     {"source": "/legacy/actor/basics", "destination": "/open-source/legacy/actor/basics"},
     {"source": "/legacy/actor/examples", "destination": "/open-source/legacy/actor/examples"},
     {"source": "/legacy/actor/all-parameters", "destination": "/open-source/legacy/actor/all-parameters"},
@@ -410,11 +395,6 @@
     {"source": "/cloud", "destination": "/cloud/introduction"},
     {"source": "/use-claude", "destination": "/cloud/introduction"},
     {"source": "/production", "destination": "/open-source/legacy/sandbox/quickstart"},
-    {"source": "/customize/code-agent/basics", "destination": "/open-source/legacy/code-agent/basics"},
-    {"source": "/customize/code-agent/output-format", "destination": "/open-source/legacy/code-agent/output-format"},
-    {"source": "/customize/code-agent/exporting", "destination": "/open-source/legacy/code-agent/exporting"},
-    {"source": "/customize/code-agent/all-parameters", "destination": "/open-source/legacy/code-agent/all-parameters"},
-    {"source": "/customize/code-agent/example-products", "destination": "/open-source/legacy/code-agent/example-products"},
     {"source": "/customize/actor/basics", "destination": "/open-source/legacy/actor/basics"},
     {"source": "/customize/actor/examples", "destination": "/open-source/legacy/actor/examples"},
     {"source": "/customize/actor/all-parameters", "destination": "/open-source/legacy/actor/all-parameters"},
