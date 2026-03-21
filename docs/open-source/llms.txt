@@ -73,13 +73,6 @@ For full page content with code examples, see [/open-source/llms-full.txt](https
 
 ## Legacy
 
-### Code Agent
-- [Code Agent Basics](https://docs.browser-use.com/open-source/legacy/code-agent/basics): Write Python code locally with browser automation.
-- [Output Format](https://docs.browser-use.com/open-source/legacy/code-agent/output-format): Understanding CodeAgent return values.
-- [Exporting Sessions](https://docs.browser-use.com/open-source/legacy/code-agent/exporting): Save sessions as Jupyter notebooks or Python scripts.
-- [All Parameters](https://docs.browser-use.com/open-source/legacy/code-agent/all-parameters): Complete CodeAgent configuration reference.
-- [Example: Extract Products](https://docs.browser-use.com/open-source/legacy/code-agent/example-products): Collect products and save to CSV.
-
 ### Actor
 - [Actor Basics](https://docs.browser-use.com/open-source/legacy/actor/basics): Low-level Playwright-like browser automation with full CDP control.
 - [Actor Examples](https://docs.browser-use.com/open-source/legacy/actor/examples): Forms, JavaScript, mouse operations, and AI features.
