@@ -4,18 +4,42 @@ description: "Run browser automation tasks from your AI coding assistant. Connec
 icon: plug
 ---
 
-Browser Use provides a [Model Context Protocol](https://modelcontextprotocol.io) server at `https://api.browser-use.com/mcp`.
+Browser Use provides two [Model Context Protocol](https://modelcontextprotocol.io) server endpoints:
+
+| Endpoint | URL |
+|----------|-----|
+| **v2** | `https://api.browser-use.com/mcp` |
+| **v3** | `https://api.browser-use.com/v3/mcp` |
+
+The **v2** endpoint uses a task-based agent — each task runs independently and is dispatched to a queue. The **v3** endpoint uses a session-based agent that runs in a persistent sandbox container, supporting keep-alive for multi-turn interactions, model selection (`bu-mini`, `bu-max`, `bu-ultra`), structured output, and shared workspaces for file persistence across sessions.
+
+Get your API key from the [Browser Use Dashboard](https://cloud.browser-use.com/settings?tab=api-keys).
 
 ## Claude Code
 
+<Tabs>
+<Tab title="v2">
 ```bash
-claude mcp add --transport http browser-use https://api.browser-use.com/mcp
+claude mcp add -t http -H "x-browser-use-api-key: YOUR_API_KEY" browser-use https://api.browser-use.com/mcp
 ```
+</Tab>
+<Tab title="v3">
+```bash
+claude mcp add -t http -H "x-browser-use-api-key: YOUR_API_KEY" browser-use https://api.browser-use.com/v3/mcp
+```
+</Tab>
+</Tabs>
+
+<Note>
+Replace `YOUR_API_KEY` with your actual API key. Claude Code requires the API key to be passed via the `-H` (header) flag.
+</Note>
 
 ## Claude Desktop
 
 Add to `claude_desktop_config.json`:
 
+<Tabs>
+<Tab title="v2">
 ```json
 {
   "mcpServers": {
@@ -28,11 +52,29 @@ Add to `claude_desktop_config.json`:
   }
 }
 ```
+</Tab>
+<Tab title="v3">
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+</Tab>
+</Tabs>
 
 ## Cursor
 
 Add to `.cursor/mcp.json`:
 
+<Tabs>
+<Tab title="v2">
 ```json
 {
   "mcpServers": {
@@ -45,11 +87,29 @@ Add to `.cursor/mcp.json`:
   }
 }
 ```
+</Tab>
+<Tab title="v3">
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+</Tab>
+</Tabs>
 
 ## Windsurf
 
 Add to `~/.codeium/windsurf/mcp_config.json`:
 
+<Tabs>
+<Tab title="v2">
 ```json
 {
   "mcpServers": {
@@ -62,9 +122,27 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
   }
 }
 ```
+</Tab>
+<Tab title="v3">
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "serverUrl": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+</Tab>
+</Tabs>
 
-## Available tools
+## Available Tools
 
+<Tabs>
+<Tab title="v2">
 | Tool | Description | Cost |
 |------|-------------|------|
 | `browser_task` | Run a full automation task | $0.01 init + per-step (default $0.006/step). See [Pricing](/cloud/pricing). |
@@ -73,3 +151,16 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 | `get_cookies` | Extract cookies for auth | Free |
 | `list_browser_profiles` | List profiles | Free |
 | `monitor_task` | Check task progress | Free |
+</Tab>
+<Tab title="v3">
+| Tool | Description |
+|------|-------------|
+| `run_session` | Create a new browser session and run a task. Supports `keep_alive` to reuse the session, `model` selection (`bu-mini`, `bu-max`, `bu-ultra`), `output_schema` for structured output, and `profile_id` for authenticated browsing. |
+| `get_session` | Poll a session for status and output. Returns status (`running`, `idle`, `stopped`, `error`), step count, cost breakdown, and a live URL to watch the browser. |
+| `send_task` | Send a follow-up task to an idle keep-alive session. Enables multi-turn interactions that reuse the same browser context. |
+| `stop_session` | Stop a running session. Use `strategy: "task"` to stop only the current task (session stays idle), or `"session"` to destroy the sandbox. |
+| `get_session_messages` | Get the agent's step-by-step messages for a session, including browser actions, reasoning, and results. |
+| `list_sessions` | List recent sessions with status and cost info. |
+| `list_browser_profiles` | List cloud browser profiles for authenticated tasks. |
+</Tab>
+</Tabs>
