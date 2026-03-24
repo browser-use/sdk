@@ -2,6 +2,9 @@
 
 > Self-hosted browser automation with any LLM. Python library for AI-powered web agents.
 
+Install this as an agent skill for persistent access: `npx skills add https://github.com/browser-use/browser-use --skill open-source -y`
+Browse: [skills.sh/browser-use/browser-use/open-source](https://skills.sh/browser-use/browser-use/open-source)
+
 For full page content with code examples, see [/open-source/llms-full.txt](https://docs.browser-use.com/open-source/llms-full.txt).
 
 ## Get Started

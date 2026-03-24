@@ -4,6 +4,9 @@
 
 **Recommended: [BU Agent API (v3)](https://docs.browser-use.com/cloud/new-features/api-v3)** — more accurate agents, long-running tasks, file uploads, and persistent workspaces. V3 is a superset of v2. Use v3 for new projects.
 
+Install this as an agent skill for persistent access: `npx skills add https://github.com/browser-use/browser-use --skill cloud -y`
+Browse: [skills.sh/browser-use/browser-use/cloud](https://skills.sh/browser-use/browser-use/cloud)
+
 For full page content with code examples, see [/cloud/llms-full.txt](https://docs.browser-use.com/cloud/llms-full.txt).
 
 ## Get Started
