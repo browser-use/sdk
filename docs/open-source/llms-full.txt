@@ -1493,7 +1493,7 @@ Source: https://docs.browser-use.com/open-source/customize/browser/all-parameter
 ## AI Integration
 
 - `highlight_elements` (default: `True`): Highlight interactive elements for AI vision
-- `paint_order_filtering` (default: `True`): Enable paint order filtering to optimize DOM tree by removing elements hidden behind others. Slightly experimental
+- `paint_order_filtering` (default: `True`): Enable paint order filtering to optimize DOM tree by removing elements hidden behind others. In early rollout
 
 ## Downloads & Files
 
@@ -2764,7 +2764,7 @@ async def main():
 	print('🎉 All agents completed!')
 ```
 
-> **Note:** This is experimental, and agents might conflict each other.
+> **Note:** Agents might conflict with each other.
 
 # Playwright Integration
 Source: https://docs.browser-use.com/open-source/examples/templates/playwright-integration

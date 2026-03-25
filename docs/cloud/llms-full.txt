@@ -266,7 +266,7 @@ See [Tasks](/cloud/guides/tasks) for all parameters, or browse [Tips](/cloud/tip
 # Coding Agent Quickstart
 Source: https://docs.browser-use.com/cloud/coding-agent-quickstart
 
-Paste the following into **Claude Code**, **Codex**, **Cursor**, or any coding agent. It contains the full SDK reference for both BU Agent API (v3 Experimental) and v2 API — every method, every parameter, working examples.
+Paste the following into **Claude Code**, **Codex**, **Cursor**, or any coding agent. It contains the full SDK reference for both BU Agent API (v3) and v2 API — every method, every parameter, working examples.
 
 Your agent will be able to write Browser Use Cloud code immediately.
 
@@ -276,7 +276,7 @@ Your agent will be able to write Browser Use Cloud code immediately.
 # Browser Use Cloud SDK
 
 Both APIs are in the same package (`browser-use-sdk`):
-- **BU Agent API (v3 Experimental)** — `browser-use-sdk/v3`
+- **BU Agent API (v3)** — `browser-use-sdk/v3`
 - **Browser Use Cloud v2** — `browser-use-sdk`
 
 ## Install
@@ -289,7 +289,7 @@ Get a key at https://cloud.browser-use.com/settings?tab=api-keys
 
 ---
 
-# BU Agent API (v3 Experimental)
+# BU Agent API (v3)
 
 ## Python SDK (v3)
 
@@ -753,7 +753,7 @@ Use `after` and `before` cursors for pagination through large message histories.
 - **Workspaces Guide** — Persistent file storage across sessions. [/cloud/guides/workspaces]
 - **Agent Tasks** — Task guide. [/cloud/guides/tasks]
 
-> **Note:** The BU Agent API is experimental. The interface may change.
+> **Note:** The BU Agent API interface may change.
 
 # Models and Pricing
 Source: https://docs.browser-use.com/cloud/pricing
