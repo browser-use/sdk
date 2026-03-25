@@ -4,6 +4,9 @@
 
 **Recommended: Use the BU Agent API (v3) for new projects.** V3 provides more accurate agents, long-running tasks, file uploads, and persistent workspaces. V3 is a superset of v2. Import from `browser_use_sdk.v3` (Python) or `browser-use-sdk/v3` (TypeScript).
 
+Install this as an agent skill for persistent access: `npx skills add https://github.com/browser-use/browser-use --skill cloud -y`
+Browse: [skills.sh/browser-use/browser-use/cloud](https://skills.sh/browser-use/browser-use/cloud)
+
 # Introduction
 Source: https://docs.browser-use.com/cloud/introduction
 

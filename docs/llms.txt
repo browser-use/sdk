@@ -4,6 +4,24 @@
 
 Browser Use has two products: **Browser Use Cloud** (managed SDK and API) and **Browser Use Open Source** (self-hosted Python library). They are separate products with separate documentation.
 
+## Install as an Agent Skill
+
+Give your AI coding agent full Browser Use documentation by installing it as a skill via [skills.sh](https://skills.sh):
+
+```bash
+# Cloud SDK & API docs
+npx skills add https://github.com/browser-use/browser-use --skill cloud -y
+
+# Open-source library docs
+npx skills add https://github.com/browser-use/browser-use --skill open-source -y
+```
+
+Works with Claude Code, Cursor, Windsurf, Cline, GitHub Copilot, and 15+ other agents.
+
+Browse available skills:
+- [Cloud skill](https://skills.sh/browser-use/browser-use/cloud)
+- [Open Source skill](https://skills.sh/browser-use/browser-use/open-source)
+
 ## Browser Use Cloud (Recommended)
 
 SDK and API for browser automation with a state-of-the-art model, stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure. Available in Python and TypeScript.

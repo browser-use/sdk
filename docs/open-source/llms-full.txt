@@ -2,6 +2,9 @@
 
 > Complete reference for the Browser Use open-source Python library. Self-hosted browser automation with any LLM.
 
+Install this as an agent skill for persistent access: `npx skills add https://github.com/browser-use/browser-use --skill open-source -y`
+Browse: [skills.sh/browser-use/browser-use/open-source](https://skills.sh/browser-use/browser-use/open-source)
+
 # Introduction
 Source: https://docs.browser-use.com/open-source/introduction
 
