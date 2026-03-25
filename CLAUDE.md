@@ -29,7 +29,7 @@ RUNBOOK.md                     # /sdk pipeline guide + learnings
 ## API Versions
 
 - **v2** (default) — stable, full API surface. `import { BrowserUse } from "browser-use-sdk"` / `from browser_use_sdk import BrowserUse`
-- **v3** (experimental) — subpath import. `import { BrowserUse } from "browser-use-sdk/v3"` / `from browser_use_sdk.v3 import BrowserUse`
+- **v3** — subpath import. `import { BrowserUse } from "browser-use-sdk/v3"` / `from browser_use_sdk.v3 import BrowserUse`
 
 ## SDK Updates
 

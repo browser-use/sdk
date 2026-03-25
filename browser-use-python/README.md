@@ -108,7 +108,7 @@ async for step in client.run("Scrape the front page of HN"):
     print(f"[{step.number}] {step.next_goal} — {step.url}")
 ```
 
-## v3 API (experimental)
+## v3 API
 
 The v3 API uses a simplified session-based model:
 

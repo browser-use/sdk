@@ -144,7 +144,7 @@
                 "pages": ["cloud/api-reference"]
               },
               {
-                "group": "BU Agent API (Experimental)",
+                "group": "BU Agent API",
                 "openapi": {
                   "source": "cloud/openapi/v3.json",
                   "directory": "cloud/api-v3"

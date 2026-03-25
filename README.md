@@ -13,7 +13,7 @@ Official SDKs for the [Browser Use](https://browser-use.com) cloud API.
 | [browser-use-sdk](browser-use-node/) | TypeScript | npm | 3.3.1 |
 | [browser-use-sdk](browser-use-python/) | Python | PyPI | 3.3.1 |
 
-Both packages support **v2** (default, stable) and **v3** (experimental, via subpath import).
+Both packages support **v2** (default, stable) and **v3** (via subpath import).
 
 ## Quick Start
 
@@ -45,7 +45,7 @@ output = await client.run("Go to google.com")
 
 
 
-## V3 (Experimental)
+## V3
 
 ```typescript
 import { BrowserUse } from "browser-use-sdk/v3";

@@ -28,7 +28,7 @@ console.log(result.output);
 console.log(result.id, result.status);
 ```
 
-## V3 (Experimental)
+## V3
 
 The v3 API uses a unified session model. Import from `browser-use-sdk/v3`:
 
