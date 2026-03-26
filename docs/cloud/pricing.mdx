@@ -4,26 +4,45 @@ description: "Cloud API pricing, models, and cost breakdown."
 icon: "dollar-sign"
 ---
 
-## Pricing Overview
+## Plans
 
-| Product | Pay As You Go | Business/Scaleup | Notes |
-| ------- | ------------- | ---------------- | ----- |
-| **AI Agent Tasks** | \$0.01 init + per-step | 25% off per-step | See LLM pricing below |
-| **Browser Sessions** | \$0.06/hour | \$0.03/hour (50% off) | Charged upfront, unused time refunded |
-| **Skill Creation** | \$2.00/skill | \$1.00/skill (50% off) | Refunded if cancelled, refinements free |
-| **Skill Execution** | \$0.02/call | \$0.01/call (50% off) | Per API call |
-| **Proxy Data** | \$10/GB | \$4-5/GB (50-60% off) | Metered by data transfer |
+Credits pay for all usage: agent tasks, browser sessions, proxy data, and skills.
+
+Subscriptions give you credits per month at a discount.
+
+| | Pay As You Go | Subscription |
+| - | ------------- | ------------ |
+| Credits | Buy what you need | Monthly, with 20-35% discount |
+| Team members | 1 | 2-10 |
+| Concurrent sessions | 25 | 50-500 |
+| Stealth mode | Basic | Advanced |
+
+Subscription also includes priority support, early feature access, and an onboarding engineer.
+
+[See plans & pricing](https://browser-use.com/pricing)
+
+### Enterprise
+
+Custom SLAs, zero data retention, and on-prem deployment.
+
+[Contact us](https://browser-use.com/pricing) for these or any other asks you might have.
 
 ---
 
-## AI Agent Task Pricing
+## Agent Pricing (v3 — Token-Based)
 
-Task pricing consists of two components:
+v3 is the current agent API. Each task incurs a \$0.01 initialization fee plus token-based costs.
 
-1. **Task Initialization Cost**: \$0.01 per started task
-2. **Task Step Cost**: Additional cost based on the specific model used for each step
+| Model | Input per 1M tokens | Output per 1M tokens |
+| ----- | ------------------- | -------------------- |
+| BU Mini (Gemini 3 Flash) | ~\$0.72 | ~\$4.20 |
+| BU Max (Claude Sonnet 4.6) | ~\$3.60 | ~\$18.00 |
 
-### LLM Model Step Pricing
+---
+
+## Agent Pricing (v2 — Per-Step)
+
+Our v2 agent uses flat per-step pricing. Each step is one agent action (click, type, navigate, extract). Each task incurs a \$0.01 initialization fee plus per-step costs.
 
 | Model | API String | Cost per Step |
 | ----- | ---------- | ------------- |
@@ -50,93 +69,31 @@ const result = await client.run("...", { llm: "browser-use-2.0" });
 ```
 </CodeGroup>
 
-### Example Cost Calculation
-
-Using Browser Use 2.0 for a 10 step task:
-
-- Task initialization: \$0.01
-- 10 steps x \$0.006 per step = \$0.06
-- **Total cost: \$0.07**
-
-Using Browser Use LLM for a 10 step task:
-
-- Task initialization: \$0.01
-- 10 steps x \$0.002 per step = \$0.02
-- **Total cost: \$0.03** (~33 tasks per dollar)
-
----
-
-## V3 API Pricing (Token-Based)
-
-V3 uses token-based billing instead of flat per-step costs.
-
-| Model | Input per 1M | Output per 1M |
-| ----- | ------------ | ------------- |
-| BU Mini (Gemini 3 Flash) | ~\$0.72 | ~\$4.20 |
-| BU Max (Claude Sonnet 4.6) | ~\$3.60 | ~\$18.00 |
-
-Includes a 1.2x markup over raw provider costs. Task initialization (\$0.01) and browser sessions are billed separately.
-
 ---
 
 ## Browser Session Pricing
 
-Browser sessions (direct CDP access) are billed separately from AI agent tasks. **Business and Scaleup subscribers get 50% off browser session costs.**
-
-| Plan | Hourly Rate | Per Minute |
-| ---- | ----------- | ---------- |
-| Pay As You Go | \$0.06/hour | \$0.001/min |
-| Business/Scaleup | \$0.03/hour | \$0.0005/min |
-
-| Item | Details |
-| ---- | ------- |
-| Minimum charge | 1 minute |
-| Billing | Charged upfront |
-| Refunds | Proportional refund when stopped early |
-
-### How Browser Session Billing Works
-
-1. **Upfront charge**: Full amount charged when session starts based on timeout duration
-2. **Proportional refund**: Unused time refunded when you stop the session
-3. **Minimum billing**: At least 1 minute is charged
-
-**Example (Pay As You Go)**: You start a 60-minute session (\$0.06 charged). You stop after 30 minutes. You receive a \$0.03 refund.
-
-**Example (Business)**: Same scenario costs only \$0.03 upfront, with \$0.015 refund for unused time.
-
-### Timeout Limits
-
-All plans support up to **4 hours (240 minutes)** per browser session.
+Browser sessions (direct CDP access) are billed separately from agent tasks. \$0.06/hour (\$0.001/min), charged upfront with a proportional refund when stopped early. Minimum charge is 1 minute, max session is 4 hours.
 
 ---
 
 ## Skill Pricing
 
-| Item | Pay As You Go | Business/Scaleup |
-| ---- | ------------- | ---------------- |
-| Skill creation | \$2.00 per skill | \$1.00 per skill (50% off) |
-| Skill execution | \$0.02 per API call | \$0.01 per API call (50% off) |
-| Skill refinement | Free | Free |
-| Minimum balance to create | \$2.00 | \$2.00 |
-| Minimum balance to execute | \$0.10 | \$0.10 |
+| Item | Cost |
+| ---- | ---- |
+| Skill creation | \$2.00 per skill |
+| Skill execution | \$0.02 per API call |
+| Skill refinement | Free |
+| Minimum balance to create | \$2.00 |
+| Minimum balance to execute | \$0.10 |
 
-### How Skill Creation Billing Works
-
-1. **Upfront charge**: Charged when you start creating a skill
-2. **Refund on cancellation**: Full refund if you cancel before generation completes
-3. **Refinements are free**: Iterating on an existing skill costs nothing
+Refund on cancellation if generation hasn't completed. Refinements are always free.
 
 ---
 
 ## Proxy Pricing
 
-Proxy usage is charged per GB of data transferred. **Business and Scaleup subscribers get 50% off proxy costs.**
-
-| Plan | Proxy Cost |
-| ---- | ---------- |
-| Pay As You Go | \$10/GB |
-| Business | \$5/GB (50% off) |
-| Scaleup | \$4/GB (60% off) |
+Proxy usage is charged at \$0.01/MB of data transferred.
 
 <Note>
 Proxy is automatically enabled when you set `proxyCountryCode` on a session. Data usage is metered and charged based on actual transfer.
@@ -144,6 +101,4 @@ Proxy is automatically enabled when you set `proxyCountryCode` on a session. Dat
 
 ---
 
-**Scaleup & Enterprise** — [contact us](https://browser-use.com/pricing) to get started. We sign ZDR (zero data retention), no-training, HIPAA, BAA, and custom compliance contracts. Includes dedicated browser pool, on-prem deployment options, and custom SLAs.
-
-[See plans & pricing →](https://browser-use.com/pricing)
+[See plans & pricing](https://browser-use.com/pricing)
