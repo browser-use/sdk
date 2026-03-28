@@ -169,8 +169,8 @@ if __name__ == "__main__":
 
 See [Browser Use Cloud](/cloud/introduction) for how to sync your cookies to the cloud.
 
-# Coding Agent Quickstart
-Source: https://docs.browser-use.com/open-source/coding-agent-quickstart
+# Prompts for Vibecoders
+Source: https://docs.browser-use.com/open-source/vibecoding
 
 1. Copy all content [🔗  from here](https://github.com/browser-use/browser-use/blob/main/AGENTS.md) (~9k tokens)
 2. Paste it into your project
