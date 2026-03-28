@@ -30,7 +30,7 @@ SDK and API for browser automation with a state-of-the-art model, stealth browse
 
 - [Cloud Full Reference](https://docs.browser-use.com/cloud/llms-full.txt) — Complete cloud SDK and API documentation with all pages.
 - [Cloud Documentation Index](https://docs.browser-use.com/cloud/llms.txt) — Concise page index.
-- [Coding Agent Quickstart](https://docs.browser-use.com/cloud/coding-agent-quickstart) — Every SDK method, parameter, and response type in one page.
+- [Prompts for Vibecoders](https://docs.browser-use.com/cloud/vibecoding) — Every SDK method, parameter, and response type in one page.
 
 ## Browser Use Open Source
 

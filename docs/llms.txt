@@ -28,7 +28,7 @@ SDK and API for browser automation with a state-of-the-art model, stealth browse
 
 - [Cloud Documentation Index](/cloud/llms.txt): Concise page index for all cloud docs.
 - [Cloud Full Reference](/cloud/llms-full.txt): Complete cloud documentation with full page content.
-- [Coding Agent Quickstart](https://docs.browser-use.com/cloud/coding-agent-quickstart): Every SDK method, parameter, and response type in one page.
+- [Prompts for Vibecoders](https://docs.browser-use.com/cloud/vibecoding): Every SDK method, parameter, and response type in one page.
 
 ## Browser Use Open Source
 
@@ -273,5 +273,5 @@ result = await agent.run()
 
 ## Full SDK Reference
 
-For the complete SDK reference with every method, parameter, and response type, see the Coding Agent Quickstart page. It is designed to be copy-pasted into AI coding agents:
-https://docs.browser-use.com/cloud/coding-agent-quickstart
+For the complete SDK reference with every method, parameter, and response type, see the Prompts for Vibecoders page. It is designed to be copy-pasted into AI coding agents:
+https://docs.browser-use.com/cloud/vibecoding

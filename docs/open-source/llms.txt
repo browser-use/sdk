@@ -11,7 +11,7 @@ For full page content with code examples, see [/open-source/llms-full.txt](https
 
 - [Introduction](https://docs.browser-use.com/open-source/introduction): Overview of the open-source browser automation library.
 - [Human Quickstart](https://docs.browser-use.com/open-source/quickstart): Install and run your first agent with step-by-step instructions.
-- [Coding Agent Quickstart](https://docs.browser-use.com/open-source/coding-agent-quickstart): Quick-start reference designed for AI coding agents.
+- [Prompts for Vibecoders](https://docs.browser-use.com/open-source/vibecoding): Quick-start reference designed for AI coding agents.
 - [Supported Models](https://docs.browser-use.com/open-source/supported-models): Compatible LLMs including GPT-4o, Claude, Gemini, DeepSeek, and more.
 
 ## Customize

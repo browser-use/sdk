@@ -13,7 +13,7 @@ For full page content with code examples, see [/cloud/llms-full.txt](https://doc
 
 - [Introduction](https://docs.browser-use.com/cloud/introduction): Product overview and four approaches to browser automation (tasks, skills, browser infra, open-source hybrid).
 - [Quickstart](https://docs.browser-use.com/cloud/quickstart): Install the SDK, set your API key, and run your first task in Python or TypeScript.
-- [Coding Agent Quickstart](https://docs.browser-use.com/cloud/coding-agent-quickstart): Complete SDK reference in a single page. Designed for AI coding agents.
+- [Prompts for Vibecoders](https://docs.browser-use.com/cloud/vibecoding): Complete SDK reference in a single page. Designed for AI coding agents.
 - [BU Agent API (v3)](https://docs.browser-use.com/cloud/new-features/api-v3): Next-generation agent API with structured output, file uploads, workspaces, and faster agents.
 - [Pricing](https://docs.browser-use.com/cloud/pricing): Models, pricing tiers, and cost breakdown.
 
