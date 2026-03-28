@@ -219,7 +219,6 @@
                 "group": "Integration",
                 "icon": "plug",
                 "pages": [
-                  "open-source/customize/integrations/docs-mcp",
                   "open-source/customize/integrations/mcp-server"
                 ]
               },
@@ -358,7 +357,8 @@
     {"source": "/customize/tools/response", "destination": "/open-source/customize/tools/response"},
     {"source": "/customize/skills/basics", "destination": "/cloud/guides/skills"},
 
-    {"source": "/customize/integrations/docs-mcp", "destination": "/open-source/customize/integrations/docs-mcp"},
+    {"source": "/customize/integrations/docs-mcp", "destination": "/open-source/customize/integrations/mcp-server"},
+    {"source": "/open-source/customize/integrations/docs-mcp", "destination": "/open-source/customize/integrations/mcp-server"},
     {"source": "/customize/integrations/mcp-server", "destination": "/open-source/customize/integrations/mcp-server"},
     {"source": "/customize/hooks", "destination": "/open-source/customize/hooks"},
 
