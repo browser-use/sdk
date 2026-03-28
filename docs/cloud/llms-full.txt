@@ -260,11 +260,11 @@ const result = await client.run("Get my latest order status", {
 
 See [Tasks](/cloud/guides/tasks) for all parameters, or browse [Tips](/cloud/tips/data/structured-output) for copy-paste recipes.
 
-- **Coding Agent Quickstart** — Paste one blob into your AI editor. Your agent knows the entire API. [/cloud/coding-agent-quickstart]
+- **Prompts for Vibecoders** — Paste one blob into your AI editor. Your agent knows the entire API. [/cloud/vibecoding]
 - **Overview** — Four ways to automate the web — pick the one that fits. [/cloud/introduction]
 
-# Coding Agent Quickstart
-Source: https://docs.browser-use.com/cloud/coding-agent-quickstart
+# Prompts for Vibecoders
+Source: https://docs.browser-use.com/cloud/vibecoding
 
 Paste the following into **Claude Code**, **Codex**, **Cursor**, or any coding agent. It contains the full SDK reference for both BU Agent API (v3) and v2 API — every method, every parameter, working examples.
 
