@@ -76,7 +76,8 @@
                     "group": "Browser",
                     "icon": "globe",
                     "pages": [
-                      "cloud/guides/proxies-and-stealth",
+                      "cloud/browser/stealth",
+                      "cloud/browser/proxies",
                       "cloud/browser/live-preview",
                       {
                         "group": "Authentication",
@@ -329,6 +330,7 @@
     {"source": "/", "destination": "/cloud/quickstart"},
     {"source": "/cloud/new-features/api-v3", "destination": "/cloud/agent/quickstart"},
     {"source": "/cloud/guides/sessions", "destination": "/cloud/guides/authentication"},
+    {"source": "/cloud/guides/proxies-and-stealth", "destination": "/cloud/browser/stealth"},
     {"source": "/cloud/guides/tasks", "destination": "/cloud/agent/quickstart"},
     {"source": "/cloud/guides/workspaces", "destination": "/cloud/agent/workspaces"},
     {"source": "/cloud/guides/browser-api", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
