@@ -22,7 +22,7 @@ workspace = await client.workspaces.create(name="my-workspace")
 
 # Get a presigned upload URL
 upload = await client.workspaces.upload_files(
-    str(workspace.id),
+    workspace.id,
     files=[{"name": "people.csv", "contentType": "text/csv", "size": 45}],
 )
 
@@ -38,7 +38,7 @@ with open("people.csv", "rb") as f:
 # Tell the agent to use it
 result = await client.run(
     "Read people.csv and tell me who works at Google",
-    workspace_id=str(workspace.id),
+    workspace_id=workspace.id,
 )
 print(result.output)
 ```
@@ -85,11 +85,11 @@ workspace = await client.workspaces.create(name="my-workspace")
 # Agent saves files to the workspace
 result = await client.run(
     "Go to Hacker News and save the top 3 posts as posts.json",
-    workspace_id=str(workspace.id),
+    workspace_id=workspace.id,
 )
 
 # List and download files
-files = await client.workspaces.files(str(workspace.id), include_urls=True)
+files = await client.workspaces.files(workspace.id, include_urls=True)
 for f in files.files:
     print(f"{f.path} ({f.size} bytes)")
 

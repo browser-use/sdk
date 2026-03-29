@@ -229,13 +229,13 @@ class AsyncSessions:
             )
         )
 
-    async def get(self, session_id: str) -> SessionResponse:
+    async def get(self, session_id: _ID) -> SessionResponse:
         """Get session details."""
         return SessionResponse.model_validate(
             await self._http.request("GET", f"/sessions/{session_id}")
         )
 
-    async def stop(self, session_id: str, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
+    async def stop(self, session_id: _ID, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
         """Stop a session or the running task."""
         body: dict[str, Any] | None = None
         if strategy is not None or extra:
@@ -247,13 +247,13 @@ class AsyncSessions:
             await self._http.request("POST", f"/sessions/{session_id}/stop", json=body)
         )
 
-    async def delete(self, session_id: str) -> None:
+    async def delete(self, session_id: _ID) -> None:
         """Soft-delete a session."""
         await self._http.request("DELETE", f"/sessions/{session_id}")
 
     async def upload_files(
         self,
-        session_id: str,
+        session_id: _ID,
         files: list[FileUploadItem],
         **extra: Any,
     ) -> FileUploadResponse:
@@ -268,7 +268,7 @@ class AsyncSessions:
 
     async def files(
         self,
-        session_id: str,
+        session_id: _ID,
         *,
         prefix: str | None = None,
         limit: int | None = None,
@@ -293,7 +293,7 @@ class AsyncSessions:
 
     async def messages(
         self,
-        session_id: str,
+        session_id: _ID,
         *,
         after: str | None = None,
         before: str | None = None,

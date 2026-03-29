@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
+
+_ID = str | UUID
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
@@ -51,7 +54,7 @@ class Workspaces:
             self._http.request("POST", "/workspaces", json=body or None)
         )
 
-    def get(self, workspace_id: str) -> WorkspaceView:
+    def get(self, workspace_id: _ID) -> WorkspaceView:
         """Get workspace details."""
         return WorkspaceView.model_validate(
             self._http.request("GET", f"/workspaces/{workspace_id}")
@@ -59,7 +62,7 @@ class Workspaces:
 
     def update(
         self,
-        workspace_id: str,
+        workspace_id: _ID,
         *,
         name: str | None = None,
         **extra: Any,
@@ -73,13 +76,13 @@ class Workspaces:
             self._http.request("PATCH", f"/workspaces/{workspace_id}", json=body)
         )
 
-    def delete(self, workspace_id: str) -> None:
+    def delete(self, workspace_id: _ID) -> None:
         """Delete a workspace and its data."""
         self._http.request("DELETE", f"/workspaces/{workspace_id}")
 
     def files(
         self,
-        workspace_id: str,
+        workspace_id: _ID,
         *,
         prefix: str | None = None,
         limit: int | None = None,
@@ -104,7 +107,7 @@ class Workspaces:
 
     def upload_files(
         self,
-        workspace_id: str,
+        workspace_id: _ID,
         files: list[FileUploadItem],
         *,
         prefix: str | None = None,
@@ -124,7 +127,7 @@ class Workspaces:
             )
         )
 
-    def delete_file(self, workspace_id: str, *, path: str) -> None:
+    def delete_file(self, workspace_id: _ID, *, path: str) -> None:
         """Delete a file from a workspace."""
         self._http.request(
             "DELETE",
@@ -132,7 +135,7 @@ class Workspaces:
             params={"path": path},
         )
 
-    def size(self, workspace_id: str) -> Any:
+    def size(self, workspace_id: _ID) -> Any:
         """Get storage usage for a workspace."""
         return self._http.request("GET", f"/workspaces/{workspace_id}/size")
 
@@ -174,7 +177,7 @@ class AsyncWorkspaces:
             await self._http.request("POST", "/workspaces", json=body or None)
         )
 
-    async def get(self, workspace_id: str) -> WorkspaceView:
+    async def get(self, workspace_id: _ID) -> WorkspaceView:
         """Get workspace details."""
         return WorkspaceView.model_validate(
             await self._http.request("GET", f"/workspaces/{workspace_id}")
@@ -182,7 +185,7 @@ class AsyncWorkspaces:
 
     async def update(
         self,
-        workspace_id: str,
+        workspace_id: _ID,
         *,
         name: str | None = None,
         **extra: Any,
@@ -196,13 +199,13 @@ class AsyncWorkspaces:
             await self._http.request("PATCH", f"/workspaces/{workspace_id}", json=body)
         )
 
-    async def delete(self, workspace_id: str) -> None:
+    async def delete(self, workspace_id: _ID) -> None:
         """Delete a workspace and its data."""
         await self._http.request("DELETE", f"/workspaces/{workspace_id}")
 
     async def files(
         self,
-        workspace_id: str,
+        workspace_id: _ID,
         *,
         prefix: str | None = None,
         limit: int | None = None,
@@ -227,7 +230,7 @@ class AsyncWorkspaces:
 
     async def upload_files(
         self,
-        workspace_id: str,
+        workspace_id: _ID,
         files: list[FileUploadItem],
         *,
         prefix: str | None = None,
@@ -247,7 +250,7 @@ class AsyncWorkspaces:
             )
         )
 
-    async def delete_file(self, workspace_id: str, *, path: str) -> None:
+    async def delete_file(self, workspace_id: _ID, *, path: str) -> None:
         """Delete a file from a workspace."""
         await self._http.request(
             "DELETE",
@@ -255,6 +258,6 @@ class AsyncWorkspaces:
             params={"path": path},
         )
 
-    async def size(self, workspace_id: str) -> Any:
+    async def size(self, workspace_id: _ID) -> Any:
         """Get storage usage for a workspace."""
         return await self._http.request("GET", f"/workspaces/{workspace_id}/size")
