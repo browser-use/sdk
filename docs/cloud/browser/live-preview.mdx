@@ -14,7 +14,7 @@ import asyncio
 from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-session = await client.sessions.create("Search for flights from NYC to London")
+session = await client.sessions.create("Check how many GitHub stars browser-use has")
 
 # liveUrl becomes available once the browser is ready
 while True:
@@ -29,7 +29,7 @@ import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({
-  task: "Search for flights from NYC to London",
+  task: "Check how many GitHub stars browser-use has",
 });
 
 // liveUrl becomes available once the browser is ready
@@ -56,6 +56,20 @@ Useful for human interaction or to see live what's happening.
   allow="autoplay"
   style="border: none; border-radius: 8px;"
 ></iframe>
+```
+
+## Customize
+
+Append query parameters to the `liveUrl`:
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `theme` | `light`, `dark` (default) | Light or dark mode |
+| `ui` | `false` | Hide the browser chrome (URL bar, tabs) |
+
+```
+https://live.browser-use.com?wss=...&theme=light
+https://live.browser-use.com?wss=...&ui=false
 ```
 
 ## Public share links
