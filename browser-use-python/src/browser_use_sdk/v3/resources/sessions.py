@@ -183,7 +183,10 @@ class Sessions:
             session = self.get(session_id)
             if session.recording_urls:
                 return list(session.recording_urls)
-            time.sleep(interval)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            time.sleep(min(interval, remaining))
         return []
 
 
@@ -351,5 +354,8 @@ class AsyncSessions:
             session = await self.get(session_id)
             if session.recording_urls:
                 return list(session.recording_urls)
-            await asyncio.sleep(interval)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            await asyncio.sleep(min(interval, remaining))
         return []
