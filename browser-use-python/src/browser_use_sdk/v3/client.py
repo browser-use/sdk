@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from .._core.http import AsyncHttpClient, SyncHttpClient
 from .resources.sessions import AsyncSessions, Sessions
 from .resources.workspaces import AsyncWorkspaces, Workspaces
-from .helpers import AsyncSessionRun, SessionResult, _poll_output
+from .helpers import AsyncSessionRun, SessionResult, SessionStream, _poll_output
 from ..generated.v3.models import SessionResponse
 
 _V3_BASE_URL = "https://api.browser-use.com/api/v3"
@@ -122,6 +122,49 @@ class BrowserUse:
             **extra,
         )
         return _poll_output(self.sessions, str(data.id), resolved_schema)
+
+    def stream(
+        self,
+        task: str,
+        *,
+        schema: type[Any] | None = None,
+        output_schema: type[Any] | None = None,
+        model: str | None = None,
+        session_id: str | UUID | None = None,
+        keep_alive: bool | None = None,
+        max_cost_usd: float | None = None,
+        profile_id: str | None = None,
+        proxy_country_code: str | None = None,
+        workspace_id: str | None = None,
+        **extra: Any,
+    ) -> SessionStream[Any]:
+        """Run a task and yield messages as they happen.
+
+        Usage::
+
+            stream = client.stream("Find the top story on HN")
+            for msg in stream:
+                print(f"[{msg.role}] {msg.summary}")
+            print(stream.result.output)
+        """
+        resolved_schema = schema or output_schema
+        schema_dict: dict[str, Any] | None = None
+        if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
+            schema_dict = resolved_schema.model_json_schema()
+
+        data = self.sessions.create(
+            task,
+            model=model,
+            session_id=session_id,
+            keep_alive=keep_alive,
+            max_cost_usd=max_cost_usd,
+            profile_id=profile_id,
+            proxy_country_code=proxy_country_code,
+            output_schema=schema_dict,
+            workspace_id=workspace_id,
+            **extra,
+        )
+        return SessionStream(data, self.sessions, resolved_schema)
 
     def close(self) -> None:
         """Close the underlying HTTP client."""
