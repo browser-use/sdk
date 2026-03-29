@@ -74,7 +74,7 @@ https://live.browser-use.com?wss=...&ui=false
 
 ## Recording
 
-Enable recording to get an MP4 video of the session after it completes. Recording URLs may take a few seconds to appear after the session stops — poll `sessions.get()` if empty initially.
+Enable recording to get an MP4 video of the browser session. Only available when the agent actually opens a browser — tasks answered without browsing produce no recording. Poll `sessions.get()` after the session stops if `recording_urls` is empty — processing may take a few seconds for longer sessions.
 
 <CodeGroup>
 ```python Python
