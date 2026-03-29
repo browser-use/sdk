@@ -73,18 +73,12 @@ export class SessionRun<T = string> implements PromiseLike<SessionResult<T>> {
   private async _waitForOutput(): Promise<SessionResult<T>> {
     const sessionId = await this._ensureSessionId();
     const deadline = Date.now() + this._timeout;
-    let capturedLiveUrl: string | null = null;
 
     while (Date.now() < deadline) {
       const session = await this._sessions.get(sessionId);
-      if (session.liveUrl) capturedLiveUrl = session.liveUrl;
       if (TERMINAL_STATUSES.has(session.status)) {
         const { output, ...rest } = session;
         const parsed = this._parseOutput(output);
-        // Preserve liveUrl captured during polling (goes null at terminal)
-        if (capturedLiveUrl && !rest.liveUrl) {
-          rest.liveUrl = capturedLiveUrl;
-        }
         this._result = { ...rest, output: parsed } as SessionResult<T>;
         return this._result;
       }
