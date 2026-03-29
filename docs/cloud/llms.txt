@@ -8,14 +8,14 @@
 - Open Source: https://github.com/browser-use/browser-use
 - Docs: https://docs.browser-use.com
 - OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
+- Chat UI example: https://docs.browser-use.com/cloud/tutorials/chat-ui — Full end-to-end example with live browser, streaming, auth. Best starting point to build a prototype.
 - Stealth benchmark: https://browser-use.com/posts/stealth-benchmark
 - Agent benchmark (online Mind2Web): https://browser-use.com/posts/online-mind2web-benchmark
 - Blog: https://browser-use.com/posts
-- API v2 Reference: https://docs.browser-use.com/cloud/api-v2-overview
 
-Install:
-- Python: `pip install browser-use-sdk`
-- TypeScript: `npm install browser-use-sdk`
+Install (check if already installed and update to latest):
+- Python: `pip install --upgrade browser-use-sdk`
+- TypeScript: `npm install browser-use-sdk@latest`
 
 
 ## Get Started
