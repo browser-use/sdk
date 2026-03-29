@@ -5,7 +5,7 @@ description: "Persistent file storage across sessions. Upload input files, downl
 
 See your workspaces at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=workspaces).
 
-## Create a workspace
+## Create and use a workspace
 
 <CodeGroup>
 ```python Python
@@ -13,23 +13,7 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
-print(workspace.id, workspace.name)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
 
-const client = new BrowserUse();
-const workspace = await client.workspaces.create({ name: "my-workspace" });
-console.log(workspace.id, workspace.name);
-```
-</CodeGroup>
-
-## Use a workspace with a task
-
-Pass `workspace_id` when running a task. The agent can read and write files in the workspace during execution.
-
-<CodeGroup>
-```python Python
 result = await client.run(
     'Create a file called HEARTBEAT.md with the text "say hello"',
     workspace_id=str(workspace.id),
@@ -37,6 +21,11 @@ result = await client.run(
 print(result.output)
 ```
 ```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const workspace = await client.workspaces.create({ name: "my-workspace" });
+
 const result = await client.run(
   'Create a file called HEARTBEAT.md with the text "say hello"',
   { workspaceId: workspace.id },
