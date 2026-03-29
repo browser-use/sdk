@@ -10,6 +10,7 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
+# Create a session first, then run tasks inside it
 session = await client.sessions.create()
 
 result1 = await client.run(
@@ -29,6 +30,7 @@ import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 
+// Create a session first, then run tasks inside it
 const session = await client.sessions.create();
 
 const result1 = await client.run("Log into example.com with user@test.com", {
