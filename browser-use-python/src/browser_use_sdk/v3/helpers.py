@@ -11,8 +11,6 @@ from ..generated.v3.models import SessionResponse
 from .resources.sessions import AsyncSessions, Sessions
 
 _TERMINAL_STATUSES = {"idle", "stopped", "timed_out", "error"}
-_POST_POLL_INTERVAL = 2
-_POST_POLL_MAX = 30  # seconds to wait for live_url / recording_urls after terminal
 
 T = TypeVar("T")
 
@@ -58,17 +56,6 @@ def _poll_output(
     while time.monotonic() < deadline:
         session = sessions.get(session_id)
         if session.status.value in _TERMINAL_STATUSES:
-            # Auto-await live_url and recording_urls if not yet available
-            post_deadline = time.monotonic() + _POST_POLL_MAX
-            while time.monotonic() < post_deadline:
-                if session.live_url and session.recording_urls:
-                    break
-                prev = (session.live_url, session.recording_urls)
-                time.sleep(_POST_POLL_INTERVAL)
-                session = sessions.get(session_id)
-                # Stop if nothing changed (won't come)
-                if (session.live_url, session.recording_urls) == prev:
-                    break
             return SessionResult(session, _parse_output(session.output, output_schema))
         time.sleep(interval)
     raise TimeoutError(f"Session {session_id} did not complete within {timeout}s")
@@ -87,17 +74,6 @@ async def _async_poll_output(
     while time.monotonic() < deadline:
         session = await sessions.get(session_id)
         if session.status.value in _TERMINAL_STATUSES:
-            # Auto-await live_url and recording_urls if not yet available
-            post_deadline = time.monotonic() + _POST_POLL_MAX
-            while time.monotonic() < post_deadline:
-                if session.live_url and session.recording_urls:
-                    break
-                prev = (session.live_url, session.recording_urls)
-                await asyncio.sleep(_POST_POLL_INTERVAL)
-                session = await sessions.get(session_id)
-                # Stop if nothing changed (won't come)
-                if (session.live_url, session.recording_urls) == prev:
-                    break
             return SessionResult(session, _parse_output(session.output, output_schema))
         await asyncio.sleep(interval)
     raise TimeoutError(f"Session {session_id} did not complete within {timeout}s")

@@ -12,7 +12,7 @@ icon: hand
 ## Flow
 
 1. Create a session with `keep_alive=True` so it stays alive between tasks
-2. Run an agent task — `result.live_url` is auto-awaited
+2. Run an agent task — `result.live_url` is available after the task completes
 3. Human interacts with the live browser
 4. Send a new follow-up task
 
@@ -25,7 +25,7 @@ client = AsyncBrowserUse()
 # 1. Create a persistent session
 session = await client.sessions.create(keep_alive=True)
 
-# 2. Agent does the first part (live_url is auto-awaited)
+# 2. Agent does the first part
 result = await client.run(
     "Go to Google Flights and search for flights from NYC to London",
     session_id=session.id,
@@ -55,7 +55,7 @@ const client = new BrowserUse();
 // 1. Create a persistent session
 const session = await client.sessions.create({ keepAlive: true });
 
-// 2. Agent does the first part (liveUrl is auto-awaited)
+// 2. Agent does the first part
 const searchResult = await client.run(
   "Go to Google Flights and search for flights from NYC to London",
   { sessionId: session.id },

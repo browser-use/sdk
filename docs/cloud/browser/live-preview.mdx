@@ -78,6 +78,7 @@ Enable recording to get an MP4 video of the browser session. Only available when
 
 <CodeGroup>
 ```python Python
+import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
@@ -86,7 +87,14 @@ result = await client.run(
     enable_recording=True,
 )
 
-for url in result.recording_urls:
+# Recording may not be ready immediately — poll until available
+for _ in range(30):
+    session = await client.sessions.get(result.id)
+    if session.recording_urls:
+        break
+    await asyncio.sleep(2)
+
+for url in session.recording_urls:
     print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
@@ -97,7 +105,14 @@ const result = await client.run("Check how many GitHub stars browser-use has", {
   enableRecording: true,
 });
 
-for (const url of result.recordingUrls) {
+// Recording may not be ready immediately — poll until available
+let session = await client.sessions.get(result.id);
+for (let i = 0; i < 30 && !session.recordingUrls?.length; i++) {
+  await new Promise((r) => setTimeout(r, 2000));
+  session = await client.sessions.get(result.id);
+}
+
+for (const url of session.recordingUrls) {
   console.log(url); // presigned MP4 download URL
 }
 ```

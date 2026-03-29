@@ -277,7 +277,7 @@ workspace = await client.workspaces.create(name="my-workspace")
 
 # Get a presigned upload URL
 upload = await client.workspaces.upload_files(
-    str(workspace.id),
+    workspace.id,
     files=[{"name": "people.csv", "contentType": "text/csv", "size": 45}],
 )
 
@@ -293,7 +293,7 @@ with open("people.csv", "rb") as f:
 # Tell the agent to use it
 result = await client.run(
     "Read people.csv and tell me who works at Google",
-    workspace_id=str(workspace.id),
+    workspace_id=workspace.id,
 )
 print(result.output)
 ```
@@ -340,11 +340,11 @@ workspace = await client.workspaces.create(name="my-workspace")
 # Agent saves files to the workspace
 result = await client.run(
     "Go to Hacker News and save the top 3 posts as posts.json",
-    workspace_id=str(workspace.id),
+    workspace_id=workspace.id,
 )
 
 # List and download files
-files = await client.workspaces.files(str(workspace.id), include_urls=True)
+files = await client.workspaces.files(workspace.id, include_urls=True)
 for f in files.files:
     print(f"{f.path} ({f.size} bytes)")
 
@@ -411,7 +411,7 @@ Source: https://docs.browser-use.com/cloud/agent/human-in-the-loop
 ## Flow
 
 1. Create a session with `keep_alive=True` so it stays alive between tasks
-2. Run an agent task — `result.live_url` is auto-awaited
+2. Run an agent task — `result.live_url` is available after the task completes
 3. Human interacts with the live browser
 4. Send a new follow-up task
 
@@ -424,7 +424,7 @@ client = AsyncBrowserUse()
 # 1. Create a persistent session
 session = await client.sessions.create(keep_alive=True)
 
-# 2. Agent does the first part (live_url is auto-awaited)
+# 2. Agent does the first part
 result = await client.run(
     "Go to Google Flights and search for flights from NYC to London",
     session_id=session.id,
@@ -454,7 +454,7 @@ const client = new BrowserUse();
 // 1. Create a persistent session
 const session = await client.sessions.create({ keepAlive: true });
 
-// 2. Agent does the first part (liveUrl is auto-awaited)
+// 2. Agent does the first part
 const searchResult = await client.run(
   "Go to Google Flights and search for flights from NYC to London",
   { sessionId: session.id },
@@ -653,6 +653,7 @@ Enable recording to get an MP4 video of the browser session. Only available when
 
 <CodeGroup>
 ```python Python
+import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
@@ -661,7 +662,14 @@ result = await client.run(
     enable_recording=True,
 )
 
-for url in result.recording_urls:
+# Recording may not be ready immediately — poll until available
+for _ in range(30):
+    session = await client.sessions.get(result.id)
+    if session.recording_urls:
+        break
+    await asyncio.sleep(2)
+
+for url in session.recording_urls:
     print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
@@ -672,7 +680,14 @@ const result = await client.run("Check how many GitHub stars browser-use has", {
   enableRecording: true,
 });
 
-for (const url of result.recordingUrls) {
+// Recording may not be ready immediately — poll until available
+let session = await client.sessions.get(result.id);
+for (let i = 0; i < 30 && !session.recordingUrls?.length; i++) {
+  await new Promise((r) => setTimeout(r, 2000));
+  session = await client.sessions.get(result.id);
+}
+
+for (const url of session.recordingUrls) {
   console.log(url); // presigned MP4 download URL
 }
 ```
@@ -1575,14 +1590,12 @@ Set `max_cost_usd` to cap spending per task. Default is $20. A typical task cost
 
 ## How do I get the live browser URL?
 
-`client.run()` auto-awaits `live_url` — it's available on the result once the task completes.
+After `client.run()` completes, `result.live_url` is available on the result. If you use `sessions.create()` directly, poll `sessions.get()` until `live_url` appears (~3-5 seconds).
 
 ```python
-result = await client.run("Go to example.com")
+result = await client.run("Go to example.com", keep_alive=True)
 print(result.live_url)
 ```
-
-If you use `sessions.create()` directly, poll `sessions.get()` until `live_url` appears (~3-5 seconds).
 
 ## How do I authenticate on websites?
 
