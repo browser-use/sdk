@@ -54,6 +54,7 @@
                 "group": "Get Started",
                 "pages": [
                   "cloud/quickstart",
+                  "cloud/vibecoding",
                   "cloud/pricing"
                 ]
               },
@@ -336,7 +337,6 @@
     {"source": "/", "destination": "/cloud/quickstart"},
     {"source": "/introduction", "destination": "/cloud/quickstart"},
     {"source": "/cloud/introduction", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/vibecoding", "destination": "/cloud/quickstart"},
     {"source": "/quickstart", "destination": "/open-source/quickstart"},
     {"source": "/quickstart_llm", "destination": "/open-source/vibecoding"},
     {"source": "/supported-models", "destination": "/open-source/supported-models"},
@@ -428,10 +428,10 @@
     {"source": "/customize/examples/prompting-guide", "destination": "/open-source/customize/agent/prompting-guide"},
 
     {"source": "/pricing", "destination": "/cloud/pricing"},
-    {"source": "/llm-quickstart", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/llm-quickstart", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/coding-agent-quickstart", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/write-code", "destination": "/cloud/quickstart"},
+    {"source": "/llm-quickstart", "destination": "/cloud/vibecoding"},
+    {"source": "/cloud/llm-quickstart", "destination": "/cloud/vibecoding"},
+    {"source": "/cloud/coding-agent-quickstart", "destination": "/cloud/vibecoding"},
+    {"source": "/cloud/write-code", "destination": "/cloud/vibecoding"},
     {"source": "/open-source/coding-agent-quickstart", "destination": "/open-source/vibecoding"},
     {"source": "/open-source/write-code", "destination": "/open-source/vibecoding"},
     {"source": "/faq", "destination": "/cloud/faq"},
@@ -475,7 +475,7 @@
 
     {"source": "/get-started/human-quickstart", "destination": "/cloud/quickstart"},
     {"source": "/human-quickstart", "destination": "/cloud/quickstart"},
-    {"source": "/get-started/llm-quickstart", "destination": "/cloud/quickstart"},
+    {"source": "/get-started/llm-quickstart", "destination": "/cloud/vibecoding"},
     {"source": "/open-source/quickstart_llm", "destination": "/open-source/vibecoding"},
     {"source": "/get-started/models-and-pricing", "destination": "/cloud/pricing"},
     {"source": "/get-started/pricing", "destination": "/cloud/pricing"},
