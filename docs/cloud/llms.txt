@@ -17,6 +17,11 @@ Install (check if already installed and update to latest):
 - Python: `pip install --upgrade browser-use-sdk`
 - TypeScript: `npm install browser-use-sdk@latest`
 
+Set API key (starts with `bu_`):
+```
+export BROWSER_USE_API_KEY=bu_your_key_here
+```
+
 
 ## Get Started
 - [Quick start](https://docs.browser-use.com/cloud/quickstart): Install the SDK, set your API key, and run your first AI browser automation task.

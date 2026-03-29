@@ -191,6 +191,11 @@ Install (check if already installed and update to latest):
 - Python: `pip install --upgrade browser-use-sdk`
 - TypeScript: `npm install browser-use-sdk@latest`
 
+Set API key (starts with `bu_`):
+```
+export BROWSER_USE_API_KEY=bu_your_key_here
+```
+
 HEADER
 
 # Append grouped nav entries
