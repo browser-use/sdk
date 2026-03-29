@@ -40,7 +40,7 @@ for p in profiles:
     print(p.id, p.name)
 
 # Search by name
-results = await client.profiles.list(query="linkedin")
+results = await client.profiles.list(query="user-id-1")
 profile = results[0]  # first match
 
 # Get one by ID
@@ -63,7 +63,7 @@ for (const p of profiles) {
 }
 
 // Search by name
-const results = await client.profiles.list({ query: "linkedin" });
+const results = await client.profiles.list({ query: "user-id-1" });
 const profile = results[0]; // first match
 
 // Get one by ID
