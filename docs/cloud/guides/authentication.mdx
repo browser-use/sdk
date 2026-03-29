@@ -81,7 +81,7 @@ await client.profiles.delete(profileId);
 
 ## Usage patterns
 
-- **Per-user profiles:** Create one profile per end-user. Store the profile ID in your database.
+- **Per-user profiles:** Create one profile per end-user. Query by name to get the profile ID, or store a mapping between your users and their profile IDs in your database.
 
 <Warning>
   Profile state is only saved when the session ends. Always call `sessions.stop()` when you are done — if a session is left open or times out, changes may not be persisted.
