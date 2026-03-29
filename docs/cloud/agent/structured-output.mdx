@@ -4,6 +4,8 @@ description: "Get validated, typed data back from agent tasks."
 icon: table
 ---
 
+Pass a Pydantic model (Python) or Zod schema (TypeScript) — `result.output` is automatically validated and converted to the typed object.
+
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
