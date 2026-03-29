@@ -41,8 +41,9 @@ for p in profiles:
 
 # Search by name
 results = await client.profiles.list(query="linkedin")
+profile = results[0]  # first match
 
-# Get one
+# Get one by ID
 profile = await client.profiles.get(profile_id)
 
 # Update
@@ -63,8 +64,9 @@ for (const p of profiles) {
 
 // Search by name
 const results = await client.profiles.list({ query: "linkedin" });
+const profile = results[0]; // first match
 
-// Get one
+// Get one by ID
 const profile = await client.profiles.get(profileId);
 
 // Update
