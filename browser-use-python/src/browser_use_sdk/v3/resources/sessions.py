@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
@@ -12,6 +13,9 @@ from ...generated.v3.models import (
     SessionResponse,
 )
 
+# Accept both str and UUID for session IDs
+_ID = str | UUID
+
 
 class Sessions:
     def __init__(self, http: SyncHttpClient) -> None:
@@ -22,7 +26,7 @@ class Sessions:
         task: str | None = None,
         *,
         model: str | None = None,
-        session_id: str | None = None,
+        session_id: _ID | None = None,
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
@@ -39,7 +43,7 @@ class Sessions:
         if model is not None:
             body["model"] = model
         if session_id is not None:
-            body["sessionId"] = session_id
+            body["sessionId"] = str(session_id)
         if keep_alive is not None:
             body["keepAlive"] = keep_alive
         if max_cost_usd is not None:
@@ -77,13 +81,13 @@ class Sessions:
             )
         )
 
-    def get(self, session_id: str) -> SessionResponse:
+    def get(self, session_id: _ID) -> SessionResponse:
         """Get session details."""
         return SessionResponse.model_validate(
             self._http.request("GET", f"/sessions/{session_id}")
         )
 
-    def stop(self, session_id: str, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
+    def stop(self, session_id: _ID, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
         """Stop a session or the running task."""
         body: dict[str, Any] | None = None
         if strategy is not None or extra:
@@ -95,13 +99,13 @@ class Sessions:
             self._http.request("POST", f"/sessions/{session_id}/stop", json=body)
         )
 
-    def delete(self, session_id: str) -> None:
+    def delete(self, session_id: _ID) -> None:
         """Soft-delete a session."""
         self._http.request("DELETE", f"/sessions/{session_id}")
 
     def upload_files(
         self,
-        session_id: str,
+        session_id: _ID,
         files: list[FileUploadItem],
         **extra: Any,
     ) -> FileUploadResponse:
@@ -116,7 +120,7 @@ class Sessions:
 
     def files(
         self,
-        session_id: str,
+        session_id: _ID,
         *,
         prefix: str | None = None,
         limit: int | None = None,
@@ -141,7 +145,7 @@ class Sessions:
 
     def messages(
         self,
-        session_id: str,
+        session_id: _ID,
         *,
         after: str | None = None,
         before: str | None = None,
@@ -170,7 +174,7 @@ class AsyncSessions:
         task: str | None = None,
         *,
         model: str | None = None,
-        session_id: str | None = None,
+        session_id: _ID | None = None,
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
@@ -187,7 +191,7 @@ class AsyncSessions:
         if model is not None:
             body["model"] = model
         if session_id is not None:
-            body["sessionId"] = session_id
+            body["sessionId"] = str(session_id)
         if keep_alive is not None:
             body["keepAlive"] = keep_alive
         if max_cost_usd is not None:

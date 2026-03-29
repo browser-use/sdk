@@ -15,15 +15,15 @@ session = await client.sessions.create()
 
 result1 = await client.run(
     "Log into example.com with user@test.com",
-    session_id=str(session.id),
+    session_id=session.id,
     keep_alive=True,
 )
 result2 = await client.run(
     "Now go to settings and change the timezone",
-    session_id=str(session.id),
+    session_id=session.id,
 )
 
-await client.sessions.stop(str(session.id))
+await client.sessions.stop(session.id)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";

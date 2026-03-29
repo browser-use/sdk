@@ -5,6 +5,8 @@ import type { Sessions } from "./resources/sessions.js";
 type SessionResponse = components["schemas"]["SessionResponse"];
 
 const TERMINAL_STATUSES = new Set(["idle", "stopped", "timed_out", "error"]);
+const POST_POLL_INTERVAL = 2_000;
+const POST_POLL_MAX = 30_000; // ms to wait for liveUrl / recordingUrls after terminal
 
 export interface RunOptions {
   /** Maximum time to wait in milliseconds. Default: 14_400_000 (4 hours). */
@@ -75,8 +77,19 @@ export class SessionRun<T = string> implements PromiseLike<SessionResult<T>> {
     const deadline = Date.now() + this._timeout;
 
     while (Date.now() < deadline) {
-      const session = await this._sessions.get(sessionId);
+      let session = await this._sessions.get(sessionId);
       if (TERMINAL_STATUSES.has(session.status)) {
+        // Auto-await liveUrl and recordingUrls if not yet available
+        const postDeadline = Date.now() + POST_POLL_MAX;
+        while (Date.now() < postDeadline) {
+          if (session.liveUrl && session.recordingUrls?.length) break;
+          const prevLiveUrl = session.liveUrl;
+          const prevRecordingLen = session.recordingUrls?.length ?? 0;
+          await new Promise((r) => setTimeout(r, POST_POLL_INTERVAL));
+          session = await this._sessions.get(sessionId);
+          // Stop if nothing changed (won't come)
+          if (session.liveUrl === prevLiveUrl && (session.recordingUrls?.length ?? 0) === prevRecordingLen) break;
+        }
         const { output, ...rest } = session;
         const parsed = this._parseOutput(output);
         this._result = { ...rest, output: parsed } as SessionResult<T>;

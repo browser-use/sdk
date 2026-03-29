@@ -21,7 +21,7 @@ Set `max_cost_usd` to cap spending per task. Default is $20. A typical task cost
 import asyncio
 session = await client.sessions.create(task="Go to example.com")
 while True:
-    s = await client.sessions.get(str(session.id))
+    s = await client.sessions.get(session.id)
     if s.live_url:
         print(s.live_url)
         break

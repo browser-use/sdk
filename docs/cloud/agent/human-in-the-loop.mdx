@@ -12,13 +12,12 @@ icon: hand
 ## Flow
 
 1. Create a session with `keep_alive=True` so it stays alive between tasks
-2. Run an agent task — `live_url` becomes available once the browser starts (~3-5 seconds, poll `sessions.get()`)
-3. Human interacts with the `liveUrl`
+2. Run an agent task — `result.live_url` is auto-awaited
+3. Human interacts with the live browser
 4. Send a new follow-up task
 
 <CodeGroup>
 ```python Python
-import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
@@ -26,19 +25,13 @@ client = AsyncBrowserUse()
 # 1. Create a persistent session
 session = await client.sessions.create(keep_alive=True)
 
-# 2. Agent does the first part
+# 2. Agent does the first part (live_url is auto-awaited)
 result = await client.run(
     "Go to Google Flights and search for flights from NYC to London",
-    session_id=str(session.id),
+    session_id=session.id,
 )
 print(result.output)
-
-# liveUrl becomes available once the browser starts (~3-5s)
-s = await client.sessions.get(str(session.id))
-while not s.live_url:
-    await asyncio.sleep(1)
-    s = await client.sessions.get(str(session.id))
-print(f"Live view: {s.live_url}")
+print(f"Live view: {result.live_url}")
 
 # 3. Human opens live_url and picks a flight
 input("Press Enter after you've selected a flight in the live view...")
@@ -46,12 +39,12 @@ input("Press Enter after you've selected a flight in the live view...")
 # 4. Agent continues where the human left off
 result = await client.run(
     "Get the details of the selected flight — airline, price, departure and arrival times",
-    session_id=str(session.id),
+    session_id=session.id,
 )
 print(result.output)
 
 # Clean up
-await client.sessions.stop(str(session.id))
+await client.sessions.stop(session.id)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -62,20 +55,13 @@ const client = new BrowserUse();
 // 1. Create a persistent session
 const session = await client.sessions.create({ keepAlive: true });
 
-// 2. Agent does the first part
+// 2. Agent does the first part (liveUrl is auto-awaited)
 const searchResult = await client.run(
   "Go to Google Flights and search for flights from NYC to London",
   { sessionId: session.id },
 );
 console.log(searchResult.output);
-
-// liveUrl becomes available once the browser starts (~3-5s)
-let s = await client.sessions.get(session.id);
-while (!s.liveUrl) {
-  await new Promise((r) => setTimeout(r, 1000));
-  s = await client.sessions.get(session.id);
-}
-console.log(`Live view: ${s.liveUrl}`);
+console.log(`Live view: ${searchResult.liveUrl}`);
 
 // 3. Human opens liveUrl and picks a flight
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
