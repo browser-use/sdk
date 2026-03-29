@@ -133,7 +133,7 @@
             "href": "cloud/api-reference",
             "groups": [
               {
-                "group": "Get Started",
+                "group": "Authentication",
                 "pages": ["cloud/api-reference"]
               },
               {
@@ -149,7 +149,7 @@
             "tab": "API v2",
             "groups": [
               {
-                "group": "Get Started",
+                "group": "Authentication",
                 "pages": ["cloud/api-reference"]
               },
               {
