@@ -3631,7 +3631,8 @@
       "name": "Profiles"
     },
     {
-      "name": "Workspaces"
+      "name": "Workspaces",
+      "description": "File handling across sessions. Upload and download files, give the agent persistent memory."
     },
     {
       "name": "Files"
