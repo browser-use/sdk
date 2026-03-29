@@ -1,0 +1,27 @@
+---
+title: Quick start
+description: "Run your first AI browser agent task."
+---
+
+Same package, different import path:
+
+<CodeGroup>
+```python Python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse()
+    result = await client.run("Find the top 3 trending repos on GitHub today")
+    print(result.output)
+
+asyncio.run(main())
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const result = await client.run("Find the top 3 trending repos on GitHub today");
+console.log(result.output);
+```
+</CodeGroup>

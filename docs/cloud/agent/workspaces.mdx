@@ -1,12 +1,9 @@
 ---
-title: Workspaces
+title: Workspaces & files
 description: "Persistent file storage across sessions. Upload input files, download results, and share data across tasks."
-icon: folder
 ---
 
-## What are workspaces?
-
-A workspace is a persistent storage container that lives across sessions. Use workspaces to share files between tasks — upload input data before a task starts, or retrieve output files after it completes.
+A workspace is a persistent storage container that lives across sessions. Upload input data before a task starts, or retrieve output files after it completes.
 
 <Tip>
   Every project gets a default "My Files" workspace automatically.
@@ -31,54 +28,12 @@ console.log(workspace.id, workspace.name);
 ```
 </CodeGroup>
 
-## Manage workspaces
-
-<CodeGroup>
-```python Python
-# Get
-workspace = await client.workspaces.get(workspace_id)
-
-# Update
-updated = await client.workspaces.update(workspace_id, name="renamed")
-
-# List
-workspaces = await client.workspaces.list()
-for w in workspaces.items:
-    print(w.id, w.name)
-
-# Delete
-await client.workspaces.delete(workspace_id)
-```
-```typescript TypeScript
-// Get
-const workspace = await client.workspaces.get(workspaceId);
-
-// Update
-const updated = await client.workspaces.update(workspaceId, { name: "renamed" });
-
-// List
-const workspaces = await client.workspaces.list();
-for (const w of workspaces.items) {
-  console.log(w.id, w.name);
-}
-
-// Delete
-await client.workspaces.delete(workspaceId);
-```
-</CodeGroup>
-
 ## Use a workspace with a task
 
 Pass `workspace_id` when running a task. The agent can read and write files in the workspace during execution.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-
-workspace = await client.workspaces.create(name="my-workspace")
-
 result = await client.run(
     'Create a file called HEARTBEAT.md with the text "say hello"',
     workspace_id=str(workspace.id),
@@ -86,12 +41,6 @@ result = await client.run(
 print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-
-const workspace = await client.workspaces.create({ name: "my-workspace" });
-
 const result = await client.run(
   'Create a file called HEARTBEAT.md with the text "say hello"',
   { workspaceId: workspace.id },
@@ -102,39 +51,41 @@ console.log(result.output);
 
 ## List and delete files
 
-After a task completes, list files in the workspace or clean up individual files.
-
 <CodeGroup>
 ```python Python
-# List files
 files = await client.workspaces.files(workspace_id, include_urls=True)
 for f in files.files:
     print(f.path, f.size)
 
-# Delete a file
 await client.workspaces.delete_file(workspace_id, path="HEARTBEAT.md")
 ```
 ```typescript TypeScript
-// List files
 const files = await client.workspaces.files(workspaceId, { includeUrls: true });
 for (const f of files.files) {
   console.log(f.path, f.size);
 }
 
-// Delete a file
 await client.workspaces.deleteFile(workspaceId, "HEARTBEAT.md");
+```
+</CodeGroup>
+
+## Manage workspaces
+
+<CodeGroup>
+```python Python
+workspace = await client.workspaces.get(workspace_id)
+updated = await client.workspaces.update(workspace_id, name="renamed")
+workspaces = await client.workspaces.list()
+await client.workspaces.delete(workspace_id)
+```
+```typescript TypeScript
+const workspace = await client.workspaces.get(workspaceId);
+const updated = await client.workspaces.update(workspaceId, { name: "renamed" });
+const workspaces = await client.workspaces.list();
+await client.workspaces.delete(workspaceId);
 ```
 </CodeGroup>
 
 <Warning>
   Deleting a workspace permanently removes all its files. This cannot be undone.
 </Warning>
-
-<CardGroup cols={2}>
-  <Card title="Workspaces API Reference" icon="code" href="/cloud/api-reference">
-    Full endpoint reference.
-  </Card>
-  <Card title="Sessions Guide" icon="browser" href="/cloud/guides/sessions">
-    Learn about sessions and profiles.
-  </Card>
-</CardGroup>

@@ -48,7 +48,7 @@
         },
         "tabs": [
           {
-            "tab": "Docs",
+            "tab": "Cloud SDK",
             "groups": [
               {
                 "group": "Get Started",
@@ -58,83 +58,63 @@
                 ]
               },
               {
-                "group": "New Features",
+                "group": "Pillars",
                 "pages": [
-                  "cloud/new-features/api-v3"
+                  {
+                    "group": "Agent",
+                    "icon": "robot",
+                    "pages": [
+                      "cloud/agent/quickstart",
+                      "cloud/agent/structured-output",
+                      "cloud/agent/streaming",
+                      "cloud/agent/follow-up-tasks",
+                      "cloud/agent/workspaces",
+                      "cloud/agent/human-in-the-loop"
+                    ]
+                  },
+                  {
+                    "group": "Browser",
+                    "icon": "globe",
+                    "pages": [
+                      "cloud/guides/proxies-and-stealth",
+                      "cloud/browser/live-preview",
+                      "cloud/browser/playwright-puppeteer-selenium",
+                      "cloud/guides/sessions",
+                      "cloud/guides/authentication"
+                    ]
+                  }
                 ]
               },
               {
-                "group": "Concepts",
+                "group": "More",
                 "pages": [
-                  "cloud/guides/tasks",
-                  "cloud/guides/sessions",
-                  "cloud/guides/workspaces",
-                  "cloud/guides/browser-api",
-                  "cloud/guides/proxies-and-stealth",
-                  "cloud/guides/authentication",
-                  "cloud/guides/webhooks",
+                  {
+                    "group": "Integrations",
+                    "icon": "plug",
+                    "pages": [
+                      "cloud/tutorials/integrations/openclaw",
+                      "cloud/guides/mcp-server",
+                      "cloud/guides/webhooks",
+                      "cloud/tutorials/integrations/n8n"
+                    ]
+                  },
+                  {
+                    "group": "Tutorials",
+                    "icon": "graduation-cap",
+                    "pages": [
+                      "cloud/tutorials/chat-ui"
+                    ]
+                  },
+                  "cloud/faq",
                   {
                     "group": "Legacy (v2)",
+                    "icon": "box-archive",
                     "isDefaultOpen": false,
                     "pages": [
                       "cloud/legacy/agent",
                       "cloud/legacy/skills"
                     ]
                   }
-                ]
-              },
-              {
-                "group": "Tutorials",
-                "pages": ["cloud/tutorials/chat-ui"]
-              },
-              {
-                "group": "Integrations",
-                "pages": [
-                  "cloud/guides/mcp-server",
-                  "cloud/tutorials/integrations/openclaw",
-                  "cloud/tutorials/integrations/n8n"
-                ]
-              },
-              {
-                "group": "Resources",
-                "pages": [
-                  {
-                    "group": "Tips",
-                    "pages": [
-                      {
-                        "group": "Authentication",
-                        "pages": [
-                          "cloud/tips/authentication/profiles-and-secrets",
-                          "cloud/tips/authentication/1password-2fa",
-                          "cloud/tips/authentication/social-media"
-                        ]
-                      },
-                      {
-                        "group": "Live View",
-                        "pages": [
-                          "cloud/tips/live-view/iframe-embed",
-                          "cloud/tips/live-view/human-takeover"
-                        ]
-                      },
-                      {
-                        "group": "Parallel",
-                        "pages": [
-                          "cloud/tips/parallel/concurrent-extraction",
-                          "cloud/tips/parallel/shared-config"
-                        ]
-                      },
-                      {
-                        "group": "Data",
-                        "pages": [
-                          "cloud/tips/data/structured-output",
-                          "cloud/tips/data/file-downloads",
-                          "cloud/tips/data/geo-scraping",
-                          "cloud/tips/data/streaming"
-                        ]
-                      }
-                    ]
-                  },
-                  "cloud/faq"
                 ]
               }
             ]
@@ -339,6 +319,11 @@
   },
   "redirects": [
     {"source": "/", "destination": "/cloud/quickstart"},
+    {"source": "/cloud/new-features/api-v3", "destination": "/cloud/agent/quickstart"},
+    {"source": "/cloud/guides/tasks", "destination": "/cloud/agent/quickstart"},
+    {"source": "/cloud/guides/workspaces", "destination": "/cloud/agent/workspaces"},
+    {"source": "/cloud/guides/browser-api", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
+    {"source": "/cloud/tips/live-view/iframe-embed", "destination": "/cloud/browser/live-preview"},
     {"source": "/cloud/pricing", "destination": "/cloud/legacy/agent"},
     {"source": "/cloud/models", "destination": "/cloud/legacy/agent"},
     {"source": "/cloud/guides/skills", "destination": "/cloud/legacy/skills"},
@@ -447,15 +432,15 @@
 
     {"source": "/guides/overview", "destination": "/cloud/quickstart"},
     {"source": "/cloud/guides/overview", "destination": "/cloud/quickstart"},
-    {"source": "/guides/tasks", "destination": "/cloud/guides/tasks"},
+    {"source": "/guides/tasks", "destination": "/cloud/agent/quickstart"},
     {"source": "/guides/sessions", "destination": "/cloud/guides/sessions"},
-    {"source": "/guides/browser-api", "destination": "/cloud/guides/browser-api"},
+    {"source": "/guides/browser-api", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
     {"source": "/guides/proxies-and-stealth", "destination": "/cloud/guides/proxies-and-stealth"},
     {"source": "/guides/skills", "destination": "/cloud/guides/skills"},
     {"source": "/guides/authentication", "destination": "/cloud/guides/authentication"},
     {"source": "/guides/mcp-server", "destination": "/cloud/guides/mcp-server"},
     {"source": "/guides/webhooks", "destination": "/cloud/guides/webhooks"},
-    {"source": "/guides/workspaces", "destination": "/cloud/guides/workspaces"},
+    {"source": "/guides/workspaces", "destination": "/cloud/agent/workspaces"},
 
     {"source": "/tutorials/chat-ui", "destination": "/cloud/tutorials/chat-ui"},
 
@@ -487,18 +472,18 @@
     {"source": "/get-started/models-and-pricing", "destination": "/cloud/pricing"},
     {"source": "/get-started/pricing", "destination": "/cloud/pricing"},
     {"source": "/concepts/overview", "destination": "/cloud/quickstart"},
-    {"source": "/concepts/task", "destination": "/cloud/guides/tasks"},
+    {"source": "/concepts/task", "destination": "/cloud/agent/quickstart"},
     {"source": "/concepts/skills", "destination": "/cloud/guides/skills"},
     {"source": "/concepts/session", "destination": "/cloud/guides/sessions"},
     {"source": "/concepts/profile", "destination": "/cloud/guides/sessions"},
-    {"source": "/concepts/file", "destination": "/cloud/guides/tasks"},
-    {"source": "/concepts/browser", "destination": "/cloud/guides/browser-api"},
-    {"source": "/usage/structured-output", "destination": "/cloud/guides/tasks"},
-    {"source": "/usage/streaming-response", "destination": "/cloud/guides/tasks"},
-    {"source": "/usage/streaming", "destination": "/cloud/guides/tasks"},
+    {"source": "/concepts/file", "destination": "/cloud/agent/quickstart"},
+    {"source": "/concepts/browser", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
+    {"source": "/usage/structured-output", "destination": "/cloud/agent/quickstart"},
+    {"source": "/usage/streaming-response", "destination": "/cloud/agent/quickstart"},
+    {"source": "/usage/streaming", "destination": "/cloud/agent/quickstart"},
     {"source": "/usage/mcp-server", "destination": "/cloud/guides/mcp-server"},
     {"source": "/usage/stealth", "destination": "/cloud/guides/proxies-and-stealth"},
-    {"source": "/usage/safety", "destination": "/cloud/guides/tasks"},
+    {"source": "/usage/safety", "destination": "/cloud/agent/quickstart"},
     {"source": "/usage/webhooks", "destination": "/cloud/guides/webhooks"},
     {"source": "/usage/authentication", "destination": "/cloud/guides/authentication"},
     {"source": "/api-reference/*", "destination": "/cloud/api-reference"},
