@@ -48,7 +48,7 @@
         },
         "tabs": [
           {
-            "tab": "Cloud SDK",
+            "tab": "Docs",
             "groups": [
               {
                 "group": "Cloud SDK",
@@ -76,6 +76,15 @@
                       "cloud/guides/sessions",
                       "cloud/guides/authentication"
                     ]
+                  },
+                  {
+                    "group": "Legacy (v2)",
+                    "icon": "box-archive",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "cloud/legacy/agent",
+                      "cloud/legacy/skills"
+                    ]
                   }
                 ]
               },
@@ -99,16 +108,7 @@
                       "cloud/tutorials/chat-ui"
                     ]
                   },
-                  "cloud/faq",
-                  {
-                    "group": "Legacy (v2)",
-                    "icon": "box-archive",
-                    "isDefaultOpen": false,
-                    "pages": [
-                      "cloud/legacy/agent",
-                      "cloud/legacy/skills"
-                    ]
-                  }
+                  "cloud/faq"
                 ]
               }
             ]
