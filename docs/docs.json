@@ -311,13 +311,13 @@
   },
   "navbar": {
     "links": [
-      { "label": "Github", "href": "https://github.com/browser-use/browser-use" },
-      { "label": "Discord", "href": "https://link.browser-use.com/discord" },
-      { "label": "Status", "href": "https://status.browser-use.com" }
+      { "icon": "github", "href": "https://github.com/browser-use/browser-use" },
+      { "icon": "discord", "href": "https://link.browser-use.com/discord" },
+      { "icon": "signal", "href": "https://status.browser-use.com" }
     ],
     "primary": {
       "type": "button",
-      "label": "Cloud Dashboard",
+      "label": "Dashboard",
       "href": "https://cloud.browser-use.com"
     }
   },
