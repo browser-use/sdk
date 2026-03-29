@@ -66,8 +66,8 @@
                     "pages": [
                       "cloud/agent/quickstart",
                       "cloud/agent/structured-output",
-                      "cloud/agent/streaming",
                       "cloud/agent/follow-up-tasks",
+                      "cloud/agent/streaming",
                       "cloud/agent/workspaces",
                       "cloud/agent/human-in-the-loop"
                     ]
