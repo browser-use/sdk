@@ -13,14 +13,14 @@ A workspace is a persistent storage container that lives across sessions. Upload
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
 print(workspace.id, workspace.name)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
 const workspace = await client.workspaces.create({ name: "my-workspace" });

@@ -11,7 +11,7 @@ Create a session first to get the `liveUrl`, then run a task in that session.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
@@ -24,7 +24,7 @@ result = await client.run(
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
 
