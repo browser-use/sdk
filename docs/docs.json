@@ -85,6 +85,7 @@
                   },
                   {
                     "group": "Integrations",
+                    "icon": "plug",
                     "pages": [
                       "cloud/tutorials/integrations/openclaw",
                       "cloud/guides/mcp-server",
@@ -94,6 +95,7 @@
                   },
                   {
                     "group": "Legacy (v2)",
+                    "icon": "box-archive",
                     "isDefaultOpen": false,
                     "pages": [
                       "cloud/legacy/agent",
@@ -107,6 +109,7 @@
                 "pages": [
                   {
                     "group": "Tutorials",
+                    "icon": "graduation-cap",
                     "pages": [
                       "cloud/tutorials/chat-ui"
                     ]
