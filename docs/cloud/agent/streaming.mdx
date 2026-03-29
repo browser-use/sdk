@@ -36,66 +36,6 @@ console.log(run.result.output);
 ```
 </CodeGroup>
 
-## Follow-up tasks
-
-Each `run()` only streams messages from its own task — not the entire session history.
-
-<CodeGroup>
-```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-session = await client.sessions.create(keep_alive=True)
-
-run1 = client.run("Search flights NYC to London", session_id=session.id)
-async for msg in run1:
-    print(f"[Task 1] {msg.summary}")
-
-# Human picks a flight...
-
-run2 = client.run("Get details of the selected flight", session_id=session.id)
-async for msg in run2:
-    print(f"[Task 2] {msg.summary}")
-
-await client.sessions.stop(session.id)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-const session = await client.sessions.create({ keepAlive: true });
-
-const run1 = client.run("Search flights NYC to London", { sessionId: session.id });
-for await (const msg of run1) {
-  console.log(`[Task 1] ${msg.summary}`);
-}
-
-// Human picks a flight...
-
-const run2 = client.run("Get details of the selected flight", { sessionId: session.id });
-for await (const msg of run2) {
-  console.log(`[Task 2] ${msg.summary}`);
-}
-
-await client.sessions.stop(session.id);
-```
-</CodeGroup>
-
-## Without streaming
-
-If you just need the final result:
-
-<CodeGroup>
-```python Python
-result = await client.run("Find the top story on Hacker News")
-print(result.output)
-```
-```typescript TypeScript
-const result = await client.run("Find the top story on Hacker News");
-console.log(result.output);
-```
-</CodeGroup>
-
 ## Message fields
 
 Each message has:
