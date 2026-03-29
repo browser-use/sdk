@@ -54,8 +54,7 @@
                 "group": "Get Started",
                 "pages": [
                   "cloud/quickstart",
-                  "cloud/vibecoding",
-                  "cloud/pricing"
+                  "cloud/vibecoding"
                 ]
               },
               {
@@ -72,10 +71,16 @@
                   "cloud/guides/workspaces",
                   "cloud/guides/browser-api",
                   "cloud/guides/proxies-and-stealth",
-                  "cloud/guides/skills",
                   "cloud/guides/authentication",
-                  "cloud/guides/mcp-server",
-                  "cloud/guides/webhooks"
+                  "cloud/guides/webhooks",
+                  {
+                    "group": "Legacy (v2)",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "cloud/legacy/agent",
+                      "cloud/legacy/skills"
+                    ]
+                  }
                 ]
               },
               {
@@ -85,9 +90,9 @@
               {
                 "group": "Integrations",
                 "pages": [
+                  "cloud/guides/mcp-server",
                   "cloud/tutorials/integrations/openclaw",
-                  "cloud/tutorials/integrations/n8n",
-                  "cloud/tutorials/integrations/playwright"
+                  "cloud/tutorials/integrations/n8n"
                 ]
               },
               {
@@ -311,13 +316,12 @@
   },
   "navbar": {
     "links": [
-      { "label": "Github", "href": "https://github.com/browser-use/browser-use" },
-      { "label": "Discord", "href": "https://link.browser-use.com/discord" },
-      { "label": "Status", "href": "https://status.browser-use.com" }
+      { "label": "GitHub", "href": "https://github.com/browser-use/browser-use" },
+      { "label": "Discord", "href": "https://link.browser-use.com/discord" }
     ],
     "primary": {
       "type": "button",
-      "label": "Cloud Dashboard",
+      "label": "Dashboard",
       "href": "https://cloud.browser-use.com"
     }
   },
@@ -335,6 +339,9 @@
   },
   "redirects": [
     {"source": "/", "destination": "/cloud/quickstart"},
+    {"source": "/cloud/pricing", "destination": "/cloud/legacy/agent"},
+    {"source": "/cloud/models", "destination": "/cloud/legacy/agent"},
+    {"source": "/cloud/guides/skills", "destination": "/cloud/legacy/skills"},
     {"source": "/introduction", "destination": "/cloud/quickstart"},
     {"source": "/cloud/introduction", "destination": "/cloud/quickstart"},
     {"source": "/quickstart", "destination": "/open-source/quickstart"},
