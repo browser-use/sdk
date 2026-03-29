@@ -14,7 +14,7 @@ import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-session = await client.sessions.create("Check how many GitHub stars browser-use has")
+session = await client.sessions.create(task="Check how many GitHub stars browser-use has")
 
 # liveUrl becomes available once the browser is ready
 while True:

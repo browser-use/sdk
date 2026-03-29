@@ -8,7 +8,7 @@ icon: message-lines
   Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
 </Note>
 
-Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool calls, and results.
+Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool calls, and results. Each message has a `role` (`user`, `assistant`, `tool`), a `summary` for display, and a `type` (e.g. `browser_action`, `browser_action_result`). See [List session messages](/cloud/api-v3/sessions/list-session-messages) for all fields.
 
 <CodeGroup>
 ```python Python
@@ -17,22 +17,20 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(task="Find the top story on Hacker News")
-session_id = session.id
 
 seen = set()
 while True:
-    msgs = await client.sessions.messages(session_id, limit=100)
+    msgs = await client.sessions.messages(session.id, limit=100)
     for m in msgs.messages:
-        if str(m.id) not in seen:
-            seen.add(str(m.id))
-            print(f"[{m.role}] {m.data[:200]}")
+        if m.id not in seen:
+            seen.add(m.id)
+            print(f"[{m.role}] {m.summary}")
 
-    s = await client.sessions.get(session_id)
-    if s.status.value in ("idle", "stopped", "error", "timed_out"):
+    s = await client.sessions.get(session.id)
+    if s.status in ("idle", "stopped", "error", "timed_out"):
         break
     await asyncio.sleep(2)
 
-# Final output
 print(s.output)
 ```
 ```typescript TypeScript
@@ -49,7 +47,7 @@ while (true) {
   for (const m of msgs.messages) {
     if (!seen.has(m.id)) {
       seen.add(m.id);
-      console.log(`[${m.role}] ${m.data.slice(0, 200)}`);
+      console.log(`[${m.role}] ${m.summary}`);
     }
   }
 
@@ -60,10 +58,7 @@ while (true) {
   await new Promise((r) => setTimeout(r, 2000));
 }
 
-// Final output
 const result = await client.sessions.get(session.id);
 console.log(result.output);
 ```
 </CodeGroup>
-
-Each message has a `role` (`user`, `assistant`, `tool`), a `summary` for display, and a `type` (e.g. `browser_action`, `browser_action_result`). Browser action results include a `screenshot_url`. See [List session messages](/cloud/api-v3/sessions/list-session-messages) for all fields.
