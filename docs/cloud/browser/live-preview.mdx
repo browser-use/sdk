@@ -1,6 +1,6 @@
 ---
 title: Live preview
-description: "Watch the agent's browser in real time. Embed it in your app or share a public link."
+description: "Watch the agent's browser in real time. Embed it in your app."
 icon: eye
 ---
 
@@ -22,7 +22,7 @@ while True:
     if s.live_url:
         print(s.live_url)
         break
-    await asyncio.sleep(2)
+    await asyncio.sleep(0.5)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk";
@@ -39,7 +39,7 @@ while (true) {
     console.log(s.liveUrl);
     break;
   }
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 500));
 }
 ```
 </CodeGroup>
