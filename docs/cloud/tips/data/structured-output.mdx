@@ -7,7 +7,7 @@ Define a schema for the data you want, and the agent returns it as a typed objec
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 from pydantic import BaseModel
 
 class Product(BaseModel):
@@ -27,7 +27,7 @@ for p in result.output.items:
     print(f"{p.name}: ${p.price} ({p.rating}★)")
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import { z } from "zod";
 
 const Product = z.object({ name: z.string(), price: z.number(), rating: z.number() });

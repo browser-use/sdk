@@ -57,7 +57,7 @@ await browser.close();
 ```python
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 browser = await client.browsers.create()
@@ -89,7 +89,7 @@ Create a browser via the SDK, get a `cdp_url`, connect with your framework.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 browser = await client.browsers.create(proxy_country_code="us")
@@ -97,7 +97,7 @@ print(browser.cdp_url)   # ws://...
 print(browser.live_url)  # debug view
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const browser = await client.browsers.create({ proxyCountryCode: "us" });

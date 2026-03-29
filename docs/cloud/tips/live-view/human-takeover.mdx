@@ -20,7 +20,7 @@ Human-in-the-loop is not only for failures. Use it whenever you want a human to 
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
@@ -49,7 +49,7 @@ print(result.output)
 await client.sessions.stop(session.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import * as readline from "readline";
 
 const client = new BrowserUse();

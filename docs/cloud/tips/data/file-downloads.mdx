@@ -8,7 +8,7 @@ When the agent downloads files during a task (e.g., exporting a report, saving a
 <CodeGroup>
 ```python Python
 import httpx
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run("Download the latest PDF report from example.com/reports")
@@ -23,7 +23,7 @@ for file in task.output_files:
     print(f"Saved {file.file_name}")
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import { writeFileSync } from "fs";
 
 const client = new BrowserUse();

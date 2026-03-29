@@ -8,7 +8,7 @@ A US residential proxy is active by default on every session. To route through a
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
@@ -17,7 +17,7 @@ result = await client.run(
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Get the price of iPhone 16 on amazon.de", {
@@ -52,7 +52,7 @@ Bring your own proxy server (HTTP or SOCKS5). Requires custom plan.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(
@@ -64,7 +64,7 @@ session = await client.sessions.create(
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({

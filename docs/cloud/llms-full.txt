@@ -27,7 +27,7 @@ export BROWSER_USE_API_KEY=your_key
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 async def main():
     client = AsyncBrowserUse()
@@ -37,7 +37,7 @@ async def main():
 asyncio.run(main())
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Find the top 3 trending repos on GitHub today");
@@ -63,14 +63,14 @@ Source: https://docs.browser-use.com/cloud/agent/quickstart
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run("Find the top 3 trending repos on GitHub today")
 print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Find the top 3 trending repos on GitHub today");
@@ -97,7 +97,7 @@ Source: https://docs.browser-use.com/cloud/agent/structured-output
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 from pydantic import BaseModel
 
 class Contact(BaseModel):
@@ -113,7 +113,7 @@ result = await client.run(
 print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import { z } from "zod";
 
 const Contact = z.object({
@@ -138,7 +138,7 @@ Source: https://docs.browser-use.com/cloud/agent/follow-up-tasks
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
@@ -157,7 +157,7 @@ result2 = await client.run(
 await client.sessions.stop(str(session.id))
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 
@@ -191,7 +191,7 @@ Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool 
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(task="Find the top story on Hacker News")
@@ -212,7 +212,7 @@ while True:
     await asyncio.sleep(2)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({
@@ -255,7 +255,7 @@ Upload a file to a workspace, then tell the agent to use it.
 <CodeGroup>
 ```python Python
 import httpx
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
@@ -283,7 +283,7 @@ result = await client.run(
 print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import { readFileSync } from "fs";
 
 const client = new BrowserUse();
@@ -317,7 +317,7 @@ Run a task that saves files to a workspace, then download them.
 <CodeGroup>
 ```python Python
 import httpx
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
@@ -339,7 +339,7 @@ for f in files.files:
             out.write(resp.content)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import { writeFileSync } from "fs";
 
 const client = new BrowserUse();
@@ -402,7 +402,7 @@ Source: https://docs.browser-use.com/cloud/agent/human-in-the-loop
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
@@ -431,7 +431,7 @@ print(result.output)
 await client.sessions.stop(session.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import * as readline from "readline";
 
 const client = new BrowserUse();
@@ -488,7 +488,7 @@ A US residential proxy is active by default on every session. To route through a
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
@@ -497,7 +497,7 @@ result = await client.run(
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Get the price of iPhone 16 on amazon.de", {
@@ -532,7 +532,7 @@ Bring your own proxy server (HTTP or SOCKS5). Requires custom plan.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(
@@ -544,7 +544,7 @@ session = await client.sessions.create(
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({
@@ -569,7 +569,7 @@ Source: https://docs.browser-use.com/cloud/browser/live-preview
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create("Check how many GitHub stars browser-use has")
@@ -583,7 +583,7 @@ while True:
     await asyncio.sleep(0.5)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({
@@ -636,7 +636,7 @@ Enable recording to get an MP4 video of the session after it completes.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
@@ -648,7 +648,7 @@ for url in result.recording_urls:
     print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Check how many GitHub stars browser-use has", {
@@ -683,7 +683,7 @@ Source: https://docs.browser-use.com/cloud/guides/authentication
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 profile = await client.profiles.create(name="user-id-1")
@@ -694,7 +694,7 @@ result = await client.run("Check browser-use github stars", session_id=session.i
 print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const profile = await client.profiles.create({ name: "user-id-1" });
@@ -781,14 +781,14 @@ This opens a browser where you select which accounts to sync. After syncing, you
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(profile_id="your_synced_profile_id")
 result = await client.run("Check my LinkedIn messages", session_id=session.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({ profileId: "your_synced_profile_id" });
@@ -807,7 +807,7 @@ Pass credentials to the agent scoped by domain. The agent uses them only on matc
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
@@ -817,7 +817,7 @@ result = await client.run(
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run(
@@ -887,7 +887,7 @@ Create a new vault in 1Password for Browser Use. Add the credentials you want th
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
@@ -898,7 +898,7 @@ result = await client.run(
 print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run(
@@ -1004,7 +1004,7 @@ await browser.close();
 ```python
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 browser = await client.browsers.create()
@@ -1036,7 +1036,7 @@ Create a browser via the SDK, get a `cdp_url`, connect with your framework.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 browser = await client.browsers.create(proxy_country_code="us")
@@ -1044,7 +1044,7 @@ print(browser.cdp_url)   # ws://...
 print(browser.live_url)  # debug view
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const browser = await client.browsers.create({ proxyCountryCode: "us" });
@@ -1453,7 +1453,7 @@ All SDK calls live in a single file: `src/lib/api.ts`.
 ## Setup: SDK Clients
 
 ```typescript api.ts
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const apiKey = process.env.NEXT_PUBLIC_BROWSER_USE_API_KEY ?? "";
 const client = new BrowserUse({ apiKey });

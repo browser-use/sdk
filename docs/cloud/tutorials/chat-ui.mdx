@@ -16,7 +16,7 @@ All SDK calls live in a single file: `src/lib/api.ts`.
 ## Setup: SDK Clients
 
 ```typescript api.ts
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const apiKey = process.env.NEXT_PUBLIC_BROWSER_USE_API_KEY ?? "";
 const client = new BrowserUse({ apiKey });

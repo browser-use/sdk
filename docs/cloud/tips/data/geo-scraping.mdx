@@ -7,7 +7,7 @@ Prices, availability, and content often vary by country. Use `proxy_country_code
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 from pydantic import BaseModel
 
 class Price(BaseModel):
@@ -30,7 +30,7 @@ print(result.output)  # Price(product='MacBook Air', price='148,800', currency='
 await client.sessions.stop(session.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import { z } from "zod";
 
 const Price = z.object({ product: z.string(), price: z.string(), currency: z.string() });

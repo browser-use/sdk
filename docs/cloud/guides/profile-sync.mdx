@@ -12,14 +12,14 @@ This opens a browser where you select which accounts to sync. After syncing, you
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(profile_id="your_synced_profile_id")
 result = await client.run("Check my LinkedIn messages", session_id=session.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({ profileId: "your_synced_profile_id" });
