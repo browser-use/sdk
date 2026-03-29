@@ -92,8 +92,7 @@
                 "pages": [
                   "cloud/guides/mcp-server",
                   "cloud/tutorials/integrations/openclaw",
-                  "cloud/tutorials/integrations/n8n",
-                  "cloud/tutorials/integrations/playwright"
+                  "cloud/tutorials/integrations/n8n"
                 ]
               },
               {
