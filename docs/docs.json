@@ -129,15 +129,15 @@
             ]
           },
           {
-            "tab": "API v3 Reference",
+            "tab": "API v3",
             "href": "cloud/api-reference",
             "groups": [
               {
-                "group": "Overview",
+                "group": "Get Started",
                 "pages": ["cloud/api-reference"]
               },
               {
-                "group": "API v3",
+                "group": "Endpoints",
                 "openapi": {
                   "source": "cloud/openapi/v3.json",
                   "directory": "cloud/api-v3"
@@ -146,7 +146,7 @@
             ]
           },
           {
-            "tab": "API V2",
+            "tab": "API v2 (Legacy)",
             "groups": [
               {
                 "group": "API v2 (Legacy)",
