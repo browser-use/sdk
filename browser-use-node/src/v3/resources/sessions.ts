@@ -79,4 +79,28 @@ export class Sessions {
       params as Record<string, unknown>,
     );
   }
+
+  /**
+   * Poll until recording URLs are available. Returns presigned MP4 URLs.
+   *
+   * Returns an empty array if no recording was produced (e.g. the agent
+   * answered without opening a browser, or recording was not enabled).
+   */
+  async waitForRecording(
+    sessionId: string,
+    options?: { timeout?: number; interval?: number },
+  ): Promise<string[]> {
+    const timeout = options?.timeout ?? 15_000;
+    const interval = options?.interval ?? 2_000;
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+      const data = await this.http.get<Record<string, unknown>>(`/sessions/${sessionId}`);
+      const urls = data.recordingUrls;
+      if (Array.isArray(urls) && urls.length > 0) return urls as string[];
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      await new Promise((r) => setTimeout(r, Math.min(interval, remaining)));
+    }
+    return [];
+  }
 }
