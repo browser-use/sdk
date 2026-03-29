@@ -3,67 +3,38 @@ title: Stream messages
 description: "Poll the agent's message history in real time to build custom UIs or monitor progress."
 ---
 
-<Tip>
+<Note>
   Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
-</Tip>
+</Note>
 
-Use `sessions.messages()` to poll the agent's messages while a task runs.
+Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool calls, and results in real time.
 
 <CodeGroup>
 ```python Python
-import asyncio
 from browser_use_sdk import AsyncBrowserUse
 
-async def main():
-    client = AsyncBrowserUse()
+client = AsyncBrowserUse()
+session = await client.sessions.create("Find the top story on Hacker News")
 
-    session = await client.sessions.create("Find the top story on Hacker News")
-    session_id = str(session.id)
-
-    seen = set()
-    while True:
-        s = await client.sessions.get(session_id)
-        msgs = await client.sessions.messages(session_id, limit=100)
-
-        for m in msgs.messages:
-            if str(m.id) not in seen:
-                seen.add(str(m.id))
-                print(f"[{m.role}] {m.data[:200]}")
-
-        if s.status.value in ("idle", "stopped", "error", "timed_out"):
-            print(f"\nDone — {s.output}")
-            break
-        await asyncio.sleep(2)
-
-asyncio.run(main())
+# Get messages
+msgs = await client.sessions.messages(str(session.id), limit=100)
+for m in msgs.messages:
+    print(f"[{m.role}] {m.data[:200]}")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
-
 const session = await client.sessions.create({
   task: "Find the top story on Hacker News",
 });
-const sessionId = session.id;
 
-const seen = new Set<string>();
-while (true) {
-  const s = await client.sessions.get(sessionId);
-  const msgs = await client.sessions.messages(sessionId, { limit: 100 });
-
-  for (const m of msgs.messages) {
-    if (!seen.has(m.id)) {
-      seen.add(m.id);
-      console.log(`[${m.role}] ${m.data.slice(0, 200)}`);
-    }
-  }
-
-  if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
-    console.log(`\nDone — ${s.output}`);
-    break;
-  }
-  await new Promise((r) => setTimeout(r, 2000));
+// Get messages
+const msgs = await client.sessions.messages(session.id, { limit: 100 });
+for (const m of msgs.messages) {
+  console.log(`[${m.role}] ${m.data.slice(0, 200)}`);
 }
 ```
 </CodeGroup>
+
+Poll in a loop every 2 seconds until `session.status` is `idle`, `stopped`, `error`, or `timed_out`.
