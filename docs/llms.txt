@@ -1,4 +1,4 @@
-# Browser Use Cloud
+# Browser Use Cloud SDK
 
 > Easiest way to automate the web. Tell an agent in natural language what to do.
 
@@ -7,7 +7,6 @@
 - API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Open Source: https://github.com/browser-use/browser-use
 - Docs: https://docs.browser-use.com
-- API v3 Reference: https://docs.browser-use.com/cloud/api-reference
 - OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
 
 Install:
@@ -48,7 +47,7 @@ Install:
 - [n8n](https://docs.browser-use.com/cloud/tutorials/integrations/n8n): Use Browser Use as an HTTP node in n8n workflows.
 
 ## Tutorials
-- [Chat UI](https://docs.browser-use.com/cloud/tutorials/chat-ui): Build a chat interface for Browser Use with Next.js and the SDK.
+- [Chat UI](https://docs.browser-use.com/cloud/tutorials/chat-ui): Full end-to-end example. Build a chat UI with live browser preview, authentication, streaming messages, and session management. Best starting point for integrating Browser Use as a main agent or sub-agent into your app.
 - [FAQ](https://docs.browser-use.com/cloud/faq): Fix common issues — slow tasks, failed agents, login problems, blocked sites, and unexpected costs.
 
 ## Legacy (v2)

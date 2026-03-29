@@ -172,7 +172,7 @@ CLOUD_FULL="$SCRIPT_DIR/llms-full.txt"
 
 # Header
 cat > "$CLOUD_INDEX" << 'HEADER'
-# Browser Use Cloud
+# Browser Use Cloud SDK
 
 > Easiest way to automate the web. Tell an agent in natural language what to do.
 
@@ -181,7 +181,6 @@ cat > "$CLOUD_INDEX" << 'HEADER'
 - API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Open Source: https://github.com/browser-use/browser-use
 - Docs: https://docs.browser-use.com
-- API v3 Reference: https://docs.browser-use.com/cloud/api-reference
 - OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
 - API v2 Reference: https://docs.browser-use.com/cloud/api-v2-overview
 
