@@ -27,6 +27,48 @@ console.log(result.output);
 
 View your profile IDs at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=profiles).
 
+## Manage profiles
+
+<CodeGroup>
+```python Python
+# Create
+profile = await client.profiles.create(name="work-account")
+
+# List all
+profiles = await client.profiles.list()
+for p in profiles:
+    print(p.id, p.name)
+
+# Get one
+profile = await client.profiles.get(profile_id)
+
+# Update
+await client.profiles.update(profile_id, name="renamed")
+
+# Delete
+await client.profiles.delete(profile_id)
+```
+```typescript TypeScript
+// Create
+const profile = await client.profiles.create({ name: "work-account" });
+
+// List all
+const profiles = await client.profiles.list();
+for (const p of profiles) {
+  console.log(p.id, p.name);
+}
+
+// Get one
+const profile = await client.profiles.get(profileId);
+
+// Update
+await client.profiles.update(profileId, { name: "renamed" });
+
+// Delete
+await client.profiles.delete(profileId);
+```
+</CodeGroup>
+
 ## Usage patterns
 
 - **Per-user profiles:** Create one profile per end-user. Store the profile ID in your database.
