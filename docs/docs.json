@@ -146,10 +146,14 @@
             ]
           },
           {
-            "tab": "API v2 (Legacy)",
+            "tab": "API v2",
             "groups": [
               {
-                "group": "API v2 (Legacy)",
+                "group": "Get Started",
+                "pages": ["cloud/api-reference"]
+              },
+              {
+                "group": "Endpoints",
                 "openapi": {
                   "source": "cloud/openapi/v2.json",
                   "directory": "cloud/api-v2"
