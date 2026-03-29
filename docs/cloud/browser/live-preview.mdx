@@ -86,7 +86,8 @@ result = await client.run(
     enable_recording=True,
 )
 
-print(result.recording_url)  # presigned MP4 download URL
+for url in result.recording_urls:
+    print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -96,7 +97,9 @@ const result = await client.run("Check how many GitHub stars browser-use has", {
   enableRecording: true,
 });
 
-console.log(result.recordingUrl); // presigned MP4 download URL
+for (const url of result.recordingUrls) {
+  console.log(url); // presigned MP4 download URL
+}
 ```
 </CodeGroup>
 
