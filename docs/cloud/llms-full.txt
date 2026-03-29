@@ -61,6 +61,8 @@ Source: https://docs.browser-use.com/cloud/vibecoding
 Source: https://docs.browser-use.com/cloud/agent/quickstart
 
 
+The SDK is a thin wrapper with polling around the [API v3 Reference](/cloud/api-reference). `client.run()` accepts all parameters from the API, creates a session, polls until completion, and parses the output.
+
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
@@ -466,97 +468,6 @@ await client.sessions.stop(session.id);
 ```
 </CodeGroup>
 
-
-
-# All parameters
-Source: https://docs.browser-use.com/cloud/agent/parameters
-
-
-## client.run()
-
-| Parameter | Python | TypeScript | Description |
-|-----------|--------|------------|-------------|
-| `task` | `str` | `string` | What you want the agent to do. |
-| `model` | `str` | `string` | `"bu-mini"` (default, faster) or `"bu-max"` (more capable). |
-| `output_schema` | `type[BaseModel]` | `schema: ZodSchema` | Return structured data matching this schema. |
-| `session_id` | `str` | `sessionId: string` | Reuse an existing session for follow-up tasks. |
-| `keep_alive` | `bool` | `keepAlive: boolean` | Keep session alive after task completes (default: `False`). |
-| `workspace_id` | `str` | `workspaceId: string` | Attach a workspace for persistent file storage. |
-| `profile_id` | `str` | `profileId: string` | Use a saved browser profile (cookies, login state). |
-| `proxy_country_code` | `str` | `proxyCountryCode: string` | Residential proxy country code, e.g. `"us"`, `"de"` (default: `"us"`). |
-| `max_cost_usd` | `float` | `maxCostUsd: number` | Cost cap in USD. Default: `$20`. Agent stops if exceeded. |
-| `enable_recording` | `bool` | `enableRecording: boolean` | Record session as MP4 video (default: `False`). |
-
-### Return value
-
-`client.run()` polls until the task completes and returns a `SessionResult`:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `str` | Session UUID. |
-| `status` | `str` | See session statuses below. |
-| `output` | `str` or structured type | The agent's result. |
-| `model` | `str` | Model used (`bu-mini` or `bu-max`). |
-| `title` | `str` | Auto-generated task title. |
-| `is_task_successful` | `bool` | Whether the agent completed the task successfully. |
-| `step_count` | `int` | Number of agent steps taken. |
-| `last_step_summary` | `str` | Summary of the last step. |
-| `live_url` | `str` | Real-time browser view URL. Null until browser starts — poll `sessions.get()`. |
-| `recording_urls` | `list[str]` | MP4 download URLs (if `enable_recording=True`). |
-| `screenshot_url` | `str` | Final page screenshot (presigned URL). |
-| `total_cost_usd` | `str` | Total cost for this task. |
-| `llm_cost_usd` | `str` | LLM token cost. |
-| `proxy_cost_usd` | `str` | Proxy data transfer cost. |
-| `browser_cost_usd` | `str` | Browser session cost. |
-| `proxy_used_mb` | `str` | Proxy data transfer in MB. |
-| `total_input_tokens` | `int` | Input tokens used. |
-| `total_output_tokens` | `int` | Output tokens used. |
-| `profile_id` | `str` | Profile used (if set). |
-| `workspace_id` | `str` | Workspace used (if set). |
-| `proxy_country_code` | `str` | Proxy country used. |
-| `max_cost_usd` | `str` | Cost cap that was set. Default: `$20`. |
-| `agentmail_email` | `str` | Unique email address for this session (e.g. `name@mail.bu.app`). |
-| `created_at` | `str` | Session creation timestamp. |
-| `updated_at` | `str` | Last update timestamp. |
-
-### Session statuses
-
-| Status | Meaning |
-|--------|---------|
-| `created` | Session created, no task running yet. |
-| `running` | Agent is actively working on a task. |
-| `idle` | Task completed, session alive (`keep_alive=True`). |
-| `stopped` | Session ended. |
-| `timed_out` | Session exceeded time limit. |
-| `error` | Session encountered an error. |
-
-## sessions.create()
-
-Create a session manually for follow-up tasks or to get a `live_url` before running a task.
-
-| Parameter | Python | TypeScript | Description |
-|-----------|--------|------------|-------------|
-| `task` | `str` | `task: string` | Optional. Omit to create an idle session. |
-| `session_id` | `str` | `sessionId: string` | Dispatch to an existing idle session. |
-| `model` | `str` | `model: string` | `"bu-mini"` (default) or `"bu-max"`. |
-| `keep_alive` | `bool` | `keepAlive: boolean` | Keep alive after task (default: `False`). |
-| `profile_id` | `str` | `profileId: string` | Browser profile to load. |
-| `proxy_country_code` | `str` | `proxyCountryCode: string` | Proxy country. |
-| `workspace_id` | `str` | `workspaceId: string` | Attach workspace. |
-| `max_cost_usd` | `float` | `maxCostUsd: number` | Cost cap. |
-| `output_schema` | `dict` | `outputSchema: object` | JSON Schema for structured output. |
-| `enable_recording` | `bool` | `enableRecording: boolean` | Record as MP4. |
-
-## sessions.messages()
-
-Poll the agent's message history for building custom UIs.
-
-| Parameter | Python | TypeScript | Description |
-|-----------|--------|------------|-------------|
-| `session_id` | `str` | `sessionId: string` | Session to get messages from. |
-| `limit` | `int` | `limit: number` | Max messages to return (default: 50). |
-| `after` | `str` | `after: string` | Cursor for forward pagination. |
-| `before` | `str` | `before: string` | Cursor for backward pagination. |
 
 
 # Introduction Stealth
@@ -1001,94 +912,6 @@ console.log(browser.liveUrl);
 <Warning>
   Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
 </Warning>
-
-
-# All parameters
-Source: https://docs.browser-use.com/cloud/browser/parameters
-
-
-## browsers.create()
-
-Create a raw CDP browser session for Playwright, Puppeteer, or Selenium.
-
-| Parameter | Python | TypeScript | Description |
-|-----------|--------|------------|-------------|
-| `proxy_country_code` | `str` | `proxyCountryCode: string` | Residential proxy country (default: `"us"`). |
-| `profile_id` | `str` | `profileId: string` | Load a saved browser profile. |
-| `timeout` | `int` | `timeout: number` | Session timeout in minutes (default: 60, max: 240). |
-| `browser_screen_width` | `int` | `browserScreenWidth: number` | Browser width in pixels. |
-| `browser_screen_height` | `int` | `browserScreenHeight: number` | Browser height in pixels. |
-| `enable_recording` | `bool` | `enableRecording: boolean` | Record session as MP4 (default: `False`). |
-| `allow_resizing` | `bool` | `allowResizing: boolean` | Allow browser resize during session (default: `False`). |
-| `custom_proxy` | `dict` | `customProxy: object` | Custom proxy: `{host, port, username?, password?}`. Requires custom plan. |
-
-### Return value
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `str` | Browser session UUID. |
-| `cdp_url` | `str` | Chrome DevTools Protocol URL. Connect with Playwright/Puppeteer/Selenium. |
-| `live_url` | `str` | Real-time browser view URL. Available immediately (no polling needed). |
-| `status` | `str` | `active` or `stopped`. |
-| `timeout_at` | `str` | Timestamp when session will auto-stop. |
-| `started_at` | `str` | Session start timestamp. |
-| `browser_cost` | `str` | Browser session cost in USD. |
-| `proxy_used_mb` | `str` | Proxy data transfer in MB. |
-| `proxy_cost` | `str` | Proxy cost in USD. |
-| `recording_url` | `str` | MP4 download URL (after session stops, if recording enabled). |
-
-### Stop a browser
-
-```
-PATCH /api/v3/browsers/{id}
-Body: {"action": "stop"}
-```
-
-## WebSocket URL (no SDK)
-
-Connect directly without the SDK. All config via query parameters.
-
-```
-wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us
-```
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `apiKey` | `string` | **Required.** Your Browser Use API key. |
-| `proxyCountryCode` | `string` | Proxy country (e.g. `us`, `de`, `jp`). |
-| `profileId` | `string` | Load a saved browser profile. |
-| `timeout` | `int` | Session timeout in minutes (max: 240). |
-| `browserScreenWidth` | `int` | Browser width in pixels. |
-| `browserScreenHeight` | `int` | Browser height in pixels. |
-
-## profiles.create()
-
-| Parameter | Python | TypeScript | Description |
-|-----------|--------|------------|-------------|
-| `name` | `str` | `name: string` | Profile name. Use for searching later. |
-
-## profiles.list()
-
-| Parameter | Python | TypeScript | Description |
-|-----------|--------|------------|-------------|
-| `query` | `str` | `query: string` | Search profiles by name (substring match). |
-| `page_size` | `int` | `pageSize: number` | Results per page. |
-| `page_number` | `int` | `pageNumber: number` | Page number. |
-
-## workspaces.create()
-
-| Parameter | Python | TypeScript | Description |
-|-----------|--------|------------|-------------|
-| `name` | `str` | `name: string` | Workspace name. |
-
-## workspaces.upload_files()
-
-| Parameter | Python | TypeScript | Description |
-|-----------|--------|------------|-------------|
-| `workspace_id` | `str` | `workspaceId: string` | Workspace to upload to. |
-| `files` | `list[dict]` | `files: object[]` | Each file needs `name`, `contentType`, `size`. |
-
-Returns presigned upload URLs. PUT file content to each URL with matching `Content-Type` header.
 
 
 # OpenClaw
@@ -1746,6 +1569,7 @@ Set `max_cost_usd` to cap spending per task. Default is $20. A typical task cost
 `live_url` is not available immediately on session creation. Poll `sessions.get()` until it appears (~3-5 seconds).
 
 ```python
+import asyncio
 session = await client.sessions.create(task="Go to example.com")
 while True:
     s = await client.sessions.get(str(session.id))

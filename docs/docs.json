@@ -69,8 +69,7 @@
                       "cloud/agent/follow-up-tasks",
                       "cloud/agent/streaming",
                       "cloud/agent/workspaces",
-                      "cloud/agent/human-in-the-loop",
-                      "cloud/agent/parameters"
+                      "cloud/agent/human-in-the-loop"
                     ]
                   },
                   {
@@ -88,8 +87,7 @@
                           "cloud/guides/profile-sync"
                         ]
                       },
-                      "cloud/browser/playwright-puppeteer-selenium",
-                      "cloud/browser/parameters"
+                      "cloud/browser/playwright-puppeteer-selenium"
                     ]
                   }
                 ]

@@ -24,7 +24,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 
 ## Get Started
-- [Quick start](https://docs.browser-use.com/cloud/quickstart): Install the SDK, set your API key, and run your first AI browser automation task.
+- [Quick start](https://docs.browser-use.com/cloud/quickstart): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
 - [Prompt for Vibecoders](https://docs.browser-use.com/cloud/vibecoding): Complete Cloud SDK reference for AI coding agents.
 
 
@@ -35,7 +35,6 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Live messages](https://docs.browser-use.com/cloud/agent/streaming): Poll the agent's message history in real time to build custom UIs or monitor progress.
 - [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces): Persistent file storage across sessions. Upload input files, download results, and share data across tasks.
 - [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop): Let a human interact with the live browser while the agent is running. Useful for approvals, payments, complex auth flows, or reviewing agent work before continuing.
-- [All parameters](https://docs.browser-use.com/cloud/agent/parameters): Complete reference for client.run() and session parameters.
 
 ## Browser
 - [Introduction Stealth](https://docs.browser-use.com/cloud/browser/stealth): Best stealth on the planet. We fork Chromium to give agents access to all websites.
@@ -46,7 +45,6 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Profiles](https://docs.browser-use.com/cloud/guides/authentication): Persistent browser state — cookies, localStorage, saved passwords. Login once, reuse across sessions.
 - [Sync local and cloud cookies](https://docs.browser-use.com/cloud/guides/profile-sync): Sync your local browser cookies to the cloud — instantly authenticate without managing credentials.
 - [Playwright, Puppeteer, Selenium](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium): Connect your automation framework to Browser Use's stealth infrastructure via CDP.
-- [All parameters](https://docs.browser-use.com/cloud/browser/parameters): Complete reference for browser session and CDP connection parameters.
 
 
 ## Integrations
