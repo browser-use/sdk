@@ -1,16 +1,11 @@
 ---
 title: Quickstart
-description: "Install the SDK, set your API key, and run your first AI browser automation task with Python or TypeScript."
+description: "State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure."
+sidebarTitle: "Quickstart"
 icon: rocket
 ---
 
-<Note>
-  **Try the [BU Agent API (v3)](/cloud/new-features/api-v3)** — more accurate agents, long-running tasks, file uploads, and persistent workspaces. V3 is a superset of v2.
-</Note>
-
-**Every browser comes with:** anti-fingerprinting, automatic CAPTCHA solving, cookie/ad blocking, Cloudflare bypass, and residential proxies. No configuration needed.
-
-## 1. Install & configure
+### 1. Install & configure
 
 <CodeGroup>
 ```bash Python
@@ -21,13 +16,13 @@ npm install browser-use-sdk
 ```
 </CodeGroup>
 
-Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys), then:
+Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then:
 
 ```bash
 export BROWSER_USE_API_KEY=your_key
 ```
 
-## 2. Run your first task
+### 2. Run your first task
 
 <CodeGroup>
 ```python Python
@@ -50,7 +45,7 @@ console.log(result.output);
 ```
 </CodeGroup>
 
-## 3. Get structured data
+### 3. Get structured data
 
 Define a schema and get validated, typed data back.
 
@@ -97,7 +92,7 @@ result.output.forEach((post) => console.log(`${post.title} (${post.points} pts)`
 ```
 </CodeGroup>
 
-## 4. Watch it run
+### 4. Watch it run
 
 Every session has a `liveUrl` — a real-time view of the browser. Use it for debugging, embedding in your app, or handing control to a human mid-task.
 
@@ -123,7 +118,7 @@ const result = await client.run("Get the top 3 posts from Hacker News", {
 ```
 </CodeGroup>
 
-## 5. Add profiles, proxies, and 1Password
+### 5. Add profiles, proxies, and 1Password
 
 Use saved browser profiles for authenticated sites, residential proxies for geo-specific content, and 1Password for auto-filling credentials and 2FA codes.
 
@@ -159,13 +154,11 @@ const result = await client.run("Get my latest order status", {
 ```
 </CodeGroup>
 
-See [Tasks](/cloud/guides/tasks) for all parameters, or browse [Tips](/cloud/tips/data/structured-output) for copy-paste recipes.
-
 <CardGroup cols={2}>
-  <Card title="Prompts for Vibecoders" icon="brain" href="/cloud/vibecoding">
-    Paste one blob into your AI editor. Your agent knows the entire API.
-  </Card>
   <Card title="Agent Tasks" icon="play" href="/cloud/guides/tasks">
     All parameters, structured output, streaming, and cost controls.
+  </Card>
+  <Card title="Browser Infrastructure" icon="globe" href="/cloud/guides/browser-api">
+    Fast, stealth-enabled browsers for any agent or automation framework.
   </Card>
 </CardGroup>

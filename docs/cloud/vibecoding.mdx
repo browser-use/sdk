@@ -1,16 +1,8 @@
 ---
-title: Prompts for Vibecoders
+title: Prompt for Vibecoders
 description: "Complete Cloud SDK reference for AI coding agents. Copy one blob into Claude Code, Cursor, or Copilot for instant API integration."
 icon: brain
 ---
-
-Paste the following into **Claude Code**, **Codex**, **Cursor**, or any coding agent. It contains the full SDK reference for both BU Agent API (v3) and v2 API — every method, every parameter, working examples.
-
-Your agent will be able to write Browser Use Cloud code immediately.
-
-<Tip>
-  In Claude Code: save this as `CLOUD.md` in your project root. In Cursor: paste into a `.cursorrules` file or chat context.
-</Tip>
 
 ````markdown
 # Browser Use Cloud SDK
@@ -25,7 +17,7 @@ Both APIs are in the same package (`browser-use-sdk`):
 
 ## Setup
 Set `BROWSER_USE_API_KEY` env var, or pass `api_key`/`apiKey` to the constructor.
-Get a key at https://cloud.browser-use.com/settings?tab=api-keys
+Get a key at https://cloud.browser-use.com/settings?tab=api-keys&new=1
 
 ---
 
@@ -197,7 +189,7 @@ await client.sessions.stop(session.id);
 const upload = await client.sessions.uploadFiles(session.id, {
   files: [{ name: "data.csv", contentType: "text/csv" }],
 });
-await fetch(upload.files[0].uploadUrl, { method: "PUT", body: readFileSync("data.csv") });
+await fetch(upload.files[0].uploadUrl, { method: "PUT", headers: { "Content-Type": "text/csv" }, body: readFileSync("data.csv") });
 
 // File listing
 const files = await client.sessions.files(session.id, {
@@ -373,7 +365,7 @@ for await (const step of client.run("Go to google.com")) {
 - **Profile Sync**: upload local cookies to cloud: `curl -fsSL https://browser-use.com/profile.sh | sh`
 - **Proxies**: set `proxy_country_code` on session. 195+ countries. CAPTCHAs handled automatically
 - **Stealth**: on by default. Anti-detect, CAPTCHA solving, ad blocking
-- **Browser Use LLM**: default model, optimized for browser tasks. 15× cheaper
+- **Browser Use LLM**: default model, optimized for browser tasks. 15x cheaper
 - **Vision**: agent can take screenshots. Enable with `vision=True`
 - **1Password**: auto-fill passwords and 2FA/TOTP codes with `op_vault_id`
 ````

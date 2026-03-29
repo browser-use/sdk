@@ -26,7 +26,7 @@
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
-    "href": "/cloud/introduction"
+    "href": "/cloud/quickstart"
   },
   "api": {
     "playground": {
@@ -53,7 +53,6 @@
               {
                 "group": "Get Started",
                 "pages": [
-                  "cloud/introduction",
                   "cloud/quickstart",
                   "cloud/vibecoding",
                   "cloud/pricing"
@@ -335,8 +334,9 @@
     }
   },
   "redirects": [
-    {"source": "/", "destination": "/cloud/introduction"},
-    {"source": "/introduction", "destination": "/cloud/introduction"},
+    {"source": "/", "destination": "/cloud/quickstart"},
+    {"source": "/introduction", "destination": "/cloud/quickstart"},
+    {"source": "/cloud/introduction", "destination": "/cloud/quickstart"},
     {"source": "/quickstart", "destination": "/open-source/quickstart"},
     {"source": "/quickstart_llm", "destination": "/open-source/vibecoding"},
     {"source": "/supported-models", "destination": "/open-source/supported-models"},
@@ -391,9 +391,9 @@
     {"source": "/development/n8n-integration", "destination": "/open-source/development/n8n-integration"},
     {"source": "/development/roadmap", "destination": "/open-source/development/roadmap"},
 
-    {"source": "/use-cloud", "destination": "/cloud/introduction"},
-    {"source": "/cloud", "destination": "/cloud/introduction"},
-    {"source": "/use-claude", "destination": "/cloud/introduction"},
+    {"source": "/use-cloud", "destination": "/cloud/quickstart"},
+    {"source": "/cloud", "destination": "/cloud/quickstart"},
+    {"source": "/use-claude", "destination": "/cloud/quickstart"},
     {"source": "/production", "destination": "/open-source/legacy/sandbox/quickstart"},
     {"source": "/customize/actor/basics", "destination": "/open-source/legacy/actor/basics"},
     {"source": "/customize/actor/examples", "destination": "/open-source/legacy/actor/examples"},
@@ -438,8 +438,8 @@
     {"source": "/open-source", "destination": "/open-source/introduction"},
     {"source": "/examples", "destination": "/cloud/tips/data/structured-output"},
 
-    {"source": "/guides/overview", "destination": "/cloud/introduction"},
-    {"source": "/cloud/guides/overview", "destination": "/cloud/introduction"},
+    {"source": "/guides/overview", "destination": "/cloud/quickstart"},
+    {"source": "/cloud/guides/overview", "destination": "/cloud/quickstart"},
     {"source": "/guides/tasks", "destination": "/cloud/guides/tasks"},
     {"source": "/guides/sessions", "destination": "/cloud/guides/sessions"},
     {"source": "/guides/browser-api", "destination": "/cloud/guides/browser-api"},
@@ -496,6 +496,6 @@
     {"source": "/usage/authentication", "destination": "/cloud/guides/authentication"},
     {"source": "/api-reference/*", "destination": "/cloud/api-reference"},
     {"source": "/cloud/v2/quickstart", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/v1/*", "destination": "/cloud/introduction"}
+    {"source": "/cloud/v1/*", "destination": "/cloud/quickstart"}
   ]
 }
