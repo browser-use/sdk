@@ -78,8 +78,6 @@ await client.profiles.delete(profileId);
 ## Usage patterns
 
 - **Per-user profiles:** Create one profile per end-user. Store the profile ID in your database.
-- **Per-site profiles:** Separate profiles for different services (e.g., "linkedin", "github", "jira").
-- **Warm-up profiles:** Pre-login to common services once, then every automation starts already authenticated.
 
 <Warning>
   Profile state (cookies, localStorage) is only saved when the session ends. Always call `sessions.stop()` when you are done — if a session is left open or times out, changes may not be persisted.
