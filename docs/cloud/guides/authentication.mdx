@@ -10,7 +10,7 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(profile_id="profile_abc123")
-result = await client.run("Check my GitHub notifications", session_id=session.id)
+result = await client.run("Check browser-use github stars", session_id=session.id)
 print(result.output)
 ```
 ```typescript TypeScript
@@ -18,7 +18,7 @@ import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({ profileId: "profile_abc123" });
-const result = await client.run("Check my GitHub notifications", {
+const result = await client.run("Check browser-use github stars", {
   sessionId: session.id,
 });
 console.log(result.output);
