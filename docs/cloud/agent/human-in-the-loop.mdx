@@ -9,7 +9,6 @@ Human-in-the-loop is not only for failures. Use it whenever you want a human to 
 - Human enters payment info or approves a transaction, agent handles the rest
 - Human navigates a complex auth flow, then hands back to agent
 - Human reviews what the agent did before the agent continues
-- QA workflow: agent does work, human spot-checks, agent proceeds
 
 ## Flow
 
@@ -84,6 +83,3 @@ await client.sessions.stop(session.id);
 ```
 </CodeGroup>
 
-<Tip>
-  The `liveUrl` gives the human full mouse and keyboard control. The agent sees whatever state the human leaves the browser in when the next task starts.
-</Tip>

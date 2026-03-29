@@ -34,23 +34,88 @@ console.log(result.output);
 ```
 </CodeGroup>
 
-## List and delete files
+## Upload a file
+
+Upload a file to a session, then tell the agent to use it.
 
 <CodeGroup>
 ```python Python
-files = await client.workspaces.files(workspace_id, include_urls=True)
+import httpx
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+session = await client.sessions.create()
+
+upload = await client.sessions.upload_files(
+    str(session.id),
+    files=[{"name": "data.csv", "content_type": "text/csv"}],
+)
+
+with open("data.csv", "rb") as f:
+    async with httpx.AsyncClient() as http:
+        await http.put(
+            upload.files[0].upload_url,
+            content=f.read(),
+            headers={"Content-Type": "text/csv"},
+        )
+
+result = await client.run(
+    "Analyze the uploaded data.csv and summarize the results",
+    session_id=str(session.id),
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+import { readFileSync } from "fs";
+
+const client = new BrowserUse();
+const session = await client.sessions.create();
+
+const upload = await client.sessions.uploadFiles(session.id, {
+  files: [{ name: "data.csv", contentType: "text/csv" }],
+});
+
+await fetch(upload.files[0].uploadUrl, {
+  method: "PUT",
+  headers: { "Content-Type": "text/csv" },
+  body: readFileSync("data.csv"),
+});
+
+const result = await client.run(
+  "Analyze the uploaded data.csv and summarize the results",
+  { sessionId: session.id },
+);
+```
+</CodeGroup>
+
+## Download files
+
+List files in a workspace and download them via presigned URLs.
+
+<CodeGroup>
+```python Python
+import httpx
+
+files = await client.workspaces.files(str(workspace.id), include_urls=True)
 for f in files.files:
     print(f.path, f.size)
 
-await client.workspaces.delete_file(workspace_id, path="HEARTBEAT.md")
+    # Download
+    async with httpx.AsyncClient() as http:
+        resp = await http.get(f.url)
+        with open(f.path, "wb") as out:
+            out.write(resp.content)
 ```
 ```typescript TypeScript
-const files = await client.workspaces.files(workspaceId, { includeUrls: true });
+const files = await client.workspaces.files(workspace.id, { includeUrls: true });
 for (const f of files.files) {
   console.log(f.path, f.size);
-}
 
-await client.workspaces.deleteFile(workspaceId, "HEARTBEAT.md");
+  // Download
+  const resp = await fetch(f.url);
+  const data = await resp.text();
+  console.log(data);
+}
 ```
 </CodeGroup>
 
