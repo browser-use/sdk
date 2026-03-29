@@ -9,7 +9,8 @@ icon: user
 from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-session = await client.sessions.create(profile_id="profile_abc123")
+profile = await client.profiles.create(name="user-id-1")
+session = await client.sessions.create(profile_id=profile.id)
 result = await client.run("Check browser-use github stars", session_id=session.id)
 print(result.output)
 ```
@@ -17,7 +18,8 @@ print(result.output)
 import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
-const session = await client.sessions.create({ profileId: "profile_abc123" });
+const profile = await client.profiles.create({ name: "user-id-1" });
+const session = await client.sessions.create({ profileId: profile.id });
 const result = await client.run("Check browser-use github stars", {
   sessionId: session.id,
 });
