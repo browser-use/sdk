@@ -1,22 +1,20 @@
 ---
 title: Human in the loop
 description: "Combine human judgment with agent automation — hand control back and forth in the same session."
+icon: hand
 ---
 
-Human-in-the-loop is not only for failures. Use it whenever you want a human to handle a sensitive or complex step, then let the agent continue.
-
-**Use cases:**
+## Use cases
 - Human enters payment info or approves a transaction, agent handles the rest
 - Human navigates a complex auth flow, then hands back to agent
 - Human reviews what the agent did before the agent continues
-- QA workflow: agent does work, human spot-checks, agent proceeds
 
 ## Flow
 
 1. Create a session with `keep_alive=True` so it stays alive between tasks
 2. Run an agent task
-3. Human opens the `liveUrl` and does their part
-4. Send a new follow-up task on the same session
+3. Human interacts with the `liveUrl`
+4. Send a new follow-up task
 
 <CodeGroup>
 ```python Python
@@ -84,6 +82,3 @@ await client.sessions.stop(session.id);
 ```
 </CodeGroup>
 
-<Tip>
-  The `liveUrl` gives the human full mouse and keyboard control. The agent sees whatever state the human leaves the browser in when the next task starts.
-</Tip>

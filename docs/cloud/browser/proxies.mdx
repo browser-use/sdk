@@ -1,0 +1,78 @@
+---
+title: Proxies
+description: "Residential proxies in 195+ countries. On by default."
+icon: globe
+---
+
+A US residential proxy is active by default on every session. To route through a different country, set `proxy_country_code`.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Get the price of iPhone 16 on amazon.de",
+    proxy_country_code="de",
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run("Get the price of iPhone 16 on amazon.de", {
+  proxyCountryCode: "de",
+});
+```
+</CodeGroup>
+
+Common country codes: `us`, `gb`, `de`, `fr`, `jp`, `au`, `br`, `in`, `kr`, `ca`.
+
+## Disable proxies
+
+If your use case does not need proxies, for example QA testing.
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Go to http://localhost:3000",
+    proxy_country_code=None,
+)
+```
+```typescript TypeScript
+const result = await client.run("Go to http://localhost:3000", {
+  proxyCountryCode: null,
+});
+```
+</CodeGroup>
+
+## Custom proxy
+
+Bring your own proxy server (HTTP or SOCKS5). Requires custom plan.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+session = await client.sessions.create(
+    custom_proxy={
+        "url": "http://proxy.example.com:8080",
+        "username": "user",
+        "password": "pass",
+    },
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const session = await client.sessions.create({
+  customProxy: {
+    url: "http://proxy.example.com:8080",
+    username: "user",
+    password: "pass",
+  },
+});
+```
+</CodeGroup>

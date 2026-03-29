@@ -66,8 +66,8 @@
                     "pages": [
                       "cloud/agent/quickstart",
                       "cloud/agent/structured-output",
-                      "cloud/agent/streaming",
                       "cloud/agent/follow-up-tasks",
+                      "cloud/agent/streaming",
                       "cloud/agent/workspaces",
                       "cloud/agent/human-in-the-loop"
                     ]
@@ -76,11 +76,20 @@
                     "group": "Browser",
                     "icon": "globe",
                     "pages": [
-                      "cloud/guides/proxies-and-stealth",
+                      "cloud/browser/stealth",
+                      "cloud/browser/proxies",
                       "cloud/browser/live-preview",
-                      "cloud/browser/playwright-puppeteer-selenium",
-                      "cloud/guides/sessions",
-                      "cloud/guides/authentication"
+                      {
+                        "group": "Authentication",
+                        "icon": "key",
+                        "pages": [
+                          "cloud/guides/authentication",
+                          "cloud/guides/profile-sync",
+                          "cloud/guides/secrets",
+                          "cloud/guides/1password"
+                        ]
+                      },
+                      "cloud/browser/playwright-puppeteer-selenium"
                     ]
                   }
                 ]
@@ -128,14 +137,14 @@
                 "pages": ["cloud/api-reference"]
               },
               {
-                "group": "BU Agent API",
+                "group": "API v3",
                 "openapi": {
                   "source": "cloud/openapi/v3.json",
                   "directory": "cloud/api-v3"
                 }
               },
               {
-                "group": "API v2 (Stable)",
+                "group": "API v2 (Legacy)",
                 "openapi": {
                   "source": "cloud/openapi/v2.json",
                   "directory": "cloud/api-v2"
@@ -320,12 +329,26 @@
   "redirects": [
     {"source": "/", "destination": "/cloud/quickstart"},
     {"source": "/cloud/new-features/api-v3", "destination": "/cloud/agent/quickstart"},
+    {"source": "/cloud/guides/sessions", "destination": "/cloud/guides/authentication"},
+    {"source": "/cloud/guides/proxies-and-stealth", "destination": "/cloud/browser/proxies"},
     {"source": "/cloud/guides/tasks", "destination": "/cloud/agent/quickstart"},
     {"source": "/cloud/guides/workspaces", "destination": "/cloud/agent/workspaces"},
-    {"source": "/cloud/guides/browser-api", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
+    {"source": "/cloud/guides/browser-api", "destination": "/cloud/browser/stealth"},
     {"source": "/cloud/tips/live-view/iframe-embed", "destination": "/cloud/browser/live-preview"},
-    {"source": "/cloud/pricing", "destination": "/cloud/legacy/agent"},
-    {"source": "/cloud/models", "destination": "/cloud/legacy/agent"},
+    {"source": "/cloud/tips/live-view/human-takeover", "destination": "/cloud/agent/human-in-the-loop"},
+    {"source": "/cloud/tips/authentication/1password-2fa", "destination": "/cloud/guides/1password"},
+    {"source": "/cloud/tips/authentication/profiles-and-secrets", "destination": "/cloud/guides/authentication"},
+    {"source": "/cloud/guides/authentication/profiles-and-secrets", "destination": "/cloud/guides/authentication"},
+    {"source": "/cloud/tips/authentication/social-media", "destination": "/cloud/guides/authentication"},
+    {"source": "/cloud/tips/data/file-downloads", "destination": "/cloud/agent/workspaces"},
+    {"source": "/cloud/tips/data/geo-scraping", "destination": "/cloud/browser/proxies"},
+    {"source": "/cloud/tips/data/streaming", "destination": "/cloud/agent/streaming"},
+    {"source": "/cloud/tips/data/structured-output", "destination": "/cloud/agent/structured-output"},
+    {"source": "/cloud/tips/parallel/concurrent-extraction", "destination": "/cloud/agent/quickstart"},
+    {"source": "/cloud/tips/parallel/shared-config", "destination": "/cloud/agent/quickstart"},
+    {"source": "/cloud/tutorials/integrations/playwright", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
+    {"source": "/cloud/pricing", "destination": "https://browser-use.com/pricing"},
+    {"source": "/cloud/models", "destination": "https://browser-use.com/pricing"},
     {"source": "/cloud/guides/skills", "destination": "/cloud/legacy/skills"},
     {"source": "/introduction", "destination": "/cloud/quickstart"},
     {"source": "/cloud/introduction", "destination": "/cloud/quickstart"},
@@ -419,7 +442,7 @@
     {"source": "/customize/examples/vibetest-use", "destination": "/open-source/examples/apps/vibetest-use"},
     {"source": "/customize/examples/prompting-guide", "destination": "/open-source/customize/agent/prompting-guide"},
 
-    {"source": "/pricing", "destination": "/cloud/pricing"},
+    {"source": "/pricing", "destination": "https://browser-use.com/pricing"},
     {"source": "/llm-quickstart", "destination": "/cloud/vibecoding"},
     {"source": "/cloud/llm-quickstart", "destination": "/cloud/vibecoding"},
     {"source": "/cloud/coding-agent-quickstart", "destination": "/cloud/vibecoding"},
@@ -469,8 +492,8 @@
     {"source": "/human-quickstart", "destination": "/cloud/quickstart"},
     {"source": "/get-started/llm-quickstart", "destination": "/cloud/vibecoding"},
     {"source": "/open-source/quickstart_llm", "destination": "/open-source/vibecoding"},
-    {"source": "/get-started/models-and-pricing", "destination": "/cloud/pricing"},
-    {"source": "/get-started/pricing", "destination": "/cloud/pricing"},
+    {"source": "/get-started/models-and-pricing", "destination": "https://browser-use.com/pricing"},
+    {"source": "/get-started/pricing", "destination": "https://browser-use.com/pricing"},
     {"source": "/concepts/overview", "destination": "/cloud/quickstart"},
     {"source": "/concepts/task", "destination": "/cloud/agent/quickstart"},
     {"source": "/concepts/skills", "destination": "/cloud/guides/skills"},

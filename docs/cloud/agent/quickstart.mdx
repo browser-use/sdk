@@ -1,27 +1,34 @@
 ---
-title: Quick start
-description: "Run your first AI browser agent task."
+title: Introduction
+description: "Easiest way to automate the web. Tell this agent in natural language what it should do, and it can interact with the web like a human."
+icon: rocket
 ---
-
-Same package, different import path:
 
 <CodeGroup>
 ```python Python
-import asyncio
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk import AsyncBrowserUse
 
-async def main():
-    client = AsyncBrowserUse()
-    result = await client.run("Find the top 3 trending repos on GitHub today")
-    print(result.output)
-
-asyncio.run(main())
+client = AsyncBrowserUse()
+result = await client.run("Find the top 3 trending repos on GitHub today")
+print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
 const result = await client.run("Find the top 3 trending repos on GitHub today");
 console.log(result.output);
 ```
 </CodeGroup>
+
+**What this agent can do:**
+- **Data extraction** — scrape websites with thousands of listings
+- **Form filling** — submit applications, fill out surveys, enter data
+- **Multi-step workflows** — log in, navigate, click through flows, download files
+- **Research** — search across multiple sites, compare results, summarize findings
+- **Monitoring** — monitor a website and get notified if something changes
+- **Testing** — test websites end-to-end with natural language instructions
+- **Scheduling** — schedule tasks to run on a recurring basis
+- **1,000+ integrations** — Gmail, Calendar, Notion, and more
+
+The best SOTA browser agent — see our [online Mind2Web benchmark](https://browser-use.com/posts/online-mind2web-benchmark).

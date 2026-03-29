@@ -1,50 +1,49 @@
 ---
-title: Streaming
-description: "Stream the agent's message history in real time."
+title: Live messages
+description: "Poll the agent's message history in real time to build custom UIs or monitor progress."
+icon: message-lines
 ---
 
-Use `sessions.messages()` to poll the agent's message history while a task runs. This gives you the full conversation — user messages, assistant reasoning, and tool calls.
+<Note>
+  Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
+</Note>
+
+Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool calls, and results.
 
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-
 session = await client.sessions.create("Find the top story on Hacker News")
 session_id = str(session.id)
 
 seen = set()
 while True:
-    s = await client.sessions.get(session_id)
     msgs = await client.sessions.messages(session_id, limit=100)
-
     for m in msgs.messages:
         if str(m.id) not in seen:
             seen.add(str(m.id))
             print(f"[{m.role}] {m.data[:200]}")
 
+    s = await client.sessions.get(session_id)
     if s.status.value in ("idle", "stopped", "error", "timed_out"):
-        print(f"\nDone — {s.output}")
+        print(s.output)
         break
     await asyncio.sleep(2)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
-
 const session = await client.sessions.create({
   task: "Find the top story on Hacker News",
 });
-const sessionId = session.id;
 
 const seen = new Set<string>();
 while (true) {
-  const s = await client.sessions.get(sessionId);
-  const msgs = await client.sessions.messages(sessionId, { limit: 100 });
-
+  const msgs = await client.sessions.messages(session.id, { limit: 100 });
   for (const m of msgs.messages) {
     if (!seen.has(m.id)) {
       seen.add(m.id);
@@ -52,13 +51,12 @@ while (true) {
     }
   }
 
+  const s = await client.sessions.get(session.id);
   if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
-    console.log(`\nDone — ${s.output}`);
+    console.log(s.output);
     break;
   }
   await new Promise((r) => setTimeout(r, 2000));
 }
 ```
 </CodeGroup>
-
-Use `after` and `before` cursors for pagination through large message histories.

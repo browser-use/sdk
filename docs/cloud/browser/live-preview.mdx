@@ -1,44 +1,52 @@
 ---
 title: Live preview
-description: "Embed the agent's live browser view in your app using an iframe."
+description: "Watch the agent's browser in real time. Embed it in your app."
+icon: eye
 ---
 
-Every session has a `liveUrl` — a real-time view of the agent's browser. Embed it in your app so users can watch the agent work.
-
-## Get the live URL
-
-Create a session first to get the `liveUrl`, then run a task in that session.
+<Note>
+  Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
+</Note>
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+import asyncio
+from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
+session = await client.sessions.create("Check how many GitHub stars browser-use has")
 
-session = await client.sessions.create()
-print(session.live_url)  # embed this in an iframe
-
-result = await client.run(
-    "Search for flights from NYC to London",
-    session_id=str(session.id),
-)
+# liveUrl becomes available once the browser is ready
+while True:
+    s = await client.sessions.get(str(session.id))
+    if s.live_url:
+        print(s.live_url)
+        break
+    await asyncio.sleep(0.5)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
+const session = await client.sessions.create({
+  task: "Check how many GitHub stars browser-use has",
+});
 
-const session = await client.sessions.create();
-console.log(session.liveUrl); // embed this in an iframe
-
-const result = await client.run(
-  "Search for flights from NYC to London",
-  { sessionId: session.id },
-);
+// liveUrl becomes available once the browser is ready
+while (true) {
+  const s = await client.sessions.get(session.id);
+  if (s.liveUrl) {
+    console.log(s.liveUrl);
+    break;
+  }
+  await new Promise((r) => setTimeout(r, 500));
+}
 ```
 </CodeGroup>
 
-## Embed in HTML
+## Embed live browser into your app
+
+Useful for human interaction or to see live what's happening.
 
 ```html
 <iframe
@@ -50,16 +58,59 @@ const result = await client.run(
 ></iframe>
 ```
 
-The live view updates in real time. No polling or WebSocket setup needed on your end.
+## Customize
 
-## Public share links
+Append query parameters to the `liveUrl`:
 
-Create a shareable public link for recording or sharing.
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `theme` | `light`, `dark` (default) | Light or dark mode |
+| `ui` | `false` | Hide the browser chrome (URL bar, tabs) |
+
+```
+https://live.browser-use.com?wss=...&theme=light
+https://live.browser-use.com?wss=...&ui=false
+```
+
+## Recording
+
+Enable recording to get an MP4 video of the session after it completes.
 
 <CodeGroup>
 ```python Python
-share = await client.sessions.create_share(session.id)
-print(share.url)  # shareable URL anyone can view
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Check how many GitHub stars browser-use has",
+    enable_recording=True,
+)
+
+for url in result.recording_urls:
+    print(url)  # presigned MP4 download URL
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run("Check how many GitHub stars browser-use has", {
+  enableRecording: true,
+});
+
+for (const url of result.recordingUrls) {
+  console.log(url); // presigned MP4 download URL
+}
+```
+</CodeGroup>
+
+## Public share links
+
+Generate a public URL that anyone can open to watch the entire agent session — no API key needed. Useful for sharing with teammates, stakeholders, or embedding in dashboards.
+
+<CodeGroup>
+```python Python
+share = await client.sessions.create_share(str(session.id))
+print(share.url)
 ```
 ```typescript TypeScript
 const share = await client.sessions.createShare(session.id);
