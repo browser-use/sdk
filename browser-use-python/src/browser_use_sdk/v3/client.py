@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from collections.abc import Awaitable
 from typing import Any, TypeVar, overload
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -47,7 +48,7 @@ class BrowserUse:
         *,
         schema: type[T],
         model: str | None = ...,
-        session_id: str | None = ...,
+        session_id: str | UUID | None = ...,
         keep_alive: bool | None = ...,
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
@@ -63,7 +64,7 @@ class BrowserUse:
         *,
         output_schema: type[T],
         model: str | None = ...,
-        session_id: str | None = ...,
+        session_id: str | UUID | None = ...,
         keep_alive: bool | None = ...,
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
@@ -78,7 +79,7 @@ class BrowserUse:
         task: str,
         *,
         model: str | None = ...,
-        session_id: str | None = ...,
+        session_id: str | UUID | None = ...,
         keep_alive: bool | None = ...,
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
@@ -94,7 +95,7 @@ class BrowserUse:
         schema: type[Any] | None = None,
         output_schema: type[Any] | None = None,
         model: str | None = None,
-        session_id: str | None = None,
+        session_id: str | UUID | None = None,
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
@@ -163,7 +164,7 @@ class AsyncBrowserUse:
         *,
         schema: type[T],
         model: str | None = ...,
-        session_id: str | None = ...,
+        session_id: str | UUID | None = ...,
         keep_alive: bool | None = ...,
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
@@ -179,7 +180,7 @@ class AsyncBrowserUse:
         *,
         output_schema: type[T],
         model: str | None = ...,
-        session_id: str | None = ...,
+        session_id: str | UUID | None = ...,
         keep_alive: bool | None = ...,
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
@@ -194,7 +195,7 @@ class AsyncBrowserUse:
         task: str,
         *,
         model: str | None = ...,
-        session_id: str | None = ...,
+        session_id: str | UUID | None = ...,
         keep_alive: bool | None = ...,
         max_cost_usd: float | None = ...,
         profile_id: str | None = ...,
@@ -210,7 +211,7 @@ class AsyncBrowserUse:
         schema: type[Any] | None = None,
         output_schema: type[Any] | None = None,
         model: str | None = None,
-        session_id: str | None = None,
+        session_id: str | UUID | None = None,
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,

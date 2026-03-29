@@ -15,18 +15,14 @@ Set `max_cost_usd` to cap spending per task. Default is $20. A typical task cost
 
 ## How do I get the live browser URL?
 
-`live_url` is not available immediately on session creation. Poll `sessions.get()` until it appears (~3-5 seconds).
+`live_url` is available while the browser is running. Use `keep_alive=True` so the session stays alive after the task — otherwise `live_url` goes to null when the task finishes.
 
 ```python
-import asyncio
-session = await client.sessions.create(task="Go to example.com")
-while True:
-    s = await client.sessions.get(str(session.id))
-    if s.live_url:
-        print(s.live_url)
-        break
-    await asyncio.sleep(0.5)
+result = await client.run("Go to example.com", keep_alive=True)
+print(result.live_url)  # available because session is still alive
 ```
+
+If you use `sessions.create()` directly, poll `sessions.get()` until `live_url` appears (~3-5 seconds).
 
 ## How do I authenticate on websites?
 
@@ -58,8 +54,8 @@ Use workspaces. See [Workspaces & files](/cloud/agent/workspaces).
 
 ```python
 workspace = await client.workspaces.create(name="my-workspace")
-result = await client.run("Save top 3 HN posts as posts.json", workspace_id=str(workspace.id))
-files = await client.workspaces.files(str(workspace.id), include_urls=True)
+result = await client.run("Save top 3 HN posts as posts.json", workspace_id=workspace.id)
+files = await client.workspaces.files(workspace.id, include_urls=True)
 ```
 
 ## How do I use Browser Use as a sub-agent?

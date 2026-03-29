@@ -18,7 +18,7 @@ session = await client.sessions.create("Check how many GitHub stars browser-use 
 
 # liveUrl becomes available once the browser is ready
 while True:
-    s = await client.sessions.get(str(session.id))
+    s = await client.sessions.get(session.id)
     if s.live_url:
         print(s.live_url)
         break
@@ -78,6 +78,7 @@ Enable recording to get an MP4 video of the browser session. Only available when
 
 <CodeGroup>
 ```python Python
+import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
@@ -86,11 +87,9 @@ result = await client.run(
     enable_recording=True,
 )
 
-# Recording may not be ready immediately — poll (max 60s)
-import asyncio
-session = result
+# Recording may not be ready immediately — poll until available
 for _ in range(30):
-    session = await client.sessions.get(str(result.id))
+    session = await client.sessions.get(result.id)
     if session.recording_urls:
         break
     await asyncio.sleep(2)
@@ -106,7 +105,7 @@ const result = await client.run("Check how many GitHub stars browser-use has", {
   enableRecording: true,
 });
 
-// Recording may not be ready immediately — poll (max 60s)
+// Recording may not be ready immediately — poll until available
 let session = await client.sessions.get(result.id);
 for (let i = 0; i < 30 && !session.recordingUrls?.length; i++) {
   await new Promise((r) => setTimeout(r, 2000));
@@ -125,7 +124,7 @@ Generate a public URL that anyone can open to watch the entire agent session —
 
 <CodeGroup>
 ```python Python
-share = await client.sessions.create_share(str(session.id))
+share = await client.sessions.create_share(session.id)
 print(share.url)
 ```
 ```typescript TypeScript

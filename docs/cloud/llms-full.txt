@@ -61,7 +61,9 @@ Source: https://docs.browser-use.com/cloud/vibecoding
 Source: https://docs.browser-use.com/cloud/agent/quickstart
 
 
-The SDK is a thin wrapper with polling around the [API v3 Reference](https://docs.browser-use.com/cloud/api-reference). `client.run()` accepts all parameters from the API, creates a session, polls until completion, and parses the output.
+The SDK is a thin wrapper around the [API v3 Reference](https://docs.browser-use.com/cloud/api-reference).
+
+`client.run()` creates a session, polls every 2 seconds until completion (up to 4 hours), and returns the result. It accepts all parameters from the [Create Session](https://docs.browser-use.com/cloud/api-v3/sessions/create-session) endpoint. The result is a [Session object](https://docs.browser-use.com/cloud/api-v3/sessions/get-session) — use `result.output` for the agent's response.
 
 <CodeGroup>
 ```python Python
@@ -96,6 +98,8 @@ The best SOTA browser agent — see our [online Mind2Web benchmark](https://brow
 # Structured output
 Source: https://docs.browser-use.com/cloud/agent/structured-output
 
+
+Pass a Pydantic model (Python) or Zod schema (TypeScript) — `result.output` is automatically validated and converted to the typed object.
 
 <CodeGroup>
 ```python Python
@@ -144,25 +148,27 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
+# Create a session first, then run tasks inside it
 session = await client.sessions.create()
 
 result1 = await client.run(
     "Log into example.com with user@test.com",
-    session_id=str(session.id),
+    session_id=session.id,
     keep_alive=True,
 )
 result2 = await client.run(
     "Now go to settings and change the timezone",
-    session_id=str(session.id),
+    session_id=session.id,
 )
 
-await client.sessions.stop(str(session.id))
+await client.sessions.stop(session.id)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 
+// Create a session first, then run tasks inside it
 const session = await client.sessions.create();
 
 const result1 = await client.run("Log into example.com with user@test.com", {
@@ -197,7 +203,7 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(task="Find the top story on Hacker News")
-session_id = str(session.id)
+session_id = session.id
 
 seen = set()
 while True:
@@ -209,9 +215,11 @@ while True:
 
     s = await client.sessions.get(session_id)
     if s.status.value in ("idle", "stopped", "error", "timed_out"):
-        print(s.output)
         break
     await asyncio.sleep(2)
+
+# Final output
+print(s.output)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -233,25 +241,18 @@ while (true) {
 
   const s = await client.sessions.get(session.id);
   if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
-    console.log(s.output);
     break;
   }
   await new Promise((r) => setTimeout(r, 2000));
 }
+
+// Final output
+const result = await client.sessions.get(session.id);
+console.log(result.output);
 ```
 </CodeGroup>
 
-## Message fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `str` | Message UUID. |
-| `role` | `str` | `user`, `assistant`, or `tool`. |
-| `data` | `str` | Message content (JSON string — parse it). |
-| `type` | `str` | `user_message`, `assistant_message`, `browser_action`, `browser_action_result`, `completion_result`, etc. |
-| `summary` | `str` | Human-readable summary of the message. |
-| `screenshot_url` | `str` | Presigned screenshot URL (on browser action results). |
-| `created_at` | `str` | Timestamp. |
+Each message has a `role` (`user`, `assistant`, `tool`), a `summary` for display, and a `type` (e.g. `browser_action`, `browser_action_result`). Browser action results include a `screenshot_url`. See [List session messages](https://docs.browser-use.com/cloud/api-v3/sessions/list-session-messages) for all fields.
 
 
 # Workspaces & files
@@ -276,7 +277,7 @@ workspace = await client.workspaces.create(name="my-workspace")
 
 # Get a presigned upload URL
 upload = await client.workspaces.upload_files(
-    str(workspace.id),
+    workspace.id,
     files=[{"name": "people.csv", "contentType": "text/csv", "size": 45}],
 )
 
@@ -292,7 +293,7 @@ with open("people.csv", "rb") as f:
 # Tell the agent to use it
 result = await client.run(
     "Read people.csv and tell me who works at Google",
-    workspace_id=str(workspace.id),
+    workspace_id=workspace.id,
 )
 print(result.output)
 ```
@@ -339,11 +340,11 @@ workspace = await client.workspaces.create(name="my-workspace")
 # Agent saves files to the workspace
 result = await client.run(
     "Go to Hacker News and save the top 3 posts as posts.json",
-    workspace_id=str(workspace.id),
+    workspace_id=workspace.id,
 )
 
 # List and download files
-files = await client.workspaces.files(str(workspace.id), include_urls=True)
+files = await client.workspaces.files(workspace.id, include_urls=True)
 for f in files.files:
     print(f"{f.path} ({f.size} bytes)")
 
@@ -410,8 +411,8 @@ Source: https://docs.browser-use.com/cloud/agent/human-in-the-loop
 ## Flow
 
 1. Create a session with `keep_alive=True` so it stays alive between tasks
-2. Run an agent task — `live_url` becomes available once the browser starts (~3-5 seconds, poll `sessions.get()`)
-3. Human interacts with the `liveUrl`
+2. Run an agent task — `result.live_url` is available after the task completes
+3. Human interacts with the live browser
 4. Send a new follow-up task
 
 <CodeGroup>
@@ -422,7 +423,6 @@ client = AsyncBrowserUse()
 
 # 1. Create a persistent session
 session = await client.sessions.create(keep_alive=True)
-print(f"Live view: {session.live_url}")
 
 # 2. Agent does the first part
 result = await client.run(
@@ -430,6 +430,7 @@ result = await client.run(
     session_id=session.id,
 )
 print(result.output)
+print(f"Live view: {result.live_url}")
 
 # 3. Human opens live_url and picks a flight
 input("Press Enter after you've selected a flight in the live view...")
@@ -452,7 +453,6 @@ const client = new BrowserUse();
 
 // 1. Create a persistent session
 const session = await client.sessions.create({ keepAlive: true });
-console.log(`Live view: ${session.liveUrl}`);
 
 // 2. Agent does the first part
 const searchResult = await client.run(
@@ -460,6 +460,7 @@ const searchResult = await client.run(
   { sessionId: session.id },
 );
 console.log(searchResult.output);
+console.log(`Live view: ${searchResult.liveUrl}`);
 
 // 3. Human opens liveUrl and picks a flight
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -592,7 +593,7 @@ session = await client.sessions.create("Check how many GitHub stars browser-use 
 
 # liveUrl becomes available once the browser is ready
 while True:
-    s = await client.sessions.get(str(session.id))
+    s = await client.sessions.get(session.id)
     if s.live_url:
         print(s.live_url)
         break
@@ -648,10 +649,11 @@ https://live.browser-use.com?wss=...&ui=false
 
 ## Recording
 
-Enable recording to get an MP4 video of the session after it completes. Recording URLs may take a few seconds to appear after the session stops — poll `sessions.get()` if empty initially.
+Enable recording to get an MP4 video of the browser session. Only available when the agent actually opens a browser — tasks answered without browsing produce no recording. If you run multiple tasks in the same session (with `keep_alive`), you may get multiple recordings. Poll `sessions.get()` if `recording_urls` is empty — processing may take a few seconds for longer sessions.
 
 <CodeGroup>
 ```python Python
+import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
@@ -660,7 +662,14 @@ result = await client.run(
     enable_recording=True,
 )
 
-for url in result.recording_urls:
+# Recording may not be ready immediately — poll until available
+for _ in range(30):
+    session = await client.sessions.get(result.id)
+    if session.recording_urls:
+        break
+    await asyncio.sleep(2)
+
+for url in session.recording_urls:
     print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
@@ -671,7 +680,14 @@ const result = await client.run("Check how many GitHub stars browser-use has", {
   enableRecording: true,
 });
 
-for (const url of result.recordingUrls) {
+// Recording may not be ready immediately — poll until available
+let session = await client.sessions.get(result.id);
+for (let i = 0; i < 30 && !session.recordingUrls?.length; i++) {
+  await new Promise((r) => setTimeout(r, 2000));
+  session = await client.sessions.get(result.id);
+}
+
+for (const url of session.recordingUrls) {
   console.log(url); // presigned MP4 download URL
 }
 ```
@@ -683,7 +699,7 @@ Generate a public URL that anyone can open to watch the entire agent session —
 
 <CodeGroup>
 ```python Python
-share = await client.sessions.create_share(str(session.id))
+share = await client.sessions.create_share(session.id)
 print(share.url)
 ```
 ```typescript TypeScript
@@ -1227,10 +1243,8 @@ app.post("/webhook", (req, res) => {
     return res.status(401).send("Invalid signature");
   }
 
-  const event = JSON.parse(body);
-
-  if (event.type === "agent.task.status_update") {
-    const { task_id, status, session_id } = event.payload;
+  if (payload.type === "agent.task.status_update") {
+    const { task_id, status, session_id } = payload.payload;
     console.log(`Task ${task_id} is now ${status}`);
   }
 
@@ -1275,11 +1289,9 @@ async def handle_webhook(request: Request):
     if not hmac.compare_digest(expected, signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
 
-    event = await request.json()
-
-    if event["type"] == "agent.task.status_update":
-        task_id = event["payload"]["task_id"]
-        status = event["payload"]["status"]
+    if payload["type"] == "agent.task.status_update":
+        task_id = payload["payload"]["task_id"]
+        status = payload["payload"]["status"]
         print(f"Task {task_id} is now {status}")
 
     return {"status": "ok"}
@@ -1578,17 +1590,11 @@ Set `max_cost_usd` to cap spending per task. Default is $20. A typical task cost
 
 ## How do I get the live browser URL?
 
-`live_url` is not available immediately on session creation. Poll `sessions.get()` until it appears (~3-5 seconds).
+After `client.run()` completes, `result.live_url` is available on the result. If you use `sessions.create()` directly, poll `sessions.get()` until `live_url` appears (~3-5 seconds).
 
 ```python
-import asyncio
-session = await client.sessions.create(task="Go to example.com")
-while True:
-    s = await client.sessions.get(str(session.id))
-    if s.live_url:
-        print(s.live_url)
-        break
-    await asyncio.sleep(0.5)
+result = await client.run("Go to example.com", keep_alive=True)
+print(result.live_url)
 ```
 
 ## How do I authenticate on websites?
@@ -1621,8 +1627,8 @@ Use workspaces. See [Workspaces & files](https://docs.browser-use.com/cloud/agen
 
 ```python
 workspace = await client.workspaces.create(name="my-workspace")
-result = await client.run("Save top 3 HN posts as posts.json", workspace_id=str(workspace.id))
-files = await client.workspaces.files(str(workspace.id), include_urls=True)
+result = await client.run("Save top 3 HN posts as posts.json", workspace_id=workspace.id)
+files = await client.workspaces.files(workspace.id, include_urls=True)
 ```
 
 ## How do I use Browser Use as a sub-agent?
