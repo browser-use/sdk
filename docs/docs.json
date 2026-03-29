@@ -68,7 +68,8 @@
                       "cloud/agent/structured-output",
                       "cloud/agent/streaming",
                       "cloud/agent/follow-up-tasks",
-                      "cloud/agent/workspaces"
+                      "cloud/agent/workspaces",
+                      "cloud/agent/human-in-the-loop"
                     ]
                   },
                   {
@@ -108,42 +109,6 @@
               {
                 "group": "Resources",
                 "pages": [
-                  {
-                    "group": "Tips",
-                    "pages": [
-                      {
-                        "group": "Authentication",
-                        "pages": [
-                          "cloud/tips/authentication/profiles-and-secrets",
-                          "cloud/tips/authentication/1password-2fa",
-                          "cloud/tips/authentication/social-media"
-                        ]
-                      },
-                      {
-                        "group": "Live View",
-                        "pages": [
-                          "cloud/tips/live-view/iframe-embed",
-                          "cloud/tips/live-view/human-takeover"
-                        ]
-                      },
-                      {
-                        "group": "Parallel",
-                        "pages": [
-                          "cloud/tips/parallel/concurrent-extraction",
-                          "cloud/tips/parallel/shared-config"
-                        ]
-                      },
-                      {
-                        "group": "Data",
-                        "pages": [
-                          "cloud/tips/data/structured-output",
-                          "cloud/tips/data/file-downloads",
-                          "cloud/tips/data/geo-scraping",
-                          "cloud/tips/data/streaming"
-                        ]
-                      }
-                    ]
-                  },
                   "cloud/faq"
                 ]
               }
