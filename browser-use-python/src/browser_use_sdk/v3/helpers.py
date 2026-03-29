@@ -53,9 +53,15 @@ def _poll_output(
 ) -> SessionResult[Any]:
     """Poll session status until terminal, return SessionResult."""
     deadline = time.monotonic() + timeout
+    captured_live_url: str | None = None
     while time.monotonic() < deadline:
         session = sessions.get(session_id)
+        if session.live_url:
+            captured_live_url = session.live_url
         if session.status.value in _TERMINAL_STATUSES:
+            # Preserve live_url captured during polling (goes null at terminal)
+            if captured_live_url and not session.live_url:
+                session.live_url = captured_live_url
             return SessionResult(session, _parse_output(session.output, output_schema))
         time.sleep(interval)
     raise TimeoutError(f"Session {session_id} did not complete within {timeout}s")
@@ -71,9 +77,15 @@ async def _async_poll_output(
 ) -> SessionResult[Any]:
     """Async poll session status until terminal, return SessionResult."""
     deadline = time.monotonic() + timeout
+    captured_live_url: str | None = None
     while time.monotonic() < deadline:
         session = await sessions.get(session_id)
+        if session.live_url:
+            captured_live_url = session.live_url
         if session.status.value in _TERMINAL_STATUSES:
+            # Preserve live_url captured during polling (goes null at terminal)
+            if captured_live_url and not session.live_url:
+                session.live_url = captured_live_url
             return SessionResult(session, _parse_output(session.output, output_schema))
         await asyncio.sleep(interval)
     raise TimeoutError(f"Session {session_id} did not complete within {timeout}s")
