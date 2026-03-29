@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import time
 from typing import Any
 from uuid import UUID
 
@@ -164,6 +166,29 @@ class Sessions:
             )
         )
 
+    def wait_for_recording(
+        self,
+        session_id: _ID,
+        *,
+        timeout: float = 15,
+        interval: float = 2,
+    ) -> list[str]:
+        """Poll until recording URLs are available. Returns a list of presigned MP4 URLs.
+
+        Returns an empty list if no recording was produced (e.g. the agent
+        answered without opening a browser, or recording was not enabled).
+        """
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            session = self.get(session_id)
+            if session.recording_urls:
+                return list(session.recording_urls)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            time.sleep(min(interval, remaining))
+        return []
+
 
 class AsyncSessions:
     def __init__(self, http: AsyncHttpClient) -> None:
@@ -311,3 +336,26 @@ class AsyncSessions:
                 },
             )
         )
+
+    async def wait_for_recording(
+        self,
+        session_id: _ID,
+        *,
+        timeout: float = 15,
+        interval: float = 2,
+    ) -> list[str]:
+        """Poll until recording URLs are available. Returns a list of presigned MP4 URLs.
+
+        Returns an empty list if no recording was produced (e.g. the agent
+        answered without opening a browser, or recording was not enabled).
+        """
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            session = await self.get(session_id)
+            if session.recording_urls:
+                return list(session.recording_urls)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            await asyncio.sleep(min(interval, remaining))
+        return []

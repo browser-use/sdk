@@ -2467,10 +2467,11 @@ export interface components {
          *             CREATED: Task has been created but not yet started.
          *         STARTED: Task has been started and is currently running.
          *         FINISHED: Task has finished and the agent has completed the task.
+         *         FAILED: Task execution failed due to an error.
          *         STOPPED: Task execution has been manually stopped (cannot be resumed).
          * @enum {string}
          */
-        TaskStatus: "created" | "started" | "finished" | "stopped";
+        TaskStatus: "created" | "started" | "finished" | "failed" | "stopped";
         /**
          * TaskStatusView
          * @description Lightweight view optimized for polling. Use GET /tasks/{id}/status for efficient polling

@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
@@ -22,6 +22,7 @@ class BuAgentSessionStatus(Enum):
 class BuModel(Enum):
     bu_mini = 'bu-mini'
     bu_max = 'bu-max'
+    bu_ultra = 'bu-ultra'
 
 
 class FileInfo(BaseModel):
@@ -34,8 +35,8 @@ class FileInfo(BaseModel):
 
 
 class FileListResponse(BaseModel):
-    files: List[FileInfo] = Field(..., title='Files')
-    folders: List[str] | None = Field(
+    files: list[FileInfo] = Field(..., title='Files')
+    folders: list[str] | None = Field(
         None,
         description='Immediate sub-folder names at this prefix level',
         title='Folders',
@@ -76,7 +77,7 @@ class FileUploadItem(BaseModel):
 
 
 class FileUploadRequest(BaseModel):
-    files: List[FileUploadItem] = Field(..., max_length=10, min_length=1, title='Files')
+    files: list[FileUploadItem] = Field(..., max_length=10, min_length=1, title='Files')
 
 
 class FileUploadResponseItem(BaseModel):
@@ -85,6 +86,10 @@ class FileUploadResponseItem(BaseModel):
     path: str = Field(
         ..., description='S3-relative path, e.g. "uploads/data.csv"', title='Path'
     )
+
+
+class InsufficientCreditsError(BaseModel):
+    detail: str | None = Field('Insufficient credits', title='Detail')
 
 
 class MessageResponse(BaseModel):
@@ -103,6 +108,86 @@ class MessageResponse(BaseModel):
         title='Summary',
     )
     created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
+
+
+class Name(RootModel[str]):
+    root: str = Field(
+        ..., description='Optional name for the profile', max_length=100, title='Name'
+    )
+
+
+class UserId(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Your internal user identifier for this profile. Use this to associate a profile with a user in your system.',
+        max_length=255,
+        title='User ID',
+    )
+
+
+class ProfileCreateRequest(BaseModel):
+    name: Name | None = Field(
+        None, description='Optional name for the profile', title='Name'
+    )
+    user_id: UserId | None = Field(
+        None,
+        alias='userId',
+        description='Your internal user identifier for this profile. Use this to associate a profile with a user in your system.',
+        title='User ID',
+    )
+
+
+class ProfileNotFoundError(BaseModel):
+    detail: str | None = Field('Profile not found', title='Detail')
+
+
+class ProfileUpdateRequest(BaseModel):
+    name: Name | None = Field(
+        None, description='Optional name for the profile', title='Name'
+    )
+    user_id: UserId | None = Field(
+        None,
+        alias='userId',
+        description='Your internal user identifier for this profile. Use this to associate a profile with a user in your system.',
+        title='User ID',
+    )
+
+
+class ProfileView(BaseModel):
+    id: UUID = Field(..., description='Unique identifier for the profile', title='ID')
+    user_id: str | None = Field(
+        None,
+        alias='userId',
+        description='Your internal user identifier for this profile. Use this to associate a profile with a user in your system.',
+        title='User ID',
+    )
+    name: str | None = Field(
+        None, description='Optional name for the profile', title='Name'
+    )
+    last_used_at: AwareDatetime | None = Field(
+        None,
+        alias='lastUsedAt',
+        description='Timestamp when the profile was last used',
+        title='Last Used At',
+    )
+    created_at: AwareDatetime = Field(
+        ...,
+        alias='createdAt',
+        description='Timestamp when the profile was created',
+        title='Created At',
+    )
+    updated_at: AwareDatetime = Field(
+        ...,
+        alias='updatedAt',
+        description='Timestamp when the profile was last updated',
+        title='Updated At',
+    )
+    cookie_domains: list[str] | None = Field(
+        None,
+        alias='cookieDomains',
+        description='List of domain URLs that have cookies stored for this profile',
+        title='Cookie Domains',
+    )
 
 
 class ProxyCountryCode(Enum):
@@ -375,7 +460,7 @@ class RunTaskRequest(BaseModel):
     profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
     workspace_id: UUID | None = Field(None, alias='workspaceId', title='Workspaceid')
     proxy_country_code: ProxyCountryCode | None = Field('us', alias='proxyCountryCode')
-    output_schema: Dict[str, Any] | None = Field(
+    output_schema: dict[str, Any] | None = Field(
         None, alias='outputSchema', title='Outputschema'
     )
     enable_scheduled_tasks: bool | None = Field(
@@ -384,6 +469,8 @@ class RunTaskRequest(BaseModel):
     enable_recording: bool | None = Field(
         False, alias='enableRecording', title='Enablerecording'
     )
+    skills: bool | None = Field(True, title='Skills')
+    agentmail: bool | None = Field(True, title='Agentmail')
 
 
 class SessionResponse(BaseModel):
@@ -395,7 +482,7 @@ class SessionResponse(BaseModel):
     model: BuModel
     title: str | None = Field(None, title='Title')
     output: Any = Field(None, title='Output')
-    output_schema: Dict[str, Any] | None = Field(
+    output_schema: dict[str, Any] | None = Field(
         None, alias='outputSchema', title='Outputschema'
     )
     step_count: int | None = Field(0, alias='stepCount', title='Stepcount')
@@ -406,7 +493,9 @@ class SessionResponse(BaseModel):
         None, alias='isTaskSuccessful', title='Istasksuccessful'
     )
     live_url: str | None = Field(None, alias='liveUrl', title='Liveurl')
-    recording_url: str | None = Field(None, alias='recordingUrl', title='Recordingurl')
+    recording_urls: list[str] | None = Field(
+        [], alias='recordingUrls', title='Recordingurls'
+    )
     profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
     workspace_id: UUID | None = Field(None, alias='workspaceId', title='Workspaceid')
     proxy_country_code: ProxyCountryCode | None = Field(None, alias='proxyCountryCode')
@@ -449,6 +538,9 @@ class SessionResponse(BaseModel):
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Totalcostusd',
     )
+    agentmail_email: str | None = Field(
+        None, alias='agentmailEmail', title='Agentmailemail'
+    )
     created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
     updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
 
@@ -459,25 +551,25 @@ class StopStrategy(Enum):
 
 
 class ValidationError(BaseModel):
-    loc: List[str | int] = Field(..., title='Location')
+    loc: list[str | int] = Field(..., title='Location')
     msg: str = Field(..., title='Message')
     type: str = Field(..., title='Error Type')
 
 
-class Name(RootModel[str]):
+class Name2(RootModel[str]):
     root: str = Field(
         ..., description='Optional name for the workspace', max_length=100, title='Name'
     )
 
 
 class WorkspaceCreateRequest(BaseModel):
-    name: Name | None = Field(
+    name: Name2 | None = Field(
         None, description='Optional name for the workspace', title='Name'
     )
 
 
 class WorkspaceUpdateRequest(BaseModel):
-    name: Name | None = Field(
+    name: Name2 | None = Field(
         None, description='Optional name for the workspace', title='Name'
     )
 
@@ -502,20 +594,38 @@ class WorkspaceView(BaseModel):
 
 
 class FileUploadResponse(BaseModel):
-    files: List[FileUploadResponseItem] = Field(..., title='Files')
+    files: list[FileUploadResponseItem] = Field(..., title='Files')
 
 
 class HTTPValidationError(BaseModel):
-    detail: List[ValidationError] | None = Field(None, title='Detail')
+    detail: list[ValidationError] | None = Field(None, title='Detail')
 
 
 class MessageListResponse(BaseModel):
-    messages: List[MessageResponse] = Field(..., title='Messages')
+    messages: list[MessageResponse] = Field(..., title='Messages')
     has_more: bool = Field(..., alias='hasMore', title='Hasmore')
 
 
+class ProfileListResponse(BaseModel):
+    items: list[ProfileView] = Field(
+        ..., description='List of profile views for the current page', title='Items'
+    )
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
+    )
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
+    )
+
+
 class SessionListResponse(BaseModel):
-    sessions: List[SessionResponse] = Field(..., title='Sessions')
+    sessions: list[SessionResponse] = Field(..., title='Sessions')
     total: int = Field(..., title='Total')
     page: int = Field(..., title='Page')
     page_size: int = Field(..., alias='pageSize', title='Pagesize')
@@ -526,7 +636,7 @@ class StopSessionRequest(BaseModel):
 
 
 class WorkspaceListResponse(BaseModel):
-    items: List[WorkspaceView] = Field(
+    items: list[WorkspaceView] = Field(
         ..., description='List of workspace views for the current page', title='Items'
     )
     total_items: int = Field(
