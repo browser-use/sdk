@@ -311,7 +311,7 @@
   },
   "navbar": {
     "links": [
-      { "type": "github", "href": "https://github.com/browser-use/browser-use" },
+      { "label": "GitHub", "href": "https://github.com/browser-use/browser-use" },
       { "type": "discord", "href": "https://link.browser-use.com/discord" }
     ],
     "primary": {
