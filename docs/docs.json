@@ -58,7 +58,7 @@
                 ]
               },
               {
-                "group": "Guides",
+                "group": "Core",
                 "pages": [
                   {
                     "group": "Agent",
@@ -96,6 +96,13 @@
                       "cloud/guides/mcp-server",
                       "cloud/guides/webhooks",
                       "cloud/tutorials/integrations/n8n"
+                    ]
+                  },
+                  {
+                    "group": "Tutorials",
+                    "icon": "graduation-cap",
+                    "pages": [
+                      "cloud/tutorials/chat-ui"
                     ]
                   },
                   "cloud/faq",
