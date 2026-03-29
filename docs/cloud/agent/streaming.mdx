@@ -1,6 +1,6 @@
 ---
 title: Live messages
-description: "Poll the agent's message history in real time to build custom UIs or monitor progress."
+description: "Stream the agent's messages in real time to build custom UIs or monitor progress."
 icon: message-lines
 ---
 
@@ -8,7 +8,111 @@ icon: message-lines
   Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
 </Note>
 
-Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool calls, and results. Each message has a `role` (`user`, `assistant`, `tool`), a `summary` for display, and a `type` (e.g. `browser_action`, `browser_action_result`). See [List session messages](/cloud/api-v3/sessions/list-session-messages) for all fields.
+Stream messages as the agent works — reasoning, tool calls, browser actions, and results.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+run = client.run("Find the top story on Hacker News")
+async for msg in run:
+    print(f"[{msg.role}] {msg.summary}")
+
+print(run.result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+
+const run = client.run("Find the top story on Hacker News");
+for await (const msg of run) {
+  console.log(`[${msg.role}] ${msg.summary}`);
+}
+
+console.log(run.result.output);
+```
+</CodeGroup>
+
+## Follow-up tasks
+
+Each `run()` only streams messages from its own task — not the entire session history.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+session = await client.sessions.create(keep_alive=True)
+
+run1 = client.run("Search flights NYC to London", session_id=session.id)
+async for msg in run1:
+    print(f"[Task 1] {msg.summary}")
+
+# Human picks a flight...
+
+run2 = client.run("Get details of the selected flight", session_id=session.id)
+async for msg in run2:
+    print(f"[Task 2] {msg.summary}")
+
+await client.sessions.stop(session.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const session = await client.sessions.create({ keepAlive: true });
+
+const run1 = client.run("Search flights NYC to London", { sessionId: session.id });
+for await (const msg of run1) {
+  console.log(`[Task 1] ${msg.summary}`);
+}
+
+// Human picks a flight...
+
+const run2 = client.run("Get details of the selected flight", { sessionId: session.id });
+for await (const msg of run2) {
+  console.log(`[Task 2] ${msg.summary}`);
+}
+
+await client.sessions.stop(session.id);
+```
+</CodeGroup>
+
+## Without streaming
+
+If you just need the final result:
+
+<CodeGroup>
+```python Python
+result = await client.run("Find the top story on Hacker News")
+print(result.output)
+```
+```typescript TypeScript
+const result = await client.run("Find the top story on Hacker News");
+console.log(result.output);
+```
+</CodeGroup>
+
+## Message fields
+
+Each message has:
+
+| Field | Description |
+|-------|-------------|
+| `role` | `user`, `assistant`, or `tool` |
+| `type` | `browser_action`, `browser_action_result`, `planning`, `completion`, etc. |
+| `summary` | One-liner for display (e.g. "Navigating to google.com") |
+| `data` | Full message content (JSON string) |
+| `screenshot_url` | Screenshot URL (on `browser_action_result` messages) |
+
+See [List session messages](/cloud/api-v3/sessions/list-session-messages) for all fields.
+
+## Manual polling
+
+If you need full control over the polling loop (e.g. custom interval, filtering):
 
 <CodeGroup>
 ```python Python
@@ -18,13 +122,12 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 session = await client.sessions.create(task="Find the top story on Hacker News")
 
-seen = set()
+cursor = None
 while True:
-    msgs = await client.sessions.messages(session.id, limit=100)
+    msgs = await client.sessions.messages(session.id, after=cursor, limit=100)
     for m in msgs.messages:
-        if m.id not in seen:
-            seen.add(m.id)
-            print(f"[{m.role}] {m.summary}")
+        print(f"[{m.role}] {m.summary}")
+        cursor = m.id
 
     s = await client.sessions.get(session.id)
     if s.status in ("idle", "stopped", "error", "timed_out"):
@@ -41,24 +144,20 @@ const session = await client.sessions.create({
   task: "Find the top story on Hacker News",
 });
 
-const seen = new Set<string>();
+let cursor: string | undefined;
 while (true) {
-  const msgs = await client.sessions.messages(session.id, { limit: 100 });
+  const msgs = await client.sessions.messages(session.id, { after: cursor, limit: 100 });
   for (const m of msgs.messages) {
-    if (!seen.has(m.id)) {
-      seen.add(m.id);
-      console.log(`[${m.role}] ${m.summary}`);
-    }
+    console.log(`[${m.role}] ${m.summary}`);
+    cursor = m.id;
   }
 
   const s = await client.sessions.get(session.id);
   if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
+    console.log(s.output);
     break;
   }
   await new Promise((r) => setTimeout(r, 2000));
 }
-
-const result = await client.sessions.get(session.id);
-console.log(result.output);
 ```
 </CodeGroup>
