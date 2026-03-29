@@ -35,6 +35,9 @@ print(result.output)
 
 # liveUrl becomes available once the browser starts (~3-5s)
 s = await client.sessions.get(str(session.id))
+while not s.live_url:
+    await asyncio.sleep(1)
+    s = await client.sessions.get(str(session.id))
 print(f"Live view: {s.live_url}")
 
 # 3. Human opens live_url and picks a flight
@@ -67,7 +70,11 @@ const searchResult = await client.run(
 console.log(searchResult.output);
 
 // liveUrl becomes available once the browser starts (~3-5s)
-const s = await client.sessions.get(session.id);
+let s = await client.sessions.get(session.id);
+while (!s.liveUrl) {
+  await new Promise((r) => setTimeout(r, 1000));
+  s = await client.sessions.get(session.id);
+}
 console.log(`Live view: ${s.liveUrl}`);
 
 // 3. Human opens liveUrl and picks a flight
