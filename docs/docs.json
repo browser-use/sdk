@@ -94,10 +94,6 @@
                 ]
               },
               {
-                "group": "Tutorials",
-                "pages": ["cloud/tutorials/chat-ui"]
-              },
-              {
                 "group": "Integrations",
                 "pages": [
                   "cloud/guides/mcp-server",
@@ -109,6 +105,12 @@
               {
                 "group": "Resources",
                 "pages": [
+                  {
+                    "group": "Tutorials",
+                    "pages": [
+                      "cloud/tutorials/chat-ui"
+                    ]
+                  },
                   "cloud/faq"
                 ]
               }
