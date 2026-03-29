@@ -84,6 +84,15 @@
                     ]
                   },
                   {
+                    "group": "Integrations",
+                    "pages": [
+                      "cloud/tutorials/integrations/openclaw",
+                      "cloud/guides/mcp-server",
+                      "cloud/guides/webhooks",
+                      "cloud/tutorials/integrations/n8n"
+                    ]
+                  },
+                  {
                     "group": "Legacy (v2)",
                     "isDefaultOpen": false,
                     "pages": [
@@ -91,15 +100,6 @@
                       "cloud/legacy/skills"
                     ]
                   }
-                ]
-              },
-              {
-                "group": "Integrations",
-                "pages": [
-                  "cloud/tutorials/integrations/openclaw",
-                  "cloud/guides/mcp-server",
-                  "cloud/guides/webhooks",
-                  "cloud/tutorials/integrations/n8n"
                 ]
               },
               {
