@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Dict, List, Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
@@ -247,7 +247,7 @@ class EnabledSkillsLimitExceededError(BaseModel):
 
 
 class ExecuteSkillRequest(BaseModel):
-    parameters: Dict[str, Any] | None = Field(
+    parameters: dict[str, Any] | None = Field(
         None, description='Parameters to pass to the skill handler', title='Parameters'
     )
     session_id: UUID | None = Field(
@@ -415,7 +415,7 @@ class ProfileView(BaseModel):
         description='Timestamp when the profile was last updated',
         title='Updated At',
     )
-    cookie_domains: List[str] | None = Field(
+    cookie_domains: list[str] | None = Field(
         None,
         alias='cookieDomains',
         description='List of domain URLs that have cookies stored for this profile',
@@ -957,6 +957,7 @@ class TaskStatus(Enum):
     created = 'created'
     started = 'started'
     finished = 'finished'
+    failed = 'failed'
     stopped = 'stopped'
 
 
@@ -1025,7 +1026,7 @@ class TaskStepView(BaseModel):
         description='Optional URL to the screenshot taken at this step',
         title='Screenshot URL',
     )
-    actions: List[str] = Field(
+    actions: list[str] = Field(
         ...,
         description='List of stringified json actions performed by the agent in this step',
         title='Actions',
@@ -1086,16 +1087,16 @@ class TaskView(BaseModel):
         description='Naive UTC timestamp when the task completed (None if still running)',
         title='Finished At',
     )
-    metadata: Dict[str, Any] | None = Field(
+    metadata: dict[str, Any] | None = Field(
         {},
         description='Optional additional metadata associated with the task set by the user',
         title='Metadata',
     )
-    steps: List[TaskStepView] = Field(..., title='Steps')
+    steps: list[TaskStepView] = Field(..., title='Steps')
     output: str | None = Field(
         None, description='Final output/result of the task', title='Output'
     )
-    output_files: List[FileView] = Field(..., alias='outputFiles', title='Outputfiles')
+    output_files: list[FileView] = Field(..., alias='outputFiles', title='Outputfiles')
     browser_use_version: str | None = Field(
         None,
         alias='browserUseVersion',
@@ -1124,7 +1125,7 @@ class TaskView(BaseModel):
         description='Total cost of the task in USD. This is the sum of all step costs incurred during task execution.',
         title='Cost',
     )
-    suggestions: List[Dict[str, Any]] | None = Field(
+    suggestions: list[dict[str, Any]] | None = Field(
         None,
         description='List of actionable suggestions for improving task configuration based on detected issues during execution.',
         title='Suggestions',
@@ -1183,10 +1184,10 @@ class UpdateSkillRequest(BaseModel):
         description='Description of what the skill does (shows up in the public view)',
         title='Description',
     )
-    categories: List[SkillCategory] | None = Field(
+    categories: list[SkillCategory] | None = Field(
         None, description='Categories to assign to the skill', title='Categories'
     )
-    domains: List[str] | None = Field(
+    domains: list[str] | None = Field(
         None, description='Domains/websites this skill interacts with', title='Domains'
     )
     is_enabled: bool | None = Field(
@@ -1208,7 +1209,7 @@ class UploadFilePresignedUrlResponse(BaseModel):
     method: Literal['POST'] = Field(
         ..., description='The HTTP method to use for the upload.', title='Method'
     )
-    fields: Dict[str, str] = Field(
+    fields: dict[str, str] = Field(
         ...,
         description='The form fields to include in the upload request.',
         title='Fields',
@@ -1269,7 +1270,7 @@ class UploadFileRequest(BaseModel):
 
 
 class ValidationError(BaseModel):
-    loc: List[str | int] = Field(..., title='Location')
+    loc: list[str | int] = Field(..., title='Location')
     msg: str = Field(..., title='Message')
     type: str = Field(..., title='Error Type')
 
@@ -1384,7 +1385,7 @@ class BrowserSessionItemView(BaseModel):
 
 
 class BrowserSessionListResponse(BaseModel):
-    items: List[BrowserSessionItemView] = Field(
+    items: list[BrowserSessionItemView] = Field(
         ...,
         description='List of browser session views for the current page',
         title='Items',
@@ -1549,17 +1550,17 @@ class CreateTaskRequest(BaseModel):
         description='The ID of the session where the task will run.',
         title='Session ID',
     )
-    metadata: Dict[str, str] | None = Field(
+    metadata: dict[str, str] | None = Field(
         None,
         description='The metadata for the task. Up to 10 key-value pairs.',
         title='Metadata',
     )
-    secrets: Dict[str, str] | None = Field(
+    secrets: dict[str, str] | None = Field(
         None,
         description='The secrets for the task. Allowed domains are not required for secrets to be injected, but are recommended.',
         title='Secrets',
     )
-    allowed_domains: List[str] | None = Field(
+    allowed_domains: list[str] | None = Field(
         None,
         alias='allowedDomains',
         description='The allowed domains for the task.',
@@ -1592,7 +1593,7 @@ class CreateTaskRequest(BaseModel):
     thinking: bool | None = Field(
         False, description='Whether agent thinking mode is enabled.', title='Thinking'
     )
-    vision: bool | str | None = Field(
+    vision: bool | Literal['auto'] | None = Field(
         True,
         description="Whether agent vision capabilities are enabled. Set to 'auto' to let the agent decide based on the model capabilities.",
         title='Vision',
@@ -1621,7 +1622,7 @@ class CreateTaskRequest(BaseModel):
         description='The LLM model to use for judging. If not provided, uses the default judge LLM.',
         title='Judge LLM',
     )
-    skill_ids: List[str] | None = Field(
+    skill_ids: list[str] | None = Field(
         None,
         alias='skillIds',
         description="List of skill IDs to enable for this task. Use ['*'] to enable all available skills for the project.",
@@ -1630,7 +1631,7 @@ class CreateTaskRequest(BaseModel):
 
 
 class HTTPValidationError(BaseModel):
-    detail: List[ValidationError] | None = Field(None, title='Detail')
+    detail: list[ValidationError] | None = Field(None, title='Detail')
 
 
 class ParameterSchema(BaseModel):
@@ -1643,7 +1644,7 @@ class ParameterSchema(BaseModel):
 
 
 class ProfileListResponse(BaseModel):
-    items: List[ProfileView] = Field(
+    items: list[ProfileView] = Field(
         ..., description='List of profile views for the current page', title='Items'
     )
     total_items: int = Field(
@@ -1723,7 +1724,7 @@ class SessionItemView(BaseModel):
 
 
 class SessionListResponse(BaseModel):
-    items: List[SessionItemView] = Field(
+    items: list[SessionItemView] = Field(
         ..., description='List of session views for the current page', title='Items'
     )
     total_items: int = Field(
@@ -1741,7 +1742,7 @@ class SessionListResponse(BaseModel):
 
 
 class SkillExecutionListResponse(BaseModel):
-    items: List[SkillExecutionView] = Field(
+    items: list[SkillExecutionView] = Field(
         ..., description='List of executions', title='Items'
     )
     total_items: int = Field(
@@ -1773,10 +1774,10 @@ class SkillResponse(BaseModel):
         description='Description of the skill (shows up in the public view)',
         title='Description',
     )
-    categories: List[SkillCategory] = Field(
+    categories: list[SkillCategory] = Field(
         ..., description='Categories of the skill', title='Categories'
     )
-    domains: List[str] = Field(
+    domains: list[str] = Field(
         ..., description='Domains/websites this skill interacts with', title='Domains'
     )
     goal: str | None = Field(
@@ -1793,10 +1794,10 @@ class SkillResponse(BaseModel):
     status: SkillsGenerationStatus = Field(
         ..., description='Status of the skill', title='Status'
     )
-    parameters: List[ParameterSchema] = Field(
+    parameters: list[ParameterSchema] = Field(
         ..., description='Input parameters of the skill', title='Parameters'
     )
-    output_schema: Dict[str, Any] = Field(
+    output_schema: dict[str, Any] = Field(
         ...,
         alias='outputSchema',
         description='Output schema of the skill',
@@ -1904,7 +1905,7 @@ class TaskItemView(BaseModel):
         description='Naive UTC timestamp when the task completed (None if still running)',
         title='Finished At',
     )
-    metadata: Dict[str, Any] | None = Field(
+    metadata: dict[str, Any] | None = Field(
         {},
         description='Optional additional metadata associated with the task set by the user',
         title='Metadata',
@@ -1940,7 +1941,7 @@ class TaskItemView(BaseModel):
         description='Total cost of the task in USD. This is the sum of all step costs incurred during task execution.',
         title='Cost',
     )
-    suggestions: List[Dict[str, Any]] | None = Field(
+    suggestions: list[dict[str, Any]] | None = Field(
         None,
         description='List of actionable suggestions for improving task configuration based on detected issues during execution.',
         title='Suggestions',
@@ -1948,7 +1949,7 @@ class TaskItemView(BaseModel):
 
 
 class TaskListResponse(BaseModel):
-    items: List[TaskItemView] = Field(
+    items: list[TaskItemView] = Field(
         ..., description='List of task views for the current page', title='Items'
     )
     total_items: int = Field(
@@ -1978,16 +1979,16 @@ class MarketplaceSkillResponse(BaseModel):
         description='Description of the skill (shows up in the public view)',
         title='Description',
     )
-    categories: List[SkillCategory] = Field(
+    categories: list[SkillCategory] = Field(
         ..., description='Categories of the skill', title='Categories'
     )
-    domains: List[str] = Field(
+    domains: list[str] = Field(
         ..., description='Domains/websites this skill interacts with', title='Domains'
     )
-    parameters: List[ParameterSchema] = Field(
+    parameters: list[ParameterSchema] = Field(
         ..., description='Input parameters of the skill', title='Parameters'
     )
-    output_schema: Dict[str, Any] = Field(
+    output_schema: dict[str, Any] = Field(
         ...,
         alias='outputSchema',
         description='Output schema of the skill',
@@ -2071,7 +2072,7 @@ class SessionView(BaseModel):
         description='Timestamp when the session was stopped (None if still active)',
         title='Finished At',
     )
-    tasks: List[TaskItemView] = Field(
+    tasks: list[TaskItemView] = Field(
         ..., description='List of tasks associated with this session', title='Tasks'
     )
     public_share_url: str | None = Field(
@@ -2109,7 +2110,7 @@ class SessionView(BaseModel):
 
 
 class SkillListResponse(BaseModel):
-    items: List[SkillResponse] = Field(..., description='List of skills', title='Items')
+    items: list[SkillResponse] = Field(..., description='List of skills', title='Items')
     total_items: int = Field(
         ...,
         alias='totalItems',
@@ -2125,7 +2126,7 @@ class SkillListResponse(BaseModel):
 
 
 class MarketplaceSkillListResponse(BaseModel):
-    items: List[MarketplaceSkillResponse] = Field(
+    items: list[MarketplaceSkillResponse] = Field(
         ..., description='List of skills', title='Items'
     )
     total_items: int = Field(

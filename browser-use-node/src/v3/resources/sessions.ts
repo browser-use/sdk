@@ -94,9 +94,8 @@ export class Sessions {
     const interval = options?.interval ?? 2_000;
     const deadline = Date.now() + timeout;
     while (Date.now() < deadline) {
-      const data = await this.http.get<Record<string, unknown>>(`/sessions/${sessionId}`);
-      const urls = data.recordingUrls;
-      if (Array.isArray(urls) && urls.length > 0) return urls as string[];
+      const session = await this.get(sessionId);
+      if (session.recordingUrls?.length) return session.recordingUrls;
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
       await new Promise((r) => setTimeout(r, Math.min(interval, remaining)));

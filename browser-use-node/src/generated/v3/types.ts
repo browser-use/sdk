@@ -150,6 +150,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Profiles
+         * @description Get paginated list of profiles.
+         *
+         *     Use the `query` parameter to search profiles by name or user_id.
+         *     This is useful when you have many profiles and need to find a specific user.
+         *
+         *     Example: If you set `user_id` to your internal user identifier when creating profiles,
+         *     you can later search for that user by passing their identifier as the `query` parameter.
+         */
+        get: operations["list_profiles_profiles_get"];
+        put?: never;
+        /**
+         * Create Profile
+         * @description Profiles allow you to preserve the state of the browser between tasks.
+         *
+         *     They are most commonly used to allow users to preserve the log-in state in the agent between tasks.
+         *     You'd normally create one profile per user and then use it for all their tasks.
+         *
+         *     You can set a `user_id` when creating a profile to associate it with a user in your system.
+         *     This allows you to later search for the profile using the GET /profiles endpoint with a query parameter.
+         */
+        post: operations["create_profile_profiles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/profiles/{profile_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Profile
+         * @description Get profile details.
+         */
+        get: operations["get_profile_profiles__profile_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Browser Profile
+         * @description Permanently delete a browser profile and its configuration.
+         */
+        delete: operations["delete_browser_profile_profiles__profile_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Profile
+         * @description Update a browser profile's information.
+         */
+        patch: operations["update_profile_profiles__profile_id__patch"];
+        trace?: never;
+    };
     "/workspaces": {
         parameters: {
             query?: never;
@@ -279,7 +343,7 @@ export interface components {
          * BuModel
          * @enum {string}
          */
-        BuModel: "bu-mini" | "bu-max";
+        BuModel: "bu-mini" | "bu-max" | "bu-ultra";
         /**
          * FileInfo
          * @description A file in a session's workspace.
@@ -375,6 +439,17 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /**
+         * InsufficientCreditsError
+         * @description Error response when there are insufficient credits
+         */
+        InsufficientCreditsError: {
+            /**
+             * Detail
+             * @default Insufficient credits
+             */
+            detail: string;
+        };
         /** MessageListResponse */
         MessageListResponse: {
             /** Messages */
@@ -415,6 +490,122 @@ export interface components {
              * Format: date-time
              */
             createdAt: string;
+        };
+        /**
+         * ProfileCreateRequest
+         * @description Request model for creating a new profile.
+         */
+        ProfileCreateRequest: {
+            /**
+             * Name
+             * @description Optional name for the profile
+             */
+            name?: string | null;
+            /**
+             * User ID
+             * @description Your internal user identifier for this profile. Use this to associate a profile with a user in your system.
+             */
+            userId?: string | null;
+        };
+        /**
+         * ProfileListResponse
+         * @description Response model for paginated profile list requests.
+         */
+        ProfileListResponse: {
+            /**
+             * Items
+             * @description List of profile views for the current page
+             */
+            items: components["schemas"]["ProfileView"][];
+            /**
+             * Total Items
+             * @description Total number of items in the list
+             */
+            totalItems: number;
+            /**
+             * Page Number
+             * @description Page number
+             */
+            pageNumber: number;
+            /**
+             * Page Size
+             * @description Number of items per page
+             */
+            pageSize: number;
+        };
+        /**
+         * ProfileNotFoundError
+         * @description Error response when a profile is not found
+         */
+        ProfileNotFoundError: {
+            /**
+             * Detail
+             * @default Profile not found
+             */
+            detail: string;
+        };
+        /**
+         * ProfileUpdateRequest
+         * @description Request model for updating a profile.
+         */
+        ProfileUpdateRequest: {
+            /**
+             * Name
+             * @description Optional name for the profile
+             */
+            name?: string | null;
+            /**
+             * User ID
+             * @description Your internal user identifier for this profile. Use this to associate a profile with a user in your system.
+             */
+            userId?: string | null;
+        };
+        /**
+         * ProfileView
+         * @description View model for representing a profile. A profile lets you preserve the login state between sessions.
+         *
+         *     We recommend that you create a separate profile for each user of your app.
+         *     You can assign a user_id to each profile to easily identify which user the profile belongs to.
+         */
+        ProfileView: {
+            /**
+             * ID
+             * Format: uuid
+             * @description Unique identifier for the profile
+             */
+            id: string;
+            /**
+             * User ID
+             * @description Your internal user identifier for this profile. Use this to associate a profile with a user in your system.
+             */
+            userId?: string | null;
+            /**
+             * Name
+             * @description Optional name for the profile
+             */
+            name?: string | null;
+            /**
+             * Last Used At
+             * @description Timestamp when the profile was last used
+             */
+            lastUsedAt?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Timestamp when the profile was created
+             */
+            createdAt: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description Timestamp when the profile was last updated
+             */
+            updatedAt: string;
+            /**
+             * Cookie Domains
+             * @description List of domain URLs that have cookies stored for this profile
+             */
+            cookieDomains?: string[] | null;
         };
         /**
          * ProxyCountryCode
@@ -464,6 +655,16 @@ export interface components {
              * @default false
              */
             enableRecording: boolean;
+            /**
+             * Skills
+             * @default true
+             */
+            skills: boolean;
+            /**
+             * Agentmail
+             * @default true
+             */
+            agentmail: boolean;
         };
         /** SessionListResponse */
         SessionListResponse: {
@@ -504,8 +705,11 @@ export interface components {
             isTaskSuccessful?: boolean | null;
             /** Liveurl */
             liveUrl?: string | null;
-            /** Recordingurl */
-            recordingUrl?: string | null;
+            /**
+             * Recordingurls
+             * @default []
+             */
+            recordingUrls: string[];
             /** Profileid */
             profileId?: string | null;
             /** Workspaceid */
@@ -548,6 +752,8 @@ export interface components {
              * @default 0
              */
             totalCostUsd: string;
+            /** Agentmailemail */
+            agentmailEmail?: string | null;
             /**
              * Createdat
              * Format: date-time
@@ -920,6 +1126,194 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FileUploadResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_profiles_profiles_get: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                pageNumber?: number;
+                query?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_profile_profiles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ProfileCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileView"];
+                };
+            };
+            /** @description Subscription required for additional profiles */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsufficientCreditsError"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+        };
+    };
+    get_profile_profiles__profile_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileView"];
+                };
+            };
+            /** @description Profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileNotFoundError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_browser_profile_profiles__profile_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_profile_profiles__profile_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileView"];
+                };
+            };
+            /** @description Profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileNotFoundError"];
                 };
             };
             /** @description Validation Error */

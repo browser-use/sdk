@@ -180,10 +180,9 @@ class Sessions:
         """
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
-            data = self._http.request("GET", f"/sessions/{session_id}")
-            urls = data.get("recordingUrls") or []
-            if urls:
-                return urls
+            session = self.get(session_id)
+            if session.recording_urls:
+                return list(session.recording_urls)
             time.sleep(interval)
         return []
 
@@ -349,9 +348,8 @@ class AsyncSessions:
         """
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
-            data = await self._http.request("GET", f"/sessions/{session_id}")
-            urls = data.get("recordingUrls") or []
-            if urls:
-                return urls
+            session = await self.get(session_id)
+            if session.recording_urls:
+                return list(session.recording_urls)
             await asyncio.sleep(interval)
         return []
