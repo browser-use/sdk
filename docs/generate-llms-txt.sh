@@ -49,8 +49,14 @@ generate() {
   local section="$1"
   local product="$2"
   local dir="$SCRIPT_DIR/$section"
-  local out_index="$dir/llms.txt"
-  local out_full="$dir/llms-full.txt"
+  local out_index="$SCRIPT_DIR/llms.txt"
+  local out_full="$SCRIPT_DIR/llms-full.txt"
+
+  # For open-source, output to its own directory
+  if [[ "$section" == "open-source" ]]; then
+    out_index="$dir/llms.txt"
+    out_full="$dir/llms-full.txt"
+  fi
 
   echo "# ${section} docs" > "$out_index"
   echo "" >> "$out_index"
@@ -119,8 +125,3 @@ generate() {
 
 generate "cloud" "Cloud"
 generate "open-source" "Open Source"
-
-# Root files mirror cloud (primary product)
-cp "$SCRIPT_DIR/cloud/llms.txt" "$SCRIPT_DIR/llms.txt"
-cp "$SCRIPT_DIR/cloud/llms-full.txt" "$SCRIPT_DIR/llms-full.txt"
-echo "Root llms.txt and llms-full.txt copied from cloud"
