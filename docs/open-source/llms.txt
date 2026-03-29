@@ -1,51 +1,47 @@
 # open-source docs
 
+- [Browser Use Open Source](https://docs.browser-use.com/open-source/introduction): Python library for AI browser automation with 79k+ GitHub stars. Connect any LLM and run locally or self-hosted.
+- [Human Quickstart](https://docs.browser-use.com/open-source/quickstart): Install and run your first AI browser agent in minutes. Python setup with pip, environment variables, and a working example.
+- [Prompts for Vibecoders](https://docs.browser-use.com/open-source/vibecoding): Complete Python SDK reference for AI coding agents. Paste into Claude Code, Cursor, or Copilot for instant integration.
+- [Supported Models](https://docs.browser-use.com/open-source/supported-models): Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider.
 - [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli): Fast, persistent browser automation from the command line.
-- [All Parameters](https://docs.browser-use.com/open-source/customize/agent/all-parameters): Complete reference for all agent configuration options — LLM settings, prompts, tools, output format, and callbacks.
 - [Configuration](https://docs.browser-use.com/open-source/customize/agent/basics): Configure the agent — set your LLM, define tasks, add custom tools, and control behavior with Python.
-- [Output Format](https://docs.browser-use.com/open-source/customize/agent/output-format): Control agent output — structured results, step history, action logs, and extracted content from browser automation tasks.
 - [Prompting Guide](https://docs.browser-use.com/open-source/customize/agent/prompting-guide): Write effective prompts for the agent. Tips for task descriptions, multi-step workflows, and getting reliable structured output.
-- [All Parameters](https://docs.browser-use.com/open-source/customize/browser/all-parameters): Complete reference for all browser configuration options — launch args, proxy, viewport, user data, and CDP settings.
-- [Authentication](https://docs.browser-use.com/open-source/customize/browser/authentication): Log into websites using real browser profiles, saved storage state, and 2FA codes for authenticated automation.
+- [Output Format](https://docs.browser-use.com/open-source/customize/agent/output-format): Control agent output — structured results, step history, action logs, and extracted content from browser automation tasks.
+- [All Parameters](https://docs.browser-use.com/open-source/customize/agent/all-parameters): Complete reference for all agent configuration options — LLM settings, prompts, tools, output format, and callbacks.
 - [Configuration](https://docs.browser-use.com/open-source/customize/browser/basics): Configure the browser instance — headless mode, viewport size, proxy settings, and Playwright launch options.
+- [Authentication](https://docs.browser-use.com/open-source/customize/browser/authentication): Log into websites using real browser profiles, saved storage state, and 2FA codes for authenticated automation.
 - [Real Browser](https://docs.browser-use.com/open-source/customize/browser/real-browser): Connect to your existing Chrome browser to preserve login sessions, cookies, and extensions for authenticated tasks.
 - [Remote Browser](https://docs.browser-use.com/open-source/customize/browser/remote): Connect to remote browsers via CDP — use with the Cloud, Browserbase, or any remote Chrome instance.
-- [Lifecycle Hooks](https://docs.browser-use.com/open-source/customize/hooks): Hook into agent lifecycle events — before/after actions, navigation, extraction, and error handling callbacks.
-- [MCP Server](https://docs.browser-use.com/open-source/customize/integrations/mcp-server): Run browser-use as a local Model Context Protocol server. Connect AI models to browser automation through the MCP standard.
-- [Basics](https://docs.browser-use.com/open-source/customize/skills/basics): Skills are your API for anything. Describe what you need in plain text, and get a production-ready API endpoint you can call repeatedly.
-- [Add Tools](https://docs.browser-use.com/open-source/customize/tools/add): Extend agents with custom Python functions. Add API calls, file operations, or any custom logic as agent tools.
-- [Available Tools](https://docs.browser-use.com/open-source/customize/tools/available): Built-in tools — click, type, scroll, extract, navigate, and more. Full list of default agent actions.
+- [All Parameters](https://docs.browser-use.com/open-source/customize/browser/all-parameters): Complete reference for all browser configuration options — launch args, proxy, viewport, user data, and CDP settings.
 - [Overview](https://docs.browser-use.com/open-source/customize/tools/basics): Learn about built-in browser actions and custom tools.
+- [Available Tools](https://docs.browser-use.com/open-source/customize/tools/available): Built-in tools — click, type, scroll, extract, navigate, and more. Full list of default agent actions.
+- [Add Tools](https://docs.browser-use.com/open-source/customize/tools/add): Extend agents with custom Python functions. Add API calls, file operations, or any custom logic as agent tools.
 - [Remove Tools](https://docs.browser-use.com/open-source/customize/tools/remove): Exclude default tools to restrict agent capabilities.
 - [Response Format](https://docs.browser-use.com/open-source/customize/tools/response): Customize how tools return data to the agent. Control response formatting, extraction, and content filtering.
-- [Development](https://docs.browser-use.com/open-source/development): Preview changes locally to update your docs
-- [Get Help](https://docs.browser-use.com/open-source/development/get-help): Get help — join 20k+ developers on Discord, search GitHub issues, or ask the community.
-- [Costs](https://docs.browser-use.com/open-source/development/monitoring/costs): Track token usage and API costs for your browser automation tasks
+- [MCP Server](https://docs.browser-use.com/open-source/customize/integrations/mcp-server): Run browser-use as a local Model Context Protocol server. Connect AI models to browser automation through the MCP standard.
+- [Basics](https://docs.browser-use.com/open-source/legacy/actor/basics): Low-level Playwright-like browser automation with direct and full CDP control and precise element interactions
+- [Examples](https://docs.browser-use.com/open-source/legacy/actor/examples): Comprehensive examples for Browser Actor automation tasks including forms, JavaScript, mouse operations, and AI features
+- [All Parameters](https://docs.browser-use.com/open-source/legacy/actor/all-parameters): Complete API reference for Browser Actor classes, methods, and parameters including BrowserSession, Page, Element, and Mouse
+- [Quickstart](https://docs.browser-use.com/open-source/legacy/sandbox/quickstart): Run browser automation in the cloud
+- [Events](https://docs.browser-use.com/open-source/legacy/sandbox/events): Monitor execution with callbacks
+- [All Parameters](https://docs.browser-use.com/open-source/legacy/sandbox/all-parameters): Sandbox configuration reference
+- [Fast Agent](https://docs.browser-use.com/open-source/examples/templates/fast-agent): Optimize agent performance for maximum speed and efficiency.
+- [Follow up tasks](https://docs.browser-use.com/open-source/examples/templates/follow-up-tasks): Follow up tasks with the same browser session.
+- [Parallel Agents](https://docs.browser-use.com/open-source/examples/templates/parallel-browser): Run multiple agents in parallel with separate browser instances
+- [Playwright Integration](https://docs.browser-use.com/open-source/examples/templates/playwright-integration): Advanced example showing Playwright and Browser-Use working together
+- [Sensitive Data](https://docs.browser-use.com/open-source/examples/templates/sensitive-data): Handle secret information securely and avoid sending PII & passwords to the LLM.
+- [Secure Setup](https://docs.browser-use.com/open-source/examples/templates/secure): Azure OpenAI with data privacy and security configuration.
+- [More Examples](https://docs.browser-use.com/open-source/examples/templates/more-examples): Explore additional examples and use cases on GitHub.
+- [Ad-Use (Ad Generator)](https://docs.browser-use.com/open-source/examples/apps/ad-use): Generate Instagram image ads and TikTok video ads from landing pages using browser agents, Google's Nano Banana 🍌, and Veo3.
+- [Vibetest-Use (Automated QA)](https://docs.browser-use.com/open-source/examples/apps/vibetest-use): Run multi-agent Browser-Use tests to catch UI bugs, broken links, and accessibility issues before they ship.
+- [News-Use (News Monitor)](https://docs.browser-use.com/open-source/examples/apps/news-use): Monitor news websites and extract articles with sentiment analysis using browser agents and Google Gemini.
+- [Msg-Use (WhatsApp Sender)](https://docs.browser-use.com/open-source/examples/apps/msg-use): AI-powered WhatsApp message scheduler using browser agents and Gemini. Schedule personalized messages in natural language.
+- [Local Development Setup](https://docs.browser-use.com/open-source/development/setup/local-setup): Set up for local development. Clone the repo, install dependencies, and run tests to start contributing.
+- [Contribution Guide](https://docs.browser-use.com/open-source/development/setup/contribution-guide): How to contribute — code standards, PR process, testing requirements, and submitting your first pull request.
+- [Lifecycle Hooks](https://docs.browser-use.com/open-source/customize/hooks): Hook into agent lifecycle events — before/after actions, navigation, extraction, and error handling callbacks.
 - [Observability](https://docs.browser-use.com/open-source/development/monitoring/observability): Trace agent execution steps and capture browser session recordings.
 - [OpenLIT](https://docs.browser-use.com/open-source/development/monitoring/openlit): Complete observability with OpenLIT tracing.
 - [Telemetry](https://docs.browser-use.com/open-source/development/monitoring/telemetry): Understanding Browser Use's telemetry
-- [n8n Integration](https://docs.browser-use.com/open-source/development/n8n-integration): Learn how to integrate Browser Use with n8n workflows
-- [Roadmap](https://docs.browser-use.com/open-source/development/roadmap): Future plans and upcoming features for Browser Use.
-- [Contribution Guide](https://docs.browser-use.com/open-source/development/setup/contribution-guide): How to contribute — code standards, PR process, testing requirements, and submitting your first pull request.
-- [Local Development Setup](https://docs.browser-use.com/open-source/development/setup/local-setup): Set up for local development. Clone the repo, install dependencies, and run tests to start contributing.
-- [Ad-Use (Ad Generator)](https://docs.browser-use.com/open-source/examples/apps/ad-use): Generate Instagram image ads and TikTok video ads from landing pages using browser agents, Google's Nano Banana 🍌, and Veo3.
-- [Msg-Use (WhatsApp Sender)](https://docs.browser-use.com/open-source/examples/apps/msg-use): AI-powered WhatsApp message scheduler using browser agents and Gemini. Schedule personalized messages in natural language.
-- [News-Use (News Monitor)](https://docs.browser-use.com/open-source/examples/apps/news-use): Monitor news websites and extract articles with sentiment analysis using browser agents and Google Gemini.
-- [Vibetest-Use (Automated QA)](https://docs.browser-use.com/open-source/examples/apps/vibetest-use): Run multi-agent Browser-Use tests to catch UI bugs, broken links, and accessibility issues before they ship.
-- [Fast Agent](https://docs.browser-use.com/open-source/examples/templates/fast-agent): Optimize agent performance for maximum speed and efficiency.
-- [Follow up tasks](https://docs.browser-use.com/open-source/examples/templates/follow-up-tasks): Follow up tasks with the same browser session.
-- [More Examples](https://docs.browser-use.com/open-source/examples/templates/more-examples): Explore additional examples and use cases on GitHub.
-- [Parallel Agents](https://docs.browser-use.com/open-source/examples/templates/parallel-browser): Run multiple agents in parallel with separate browser instances
-- [Playwright Integration](https://docs.browser-use.com/open-source/examples/templates/playwright-integration): Advanced example showing Playwright and Browser-Use working together
-- [Secure Setup](https://docs.browser-use.com/open-source/examples/templates/secure): Azure OpenAI with data privacy and security configuration.
-- [Sensitive Data](https://docs.browser-use.com/open-source/examples/templates/sensitive-data): Handle secret information securely and avoid sending PII & passwords to the LLM.
-- [Browser Use Open Source](https://docs.browser-use.com/open-source/introduction): Python library for AI browser automation with 79k+ GitHub stars. Connect any LLM and run locally or self-hosted.
-- [All Parameters](https://docs.browser-use.com/open-source/legacy/actor/all-parameters): Complete API reference for Browser Actor classes, methods, and parameters including BrowserSession, Page, Element, and Mouse
-- [Basics](https://docs.browser-use.com/open-source/legacy/actor/basics): Low-level Playwright-like browser automation with direct and full CDP control and precise element interactions
-- [Examples](https://docs.browser-use.com/open-source/legacy/actor/examples): Comprehensive examples for Browser Actor automation tasks including forms, JavaScript, mouse operations, and AI features
-- [All Parameters](https://docs.browser-use.com/open-source/legacy/sandbox/all-parameters): Sandbox configuration reference
-- [Events](https://docs.browser-use.com/open-source/legacy/sandbox/events): Monitor execution with callbacks
-- [Quickstart](https://docs.browser-use.com/open-source/legacy/sandbox/quickstart): Run browser automation in the cloud
-- [Human Quickstart](https://docs.browser-use.com/open-source/quickstart): Install and run your first AI browser agent in minutes. Python setup with pip, environment variables, and a working example.
-- [Supported Models](https://docs.browser-use.com/open-source/supported-models): Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider.
-- [Prompts for Vibecoders](https://docs.browser-use.com/open-source/vibecoding): Complete Python SDK reference for AI coding agents. Paste into Claude Code, Cursor, or Copilot for instant integration.
+- [Costs](https://docs.browser-use.com/open-source/development/monitoring/costs): Track token usage and API costs for your browser automation tasks
+- [Get Help](https://docs.browser-use.com/open-source/development/get-help): Get help — join 20k+ developers on Discord, search GitHub issues, or ask the community.
