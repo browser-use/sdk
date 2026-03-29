@@ -12,9 +12,12 @@ Create a raw CDP browser session for Playwright, Puppeteer, or Selenium.
 |-----------|--------|------------|-------------|
 | `proxy_country_code` | `str` | `proxyCountryCode: string` | Residential proxy country (default: `"us"`). |
 | `profile_id` | `str` | `profileId: string` | Load a saved browser profile. |
-| `timeout` | `int` | `timeout: number` | Session timeout in minutes (max: 240). |
+| `timeout` | `int` | `timeout: number` | Session timeout in minutes (default: 60, max: 240). |
 | `browser_screen_width` | `int` | `browserScreenWidth: number` | Browser width in pixels. |
 | `browser_screen_height` | `int` | `browserScreenHeight: number` | Browser height in pixels. |
+| `enable_recording` | `bool` | `enableRecording: boolean` | Record session as MP4 (default: `False`). |
+| `allow_resizing` | `bool` | `allowResizing: boolean` | Allow browser resize during session (default: `False`). |
+| `custom_proxy` | `dict` | `customProxy: object` | Custom proxy: `{host, port, username?, password?}`. Requires custom plan. |
 
 ### Return value
 
@@ -22,8 +25,21 @@ Create a raw CDP browser session for Playwright, Puppeteer, or Selenium.
 |-------|------|-------------|
 | `id` | `str` | Browser session UUID. |
 | `cdp_url` | `str` | Chrome DevTools Protocol URL. Connect with Playwright/Puppeteer/Selenium. |
-| `live_url` | `str` | Real-time browser view URL. |
+| `live_url` | `str` | Real-time browser view URL. Available immediately (no polling needed). |
 | `status` | `str` | `active` or `stopped`. |
+| `timeout_at` | `str` | Timestamp when session will auto-stop. |
+| `started_at` | `str` | Session start timestamp. |
+| `browser_cost` | `str` | Browser session cost in USD. |
+| `proxy_used_mb` | `str` | Proxy data transfer in MB. |
+| `proxy_cost` | `str` | Proxy cost in USD. |
+| `recording_url` | `str` | MP4 download URL (after session stops, if recording enabled). |
+
+### Stop a browser
+
+```
+PATCH /api/v3/browsers/{id}
+Body: {"action": "stop"}
+```
 
 ## WebSocket URL (no SDK)
 

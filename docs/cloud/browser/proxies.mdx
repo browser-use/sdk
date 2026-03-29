@@ -57,7 +57,8 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 session = await client.sessions.create(
     custom_proxy={
-        "url": "http://proxy.example.com:8080",
+        "host": "proxy.example.com",
+        "port": 8080,
         "username": "user",
         "password": "pass",
     },
@@ -69,7 +70,8 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const session = await client.sessions.create({
   customProxy: {
-    url: "http://proxy.example.com:8080",
+    host: "proxy.example.com",
+    port: 8080,
     username: "user",
     password: "pass",
   },

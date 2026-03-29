@@ -493,19 +493,31 @@ Source: https://docs.browser-use.com/cloud/agent/parameters
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `output` | `str` or structured type | The agent's result. |
 | `id` | `str` | Session UUID. |
-| `status` | `str` | `idle`, `stopped`, `timed_out`, or `error`. |
-| `live_url` | `str` | Real-time browser view URL (poll `sessions.get()` — null until browser starts). |
+| `status` | `str` | See session statuses below. |
+| `output` | `str` or structured type | The agent's result. |
+| `model` | `str` | Model used (`bu-mini` or `bu-max`). |
+| `title` | `str` | Auto-generated task title. |
+| `is_task_successful` | `bool` | Whether the agent completed the task successfully. |
+| `step_count` | `int` | Number of agent steps taken. |
+| `last_step_summary` | `str` | Summary of the last step. |
+| `live_url` | `str` | Real-time browser view URL. Null until browser starts — poll `sessions.get()`. |
 | `recording_urls` | `list[str]` | MP4 download URLs (if `enable_recording=True`). |
+| `screenshot_url` | `str` | Final page screenshot (presigned URL). |
 | `total_cost_usd` | `str` | Total cost for this task. |
 | `llm_cost_usd` | `str` | LLM token cost. |
 | `proxy_cost_usd` | `str` | Proxy data transfer cost. |
 | `browser_cost_usd` | `str` | Browser session cost. |
+| `proxy_used_mb` | `str` | Proxy data transfer in MB. |
 | `total_input_tokens` | `int` | Input tokens used. |
 | `total_output_tokens` | `int` | Output tokens used. |
-| `model` | `str` | Model used (`bu-mini` or `bu-max`). |
-| `is_task_successful` | `bool` | Whether the agent completed the task successfully. |
+| `profile_id` | `str` | Profile used (if set). |
+| `workspace_id` | `str` | Workspace used (if set). |
+| `proxy_country_code` | `str` | Proxy country used. |
+| `max_cost_usd` | `str` | Cost cap that was set. Default: `$20`. |
+| `agentmail_email` | `str` | Unique email address for this session (e.g. `name@mail.bu.app`). |
+| `created_at` | `str` | Session creation timestamp. |
+| `updated_at` | `str` | Last update timestamp. |
 
 ### Session statuses
 
@@ -616,7 +628,8 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 session = await client.sessions.create(
     custom_proxy={
-        "url": "http://proxy.example.com:8080",
+        "host": "proxy.example.com",
+        "port": 8080,
         "username": "user",
         "password": "pass",
     },
@@ -628,7 +641,8 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const session = await client.sessions.create({
   customProxy: {
-    url: "http://proxy.example.com:8080",
+    host: "proxy.example.com",
+    port: 8080,
     username: "user",
     password: "pass",
   },
@@ -1001,9 +1015,12 @@ Create a raw CDP browser session for Playwright, Puppeteer, or Selenium.
 |-----------|--------|------------|-------------|
 | `proxy_country_code` | `str` | `proxyCountryCode: string` | Residential proxy country (default: `"us"`). |
 | `profile_id` | `str` | `profileId: string` | Load a saved browser profile. |
-| `timeout` | `int` | `timeout: number` | Session timeout in minutes (max: 240). |
+| `timeout` | `int` | `timeout: number` | Session timeout in minutes (default: 60, max: 240). |
 | `browser_screen_width` | `int` | `browserScreenWidth: number` | Browser width in pixels. |
 | `browser_screen_height` | `int` | `browserScreenHeight: number` | Browser height in pixels. |
+| `enable_recording` | `bool` | `enableRecording: boolean` | Record session as MP4 (default: `False`). |
+| `allow_resizing` | `bool` | `allowResizing: boolean` | Allow browser resize during session (default: `False`). |
+| `custom_proxy` | `dict` | `customProxy: object` | Custom proxy: `{host, port, username?, password?}`. Requires custom plan. |
 
 ### Return value
 
@@ -1011,8 +1028,21 @@ Create a raw CDP browser session for Playwright, Puppeteer, or Selenium.
 |-------|------|-------------|
 | `id` | `str` | Browser session UUID. |
 | `cdp_url` | `str` | Chrome DevTools Protocol URL. Connect with Playwright/Puppeteer/Selenium. |
-| `live_url` | `str` | Real-time browser view URL. |
+| `live_url` | `str` | Real-time browser view URL. Available immediately (no polling needed). |
 | `status` | `str` | `active` or `stopped`. |
+| `timeout_at` | `str` | Timestamp when session will auto-stop. |
+| `started_at` | `str` | Session start timestamp. |
+| `browser_cost` | `str` | Browser session cost in USD. |
+| `proxy_used_mb` | `str` | Proxy data transfer in MB. |
+| `proxy_cost` | `str` | Proxy cost in USD. |
+| `recording_url` | `str` | MP4 download URL (after session stops, if recording enabled). |
+
+### Stop a browser
+
+```
+PATCH /api/v3/browsers/{id}
+Body: {"action": "stop"}
+```
 
 ## WebSocket URL (no SDK)
 
