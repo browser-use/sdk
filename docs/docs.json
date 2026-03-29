@@ -79,7 +79,6 @@
                       "cloud/guides/proxies-and-stealth",
                       "cloud/browser/live-preview",
                       "cloud/browser/playwright-puppeteer-selenium",
-                      "cloud/guides/sessions",
                       {
                         "group": "Authentication",
                         "icon": "key",
@@ -329,6 +328,7 @@
   "redirects": [
     {"source": "/", "destination": "/cloud/quickstart"},
     {"source": "/cloud/new-features/api-v3", "destination": "/cloud/agent/quickstart"},
+    {"source": "/cloud/guides/sessions", "destination": "/cloud/guides/authentication"},
     {"source": "/cloud/guides/tasks", "destination": "/cloud/agent/quickstart"},
     {"source": "/cloud/guides/workspaces", "destination": "/cloud/agent/workspaces"},
     {"source": "/cloud/guides/browser-api", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
