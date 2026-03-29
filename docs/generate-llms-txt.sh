@@ -174,7 +174,7 @@ CLOUD_FULL="$SCRIPT_DIR/llms-full.txt"
 cat > "$CLOUD_INDEX" << 'HEADER'
 # Browser Use Cloud SDK
 
-> Easiest way to automate the web. Tell an agent in natural language what to do.
+> The most SOTA browser agent and the most scalable browser infrastructure. Built on the largest AI browser automation open-source library on GitHub with almost 100k stars.
 
 - GitHub: https://github.com/browser-use/browser-use
 - Dashboard: https://cloud.browser-use.com
@@ -182,6 +182,9 @@ cat > "$CLOUD_INDEX" << 'HEADER'
 - Open Source: https://github.com/browser-use/browser-use
 - Docs: https://docs.browser-use.com
 - OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
+- Stealth benchmark: https://browser-use.com/posts/stealth-benchmark
+- Agent benchmark (online Mind2Web): https://browser-use.com/posts/online-mind2web-benchmark
+- Blog: https://browser-use.com/posts
 - API v2 Reference: https://docs.browser-use.com/cloud/api-v2-overview
 
 Install:
