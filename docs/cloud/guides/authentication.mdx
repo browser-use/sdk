@@ -39,6 +39,9 @@ profiles = await client.profiles.list()
 for p in profiles:
     print(p.id, p.name)
 
+# Search by name
+results = await client.profiles.list(query="linkedin")
+
 # Get one
 profile = await client.profiles.get(profile_id)
 
@@ -57,6 +60,9 @@ const profiles = await client.profiles.list();
 for (const p of profiles) {
   console.log(p.id, p.name);
 }
+
+// Search by name
+const results = await client.profiles.list({ query: "linkedin" });
 
 // Get one
 const profile = await client.profiles.get(profileId);
