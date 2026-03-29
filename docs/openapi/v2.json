@@ -6299,10 +6299,11 @@
           "created",
           "started",
           "finished",
+          "failed",
           "stopped"
         ],
         "title": "TaskStatus",
-        "description": "Enumeration of possible task execution states\n\nAttributes:\n        CREATED: Task has been created but not yet started.\n    STARTED: Task has been started and is currently running.\n    FINISHED: Task has finished and the agent has completed the task.\n    STOPPED: Task execution has been manually stopped (cannot be resumed)."
+        "description": "Enumeration of possible task execution states\n\nAttributes:\n        CREATED: Task has been created but not yet started.\n    STARTED: Task has been started and is currently running.\n    FINISHED: Task has finished and the agent has completed the task.\n    FAILED: Task execution failed due to an error.\n    STOPPED: Task execution has been manually stopped (cannot be resumed)."
       },
       "TaskStatusView": {
         "properties": {

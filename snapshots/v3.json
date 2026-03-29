@@ -539,6 +539,305 @@
         }
       }
     },
+    "/profiles": {
+      "get": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "List Profiles",
+        "description": "Get paginated list of profiles.\n\nUse the `query` parameter to search profiles by name or user_id.\nThis is useful when you have many profiles and need to find a specific user.\n\nExample: If you set `user_id` to your internal user identifier when creating profiles,\nyou can later search for that user by passing their identifier as the `query` parameter.",
+        "operationId": "list_profiles_profiles_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Create Profile",
+        "description": "Profiles allow you to preserve the state of the browser between tasks.\n\nThey are most commonly used to allow users to preserve the log-in state in the agent between tasks.\nYou'd normally create one profile per user and then use it for all their tasks.\n\nYou can set a `user_id` when creating a profile to associate it with a user in your system.\nThis allows you to later search for the profile using the GET /profiles endpoint with a query parameter.",
+        "operationId": "create_profile_profiles_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Subscription required for additional profiles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsufficientCreditsError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{profile_id}": {
+      "get": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Get Profile",
+        "description": "Get profile details.",
+        "operationId": "get_profile_profiles__profile_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Profile not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Update Profile",
+        "description": "Update a browser profile's information.",
+        "operationId": "update_profile_profiles__profile_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Profile not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Delete Browser Profile",
+        "description": "Permanently delete a browser profile and its configuration.",
+        "operationId": "delete_browser_profile_profiles__profile_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/workspaces": {
       "get": {
         "tags": [
@@ -1086,7 +1385,8 @@
         "type": "string",
         "enum": [
           "bu-mini",
-          "bu-max"
+          "bu-max",
+          "bu-ultra"
         ],
         "title": "BuModel"
       },
@@ -1278,6 +1578,18 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "InsufficientCreditsError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Insufficient credits"
+          }
+        },
+        "type": "object",
+        "title": "InsufficientCreditsError",
+        "description": "Error response when there are insufficient credits"
+      },
       "MessageListResponse": {
         "properties": {
           "messages": {
@@ -1346,6 +1658,202 @@
           "createdAt"
         ],
         "title": "MessageResponse"
+      },
+      "ProfileCreateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Optional name for the profile"
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User ID",
+            "description": "Your internal user identifier for this profile. Use this to associate a profile with a user in your system."
+          }
+        },
+        "type": "object",
+        "title": "ProfileCreateRequest",
+        "description": "Request model for creating a new profile."
+      },
+      "ProfileListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileView"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of profile views for the current page"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "ProfileListResponse",
+        "description": "Response model for paginated profile list requests."
+      },
+      "ProfileNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Profile not found"
+          }
+        },
+        "type": "object",
+        "title": "ProfileNotFoundError",
+        "description": "Error response when a profile is not found"
+      },
+      "ProfileUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Optional name for the profile"
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User ID",
+            "description": "Your internal user identifier for this profile. Use this to associate a profile with a user in your system."
+          }
+        },
+        "type": "object",
+        "title": "ProfileUpdateRequest",
+        "description": "Request model for updating a profile."
+      },
+      "ProfileView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the profile"
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User ID",
+            "description": "Your internal user identifier for this profile. Use this to associate a profile with a user in your system."
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Optional name for the profile"
+          },
+          "lastUsedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At",
+            "description": "Timestamp when the profile was last used"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Timestamp when the profile was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Timestamp when the profile was last updated"
+          },
+          "cookieDomains": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cookie Domains",
+            "description": "List of domain URLs that have cookies stored for this profile"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "ProfileView",
+        "description": "View model for representing a profile. A profile lets you preserve the login state between sessions.\n\nWe recommend that you create a separate profile for each user of your app.\nYou can assign a user_id to each profile to easily identify which user the profile belongs to."
       },
       "ProxyCountryCode": {
         "type": "string",
@@ -1705,6 +2213,16 @@
             "type": "boolean",
             "title": "Enablerecording",
             "default": false
+          },
+          "skills": {
+            "type": "boolean",
+            "title": "Skills",
+            "default": true
+          },
+          "agentmail": {
+            "type": "boolean",
+            "title": "Agentmail",
+            "default": true
           }
         },
         "type": "object",
@@ -1825,16 +2343,13 @@
             ],
             "title": "Liveurl"
           },
-          "recordingUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Recordingurl"
+          "recordingUrls": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recordingurls",
+            "default": []
           },
           "profileId": {
             "anyOf": [
@@ -1921,6 +2436,17 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Totalcostusd",
             "default": "0"
+          },
+          "agentmailEmail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agentmailemail"
           },
           "createdAt": {
             "type": "string",

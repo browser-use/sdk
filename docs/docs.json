@@ -137,14 +137,14 @@
                 "pages": ["cloud/api-reference"]
               },
               {
-                "group": "BU Agent API",
+                "group": "API v3",
                 "openapi": {
                   "source": "cloud/openapi/v3.json",
                   "directory": "cloud/api-v3"
                 }
               },
               {
-                "group": "API v2 (Stable)",
+                "group": "API v2 (Legacy)",
                 "openapi": {
                   "source": "cloud/openapi/v2.json",
                   "directory": "cloud/api-v2"

@@ -1,6 +1,6 @@
 ---
 title: API Reference
-description: "Complete REST API reference for v2 and v3. Endpoints, authentication, SDKs, and request/response examples."
+description: "Complete REST API reference for v3 and v2. Endpoints, authentication, SDKs, and request/response examples."
 mode: wide
 ---
 
@@ -13,37 +13,25 @@ Get your key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/s
 ## API Versions
 
 <CardGroup cols={2}>
-  <Card title="BU Agent API (v3)" icon="bolt">
-    **Recommended for new projects.** Session-based agent API with simplified resource model.
+  <Card title="API v3" icon="bolt">
+    **Recommended for new projects.** Session-based agent API.
 
     Base URL: `https://api.browser-use.com/api/v3`
 
-    **Resources:** Sessions, Messages, Files, Workspaces
-
-    - Create sessions with optional tasks
-    - Structured output via JSON Schema
-    - File upload/download per session
-    - Persistent workspaces across sessions
-    - Models: `bu-mini` (default) and `bu-max`
+    **Resources:** Sessions, Messages, Files, Workspaces, Profiles
   </Card>
-  <Card title="Cloud API v2 (Stable)" icon="shield-check">
-    **Full-featured stable API.** Task-based with extended resources.
+  <Card title="API v2 (Legacy)" icon="box-archive">
+    Task-based API with extended resources.
 
     Base URL: `https://api.browser-use.com/api/v2`
 
     **Resources:** Tasks, Sessions, Profiles, Browsers, Skills, Marketplace, Billing
-
-    - Run tasks with streaming step logs
-    - Browser profiles for persistent state
-    - Direct CDP browser access
-    - Skills: turn websites into API endpoints
-    - Skill marketplace
   </Card>
 </CardGroup>
 
 ## SDKs
 
-Both APIs ship in a single package. Install once, import by version.
+Both APIs ship in a single package.
 
 <CodeGroup>
 ```bash npm
@@ -54,40 +42,9 @@ pip install browser-use-sdk
 ```
 </CodeGroup>
 
-<CodeGroup>
-```typescript v3 (TypeScript)
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-const result = await client.run("Find the top HN post");
-console.log(result.output);
-```
-```python v3 (Python)
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-result = await client.run("Find the top HN post")
-print(result.output)
-```
-```typescript v2 (TypeScript)
-import { BrowserUse } from "browser-use-sdk";
-
-const client = new BrowserUse();
-const result = await client.run("Find the top HN post");
-console.log(result.output);
-```
-```python v2 (Python)
-from browser_use_sdk import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-result = await client.run("Find the top HN post")
-print(result.output)
-```
-</CodeGroup>
-
 ## Endpoint Overview
 
-### BU Agent API (v3)
+### API v3
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -105,10 +62,16 @@ print(result.output)
 | <span className="method-badge method-patch">PATCH</span> | `/workspaces/{id}` | Update workspace metadata |
 | <span className="method-badge method-delete">DELETE</span> | `/workspaces/{id}` | Delete a workspace |
 | <span className="method-badge method-get">GET</span> | `/workspaces/{id}/files` | List workspace files |
-| <span className="method-badge method-get">GET</span> | `/workspaces/{id}/size` | Get workspace storage usage |
+| <span className="method-badge method-delete">DELETE</span> | `/workspaces/{id}/files` | Delete workspace files |
 | <span className="method-badge method-post">POST</span> | `/workspaces/{id}/files/upload` | Upload files to workspace |
+| <span className="method-badge method-get">GET</span> | `/workspaces/{id}/size` | Get workspace storage usage |
+| <span className="method-badge method-get">GET</span> | `/profiles` | List profiles |
+| <span className="method-badge method-post">POST</span> | `/profiles` | Create a profile |
+| <span className="method-badge method-get">GET</span> | `/profiles/{id}` | Get profile details |
+| <span className="method-badge method-patch">PATCH</span> | `/profiles/{id}` | Update a profile |
+| <span className="method-badge method-delete">DELETE</span> | `/profiles/{id}` | Delete a profile |
 
-### Cloud API v2 (Stable)
+### API v2 (Legacy)
 
 | Method | Path | Description |
 |--------|------|-------------|
