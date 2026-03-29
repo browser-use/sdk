@@ -96,9 +96,9 @@
               {
                 "group": "Integrations",
                 "pages": [
+                  "cloud/tutorials/integrations/openclaw",
                   "cloud/guides/mcp-server",
                   "cloud/guides/webhooks",
-                  "cloud/tutorials/integrations/openclaw",
                   "cloud/tutorials/integrations/n8n"
                 ]
               },
