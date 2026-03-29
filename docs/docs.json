@@ -80,7 +80,14 @@
                       "cloud/browser/live-preview",
                       "cloud/browser/playwright-puppeteer-selenium",
                       "cloud/guides/sessions",
-                      "cloud/guides/authentication"
+                      {
+                        "group": "Authentication",
+                        "icon": "key",
+                        "pages": [
+                          "cloud/guides/authentication",
+                          "cloud/guides/1password"
+                        ]
+                      }
                     ]
                   }
                 ]
