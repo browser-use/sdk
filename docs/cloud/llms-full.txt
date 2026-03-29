@@ -27,7 +27,7 @@ export BROWSER_USE_API_KEY=your_key
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 async def main():
     client = AsyncBrowserUse()
@@ -37,13 +37,17 @@ async def main():
 asyncio.run(main())
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Find the top 3 trending repos on GitHub today");
 console.log(result.output);
 ```
 </CodeGroup>
+
+<Note>
+  Want a full working app? See the [Chat UI example](/cloud/tutorials/chat-ui) — a complete Next.js app with live browser preview, streaming messages, authentication, and session management.
+</Note>
 
 
 # Prompt for Vibecoders
@@ -59,14 +63,14 @@ Source: https://docs.browser-use.com/cloud/agent/quickstart
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run("Find the top 3 trending repos on GitHub today")
 print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Find the top 3 trending repos on GitHub today");
@@ -93,7 +97,7 @@ Source: https://docs.browser-use.com/cloud/agent/structured-output
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 from pydantic import BaseModel
 
 class Contact(BaseModel):
@@ -109,7 +113,7 @@ result = await client.run(
 print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import { z } from "zod";
 
 const Contact = z.object({
@@ -134,7 +138,7 @@ Source: https://docs.browser-use.com/cloud/agent/follow-up-tasks
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
@@ -153,7 +157,7 @@ result2 = await client.run(
 await client.sessions.stop(str(session.id))
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 
@@ -187,7 +191,7 @@ Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool 
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(task="Find the top story on Hacker News")
@@ -208,7 +212,7 @@ while True:
     await asyncio.sleep(2)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({
@@ -251,7 +255,7 @@ Upload a file to a workspace, then tell the agent to use it.
 <CodeGroup>
 ```python Python
 import httpx
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
@@ -279,7 +283,7 @@ result = await client.run(
 print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import { readFileSync } from "fs";
 
 const client = new BrowserUse();
@@ -313,7 +317,7 @@ Run a task that saves files to a workspace, then download them.
 <CodeGroup>
 ```python Python
 import httpx
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
@@ -335,7 +339,7 @@ for f in files.files:
             out.write(resp.content)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import { writeFileSync } from "fs";
 
 const client = new BrowserUse();
@@ -398,7 +402,7 @@ Source: https://docs.browser-use.com/cloud/agent/human-in-the-loop
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
@@ -427,7 +431,7 @@ print(result.output)
 await client.sessions.stop(session.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 import * as readline from "readline";
 
 const client = new BrowserUse();
@@ -484,7 +488,7 @@ A US residential proxy is active by default on every session. To route through a
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
@@ -493,7 +497,7 @@ result = await client.run(
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Get the price of iPhone 16 on amazon.de", {
@@ -528,7 +532,7 @@ Bring your own proxy server (HTTP or SOCKS5). Requires custom plan.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(
@@ -540,7 +544,7 @@ session = await client.sessions.create(
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({
@@ -565,7 +569,7 @@ Source: https://docs.browser-use.com/cloud/browser/live-preview
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create("Check how many GitHub stars browser-use has")
@@ -579,7 +583,7 @@ while True:
     await asyncio.sleep(0.5)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({
@@ -632,7 +636,7 @@ Enable recording to get an MP4 video of the session after it completes.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
@@ -644,7 +648,7 @@ for url in result.recording_urls:
     print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Check how many GitHub stars browser-use has", {
@@ -679,7 +683,7 @@ Source: https://docs.browser-use.com/cloud/guides/authentication
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 profile = await client.profiles.create(name="user-id-1")
@@ -690,7 +694,7 @@ result = await client.run("Check browser-use github stars", session_id=session.i
 print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const profile = await client.profiles.create({ name: "user-id-1" });
@@ -777,14 +781,14 @@ This opens a browser where you select which accounts to sync. After syncing, you
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(profile_id="your_synced_profile_id")
 result = await client.run("Check my LinkedIn messages", session_id=session.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({ profileId: "your_synced_profile_id" });
@@ -793,154 +797,6 @@ const result = await client.run("Check my LinkedIn messages", {
 });
 ```
 </CodeGroup>
-
-
-# Secrets
-Source: https://docs.browser-use.com/cloud/guides/secrets
-
-
-Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
-
-<CodeGroup>
-```python Python
-from browser_use_sdk import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-result = await client.run(
-    "Log into GitHub and star the browser-use/browser-use repo",
-    secrets={"github.com": "username:password123"},
-    allowed_domains=["github.com"],
-)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
-
-const client = new BrowserUse();
-const result = await client.run(
-  "Log into GitHub and star the browser-use/browser-use repo",
-  {
-    secrets: { "github.com": "username:password123" },
-    allowedDomains: ["github.com"],
-  },
-);
-```
-</CodeGroup>
-
-Use `allowed_domains` to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`.
-
-For SSO/OAuth redirects, include all domains in the auth flow:
-
-<CodeGroup>
-```python Python
-result = await client.run(
-    "Log into the company portal and download the Q4 report",
-    secrets={
-        "portal.example.com": "user@company.com:password123",
-        "okta.com": "user@company.com:password123",
-    },
-    allowed_domains=["portal.example.com", "*.okta.com"],
-)
-```
-```typescript TypeScript
-const result = await client.run(
-  "Log into the company portal and download the Q4 report",
-  {
-    secrets: {
-      "portal.example.com": "user@company.com:password123",
-      "okta.com": "user@company.com:password123",
-    },
-    allowedDomains: ["portal.example.com", "*.okta.com"],
-  },
-);
-```
-</CodeGroup>
-
-
-# 1Password & 2FA
-Source: https://docs.browser-use.com/cloud/guides/1password
-
-
-## Setup
-
-### 1. Create a dedicated vault
-
-Create a new vault in 1Password for Browser Use. Add the credentials you want the agent to access (usernames, passwords, and 2FA/TOTP codes).
-
-### 2. Create a service account token
-
-1. Go to [1Password Developer Tools - Service Accounts](https://my.1password.eu/developer-tools/active/service-accounts)
-2. Click **New Service Account**, name it "Browser Use Cloud"
-3. Grant **read access** to the dedicated vault
-4. Copy the generated token
-
-### 3. Connect to Browser Use Cloud
-
-1. Go to [Browser Use Cloud Settings - Secrets](https://cloud.browser-use.com/settings?tab=secrets)
-2. Click **Create Integration**
-3. Paste your service account token
-
-## Run tasks with 1Password
-
-<CodeGroup>
-```python Python
-from browser_use_sdk import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-result = await client.run(
-    "Log into my Jira account and create a new ticket",
-    op_vault_id="your-vault-id",
-    allowed_domains=["*.atlassian.net"],
-)
-print(result.output)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
-
-const client = new BrowserUse();
-const result = await client.run(
-  "Log into my Jira account and create a new ticket",
-  {
-    opVaultId: "your-vault-id",
-    allowedDomains: ["*.atlassian.net"],
-  },
-);
-console.log(result.output);
-```
-</CodeGroup>
-
-For SSO/OAuth redirects, include all required domains:
-
-<CodeGroup>
-```python Python
-result = await client.run(
-    "Log into Jira and create a ticket for the Q4 release",
-    op_vault_id="your-vault-id",
-    allowed_domains=["*.atlassian.net", "*.okta.com"],
-)
-```
-```typescript TypeScript
-const result = await client.run(
-  "Log into Jira and create a ticket for the Q4 release",
-  {
-    opVaultId: "your-vault-id",
-    allowedDomains: ["*.atlassian.net", "*.okta.com"],
-  },
-);
-```
-</CodeGroup>
-
-## How it works
-
-When the agent encounters a login form:
-
-1. It identifies the service (e.g., Twitter, GitHub, LinkedIn)
-2. Retrieves matching credentials from your 1Password vault
-3. Fills in the username and password
-4. If 2FA is required and a TOTP code is stored, it generates and enters the code automatically
-
-<Note>
-  The agent never sees your actual credentials. The actual username, password, and 2FA codes are filled in programmatically — keeping your secrets hidden from the AI model.
-</Note>
 
 
 # Playwright, Puppeteer, Selenium
@@ -1000,7 +856,7 @@ await browser.close();
 ```python
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 browser = await client.browsers.create()
@@ -1032,7 +888,7 @@ Create a browser via the SDK, get a `cdp_url`, connect with your framework.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 browser = await client.browsers.create(proxy_country_code="us")
@@ -1040,7 +896,7 @@ print(browser.cdp_url)   # ws://...
 print(browser.live_url)  # debug view
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const browser = await client.browsers.create({ proxyCountryCode: "us" });
@@ -1448,15 +1304,11 @@ All SDK calls live in a single file: `src/lib/api.ts`.
 
 ## Setup: SDK Clients
 
-The app uses both SDK versions — v3 for the agent session API and v2 for profiles (which are not on v3 yet).
-
 ```typescript api.ts
-import { BrowserUse as BrowserUseV3 } from "browser-use-sdk/v3";
-import { BrowserUse as BrowserUseV2 } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const apiKey = process.env.NEXT_PUBLIC_BROWSER_USE_API_KEY ?? "";
-const v3 = new BrowserUseV3({ apiKey });
-const v2 = new BrowserUseV2({ apiKey });
+const client = new BrowserUse({ apiKey });
 ```
 
 <Warning>
@@ -1478,7 +1330,7 @@ export async function createSession(opts: {
   workspaceId?: string;
   proxyCountryCode?: string;
 }) {
-  return v3.sessions.create({
+  return client.sessions.create({
     model: opts.model as "bu-mini" | "bu-max",
     keepAlive: true,
     ...(opts.profileId && { profileId: opts.profileId }),
@@ -1488,7 +1340,7 @@ export async function createSession(opts: {
 }
 
 export async function sendTask(sessionId: string, task: string) {
-  return v3.sessions.create({ sessionId, task, keepAlive: true });
+  return client.sessions.create({ sessionId, task, keepAlive: true });
 }
 ```
 
@@ -1502,11 +1354,11 @@ The settings dropdowns are populated by two list calls:
 
 ```typescript api.ts
 export async function listProfiles() {
-  return v2.profiles.list({ pageSize: 100 });
+  return client.profiles.list({ pageSize: 100 });
 }
 
 export async function listWorkspaces() {
-  return v3.workspaces.list({ pageSize: 100 });
+  return client.workspaces.list({ pageSize: 100 });
 }
 ```
 
@@ -1552,15 +1404,15 @@ The session page needs three more SDK calls:
 
 ```typescript api.ts
 export async function getSession(id: string) {
-  return v3.sessions.get(id);
+  return client.sessions.get(id);
 }
 
 export async function getMessages(id: string, limit = 100) {
-  return v3.sessions.messages(id, { limit });
+  return client.sessions.messages(id, { limit });
 }
 
 export async function stopTask(id: string) {
-  await v3.sessions.stop(id, { strategy: "task" });
+  await client.sessions.stop(id, { strategy: "task" });
 }
 ```
 
@@ -1685,12 +1537,12 @@ The full SDK surface used by this app:
 
 | Method | Purpose |
 |--------|---------|
-| `v3.sessions.create()` | Create a session, send tasks |
-| `v3.sessions.get()` | Poll session status |
-| `v3.sessions.messages()` | Poll conversation messages |
-| `v3.sessions.stop()` | Stop the current task |
-| `v3.workspaces.list()` | Populate workspace dropdown |
-| `v2.profiles.list()` | Populate profile dropdown |
+| `client.sessions.create()` | Create a session, send tasks |
+| `client.sessions.get()` | Poll session status |
+| `client.sessions.messages()` | Poll conversation messages |
+| `client.sessions.stop()` | Stop the current task |
+| `client.workspaces.list()` | Populate workspace dropdown |
+| `client.profiles.list()` | Populate profile dropdown |
 
 The complete source is at [github.com/browser-use/chat-ui-example](https://github.com/browser-use/chat-ui-example).
 
@@ -1884,7 +1736,7 @@ console.log(run.result?.output);  // final result after iteration
 | `start_url` | `str` | Initial page URL. Saves steps — send the agent directly there. |
 | `secrets` | `dict` | Domain-specific credentials. See [Authentication](/cloud/guides/authentication). |
 | `allowed_domains` | `list[str]` | Restrict agent to these domains only. |
-| `session_settings` | `SessionSettings` | Proxy, profile, browser config. See [Sessions](/cloud/guides/sessions). |
+| `session_settings` | `SessionSettings` | Proxy, profile, browser config. See [Profiles](/cloud/guides/authentication). |
 | `flash_mode` | `bool` | Faster but less careful navigation. |
 | `thinking` | `bool` | Enable extended reasoning. |
 | `vision` | `bool \| str` | Enable screenshots for the agent. |
@@ -1991,7 +1843,155 @@ const result = await client.marketplace.execute(skillId, { parameters: { ... } }
 ```
 </CodeGroup>
 
-See [Models & Pricing](/cloud/pricing) for skill costs.
+See [Pricing](https://browser-use.com/pricing) for skill costs.
+
+
+# 1Password & 2FA
+Source: https://docs.browser-use.com/cloud/guides/1password
+
+
+## Setup
+
+### 1. Create a dedicated vault
+
+Create a new vault in 1Password for Browser Use. Add the credentials you want the agent to access (usernames, passwords, and 2FA/TOTP codes).
+
+### 2. Create a service account token
+
+1. Go to [1Password Developer Tools - Service Accounts](https://my.1password.eu/developer-tools/active/service-accounts)
+2. Click **New Service Account**, name it "Browser Use Cloud"
+3. Grant **read access** to the dedicated vault
+4. Copy the generated token
+
+### 3. Connect to Browser Use Cloud
+
+1. Go to [Browser Use Cloud Settings - Secrets](https://cloud.browser-use.com/settings?tab=secrets)
+2. Click **Create Integration**
+3. Paste your service account token
+
+## Run tasks with 1Password
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Log into my Jira account and create a new ticket",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net"],
+)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Log into my Jira account and create a new ticket",
+  {
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net"],
+  },
+);
+console.log(result.output);
+```
+</CodeGroup>
+
+For SSO/OAuth redirects, include all required domains:
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Log into Jira and create a ticket for the Q4 release",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net", "*.okta.com"],
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Log into Jira and create a ticket for the Q4 release",
+  {
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net", "*.okta.com"],
+  },
+);
+```
+</CodeGroup>
+
+## How it works
+
+When the agent encounters a login form:
+
+1. It identifies the service (e.g., Twitter, GitHub, LinkedIn)
+2. Retrieves matching credentials from your 1Password vault
+3. Fills in the username and password
+4. If 2FA is required and a TOTP code is stored, it generates and enters the code automatically
+
+<Note>
+  The agent never sees your actual credentials. The actual username, password, and 2FA codes are filled in programmatically — keeping your secrets hidden from the AI model.
+</Note>
+
+
+# Secrets
+Source: https://docs.browser-use.com/cloud/guides/secrets
+
+
+Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Log into GitHub and star the browser-use/browser-use repo",
+    secrets={"github.com": "username:password123"},
+    allowed_domains=["github.com"],
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Log into GitHub and star the browser-use/browser-use repo",
+  {
+    secrets: { "github.com": "username:password123" },
+    allowedDomains: ["github.com"],
+  },
+);
+```
+</CodeGroup>
+
+Use `allowed_domains` to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`.
+
+For SSO/OAuth redirects, include all domains in the auth flow:
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Log into the company portal and download the Q4 report",
+    secrets={
+        "portal.example.com": "user@company.com:password123",
+        "okta.com": "user@company.com:password123",
+    },
+    allowed_domains=["portal.example.com", "*.okta.com"],
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Log into the company portal and download the Q4 report",
+  {
+    secrets: {
+      "portal.example.com": "user@company.com:password123",
+      "okta.com": "user@company.com:password123",
+    },
+    allowedDomains: ["portal.example.com", "*.okta.com"],
+  },
+);
+```
+</CodeGroup>
 
 
 # API key

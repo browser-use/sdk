@@ -13,7 +13,7 @@ Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool 
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(task="Find the top story on Hacker News")
@@ -34,7 +34,7 @@ while True:
     await asyncio.sleep(2)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({

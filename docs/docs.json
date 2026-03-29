@@ -84,9 +84,7 @@
                         "icon": "key",
                         "pages": [
                           "cloud/guides/authentication",
-                          "cloud/guides/profile-sync",
-                          "cloud/guides/secrets",
-                          "cloud/guides/1password"
+                          "cloud/guides/profile-sync"
                         ]
                       },
                       "cloud/browser/playwright-puppeteer-selenium"
@@ -121,7 +119,9 @@
                     "isDefaultOpen": false,
                     "pages": [
                       "cloud/legacy/agent",
-                      "cloud/legacy/skills"
+                      "cloud/legacy/skills",
+                      "cloud/guides/1password",
+                      "cloud/guides/secrets"
                     ]
                   }
                 ]

@@ -11,7 +11,7 @@ icon: eye
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create("Check how many GitHub stars browser-use has")
@@ -25,7 +25,7 @@ while True:
     await asyncio.sleep(0.5)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const session = await client.sessions.create({
@@ -78,7 +78,7 @@ Enable recording to get an MP4 video of the session after it completes.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
@@ -90,7 +90,7 @@ for url in result.recording_urls:
     print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Check how many GitHub stars browser-use has", {

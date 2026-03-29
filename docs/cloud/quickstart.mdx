@@ -26,7 +26,7 @@ export BROWSER_USE_API_KEY=your_key
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v3 import AsyncBrowserUse
 
 async def main():
     client = AsyncBrowserUse()
@@ -36,10 +36,14 @@ async def main():
 asyncio.run(main())
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 const result = await client.run("Find the top 3 trending repos on GitHub today");
 console.log(result.output);
 ```
 </CodeGroup>
+
+<Note>
+  Want a full working app? See the [Chat UI example](/cloud/tutorials/chat-ui) — a complete Next.js app with live browser preview, streaming messages, authentication, and session management.
+</Note>

@@ -39,8 +39,6 @@ Install (check if already installed and update to latest):
 ## Authentication
 - [Profiles](https://docs.browser-use.com/cloud/guides/authentication): Persistent browser state — cookies, localStorage, saved passwords. Login once, reuse across sessions.
 - [Sync local and cloud cookies](https://docs.browser-use.com/cloud/guides/profile-sync): Sync your local browser cookies to the cloud — instantly authenticate without managing credentials.
-- [Secrets](https://docs.browser-use.com/cloud/guides/secrets): Pass domain-scoped credentials to the agent securely.
-- [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password): Auto-fill passwords and TOTP codes from 1Password during agent tasks.
 - [Playwright, Puppeteer, Selenium](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium): Connect your automation framework to Browser Use's stealth infrastructure via CDP.
 
 
@@ -57,4 +55,6 @@ Install (check if already installed and update to latest):
 ## Legacy (v2)
 - [Agent (v2)](https://docs.browser-use.com/cloud/legacy/agent): V2 agent models and file handling.
 - [Skills](https://docs.browser-use.com/cloud/legacy/skills): Turn any website into a deterministic API endpoint. Create once, call repeatedly.
+- [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password): Auto-fill passwords and TOTP codes from 1Password during agent tasks.
+- [Secrets](https://docs.browser-use.com/cloud/guides/secrets): Pass domain-scoped credentials to the agent securely.
 
