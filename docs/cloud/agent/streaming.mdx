@@ -7,19 +7,27 @@ description: "Poll the agent's message history in real time to build custom UIs 
   Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
 </Note>
 
-Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool calls, and results in real time.
+Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool calls, and results.
 
 <CodeGroup>
 ```python Python
+import asyncio
 from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create("Find the top story on Hacker News")
+session_id = str(session.id)
 
-# Get messages
-msgs = await client.sessions.messages(str(session.id), limit=100)
-for m in msgs.messages:
-    print(f"[{m.role}] {m.data[:200]}")
+while True:
+    msgs = await client.sessions.messages(session_id, limit=100)
+    for m in msgs.messages:
+        print(f"[{m.role}] {m.data[:200]}")
+
+    s = await client.sessions.get(session_id)
+    if s.status.value in ("idle", "stopped", "error", "timed_out"):
+        print(s.output)
+        break
+    await asyncio.sleep(2)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk";
@@ -29,12 +37,18 @@ const session = await client.sessions.create({
   task: "Find the top story on Hacker News",
 });
 
-// Get messages
-const msgs = await client.sessions.messages(session.id, { limit: 100 });
-for (const m of msgs.messages) {
-  console.log(`[${m.role}] ${m.data.slice(0, 200)}`);
+while (true) {
+  const msgs = await client.sessions.messages(session.id, { limit: 100 });
+  for (const m of msgs.messages) {
+    console.log(`[${m.role}] ${m.data.slice(0, 200)}`);
+  }
+
+  const s = await client.sessions.get(session.id);
+  if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
+    console.log(s.output);
+    break;
+  }
+  await new Promise((r) => setTimeout(r, 2000));
 }
 ```
 </CodeGroup>
-
-Poll in a loop every 2 seconds until `session.status` is `idle`, `stopped`, `error`, or `timed_out`.
