@@ -1,22 +1,10 @@
 ---
-title: Profiles & Secrets
-description: "Authenticate browser automation tasks using profile sync and domain-scoped secrets."
-icon: key
+title: Profiles
+description: "Persistent browser state — cookies, localStorage, saved passwords. Login once, reuse across sessions."
+icon: user
 ---
 
-## Sync local cookies
-
-Sync your local cookies where you are already logged in:
-
-```bash
-export BROWSER_USE_API_KEY=your_key && curl -fsSL https://browser-use.com/profile.sh | sh
-```
-
-This opens a browser where you log into your accounts. After syncing, you will receive a `profile_id`.
-
-View your synced profiles at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=profiles).
-
-## Use a profile
+A profile saves your browser state. Login once, and the agent is already authenticated in every future session.
 
 <CodeGroup>
 ```python Python
@@ -39,48 +27,4 @@ console.log(result.output);
 ```
 </CodeGroup>
 
-## Secrets
-
-Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
-
-<CodeGroup>
-```python Python
-result = await client.run(
-    "Log into GitHub and star the browser-use/browser-use repo",
-    secrets={"github.com": "username:password123"},
-    allowed_domains=["github.com"],
-)
-```
-```typescript TypeScript
-const result = await client.run(
-  "Log into GitHub and star the browser-use/browser-use repo",
-  {
-    secrets: { "github.com": "username:password123" },
-    allowedDomains: ["github.com"],
-  },
-);
-```
-</CodeGroup>
-
-Use `allowed_domains` to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`.
-
-For SSO/OAuth redirects, include both domains:
-
-<CodeGroup>
-```python Python
-result = await client.run(
-    "Log into the company portal and download the Q4 report",
-    secrets={"username": "user@company.com", "password": "password123"},
-    allowed_domains=["portal.example.com", "*.okta.com"],
-)
-```
-```typescript TypeScript
-const result = await client.run(
-  "Log into the company portal and download the Q4 report",
-  {
-    secrets: { username: "user@company.com", password: "password123" },
-    allowedDomains: ["portal.example.com", "*.okta.com"],
-  },
-);
-```
-</CodeGroup>
+View your profiles at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=profiles).
