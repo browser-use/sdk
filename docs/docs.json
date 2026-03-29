@@ -129,7 +129,7 @@
             ]
           },
           {
-            "tab": "API Reference",
+            "tab": "API v3",
             "href": "cloud/api-reference",
             "groups": [
               {
@@ -146,7 +146,7 @@
             ]
           },
           {
-            "tab": "V2 Legacy",
+            "tab": "V2 (Legacy)",
             "groups": [
               {
                 "group": "API v2 (Legacy)",
