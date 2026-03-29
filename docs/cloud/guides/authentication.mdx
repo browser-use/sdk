@@ -70,10 +70,10 @@ for (const p of profiles) {
 
 // Search by name
 const results = await client.profiles.list({ query: "user-id-1" });
-const profile = results[0]; // first match
+const found = results[0]; // first match
 
 // Get one by ID
-const profile = await client.profiles.get(profileId);
+const fetched = await client.profiles.get(profileId);
 
 // Update
 await client.profiles.update(profileId, { name: "renamed" });
