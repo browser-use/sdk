@@ -182,6 +182,7 @@ cat > "$CLOUD_INDEX" << 'HEADER'
 - Open Source: https://github.com/browser-use/browser-use
 - Docs: https://docs.browser-use.com
 - API v3 Reference: https://docs.browser-use.com/cloud/api-reference
+- OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
 - API v2 Reference: https://docs.browser-use.com/cloud/api-v2-overview
 
 Install:
