@@ -4,7 +4,7 @@ description: "Connect your automation framework to Browser Use's stealth infrast
 icon: code
 ---
 
-## WebSocket URL (no SDK)
+## Option 1: WebSocket URL (no SDK)
 
 Connect with a single URL. All configuration is passed as query parameters.
 
@@ -83,7 +83,7 @@ await client.browsers.stop(browser.id)
 | `browserScreenWidth` | `int` | Browser width in pixels. |
 | `browserScreenHeight` | `int` | Browser height in pixels. |
 
-## SDK approach
+## Option 2: SDK
 
 Create a browser via the SDK, get a `cdp_url`, connect with your framework.
 
