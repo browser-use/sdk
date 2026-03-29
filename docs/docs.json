@@ -77,8 +77,7 @@
                     "group": "Legacy (v2)",
                     "isDefaultOpen": false,
                     "pages": [
-                      "cloud/legacy/v2-agent/models",
-                      "cloud/legacy/v2-agent/files",
+                      "cloud/legacy/agent",
                       "cloud/legacy/skills"
                     ]
                   }
@@ -341,8 +340,8 @@
   },
   "redirects": [
     {"source": "/", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/pricing", "destination": "/cloud/legacy/v2-agent/models"},
-    {"source": "/cloud/models", "destination": "/cloud/legacy/v2-agent/models"},
+    {"source": "/cloud/pricing", "destination": "/cloud/legacy/agent"},
+    {"source": "/cloud/models", "destination": "/cloud/legacy/agent"},
     {"source": "/cloud/guides/skills", "destination": "/cloud/legacy/skills"},
     {"source": "/introduction", "destination": "/cloud/quickstart"},
     {"source": "/cloud/introduction", "destination": "/cloud/quickstart"},

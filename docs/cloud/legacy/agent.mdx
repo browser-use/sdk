@@ -1,11 +1,40 @@
 ---
-title: "Files"
-description: "Upload and download files for v2 agent tasks."
+title: "Agent (v2)"
+description: "V2 agent models and file handling."
 ---
+
+## Models
+
+| Model | API String | Cost per Step |
+| ----- | ---------- | ------------- |
+| Browser Use 2.0 | `browser-use-2.0` | \$0.006 |
+| Browser Use LLM | `browser-use-llm` | \$0.002 |
+| O3 | `o3` | \$0.03 |
+| Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$0.03 |
+| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.01 |
+| Gemini Flash Latest | `gemini-flash-latest` | \$0.0075 |
+| Gemini Flash Lite Latest | `gemini-flash-lite-latest` | \$0.005 |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$0.05 |
+
+Pass `llm` explicitly to select a model:
+
+<CodeGroup>
+```python Python
+result = await client.run("...", llm="browser-use-2.0")
+```
+```typescript TypeScript
+const result = await client.run("...", { llm: "browser-use-2.0" });
+```
+</CodeGroup>
+
+---
+
+## Files
 
 Upload images, PDFs, documents, and text files (10 MB max) to sessions, and download output files from completed tasks.
 
-## Upload a file
+### Upload a file
 
 Get a presigned URL, then upload via PUT.
 
@@ -57,7 +86,7 @@ const result = await client.run("Summarize the uploaded PDF", { sessionId: sessi
   Presigned URLs expire after 120 seconds. Max file size: 10 MB.
 </Warning>
 
-## Download task output files
+### Download task output files
 
 <CodeGroup>
 ```python Python
