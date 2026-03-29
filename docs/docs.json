@@ -82,7 +82,6 @@
                     ]
                   },
                   "cloud/guides/authentication",
-                  "cloud/guides/webhooks",
                   {
                     "group": "Legacy (v2)",
                     "isDefaultOpen": false,
@@ -101,6 +100,7 @@
                 "group": "Integrations",
                 "pages": [
                   "cloud/guides/mcp-server",
+                  "cloud/guides/webhooks",
                   "cloud/tutorials/integrations/openclaw",
                   "cloud/tutorials/integrations/n8n"
                 ]
