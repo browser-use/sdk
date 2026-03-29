@@ -9,9 +9,9 @@ icon: user
 from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-# results = await client.profiles.list(query="user-id-1")
-# profile = results[0]
 profile = await client.profiles.create(name="user-id-1")
+# or search existing
+# profile = (await client.profiles.list(query="user-id-1"))[0]
 session = await client.sessions.create(profile_id=profile.id)
 result = await client.run("Check browser-use github stars", session_id=session.id)
 print(result.output)
@@ -20,9 +20,9 @@ print(result.output)
 import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
-// const results = await client.profiles.list({ query: "user-id-1" });
-// const profile = results[0];
 const profile = await client.profiles.create({ name: "user-id-1" });
+// or search existing
+// const profile = (await client.profiles.list({ query: "user-id-1" }))[0];
 const session = await client.sessions.create({ profileId: profile.id });
 const result = await client.run("Check browser-use github stars", {
   sessionId: session.id,
