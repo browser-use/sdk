@@ -48,7 +48,7 @@
         },
         "tabs": [
           {
-            "tab": "Docs",
+            "tab": "Cloud SDK",
             "groups": [
               {
                 "group": "Get Started",
@@ -58,7 +58,7 @@
                 ]
               },
               {
-                "group": "Walkthrough",
+                "group": "Pillars",
                 "pages": [
                   {
                     "group": "Agent",
