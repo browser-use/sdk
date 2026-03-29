@@ -1,5 +1,5 @@
 ---
-title: Stream messages
+title: Live messages
 description: "Poll the agent's message history in real time to build custom UIs or monitor progress."
 ---
 
@@ -18,10 +18,13 @@ client = AsyncBrowserUse()
 session = await client.sessions.create("Find the top story on Hacker News")
 session_id = str(session.id)
 
+seen = set()
 while True:
     msgs = await client.sessions.messages(session_id, limit=100)
     for m in msgs.messages:
-        print(f"[{m.role}] {m.data[:200]}")
+        if str(m.id) not in seen:
+            seen.add(str(m.id))
+            print(f"[{m.role}] {m.data[:200]}")
 
     s = await client.sessions.get(session_id)
     if s.status.value in ("idle", "stopped", "error", "timed_out"):
@@ -37,10 +40,14 @@ const session = await client.sessions.create({
   task: "Find the top story on Hacker News",
 });
 
+const seen = new Set<string>();
 while (true) {
   const msgs = await client.sessions.messages(session.id, { limit: 100 });
   for (const m of msgs.messages) {
-    console.log(`[${m.role}] ${m.data.slice(0, 200)}`);
+    if (!seen.has(m.id)) {
+      seen.add(m.id);
+      console.log(`[${m.role}] ${m.data.slice(0, 200)}`);
+    }
   }
 
   const s = await client.sessions.get(session.id);
