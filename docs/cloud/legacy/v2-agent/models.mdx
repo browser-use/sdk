@@ -1,15 +1,7 @@
 ---
 title: "Models"
-description: "Available LLM models for Browser Use Cloud."
-icon: "microchip"
+description: "Available LLM models for v2 agent tasks."
 ---
-
-## V3 Models
-
-| Model | API String | Pricing |
-| ----- | ---------- | ------- |
-| BU Mini (Gemini 3 Flash) | `bu-mini` | ~\$0.72/1M input, ~\$4.20/1M output |
-| BU Max (Claude Sonnet 4.6) | `bu-max` | ~\$3.60/1M input, ~\$18.00/1M output |
 
 ## V2 Models
 
@@ -25,4 +17,15 @@ icon: "microchip"
 | Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
 | Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$0.05 |
 
-**Browser Use 2.0** is the default for v2 — custom-trained for browser automation. 15x cheaper and 6x faster than frontier models (~3s/step vs ~8s/step).
+**Browser Use 2.0** is the default — custom-trained for browser automation. 15x cheaper and 6x faster than frontier models (~3s/step vs ~8s/step).
+
+Use it by default (no configuration needed), or pass `llm` explicitly:
+
+<CodeGroup>
+```python Python
+result = await client.run("...", llm="browser-use-2.0")
+```
+```typescript TypeScript
+const result = await client.run("...", { llm: "browser-use-2.0" });
+```
+</CodeGroup>

@@ -54,8 +54,7 @@
                 "group": "Get Started",
                 "pages": [
                   "cloud/quickstart",
-                  "cloud/vibecoding",
-                  "cloud/models"
+                  "cloud/vibecoding"
                 ]
               },
               {
@@ -79,6 +78,20 @@
               {
                 "group": "Tutorials",
                 "pages": ["cloud/tutorials/chat-ui"]
+              },
+              {
+                "group": "Legacy (v2)",
+                "isDefaultOpen": false,
+                "pages": [
+                  {
+                    "group": "V2 Agent",
+                    "pages": [
+                      "cloud/legacy/v2-agent/models",
+                      "cloud/legacy/v2-agent/files"
+                    ]
+                  },
+                  "cloud/legacy/skills"
+                ]
               },
               {
                 "group": "Integrations",
@@ -129,13 +142,6 @@
                     ]
                   },
                   "cloud/faq"
-                ]
-              },
-              {
-                "group": "Legacy (v2)",
-                "pages": [
-                  "cloud/legacy/skills",
-                  "cloud/legacy/pricing"
                 ]
               }
             ]
@@ -340,7 +346,8 @@
   },
   "redirects": [
     {"source": "/", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/pricing", "destination": "/cloud/models"},
+    {"source": "/cloud/pricing", "destination": "/cloud/legacy/v2-agent/models"},
+    {"source": "/cloud/models", "destination": "/cloud/legacy/v2-agent/models"},
     {"source": "/cloud/guides/skills", "destination": "/cloud/legacy/skills"},
     {"source": "/introduction", "destination": "/cloud/quickstart"},
     {"source": "/cloud/introduction", "destination": "/cloud/quickstart"},
