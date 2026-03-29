@@ -145,6 +145,7 @@
               },
               {
                 "group": "API v2 (Legacy)",
+                "expanded": false,
                 "openapi": {
                   "source": "cloud/openapi/v2.json",
                   "directory": "cloud/api-v2"
