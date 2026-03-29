@@ -65,3 +65,8 @@ generate() {
 
 generate "open-source"
 generate "cloud"
+
+# Root files mirror cloud (primary product)
+cp "$SCRIPT_DIR/cloud/llms.txt" "$SCRIPT_DIR/llms.txt"
+cp "$SCRIPT_DIR/cloud/llms-full.txt" "$SCRIPT_DIR/llms-full.txt"
+echo "Root llms.txt and llms-full.txt copied from cloud"
