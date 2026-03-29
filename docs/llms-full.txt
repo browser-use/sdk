@@ -411,12 +411,13 @@ Source: https://docs.browser-use.com/cloud/agent/human-in-the-loop
 ## Flow
 
 1. Create a session with `keep_alive=True` so it stays alive between tasks
-2. Run an agent task — `result.live_url` is available after the task completes
+2. Run an agent task — poll `sessions.get()` for `live_url` (~3-5 seconds)
 3. Human interacts with the live browser
 4. Send a new follow-up task
 
 <CodeGroup>
 ```python Python
+import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
@@ -430,7 +431,13 @@ result = await client.run(
     session_id=session.id,
 )
 print(result.output)
-print(f"Live view: {result.live_url}")
+
+# Get the live URL (available while session is alive with keep_alive)
+s = await client.sessions.get(session.id)
+while not s.live_url:
+    await asyncio.sleep(1)
+    s = await client.sessions.get(session.id)
+print(f"Live view: {s.live_url}")
 
 # 3. Human opens live_url and picks a flight
 input("Press Enter after you've selected a flight in the live view...")
@@ -460,7 +467,14 @@ const searchResult = await client.run(
   { sessionId: session.id },
 );
 console.log(searchResult.output);
-console.log(`Live view: ${searchResult.liveUrl}`);
+
+// Get the live URL (available while session is alive with keepAlive)
+let s = await client.sessions.get(session.id);
+while (!s.liveUrl) {
+  await new Promise((r) => setTimeout(r, 1000));
+  s = await client.sessions.get(session.id);
+}
+console.log(`Live view: ${s.liveUrl}`);
 
 // 3. Human opens liveUrl and picks a flight
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -649,11 +663,10 @@ https://live.browser-use.com?wss=...&ui=false
 
 ## Recording
 
-Enable recording to get an MP4 video of the browser session. Only available when the agent actually opens a browser — tasks answered without browsing produce no recording. If you run multiple tasks in the same session (with `keep_alive`), you may get multiple recordings. Poll `sessions.get()` if `recording_urls` is empty — processing may take a few seconds for longer sessions.
+Enable recording to get an MP4 video of the browser session. Only available when the agent actually opens a browser — tasks answered without browsing produce no recording. If you run multiple tasks in the same session (with `keep_alive`), you may get multiple recordings.
 
 <CodeGroup>
 ```python Python
-import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
@@ -662,14 +675,9 @@ result = await client.run(
     enable_recording=True,
 )
 
-# Recording may not be ready immediately — poll until available
-for _ in range(30):
-    session = await client.sessions.get(result.id)
-    if session.recording_urls:
-        break
-    await asyncio.sleep(2)
-
-for url in session.recording_urls:
+# Waits up to 15s for recording to be ready. Returns [] if no browser was opened.
+urls = await client.sessions.wait_for_recording(result.id)
+for url in urls:
     print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
@@ -680,14 +688,9 @@ const result = await client.run("Check how many GitHub stars browser-use has", {
   enableRecording: true,
 });
 
-// Recording may not be ready immediately — poll until available
-let session = await client.sessions.get(result.id);
-for (let i = 0; i < 30 && !session.recordingUrls?.length; i++) {
-  await new Promise((r) => setTimeout(r, 2000));
-  session = await client.sessions.get(result.id);
-}
-
-for (const url of session.recordingUrls) {
+// Waits up to 15s for recording to be ready. Returns [] if no browser was opened.
+const urls = await client.sessions.waitForRecording(result.id);
+for (const url of urls) {
   console.log(url); // presigned MP4 download URL
 }
 ```
@@ -1590,12 +1593,14 @@ Set `max_cost_usd` to cap spending per task. Default is $20. A typical task cost
 
 ## How do I get the live browser URL?
 
-After `client.run()` completes, `result.live_url` is available on the result. If you use `sessions.create()` directly, poll `sessions.get()` until `live_url` appears (~3-5 seconds).
+`live_url` is available while the browser is running. Use `keep_alive=True` so the session stays alive after the task — otherwise `live_url` goes to null when the task finishes.
 
 ```python
 result = await client.run("Go to example.com", keep_alive=True)
-print(result.live_url)
+print(result.live_url)  # available because session is still alive
 ```
+
+If you use `sessions.create()` directly, poll `sessions.get()` until `live_url` appears (~3-5 seconds).
 
 ## How do I authenticate on websites?
 
