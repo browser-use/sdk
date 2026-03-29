@@ -78,7 +78,6 @@
                     "pages": [
                       "cloud/guides/proxies-and-stealth",
                       "cloud/browser/live-preview",
-                      "cloud/browser/playwright-puppeteer-selenium",
                       {
                         "group": "Authentication",
                         "icon": "key",
@@ -88,7 +87,8 @@
                           "cloud/guides/secrets",
                           "cloud/guides/1password"
                         ]
-                      }
+                      },
+                      "cloud/browser/playwright-puppeteer-selenium"
                     ]
                   }
                 ]
