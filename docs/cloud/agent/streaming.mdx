@@ -29,9 +29,11 @@ while True:
 
     s = await client.sessions.get(session_id)
     if s.status.value in ("idle", "stopped", "error", "timed_out"):
-        print(s.output)
         break
     await asyncio.sleep(2)
+
+# Final output
+print(s.output)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -53,11 +55,14 @@ while (true) {
 
   const s = await client.sessions.get(session.id);
   if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
-    console.log(s.output);
     break;
   }
   await new Promise((r) => setTimeout(r, 2000));
 }
+
+// Final output
+const result = await client.sessions.get(session.id);
+console.log(result.output);
 ```
 </CodeGroup>
 
