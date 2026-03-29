@@ -6,7 +6,7 @@ icon: rocket
 
 The SDK is a thin wrapper around the [API v3 Reference](/cloud/api-reference).
 
-`client.run()` creates a session, polls every 2 seconds until completion (up to 300 seconds), and returns the result. It accepts all parameters from the [Create Session](/cloud/api-v3/sessions/create-session) endpoint.
+`client.run()` creates a session, polls every 2 seconds until completion (up to 4 hours), and returns the result. It accepts all parameters from the [Create Session](/cloud/api-v3/sessions/create-session) endpoint.
 
 The result has: `output` (string or parsed schema), `status`, `id`, `total_cost_usd`, `live_url`, `recording_urls`, and all other [session fields](/cloud/api-v3/sessions/get-session).
 

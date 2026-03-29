@@ -48,7 +48,7 @@ def _poll_output(
     session_id: str,
     output_schema: type[Any] | None = None,
     *,
-    timeout: float = 300,
+    timeout: float = 14400,
     interval: float = 2,
 ) -> SessionResult[Any]:
     """Poll session status until terminal, return SessionResult."""
@@ -66,7 +66,7 @@ async def _async_poll_output(
     session_id: str,
     output_schema: type[Any] | None = None,
     *,
-    timeout: float = 300,
+    timeout: float = 14400,
     interval: float = 2,
 ) -> SessionResult[Any]:
     """Async poll session status until terminal, return SessionResult."""
@@ -88,7 +88,7 @@ class AsyncSessionRun(Generic[T]):
         sessions: AsyncSessions,
         output_schema: type[T] | None = None,
         *,
-        timeout: float = 300,
+        timeout: float = 14400,
         interval: float = 2,
     ) -> None:
         self._create_fn = create_fn
