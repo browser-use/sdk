@@ -47,7 +47,7 @@ Set your API key:
 ```
 export BROWSER_USE_API_KEY=your_key
 ```
-Get a key at: https://cloud.browser-use.com/settings?tab=api-keys
+Get a key at: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 
 Two API versions in one package:
 - **BU Agent API (v3)** — recommended for new projects. More accurate agents, long-running tasks, file uploads, workspaces. Superset of v2. `from browser_use_sdk.v3 import AsyncBrowserUse`

@@ -128,7 +128,7 @@ pip install browser-use-sdk
 npm install browser-use-sdk
 ```
 
-Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys), then:
+Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then:
 
 ```bash
 export BROWSER_USE_API_KEY=your_key
@@ -285,7 +285,7 @@ Both APIs are in the same package (`browser-use-sdk`):
 
 ## Setup
 Set `BROWSER_USE_API_KEY` env var, or pass `api_key`/`apiKey` to the constructor.
-Get a key at https://cloud.browser-use.com/settings?tab=api-keys
+Get a key at https://cloud.browser-use.com/settings?tab=api-keys&new=1
 
 ---
 
@@ -3114,7 +3114,7 @@ Browser Use exposes a WebSocket CDP URL. OpenClaw connects to it like any remote
 
 **1. Get your API key**
 
-Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and copy your API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys).
+Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and copy your API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
 
 **2. Add a Browser Use profile**
 
@@ -3248,7 +3248,7 @@ Source: https://docs.browser-use.com/cloud/api-reference
 
 All endpoints require an API key via the `x-api-key` header.
 
-Get your key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys), or set it as `BROWSER_USE_API_KEY` in your environment.
+Get your key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1), or set it as `BROWSER_USE_API_KEY` in your environment.
 
 ## API Versions
 
