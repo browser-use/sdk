@@ -329,7 +329,7 @@
   "redirects": [
     {"source": "/", "destination": "/cloud/quickstart"},
     {"source": "/cloud/new-features/api-v3", "destination": "/cloud/agent/quickstart"},
-    {"source": "/cloud/guides/sessions", "destination": "/cloud/browser/stealth"},
+    {"source": "/cloud/guides/sessions", "destination": "/cloud/guides/authentication"},
     {"source": "/cloud/guides/proxies-and-stealth", "destination": "/cloud/browser/proxies"},
     {"source": "/cloud/guides/tasks", "destination": "/cloud/agent/quickstart"},
     {"source": "/cloud/guides/workspaces", "destination": "/cloud/agent/workspaces"},
