@@ -189,7 +189,7 @@ await client.sessions.stop(session.id);
 const upload = await client.sessions.uploadFiles(session.id, {
   files: [{ name: "data.csv", contentType: "text/csv" }],
 });
-await fetch(upload.files[0].uploadUrl, { method: "PUT", body: readFileSync("data.csv") });
+await fetch(upload.files[0].uploadUrl, { method: "PUT", headers: { "Content-Type": "text/csv" }, body: readFileSync("data.csv") });
 
 // File listing
 const files = await client.sessions.files(session.id, {
