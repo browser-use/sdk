@@ -15,15 +15,11 @@ All SDK calls live in a single file: `src/lib/api.ts`.
 
 ## Setup: SDK Clients
 
-The app uses both SDK versions — v3 for the agent session API and v2 for profiles (which are not on v3 yet).
-
 ```typescript api.ts
-import { BrowserUse as BrowserUseV3 } from "browser-use-sdk/v3";
-import { BrowserUse as BrowserUseV2 } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk";
 
 const apiKey = process.env.NEXT_PUBLIC_BROWSER_USE_API_KEY ?? "";
-const v3 = new BrowserUseV3({ apiKey });
-const v2 = new BrowserUseV2({ apiKey });
+const client = new BrowserUse({ apiKey });
 ```
 
 <Warning>
@@ -45,7 +41,7 @@ export async function createSession(opts: {
   workspaceId?: string;
   proxyCountryCode?: string;
 }) {
-  return v3.sessions.create({
+  return client.sessions.create({
     model: opts.model as "bu-mini" | "bu-max",
     keepAlive: true,
     ...(opts.profileId && { profileId: opts.profileId }),
@@ -55,7 +51,7 @@ export async function createSession(opts: {
 }
 
 export async function sendTask(sessionId: string, task: string) {
-  return v3.sessions.create({ sessionId, task, keepAlive: true });
+  return client.sessions.create({ sessionId, task, keepAlive: true });
 }
 ```
 
@@ -69,11 +65,11 @@ The settings dropdowns are populated by two list calls:
 
 ```typescript api.ts
 export async function listProfiles() {
-  return v2.profiles.list({ pageSize: 100 });
+  return client.profiles.list({ pageSize: 100 });
 }
 
 export async function listWorkspaces() {
-  return v3.workspaces.list({ pageSize: 100 });
+  return client.workspaces.list({ pageSize: 100 });
 }
 ```
 
@@ -119,15 +115,15 @@ The session page needs three more SDK calls:
 
 ```typescript api.ts
 export async function getSession(id: string) {
-  return v3.sessions.get(id);
+  return client.sessions.get(id);
 }
 
 export async function getMessages(id: string, limit = 100) {
-  return v3.sessions.messages(id, { limit });
+  return client.sessions.messages(id, { limit });
 }
 
 export async function stopTask(id: string) {
-  await v3.sessions.stop(id, { strategy: "task" });
+  await client.sessions.stop(id, { strategy: "task" });
 }
 ```
 
@@ -252,11 +248,11 @@ The full SDK surface used by this app:
 
 | Method | Purpose |
 |--------|---------|
-| `v3.sessions.create()` | Create a session, send tasks |
-| `v3.sessions.get()` | Poll session status |
-| `v3.sessions.messages()` | Poll conversation messages |
-| `v3.sessions.stop()` | Stop the current task |
-| `v3.workspaces.list()` | Populate workspace dropdown |
-| `v2.profiles.list()` | Populate profile dropdown |
+| `client.sessions.create()` | Create a session, send tasks |
+| `client.sessions.get()` | Poll session status |
+| `client.sessions.messages()` | Poll conversation messages |
+| `client.sessions.stop()` | Stop the current task |
+| `client.workspaces.list()` | Populate workspace dropdown |
+| `client.profiles.list()` | Populate profile dropdown |
 
 The complete source is at [github.com/browser-use/chat-ui-example](https://github.com/browser-use/chat-ui-example).
