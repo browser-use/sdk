@@ -18,20 +18,27 @@ icon: hand
 
 <CodeGroup>
 ```python Python
+import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
 # 1. Create a persistent session
 session = await client.sessions.create(keep_alive=True)
-print(f"Live view: {session.live_url}")
 
 # 2. Agent does the first part
 result = await client.run(
     "Go to Google Flights and search for flights from NYC to London",
-    session_id=session.id,
+    session_id=str(session.id),
 )
 print(result.output)
+
+# liveUrl becomes available once the browser starts (~3-5s)
+s = await client.sessions.get(str(session.id))
+while not s.live_url:
+    await asyncio.sleep(1)
+    s = await client.sessions.get(str(session.id))
+print(f"Live view: {s.live_url}")
 
 # 3. Human opens live_url and picks a flight
 input("Press Enter after you've selected a flight in the live view...")
@@ -39,12 +46,12 @@ input("Press Enter after you've selected a flight in the live view...")
 # 4. Agent continues where the human left off
 result = await client.run(
     "Get the details of the selected flight — airline, price, departure and arrival times",
-    session_id=session.id,
+    session_id=str(session.id),
 )
 print(result.output)
 
 # Clean up
-await client.sessions.stop(session.id)
+await client.sessions.stop(str(session.id))
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -54,7 +61,6 @@ const client = new BrowserUse();
 
 // 1. Create a persistent session
 const session = await client.sessions.create({ keepAlive: true });
-console.log(`Live view: ${session.liveUrl}`);
 
 // 2. Agent does the first part
 const searchResult = await client.run(
@@ -62,6 +68,14 @@ const searchResult = await client.run(
   { sessionId: session.id },
 );
 console.log(searchResult.output);
+
+// liveUrl becomes available once the browser starts (~3-5s)
+let s = await client.sessions.get(session.id);
+while (!s.liveUrl) {
+  await new Promise((r) => setTimeout(r, 1000));
+  s = await client.sessions.get(session.id);
+}
+console.log(`Live view: ${s.liveUrl}`);
 
 // 3. Human opens liveUrl and picks a flight
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });

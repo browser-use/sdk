@@ -29,9 +29,11 @@ while True:
 
     s = await client.sessions.get(session_id)
     if s.status.value in ("idle", "stopped", "error", "timed_out"):
-        print(s.output)
         break
     await asyncio.sleep(2)
+
+# Final output
+print(s.output)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -53,12 +55,15 @@ while (true) {
 
   const s = await client.sessions.get(session.id);
   if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
-    console.log(s.output);
     break;
   }
   await new Promise((r) => setTimeout(r, 2000));
 }
+
+// Final output
+const result = await client.sessions.get(session.id);
+console.log(result.output);
 ```
 </CodeGroup>
 
-Each message has a `role` (`user`, `assistant`, `tool`), a `summary` for display, and a `type` (e.g. `browser_action`, `browser_action_result`). Browser action results include a `screenshot_url`. See the [API v3 Reference](/cloud/api-reference) for all fields.
+Each message has a `role` (`user`, `assistant`, `tool`), a `summary` for display, and a `type` (e.g. `browser_action`, `browser_action_result`). Browser action results include a `screenshot_url`. See [List session messages](/cloud/api-v3/sessions/list-session-messages) for all fields.

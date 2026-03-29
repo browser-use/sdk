@@ -7,7 +7,7 @@ type SessionResponse = components["schemas"]["SessionResponse"];
 const TERMINAL_STATUSES = new Set(["idle", "stopped", "timed_out", "error"]);
 
 export interface RunOptions {
-  /** Maximum time to wait in milliseconds. Default: 300_000 (5 min). */
+  /** Maximum time to wait in milliseconds. Default: 14_400_000 (4 hours). */
   timeout?: number;
   /** Polling interval in milliseconds. Default: 2_000. */
   interval?: number;
@@ -38,7 +38,7 @@ export class SessionRun<T = string> implements PromiseLike<SessionResult<T>> {
     this._createPromise = createPromise;
     this._sessions = sessions;
     this._schema = schema;
-    this._timeout = options?.timeout ?? 300_000;
+    this._timeout = options?.timeout ?? 14_400_000;
     this._interval = options?.interval ?? 2_000;
   }
 
