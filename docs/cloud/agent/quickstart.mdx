@@ -4,7 +4,11 @@ description: "Easiest way to automate the web. Tell this agent in natural langua
 icon: rocket
 ---
 
-The SDK is a thin wrapper with polling around the [API v3 Reference](/cloud/api-reference). `client.run()` accepts all parameters from the API, creates a session, polls until completion, and parses the output.
+The SDK is a thin wrapper around the [API v3 Reference](/cloud/api-reference).
+
+`client.run()` creates a session, polls every 2 seconds until completion (up to 300 seconds), and returns the result. It accepts all parameters from the [Create Session](/cloud/api-v3/sessions/create-session) endpoint.
+
+The result has: `output` (string or parsed schema), `status`, `id`, `total_cost_usd`, `live_url`, `recording_urls`, and all other [session fields](/cloud/api-v3/sessions/get-session).
 
 <CodeGroup>
 ```python Python
@@ -13,6 +17,7 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 result = await client.run("Find the top 3 trending repos on GitHub today")
 print(result.output)
+print(result.total_cost_usd)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -20,6 +25,7 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const result = await client.run("Find the top 3 trending repos on GitHub today");
 console.log(result.output);
+console.log(result.totalCostUsd);
 ```
 </CodeGroup>
 

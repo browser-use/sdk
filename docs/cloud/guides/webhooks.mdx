@@ -124,10 +124,8 @@ app.post("/webhook", (req, res) => {
     return res.status(401).send("Invalid signature");
   }
 
-  const event = JSON.parse(body);
-
-  if (event.type === "agent.task.status_update") {
-    const { task_id, status, session_id } = event.payload;
+  if (payload.type === "agent.task.status_update") {
+    const { task_id, status, session_id } = payload.payload;
     console.log(`Task ${task_id} is now ${status}`);
   }
 
@@ -172,11 +170,9 @@ async def handle_webhook(request: Request):
     if not hmac.compare_digest(expected, signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
 
-    event = await request.json()
-
-    if event["type"] == "agent.task.status_update":
-        task_id = event["payload"]["task_id"]
-        status = event["payload"]["status"]
+    if payload["type"] == "agent.task.status_update":
+        task_id = payload["payload"]["task_id"]
+        status = payload["payload"]["status"]
         print(f"Task {task_id} is now {status}")
 
     return {"status": "ok"}
