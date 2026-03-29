@@ -60,3 +60,15 @@ while (true) {
 }
 ```
 </CodeGroup>
+
+## Message fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `str` | Message UUID. |
+| `role` | `str` | `user`, `assistant`, or `tool`. |
+| `data` | `str` | Message content (JSON string — parse it). |
+| `type` | `str` | `user_message`, `assistant_message`, `browser_action`, `browser_action_result`, `completion_result`, etc. |
+| `summary` | `str` | Human-readable summary of the message. |
+| `screenshot_url` | `str` | Presigned screenshot URL (on browser action results). |
+| `created_at` | `str` | Timestamp. |

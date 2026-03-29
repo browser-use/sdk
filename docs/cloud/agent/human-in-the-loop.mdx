@@ -12,7 +12,7 @@ icon: hand
 ## Flow
 
 1. Create a session with `keep_alive=True` so it stays alive between tasks
-2. Run an agent task
+2. Run an agent task — `live_url` becomes available once the browser starts (~3-5 seconds, poll `sessions.get()`)
 3. Human interacts with the `liveUrl`
 4. Send a new follow-up task
 

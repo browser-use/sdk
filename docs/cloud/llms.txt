@@ -1,6 +1,6 @@
 # Browser Use Cloud SDK
 
-> The most SOTA browser agent and the most scalable browser infrastructure. Built on the largest AI browser automation open-source library on GitHub with almost 100k stars.
+> The most SOTA browser agent and the most scalable browser infrastructure. Built on the largest AI browser automation open-source library on GitHub with almost 100k stars. Web scraping, data extraction, form filling, and headless browser automation via natural language. Anti-detection, CAPTCHA solving, residential proxies. Alternative to Playwright, Puppeteer, and Selenium for AI-powered automation.
 
 - GitHub: https://github.com/browser-use/browser-use
 - Dashboard: https://cloud.browser-use.com

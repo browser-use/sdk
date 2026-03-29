@@ -18,7 +18,7 @@ Source: https://docs.browser-use.com/open-source/introduction
 </CardGroup>
 
 <Tip>
-  Try [Browser Use Cloud](/cloud/introduction) for our SOTA model, stealth browsers, CAPTCHA solving, and managed infrastructure.
+  Try [Browser Use Cloud](https://docs.browser-use.com/cloud/introduction) for our SOTA model, stealth browsers, CAPTCHA solving, and managed infrastructure.
 </Tip>
 
 
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     asyncio.run(production_task())
 ```
 
-See [Browser Use Cloud](/cloud/quickstart) for how to sync your cookies to the cloud.
+See [Browser Use Cloud](https://docs.browser-use.com/cloud/quickstart) for how to sync your cookies to the cloud.
 
 
 # Prompts for Vibecoders
@@ -2473,7 +2473,7 @@ Source: https://docs.browser-use.com/open-source/customize/integrations/mcp-serv
 Browser Use can run as a local **Model Context Protocol (MCP)** server on your machine via stdio. This is the **free, open-source option** that gives you direct, low-level control over browser automation but requires your own LLM API keys.
 
 <Note>
-Looking for a hosted solution? Use the [Cloud MCP Server](/cloud/guides/mcp-server) instead — no setup required, just an API key.
+Looking for a hosted solution? Use the [Cloud MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server) instead — no setup required, just an API key.
 </Note>
 
 ## Quick Start
