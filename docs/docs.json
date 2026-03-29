@@ -51,15 +51,9 @@
             "tab": "Cloud SDK",
             "groups": [
               {
-                "group": "Get Started",
+                "group": "Cloud SDK",
                 "pages": [
-                  "cloud/quickstart",
-                  "cloud/vibecoding"
-                ]
-              },
-              {
-                "group": "Concepts",
-                "pages": [
+                  "cloud/vibecoding",
                   {
                     "group": "Agent",
                     "icon": "robot",
@@ -82,7 +76,12 @@
                       "cloud/guides/sessions",
                       "cloud/guides/authentication"
                     ]
-                  },
+                  }
+                ]
+              },
+              {
+                "group": "More",
+                "pages": [
                   {
                     "group": "Integrations",
                     "icon": "plug",
@@ -94,6 +93,14 @@
                     ]
                   },
                   {
+                    "group": "Tutorials",
+                    "icon": "graduation-cap",
+                    "pages": [
+                      "cloud/tutorials/chat-ui"
+                    ]
+                  },
+                  "cloud/faq",
+                  {
                     "group": "Legacy (v2)",
                     "icon": "box-archive",
                     "isDefaultOpen": false,
@@ -102,19 +109,6 @@
                       "cloud/legacy/skills"
                     ]
                   }
-                ]
-              },
-              {
-                "group": "Resources",
-                "pages": [
-                  {
-                    "group": "Tutorials",
-                    "icon": "graduation-cap",
-                    "pages": [
-                      "cloud/tutorials/chat-ui"
-                    ]
-                  },
-                  "cloud/faq"
                 ]
               }
             ]
