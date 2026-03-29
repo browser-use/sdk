@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import time
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
-from ..generated.v3.models import SessionResponse
+from ..generated.v3.models import MessageResponse, SessionResponse
 from .resources.sessions import AsyncSessions, Sessions
 
 _TERMINAL_STATUSES = {"idle", "stopped", "timed_out", "error"}
@@ -119,3 +119,92 @@ class AsyncSessionRun(Generic[T]):
 
     def __await__(self):
         return self._wait_for_output().__await__()
+
+    async def __aiter__(self) -> AsyncIterator[MessageResponse]:
+        """Yield new messages as they appear, then set .result when done.
+
+        Usage::
+
+            run = client.run("Find the top story on HN")
+            async for msg in run:
+                print(f"[{msg.role}] {msg.summary}")
+            print(run.result.output)
+        """
+        data = await self._create_fn()
+        self.session_id = str(data.id)
+        cursor: str | None = None
+        deadline = time.monotonic() + self._timeout
+
+        while time.monotonic() < deadline:
+            resp = await self._sessions.messages(self.session_id, after=cursor, limit=100)
+            for msg in resp.messages:
+                yield msg
+                cursor = str(msg.id)
+
+            session = await self._sessions.get(self.session_id)
+            if session.status.value in _TERMINAL_STATUSES:
+                # Drain any remaining messages
+                resp = await self._sessions.messages(self.session_id, after=cursor, limit=100)
+                for msg in resp.messages:
+                    yield msg
+                self.result = SessionResult(session, _parse_output(session.output, self._output_schema))
+                return
+
+            await asyncio.sleep(self._interval)
+
+        raise TimeoutError(f"Session {self.session_id} did not complete within {self._timeout}s")
+
+
+class SessionStream(Generic[T]):
+    """Sync iterator that yields new messages as they appear.
+
+    Usage::
+
+        stream = client.stream("Find the top story on HN")
+        for msg in stream:
+            print(f"[{msg.role}] {msg.summary}")
+        print(stream.result.output)
+    """
+
+    def __init__(
+        self,
+        session: SessionResponse,
+        sessions: Sessions,
+        output_schema: type[T] | None = None,
+        *,
+        timeout: float = 14400,
+        interval: float = 2,
+    ) -> None:
+        self.session_id = str(session.id)
+        self._sessions = sessions
+        self._output_schema = output_schema
+        self._timeout = timeout
+        self._interval = interval
+        self.result: SessionResult[T] | None = None
+
+    @property
+    def output(self) -> T | None:
+        """Final typed output (available after iteration completes)."""
+        return self.result.output if self.result else None
+
+    def __iter__(self) -> Iterator[MessageResponse]:
+        cursor: str | None = None
+        deadline = time.monotonic() + self._timeout
+
+        while time.monotonic() < deadline:
+            resp = self._sessions.messages(self.session_id, after=cursor, limit=100)
+            for msg in resp.messages:
+                yield msg
+                cursor = str(msg.id)
+
+            session = self._sessions.get(self.session_id)
+            if session.status.value in _TERMINAL_STATUSES:
+                resp = self._sessions.messages(self.session_id, after=cursor, limit=100)
+                for msg in resp.messages:
+                    yield msg
+                self.result = SessionResult(session, _parse_output(session.output, self._output_schema))
+                return
+
+            time.sleep(self._interval)
+
+        raise TimeoutError(f"Session {self.session_id} did not complete within {self._timeout}s")

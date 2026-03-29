@@ -3,6 +3,7 @@ import type { components } from "../generated/v3/types.js";
 import type { Sessions } from "./resources/sessions.js";
 
 type SessionResponse = components["schemas"]["SessionResponse"];
+type MessageResponse = components["schemas"]["MessageResponse"];
 
 const TERMINAL_STATUSES = new Set(["idle", "stopped", "timed_out", "error"]);
 
@@ -92,6 +93,40 @@ export class SessionRun<T = string> implements PromiseLike<SessionResult<T>> {
     throw new Error(
       `Session ${sessionId} did not complete within ${this._timeout}ms`,
     );
+  }
+
+  /**
+   * Enable `for await (const msg of client.run(...))` — yields messages as they appear.
+   * After iteration, `.result` contains the final SessionResult.
+   */
+  async *[Symbol.asyncIterator](): AsyncGenerator<MessageResponse> {
+    const sessionId = await this._ensureSessionId();
+    let cursor: string | undefined;
+    const deadline = Date.now() + this._timeout;
+
+    while (Date.now() < deadline) {
+      const resp = await this._sessions.messages(sessionId, { after: cursor, limit: 100 });
+      for (const msg of resp.messages) {
+        yield msg;
+        cursor = msg.id;
+      }
+
+      const session = await this._sessions.get(sessionId);
+      if (TERMINAL_STATUSES.has(session.status)) {
+        // Drain remaining messages
+        const final = await this._sessions.messages(sessionId, { after: cursor, limit: 100 });
+        for (const msg of final.messages) yield msg;
+        const { output, ...rest } = session;
+        this._result = { ...rest, output: this._parseOutput(output) } as SessionResult<T>;
+        return;
+      }
+
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      await new Promise((r) => setTimeout(r, Math.min(this._interval, remaining)));
+    }
+
+    throw new Error(`Session ${sessionId} did not complete within ${this._timeout}ms`);
   }
 
   private _parseOutput(output: unknown): T {
