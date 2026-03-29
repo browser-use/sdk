@@ -4,6 +4,8 @@ description: "Easiest way to automate the web. Tell this agent in natural langua
 icon: rocket
 ---
 
+The SDK is a thin wrapper with polling around the [API v3 Reference](/cloud/api-reference). `client.run()` accepts all parameters from the API, creates a session, polls until completion, and parses the output.
+
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse

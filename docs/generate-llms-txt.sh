@@ -159,7 +159,7 @@ for product_nav in d['navigation']['products']:
     echo "# ${title:-$slug}" >> "$out"
     echo "Source: ${BASE_URL}/${slug}" >> "$out"
     echo "" >> "$out"
-    awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}' "$file" >> "$out"
+    awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}' "$file" | sed "s|](/cloud/|](${BASE_URL}/cloud/|g" >> "$out"
     echo "" >> "$out"
   done
 
@@ -174,7 +174,7 @@ CLOUD_FULL="$SCRIPT_DIR/llms-full.txt"
 cat > "$CLOUD_INDEX" << 'HEADER'
 # Browser Use Cloud SDK
 
-> The most SOTA browser agent and the most scalable browser infrastructure. Built on the largest AI browser automation open-source library on GitHub with almost 100k stars.
+> The most SOTA browser agent and the most scalable browser infrastructure. Built on the largest AI browser automation open-source library on GitHub with almost 100k stars. Web scraping, data extraction, form filling, and headless browser automation via natural language. Anti-detection, CAPTCHA solving, residential proxies. Alternative to Playwright, Puppeteer, and Selenium for AI-powered automation.
 
 - GitHub: https://github.com/browser-use/browser-use
 - Dashboard: https://cloud.browser-use.com
@@ -190,6 +190,11 @@ cat > "$CLOUD_INDEX" << 'HEADER'
 Install (check if already installed and update to latest):
 - Python: `pip install --upgrade browser-use-sdk`
 - TypeScript: `npm install browser-use-sdk@latest`
+
+Set API key (starts with `bu_`):
+```
+export BROWSER_USE_API_KEY=bu_your_key_here
+```
 
 HEADER
 

@@ -1,39 +1,71 @@
 ---
 title: FAQ
-description: "Fix common issues — slow tasks, failed agents, login problems, blocked sites, and unexpected costs."
+description: "Common questions and solutions."
 icon: circle-question
 ---
 
-## Task is slow
+## How much does a task cost?
 
-- **Set a start URL.** Skip navigation steps: `start_url="https://example.com/page"`.
-- **Use a closer proxy.** Proxy distance adds latency. If your target site is in the US, use `proxy_country_code="us"`.
+Set `max_cost_usd` to cap spending per task. Default is $20. A typical task costs $0.01–$0.05. Check `result.total_cost_usd` after each task.
 
-## Agent failed or gave wrong output
+## Which model should I use?
 
-- **Check the live URL.** Create a session and watch what the agent does via `live_url`. See [Live preview](/cloud/browser/live-preview).
-- **Simplify instructions.** Break complex tasks into smaller steps. Run multiple tasks in the same session.
-- **Add a start URL.** Do not make the agent search for a site — send it directly there.
+- **bu-mini** (default) — faster, cheaper. Good for most tasks.
+- **bu-max** — more capable. Use for complex multi-step workflows.
 
-## Need to log in to a site
+## How do I get the live browser URL?
 
-Three options, from easiest to most secure:
+`live_url` is not available immediately on session creation. Poll `sessions.get()` until it appears (~3-5 seconds).
 
-1. **Profile Sync** — sync your local browser cookies. One command: `curl -fsSL https://browser-use.com/profile.sh | sh`. See [Sync local and cloud cookies](/cloud/guides/profile-sync).
-2. **Secrets** — pass credentials scoped by domain. See [Secrets](/cloud/guides/secrets).
-3. **1Password** — auto-fill passwords and 2FA/TOTP codes. See [1Password & 2FA](/cloud/guides/1password).
+```python
+import asyncio
+session = await client.sessions.create(task="Go to example.com")
+while True:
+    s = await client.sessions.get(str(session.id))
+    if s.live_url:
+        print(s.live_url)
+        break
+    await asyncio.sleep(0.5)
+```
+
+## How do I authenticate on websites?
+
+1. **Profiles** — sync your local browser cookies: `curl -fsSL https://browser-use.com/profile.sh | sh`. See [Profiles](/cloud/guides/authentication).
+2. **1Password** — auto-fill passwords and 2FA codes. See [1Password & 2FA](/cloud/guides/1password) (v2 SDK).
+3. **Secrets** — pass credentials scoped by domain. See [Secrets](/cloud/guides/secrets) (v2 SDK).
+
+## Task failed or wrong output
+
+- **Add a start URL.** Don't make the agent search — send it directly.
+- **Simplify instructions.** Break complex tasks into smaller follow-up tasks in the same session.
+- **Check the live URL.** Watch what the agent does in real time.
+- **Try bu-max.** More capable model for harder tasks.
 
 ## Getting blocked by a website
 
-Stealth is on by default (anti-fingerprinting, CAPTCHA solving, Cloudflare bypass). If you are still blocked:
+Stealth is on by default. If still blocked:
 
-- **Try a different proxy country.** Some sites geo-restrict. Use `proxy_country_code` to match the target region.
-- **Check if the site uses a login wall.** Use a [Profile](/cloud/guides/authentication) to authenticate first.
-
-## How much does a task cost?
-
-Set `max_cost_usd` to cap spending per task. Default is $20. Check `result.total_cost_usd` after each task.
+- **Try a different proxy country** to match the target region.
+- **Use a profile** with logged-in cookies to bypass login walls.
 
 ## Rate limited (429 errors)
 
-The SDK auto-retries 429 responses with exponential backoff (up to 10s). If you are consistently hitting limits, you may need to upgrade your plan for more concurrent sessions.
+The SDK auto-retries 429 responses with exponential backoff. If persistent, you may need more concurrent sessions — contact support.
+
+## How do I save files from a task?
+
+Use workspaces. See [Workspaces & files](/cloud/agent/workspaces).
+
+```python
+workspace = await client.workspaces.create(name="my-workspace")
+result = await client.run("Save top 3 HN posts as posts.json", workspace_id=str(workspace.id))
+files = await client.workspaces.files(str(workspace.id), include_urls=True)
+```
+
+## How do I use Browser Use as a sub-agent?
+
+Use `client.run()` inside your agent's tool function. For a full working example with streaming and live preview, see the [Chat UI tutorial](/cloud/tutorials/chat-ui).
+
+## v2 vs v3 — which should I use?
+
+Use v3 (`from browser_use_sdk.v3 import AsyncBrowserUse`). It has sessions, workspaces, live messages, and recording. v2 is legacy — only use it if you need `secrets`, `allowed_domains`, or `op_vault_id`.

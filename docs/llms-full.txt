@@ -46,7 +46,7 @@ console.log(result.output);
 </CodeGroup>
 
 <Note>
-  Want a full working app? See the [Chat UI example](/cloud/tutorials/chat-ui) — a complete Next.js app with live browser preview, streaming messages, authentication, and session management.
+  Want a full working app? See the [Chat UI example](https://docs.browser-use.com/cloud/tutorials/chat-ui) — a complete Next.js app with live browser preview, streaming messages, authentication, and session management.
 </Note>
 
 
@@ -60,6 +60,8 @@ Source: https://docs.browser-use.com/cloud/vibecoding
 # Introduction
 Source: https://docs.browser-use.com/cloud/agent/quickstart
 
+
+The SDK is a thin wrapper with polling around the [API v3 Reference](https://docs.browser-use.com/cloud/api-reference). `client.run()` accepts all parameters from the API, creates a session, polls until completion, and parses the output.
 
 <CodeGroup>
 ```python Python
@@ -183,7 +185,7 @@ Source: https://docs.browser-use.com/cloud/agent/streaming
 
 
 <Note>
-  Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
+  Want a ready-made UI? See the [Chat UI tutorial](https://docs.browser-use.com/cloud/tutorials/chat-ui).
 </Note>
 
 Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool calls, and results.
@@ -238,6 +240,18 @@ while (true) {
 }
 ```
 </CodeGroup>
+
+## Message fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `str` | Message UUID. |
+| `role` | `str` | `user`, `assistant`, or `tool`. |
+| `data` | `str` | Message content (JSON string — parse it). |
+| `type` | `str` | `user_message`, `assistant_message`, `browser_action`, `browser_action_result`, `completion_result`, etc. |
+| `summary` | `str` | Human-readable summary of the message. |
+| `screenshot_url` | `str` | Presigned screenshot URL (on browser action results). |
+| `created_at` | `str` | Timestamp. |
 
 
 # Workspaces & files
@@ -396,7 +410,7 @@ Source: https://docs.browser-use.com/cloud/agent/human-in-the-loop
 ## Flow
 
 1. Create a session with `keep_alive=True` so it stays alive between tasks
-2. Run an agent task
+2. Run an agent task — `live_url` becomes available once the browser starts (~3-5 seconds, poll `sessions.get()`)
 3. Human interacts with the `liveUrl`
 4. Send a new follow-up task
 
@@ -537,7 +551,8 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 session = await client.sessions.create(
     custom_proxy={
-        "url": "http://proxy.example.com:8080",
+        "host": "proxy.example.com",
+        "port": 8080,
         "username": "user",
         "password": "pass",
     },
@@ -549,7 +564,8 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const session = await client.sessions.create({
   customProxy: {
-    url: "http://proxy.example.com:8080",
+    host: "proxy.example.com",
+    port: 8080,
     username: "user",
     password: "pass",
   },
@@ -563,7 +579,7 @@ Source: https://docs.browser-use.com/cloud/browser/live-preview
 
 
 <Note>
-  Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
+  Want a ready-made UI? See the [Chat UI tutorial](https://docs.browser-use.com/cloud/tutorials/chat-ui).
 </Note>
 
 <CodeGroup>
@@ -632,7 +648,7 @@ https://live.browser-use.com?wss=...&ui=false
 
 ## Recording
 
-Enable recording to get an MP4 video of the session after it completes.
+Enable recording to get an MP4 video of the session after it completes. Recording URLs may take a few seconds to appear after the session stops — poll `sessions.get()` if empty initially.
 
 <CodeGroup>
 ```python Python
@@ -1282,7 +1298,7 @@ Browser Use works with [n8n](https://n8n.io) as a standard HTTP integration — 
 
 **Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v3/sessions` with your API key in the `X-Browser-Use-API-Key` header and a JSON body like `{"task": "your task here"}`. Then poll `GET /api/v3/sessions/{session_id}` until `status` is `idle` or `stopped`.
 
-For event-driven workflows, use [Webhooks](/cloud/guides/webhooks) to receive completion events directly instead of polling.
+For event-driven workflows, use [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks) to receive completion events directly instead of polling.
 
 <Tip>
   This pattern works with any workflow tool that supports HTTP requests — Make, Zapier, Pipedream, or custom orchestrators.
@@ -1551,39 +1567,71 @@ The complete source is at [github.com/browser-use/chat-ui-example](https://githu
 Source: https://docs.browser-use.com/cloud/faq
 
 
-## Task is slow
+## How much does a task cost?
 
-- **Set a start URL.** Skip navigation steps: `start_url="https://example.com/page"`.
-- **Use a closer proxy.** Proxy distance adds latency. If your target site is in the US, use `proxy_country_code="us"`.
+Set `max_cost_usd` to cap spending per task. Default is $20. A typical task costs $0.01–$0.05. Check `result.total_cost_usd` after each task.
 
-## Agent failed or gave wrong output
+## Which model should I use?
 
-- **Check the live URL.** Create a session and watch what the agent does via `live_url`. See [Live preview](/cloud/browser/live-preview).
-- **Simplify instructions.** Break complex tasks into smaller steps. Run multiple tasks in the same session.
-- **Add a start URL.** Do not make the agent search for a site — send it directly there.
+- **bu-mini** (default) — faster, cheaper. Good for most tasks.
+- **bu-max** — more capable. Use for complex multi-step workflows.
 
-## Need to log in to a site
+## How do I get the live browser URL?
 
-Three options, from easiest to most secure:
+`live_url` is not available immediately on session creation. Poll `sessions.get()` until it appears (~3-5 seconds).
 
-1. **Profile Sync** — sync your local browser cookies. One command: `curl -fsSL https://browser-use.com/profile.sh | sh`. See [Sync local and cloud cookies](/cloud/guides/profile-sync).
-2. **Secrets** — pass credentials scoped by domain. See [Secrets](/cloud/guides/secrets).
-3. **1Password** — auto-fill passwords and 2FA/TOTP codes. See [1Password & 2FA](/cloud/guides/1password).
+```python
+import asyncio
+session = await client.sessions.create(task="Go to example.com")
+while True:
+    s = await client.sessions.get(str(session.id))
+    if s.live_url:
+        print(s.live_url)
+        break
+    await asyncio.sleep(0.5)
+```
+
+## How do I authenticate on websites?
+
+1. **Profiles** — sync your local browser cookies: `curl -fsSL https://browser-use.com/profile.sh | sh`. See [Profiles](https://docs.browser-use.com/cloud/guides/authentication).
+2. **1Password** — auto-fill passwords and 2FA codes. See [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password) (v2 SDK).
+3. **Secrets** — pass credentials scoped by domain. See [Secrets](https://docs.browser-use.com/cloud/guides/secrets) (v2 SDK).
+
+## Task failed or wrong output
+
+- **Add a start URL.** Don't make the agent search — send it directly.
+- **Simplify instructions.** Break complex tasks into smaller follow-up tasks in the same session.
+- **Check the live URL.** Watch what the agent does in real time.
+- **Try bu-max.** More capable model for harder tasks.
 
 ## Getting blocked by a website
 
-Stealth is on by default (anti-fingerprinting, CAPTCHA solving, Cloudflare bypass). If you are still blocked:
+Stealth is on by default. If still blocked:
 
-- **Try a different proxy country.** Some sites geo-restrict. Use `proxy_country_code` to match the target region.
-- **Check if the site uses a login wall.** Use a [Profile](/cloud/guides/authentication) to authenticate first.
-
-## How much does a task cost?
-
-Set `max_cost_usd` to cap spending per task. Default is $20. Check `result.total_cost_usd` after each task.
+- **Try a different proxy country** to match the target region.
+- **Use a profile** with logged-in cookies to bypass login walls.
 
 ## Rate limited (429 errors)
 
-The SDK auto-retries 429 responses with exponential backoff (up to 10s). If you are consistently hitting limits, you may need to upgrade your plan for more concurrent sessions.
+The SDK auto-retries 429 responses with exponential backoff. If persistent, you may need more concurrent sessions — contact support.
+
+## How do I save files from a task?
+
+Use workspaces. See [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces).
+
+```python
+workspace = await client.workspaces.create(name="my-workspace")
+result = await client.run("Save top 3 HN posts as posts.json", workspace_id=str(workspace.id))
+files = await client.workspaces.files(str(workspace.id), include_urls=True)
+```
+
+## How do I use Browser Use as a sub-agent?
+
+Use `client.run()` inside your agent's tool function. For a full working example with streaming and live preview, see the [Chat UI tutorial](https://docs.browser-use.com/cloud/tutorials/chat-ui).
+
+## v2 vs v3 — which should I use?
+
+Use v3 (`from browser_use_sdk.v3 import AsyncBrowserUse`). It has sessions, workspaces, live messages, and recording. v2 is legacy — only use it if you need `secrets`, `allowed_domains`, or `op_vault_id`.
 
 
 # Agent (v2)
@@ -1734,9 +1782,9 @@ console.log(run.result?.output);  // final result after iteration
 | `output_schema` / `schema` | Pydantic / Zod | Schema for structured output. |
 | `session_id` | `str` | Reuse an existing session. Omit for auto-session. |
 | `start_url` | `str` | Initial page URL. Saves steps — send the agent directly there. |
-| `secrets` | `dict` | Domain-specific credentials. See [Authentication](/cloud/guides/authentication). |
+| `secrets` | `dict` | Domain-specific credentials. See [Authentication](https://docs.browser-use.com/cloud/guides/authentication). |
 | `allowed_domains` | `list[str]` | Restrict agent to these domains only. |
-| `session_settings` | `SessionSettings` | Proxy, profile, browser config. See [Profiles](/cloud/guides/authentication). |
+| `session_settings` | `SessionSettings` | Proxy, profile, browser config. See [Profiles](https://docs.browser-use.com/cloud/guides/authentication). |
 | `flash_mode` | `bool` | Faster but less careful navigation. |
 | `thinking` | `bool` | Enable extended reasoning. |
 | `vision` | `bool \| str` | Enable screenshots for the agent. |
@@ -2008,7 +2056,7 @@ Base URL: `https://api.browser-use.com/api/v3`
 
 ---
 
-Prefer the SDK? See the [Agent docs](/cloud/agent/quickstart).
+Prefer the SDK? See the [Agent docs](https://docs.browser-use.com/cloud/agent/quickstart).
 
 <CodeGroup>
 ```bash Python
@@ -2034,7 +2082,7 @@ Base URL: `https://api.browser-use.com/api/v2`
 
 ---
 
-Prefer the SDK? See the [Agent (v2) docs](/cloud/legacy/agent).
+Prefer the SDK? See the [Agent (v2) docs](https://docs.browser-use.com/cloud/legacy/agent).
 
 <CodeGroup>
 ```bash Python
