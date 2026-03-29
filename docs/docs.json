@@ -74,7 +74,6 @@
                   "cloud/guides/proxies-and-stealth",
                   "cloud/guides/skills",
                   "cloud/guides/authentication",
-                  "cloud/guides/mcp-server",
                   "cloud/guides/webhooks"
                 ]
               },
@@ -85,6 +84,7 @@
               {
                 "group": "Integrations",
                 "pages": [
+                  "cloud/guides/mcp-server",
                   "cloud/tutorials/integrations/openclaw",
                   "cloud/tutorials/integrations/n8n",
                   "cloud/tutorials/integrations/playwright"
