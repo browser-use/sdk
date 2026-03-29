@@ -143,10 +143,14 @@ class AsyncSessionRun(Generic[T]):
 
             session = await self._sessions.get(self.session_id)
             if session.status.value in _TERMINAL_STATUSES:
-                # Drain any remaining messages
-                resp = await self._sessions.messages(self.session_id, after=cursor, limit=100)
-                for msg in resp.messages:
-                    yield msg
+                # Drain all remaining messages (may be multiple pages)
+                while True:
+                    resp = await self._sessions.messages(self.session_id, after=cursor, limit=100)
+                    if not resp.messages:
+                        break
+                    for msg in resp.messages:
+                        yield msg
+                        cursor = str(msg.id)
                 self.result = SessionResult(session, _parse_output(session.output, self._output_schema))
                 return
 
@@ -199,9 +203,13 @@ class SessionStream(Generic[T]):
 
             session = self._sessions.get(self.session_id)
             if session.status.value in _TERMINAL_STATUSES:
-                resp = self._sessions.messages(self.session_id, after=cursor, limit=100)
-                for msg in resp.messages:
-                    yield msg
+                while True:
+                    resp = self._sessions.messages(self.session_id, after=cursor, limit=100)
+                    if not resp.messages:
+                        break
+                    for msg in resp.messages:
+                        yield msg
+                        cursor = str(msg.id)
                 self.result = SessionResult(session, _parse_output(session.output, self._output_schema))
                 return
 

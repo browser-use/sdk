@@ -113,9 +113,15 @@ export class SessionRun<T = string> implements PromiseLike<SessionResult<T>> {
 
       const session = await this._sessions.get(sessionId);
       if (TERMINAL_STATUSES.has(session.status)) {
-        // Drain remaining messages
-        const final = await this._sessions.messages(sessionId, { after: cursor, limit: 100 });
-        for (const msg of final.messages) yield msg;
+        // Drain all remaining messages (may be multiple pages)
+        while (true) {
+          const page = await this._sessions.messages(sessionId, { after: cursor, limit: 100 });
+          if (!page.messages.length) break;
+          for (const msg of page.messages) {
+            yield msg;
+            cursor = msg.id;
+          }
+        }
         const { output, ...rest } = session;
         this._result = { ...rest, output: this._parseOutput(output) } as SessionResult<T>;
         return;
