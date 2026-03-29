@@ -72,26 +72,21 @@
                   "cloud/guides/browser-api",
                   "cloud/guides/proxies-and-stealth",
                   "cloud/guides/authentication",
-                  "cloud/guides/webhooks"
+                  "cloud/guides/webhooks",
+                  {
+                    "group": "Legacy (v2)",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "cloud/legacy/v2-agent/models",
+                      "cloud/legacy/v2-agent/files",
+                      "cloud/legacy/skills"
+                    ]
+                  }
                 ]
               },
               {
                 "group": "Tutorials",
                 "pages": ["cloud/tutorials/chat-ui"]
-              },
-              {
-                "group": "Legacy (v2)",
-                "isDefaultOpen": false,
-                "pages": [
-                  {
-                    "group": "V2 Agent",
-                    "pages": [
-                      "cloud/legacy/v2-agent/models",
-                      "cloud/legacy/v2-agent/files"
-                    ]
-                  },
-                  "cloud/legacy/skills"
-                ]
               },
               {
                 "group": "Integrations",
