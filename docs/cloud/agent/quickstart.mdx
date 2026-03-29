@@ -1,39 +1,17 @@
 ---
-title: Quick start
-description: "Install the SDK, set your API key, and run your first AI browser agent task."
-icon: rocket
+title: Introduction
+description: "AI browser agent that can browse the web, extract data, fill forms, and complete multi-step workflows."
 ---
 
-## 1. Install
-
-<CodeGroup>
-```bash Python
-pip install browser-use-sdk
-```
-```bash TypeScript
-npm install browser-use-sdk
-```
-</CodeGroup>
-
-Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then:
-
-```bash
-export BROWSER_USE_API_KEY=your_key
-```
-
-## 2. Run your first task
+The BU Agent takes a natural language task and autonomously browses the web to complete it. Describe what you want — the agent figures out the steps.
 
 <CodeGroup>
 ```python Python
-import asyncio
 from browser_use_sdk import AsyncBrowserUse
 
-async def main():
-    client = AsyncBrowserUse()
-    result = await client.run("Find the top 3 trending repos on GitHub today")
-    print(result.output)
-
-asyncio.run(main())
+client = AsyncBrowserUse()
+result = await client.run("Find the top 3 trending repos on GitHub today")
+print(result.output)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk";
@@ -43,3 +21,9 @@ const result = await client.run("Find the top 3 trending repos on GitHub today")
 console.log(result.output);
 ```
 </CodeGroup>
+
+**What agents can do:**
+- **Data extraction** — scrape websites, collect structured data, monitor prices
+- **Form filling** — submit applications, fill out surveys, enter data
+- **Multi-step workflows** — log in, navigate, click through flows, download files
+- **Research** — search across multiple sites, compare results, summarize findings

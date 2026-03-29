@@ -26,7 +26,7 @@
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
-    "href": "/cloud/agent/quickstart"
+    "href": "/cloud/quickstart"
   },
   "api": {
     "playground": {
@@ -53,6 +53,7 @@
               {
                 "group": "Get Started",
                 "pages": [
+                  "cloud/quickstart",
                   "cloud/vibecoding"
                 ]
               },
@@ -317,8 +318,7 @@
     }
   },
   "redirects": [
-    {"source": "/", "destination": "/cloud/agent/quickstart"},
-    {"source": "/cloud/quickstart", "destination": "/cloud/agent/quickstart"},
+    {"source": "/", "destination": "/cloud/quickstart"},
     {"source": "/cloud/new-features/api-v3", "destination": "/cloud/agent/quickstart"},
     {"source": "/cloud/guides/tasks", "destination": "/cloud/agent/quickstart"},
     {"source": "/cloud/guides/workspaces", "destination": "/cloud/agent/workspaces"},
