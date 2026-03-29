@@ -73,36 +73,6 @@ console.log(result.output);  // { ticker: "NVDA", price: 135.40, changePct: 2.3 
 ```
 </CodeGroup>
 
-## Streaming steps
-
-Use `async for` to yield steps as the agent works.
-
-<CodeGroup>
-```python Python
-from browser_use_sdk import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-run = client.run("Find the cheapest flight from NYC to London on Google Flights")
-async for step in run:
-    print(f"Step {step.number}: {step.next_goal}")
-    print(f"  URL: {step.url}")
-
-print(run.result.output)  # final result after iteration
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
-
-const client = new BrowserUse();
-const run = client.run("Find the cheapest flight from NYC to London on Google Flights");
-for await (const step of run) {
-  console.log(`Step ${step.number}: ${step.nextGoal}`);
-  console.log(`  URL: ${step.url}`);
-}
-
-console.log(run.result?.output);  // final result after iteration
-```
-</CodeGroup>
-
 ## Message streaming (v3)
 
 In the BU Agent API, use `sessions.messages()` to poll the agent's message history while a task runs. This gives you the full conversation — user messages, assistant reasoning, and tool calls.
@@ -165,24 +135,3 @@ while (true) {
 
 Use `after` and `before` cursors for pagination through large message histories.
 
-## Key parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `task` | `str` | What you want the agent to do. 1-50,000 characters. |
-| `llm` | `str` | Model override. Default: Browser Use 2.0. See [Models & Pricing](/cloud/pricing). |
-| `output_schema` / `schema` | Pydantic / Zod | Schema for structured output. |
-| `session_id` | `str` | Reuse an existing session. Omit for auto-session. |
-| `start_url` | `str` | Initial page URL. Saves steps — send the agent directly there. |
-| `secrets` | `dict` | Domain-specific credentials. See [Authentication](/cloud/guides/authentication). |
-| `allowed_domains` | `list[str]` | Restrict agent to these domains only. |
-| `session_settings` | `SessionSettings` | Proxy, profile, browser config. See [Sessions](/cloud/guides/sessions). |
-| `flash_mode` | `bool` | Faster but less careful navigation. |
-| `thinking` | `bool` | Enable extended reasoning. |
-| `vision` | `bool \| str` | Enable screenshots for the agent. |
-| `highlight_elements` | `bool` | Highlight interactive elements on the page. |
-| `system_prompt_extension` | `str` | Append custom instructions to the system prompt. |
-| `judge` | `bool` | Enable quality judge to verify output. |
-| `skill_ids` | `list[str]` | Skills the agent can use during the task. |
-| `op_vault_id` | `str` | 1Password vault ID for auto-fill credentials and 2FA. See [Authentication](/cloud/guides/authentication#1password-integration). |
-| `metadata` | `dict[str, str]` | Custom metadata attached to the task. |
