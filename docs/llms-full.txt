@@ -190,7 +190,7 @@ import asyncio
 from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-session = await client.sessions.create("Find the top story on Hacker News")
+session = await client.sessions.create(task="Find the top story on Hacker News")
 session_id = str(session.id)
 
 seen = set()
@@ -743,10 +743,10 @@ for (const p of profiles) {
 
 // Search by name
 const results = await client.profiles.list({ query: "user-id-1" });
-const profile = results[0]; // first match
+const found = results[0]; // first match
 
 // Get one by ID
-const profile = await client.profiles.get(profileId);
+const fetched = await client.profiles.get(profileId);
 
 // Update
 await client.profiles.update(profileId, { name: "renamed" });
@@ -828,13 +828,16 @@ const result = await client.run(
 
 Use `allowed_domains` to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`.
 
-For SSO/OAuth redirects, include both domains:
+For SSO/OAuth redirects, include all domains in the auth flow:
 
 <CodeGroup>
 ```python Python
 result = await client.run(
     "Log into the company portal and download the Q4 report",
-    secrets={"username": "user@company.com", "password": "password123"},
+    secrets={
+        "portal.example.com": "user@company.com:password123",
+        "okta.com": "user@company.com:password123",
+    },
     allowed_domains=["portal.example.com", "*.okta.com"],
 )
 ```
@@ -842,7 +845,10 @@ result = await client.run(
 const result = await client.run(
   "Log into the company portal and download the Q4 report",
   {
-    secrets: { username: "user@company.com", password: "password123" },
+    secrets: {
+      "portal.example.com": "user@company.com:password123",
+      "okta.com": "user@company.com:password123",
+    },
     allowedDomains: ["portal.example.com", "*.okta.com"],
   },
 );
@@ -1148,56 +1154,22 @@ For the complete CLI reference and advanced features like cloud browsers, tunnel
 Source: https://docs.browser-use.com/cloud/guides/mcp-server
 
 
-Browser Use provides two [Model Context Protocol](https://modelcontextprotocol.io) server endpoints:
+```
+https://api.browser-use.com/v3/mcp
+```
 
-| Endpoint | URL |
-|----------|-----|
-| **v2** | `https://api.browser-use.com/mcp` |
-| **v3** | `https://api.browser-use.com/v3/mcp` |
-
-The **v2** endpoint uses a task-based agent — each task runs independently and is dispatched to a queue. The **v3** endpoint uses a session-based agent that runs in a persistent sandbox container, supporting keep-alive for multi-turn interactions, model selection (`bu-mini`, `bu-max`, `bu-ultra`), structured output, and shared workspaces for file persistence across sessions.
-
-Get your API key from the [Browser Use Dashboard](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
 
 ## Claude Code
 
-<Tabs>
-<Tab title="v2">
-```bash
-claude mcp add -t http -H "x-browser-use-api-key: YOUR_API_KEY" browser-use https://api.browser-use.com/mcp
-```
-</Tab>
-<Tab title="v3">
 ```bash
 claude mcp add -t http -H "x-browser-use-api-key: YOUR_API_KEY" browser-use https://api.browser-use.com/v3/mcp
 ```
-</Tab>
-</Tabs>
-
-<Note>
-Replace `YOUR_API_KEY` with your actual API key. Claude Code requires the API key to be passed via the `-H` (header) flag.
-</Note>
 
 ## Claude Desktop
 
 Add to `claude_desktop_config.json`:
 
-<Tabs>
-<Tab title="v2">
-```json
-{
-  "mcpServers": {
-    "browser-use": {
-      "url": "https://api.browser-use.com/mcp",
-      "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
-      }
-    }
-  }
-}
-```
-</Tab>
-<Tab title="v3">
 ```json
 {
   "mcpServers": {
@@ -1210,29 +1182,11 @@ Add to `claude_desktop_config.json`:
   }
 }
 ```
-</Tab>
-</Tabs>
 
 ## Cursor
 
 Add to `.cursor/mcp.json`:
 
-<Tabs>
-<Tab title="v2">
-```json
-{
-  "mcpServers": {
-    "browser-use": {
-      "url": "https://api.browser-use.com/mcp",
-      "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
-      }
-    }
-  }
-}
-```
-</Tab>
-<Tab title="v3">
 ```json
 {
   "mcpServers": {
@@ -1245,29 +1199,11 @@ Add to `.cursor/mcp.json`:
   }
 }
 ```
-</Tab>
-</Tabs>
 
 ## Windsurf
 
 Add to `~/.codeium/windsurf/mcp_config.json`:
 
-<Tabs>
-<Tab title="v2">
-```json
-{
-  "mcpServers": {
-    "browser-use": {
-      "serverUrl": "https://api.browser-use.com/mcp",
-      "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
-      }
-    }
-  }
-}
-```
-</Tab>
-<Tab title="v3">
 ```json
 {
   "mcpServers": {
@@ -1280,34 +1216,18 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
   }
 }
 ```
-</Tab>
-</Tabs>
 
 ## Available Tools
 
-<Tabs>
-<Tab title="v2">
-| Tool | Description | Cost |
-|------|-------------|------|
-| `browser_task` | Run a full automation task | $0.01 init + per-step (default $0.006/step). See [Pricing](/cloud/pricing). |
-| `execute_skill` | Run a skill | $0.02/call |
-| `list_skills` | List available skills | Free |
-| `get_cookies` | Extract cookies for auth | Free |
-| `list_browser_profiles` | List profiles | Free |
-| `monitor_task` | Check task progress | Free |
-</Tab>
-<Tab title="v3">
 | Tool | Description |
 |------|-------------|
-| `run_session` | Create a new browser session and run a task. Supports `keep_alive` to reuse the session, `model` selection (`bu-mini`, `bu-max`, `bu-ultra`), `output_schema` for structured output, and `profile_id` for authenticated browsing. |
-| `get_session` | Poll a session for status and output. Returns status (`running`, `idle`, `stopped`, `error`), step count, cost breakdown, and a live URL to watch the browser. |
-| `send_task` | Send a follow-up task to an idle keep-alive session. Enables multi-turn interactions that reuse the same browser context. |
-| `stop_session` | Stop a running session. Use `strategy: "task"` to stop only the current task (session stays idle), or `"session"` to destroy the sandbox. |
-| `get_session_messages` | Get the agent's step-by-step messages for a session, including browser actions, reasoning, and results. |
-| `list_sessions` | List recent sessions with status and cost info. |
-| `list_browser_profiles` | List cloud browser profiles for authenticated tasks. |
-</Tab>
-</Tabs>
+| `run_session` | Create a session and run a task. Supports `keep_alive`, `model` (`bu-mini`, `bu-max`), `output_schema`, and `profile_id`. |
+| `get_session` | Poll session status and output. Returns status, step count, cost breakdown, and live URL. |
+| `send_task` | Send a follow-up task to an idle keep-alive session. |
+| `stop_session` | Stop a session. `strategy: "task"` stops only the task, `"session"` destroys the sandbox. |
+| `get_session_messages` | Get the agent's messages — browser actions, reasoning, and results. |
+| `list_sessions` | List recent sessions with status and cost. |
+| `list_browser_profiles` | List browser profiles for authenticated tasks. |
 
 
 # Webhooks
@@ -1504,7 +1424,7 @@ Source: https://docs.browser-use.com/cloud/tutorials/integrations/n8n
 
 Browser Use works with [n8n](https://n8n.io) as a standard HTTP integration — no custom nodes needed.
 
-**Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v2/tasks` with your API key in the `X-Browser-Use-API-Key` header. Then poll `GET /api/v2/tasks/{task_id}/status` until `status` is `finished` or `stopped`.
+**Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v3/sessions` with your API key in the `X-Browser-Use-API-Key` header and a JSON body like `{"task": "your task here"}`. Then poll `GET /api/v3/sessions/{session_id}` until `status` is `idle` or `stopped`.
 
 For event-driven workflows, use [Webhooks](/cloud/guides/webhooks) to receive completion events directly instead of polling.
 
@@ -1781,13 +1701,12 @@ Source: https://docs.browser-use.com/cloud/faq
 
 ## Task is slow
 
-- **Switch models.** Browser Use LLM is ~3s/step. Frontier models (Claude, Gemini, O3) are 6-8s/step. See [Models & Pricing](/cloud/pricing).
 - **Set a start URL.** Skip navigation steps: `start_url="https://example.com/page"`.
 - **Use a closer proxy.** Proxy distance adds latency. If your target site is in the US, use `proxy_country_code="us"`.
 
 ## Agent failed or gave wrong output
 
-- **Check the live URL.** Create a [session](/cloud/guides/sessions) manually and watch what the agent does via `session.live_url`.
+- **Check the live URL.** Create a session and watch what the agent does via `live_url`. See [Live preview](/cloud/browser/live-preview).
 - **Simplify instructions.** Break complex tasks into smaller steps. Run multiple tasks in the same session.
 - **Add a start URL.** Do not make the agent search for a site — send it directly there.
 
@@ -1795,25 +1714,24 @@ Source: https://docs.browser-use.com/cloud/faq
 
 Three options, from easiest to most secure:
 
-1. **Profile Sync** — sync your local browser cookies. One command: `curl -fsSL https://browser-use.com/profile.sh | sh`. See [Profiles](/cloud/guides/sessions#profile-sync).
-2. **Secrets** — pass credentials scoped by domain. See [Authentication](/cloud/guides/authentication).
-3. **1Password** — auto-fill passwords and 2FA/TOTP codes. See [Authentication](/cloud/guides/authentication#1password-integration).
+1. **Profile Sync** — sync your local browser cookies. One command: `curl -fsSL https://browser-use.com/profile.sh | sh`. See [Sync local and cloud cookies](/cloud/guides/profile-sync).
+2. **Secrets** — pass credentials scoped by domain. See [Secrets](/cloud/guides/secrets).
+3. **1Password** — auto-fill passwords and 2FA/TOTP codes. See [1Password & 2FA](/cloud/guides/1password).
 
 ## Getting blocked by a website
 
 Stealth is on by default (anti-fingerprinting, CAPTCHA solving, Cloudflare bypass). If you are still blocked:
 
 - **Try a different proxy country.** Some sites geo-restrict. Use `proxy_country_code` to match the target region.
-- **Slow down.** Use `flash_mode=False` for more careful navigation.
-- **Check if the site uses a login wall.** Use a [Profile](/cloud/guides/sessions#profiles) to authenticate first.
+- **Check if the site uses a login wall.** Use a [Profile](/cloud/guides/authentication) to authenticate first.
 
 ## How much does a task cost?
 
-\$0.01 init + per-step cost based on model. A typical 10-step task with Browser Use LLM costs **\$0.03**. See [Pricing](/cloud/pricing) for full details.
+Set `max_cost_usd` to cap spending per task. Default is $20. Check `result.total_cost_usd` after each task.
 
 ## Rate limited (429 errors)
 
-The SDK auto-retries 429 responses with exponential backoff (up to 10s). If you are consistently hitting limits, you may need to upgrade your plan for more concurrent sessions. See [Pricing](/cloud/pricing).
+The SDK auto-retries 429 responses with exponential backoff (up to 10s). If you are consistently hitting limits, you may need to upgrade your plan for more concurrent sessions.
 
 
 # Agent (v2)

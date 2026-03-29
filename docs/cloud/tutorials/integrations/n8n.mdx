@@ -5,7 +5,7 @@ description: Use Browser Use as an HTTP node in n8n workflows.
 
 Browser Use works with [n8n](https://n8n.io) as a standard HTTP integration — no custom nodes needed.
 
-**Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v2/tasks` with your API key in the `X-Browser-Use-API-Key` header. Then poll `GET /api/v2/tasks/{task_id}/status` until `status` is `finished` or `stopped`.
+**Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v3/sessions` with your API key in the `X-Browser-Use-API-Key` header and a JSON body like `{"task": "your task here"}`. Then poll `GET /api/v3/sessions/{session_id}` until `status` is `idle` or `stopped`.
 
 For event-driven workflows, use [Webhooks](/cloud/guides/webhooks) to receive completion events directly instead of polling.
 

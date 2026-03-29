@@ -16,7 +16,7 @@ import asyncio
 from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-session = await client.sessions.create("Find the top story on Hacker News")
+session = await client.sessions.create(task="Find the top story on Hacker News")
 session_id = str(session.id)
 
 seen = set()

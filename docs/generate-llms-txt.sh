@@ -224,3 +224,8 @@ echo "" >> "$OS_INDEX"
 echo "Generated $OS_INDEX ($(wc -l < "$OS_INDEX") lines)"
 
 generate_full "open-source" "Open Source" "$OS_FULL"
+
+# Copy cloud files to cloud/ directory (symlinks don't work on Mintlify)
+cp "$SCRIPT_DIR/llms.txt" "$SCRIPT_DIR/cloud/llms.txt"
+cp "$SCRIPT_DIR/llms-full.txt" "$SCRIPT_DIR/cloud/llms-full.txt"
+echo "Copied root llms files to cloud/"

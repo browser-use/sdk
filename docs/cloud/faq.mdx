@@ -6,13 +6,12 @@ icon: circle-question
 
 ## Task is slow
 
-- **Switch models.** Browser Use LLM is ~3s/step. Frontier models (Claude, Gemini, O3) are 6-8s/step. See [Models & Pricing](/cloud/pricing).
 - **Set a start URL.** Skip navigation steps: `start_url="https://example.com/page"`.
 - **Use a closer proxy.** Proxy distance adds latency. If your target site is in the US, use `proxy_country_code="us"`.
 
 ## Agent failed or gave wrong output
 
-- **Check the live URL.** Create a [session](/cloud/guides/sessions) manually and watch what the agent does via `session.live_url`.
+- **Check the live URL.** Create a session and watch what the agent does via `live_url`. See [Live preview](/cloud/browser/live-preview).
 - **Simplify instructions.** Break complex tasks into smaller steps. Run multiple tasks in the same session.
 - **Add a start URL.** Do not make the agent search for a site — send it directly there.
 
@@ -20,22 +19,21 @@ icon: circle-question
 
 Three options, from easiest to most secure:
 
-1. **Profile Sync** — sync your local browser cookies. One command: `curl -fsSL https://browser-use.com/profile.sh | sh`. See [Profiles](/cloud/guides/sessions#profile-sync).
-2. **Secrets** — pass credentials scoped by domain. See [Authentication](/cloud/guides/authentication).
-3. **1Password** — auto-fill passwords and 2FA/TOTP codes. See [Authentication](/cloud/guides/authentication#1password-integration).
+1. **Profile Sync** — sync your local browser cookies. One command: `curl -fsSL https://browser-use.com/profile.sh | sh`. See [Sync local and cloud cookies](/cloud/guides/profile-sync).
+2. **Secrets** — pass credentials scoped by domain. See [Secrets](/cloud/guides/secrets).
+3. **1Password** — auto-fill passwords and 2FA/TOTP codes. See [1Password & 2FA](/cloud/guides/1password).
 
 ## Getting blocked by a website
 
 Stealth is on by default (anti-fingerprinting, CAPTCHA solving, Cloudflare bypass). If you are still blocked:
 
 - **Try a different proxy country.** Some sites geo-restrict. Use `proxy_country_code` to match the target region.
-- **Slow down.** Use `flash_mode=False` for more careful navigation.
-- **Check if the site uses a login wall.** Use a [Profile](/cloud/guides/sessions#profiles) to authenticate first.
+- **Check if the site uses a login wall.** Use a [Profile](/cloud/guides/authentication) to authenticate first.
 
 ## How much does a task cost?
 
-\$0.01 init + per-step cost based on model. A typical 10-step task with Browser Use LLM costs **\$0.03**. See [Pricing](/cloud/pricing) for full details.
+Set `max_cost_usd` to cap spending per task. Default is $20. Check `result.total_cost_usd` after each task.
 
 ## Rate limited (429 errors)
 
-The SDK auto-retries 429 responses with exponential backoff (up to 10s). If you are consistently hitting limits, you may need to upgrade your plan for more concurrent sessions. See [Pricing](/cloud/pricing).
+The SDK auto-retries 429 responses with exponential backoff (up to 10s). If you are consistently hitting limits, you may need to upgrade your plan for more concurrent sessions.

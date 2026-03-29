@@ -11,6 +11,7 @@
 - Stealth benchmark: https://browser-use.com/posts/stealth-benchmark
 - Agent benchmark (online Mind2Web): https://browser-use.com/posts/online-mind2web-benchmark
 - Blog: https://browser-use.com/posts
+- API v2 Reference: https://docs.browser-use.com/cloud/api-v2-overview
 
 Install:
 - Python: `pip install browser-use-sdk`
@@ -28,7 +29,7 @@ Install:
 - [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks): Run multiple tasks in the same browser session.
 - [Live messages](https://docs.browser-use.com/cloud/agent/streaming): Poll the agent's message history in real time to build custom UIs or monitor progress.
 - [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces): Persistent file storage across sessions. Upload input files, download results, and share data across tasks.
-- [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop): Combine human judgment with agent automation — hand control back and forth in the same session.
+- [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop): Let a human interact with the live browser while the agent is running. Useful for approvals, payments, complex auth flows, or reviewing agent work before continuing.
 
 ## Browser
 - [Introduction Stealth](https://docs.browser-use.com/cloud/browser/stealth): Best stealth on the planet. We fork Chromium to give agents access to all websites.
