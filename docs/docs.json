@@ -78,10 +78,10 @@
                       "cloud/guides/proxies-and-stealth",
                       "cloud/browser/live-preview",
                       "cloud/browser/playwright-puppeteer-selenium",
-                      "cloud/guides/sessions"
+                      "cloud/guides/sessions",
+                      "cloud/guides/authentication"
                     ]
                   },
-                  "cloud/guides/authentication",
                   {
                     "group": "Legacy (v2)",
                     "isDefaultOpen": false,
