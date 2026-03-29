@@ -86,13 +86,16 @@ result = await client.run(
     enable_recording=True,
 )
 
-# Recording may not be ready immediately — poll if empty
+# Recording may not be ready immediately — poll (max 60s)
 import asyncio
-while not result.recording_urls:
+session = result
+for _ in range(30):
+    session = await client.sessions.get(str(result.id))
+    if session.recording_urls:
+        break
     await asyncio.sleep(2)
-    result = await client.sessions.get(str(result.id))
 
-for url in result.recording_urls:
+for url in session.recording_urls:
     print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
@@ -103,9 +106,9 @@ const result = await client.run("Check how many GitHub stars browser-use has", {
   enableRecording: true,
 });
 
-// Recording may not be ready immediately — poll if empty
-let session = result;
-while (!session.recordingUrls?.length) {
+// Recording may not be ready immediately — poll (max 60s)
+let session = await client.sessions.get(result.id);
+for (let i = 0; i < 30 && !session.recordingUrls?.length; i++) {
   await new Promise((r) => setTimeout(r, 2000));
   session = await client.sessions.get(result.id);
 }
