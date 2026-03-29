@@ -58,19 +58,29 @@
                 ]
               },
               {
-                "group": "New Features",
-                "pages": [
-                  "cloud/new-features/api-v3"
-                ]
-              },
-              {
                 "group": "Concepts",
                 "pages": [
-                  "cloud/guides/tasks",
+                  {
+                    "group": "Agent",
+                    "icon": "robot",
+                    "pages": [
+                      "cloud/agent/quickstart",
+                      "cloud/agent/structured-output",
+                      "cloud/agent/streaming",
+                      "cloud/agent/follow-up-tasks",
+                      "cloud/agent/workspaces"
+                    ]
+                  },
+                  {
+                    "group": "Browser",
+                    "icon": "globe",
+                    "pages": [
+                      "cloud/guides/proxies-and-stealth",
+                      "cloud/browser/live-preview",
+                      "cloud/browser/playwright-puppeteer-selenium"
+                    ]
+                  },
                   "cloud/guides/sessions",
-                  "cloud/guides/workspaces",
-                  "cloud/guides/browser-api",
-                  "cloud/guides/proxies-and-stealth",
                   "cloud/guides/authentication",
                   "cloud/guides/webhooks",
                   {
@@ -339,6 +349,11 @@
   },
   "redirects": [
     {"source": "/", "destination": "/cloud/quickstart"},
+    {"source": "/cloud/new-features/api-v3", "destination": "/cloud/agent/quickstart"},
+    {"source": "/cloud/guides/tasks", "destination": "/cloud/agent/quickstart"},
+    {"source": "/cloud/guides/workspaces", "destination": "/cloud/agent/workspaces"},
+    {"source": "/cloud/guides/browser-api", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
+    {"source": "/cloud/tips/live-view/iframe-embed", "destination": "/cloud/browser/live-preview"},
     {"source": "/cloud/pricing", "destination": "/cloud/legacy/agent"},
     {"source": "/cloud/models", "destination": "/cloud/legacy/agent"},
     {"source": "/cloud/guides/skills", "destination": "/cloud/legacy/skills"},

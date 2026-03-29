@@ -1,0 +1,91 @@
+---
+title: Workspaces & files
+description: "Persistent file storage across sessions. Upload input files, download results, and share data across tasks."
+---
+
+A workspace is a persistent storage container that lives across sessions. Upload input data before a task starts, or retrieve output files after it completes.
+
+<Tip>
+  Every project gets a default "My Files" workspace automatically.
+</Tip>
+
+## Create a workspace
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+workspace = await client.workspaces.create(name="my-workspace")
+print(workspace.id, workspace.name)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const workspace = await client.workspaces.create({ name: "my-workspace" });
+console.log(workspace.id, workspace.name);
+```
+</CodeGroup>
+
+## Use a workspace with a task
+
+Pass `workspace_id` when running a task. The agent can read and write files in the workspace during execution.
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    'Create a file called HEARTBEAT.md with the text "say hello"',
+    workspace_id=str(workspace.id),
+)
+print(result.output)
+```
+```typescript TypeScript
+const result = await client.run(
+  'Create a file called HEARTBEAT.md with the text "say hello"',
+  { workspaceId: workspace.id },
+);
+console.log(result.output);
+```
+</CodeGroup>
+
+## List and delete files
+
+<CodeGroup>
+```python Python
+files = await client.workspaces.files(workspace_id, include_urls=True)
+for f in files.files:
+    print(f.path, f.size)
+
+await client.workspaces.delete_file(workspace_id, path="HEARTBEAT.md")
+```
+```typescript TypeScript
+const files = await client.workspaces.files(workspaceId, { includeUrls: true });
+for (const f of files.files) {
+  console.log(f.path, f.size);
+}
+
+await client.workspaces.deleteFile(workspaceId, "HEARTBEAT.md");
+```
+</CodeGroup>
+
+## Manage workspaces
+
+<CodeGroup>
+```python Python
+workspace = await client.workspaces.get(workspace_id)
+updated = await client.workspaces.update(workspace_id, name="renamed")
+workspaces = await client.workspaces.list()
+await client.workspaces.delete(workspace_id)
+```
+```typescript TypeScript
+const workspace = await client.workspaces.get(workspaceId);
+const updated = await client.workspaces.update(workspaceId, { name: "renamed" });
+const workspaces = await client.workspaces.list();
+await client.workspaces.delete(workspaceId);
+```
+</CodeGroup>
+
+<Warning>
+  Deleting a workspace permanently removes all its files. This cannot be undone.
+</Warning>

@@ -1,0 +1,47 @@
+---
+title: Follow-up tasks
+description: "Run multiple tasks in the same browser session."
+---
+
+Create a session manually to run multiple tasks in the same browser. The agent keeps all state — cookies, tabs, login sessions — between tasks.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+session = await client.sessions.create(proxy_country_code="us")
+
+result1 = await client.run(
+    "Log into example.com with user@test.com",
+    session_id=str(session.id),
+    keep_alive=True,
+)
+result2 = await client.run(
+    "Now go to settings and change the timezone",
+    session_id=str(session.id),
+)
+
+await client.sessions.stop(str(session.id))
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+
+const session = await client.sessions.create({ proxyCountryCode: "us" });
+
+const result1 = await client.run("Log into example.com with user@test.com", {
+  sessionId: session.id,
+  keepAlive: true,
+});
+const result2 = await client.run("Now go to settings and change the timezone", {
+  sessionId: session.id,
+});
+
+await client.sessions.stop(session.id);
+```
+</CodeGroup>
+
+Use `keep_alive: true` to keep the session running after a task completes. Without it, the session auto-stops when the task finishes.
