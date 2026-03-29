@@ -8,7 +8,7 @@ icon: message-lines
   Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
 </Note>
 
-Stream messages as the agent works — reasoning, tool calls, browser actions, and results.
+Stream messages as the agent works — reasoning, tool calls, browser actions, and results. Each message has a `summary` for display and a `role` (`user`, `assistant`, `tool`). See [List session messages](/cloud/api-v3/sessions/list-session-messages) for all fields.
 
 <CodeGroup>
 ```python Python
@@ -36,19 +36,14 @@ console.log(run.result.output);
 ```
 </CodeGroup>
 
-## Message fields
-
-Each message has:
-
-| Field | Description |
-|-------|-------------|
-| `role` | `user`, `assistant`, or `tool` |
-| `type` | `browser_action`, `browser_action_result`, `planning`, `completion`, etc. |
-| `summary` | One-liner for display (e.g. "Navigating to google.com") |
-| `data` | Full message content (JSON string) |
-| `screenshot_url` | Screenshot URL (on `browser_action_result` messages) |
-
-See [List session messages](/cloud/api-v3/sessions/list-session-messages) for all fields.
+```
+[user] Find the top story on Hacker News
+[assistant] Navigating to https://news.ycombinator.com/
+[tool] Browser Navigate: Navigated
+[assistant] Analyzing browser state
+[tool] Browser Analyze State: The top story is "Coding Agents Could Make Free Software Matter Again"
+[tool] Done Autonomous: The top story on Hacker News is "Coding Agents Could Make Free Software Matter Again"
+```
 
 ## Manual polling
 
