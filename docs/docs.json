@@ -147,10 +147,11 @@
           },
           {
             "tab": "API v2",
+            "href": "cloud/api-v2-overview",
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["cloud/api-reference"]
+                "pages": ["cloud/api-v2-overview"]
               },
               {
                 "group": "Endpoints",
