@@ -3,7 +3,11 @@ title: Stream messages
 description: "Poll the agent's message history in real time to build custom UIs or monitor progress."
 ---
 
-Use `sessions.messages()` to poll the agent's messages while a task runs. You get the full conversation — user messages, assistant reasoning, and tool calls.
+<Tip>
+  Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
+</Tip>
+
+Use `sessions.messages()` to poll the agent's messages while a task runs.
 
 <CodeGroup>
 ```python Python
@@ -63,5 +67,3 @@ while (true) {
 }
 ```
 </CodeGroup>
-
-Use `after` and `before` cursors on `sessions.messages()` to paginate through large message histories.
