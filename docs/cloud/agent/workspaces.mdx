@@ -15,7 +15,7 @@ client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
 
 result = await client.run(
-    'Create a file called HEARTBEAT.md with the text "say hello"',
+    'Go to Hacker News and save the first three posts as posts.json',
     workspace_id=str(workspace.id),
 )
 print(result.output)
@@ -27,7 +27,7 @@ const client = new BrowserUse();
 const workspace = await client.workspaces.create({ name: "my-workspace" });
 
 const result = await client.run(
-  'Create a file called HEARTBEAT.md with the text "say hello"',
+  'Go to Hacker News and save the first three posts as posts.json',
   { workspaceId: workspace.id },
 );
 console.log(result.output);
