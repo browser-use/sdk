@@ -893,7 +893,7 @@ const result = await client.run("Check my LinkedIn messages", {
 # 2FA
 Source: https://docs.browser-use.com/cloud/guides/2fa
 
-Sites with 2FA block automated logins. Here are five approaches — pick the one that fits your setup.
+Sites with 2FA block automated logins. Here are four approaches — pick the one that fits your setup.
 
 | Approach | Best for | Complexity |
 |---|---|---|
@@ -901,7 +901,6 @@ Sites with 2FA block automated logins. Here are five approaches — pick the one
 | Human in the loop | One-off tasks, complex auth flows | Low |
 | Agent Mail | Email-based 2FA, end-client automation | Medium |
 | TOTP secret in prompt | Authenticator app 2FA (Google Authenticator, Authy) | Medium |
-| 1Password integration | Teams already using 1Password | Medium |
 
 ## 1. Profiles — login once, reuse cookies
 
@@ -1031,10 +1030,6 @@ print(result.output)
 ```
 
 Where to find TOTP secrets: 1Password (Edit item → One-Time Password → Show secret), Google Authenticator (click "Can't scan it?"), Authy (desktop export), or "manual entry" during 2FA setup.
-
-## 5. 1Password integration
-
-Connect 1Password to Browser Use and the agent auto-fills credentials and TOTP codes without ever seeing them. See the 1Password & 2FA guide for setup.
 
 
 # OpenClaw

@@ -4,7 +4,7 @@ description: "Best practices for handling two-factor authentication in automated
 icon: shield-halved
 ---
 
-Sites with 2FA block automated logins. Here are five approaches — pick the one that fits your setup.
+Sites with 2FA block automated logins. Here are four approaches — pick the one that fits your setup.
 
 | Approach | Best for | Complexity |
 |---|---|---|
@@ -12,7 +12,6 @@ Sites with 2FA block automated logins. Here are five approaches — pick the one
 | [Human in the loop](#2-human-in-the-loop) | One-off tasks, complex auth flows | Low |
 | [Agent Mail](#3-agent-mail) | Email-based 2FA, end-client automation | Medium |
 | [TOTP secret in prompt](#4-totp-secret-in-prompt) | Authenticator app 2FA (Google Authenticator, Authy) | Medium |
-| [1Password integration](#5-1password-integration) | Teams already using 1Password | Medium |
 
 ---
 
@@ -266,19 +265,11 @@ This works because the Browser Use agent can execute Python code as part of its 
 
 ---
 
-## 5. 1Password integration
-
-If you use 1Password, connect it to Browser Use and the agent will auto-fill credentials and TOTP codes without ever seeing them.
-
-See [1Password & 2FA](/cloud/guides/1password) for setup instructions.
-
----
-
 ## Which approach should I use?
 
 <AccordionGroup>
   <Accordion title="I'm automating my own accounts">
-    Start with **Profiles** — log in once, reuse cookies. If cookies expire frequently, add **TOTP secret in prompt** or **1Password** for fully automated re-login.
+    Start with **Profiles** — log in once, reuse cookies. If cookies expire frequently, add **TOTP secret in prompt** for fully automated re-login.
   </Accordion>
   <Accordion title="I'm building a product for end-users">
     Use **Profiles** with one profile per user. For initial login, use **Human in the loop** — your user logs in once via the live view, then the agent reuses the session. For email 2FA, set up **Agent Mail** with email forwarding from your user.
@@ -287,6 +278,6 @@ See [1Password & 2FA](/cloud/guides/1password) for setup instructions.
     Use **Agent Mail** (enabled by default). For end-client scenarios, have them forward 2FA emails to a dedicated inbox.
   </Accordion>
   <Accordion title="I need fully autonomous 2FA without any human">
-    Use **TOTP secret in prompt** (the agent generates codes via pyotp) or **1Password** (auto-fills credentials and TOTP). Both work without human intervention.
+    Use **TOTP secret in prompt** — the agent generates codes via pyotp, no human intervention needed.
   </Accordion>
 </AccordionGroup>
