@@ -13,14 +13,14 @@ The SDK is a thin wrapper around the [API v3 Reference](/cloud/api-reference).
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-result = await client.run("Find the top 3 trending repos on GitHub today")
+result = await client.run("List the top 20 posts on Hacker News today with their points")
 print(result.output)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const result = await client.run("Find the top 3 trending repos on GitHub today");
+const result = await client.run("List the top 20 posts on Hacker News today with their points");
 console.log(result.output);
 ```
 </CodeGroup>

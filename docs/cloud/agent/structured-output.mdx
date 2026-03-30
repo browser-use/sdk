@@ -11,33 +11,43 @@ Pass a Pydantic model (Python) or Zod schema (TypeScript) — `result.output` is
 from browser_use_sdk.v3 import AsyncBrowserUse
 from pydantic import BaseModel
 
-class Contact(BaseModel):
+class Post(BaseModel):
     name: str
-    title: str
-    company: str
+    points: int
+    comments: int
+
+class HNPosts(BaseModel):
+    posts: list[Post]
 
 client = AsyncBrowserUse()
 result = await client.run(
-    "Find the founding team of Browser Use on LinkedIn",
-    output_schema=Contact,
+    "List the top 20 posts on Hacker News today with their points",
+    output_schema=HNPosts,
 )
-print(result.output)
+for post in result.output.posts:
+    print(f"{post.name} ({post.points} pts, {post.comments} comments)")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 import { z } from "zod";
 
-const Contact = z.object({
+const Post = z.object({
   name: z.string(),
-  title: z.string(),
-  company: z.string(),
+  points: z.number(),
+  comments: z.number(),
+});
+
+const HNPosts = z.object({
+  posts: z.array(Post),
 });
 
 const client = new BrowserUse();
 const result = await client.run(
-  "Find the founding team of Browser Use on LinkedIn",
-  { schema: Contact },
+  "List the top 20 posts on Hacker News today with their points",
+  { schema: HNPosts },
 );
-console.log(result.output);
+for (const post of result.output.posts) {
+  console.log(`${post.name} (${post.points} pts, ${post.comments} comments)`);
+}
 ```
 </CodeGroup>
