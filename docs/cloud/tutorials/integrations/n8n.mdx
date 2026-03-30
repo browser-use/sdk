@@ -46,7 +46,7 @@ Add a second **HTTP Request** node in a loop:
 | URL | `https://api.browser-use.com/api/v3/sessions/{{ $json.id }}` |
 | Authentication | Header Auth (from step 1) |
 
-Check the `status` field. The session is done when status is `finished` or `stopped`. Use an **If** node to loop back with a **Wait** node (5–10 seconds) until complete.
+Check the `status` field. The session is done when status is `idle`, `stopped`, `error`, or `timed_out`. Use an **If** node to loop back with a **Wait** node (5–10 seconds) until complete.
 
 The final response contains `output` with the agent's result.
 

@@ -65,7 +65,7 @@ while True:
         cursor = m.id
 
     s = await client.sessions.get(session.id)
-    if s.status in ("idle", "stopped", "error", "timed_out"):
+    if s.status.value in ("idle", "stopped", "error", "timed_out"):
         break
     await asyncio.sleep(2)
 

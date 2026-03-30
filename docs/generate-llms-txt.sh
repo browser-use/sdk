@@ -111,6 +111,11 @@ for product_nav in d['navigation']['products']:
         if 'tabs' in product_nav:
             for tab in product_nav['tabs']:
                 if isinstance(tab, dict):
+                    tab_name = tab.get('tab', '')
+                    # Emit tab header for non-primary tabs to separate API sections
+                    if tab_name and tab_name != product_nav['tabs'][0].get('tab', ''):
+                        lines.append(f'')
+                        lines.append(f'## {tab_name}')
                     for g in tab.get('groups', []):
                         lines.extend(process_group(g))
         if 'groups' in product_nav:
