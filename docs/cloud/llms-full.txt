@@ -890,6 +890,126 @@ const result = await client.run("Check my LinkedIn messages", {
 ```
 
 
+# 2FA
+Source: https://docs.browser-use.com/cloud/guides/2fa
+
+Sites with 2FA block automated logins. Here are five approaches — pick the one that fits your setup.
+
+| Approach | Best for | Complexity |
+|---|---|---|
+| Profiles (login once) | Sites with long-lived cookies | Lowest |
+| Human in the loop | One-off tasks, complex auth flows | Low |
+| Agent Mail | Email-based 2FA, end-client automation | Medium |
+| TOTP secret in prompt | Authenticator app 2FA (Google Authenticator, Authy) | Medium |
+| 1Password integration | Teams already using 1Password | Medium |
+
+## 1. Profiles — login once, reuse cookies
+
+Login manually once (or let the agent do it), then save the browser state as a profile. Future sessions reuse the cookies — no 2FA prompt as long as the cookies are valid.
+
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+profile = await client.profiles.create(name="my-account")
+session = await client.sessions.create(profile_id=profile.id)
+print(f"Live view: {session.live_url}")
+
+input("Log in and complete 2FA in the live view, then press Enter...")
+
+await client.sessions.stop(session.id)
+
+# Next time: reuse the profile, no 2FA needed
+session = await client.sessions.create(profile_id=profile.id)
+result = await client.run("Go to example.com/dashboard and get my balance", session_id=session.id)
+print(result.output)
+await client.sessions.stop(session.id)
+```
+
+Cookies expire. Some sites stay logged in for months, others expire daily. Always call `sessions.stop()` — profile state is only saved when the session ends cleanly.
+
+## 2. Human in the loop
+
+Let the agent navigate to the login page, then a human takes over to complete 2FA via the live browser view.
+
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+session = await client.sessions.create()
+
+result = await client.run(
+    "Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
+    session_id=session.id,
+)
+
+input("Complete 2FA in the live view, then press Enter...")
+
+result = await client.run(
+    "You are now logged in. Go to the dashboard and export the monthly report",
+    session_id=session.id,
+)
+print(result.output)
+await client.sessions.stop(session.id)
+```
+
+## 3. Agent Mail
+
+When 2FA sends a code via email, the agent can read it automatically using Agent Mail — a built-in email inbox for each session. Enabled by default (`agentmail=True`).
+
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+result = await client.run(
+    """
+    1. Go to example.com/signup
+    2. Sign up with the agent's email address (use the email available to you)
+    3. Check your email inbox for the verification code
+    4. Enter the code on the website
+    5. Complete the registration
+    """,
+    agentmail=True,  # default
+)
+print(result.output)
+```
+
+For end-client automation: have your client forward 2FA emails from the service (e.g., `noreply@bank.com`) to a dedicated inbox. The agent reads the forwarded code during the task. You can also connect Gmail via Composio in the dashboard.
+
+## 4. TOTP secret in prompt
+
+If the site uses an authenticator app, pass the TOTP secret to the agent. The agent uses pyotp to generate fresh 6-digit codes.
+
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+totp_secret = "JBSWY3DPEHPK3PXP"  # from authenticator setup, NOT the 6-digit code
+
+result = await client.run(
+    f"""
+    Log into example.com with username user@example.com and password mypassword.
+    When prompted for a 2FA code, generate one using pyotp:
+
+    import pyotp
+    totp = pyotp.TOTP("{totp_secret}")
+    code = totp.now()
+
+    Enter the generated code.
+    """,
+)
+print(result.output)
+```
+
+Where to find TOTP secrets: 1Password (Edit item → One-Time Password → Show secret), Google Authenticator (click "Can't scan it?"), Authy (desktop export), or "manual entry" during 2FA setup.
+
+## 5. 1Password integration
+
+Connect 1Password to Browser Use and the agent auto-fills credentials and TOTP codes without ever seeing them. See the 1Password & 2FA guide for setup.
+
+
 # OpenClaw
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/openclaw
 
