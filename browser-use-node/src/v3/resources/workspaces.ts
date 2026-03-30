@@ -1,4 +1,28 @@
+import { readFileSync, writeFileSync, mkdirSync, statSync } from "fs";
+import { basename, dirname, extname, join } from "path";
 import type { HttpClient } from "../../core/http.js";
+
+const MIME_TYPES: Record<string, string> = {
+  ".csv": "text/csv",
+  ".json": "application/json",
+  ".txt": "text/plain",
+  ".html": "text/html",
+  ".xml": "application/xml",
+  ".pdf": "application/pdf",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".zip": "application/zip",
+  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ".xls": "application/vnd.ms-excel",
+  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+};
+
+function guessContentType(path: string): string {
+  return MIME_TYPES[extname(path).toLowerCase()] ?? "application/octet-stream";
+}
 import type { components } from "../../generated/v3/types.js";
 
 type WorkspaceView = components["schemas"]["WorkspaceView"];
@@ -75,5 +99,76 @@ export class Workspaces {
   /** Get storage usage for a workspace. */
   size(workspaceId: string): Promise<unknown> {
     return this.http.get<unknown>(`/workspaces/${workspaceId}/size`);
+  }
+
+  /**
+   * Upload local files to a workspace. Returns the list of remote paths.
+   *
+   * ```ts
+   * await client.workspaces.upload(wsId, "data.csv", "config.json");
+   * ```
+   */
+  async upload(workspaceId: string, ...paths: string[]): Promise<string[]> {
+    const items = paths.map((p) => ({
+      name: basename(p),
+      contentType: guessContentType(p),
+      size: statSync(p).size,
+    }));
+    const resp = await this.uploadFiles(workspaceId, { files: items });
+    for (let i = 0; i < paths.length; i++) {
+      const body = readFileSync(paths[i]);
+      const res = await fetch(resp.files[i].uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": items[i].contentType },
+        body,
+      });
+      if (!res.ok) throw new Error(`Upload failed: ${res.status} ${res.statusText}`);
+    }
+    return resp.files.map((f) => f.path);
+  }
+
+  /**
+   * Download a single file from a workspace. Returns the local path.
+   *
+   * ```ts
+   * const local = await client.workspaces.download(wsId, "uploads/data.csv", { to: "./data.csv" });
+   * ```
+   */
+  async download(workspaceId: string, path: string, options?: { to?: string }): Promise<string> {
+    const fileList = await this.files(workspaceId, { prefix: path, includeUrls: true, limit: 1 });
+    if (!fileList.files?.length) throw new Error(`File not found in workspace: ${path}`);
+    const file = fileList.files[0];
+    const dest = options?.to ?? basename(file.path);
+    mkdirSync(dirname(dest), { recursive: true });
+    const resp = await fetch(file.url!);
+    if (!resp.ok) throw new Error(`Download failed: ${resp.status}`);
+    writeFileSync(dest, Buffer.from(await resp.arrayBuffer()));
+    return dest;
+  }
+
+  /**
+   * Download all files from a workspace. Returns list of local paths.
+   *
+   * ```ts
+   * const paths = await client.workspaces.downloadAll(wsId, { to: "./output" });
+   * ```
+   */
+  async downloadAll(workspaceId: string, options?: { to?: string; prefix?: string }): Promise<string[]> {
+    const destDir = options?.to ?? ".";
+    mkdirSync(destDir, { recursive: true });
+    const fileList = await this.files(workspaceId, {
+      prefix: options?.prefix,
+      includeUrls: true,
+    });
+    const results: string[] = [];
+    for (const f of fileList.files ?? []) {
+      const local = join(destDir, f.path);
+      mkdirSync(dirname(local), { recursive: true });
+      const resp = await fetch(f.url!);
+      if (!resp.ok) throw new Error(`Download failed for ${f.path}: ${resp.status}`);
+      writeFileSync(local, Buffer.from(await resp.arrayBuffer()));
+      results.push(local);
+    }
+    return results;
   }
 }
