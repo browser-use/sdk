@@ -15,34 +15,31 @@ The app has two pages:
 1. **Home** — the user types a task, the app creates a session and sends the task.
 2. **Session** — live browser preview, streaming messages, follow-ups, and recording download.
 
-The API key never leaves the server — SDK calls use [Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations) and a [Route Handler](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) for streaming.
+All SDK calls live in a single file: `src/lib/api.ts`.
 
 ## Setup
 
 ```typescript api.ts
-// Server-only — no NEXT_PUBLIC_ prefix, never sent to the browser
 import { BrowserUse } from "browser-use-sdk/v3";
 
-export const client = new BrowserUse({
-  apiKey: process.env.BROWSER_USE_API_KEY,
-});
+const apiKey = process.env.NEXT_PUBLIC_BROWSER_USE_API_KEY ?? "";
+export const client = new BrowserUse({ apiKey });
 ```
+
+<Warning>
+  `NEXT_PUBLIC_` exposes the key to the browser. In production, move SDK calls to server actions or API routes.
+</Warning>
 
 ---
 
-## 1. Create a session (Server Action)
+## 1. Create a session
 
-```typescript actions.ts
-"use server";
-
-import { client } from "./api";
-
+```typescript api.ts
 export async function createSession() {
-  const session = await client.sessions.create({
+  return client.sessions.create({
     keepAlive: true,
     enableRecording: true,
   });
-  return { id: session.id, liveUrl: session.liveUrl, status: session.status };
 }
 ```
 
@@ -50,7 +47,7 @@ export async function createSession() {
 - **`enableRecording: true`** produces an MP4 video of the browser session.
 - **`liveUrl`** is returned immediately — no waiting or extra call needed.
 
-The home page calls the server action, then navigates (passing `liveUrl` and the initial task via URL params):
+The home page creates the session, navigates to the session page (passing `liveUrl` and the initial task via URL params), and the session page takes over from there:
 
 ```typescript page.tsx
 async function handleSend(message: string) {
@@ -64,85 +61,42 @@ async function handleSend(message: string) {
 
 ---
 
-## 2. Stream messages (SSE Route Handler)
+## 2. Stream messages with `for await`
 
-The streaming happens server-side in a Route Handler. `client.run()` with `for await` streams messages as the agent works:
-
-```typescript app/api/stream/[sessionId]/route.ts
-import { client } from "@/lib/api";
-
-export async function POST(request: Request, { params }: { params: Promise<{ sessionId: string }> }) {
-  const { sessionId } = await params;
-  const { task } = await request.json();
-
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream({
-    async start(controller) {
-      const run = client.run(task, { sessionId });
-
-      for await (const msg of run) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(msg)}\n\n`));
-      }
-
-      // Send the final session result when the task completes
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ __done: true, ...run.result })}\n\n`));
-      controller.close();
-    },
-  });
-
-  return new Response(stream, {
-    headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
-  });
-}
-```
-
-The client reads this SSE stream with `fetch`:
+Instead of polling `sessions.get()` and `sessions.messages()` separately, use `client.run()` — it streams messages and resolves when the task completes:
 
 ```typescript session-context.tsx
 const streamTask = useCallback(async (task: string) => {
-  const res = await fetch(`/api/stream/${sessionId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ task }),
-  });
+  const run = client.run(task, { sessionId });
 
-  const reader = res.body!.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n\n");
-    buffer = lines.pop() ?? "";
-
-    for (const line of lines) {
-      if (!line.startsWith("data: ")) continue;
-      const json = JSON.parse(line.slice(6));
-
-      if (json.__done) {
-        setSession(json); // final state
-      } else {
-        setMessages((prev) => [...prev, json]);
-      }
-    }
+  for await (const msg of run) {
+    setMessages((prev) => [...prev, msg]);
   }
+
+  // Iterator done — task reached terminal state
+  setSession(run.result);
 }, [sessionId]);
 ```
 
-No `sessions.get()` or `sessions.messages()` polling needed — one stream covers both messages and status.
+The `for await` loop yields each message as it arrives. When the loop ends, `run.result` contains the final session state (status, output, etc.). No separate status polling needed.
+
+Wire it up in a `useEffect` to auto-run the initial task from URL params:
+
+```typescript session-context.tsx
+useEffect(() => {
+  if (!initialTask) return;
+  sendMessage(initialTask);
+}, []);
+```
 
 ---
 
 ## 3. Follow-up tasks
 
-Follow-ups call the same `streamTask`. Add an optimistic user message so it appears instantly:
+Follow-ups call the same `streamTask` function — the stream already includes the user message, so no optimistic insert is needed:
 
 ```typescript session-context.tsx
 const sendMessage = useCallback(async (task: string) => {
-  setMessages((prev) => [...prev, { id: `opt-${Date.now()}`, role: "user", summary: task }]);
   await streamTask(task);
 }, [streamTask]);
 ```
@@ -151,35 +105,27 @@ The SDK auto-sets `keepAlive: true` when targeting an existing session, so follo
 
 ---
 
-## 4. Recording (Server Action)
+## 4. Recording
 
-Fetch the MP4 URL after the session ends:
-
-```typescript actions.ts
-"use server";
-
-export async function waitForRecording(id: string) {
-  return client.sessions.waitForRecording(id);
-}
-```
+Fetch the MP4 URL after the session ends (recording was enabled in step 1):
 
 ```typescript session-context.tsx
 useEffect(() => {
   if (!isTerminal) return;
 
-  waitForRecording(sessionId).then((urls) => {
+  client.sessions.waitForRecording(sessionId).then((urls) => {
     if (urls.length) setRecordingUrls(urls);
   });
 }, [isTerminal, sessionId]);
 ```
 
+`waitForRecording` polls for up to 15 seconds and returns presigned MP4 download URLs. Returns an empty array if the agent answered without opening a browser.
+
 ---
 
-## 5. Stop a task (Server Action)
+## 5. Stop a task
 
-```typescript actions.ts
-"use server";
-
+```typescript api.ts
 export async function stopTask(id: string) {
   await client.sessions.stop(id, { strategy: "task" });
 }
@@ -189,11 +135,41 @@ Using `strategy: "task"` stops only the current task, keeping the session alive 
 
 ---
 
+## 6. Session page
+
+The session page consumes everything through a context provider:
+
+```typescript session/[id]/page.tsx
+function SessionPage() {
+  const { session, turns, isBusy, isTerminal, recordingUrls, sendMessage, stopTask } =
+    useSession();
+
+  return (
+    <div className="flex h-screen w-full overflow-hidden">
+      {/* Chat column */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <ChatMessages turns={turns} isBusy={isBusy} />
+        <ChatInput
+          onSend={sendMessage}
+          onStop={stopTask}
+          disabled={isTerminal}
+        />
+      </div>
+
+      {/* Live browser view — liveUrl available from session creation */}
+      <BrowserPanel liveUrl={session?.liveUrl} />
+    </div>
+  );
+}
+```
+
+---
+
 ## Summary
 
-| Method | Where | Purpose |
-|--------|-------|---------|
-| `client.sessions.create()` | Server Action | Create a session (returns `liveUrl` immediately) |
-| `client.run()` | Route Handler (SSE) | Stream messages with `for await` |
-| `client.sessions.stop()` | Server Action | Stop the current task |
-| `client.sessions.waitForRecording()` | Server Action | Get MP4 recording URLs |
+| Method | Purpose |
+|--------|---------|
+| `client.sessions.create()` | Create a session (returns `liveUrl` immediately) |
+| `client.run()` | Send a task and stream messages with `for await` |
+| `client.sessions.stop()` | Stop the current task |
+| `client.sessions.waitForRecording()` | Get MP4 recording URLs |
