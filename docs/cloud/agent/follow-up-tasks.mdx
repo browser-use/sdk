@@ -44,3 +44,9 @@ const result2 = await client.run("Extract the customer reviews", {
 await client.sessions.stop(session.id);
 ```
 </CodeGroup>
+
+`sessions.create()` returns a `live_url` you can embed to watch each task execute — see [Live preview](/cloud/browser/live-preview). To stream messages as each task runs, use `client.run()` with `for await` — see [Live messages](/cloud/agent/streaming).
+
+<Note>
+  Sessions time out after 15 minutes of inactivity by default. The maximum session duration is 4 hours.
+</Note>

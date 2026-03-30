@@ -786,7 +786,7 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 profile = await client.profiles.create(name="user-id-1")
 # or search existing
-# profile = (await client.profiles.list(query="user-id-1"))[0]
+# profile = (await client.profiles.list(query="user-id-1")).items[0]
 session = await client.sessions.create(profile_id=profile.id)
 result = await client.run("Check browser-use github stars", session_id=session.id)
 print(result.output)
@@ -797,7 +797,7 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const profile = await client.profiles.create({ name: "user-id-1" });
 // or search existing
-// const profile = (await client.profiles.list({ query: "user-id-1" }))[0];
+// const profile = (await client.profiles.list({ query: "user-id-1" })).items[0];
 const session = await client.sessions.create({ profileId: profile.id });
 const result = await client.run("Check browser-use github stars", {
   sessionId: session.id,
@@ -1076,7 +1076,7 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
 
 | Event | When |
 |-------|------|
-| `agent.task.status_update` | Task status changes (`started`, `finished`, or `stopped`) |
+| `agent.task.status_update` | Task status changes (`running`, `idle`, or `stopped`) |
 | `test` | Webhook test ping |
 
 ## Payload
@@ -1088,7 +1088,7 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
   "payload": {
     "task_id": "task_abc123",
     "session_id": "session_xyz",
-    "status": "finished",
+    "status": "idle",
     "metadata": {}
   }
 }
@@ -1299,14 +1299,7 @@ The final response contains `output` with the agent's result.
 
 ## Event-driven alternative
 
-Instead of polling, use [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks) to receive a callback when the session completes. Add a Webhook trigger node in n8n and pass your webhook URL in the session creation body:
-
-```json
-{
-  "task": "Find the top 3 trending repos on GitHub today",
-  "webhook_url": "https://your-n8n-instance.com/webhook/browser-use"
-}
-```
+Instead of polling, use [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks) to receive a callback when the session completes. Configure your webhook endpoint in the [dashboard](https://cloud.browser-use.com/settings?tab=webhooks), then add a **Webhook** trigger node in n8n to receive `agent.task.status_update` events when sessions finish.
 
   This pattern works with any workflow tool that supports HTTP requests — Make, Zapier, Pipedream, or custom orchestrators.
 

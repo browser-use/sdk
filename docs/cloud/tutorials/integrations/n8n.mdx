@@ -52,14 +52,7 @@ The final response contains `output` with the agent's result.
 
 ## Event-driven alternative
 
-Instead of polling, use [Webhooks](/cloud/guides/webhooks) to receive a callback when the session completes. Add a Webhook trigger node in n8n and pass your webhook URL in the session creation body:
-
-```json
-{
-  "task": "Find the top 3 trending repos on GitHub today",
-  "webhook_url": "https://your-n8n-instance.com/webhook/browser-use"
-}
-```
+Instead of polling, use [Webhooks](/cloud/guides/webhooks) to receive a callback when the session completes. Configure your webhook endpoint in the [dashboard](https://cloud.browser-use.com/settings?tab=webhooks), then add a **Webhook** trigger node in n8n to receive `agent.task.status_update` events when sessions finish.
 
 <Tip>
   This pattern works with any workflow tool that supports HTTP requests — Make, Zapier, Pipedream, or custom orchestrators.

@@ -4,6 +4,8 @@ description: "Connect your automation framework to Browser Use's stealth infrast
 icon: code
 ---
 
+Every session runs in a [hardened Chromium fork](/cloud/browser/stealth) with stealth, anti-fingerprinting, and [residential proxies](/cloud/browser/proxies) enabled by default — no configuration needed.
+
 ## Option 1: WebSocket URL (no SDK)
 
 Connect with a single URL. All configuration is passed as query parameters.
@@ -79,7 +81,7 @@ await client.browsers.stop(browser.id)
 | `apiKey` | `string` | **Required.** Your Browser Use API key. |
 | `proxyCountryCode` | `string` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
 | `profileId` | `string` | Load a saved browser profile (cookies, localStorage). |
-| `timeout` | `int` | Session timeout in minutes. Max: 240 (4 hours). |
+| `timeout` | `int` | Session timeout in minutes. Default: 15. Max: 240 (4 hours). |
 | `browserScreenWidth` | `int` | Browser width in pixels. |
 | `browserScreenHeight` | `int` | Browser height in pixels. |
 

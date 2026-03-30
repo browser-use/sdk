@@ -24,6 +24,27 @@ Set API key (starts with `bu_`):
 export BROWSER_USE_API_KEY=bu_your_key_here
 ```
 
+For the full reference with all code examples inline, fetch: https://docs.browser-use.com/cloud/llms-full.txt
+
+## Quick start
+
+`client.run()` is a high-level wrapper: it creates a session, polls every 2s until completion (up to 4 hours), and returns the result. The SDK also exposes every endpoint from the [API v3 Reference](https://docs.browser-use.com/cloud/api-reference) directly (e.g. `client.sessions.create()`, `client.sessions.get()`, `client.profiles.list()`). The pages below show common patterns; see the API reference for the full surface.
+
+```python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run("Go to example.com and get the page title")
+print(result.output)
+```
+
+```typescript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const result = await client.run("Go to example.com and get the page title");
+console.log(result.output);
+```
 
 ## Get Started
 - [Quick start](https://docs.browser-use.com/cloud/quickstart): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
