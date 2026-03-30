@@ -4,10 +4,6 @@ description: "Common questions and solutions."
 icon: circle-question
 ---
 
-## How much does a task cost?
-
-Set `max_cost_usd` to cap spending per task. Default is $20. A typical task costs $0.01–$0.05. Check `result.total_cost_usd` after each task.
-
 ## Which model should I use?
 
 - **bu-mini** (default) — faster, cheaper. Good for most tasks.
@@ -28,38 +24,34 @@ print(session.live_url)
 2. **1Password** — auto-fill passwords and 2FA codes. See [1Password & 2FA](/cloud/guides/1password) (v2 SDK).
 3. **Secrets** — pass credentials scoped by domain. See [Secrets](/cloud/guides/secrets) (v2 SDK).
 
-## Task failed or wrong output
-
-- **Add a start URL.** Don't make the agent search — send it directly.
-- **Simplify instructions.** Break complex tasks into smaller follow-up tasks in the same session.
-- **Check the live URL.** Watch what the agent does in real time.
-- **Try bu-max.** More capable model for harder tasks.
-
 ## Getting blocked by a website
 
-Stealth is on by default. If still blocked:
+Stealth and proxies are active by default. If you're still getting blocked:
 
-- **Try a different proxy country** to match the target region.
 - **Use a profile** with logged-in cookies to bypass login walls.
+- **Try a different proxy country** to match the target region.
+
+If it still doesn't work, contact support inside the [Cloud Dashboard](https://cloud.browser-use.com) — send us a link to the page where you're getting blocked.
 
 ## Rate limited (429 errors)
 
 The SDK auto-retries 429 responses with exponential backoff. If persistent, you may need more concurrent sessions — contact support.
 
-## How do I save files from a task?
-
-Use workspaces. See [Workspaces & files](/cloud/agent/workspaces).
-
-```python
-workspace = await client.workspaces.create(name="my-workspace")
-result = await client.run("Save top 3 HN posts as posts.json", workspace_id=workspace.id)
-files = await client.workspaces.files(workspace.id, include_urls=True)
-```
-
-## How do I use Browser Use as a sub-agent?
-
-Use `client.run()` inside your agent's tool function. For a full working example with streaming and live preview, see the [Chat UI tutorial](/cloud/tutorials/chat-ui).
-
 ## v2 vs v3 — which should I use?
 
-Use v3 (`from browser_use_sdk.v3 import AsyncBrowserUse`). It has sessions, workspaces, live messages, and recording. v2 is legacy — only use it if you need `secrets`, `allowed_domains`, or `op_vault_id`.
+**v3 is the recommendation for everything.** It's a premium agent (not available in open source) that is significantly more capable than v2:
+
+- **Much better at complex tasks** and multi-step workflows
+- **Much better at large data extraction**
+- **File system** with persistent memory across tasks
+- **Task scheduling** with 1,000+ integrations (Gmail, Slack, and more)
+
+v2 is the closest to the open-source experience — pure browser automation, nothing else. If the open source already works great for your use case, v2 is the natural fit. For everything else, use v3.
+
+```python
+# v3 (recommended)
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+# v2 (simple browser-only tasks)
+from browser_use_sdk.v2 import AsyncBrowserUse
+```
