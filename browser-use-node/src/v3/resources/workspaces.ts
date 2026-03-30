@@ -1,6 +1,14 @@
 import { readFileSync, writeFileSync, mkdirSync, statSync } from "fs";
-import { basename, dirname, extname, join } from "path";
+import { basename, dirname, extname, join, resolve } from "path";
 import type { HttpClient } from "../../core/http.js";
+
+function safeJoin(base: string, untrusted: string): string {
+  const resolved = resolve(base, untrusted);
+  if (!resolved.startsWith(resolve(base))) {
+    throw new Error(`Path traversal detected: ${untrusted}`);
+  }
+  return resolved;
+}
 
 const MIME_TYPES: Record<string, string> = {
   ".csv": "text/csv",
@@ -135,12 +143,12 @@ export class Workspaces {
    * ```
    */
   async download(workspaceId: string, path: string, options?: { to?: string }): Promise<string> {
-    const fileList = await this.files(workspaceId, { prefix: path, includeUrls: true, limit: 1 });
-    if (!fileList.files?.length) throw new Error(`File not found in workspace: ${path}`);
-    const file = fileList.files[0];
-    const dest = options?.to ?? basename(file.path);
+    const fileList = await this.files(workspaceId, { prefix: path, includeUrls: true });
+    const match = fileList.files?.find((f) => f.path === path);
+    if (!match) throw new Error(`File not found in workspace: ${path}`);
+    const dest = options?.to ?? basename(match.path);
     mkdirSync(dirname(dest), { recursive: true });
-    const resp = await fetch(file.url!);
+    const resp = await fetch(match.url!);
     if (!resp.ok) throw new Error(`Download failed: ${resp.status}`);
     writeFileSync(dest, Buffer.from(await resp.arrayBuffer()));
     return dest;
@@ -156,19 +164,24 @@ export class Workspaces {
   async downloadAll(workspaceId: string, options?: { to?: string; prefix?: string }): Promise<string[]> {
     const destDir = options?.to ?? ".";
     mkdirSync(destDir, { recursive: true });
-    const fileList = await this.files(workspaceId, {
-      prefix: options?.prefix,
-      includeUrls: true,
-    });
     const results: string[] = [];
-    for (const f of fileList.files ?? []) {
-      const local = join(destDir, f.path);
-      mkdirSync(dirname(local), { recursive: true });
-      const resp = await fetch(f.url!);
-      if (!resp.ok) throw new Error(`Download failed for ${f.path}: ${resp.status}`);
-      writeFileSync(local, Buffer.from(await resp.arrayBuffer()));
-      results.push(local);
-    }
+    let cursor: string | undefined;
+    do {
+      const fileList = await this.files(workspaceId, {
+        prefix: options?.prefix,
+        includeUrls: true,
+        cursor,
+      });
+      for (const f of fileList.files ?? []) {
+        const local = safeJoin(destDir, f.path);
+        mkdirSync(dirname(local), { recursive: true });
+        const resp = await fetch(f.url!);
+        if (!resp.ok) throw new Error(`Download failed for ${f.path}: ${resp.status}`);
+        writeFileSync(local, Buffer.from(await resp.arrayBuffer()));
+        results.push(local);
+      }
+      cursor = fileList.hasMore ? (fileList.nextCursor ?? undefined) : undefined;
+    } while (cursor);
     return results;
   }
 }

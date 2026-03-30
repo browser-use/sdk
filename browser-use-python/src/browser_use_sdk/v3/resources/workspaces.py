@@ -27,6 +27,14 @@ def _guess_content_type(path: str) -> str:
     return ct or "application/octet-stream"
 
 
+def _safe_join(base: Path, untrusted: str) -> Path:
+    """Join base and untrusted path, raising if result escapes base."""
+    resolved = (base / untrusted).resolve()
+    if not str(resolved).startswith(str(base.resolve())):
+        raise ValueError(f"Path traversal detected: {untrusted}")
+    return resolved
+
+
 class Workspaces:
     def __init__(self, http: SyncHttpClient) -> None:
         self._http = http
@@ -193,14 +201,14 @@ class Workspaces:
 
             local = client.workspaces.download(ws_id, "uploads/data.csv", to="./data.csv")
         """
-        file_list = self.files(workspace_id, prefix=path, include_urls=True, limit=1)
-        if not file_list.files:
+        file_list = self.files(workspace_id, prefix=path, include_urls=True)
+        match = next((f for f in file_list.files if f.path == path), None)
+        if not match:
             raise FileNotFoundError(f"File not found in workspace: {path}")
-        url = file_list.files[0].url
-        dest = Path(to) if to else Path(os.path.basename(file_list.files[0].path))
+        dest = Path(to) if to else Path(os.path.basename(match.path))
         dest.parent.mkdir(parents=True, exist_ok=True)
         with httpx.Client(timeout=60) as http:
-            resp = http.get(url)
+            resp = http.get(match.url)
             resp.raise_for_status()
             dest.write_bytes(resp.content)
         return dest
@@ -220,16 +228,23 @@ class Workspaces:
         """
         dest_dir = Path(to)
         dest_dir.mkdir(parents=True, exist_ok=True)
-        file_list = self.files(workspace_id, prefix=prefix, include_urls=True)
         results: list[Path] = []
+        cursor: str | None = None
         with httpx.Client(timeout=60) as http:
-            for f in file_list.files:
-                local = dest_dir / f.path
-                local.parent.mkdir(parents=True, exist_ok=True)
-                resp = http.get(f.url)
-                resp.raise_for_status()
-                local.write_bytes(resp.content)
-                results.append(local)
+            while True:
+                file_list = self.files(
+                    workspace_id, prefix=prefix, include_urls=True, cursor=cursor,
+                )
+                for f in file_list.files:
+                    local = _safe_join(dest_dir, f.path)
+                    local.parent.mkdir(parents=True, exist_ok=True)
+                    resp = http.get(f.url)
+                    resp.raise_for_status()
+                    local.write_bytes(resp.content)
+                    results.append(local)
+                if not file_list.has_more:
+                    break
+                cursor = file_list.next_cursor
         return results
 
 
@@ -427,14 +442,21 @@ class AsyncWorkspaces:
         """
         dest_dir = Path(to)
         dest_dir.mkdir(parents=True, exist_ok=True)
-        file_list = await self.files(workspace_id, prefix=prefix, include_urls=True)
         results: list[Path] = []
+        cursor: str | None = None
         async with httpx.AsyncClient(timeout=60) as http:
-            for f in file_list.files:
-                local = dest_dir / f.path
-                local.parent.mkdir(parents=True, exist_ok=True)
-                resp = await http.get(f.url)
-                resp.raise_for_status()
-                local.write_bytes(resp.content)
-                results.append(local)
+            while True:
+                file_list = await self.files(
+                    workspace_id, prefix=prefix, include_urls=True, cursor=cursor,
+                )
+                for f in file_list.files:
+                    local = _safe_join(dest_dir, f.path)
+                    local.parent.mkdir(parents=True, exist_ok=True)
+                    resp = await http.get(f.url)
+                    resp.raise_for_status()
+                    local.write_bytes(resp.content)
+                    results.append(local)
+                if not file_list.has_more:
+                    break
+                cursor = file_list.next_cursor
         return results
