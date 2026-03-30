@@ -54,6 +54,7 @@ class BrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -70,6 +71,7 @@ class BrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -85,6 +87,7 @@ class BrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[str]: ...
 
@@ -101,6 +104,7 @@ class BrowserUse:
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
         workspace_id: str | None = None,
+        enable_recording: bool | None = None,
         **extra: Any,
     ) -> Any:
         """Run a task and block until complete. Returns a SessionResult."""
@@ -123,6 +127,7 @@ class BrowserUse:
             proxy_country_code=proxy_country_code,
             output_schema=schema_dict,
             workspace_id=workspace_id,
+            enable_recording=enable_recording,
             **extra,
         )
         return _poll_output(self.sessions, str(data.id), resolved_schema)
@@ -140,6 +145,7 @@ class BrowserUse:
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
         workspace_id: str | None = None,
+        enable_recording: bool | None = None,
         **extra: Any,
     ) -> SessionStream[Any]:
         """Run a task and yield messages as they happen.
@@ -169,6 +175,7 @@ class BrowserUse:
             proxy_country_code=proxy_country_code,
             output_schema=schema_dict,
             workspace_id=workspace_id,
+            enable_recording=enable_recording,
             **extra,
         )
         return SessionStream(data, self.sessions, resolved_schema)
@@ -220,6 +227,7 @@ class AsyncBrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -236,6 +244,7 @@ class AsyncBrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -251,6 +260,7 @@ class AsyncBrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[str]: ...
 
@@ -267,6 +277,7 @@ class AsyncBrowserUse:
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
         workspace_id: str | None = None,
+        enable_recording: bool | None = None,
         **extra: Any,
     ) -> AsyncSessionRun[Any]:
         """Run a task. Await the result for a SessionResult."""
@@ -291,6 +302,7 @@ class AsyncBrowserUse:
                 proxy_country_code=proxy_country_code,
                 output_schema=schema_dict,
                 workspace_id=workspace_id,
+                enable_recording=enable_recording,
                 **extra,
             )
 
