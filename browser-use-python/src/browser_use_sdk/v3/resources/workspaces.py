@@ -165,7 +165,7 @@ class Workspaces:
         items = [
             FileUploadItem(
                 name=p.name,
-                content_type=_guess_content_type(str(p)),
+                contentType=_guess_content_type(str(p)),
                 size=p.stat().st_size,
             )
             for p in resolved
@@ -371,7 +371,7 @@ class AsyncWorkspaces:
         items = [
             FileUploadItem(
                 name=p.name,
-                content_type=_guess_content_type(str(p)),
+                contentType=_guess_content_type(str(p)),
                 size=p.stat().st_size,
             )
             for p in resolved
