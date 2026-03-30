@@ -1,0 +1,18 @@
+---
+title: "Public share links (v2)"
+description: "Generate shareable URLs for agent sessions using the v2 API."
+icon: share-nodes
+---
+
+Generate a public URL that anyone can open to watch the entire agent session — no API key needed. Useful for sharing with teammates, stakeholders, or embedding in dashboards.
+
+<CodeGroup>
+```python Python
+share = await client.sessions.create_share(session.id)
+print(share.url)
+```
+```typescript TypeScript
+const share = await client.sessions.createShare(session.id);
+console.log(share.url);
+```
+</CodeGroup>
