@@ -1,17 +1,47 @@
 ---
-title: API key
-sidebarTitle: API key
-description: "Set your API key to access the Browser Use REST API."
+title: API Reference
+sidebarTitle: API Reference
+description: "Authenticate and start using the Browser Use REST API."
 mode: wide
 ---
 
-Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then:
+## Authentication
 
-```bash
-export BROWSER_USE_API_KEY=your_key
+All requests require an API key in the `Authorization` header:
+
+```
+Authorization: Bearer bu_your_key_here
 ```
 
-Base URL: `https://api.browser-use.com/api/v3`
+Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1). Keys start with `bu_`.
+
+## Base URL
+
+```
+https://api.browser-use.com/api/v3
+```
+
+## Quick example
+
+```bash curl
+# Create a session
+curl -X POST https://api.browser-use.com/api/v3/sessions \
+  -H "Authorization: Bearer bu_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Find the top 3 trending repos on GitHub today"}'
+
+# Get session result (replace SESSION_ID)
+curl https://api.browser-use.com/api/v3/sessions/SESSION_ID \
+  -H "Authorization: Bearer bu_your_key_here"
+```
+
+## Environment variable
+
+Set the key once so SDKs pick it up automatically:
+
+```bash
+export BROWSER_USE_API_KEY=bu_your_key_here
+```
 
 ---
 

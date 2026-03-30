@@ -23,6 +23,12 @@ const client = new BrowserUse();
 const result = await client.run("List the top 20 posts on Hacker News today with their points");
 console.log(result.output);
 ```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v3/sessions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "List the top 20 posts on Hacker News today with their points"}'
+```
 </CodeGroup>
 
 **What this agent can do:**
