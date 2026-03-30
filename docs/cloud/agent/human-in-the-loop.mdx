@@ -28,17 +28,17 @@ print(f"Live view: {session.live_url}")
 
 # 2. Agent does the first part
 result = await client.run(
-    "Go to Google Flights and search for flights from NYC to London",
+    "Go to amazon.com and search for noise cancelling headphones",
     session_id=session.id,
 )
 print(result.output)
 
 # 3. Human opens live_url and picks a flight
-input("Press Enter after you've selected a flight in the live view...")
+input("Press Enter after you've selected a product in the live view...")
 
 # 4. Agent continues where the human left off
 result = await client.run(
-    "Get the details of the selected flight — airline, price, departure and arrival times",
+    "Get the details of the selected product — name, price, and rating",
     session_id=session.id,
 )
 print(result.output)
@@ -58,7 +58,7 @@ console.log(`Live view: ${session.liveUrl}`);
 
 // 2. Agent does the first part
 const searchResult = await client.run(
-  "Go to Google Flights and search for flights from NYC to London",
+  "Go to amazon.com and search for noise cancelling headphones",
   { sessionId: session.id },
 );
 console.log(searchResult.output);
@@ -66,13 +66,13 @@ console.log(searchResult.output);
 // 3. Human opens liveUrl and picks a flight
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 await new Promise((resolve) =>
-  rl.question("Press Enter after you've selected a flight in the live view...", resolve),
+  rl.question("Press Enter after you've selected a product in the live view...", resolve),
 );
 rl.close();
 
 // 4. Agent continues where the human left off
 const result = await client.run(
-  "Get the details of the selected flight — airline, price, departure and arrival times",
+  "Get the details of the selected product — name, price, and rating",
   { sessionId: session.id },
 );
 console.log(result.output);
