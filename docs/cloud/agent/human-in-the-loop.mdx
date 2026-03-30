@@ -11,7 +11,7 @@ icon: hand
 
 ## Flow
 
-1. Create a session with `keep_alive=True` so it stays alive between tasks
+1. Create a session — it stays alive automatically when you pass `session_id` to `run()`
 2. Run an agent task
 3. Human interacts with the live browser
 4. Send a new follow-up task
@@ -22,8 +22,8 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
-# 1. Create a persistent session
-session = await client.sessions.create(keep_alive=True)
+# 1. Create a session
+session = await client.sessions.create()
 print(f"Live view: {session.live_url}")
 
 # 2. Agent does the first part
@@ -52,8 +52,8 @@ import * as readline from "readline";
 
 const client = new BrowserUse();
 
-// 1. Create a persistent session
-const session = await client.sessions.create({ keepAlive: true });
+// 1. Create a session
+const session = await client.sessions.create();
 console.log(`Live view: ${session.liveUrl}`);
 
 // 2. Agent does the first part

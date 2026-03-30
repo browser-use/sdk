@@ -4,19 +4,20 @@ description: "Run multiple tasks in the same browser session."
 icon: list-check
 ---
 
+When you pass a `session_id`, the session automatically stays alive between tasks.
+
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
-# Create a session first, then run tasks inside it
+# Create a session, then run tasks inside it
 session = await client.sessions.create()
 
 result1 = await client.run(
     "Log into example.com with user@test.com",
     session_id=session.id,
-    keep_alive=True,
 )
 result2 = await client.run(
     "Now go to settings and change the timezone",
@@ -30,12 +31,11 @@ import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 
-// Create a session first, then run tasks inside it
+// Create a session, then run tasks inside it
 const session = await client.sessions.create();
 
 const result1 = await client.run("Log into example.com with user@test.com", {
   sessionId: session.id,
-  keepAlive: true,
 });
 const result2 = await client.run("Now go to settings and change the timezone", {
   sessionId: session.id,
@@ -44,5 +44,3 @@ const result2 = await client.run("Now go to settings and change the timezone", {
 await client.sessions.stop(session.id);
 ```
 </CodeGroup>
-
-Use `keep_alive: true` to keep the session running after a task completes. Without it, the session auto-stops when the task finishes.

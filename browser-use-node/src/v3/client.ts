@@ -66,6 +66,10 @@ export class BrowserUse {
     if (schema) {
       body.outputSchema = z.toJSONSchema(schema) as Record<string, unknown>;
     }
+    // Auto keep_alive when dispatching to an existing session
+    if (body.sessionId && body.keepAlive === undefined) {
+      body.keepAlive = true;
+    }
     const promise = this.sessions.create(body);
     return new SessionRun(promise, this.sessions, schema, { timeout, interval });
   }
