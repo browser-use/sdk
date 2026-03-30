@@ -8,21 +8,15 @@ icon: eye
   Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
 </Note>
 
+`liveUrl` is returned on session creation.
+
 <CodeGroup>
 ```python Python
-import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(task="Check how many GitHub stars browser-use has")
-
-# liveUrl becomes available once the browser is ready
-while True:
-    s = await client.sessions.get(session.id)
-    if s.live_url:
-        print(s.live_url)
-        break
-    await asyncio.sleep(0.5)
+print(session.live_url)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -31,16 +25,7 @@ const client = new BrowserUse();
 const session = await client.sessions.create({
   task: "Check how many GitHub stars browser-use has",
 });
-
-// liveUrl becomes available once the browser is ready
-while (true) {
-  const s = await client.sessions.get(session.id);
-  if (s.liveUrl) {
-    console.log(s.liveUrl);
-    break;
-  }
-  await new Promise((r) => setTimeout(r, 500));
-}
+console.log(session.liveUrl);
 ```
 </CodeGroup>
 
