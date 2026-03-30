@@ -4,29 +4,32 @@ description: "Residential proxies in 195+ countries. On by default."
 icon: globe
 ---
 
-A US residential proxy is active by default on every session. To route through a different country, set `proxy_country_code`.
+A US residential proxy is active by default on every browser. To route through a different country, set `proxy_country_code`. See the [API reference](/cloud/api-v3/browsers/create-browser) for all supported country codes.
 
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-result = await client.run(
-    "Get the price of iPhone 16 on amazon.de",
-    proxy_country_code="de",
-)
+browser = await client.browsers.create(proxy_country_code="de")
+print(browser.cdp_url)   # ws://...
+print(browser.live_url)  # debug view
+
+# With an agent:
+# result = await client.run("Get the price of iPhone 16 on amazon.de", proxy_country_code="de")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const result = await client.run("Get the price of iPhone 16 on amazon.de", {
-  proxyCountryCode: "de",
-});
+const browser = await client.browsers.create({ proxyCountryCode: "de" });
+console.log(browser.cdpUrl);
+console.log(browser.liveUrl);
+
+// With an agent:
+// const result = await client.run("Get the price of iPhone 16 on amazon.de", { proxyCountryCode: "de" });
 ```
 </CodeGroup>
-
-Common country codes: `us`, `gb`, `de`, `fr`, `jp`, `au`, `br`, `in`, `kr`, `ca`.
 
 ## Disable proxies
 
@@ -34,15 +37,16 @@ If your use case does not need proxies, for example QA testing.
 
 <CodeGroup>
 ```python Python
-result = await client.run(
-    "Go to http://localhost:3000",
-    proxy_country_code=None,
-)
+browser = await client.browsers.create(proxy_country_code=None)
+
+# With an agent:
+# result = await client.run("Go to http://localhost:3000", proxy_country_code=None)
 ```
 ```typescript TypeScript
-const result = await client.run("Go to http://localhost:3000", {
-  proxyCountryCode: null,
-});
+const browser = await client.browsers.create({ proxyCountryCode: null });
+
+// With an agent:
+// const result = await client.run("Go to http://localhost:3000", { proxyCountryCode: null });
 ```
 </CodeGroup>
 
@@ -55,7 +59,7 @@ Bring your own proxy server (HTTP or SOCKS5). Requires custom plan.
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-session = await client.sessions.create(
+browser = await client.browsers.create(
     custom_proxy={
         "host": "proxy.example.com",
         "port": 8080,
@@ -68,7 +72,7 @@ session = await client.sessions.create(
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const session = await client.sessions.create({
+const browser = await client.browsers.create({
   customProxy: {
     host: "proxy.example.com",
     port: 8080,
