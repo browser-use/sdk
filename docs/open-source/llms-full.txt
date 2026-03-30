@@ -8,18 +8,10 @@ Source: https://docs.browser-use.com/open-source/introduction
 <img src="/images/intro-oss-light.svg" alt="Browser Use Open Source" noZoom className="block dark:hidden" />
 <img src="/images/intro-oss-dark.svg" alt="Browser Use Open Source" noZoom className="hidden dark:block" />
 
-<CardGroup cols={2}>
-  <Card title="Human Quickstart" icon="rocket" href="/open-source/quickstart">
     Install and run your first agent.
-  </Card>
-  <Card title="Prompts for Vibecoders" icon="microchip" href="/open-source/vibecoding">
     Full SDK reference in a single page.
-  </Card>
-</CardGroup>
 
-<Tip>
   Try [Browser Use Cloud](https://docs.browser-use.com/cloud/introduction) for our SOTA model, stealth browsers, CAPTCHA solving, and managed infrastructure.
-</Tip>
 
 
 # Human Quickstart
@@ -28,9 +20,7 @@ Source: https://docs.browser-use.com/open-source/quickstart
 
 To get started with Browser Use you need to install the package and create an `.env` file with your API key.
 
-<Note icon="key" color="#FFC107" iconType="regular">
 `ChatBrowserUse` offers the [fastest and most cost-effective models](https://browser-use.com/posts/speed-matters/), completing tasks 3-5x faster. New users get 5 free tasks. Get your API key [here](https://cloud.browser-use.com/new-api-key).
-</Note>
 
 ## 1. Installing Browser-Use
 
@@ -60,11 +50,9 @@ We recommend using ChatBrowserUse which is optimized for browser automation task
 touch .env
 ```
 
-<Info>On Windows, use `echo. > .env`</Info>
 
 Then add your API key to the file.
 
-<CodeGroup>
 ```bash Browser Use
 # add your key to .env file
 BROWSER_USE_API_KEY=
@@ -83,13 +71,11 @@ OPENAI_API_KEY=
 # add your key to .env file
 ANTHROPIC_API_KEY=
 ```
-</CodeGroup>
 
 See [Supported Models](/open-source/supported-models) for more.
 
 ## 3. Run your first agent
 
-<CodeGroup>
 ```python Browser Use
 from browser_use import Agent, ChatBrowserUse
 from dotenv import load_dotenv
@@ -154,9 +140,7 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
-</CodeGroup>
 
-<Note> Custom browsers can be configured in one line. Check out <a href="/open-source/customize/browser/basics">browsers</a> for more. </Note>
 
 ## 4. Going to Production
 
@@ -256,9 +240,7 @@ ChatBrowserUse offers competitive pricing per 1 million tokens:
 
 ### Google Gemini [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gemini.py)
 
-<Warning>
 `GEMINI_API_KEY` is deprecated and should be named `GOOGLE_API_KEY` as of 2025-05.
-</Warning>
 
 ```python
 from browser_use import Agent, ChatGoogle
@@ -309,11 +291,9 @@ Required environment variables:
 OPENAI_API_KEY=
 ```
 
-<Info>
   You can use any OpenAI compatible model by passing the model name to the
   `ChatOpenAI` class using a custom URL (or any other parameter that would go
   into the normal OpenAI API call).
-</Info>
 
 ### Anthropic [example](https://github.com/browser-use/browser-use/blob/main/examples/models/claude-4-sonnet.py)
 
@@ -366,10 +346,8 @@ AZURE_OPENAI_API_KEY=
 
 #### Using the Responses API (for GPT-5.1 Codex models)
 
-<Info>
 Azure OpenAI now requires `api_version >= 2025-03-01-preview` for certain models like `gpt-5.1-codex-mini`.
 These models only support the [Responses API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses) instead of the Chat Completions API.
-</Info>
 
 Browser Use automatically detects and uses the Responses API for these models:
 - `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5.1-codex-max`
@@ -1051,21 +1029,16 @@ All CLI-managed files live under `~/.browser-use/` (override with `BROWSER_USE_H
 
 ## Windows Troubleshooting
 
-<Accordion title="ARM64 Windows (Surface Pro X, Snapdragon laptops)">
 Install x64 Python (runs via emulation):
 ```powershell
 winget install Python.Python.3.11 --architecture x64
 ```
-</Accordion>
 
-<Accordion title="Multiple Python versions">
 Set the version explicitly:
 ```powershell
 $env:PY_PYTHON=3.11
 ```
-</Accordion>
 
-<Accordion title="PATH not working after install">
 Restart your terminal. If still not working:
 ```powershell
 # Check PATH
@@ -1074,9 +1047,7 @@ echo $env:PATH
 # Or run via Git Bash
 & "C:\Program Files\Git\bin\bash.exe" -c 'browser-use --help'
 ```
-</Accordion>
 
-<Accordion title="Failed to start daemon error">
 Kill zombie processes:
 ```powershell
 # Find browser-use Python processes
@@ -1085,9 +1056,7 @@ wmic process where "name='python.exe' and commandline like '%browser%use%'" get 
 # Kill by PID
 taskkill /PID <pid> /F
 ```
-</Accordion>
 
-<Accordion title="Stale virtual environment">
 Delete and reinstall:
 ```powershell
 # Kill browser-use Python processes
@@ -1095,7 +1064,6 @@ wmic process where "name='python.exe' and commandline like '%browser%use%'" call
 Remove-Item -Recurse -Force "$env:USERPROFILE\.browser-use-env"
 # Then run installer again
 ```
-</Accordion>
 
 
 # Configuration
@@ -1450,13 +1418,9 @@ Browser-Use supports multiple authentication strategies depending on your use ca
 
 Connect to your existing Chrome browser to reuse your authenticated sessions. No need to handle logins, cookies, or 2FA - if you are logged in on Chrome, the agent is, too.
 
-<Info>
 See [Real Browser](/open-source/customize/browser/real-browser) for more details and platform paths.
-</Info>
 
-<Warning>
 You may need to close Chrome completely before running. Browser-Use launches Chrome in debug mode, which can conflict with existing Chrome processes.
-</Warning>
 
 ```python
 from browser_use import Agent, Browser, ChatBrowserUse
@@ -1478,9 +1442,7 @@ await agent.run()
 
 Export cookies and localStorage from an authenticated browser, then load them in headless mode. Useful for production/CI where you cannot use a real browser profile.
 
-<Info>
 See [Browser Parameters](/open-source/customize/browser/all-parameters#user-data--profiles) for all storage options.
-</Info>
 
 ### Export from Real Browser
 
@@ -1555,9 +1517,7 @@ The JSON file follows Playwright's format:
 
 For sites using authenticator apps (Google Authenticator, 1Password, etc.), Browser-Use can generate TOTP codes automatically.
 
-<Info>
 See [Sensitive Data](/open-source/examples/templates/sensitive-data) for more on credential handling.
-</Info>
 
 ### How It Works
 
@@ -1588,9 +1548,7 @@ agent = Agent(
 await agent.run()
 ```
 
-<Tip>
 The placeholder name must end with `bu_2fa_code`. You can use any prefix: `google_bu_2fa_code`, `github_bu_2fa_code`, etc.
-</Tip>
 
 ### Where to Find TOTP Secrets
 
@@ -1701,9 +1659,7 @@ See [`examples/integrations/gmail_2fa_integration.py`](https://github.com/browse
 
 ## Security Best Practices
 
-<Info>
 See [Secure Setup](/open-source/examples/templates/secure) for enterprise security with Azure OpenAI.
-</Info>
 
 ### Restrict Domains
 
@@ -1775,9 +1731,7 @@ Source: https://docs.browser-use.com/open-source/customize/browser/real-browser
 
 This allows you to automate your existing Chrome browser, so you are already logged into your websites.
 
-<Warning>
 You may need to fully close Chrome before running these examples. Additionally, if Google search blocks automated browsers, use DuckDuckGo or other search engines instead.
-</Warning>
 
 ## Basic Example
 
@@ -1934,9 +1888,7 @@ agent = Agent(
 Source: https://docs.browser-use.com/open-source/customize/browser/all-parameters
 
 
-<Note>
 The `Browser` instance also provides all [Actor](/open-source/legacy/actor/all-parameters) methods for direct browser control (page management, element interactions, etc.).
-</Note>
 
 ## Core Settings
 
@@ -2020,7 +1972,6 @@ The `Browser` instance also provides all [Actor](/open-source/legacy/actor/all-p
 
 ## Recording & Debugging
 
-<Warning>
 Video recording requires additional optional dependencies. If these are not installed, no video will be saved and no error will be raised.
 
 Install with:
@@ -2031,7 +1982,6 @@ or:
 ```bash
 pip install imageio[ffmpeg] numpy
 ```
-</Warning>
 
 - `record_video_dir`: Directory to save video recordings as `.mp4` files
 - `record_video_size` (default: `ViewportSize`): The frame size (width, height) of the video recording.
@@ -2145,14 +2095,10 @@ agent = Agent(
 )
 ```
 
-<Warning>
 **Important**: The parameter must be named exactly `browser_session` with type `BrowserSession` (not `browser: Browser`). 
 The agent injects parameters by name matching, so using the wrong name will cause your tool to fail silently.
-</Warning>
 
-<Note>
 Use `browser_session` parameter in tools for deterministic [Actor](/open-source/legacy/actor/basics) actions.
-</Note>
 
 
 # Available Tools
@@ -2241,11 +2187,9 @@ agent = Agent(task='...', llm=llm, tools=tools)
 
 The Agent fills your function parameters based on their names, type hints, & defaults.
 
-<Warning>
 **Common Pitfall**: Parameter names must match exactly! Use `browser_session: BrowserSession` (not `browser: Browser`). 
 The agent injects special parameters by **name matching**, so using incorrect names will cause your tool to fail silently.
 See [Available Objects](#available-objects) below for the correct parameter names.
-</Warning>
 
 
 ## Available Objects
@@ -2340,9 +2284,7 @@ This shows how to create custom actions that use Playwright's precise browser au
 
 ## Common Pitfalls
 
-<Warning>
 The agent injects special parameters **by name**, not by type. Using incorrect parameter names is the most common cause of tools failing silently.
-</Warning>
 
 ### ❌ Wrong: Using `browser: Browser`
 
@@ -2472,9 +2414,7 @@ Source: https://docs.browser-use.com/open-source/customize/integrations/mcp-serv
 
 Browser Use can run as a local **Model Context Protocol (MCP)** server on your machine via stdio. This is the **free, open-source option** that gives you direct, low-level control over browser automation but requires your own LLM API keys.
 
-<Note>
 Looking for a hosted solution? Use the [Cloud MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server) instead — no setup required, just an API key.
-</Note>
 
 ## Quick Start
 
@@ -2486,13 +2426,9 @@ The server will start in stdio mode, ready to accept MCP connections.
 
 ## Client Setup
 
-<Tabs>
-<Tab title="Claude Code">
 ```bash
 claude mcp add browser-use -- uvx --from 'browser-use[cli]' browser-use --mcp
 ```
-</Tab>
-<Tab title="Claude Desktop">
 Add to your Claude Desktop config file:
 
 **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -2529,16 +2465,12 @@ Add to your Claude Desktop config file:
 
 Restart Claude Desktop after saving.
 
-<Note>
 **macOS/Linux PATH Issue:** Claude Desktop may not find `uvx` in your PATH. Use the full path to `uvx` instead:
 - Run `which uvx` in your terminal to find the location (usually `/Users/username/.local/bin/uvx` or `~/.local/bin/uvx`)
 - Replace `"command": "uvx"` with the full path, e.g., `"command": "/Users/your-username/.local/bin/uvx"`
 - Replace `your-username` with your actual username
 
 **CLI Extras Required:** The `--from browser-use[cli]` flag installs the CLI extras needed for MCP server support.
-</Note>
-</Tab>
-<Tab title="Cursor">
 Add to `~/.cursor/mcp.json`:
 
 ```json
@@ -2554,8 +2486,6 @@ Add to `~/.cursor/mcp.json`:
   }
 }
 ```
-</Tab>
-<Tab title="Windsurf">
 Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ```json
@@ -2571,8 +2501,6 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
   }
 }
 ```
-</Tab>
-</Tabs>
 
 ## Environment Variables
 
@@ -2966,9 +2894,7 @@ Source: https://docs.browser-use.com/open-source/legacy/sandbox/quickstart
 
 Sandboxes are the **easiest way to run Browser-Use in production**. We handle agents, browsers, persistence, auth, cookies, and LLMs. It is also the **fastest way to deploy** - the agent runs right next to the browser, so latency is minimal.
 
-<Note>
 Get your API key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key) — new users get 5 free tasks.
-</Note>
 
 ## Basic Example
 
@@ -3212,9 +3138,7 @@ asyncio.run(main())
 4. **Interactive Flow**: Perfect for conversational interfaces 
 5. **Break down long flows**: If you have very long flows, you can keep the browser alive and send new agents to it.
 
-<Note>
 The browser session remains active throughout the entire chain, preserving all cookies, local storage, and page state.
-</Note>
 
 
 # Parallel Agents
@@ -3665,9 +3589,7 @@ if __name__ == '__main__':
 Source: https://docs.browser-use.com/open-source/examples/templates/sensitive-data
 
 
-<Note>
 For comprehensive authentication guidance including real browser profiles, storage state, and 2FA, see the [Authentication Guide](/open-source/customize/browser/authentication).
-</Note>
 
 ```python
 import os
@@ -3768,9 +3690,7 @@ asyncio.run(main())
 
 
 
-<Note>
 For enterprise deployments contact support@browser-use.com.
-</Note>
 
 
 # More Examples
@@ -3790,9 +3710,7 @@ Have a great use case? **[Submit a pull request](https://github.com/browser-use/
 Source: https://docs.browser-use.com/open-source/examples/apps/ad-use
 
 
-<Note>
 This demo requires browser-use v0.7.6+.
-</Note>
 
 <video
   controls
@@ -3884,9 +3802,7 @@ Full implementation: [https://github.com/browser-use/browser-use/tree/main/examp
 Source: https://docs.browser-use.com/open-source/examples/apps/vibetest-use
 
 
-<Note>
 Requires **browser-use&nbsp; < v0.5.0** and Playwright Chromium. Currently getting an update to v0.7.6+. 
-</Note>
 
 <video
   controls
@@ -3978,9 +3894,7 @@ Full implementation: [https://github.com/browser-use/vibetest-use](https://githu
 Source: https://docs.browser-use.com/open-source/examples/apps/news-use
 
 
-<Note>
 This demo requires browser-use v0.7.7+.
-</Note>
 
 <video
   controls
@@ -4110,9 +4024,7 @@ Full implementation: [https://github.com/browser-use/browser-use/tree/main/examp
 Source: https://docs.browser-use.com/open-source/examples/apps/msg-use
 
 
-<Note>
 This demo requires browser-use v0.7.7+.
-</Note>
 
 <video
   controls
@@ -4683,10 +4595,8 @@ import os
 os.environ["ANONYMIZED_TELEMETRY"] = "false"
 ```
 
-<Note>
   Even when enabled, telemetry has zero impact on the library's performance. Code is available in [Telemetry
   Service](https://github.com/browser-use/browser-use/tree/main/browser_use/telemetry).
-</Note>
 
 ## Legal
 

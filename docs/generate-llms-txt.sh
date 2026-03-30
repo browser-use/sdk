@@ -75,6 +75,15 @@ def format_entry(slug):
         return f'- [{title}]({BASE_URL}/{slug}): {desc}'
     return f'- [{title}]({BASE_URL}/{slug})'
 
+seen_groups = set()
+
+def has_direct_pages(group):
+    \"\"\"Check if a group has any direct page slugs (not just sub-groups).\"\"\"
+    for page in group.get('pages', []):
+        if isinstance(page, str):
+            return True
+    return False
+
 def process_group(group, indent=0):
     lines = []
     if isinstance(group, str):
@@ -83,9 +92,15 @@ def process_group(group, indent=0):
             lines.append(entry)
     elif isinstance(group, dict):
         name = group.get('group', '')
-        if name:
-            lines.append(f'')
-            lines.append(f'## {name}')
+        if name and name not in seen_groups:
+            # Only emit header if this group has direct pages or is a leaf group
+            if has_direct_pages(group):
+                seen_groups.add(name)
+                lines.append(f'')
+                lines.append(f'## {name}')
+            elif not any(isinstance(p, dict) and 'openapi' in p for p in group.get('pages', [])):
+                # Sub-group container (like Pillars) — skip header but process children
+                pass
         for page in group.get('pages', []):
             lines.extend(process_group(page, indent+1))
     return lines
@@ -96,6 +111,11 @@ for product_nav in d['navigation']['products']:
         if 'tabs' in product_nav:
             for tab in product_nav['tabs']:
                 if isinstance(tab, dict):
+                    tab_name = tab.get('tab', '')
+                    # Emit tab header for non-primary tabs to separate API sections
+                    if tab_name and tab_name != product_nav['tabs'][0].get('tab', ''):
+                        lines.append(f'')
+                        lines.append(f'## {tab_name}')
                     for g in tab.get('groups', []):
                         lines.extend(process_group(g))
         if 'groups' in product_nav:
@@ -159,7 +179,9 @@ for product_nav in d['navigation']['products']:
     echo "# ${title:-$slug}" >> "$out"
     echo "Source: ${BASE_URL}/${slug}" >> "$out"
     echo "" >> "$out"
-    awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}' "$file" | sed "s|](/cloud/|](${BASE_URL}/cloud/|g" >> "$out"
+    awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}' "$file" \
+      | sed "s|](/cloud/|](${BASE_URL}/cloud/|g" \
+      | sed -E '/<\/?(CodeGroup|Note|Tip|Warning|Info|Card|Tabs|Tab|Steps|Step|Accordion|AccordionGroup)[^>]*>/d' >> "$out"
     echo "" >> "$out"
   done
 

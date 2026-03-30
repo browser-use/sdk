@@ -5,9 +5,61 @@ description: Use Browser Use as an HTTP node in n8n workflows.
 
 Browser Use works with [n8n](https://n8n.io) as a standard HTTP integration — no custom nodes needed.
 
-**Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v3/sessions` with your API key in the `X-Browser-Use-API-Key` header and a JSON body like `{"task": "your task here"}`. Then poll `GET /api/v3/sessions/{session_id}` until `status` is `idle` or `stopped`.
+## 1. Create a credential
 
-For event-driven workflows, use [Webhooks](/cloud/guides/webhooks) to receive completion events directly instead of polling.
+In n8n, go to **Credentials → Add Credential → Header Auth** and set:
+
+| Field | Value |
+|-------|-------|
+| Name | `Authorization` |
+| Value | `Bearer YOUR_API_KEY` |
+
+Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+## 2. Start a session
+
+Add an **HTTP Request** node:
+
+| Setting | Value |
+|---------|-------|
+| Method | `POST` |
+| URL | `https://api.browser-use.com/api/v3/sessions` |
+| Authentication | Header Auth (from step 1) |
+| Body Type | JSON |
+
+Body:
+```json
+{
+  "task": "Find the top 3 trending repos on GitHub today"
+}
+```
+
+The response includes a `session_id` you'll use to poll for results.
+
+## 3. Poll for completion
+
+Add a second **HTTP Request** node in a loop:
+
+| Setting | Value |
+|---------|-------|
+| Method | `GET` |
+| URL | `https://api.browser-use.com/api/v3/sessions/{{ $json.id }}` |
+| Authentication | Header Auth (from step 1) |
+
+Check the `status` field. The session is done when status is `idle`, `stopped`, `error`, or `timed_out`. Use an **If** node to loop back with a **Wait** node (5–10 seconds) until complete.
+
+The final response contains `output` with the agent's result.
+
+## Event-driven alternative
+
+Instead of polling, use [Webhooks](/cloud/guides/webhooks) to receive a callback when the session completes. Add a Webhook trigger node in n8n and pass your webhook URL in the session creation body:
+
+```json
+{
+  "task": "Find the top 3 trending repos on GitHub today",
+  "webhook_url": "https://your-n8n-instance.com/webhook/browser-use"
+}
+```
 
 <Tip>
   This pattern works with any workflow tool that supports HTTP requests — Make, Zapier, Pipedream, or custom orchestrators.

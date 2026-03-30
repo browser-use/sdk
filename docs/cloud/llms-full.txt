@@ -7,14 +7,12 @@ Source: https://docs.browser-use.com/cloud/quickstart
 
 ## 1. Install
 
-<CodeGroup>
 ```bash Python
 pip install browser-use-sdk
 ```
 ```bash TypeScript
 npm install browser-use-sdk
 ```
-</CodeGroup>
 
 Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then:
 
@@ -24,14 +22,13 @@ export BROWSER_USE_API_KEY=your_key
 
 ## 2. Run your first task
 
-<CodeGroup>
 ```python Python
 import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 async def main():
     client = AsyncBrowserUse()
-    result = await client.run("Find the top 3 trending repos on GitHub today")
+    result = await client.run("List the top 20 posts on Hacker News today with their points")
     print(result.output)
 
 asyncio.run(main())
@@ -40,14 +37,11 @@ asyncio.run(main())
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const result = await client.run("Find the top 3 trending repos on GitHub today");
+const result = await client.run("List the top 20 posts on Hacker News today with their points");
 console.log(result.output);
 ```
-</CodeGroup>
 
-<Note>
   Want a full working app? See the [Chat UI example](https://docs.browser-use.com/cloud/tutorials/chat-ui) — a complete Next.js app with live browser preview, streaming messages, authentication, and session management.
-</Note>
 
 
 # Prompt for Vibecoders
@@ -65,22 +59,26 @@ The SDK is a thin wrapper around the [API v3 Reference](https://docs.browser-use
 
 `client.run()` creates a session, polls every 2 seconds until completion (up to 4 hours), and returns the result. It accepts all parameters from the [Create Session](https://docs.browser-use.com/cloud/api-v3/sessions/create-session) endpoint. The result is a [Session object](https://docs.browser-use.com/cloud/api-v3/sessions/get-session) — use `result.output` for the agent's response.
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-result = await client.run("Find the top 3 trending repos on GitHub today")
+result = await client.run("List the top 20 posts on Hacker News today with their points")
 print(result.output)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const result = await client.run("Find the top 3 trending repos on GitHub today");
+const result = await client.run("List the top 20 posts on Hacker News today with their points");
 console.log(result.output);
 ```
-</CodeGroup>
+```bash curl
+curl -X POST https://api.browser-use.com/api/v3/sessions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "List the top 20 posts on Hacker News today with their points"}'
+```
 
 **What this agent can do:**
 - **Data extraction** — scrape websites with thousands of listings
@@ -101,63 +99,71 @@ Source: https://docs.browser-use.com/cloud/agent/structured-output
 
 Pass a Pydantic model (Python) or Zod schema (TypeScript) — `result.output` is automatically validated and converted to the typed object.
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 from pydantic import BaseModel
 
-class Contact(BaseModel):
+class Post(BaseModel):
     name: str
-    title: str
-    company: str
+    points: int
+    comments: int
+
+class HNPosts(BaseModel):
+    posts: list[Post]
 
 client = AsyncBrowserUse()
 result = await client.run(
-    "Find the founding team of Browser Use on LinkedIn",
-    output_schema=Contact,
+    "List the top 20 posts on Hacker News today with their points",
+    output_schema=HNPosts,
 )
-print(result.output)
+for post in result.output.posts:
+    print(f"{post.name} ({post.points} pts, {post.comments} comments)")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 import { z } from "zod";
 
-const Contact = z.object({
+const Post = z.object({
   name: z.string(),
-  title: z.string(),
-  company: z.string(),
+  points: z.number(),
+  comments: z.number(),
+});
+
+const HNPosts = z.object({
+  posts: z.array(Post),
 });
 
 const client = new BrowserUse();
 const result = await client.run(
-  "Find the founding team of Browser Use on LinkedIn",
-  { schema: Contact },
+  "List the top 20 posts on Hacker News today with their points",
+  { schema: HNPosts },
 );
-console.log(result.output);
+for (const post of result.output.posts) {
+  console.log(`${post.name} (${post.points} pts, ${post.comments} comments)`);
+}
 ```
-</CodeGroup>
 
 
 # Follow-up tasks
 Source: https://docs.browser-use.com/cloud/agent/follow-up-tasks
 
 
-<CodeGroup>
+When you pass a `session_id`, the session automatically stays alive between tasks. Each task runs a new agent that reuses the same browser — the agents don't share context, but the browser state (page, cookies, tabs) carries over.
+
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
-# Create a session first, then run tasks inside it
+# Create a session, then run tasks inside it
 session = await client.sessions.create()
 
 result1 = await client.run(
-    "Log into example.com with user@test.com",
+    "Go to amazon.com, search for laptops, and open the first result",
     session_id=session.id,
-    keep_alive=True,
 )
 result2 = await client.run(
-    "Now go to settings and change the timezone",
+    "Extract the customer reviews",
     session_id=session.id,
 )
 
@@ -168,57 +174,84 @@ import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
 
-// Create a session first, then run tasks inside it
+// Create a session, then run tasks inside it
 const session = await client.sessions.create();
 
-const result1 = await client.run("Log into example.com with user@test.com", {
+const result1 = await client.run("Go to amazon.com, search for laptops, and open the first result", {
   sessionId: session.id,
-  keepAlive: true,
 });
-const result2 = await client.run("Now go to settings and change the timezone", {
+const result2 = await client.run("Extract the customer reviews", {
   sessionId: session.id,
 });
 
 await client.sessions.stop(session.id);
 ```
-</CodeGroup>
-
-Use `keep_alive: true` to keep the session running after a task completes. Without it, the session auto-stops when the task finishes.
 
 
 # Live messages
 Source: https://docs.browser-use.com/cloud/agent/streaming
 
 
-<Note>
   Want a ready-made UI? See the [Chat UI tutorial](https://docs.browser-use.com/cloud/tutorials/chat-ui).
-</Note>
 
-Poll `sessions.messages()` while a task runs to get the agent's reasoning, tool calls, and results.
+Stream messages as the agent works — reasoning, tool calls, browser actions, and results. Each message has `role`, `type`, `summary`, `data`, and `screenshot_url`. See [List session messages](https://docs.browser-use.com/cloud/api-v3/sessions/list-session-messages) for all fields.
 
-<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+run = client.run("Find the top story on Hacker News")
+async for msg in run:
+    print(f"[{msg.role}] {msg.summary}")
+
+print(run.result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+
+const run = client.run("Find the top story on Hacker News");
+for await (const msg of run) {
+  console.log(`[${msg.role}] ${msg.summary}`);
+}
+
+console.log(run.result.output);
+```
+
+```
+[user] Find the top story on Hacker News
+[assistant] Navigating to https://news.ycombinator.com/
+[tool] Browser Navigate: Navigated
+[assistant] Analyzing browser state
+[tool] Browser Analyze State: The top story is "Coding Agents Could Make Free Software Matter Again"
+[tool] Done Autonomous: The top story on Hacker News is "Coding Agents Could Make Free Software Matter Again"
+```
+
+## Manual polling
+
+If you need full control over the polling loop (e.g. custom interval, filtering):
+
 ```python Python
 import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create(task="Find the top story on Hacker News")
-session_id = session.id
 
-seen = set()
+cursor = None
 while True:
-    msgs = await client.sessions.messages(session_id, limit=100)
+    msgs = await client.sessions.messages(session.id, after=cursor, limit=100)
     for m in msgs.messages:
-        if str(m.id) not in seen:
-            seen.add(str(m.id))
-            print(f"[{m.role}] {m.data[:200]}")
+        print(f"[{m.role}] {m.summary}")
+        cursor = m.id
 
-    s = await client.sessions.get(session_id)
+    s = await client.sessions.get(session.id)
     if s.status.value in ("idle", "stopped", "error", "timed_out"):
         break
     await asyncio.sleep(2)
 
-# Final output
 print(s.output)
 ```
 ```typescript TypeScript
@@ -229,30 +262,22 @@ const session = await client.sessions.create({
   task: "Find the top story on Hacker News",
 });
 
-const seen = new Set<string>();
+let cursor: string | undefined;
 while (true) {
-  const msgs = await client.sessions.messages(session.id, { limit: 100 });
+  const msgs = await client.sessions.messages(session.id, { after: cursor, limit: 100 });
   for (const m of msgs.messages) {
-    if (!seen.has(m.id)) {
-      seen.add(m.id);
-      console.log(`[${m.role}] ${m.data.slice(0, 200)}`);
-    }
+    console.log(`[${m.role}] ${m.summary}`);
+    cursor = m.id;
   }
 
   const s = await client.sessions.get(session.id);
   if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
+    console.log(s.output);
     break;
   }
   await new Promise((r) => setTimeout(r, 2000));
 }
-
-// Final output
-const result = await client.sessions.get(session.id);
-console.log(result.output);
 ```
-</CodeGroup>
-
-Each message has a `role` (`user`, `assistant`, `tool`), a `summary` for display, and a `type` (e.g. `browser_action`, `browser_action_result`). Browser action results include a `screenshot_url`. See [List session messages](https://docs.browser-use.com/cloud/api-v3/sessions/list-session-messages) for all fields.
 
 
 # Workspaces & files
@@ -267,7 +292,6 @@ See your workspace IDs at [cloud.browser-use.com/settings](https://cloud.browser
 
 Upload a file to a workspace, then tell the agent to use it.
 
-<CodeGroup>
 ```python Python
 import httpx
 from browser_use_sdk.v3 import AsyncBrowserUse
@@ -323,13 +347,11 @@ const result = await client.run(
 );
 console.log(result.output);
 ```
-</CodeGroup>
 
 ## Download files
 
 Run a task that saves files to a workspace, then download them.
 
-<CodeGroup>
 ```python Python
 import httpx
 from browser_use_sdk.v3 import AsyncBrowserUse
@@ -375,11 +397,9 @@ for (const f of files.files) {
   writeFileSync(f.path, Buffer.from(await resp.arrayBuffer()));
 }
 ```
-</CodeGroup>
 
 ## Manage workspaces
 
-<CodeGroup>
 ```python Python
 workspace = await client.workspaces.get(workspace_id)
 updated = await client.workspaces.update(workspace_id, name="renamed")
@@ -392,11 +412,8 @@ const updated = await client.workspaces.update(workspaceId, { name: "renamed" })
 const workspaces = await client.workspaces.list();
 await client.workspaces.delete(workspaceId);
 ```
-</CodeGroup>
 
-<Warning>
   Deleting a workspace permanently removes all its files. This cannot be undone.
-</Warning>
 
 
 # Human in the loop
@@ -410,41 +427,33 @@ Source: https://docs.browser-use.com/cloud/agent/human-in-the-loop
 
 ## Flow
 
-1. Create a session with `keep_alive=True` so it stays alive between tasks
-2. Run an agent task — poll `sessions.get()` for `live_url` (~3-5 seconds)
+1. Create a session — it stays alive automatically when you pass `session_id` to `run()`
+2. Run an agent task
 3. Human interacts with the live browser
 4. Send a new follow-up task
 
-<CodeGroup>
 ```python Python
-import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
-# 1. Create a persistent session
-session = await client.sessions.create(keep_alive=True)
+# 1. Create a session
+session = await client.sessions.create()
+print(f"Live view: {session.live_url}")
 
 # 2. Agent does the first part
 result = await client.run(
-    "Go to Google Flights and search for flights from NYC to London",
+    "Go to amazon.com and search for noise cancelling headphones",
     session_id=session.id,
 )
 print(result.output)
 
-# Get the live URL (available while session is alive with keep_alive)
-s = await client.sessions.get(session.id)
-while not s.live_url:
-    await asyncio.sleep(1)
-    s = await client.sessions.get(session.id)
-print(f"Live view: {s.live_url}")
-
 # 3. Human opens live_url and picks a flight
-input("Press Enter after you've selected a flight in the live view...")
+input("Press Enter after you've selected a product in the live view...")
 
 # 4. Agent continues where the human left off
 result = await client.run(
-    "Get the details of the selected flight — airline, price, departure and arrival times",
+    "Get the details of the selected product — name, price, and rating",
     session_id=session.id,
 )
 print(result.output)
@@ -458,34 +467,27 @@ import * as readline from "readline";
 
 const client = new BrowserUse();
 
-// 1. Create a persistent session
-const session = await client.sessions.create({ keepAlive: true });
+// 1. Create a session
+const session = await client.sessions.create();
+console.log(`Live view: ${session.liveUrl}`);
 
 // 2. Agent does the first part
 const searchResult = await client.run(
-  "Go to Google Flights and search for flights from NYC to London",
+  "Go to amazon.com and search for noise cancelling headphones",
   { sessionId: session.id },
 );
 console.log(searchResult.output);
 
-// Get the live URL (available while session is alive with keepAlive)
-let s = await client.sessions.get(session.id);
-while (!s.liveUrl) {
-  await new Promise((r) => setTimeout(r, 1000));
-  s = await client.sessions.get(session.id);
-}
-console.log(`Live view: ${s.liveUrl}`);
-
 // 3. Human opens liveUrl and picks a flight
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 await new Promise((resolve) =>
-  rl.question("Press Enter after you've selected a flight in the live view...", resolve),
+  rl.question("Press Enter after you've selected a product in the live view...", resolve),
 );
 rl.close();
 
 // 4. Agent continues where the human left off
 const result = await client.run(
-  "Get the details of the selected flight — airline, price, departure and arrival times",
+  "Get the details of the selected product — name, price, and rating",
   { sessionId: session.id },
 );
 console.log(result.output);
@@ -493,7 +495,6 @@ console.log(result.output);
 // Clean up
 await client.sessions.stop(session.id);
 ```
-</CodeGroup>
 
 
 
@@ -503,10 +504,24 @@ Source: https://docs.browser-use.com/cloud/browser/stealth
 
 See [how we perform in the hardest stealth benchmark](https://browser-use.com/posts/stealth-benchmark).
 
-- **Anti-detect browser fingerprinting** — undetectable as automation
-- **Automatic CAPTCHA solving** — handled transparently
-- **Ad and cookie banner blocking** — clean pages, faster execution
-- **Cloudflare / anti-bot bypass** — works on protected sites
+## What's included
+
+Every cloud browser session runs in a hardened Chromium fork with stealth enabled by default — no configuration needed.
+
+- **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and other browser fingerprints are randomized per session to appear as a real user. Passes CreepJS, BrowserLeaks, and other fingerprint detectors.
+- **Automatic CAPTCHA solving** — reCAPTCHA, hCaptcha, and Cloudflare Turnstile are solved transparently. The agent does not need to take any action.
+- **Ad and cookie banner blocking** — Banners are dismissed automatically so the agent sees clean pages and executes faster.
+- **Cloudflare / anti-bot bypass** — Works on sites protected by Cloudflare, DataDome, PerimeterX, and other bot detection services.
+
+## Residential proxies
+
+Residential proxies are enabled by default across 195+ countries. This makes browser sessions appear as real users from the target geography. See [Proxies](https://docs.browser-use.com/cloud/browser/proxies) for details on geo-targeting and custom proxy configuration.
+
+## No setup required
+
+Stealth is always on — every `client.run()` call and every session created via the API uses the hardened browser automatically. There are no flags to enable or parameters to set.
+
+  Need to connect your own automation framework? See [Playwright, Puppeteer, Selenium](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium) to use Browser Use's stealth infrastructure via CDP.
 
 
 # Proxies
@@ -515,7 +530,6 @@ Source: https://docs.browser-use.com/cloud/browser/proxies
 
 A US residential proxy is active by default on every session. To route through a different country, set `proxy_country_code`.
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
@@ -533,7 +547,6 @@ const result = await client.run("Get the price of iPhone 16 on amazon.de", {
   proxyCountryCode: "de",
 });
 ```
-</CodeGroup>
 
 Common country codes: `us`, `gb`, `de`, `fr`, `jp`, `au`, `br`, `in`, `kr`, `ca`.
 
@@ -541,7 +554,6 @@ Common country codes: `us`, `gb`, `de`, `fr`, `jp`, `au`, `br`, `in`, `kr`, `ca`
 
 If your use case does not need proxies, for example QA testing.
 
-<CodeGroup>
 ```python Python
 result = await client.run(
     "Go to http://localhost:3000",
@@ -553,13 +565,11 @@ const result = await client.run("Go to http://localhost:3000", {
   proxyCountryCode: null,
 });
 ```
-</CodeGroup>
 
 ## Custom proxy
 
 Bring your own proxy server (HTTP or SOCKS5). Requires custom plan.
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
@@ -586,32 +596,22 @@ const session = await client.sessions.create({
   },
 });
 ```
-</CodeGroup>
 
 
 # Live preview & recording
 Source: https://docs.browser-use.com/cloud/browser/live-preview
 
 
-<Note>
   Want a ready-made UI? See the [Chat UI tutorial](https://docs.browser-use.com/cloud/tutorials/chat-ui).
-</Note>
 
-<CodeGroup>
+`liveUrl` is returned on session creation.
+
 ```python Python
-import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-session = await client.sessions.create("Check how many GitHub stars browser-use has")
-
-# liveUrl becomes available once the browser is ready
-while True:
-    s = await client.sessions.get(session.id)
-    if s.live_url:
-        print(s.live_url)
-        break
-    await asyncio.sleep(0.5)
+session = await client.sessions.create(task="Check how many GitHub stars browser-use has")
+print(session.live_url)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -620,18 +620,8 @@ const client = new BrowserUse();
 const session = await client.sessions.create({
   task: "Check how many GitHub stars browser-use has",
 });
-
-// liveUrl becomes available once the browser is ready
-while (true) {
-  const s = await client.sessions.get(session.id);
-  if (s.liveUrl) {
-    console.log(s.liveUrl);
-    break;
-  }
-  await new Promise((r) => setTimeout(r, 500));
-}
+console.log(session.liveUrl);
 ```
-</CodeGroup>
 
 ## Embed live browser into your app
 
@@ -665,7 +655,6 @@ https://live.browser-use.com?wss=...&ui=false
 
 Enable recording to get an MP4 video of the browser session. Only available when the agent actually opens a browser — tasks answered without browsing produce no recording. If you run multiple tasks in the same session (with `keep_alive`), you may get multiple recordings.
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
@@ -694,13 +683,13 @@ for (const url of urls) {
   console.log(url); // presigned MP4 download URL
 }
 ```
-</CodeGroup>
+
+  Recording URLs are presigned and **expire after 1 hour**. Download or serve the recording promptly. If you need to access it later, save the MP4 to your own storage.
 
 ## Public share links
 
 Generate a public URL that anyone can open to watch the entire agent session — no API key needed. Useful for sharing with teammates, stakeholders, or embedding in dashboards.
 
-<CodeGroup>
 ```python Python
 share = await client.sessions.create_share(session.id)
 print(share.url)
@@ -709,14 +698,12 @@ print(share.url)
 const share = await client.sessions.createShare(session.id);
 console.log(share.url);
 ```
-</CodeGroup>
 
 
 # Profiles
 Source: https://docs.browser-use.com/cloud/guides/authentication
 
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
@@ -741,13 +728,11 @@ const result = await client.run("Check browser-use github stars", {
 });
 console.log(result.output);
 ```
-</CodeGroup>
 
 View your profile IDs at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=profiles).
 
 ## Manage profiles
 
-<CodeGroup>
 ```python Python
 # Create
 profile = await client.profiles.create(name="work-account")
@@ -793,15 +778,12 @@ await client.profiles.update(profileId, { name: "renamed" });
 // Delete
 await client.profiles.delete(profileId);
 ```
-</CodeGroup>
 
 ## Usage patterns
 
 - **Per-user profiles:** Create one profile per end-user. Query by name to get the profile ID, or store a mapping between your users and their profile IDs in your database.
 
-<Warning>
   Profile state is only saved when the session ends. Always call `sessions.stop()` when you are done — if a session is left open or times out, changes may not be persisted.
-</Warning>
 
 
 # Sync local and cloud cookies
@@ -814,7 +796,6 @@ export BROWSER_USE_API_KEY=your_key && curl -fsSL https://browser-use.com/profil
 
 This opens a browser where you select which accounts to sync. After syncing, you receive a `profile_id` to use in your tasks.
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
@@ -831,7 +812,6 @@ const result = await client.run("Check my LinkedIn messages", {
   sessionId: session.id,
 });
 ```
-</CodeGroup>
 
 
 # Playwright, Puppeteer, Selenium
@@ -844,7 +824,6 @@ Connect with a single URL. All configuration is passed as query parameters.
 
 ### Playwright
 
-<CodeGroup>
 ```python Python
 from playwright.async_api import async_playwright
 
@@ -870,7 +849,6 @@ console.log(await page.title());
 await browser.close();
 // Browser is automatically stopped when the WebSocket disconnects
 ```
-</CodeGroup>
 
 ### Puppeteer
 
@@ -921,7 +899,6 @@ await client.browsers.stop(browser.id)
 
 Create a browser via the SDK, get a `cdp_url`, connect with your framework.
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
@@ -938,11 +915,8 @@ const browser = await client.browsers.create({ proxyCountryCode: "us" });
 console.log(browser.cdpUrl);
 console.log(browser.liveUrl);
 ```
-</CodeGroup>
 
-<Warning>
   Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
-</Warning>
 
 
 # OpenClaw
@@ -1158,7 +1132,6 @@ Every webhook request includes two headers:
 
 The signature is computed over `{timestamp}.{body}`, where `body` is the JSON-serialized payload with keys sorted alphabetically and no extra whitespace. Verify it to ensure the request is authentic and to prevent replay attacks.
 
-<CodeGroup>
 ```python Python
 import hashlib
 import hmac
@@ -1203,7 +1176,6 @@ function verifyWebhook(body: string, signature: string, timestamp: string, secre
   return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 }
 ```
-</CodeGroup>
 
 ## Example: Express webhook handler
 
@@ -1300,9 +1272,7 @@ async def handle_webhook(request: Request):
     return {"status": "ok"}
 ```
 
-<Tip>
   For local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose your local server: `ngrok http 3000`. Then set the ngrok URL as your webhook endpoint in the dashboard.
-</Tip>
 
 
 # n8n
@@ -1311,228 +1281,203 @@ Source: https://docs.browser-use.com/cloud/tutorials/integrations/n8n
 
 Browser Use works with [n8n](https://n8n.io) as a standard HTTP integration — no custom nodes needed.
 
-**Setup:** Add an HTTP Request node that POSTs to `https://api.browser-use.com/api/v3/sessions` with your API key in the `X-Browser-Use-API-Key` header and a JSON body like `{"task": "your task here"}`. Then poll `GET /api/v3/sessions/{session_id}` until `status` is `idle` or `stopped`.
+## 1. Create a credential
 
-For event-driven workflows, use [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks) to receive completion events directly instead of polling.
+In n8n, go to **Credentials → Add Credential → Header Auth** and set:
 
-<Tip>
+| Field | Value |
+|-------|-------|
+| Name | `Authorization` |
+| Value | `Bearer YOUR_API_KEY` |
+
+Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+## 2. Start a session
+
+Add an **HTTP Request** node:
+
+| Setting | Value |
+|---------|-------|
+| Method | `POST` |
+| URL | `https://api.browser-use.com/api/v3/sessions` |
+| Authentication | Header Auth (from step 1) |
+| Body Type | JSON |
+
+Body:
+```json
+{
+  "task": "Find the top 3 trending repos on GitHub today"
+}
+```
+
+The response includes a `session_id` you'll use to poll for results.
+
+## 3. Poll for completion
+
+Add a second **HTTP Request** node in a loop:
+
+| Setting | Value |
+|---------|-------|
+| Method | `GET` |
+| URL | `https://api.browser-use.com/api/v3/sessions/{{ $json.id }}` |
+| Authentication | Header Auth (from step 1) |
+
+Check the `status` field. The session is done when status is `idle`, `stopped`, `error`, or `timed_out`. Use an **If** node to loop back with a **Wait** node (5–10 seconds) until complete.
+
+The final response contains `output` with the agent's result.
+
+## Event-driven alternative
+
+Instead of polling, use [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks) to receive a callback when the session completes. Add a Webhook trigger node in n8n and pass your webhook URL in the session creation body:
+
+```json
+{
+  "task": "Find the top 3 trending repos on GitHub today",
+  "webhook_url": "https://your-n8n-instance.com/webhook/browser-use"
+}
+```
+
   This pattern works with any workflow tool that supports HTTP requests — Make, Zapier, Pipedream, or custom orchestrators.
-</Tip>
 
 
 # Chat UI
 Source: https://docs.browser-use.com/cloud/tutorials/chat-ui
 
 
-This tutorial walks through the [chat-ui-example](https://github.com/browser-use/chat-ui-example) — a Next.js app that lets users chat with a Browser Use agent in real time. We will focus on the SDK integration, not the UI components.
+  Clone and run in minutes. Next.js + Browser Use SDK v3.
+
+This tutorial walks through the [chat-ui-example](https://github.com/browser-use/chat-ui-example) — a Next.js app that lets users chat with a Browser Use agent in real time. We focus on the SDK integration, not the UI components.
 
 The app has two pages:
 
 1. **Home** — the user types a task, the app creates a session and sends the task.
-2. **Session** — the app polls for messages and lets the user send follow-ups.
+2. **Session** — live browser preview, streaming messages, follow-ups, and recording download.
 
 All SDK calls live in a single file: `src/lib/api.ts`.
 
-## Setup: SDK Clients
+## Setup
 
 ```typescript api.ts
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const apiKey = process.env.NEXT_PUBLIC_BROWSER_USE_API_KEY ?? "";
-const client = new BrowserUse({ apiKey });
+export const client = new BrowserUse({ apiKey });
 ```
 
-<Warning>
   `NEXT_PUBLIC_` exposes the key to the browser. In production, move SDK calls to server actions or API routes.
-</Warning>
 
 ---
 
-## Section 1: Home Page — Creating a Session
-
-### API layer
-
-Two functions handle session creation:
+## 1. Create a session
 
 ```typescript api.ts
-export async function createSession(opts: {
-  model: string;
-  profileId?: string;
-  workspaceId?: string;
-  proxyCountryCode?: string;
-}) {
+export async function createSession() {
   return client.sessions.create({
-    model: opts.model as "bu-mini" | "bu-max",
     keepAlive: true,
-    ...(opts.profileId && { profileId: opts.profileId }),
-    ...(opts.workspaceId && { workspaceId: opts.workspaceId }),
-    ...(opts.proxyCountryCode && { proxyCountryCode: opts.proxyCountryCode as any }),
+    enableRecording: true,
   });
 }
-
-export async function sendTask(sessionId: string, task: string) {
-  return client.sessions.create({ sessionId, task, keepAlive: true });
-}
 ```
 
-Key details:
+- **`keepAlive: true`** keeps the session open after each task so the user can send follow-ups (default is `false`).
+- **`enableRecording: true`** produces an MP4 video of the browser session.
+- **`liveUrl`** is returned immediately — no waiting or extra call needed.
 
-- **`keepAlive: true`** keeps the session open after the task completes so the user can send follow-ups.
-- **`createSession`** creates the browser without a task — the session starts idle.
-- **`sendTask`** calls `sessions.create()` again with the existing `sessionId` and a `task` to start the agent.
-
-The settings dropdowns are populated by two list calls:
-
-```typescript api.ts
-export async function listProfiles() {
-  return client.profiles.list({ pageSize: 100 });
-}
-
-export async function listWorkspaces() {
-  return client.workspaces.list({ pageSize: 100 });
-}
-```
-
-### Page flow
-
-The home page calls these functions in sequence — create the session, navigate immediately, then fire-and-forget the task:
+The home page creates the session, navigates to the session page (passing `liveUrl` and the initial task via URL params), and the session page takes over from there:
 
 ```typescript page.tsx
 async function handleSend(message: string) {
-  setIsCreating(true);
-  try {
-    // 1. Create an idle session
-    const session = await createSession({
-      model,
-      ...(profileId && { profileId }),
-      ...(workspaceId && { workspaceId }),
-      ...(proxyCountryCode && { proxyCountryCode }),
-    });
+  const session = await createSession();
 
-    // 2. Navigate to the session page immediately
-    router.push(`/session/${session.id}`);
-
-    // 3. Fire-and-forget the first task
-    sendTask(session.id, message).catch((err) =>
-      console.error("Failed to dispatch task:", err)
-    );
-  } catch (err) {
-    setError(err instanceof Error ? err.message : String(err));
-    setIsCreating(false);
-  }
+  router.push(
+    `/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
+  );
 }
 ```
 
-This pattern gives instant navigation — the user sees the session page (with the live browser view) while the task is still being dispatched.
+---
+
+## 2. Stream messages with `for await`
+
+Instead of polling `sessions.get()` and `sessions.messages()` separately, use `client.run()` — it streams messages and resolves when the task completes:
+
+```typescript session-context.tsx
+const streamTask = useCallback(async (task: string) => {
+  const run = client.run(task, { sessionId });
+
+  for await (const msg of run) {
+    setMessages((prev) => [...prev, msg]);
+  }
+
+  // Iterator done — task reached terminal state
+  setSession(run.result);
+}, [sessionId]);
+```
+
+The `for await` loop yields each message as it arrives. When the loop ends, `run.result` contains the final session state (status, output, etc.). No separate status polling needed.
+
+Wire it up in a `useEffect` to auto-run the initial task from URL params:
+
+```typescript session-context.tsx
+useEffect(() => {
+  if (!initialTask) return;
+  sendMessage(initialTask);
+}, []);
+```
 
 ---
 
-## Section 2: Messages Interface — Polling & Follow-ups
+## 3. Follow-up tasks
 
-### API layer
+Follow-ups call the same `streamTask` function — the stream already includes the user message, so no optimistic insert is needed:
 
-The session page needs three more SDK calls:
+```typescript session-context.tsx
+const sendMessage = useCallback(async (task: string) => {
+  await streamTask(task);
+}, [streamTask]);
+```
+
+The SDK auto-sets `keepAlive: true` when targeting an existing session, so follow-up tasks work without extra config.
+
+---
+
+## 4. Recording
+
+Fetch the MP4 URL after the session ends (recording was enabled in step 1):
+
+```typescript session-context.tsx
+useEffect(() => {
+  if (!isTerminal) return;
+
+  client.sessions.waitForRecording(sessionId).then((urls) => {
+    if (urls.length) setRecordingUrls(urls);
+  });
+}, [isTerminal, sessionId]);
+```
+
+`waitForRecording` polls for up to 15 seconds and returns presigned MP4 download URLs. Returns an empty array if the agent answered without opening a browser.
+
+---
+
+## 5. Stop a task
 
 ```typescript api.ts
-export async function getSession(id: string) {
-  return client.sessions.get(id);
-}
-
-export async function getMessages(id: string, limit = 100) {
-  return client.sessions.messages(id, { limit });
-}
-
 export async function stopTask(id: string) {
   await client.sessions.stop(id, { strategy: "task" });
 }
 ```
 
-- **`getSession`** returns the session status (`created`, `idle`, `running`, `stopped`, `timed_out`, `error`) and the `liveUrl`.
-- **`getMessages`** returns the conversation history — user messages, agent thoughts, and tool calls.
-- **`stopTask`** stops only the current task (not the session) using `strategy: "task"`, so the user can send another task.
+Using `strategy: "task"` stops only the current task, keeping the session alive for follow-ups.
 
-### Polling with React Query
+---
 
-The session context sets up two parallel polls using [TanStack Query](https://tanstack.com/query):
+## 6. Session page
 
-```typescript session-context.tsx
-const TERMINAL = new Set(["stopped", "error", "timed_out"]);
-
-// Poll session status every 1s, stop when terminal
-const { data: session } = useQuery({
-  queryKey: ["session", sessionId],
-  queryFn: () => api.getSession(sessionId),
-  refetchInterval: (query) => {
-    const s = query.state.data?.status;
-    return s && TERMINAL.has(s) ? false : 1000;
-  },
-});
-
-const isTerminal = !!session && TERMINAL.has(session.status);
-const isActive = !!session && !isTerminal;
-
-// Poll messages every 1s while session is active
-const { data: rawResponse, isLoading } = useQuery({
-  queryKey: ["messages", sessionId],
-  queryFn: () => api.getMessages(sessionId),
-  refetchInterval: isActive ? 1000 : false,
-});
-```
-
-Both polls run at 1-second intervals and automatically stop when the session reaches a terminal status.
-
-### Sending follow-ups
-
-Follow-up messages reuse the same `sendTask` function from the home page. The context adds optimistic updates so the user's message appears instantly:
-
-```typescript session-context.tsx
-const sendMessage = useCallback(async (task: string) => {
-  // Optimistic: show the message immediately
-  const tempMsg = {
-    id: `opt-${Date.now()}`,
-    role: "user",
-    content: task,
-    createdAt: new Date().toISOString(),
-  };
-  setOptimistic((prev) => [...prev, tempMsg]);
-
-  try {
-    await api.sendTask(sessionId, task);
-  } catch (err) {
-    // Roll back on failure
-    setOptimistic((prev) => prev.filter((m) => m.id !== tempMsg.id));
-  }
-}, [sessionId]);
-```
-
-Optimistic messages are automatically filtered out once the server returns the real message with matching content.
-
-### Stopping a task
-
-```typescript session-context.tsx
-const stopTask = useCallback(async () => {
-  await api.stopTask(sessionId);
-}, [sessionId]);
-```
-
-The session page wires `stopTask` to a stop button that appears while the agent is running. Since we used `strategy: "task"`, the session stays alive for follow-ups.
-
-### Session page
-
-The session page consumes everything through the context provider:
+The session page consumes everything through a context provider:
 
 ```typescript session/[id]/page.tsx
-export default function SessionPageWrapper() {
-  const params = useParams<{ id: string }>();
-  return (
-    <SessionProvider sessionId={params.id}>
-      <SessionPage />
-    </SessionProvider>
-  );
-}
-
 function SessionPage() {
-  const { session, turns, isBusy, isTerminal, isSending, sendMessage, stopTask } =
+  const { session, turns, isBusy, isTerminal, recordingUrls, sendMessage, stopTask } =
     useSession();
 
   return (
@@ -1542,19 +1487,13 @@ function SessionPage() {
         <ChatMessages turns={turns} isBusy={isBusy} />
         <ChatInput
           onSend={sendMessage}
-          isProcessing={isBusy || isSending}
           onStop={stopTask}
           disabled={isTerminal}
-          placeholder={isTerminal ? "Session has ended" : "Send a follow-up…"}
         />
       </div>
 
-      {/* Live browser view */}
-      <BrowserPanel
-        liveUrl={session?.liveUrl}
-        turns={turns}
-        isSessionEnded={isTerminal}
-      />
+      {/* Live browser view — liveUrl available from session creation */}
+      <BrowserPanel liveUrl={session?.liveUrl} />
     </div>
   );
 }
@@ -1564,27 +1503,17 @@ function SessionPage() {
 
 ## Summary
 
-The full SDK surface used by this app:
-
 | Method | Purpose |
 |--------|---------|
-| `client.sessions.create()` | Create a session, send tasks |
-| `client.sessions.get()` | Poll session status |
-| `client.sessions.messages()` | Poll conversation messages |
+| `client.sessions.create()` | Create a session (returns `liveUrl` immediately) |
+| `client.run()` | Send a task and stream messages with `for await` |
 | `client.sessions.stop()` | Stop the current task |
-| `client.workspaces.list()` | Populate workspace dropdown |
-| `client.profiles.list()` | Populate profile dropdown |
-
-The complete source is at [github.com/browser-use/chat-ui-example](https://github.com/browser-use/chat-ui-example).
+| `client.sessions.waitForRecording()` | Get MP4 recording URLs |
 
 
 # FAQ
 Source: https://docs.browser-use.com/cloud/faq
 
-
-## How much does a task cost?
-
-Set `max_cost_usd` to cap spending per task. Default is $20. A typical task costs $0.01–$0.05. Check `result.total_cost_usd` after each task.
 
 ## Which model should I use?
 
@@ -1593,14 +1522,12 @@ Set `max_cost_usd` to cap spending per task. Default is $20. A typical task cost
 
 ## How do I get the live browser URL?
 
-`live_url` is available while the browser is running. Use `keep_alive=True` so the session stays alive after the task — otherwise `live_url` goes to null when the task finishes.
+`live_url` is returned on session creation. Embed it in an iframe or open it in a browser.
 
 ```python
-result = await client.run("Go to example.com", keep_alive=True)
-print(result.live_url)  # available because session is still alive
+session = await client.sessions.create(task="Go to example.com")
+print(session.live_url)
 ```
-
-If you use `sessions.create()` directly, poll `sessions.get()` until `live_url` appears (~3-5 seconds).
 
 ## How do I authenticate on websites?
 
@@ -1608,41 +1535,37 @@ If you use `sessions.create()` directly, poll `sessions.get()` until `live_url` 
 2. **1Password** — auto-fill passwords and 2FA codes. See [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password) (v2 SDK).
 3. **Secrets** — pass credentials scoped by domain. See [Secrets](https://docs.browser-use.com/cloud/guides/secrets) (v2 SDK).
 
-## Task failed or wrong output
-
-- **Add a start URL.** Don't make the agent search — send it directly.
-- **Simplify instructions.** Break complex tasks into smaller follow-up tasks in the same session.
-- **Check the live URL.** Watch what the agent does in real time.
-- **Try bu-max.** More capable model for harder tasks.
-
 ## Getting blocked by a website
 
-Stealth is on by default. If still blocked:
+Stealth and proxies are active by default. If you're still getting blocked:
 
-- **Try a different proxy country** to match the target region.
 - **Use a profile** with logged-in cookies to bypass login walls.
+- **Try a different proxy country** to match the target region.
+
+If it still doesn't work, contact support inside the [Cloud Dashboard](https://cloud.browser-use.com) — send us a link to the page where you're getting blocked.
 
 ## Rate limited (429 errors)
 
 The SDK auto-retries 429 responses with exponential backoff. If persistent, you may need more concurrent sessions — contact support.
 
-## How do I save files from a task?
-
-Use workspaces. See [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces).
-
-```python
-workspace = await client.workspaces.create(name="my-workspace")
-result = await client.run("Save top 3 HN posts as posts.json", workspace_id=workspace.id)
-files = await client.workspaces.files(workspace.id, include_urls=True)
-```
-
-## How do I use Browser Use as a sub-agent?
-
-Use `client.run()` inside your agent's tool function. For a full working example with streaming and live preview, see the [Chat UI tutorial](https://docs.browser-use.com/cloud/tutorials/chat-ui).
-
 ## v2 vs v3 — which should I use?
 
-Use v3 (`from browser_use_sdk.v3 import AsyncBrowserUse`). It has sessions, workspaces, live messages, and recording. v2 is legacy — only use it if you need `secrets`, `allowed_domains`, or `op_vault_id`.
+**v3 is the recommendation for everything.** It's a premium agent (not available in open source) that is significantly more capable than v2:
+
+- **Much better at complex tasks** and multi-step workflows
+- **Much better at large data extraction**
+- **File system** with persistent memory across tasks
+- **Task scheduling** with 1,000+ integrations (Gmail, Slack, and more)
+
+v2 is the closest to the open-source experience — pure browser automation, nothing else. If the open source already works great for your use case, v2 is the natural fit. For everything else, use v3.
+
+```python
+# v3 (recommended)
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+# v2 (simple browser-only tasks)
+from browser_use_sdk.v2 import AsyncBrowserUse
+```
 
 
 # Agent (v2)
@@ -1665,14 +1588,12 @@ Source: https://docs.browser-use.com/cloud/legacy/agent
 
 Pass `llm` explicitly to select a model:
 
-<CodeGroup>
 ```python Python
 result = await client.run("...", llm="browser-use-2.0")
 ```
 ```typescript TypeScript
 const result = await client.run("...", { llm: "browser-use-2.0" });
 ```
-</CodeGroup>
 
 ---
 
@@ -1684,7 +1605,6 @@ Upload images, PDFs, documents, and text files (10 MB max) to sessions, and down
 
 Get a presigned URL, then upload via PUT.
 
-<CodeGroup>
 ```python Python
 import httpx
 from browser_use_sdk import AsyncBrowserUse
@@ -1726,15 +1646,11 @@ await fetch(upload.presignedUrl, {
 
 const result = await client.run("Summarize the uploaded PDF", { sessionId: session.id });
 ```
-</CodeGroup>
 
-<Warning>
   Presigned URLs expire after 120 seconds. Max file size: 10 MB.
-</Warning>
 
 ### Download task output files
 
-<CodeGroup>
 ```python Python
 result = await client.tasks.get(task_id)
 for file in result.output_files:
@@ -1748,7 +1664,6 @@ for (const file of result.outputFiles) {
   console.log(output.presignedUrl);
 }
 ```
-</CodeGroup>
 
 ---
 
@@ -1756,12 +1671,11 @@ for (const file of result.outputFiles) {
 
 Use `async for` to yield steps as the agent works.
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-run = client.run("Find the cheapest flight from NYC to London on Google Flights")
+run = client.run("Find the most upvoted post on Reddit r/technology today")
 async for step in run:
     print(f"Step {step.number}: {step.next_goal}")
     print(f"  URL: {step.url}")
@@ -1772,7 +1686,7 @@ print(run.result.output)  # final result after iteration
 import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
-const run = client.run("Find the cheapest flight from NYC to London on Google Flights");
+const run = client.run("Find the most upvoted post on Reddit r/technology today");
 for await (const step of run) {
   console.log(`Step ${step.number}: ${step.nextGoal}`);
   console.log(`  URL: ${step.url}`);
@@ -1780,7 +1694,6 @@ for await (const step of run) {
 
 console.log(run.result?.output);  // final result after iteration
 ```
-</CodeGroup>
 
 ---
 
@@ -1821,13 +1734,10 @@ Every skill has two parts:
 
 - **Demonstration** (`agent_prompt`) — shows *how* to perform the task, but only once. Think of it like onboarding a new colleague: you would not walk them through all 100 listings. You would show the first one or two and say "keep going like this for the rest." The demonstration navigates the site, triggers the necessary network requests, and the system builds the actual endpoint logic from that recording.
 
-<Tip>
   The demonstration only needs to trigger the right network requests — it does not need to complete the full task. If extracting from many pages, open the first item and maybe paginate once. The system handles the rest.
-</Tip>
 
 ## Create a skill
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk import AsyncBrowserUse
 
@@ -1848,13 +1758,11 @@ const skill = await client.skills.create({
 });
 console.log(skill.id);
 ```
-</CodeGroup>
 
 Skill creation takes ~30 seconds. You can also create skills visually from the [Cloud Dashboard](https://cloud.browser-use.com/skills) — record yourself performing the task, or let the agent demonstrate it.
 
 ## Execute a skill
 
-<CodeGroup>
 ```python Python
 result = await client.skills.execute(
     skill.id,
@@ -1868,13 +1776,11 @@ const result = await client.skills.execute(skill.id, {
 });
 console.log(result);
 ```
-</CodeGroup>
 
 ## Refine with feedback
 
 If execution is not quite right, iterate for free:
 
-<CodeGroup>
 ```python Python
 await client.skills.refine(skill.id, feedback="Also extract the product description and available colors")
 ```
@@ -1883,13 +1789,11 @@ await client.skills.refine(skill.id, {
   feedback: "Also extract the product description and available colors",
 });
 ```
-</CodeGroup>
 
 ## Marketplace
 
 Browse and use community-created skills.
 
-<CodeGroup>
 ```python Python
 skills = await client.marketplace.list()
 my_skill = await client.marketplace.clone(skill_id)
@@ -1900,7 +1804,6 @@ const skills = await client.marketplace.list();
 const mySkill = await client.marketplace.clone(skillId);
 const result = await client.marketplace.execute(skillId, { parameters: { ... } });
 ```
-</CodeGroup>
 
 See [Pricing](https://browser-use.com/pricing) for skill costs.
 
@@ -1930,7 +1833,6 @@ Create a new vault in 1Password for Browser Use. Add the credentials you want th
 
 ## Run tasks with 1Password
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk import AsyncBrowserUse
 
@@ -1955,11 +1857,9 @@ const result = await client.run(
 );
 console.log(result.output);
 ```
-</CodeGroup>
 
 For SSO/OAuth redirects, include all required domains:
 
-<CodeGroup>
 ```python Python
 result = await client.run(
     "Log into Jira and create a ticket for the Q4 release",
@@ -1976,7 +1876,6 @@ const result = await client.run(
   },
 );
 ```
-</CodeGroup>
 
 ## How it works
 
@@ -1987,9 +1886,7 @@ When the agent encounters a login form:
 3. Fills in the username and password
 4. If 2FA is required and a TOTP code is stored, it generates and enters the code automatically
 
-<Note>
   The agent never sees your actual credentials. The actual username, password, and 2FA codes are filled in programmatically — keeping your secrets hidden from the AI model.
-</Note>
 
 
 # Secrets
@@ -1998,7 +1895,6 @@ Source: https://docs.browser-use.com/cloud/guides/secrets
 
 Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
 
-<CodeGroup>
 ```python Python
 from browser_use_sdk import AsyncBrowserUse
 
@@ -2021,13 +1917,11 @@ const result = await client.run(
   },
 );
 ```
-</CodeGroup>
 
 Use `allowed_domains` to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`.
 
 For SSO/OAuth redirects, include all domains in the auth flow:
 
-<CodeGroup>
 ```python Python
 result = await client.run(
     "Log into the company portal and download the Q4 report",
@@ -2050,33 +1944,60 @@ const result = await client.run(
   },
 );
 ```
-</CodeGroup>
 
 
-# API key
+# API Reference
 Source: https://docs.browser-use.com/cloud/api-reference
 
 
-Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then:
+## Authentication
 
-```bash
-export BROWSER_USE_API_KEY=your_key
+All requests require an API key in the `Authorization` header:
+
+```
+Authorization: Bearer bu_your_key_here
 ```
 
-Base URL: `https://api.browser-use.com/api/v3`
+Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1). Keys start with `bu_`.
+
+## Base URL
+
+```
+https://api.browser-use.com/api/v3
+```
+
+## Quick example
+
+```bash curl
+# Create a session
+curl -X POST https://api.browser-use.com/api/v3/sessions \
+  -H "Authorization: Bearer bu_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Find the top 3 trending repos on GitHub today"}'
+
+# Get session result (replace SESSION_ID)
+curl https://api.browser-use.com/api/v3/sessions/SESSION_ID \
+  -H "Authorization: Bearer bu_your_key_here"
+```
+
+## Environment variable
+
+Set the key once so SDKs pick it up automatically:
+
+```bash
+export BROWSER_USE_API_KEY=bu_your_key_here
+```
 
 ---
 
 Prefer the SDK? See the [Agent docs](https://docs.browser-use.com/cloud/agent/quickstart).
 
-<CodeGroup>
 ```bash Python
 pip install browser-use-sdk
 ```
 ```bash TypeScript
 npm install browser-use-sdk
 ```
-</CodeGroup>
 
 
 # API key
@@ -2095,12 +2016,10 @@ Base URL: `https://api.browser-use.com/api/v2`
 
 Prefer the SDK? See the [Agent (v2) docs](https://docs.browser-use.com/cloud/legacy/agent).
 
-<CodeGroup>
 ```bash Python
 pip install browser-use-sdk
 ```
 ```bash TypeScript
 npm install browser-use-sdk
 ```
-</CodeGroup>
 
