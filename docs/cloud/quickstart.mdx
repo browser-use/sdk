@@ -50,11 +50,11 @@ console.log(result.output);
 
 ## Agent vs Browser
 
-`client.run()` / `client.sessions.create()` run an AI agent task. `run()` is a wrapper around `sessions.create()` that polls until the task is done and returns the result. `client.browsers.create()` gives you a raw browser for [Playwright / Puppeteer / Selenium](/cloud/browser/playwright-puppeteer-selenium).
+`client.sessions.create()` creates an AI agent session. `client.run()` wraps `sessions.create()` and polls until done. `client.browsers.create()` gives you a raw browser for [Playwright / Puppeteer / Selenium](/cloud/browser/playwright-puppeteer-selenium).
 
-| | `client.run()` / `client.sessions.create()` | `client.browsers.create()` |
+| | `client.sessions.create()` / `client.run()` (wraps create and polls until done) | `client.browsers.create()` |
 |---|---|---|
-| **What it does** | Run an AI agent task (run polls until done) | Just give me a browser |
+| **What it does** | Run an AI agent task | Just give me a browser |
 | task | ✓ | — |
 | model | ✓ | — |
 | proxy | ✓ | ✓ |
