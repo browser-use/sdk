@@ -29,6 +29,19 @@ console.log(session.liveUrl);
 ```
 </CodeGroup>
 
+`liveUrl` is also returned when creating a standalone browser session:
+
+<CodeGroup>
+```python Python
+browser = await client.browsers.create()
+print(browser.live_url)
+```
+```typescript TypeScript
+const browser = await client.browsers.create();
+console.log(browser.liveUrl);
+```
+</CodeGroup>
+
 ## Embed live browser into your app
 
 Useful for human interaction or to see live what's happening.
@@ -89,6 +102,23 @@ const urls = await client.sessions.waitForRecording(result.id);
 for (const url of urls) {
   console.log(url); // presigned MP4 download URL
 }
+```
+</CodeGroup>
+
+For standalone browser sessions, pass `enable_recording` when creating the browser and retrieve the URL after stopping it:
+
+<CodeGroup>
+```python Python
+browser = await client.browsers.create(enable_recording=True)
+# ... use the browser via CDP ...
+stopped = await client.browsers.stop(browser.id)
+print(stopped.recording_url)  # presigned MP4 download URL
+```
+```typescript TypeScript
+const browser = await client.browsers.create({ enableRecording: true });
+// ... use the browser via CDP ...
+const stopped = await client.browsers.stop(browser.id);
+console.log(stopped.recordingUrl); // presigned MP4 download URL
 ```
 </CodeGroup>
 

@@ -50,8 +50,6 @@ console.log(result.output);
 
 ## Agent vs Browser
 
-`client.sessions.create()` creates an AI agent session. `client.run()` wraps `sessions.create()` and polls until done. `client.browsers.create()` gives you a raw browser for [Playwright / Puppeteer / Selenium](/cloud/browser/playwright-puppeteer-selenium).
-
 | | `client.sessions.create()` / `client.run()` (wraps create and polls until done) | `client.browsers.create()` |
 |---|---|---|
 | **What it does** | Run an AI agent task | Just give me a browser |
