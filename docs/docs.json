@@ -85,7 +85,8 @@
                         "icon": "key",
                         "pages": [
                           "cloud/guides/authentication",
-                          "cloud/guides/profile-sync"
+                          "cloud/guides/profile-sync",
+                          "cloud/guides/2fa"
                         ]
                       }
                     ]

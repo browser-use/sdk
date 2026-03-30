@@ -67,6 +67,7 @@ console.log(result.output);
 ## Authentication
 - [Profiles](https://docs.browser-use.com/cloud/guides/authentication): Persistent browser state — cookies, localStorage, saved passwords. Login once, reuse across sessions.
 - [Sync local and cloud cookies](https://docs.browser-use.com/cloud/guides/profile-sync): Sync your local browser cookies to the cloud — instantly authenticate without managing credentials.
+- [2FA](https://docs.browser-use.com/cloud/guides/2fa): Best practices for two-factor authentication — profiles, human-in-the-loop, Agent Mail, and TOTP via pyotp.
 
 ## Integrations
 - [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
