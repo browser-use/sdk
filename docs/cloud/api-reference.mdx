@@ -7,10 +7,10 @@ mode: wide
 
 ## Authentication
 
-All requests require an API key in the `Authorization` header:
+All requests require an API key in the `X-Browser-Use-API-Key` header:
 
 ```
-Authorization: Bearer bu_your_key_here
+X-Browser-Use-API-Key: bu_your_key_here
 ```
 
 Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1). Keys start with `bu_`.
@@ -26,13 +26,13 @@ https://api.browser-use.com/api/v3
 ```bash curl
 # Create a session
 curl -X POST https://api.browser-use.com/api/v3/sessions \
-  -H "Authorization: Bearer bu_your_key_here" \
+  -H "X-Browser-Use-API-Key: bu_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{"task": "Find the top 3 trending repos on GitHub today"}'
 
 # Get session result (replace SESSION_ID)
 curl https://api.browser-use.com/api/v3/sessions/SESSION_ID \
-  -H "Authorization: Bearer bu_your_key_here"
+  -H "X-Browser-Use-API-Key: bu_your_key_here"
 ```
 
 ## Environment variable
