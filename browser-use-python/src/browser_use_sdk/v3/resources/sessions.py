@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
@@ -16,8 +15,8 @@ from ...generated.v3.models import (
     SessionResponse,
 )
 
-# Accept both str and UUID for session IDs
-_ID = str | UUID
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 class Sessions:
@@ -29,7 +28,7 @@ class Sessions:
         task: str | None = None,
         *,
         model: str | None = None,
-        session_id: _ID | None = None,
+        session_id: str | UUID | None = None,
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
@@ -90,13 +89,13 @@ class Sessions:
             )
         )
 
-    def get(self, session_id: _ID) -> SessionResponse:
+    def get(self, session_id: str | UUID) -> SessionResponse:
         """Get session details."""
         return SessionResponse.model_validate(
             self._http.request("GET", f"/sessions/{session_id}")
         )
 
-    def stop(self, session_id: _ID, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
+    def stop(self, session_id: str | UUID, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
         """Stop a session or the running task."""
         body: dict[str, Any] | None = None
         if strategy is not None or extra:
@@ -108,13 +107,13 @@ class Sessions:
             self._http.request("POST", f"/sessions/{session_id}/stop", json=body)
         )
 
-    def delete(self, session_id: _ID) -> None:
+    def delete(self, session_id: str | UUID) -> None:
         """Soft-delete a session."""
         self._http.request("DELETE", f"/sessions/{session_id}")
 
     def upload_files(
         self,
-        session_id: _ID,
+        session_id: str | UUID,
         files: list[FileUploadItem],
         **extra: Any,
     ) -> FileUploadResponse:
@@ -129,7 +128,7 @@ class Sessions:
 
     def files(
         self,
-        session_id: _ID,
+        session_id: str | UUID,
         *,
         prefix: str | None = None,
         limit: int | None = None,
@@ -154,7 +153,7 @@ class Sessions:
 
     def messages(
         self,
-        session_id: _ID,
+        session_id: str | UUID,
         *,
         after: str | None = None,
         before: str | None = None,
@@ -175,7 +174,7 @@ class Sessions:
 
     def wait_for_recording(
         self,
-        session_id: _ID,
+        session_id: str | UUID,
         *,
         timeout: float = 15,
         interval: float = 2,
@@ -206,7 +205,7 @@ class AsyncSessions:
         task: str | None = None,
         *,
         model: str | None = None,
-        session_id: _ID | None = None,
+        session_id: str | UUID | None = None,
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
@@ -267,13 +266,13 @@ class AsyncSessions:
             )
         )
 
-    async def get(self, session_id: _ID) -> SessionResponse:
+    async def get(self, session_id: str | UUID) -> SessionResponse:
         """Get session details."""
         return SessionResponse.model_validate(
             await self._http.request("GET", f"/sessions/{session_id}")
         )
 
-    async def stop(self, session_id: _ID, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
+    async def stop(self, session_id: str | UUID, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
         """Stop a session or the running task."""
         body: dict[str, Any] | None = None
         if strategy is not None or extra:
@@ -285,13 +284,13 @@ class AsyncSessions:
             await self._http.request("POST", f"/sessions/{session_id}/stop", json=body)
         )
 
-    async def delete(self, session_id: _ID) -> None:
+    async def delete(self, session_id: str | UUID) -> None:
         """Soft-delete a session."""
         await self._http.request("DELETE", f"/sessions/{session_id}")
 
     async def upload_files(
         self,
-        session_id: _ID,
+        session_id: str | UUID,
         files: list[FileUploadItem],
         **extra: Any,
     ) -> FileUploadResponse:
@@ -306,7 +305,7 @@ class AsyncSessions:
 
     async def files(
         self,
-        session_id: _ID,
+        session_id: str | UUID,
         *,
         prefix: str | None = None,
         limit: int | None = None,
@@ -331,7 +330,7 @@ class AsyncSessions:
 
     async def messages(
         self,
-        session_id: _ID,
+        session_id: str | UUID,
         *,
         after: str | None = None,
         before: str | None = None,
@@ -352,7 +351,7 @@ class AsyncSessions:
 
     async def wait_for_recording(
         self,
-        session_id: _ID,
+        session_id: str | UUID,
         *,
         timeout: float = 15,
         interval: float = 2,

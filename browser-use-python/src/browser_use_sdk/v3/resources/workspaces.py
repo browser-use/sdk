@@ -3,23 +3,24 @@ from __future__ import annotations
 import mimetypes
 import os
 from pathlib import Path
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 import httpx
-
-_ID = str | UUID
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
     FileListResponse,
     FileUploadItem,
     FileUploadResponse,
+    Size,
     WorkspaceCreateRequest,
     WorkspaceListResponse,
     WorkspaceUpdateRequest,
     WorkspaceView,
 )
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 def _guess_content_type(path: str) -> str:
@@ -73,7 +74,7 @@ class Workspaces:
             self._http.request("POST", "/workspaces", json=body or None)
         )
 
-    def get(self, workspace_id: _ID) -> WorkspaceView:
+    def get(self, workspace_id: str | UUID) -> WorkspaceView:
         """Get workspace details."""
         return WorkspaceView.model_validate(
             self._http.request("GET", f"/workspaces/{workspace_id}")
@@ -81,7 +82,7 @@ class Workspaces:
 
     def update(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         *,
         name: str | None = None,
         **extra: Any,
@@ -95,13 +96,13 @@ class Workspaces:
             self._http.request("PATCH", f"/workspaces/{workspace_id}", json=body)
         )
 
-    def delete(self, workspace_id: _ID) -> None:
+    def delete(self, workspace_id: str | UUID) -> None:
         """Delete a workspace and its data."""
         self._http.request("DELETE", f"/workspaces/{workspace_id}")
 
     def files(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         *,
         prefix: str | None = None,
         limit: int | None = None,
@@ -126,7 +127,7 @@ class Workspaces:
 
     def upload_files(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         files: list[FileUploadItem],
         *,
         prefix: str | None = None,
@@ -146,7 +147,7 @@ class Workspaces:
             )
         )
 
-    def delete_file(self, workspace_id: _ID, *, path: str) -> None:
+    def delete_file(self, workspace_id: str | UUID, *, path: str) -> None:
         """Delete a file from a workspace."""
         self._http.request(
             "DELETE",
@@ -154,13 +155,13 @@ class Workspaces:
             params={"path": path},
         )
 
-    def size(self, workspace_id: _ID) -> Any:
+    def size(self, workspace_id: str | UUID) -> Any:
         """Get storage usage for a workspace."""
         return self._http.request("GET", f"/workspaces/{workspace_id}/size")
 
     def upload(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         *paths: str | Path,
         prefix: str | None = None,
     ) -> list[str]:
@@ -175,7 +176,7 @@ class Workspaces:
             FileUploadItem(
                 name=p.name,
                 contentType=_guess_content_type(str(p)),
-                size=p.stat().st_size,
+                size=Size(p.stat().st_size),
             )
             for p in resolved
         ]
@@ -191,7 +192,7 @@ class Workspaces:
 
     def download(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         path: str,
         *,
         to: str | Path | None = None,
@@ -215,6 +216,8 @@ class Workspaces:
             cursor = file_list.next_cursor
         dest = Path(to) if to else Path(os.path.basename(match.path))
         dest.parent.mkdir(parents=True, exist_ok=True)
+        if match.url is None:
+            raise ValueError(f"No download URL for {path!r}; ensure include_urls=True")
         with httpx.Client(timeout=60) as http:
             resp = http.get(match.url)
             resp.raise_for_status()
@@ -223,7 +226,7 @@ class Workspaces:
 
     def download_all(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         *,
         to: str | Path = ".",
         prefix: str | None = None,
@@ -244,6 +247,8 @@ class Workspaces:
                     workspace_id, prefix=prefix, include_urls=True, cursor=cursor,
                 )
                 for f in file_list.files:
+                    if f.url is None:
+                        continue
                     local = _safe_join(dest_dir, f.path)
                     local.parent.mkdir(parents=True, exist_ok=True)
                     resp = http.get(f.url)
@@ -293,7 +298,7 @@ class AsyncWorkspaces:
             await self._http.request("POST", "/workspaces", json=body or None)
         )
 
-    async def get(self, workspace_id: _ID) -> WorkspaceView:
+    async def get(self, workspace_id: str | UUID) -> WorkspaceView:
         """Get workspace details."""
         return WorkspaceView.model_validate(
             await self._http.request("GET", f"/workspaces/{workspace_id}")
@@ -301,7 +306,7 @@ class AsyncWorkspaces:
 
     async def update(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         *,
         name: str | None = None,
         **extra: Any,
@@ -315,13 +320,13 @@ class AsyncWorkspaces:
             await self._http.request("PATCH", f"/workspaces/{workspace_id}", json=body)
         )
 
-    async def delete(self, workspace_id: _ID) -> None:
+    async def delete(self, workspace_id: str | UUID) -> None:
         """Delete a workspace and its data."""
         await self._http.request("DELETE", f"/workspaces/{workspace_id}")
 
     async def files(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         *,
         prefix: str | None = None,
         limit: int | None = None,
@@ -346,7 +351,7 @@ class AsyncWorkspaces:
 
     async def upload_files(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         files: list[FileUploadItem],
         *,
         prefix: str | None = None,
@@ -366,7 +371,7 @@ class AsyncWorkspaces:
             )
         )
 
-    async def delete_file(self, workspace_id: _ID, *, path: str) -> None:
+    async def delete_file(self, workspace_id: str | UUID, *, path: str) -> None:
         """Delete a file from a workspace."""
         await self._http.request(
             "DELETE",
@@ -374,13 +379,13 @@ class AsyncWorkspaces:
             params={"path": path},
         )
 
-    async def size(self, workspace_id: _ID) -> Any:
+    async def size(self, workspace_id: str | UUID) -> Any:
         """Get storage usage for a workspace."""
         return await self._http.request("GET", f"/workspaces/{workspace_id}/size")
 
     async def upload(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         *paths: str | Path,
         prefix: str | None = None,
     ) -> list[str]:
@@ -395,7 +400,7 @@ class AsyncWorkspaces:
             FileUploadItem(
                 name=p.name,
                 contentType=_guess_content_type(str(p)),
-                size=p.stat().st_size,
+                size=Size(p.stat().st_size),
             )
             for p in resolved
         ]
@@ -412,7 +417,7 @@ class AsyncWorkspaces:
 
     async def download(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         path: str,
         *,
         to: str | Path | None = None,
@@ -436,6 +441,8 @@ class AsyncWorkspaces:
             cursor = file_list.next_cursor
         dest = Path(to) if to else Path(os.path.basename(match.path))
         dest.parent.mkdir(parents=True, exist_ok=True)
+        if match.url is None:
+            raise ValueError(f"No download URL for {path!r}; ensure include_urls=True")
         async with httpx.AsyncClient(timeout=60) as http:
             resp = await http.get(match.url)
             resp.raise_for_status()
@@ -444,7 +451,7 @@ class AsyncWorkspaces:
 
     async def download_all(
         self,
-        workspace_id: _ID,
+        workspace_id: str | UUID,
         *,
         to: str | Path = ".",
         prefix: str | None = None,
@@ -465,6 +472,8 @@ class AsyncWorkspaces:
                     workspace_id, prefix=prefix, include_urls=True, cursor=cursor,
                 )
                 for f in file_list.files:
+                    if f.url is None:
+                        continue
                     local = _safe_join(dest_dir, f.path)
                     local.parent.mkdir(parents=True, exist_ok=True)
                     resp = await http.get(f.url)

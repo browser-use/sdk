@@ -636,7 +636,7 @@ class MaxCostUsd(RootModel[str]):
 
 class RunTaskRequest(BaseModel):
     task: str | None = Field(None, title='Task')
-    model: BuModel | None = 'bu-max'
+    model: BuModel | None = BuModel.bu_max
     session_id: UUID | None = Field(None, alias='sessionId', title='Sessionid')
     keep_alive: bool | None = Field(False, alias='keepAlive', title='Keepalive')
     max_cost_usd: float | MaxCostUsd | None = Field(
@@ -644,7 +644,7 @@ class RunTaskRequest(BaseModel):
     )
     profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
     workspace_id: UUID | None = Field(None, alias='workspaceId', title='Workspaceid')
-    proxy_country_code: ProxyCountryCode | None = Field('us', alias='proxyCountryCode')
+    proxy_country_code: ProxyCountryCode | None = Field(ProxyCountryCode.us, alias='proxyCountryCode')
     output_schema: dict[str, Any] | None = Field(
         None, alias='outputSchema', title='Outputschema'
     )
@@ -941,7 +941,7 @@ class CreateBrowserSessionRequest(BaseModel):
         title='Profile ID',
     )
     proxy_country_code: ProxyCountryCode | None = Field(
-        'us',
+        ProxyCountryCode.us,
         alias='proxyCountryCode',
         description='Country code for proxy location. Defaults to US. Set to null to disable proxy.',
         title='Proxy Country Code',
@@ -1022,7 +1022,7 @@ class SessionListResponse(BaseModel):
 
 
 class StopSessionRequest(BaseModel):
-    strategy: StopStrategy | None = 'session'
+    strategy: StopStrategy | None = StopStrategy.session
 
 
 class WorkspaceListResponse(BaseModel):

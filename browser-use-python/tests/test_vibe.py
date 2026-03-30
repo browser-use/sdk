@@ -106,6 +106,12 @@ _V3_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/sessions/{session_id}/messages"): ("sessions", "messages"),
     ("get", "/sessions/{session_id}/files"): ("sessions", "files"),
     ("post", "/sessions/{session_id}/files/upload"): ("sessions", "upload_files"),
+    # profiles
+    ("post", "/profiles"): ("profiles", "create"),
+    ("get", "/profiles"): ("profiles", "list"),
+    ("get", "/profiles/{profile_id}"): ("profiles", "get"),
+    ("patch", "/profiles/{profile_id}"): ("profiles", "update"),
+    ("delete", "/profiles/{profile_id}"): ("profiles", "delete"),
     # workspaces
     ("get", "/workspaces"): ("workspaces", "list"),
     ("post", "/workspaces"): ("workspaces", "create"),
@@ -210,11 +216,12 @@ class TestV3Coverage:
         assert not missing, f"Unmapped v3 endpoints: {missing}"
 
     def test_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v3.resources import sessions, workspaces
+        from browser_use_sdk.v3.resources import profiles, sessions, workspaces
 
         resource_classes = {
             "sessions": sessions.Sessions,
             "workspaces": workspaces.Workspaces,
+            "profiles": profiles.Profiles,
         }
         for (_, _), (resource_attr, method_name) in _V3_MAP.items():
             cls = resource_classes[resource_attr]
@@ -223,11 +230,12 @@ class TestV3Coverage:
             )
 
     def test_async_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v3.resources import sessions, workspaces
+        from browser_use_sdk.v3.resources import profiles, sessions, workspaces
 
         async_classes = {
             "sessions": sessions.AsyncSessions,
             "workspaces": workspaces.AsyncWorkspaces,
+            "profiles": profiles.AsyncProfiles,
         }
         for (_, _), (resource_attr, method_name) in _V3_MAP.items():
             cls = async_classes[resource_attr]

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
@@ -11,7 +10,8 @@ from ...generated.v3.models import (
     BrowserSessionView,
 )
 
-_ID = str | UUID
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 class Browsers:
@@ -66,13 +66,13 @@ class Browsers:
             )
         )
 
-    def get(self, session_id: _ID) -> BrowserSessionView:
+    def get(self, session_id: str | UUID) -> BrowserSessionView:
         """Get browser session details."""
         return BrowserSessionView.model_validate(
             self._http.request("GET", f"/browsers/{session_id}")
         )
 
-    def update(self, session_id: _ID, *, action: str, **extra: Any) -> BrowserSessionView:
+    def update(self, session_id: str | UUID, *, action: str, **extra: Any) -> BrowserSessionView:
         """Update a browser session (e.g. stop it)."""
         body: dict[str, Any] = {"action": action}
         body.update(extra)
@@ -80,7 +80,7 @@ class Browsers:
             self._http.request("PATCH", f"/browsers/{session_id}", json=body)
         )
 
-    def stop(self, session_id: _ID) -> BrowserSessionView:
+    def stop(self, session_id: str | UUID) -> BrowserSessionView:
         """Stop a browser session."""
         return self.update(session_id, action="stop")
 
@@ -137,13 +137,13 @@ class AsyncBrowsers:
             )
         )
 
-    async def get(self, session_id: _ID) -> BrowserSessionView:
+    async def get(self, session_id: str | UUID) -> BrowserSessionView:
         """Get browser session details."""
         return BrowserSessionView.model_validate(
             await self._http.request("GET", f"/browsers/{session_id}")
         )
 
-    async def update(self, session_id: _ID, *, action: str, **extra: Any) -> BrowserSessionView:
+    async def update(self, session_id: str | UUID, *, action: str, **extra: Any) -> BrowserSessionView:
         """Update a browser session (e.g. stop it)."""
         body: dict[str, Any] = {"action": action}
         body.update(extra)
@@ -151,6 +151,6 @@ class AsyncBrowsers:
             await self._http.request("PATCH", f"/browsers/{session_id}", json=body)
         )
 
-    async def stop(self, session_id: _ID) -> BrowserSessionView:
+    async def stop(self, session_id: str | UUID) -> BrowserSessionView:
         """Stop a browser session."""
         return await self.update(session_id, action="stop")

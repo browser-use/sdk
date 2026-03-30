@@ -131,6 +131,13 @@ function v3EndpointToSdkMethod(
   if (method === "get" && path === "/sessions/{session_id}/files") return { resource: "sessions", method: "files" };
   if (method === "post" && path === "/sessions/{session_id}/files/upload") return { resource: "sessions", method: "uploadFiles" };
 
+  // Profiles
+  if (method === "post" && path === "/profiles") return { resource: "profiles", method: "create" };
+  if (method === "get" && path === "/profiles") return { resource: "profiles", method: "list" };
+  if (method === "get" && path === "/profiles/{profile_id}") return { resource: "profiles", method: "get" };
+  if (method === "patch" && path === "/profiles/{profile_id}") return { resource: "profiles", method: "update" };
+  if (method === "delete" && path === "/profiles/{profile_id}") return { resource: "profiles", method: "delete" };
+
   // Workspaces
   if (method === "get" && path === "/workspaces") return { resource: "workspaces", method: "list" };
   if (method === "post" && path === "/workspaces") return { resource: "workspaces", method: "create" };
