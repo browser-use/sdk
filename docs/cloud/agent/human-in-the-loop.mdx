@@ -12,19 +12,19 @@ icon: hand
 ## Flow
 
 1. Create a session with `keep_alive=True` so it stays alive between tasks
-2. Run an agent task — poll `sessions.get()` for `live_url` (~3-5 seconds)
+2. Run an agent task
 3. Human interacts with the live browser
 4. Send a new follow-up task
 
 <CodeGroup>
 ```python Python
-import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
 # 1. Create a persistent session
 session = await client.sessions.create(keep_alive=True)
+print(f"Live view: {session.live_url}")
 
 # 2. Agent does the first part
 result = await client.run(
@@ -32,13 +32,6 @@ result = await client.run(
     session_id=session.id,
 )
 print(result.output)
-
-# Get the live URL (available while session is alive with keep_alive)
-s = await client.sessions.get(session.id)
-while not s.live_url:
-    await asyncio.sleep(1)
-    s = await client.sessions.get(session.id)
-print(f"Live view: {s.live_url}")
 
 # 3. Human opens live_url and picks a flight
 input("Press Enter after you've selected a flight in the live view...")
@@ -61,6 +54,7 @@ const client = new BrowserUse();
 
 // 1. Create a persistent session
 const session = await client.sessions.create({ keepAlive: true });
+console.log(`Live view: ${session.liveUrl}`);
 
 // 2. Agent does the first part
 const searchResult = await client.run(
@@ -68,14 +62,6 @@ const searchResult = await client.run(
   { sessionId: session.id },
 );
 console.log(searchResult.output);
-
-// Get the live URL (available while session is alive with keepAlive)
-let s = await client.sessions.get(session.id);
-while (!s.liveUrl) {
-  await new Promise((r) => setTimeout(r, 1000));
-  s = await client.sessions.get(session.id);
-}
-console.log(`Live view: ${s.liveUrl}`);
 
 // 3. Human opens liveUrl and picks a flight
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
