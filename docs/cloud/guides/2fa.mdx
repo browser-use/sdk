@@ -1,0 +1,283 @@
+---
+title: 2FA
+description: "Best practices for handling two-factor authentication in automated browser sessions."
+icon: shield-halved
+---
+
+Sites with 2FA block automated logins. Here are four approaches — pick the one that fits your setup.
+
+| Approach | Best for | Complexity |
+|---|---|---|
+| [Profiles (login once)](#1-profiles--login-once-reuse-cookies) | Sites with long-lived cookies | Lowest |
+| [Human in the loop](#2-human-in-the-loop) | One-off tasks, complex auth flows | Low |
+| [Agent Mail](#3-agent-mail) | Email-based 2FA, end-client automation | Medium |
+| [TOTP secret in prompt](#4-totp-secret-in-prompt) | Authenticator app 2FA (Google Authenticator, Authy) | Medium |
+
+---
+
+## 1. Profiles — login once, reuse cookies
+
+Login manually once (or let the agent do it), then save the browser state as a profile. Future sessions reuse the cookies — no 2FA prompt as long as the cookies are valid.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+# Create a profile and a session
+profile = await client.profiles.create(name="my-account")
+session = await client.sessions.create(profile_id=profile.id)
+print(f"Live view: {session.live_url}")
+
+# Option A: human logs in via live view
+input("Log in and complete 2FA in the live view, then press Enter...")
+
+# Option B: let the agent log in
+# await client.run("Log in to example.com with user@example.com / password123", session_id=session.id)
+
+# Stop the session — this saves cookies to the profile
+await client.sessions.stop(session.id)
+
+# Next time: reuse the profile, no 2FA needed
+session = await client.sessions.create(profile_id=profile.id)
+result = await client.run("Go to example.com/dashboard and get my balance", session_id=session.id)
+print(result.output)
+await client.sessions.stop(session.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import * as readline from "readline";
+
+const client = new BrowserUse();
+
+// Create a profile and a session
+const profile = await client.profiles.create({ name: "my-account" });
+const session = await client.sessions.create({ profileId: profile.id });
+console.log(`Live view: ${session.liveUrl}`);
+
+// Option A: human logs in via live view
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+await new Promise((resolve) => rl.question("Log in and complete 2FA in the live view, then press Enter...", resolve));
+rl.close();
+
+// Option B: let the agent log in
+// await client.run("Log in to example.com with user@example.com / password123", { sessionId: session.id });
+
+// Stop the session — this saves cookies to the profile
+await client.sessions.stop(session.id);
+
+// Next time: reuse the profile, no 2FA needed
+const newSession = await client.sessions.create({ profileId: profile.id });
+const result = await client.run("Go to example.com/dashboard and get my balance", { sessionId: newSession.id });
+console.log(result.output);
+await client.sessions.stop(newSession.id);
+```
+</CodeGroup>
+
+<Warning>
+  Cookies expire. Some sites stay logged in for months, others expire daily. If your sessions start hitting login pages again, re-authenticate and save the profile.
+</Warning>
+
+<Tip>
+  Always call `sessions.stop()` after you're done — profile state is only saved when the session ends cleanly.
+</Tip>
+
+---
+
+## 2. Human in the loop
+
+Let the agent navigate to the login page, then a human takes over to complete 2FA via the live browser view. The agent continues after.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+session = await client.sessions.create()
+print(f"Live view: {session.live_url}")
+
+# Agent navigates to login
+result = await client.run(
+    "Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
+    session_id=session.id,
+)
+
+# Human completes 2FA in the live view
+input("Complete 2FA in the live view, then press Enter...")
+
+# Agent continues
+result = await client.run(
+    "You are now logged in. Go to the dashboard and export the monthly report",
+    session_id=session.id,
+)
+print(result.output)
+await client.sessions.stop(session.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import * as readline from "readline";
+
+const client = new BrowserUse();
+const session = await client.sessions.create();
+console.log(`Live view: ${session.liveUrl}`);
+
+// Agent navigates to login
+await client.run(
+  "Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
+  { sessionId: session.id },
+);
+
+// Human completes 2FA in the live view
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+await new Promise((resolve) => rl.question("Complete 2FA in the live view, then press Enter...", resolve));
+rl.close();
+
+// Agent continues
+const result = await client.run(
+  "You are now logged in. Go to the dashboard and export the monthly report",
+  { sessionId: session.id },
+);
+console.log(result.output);
+await client.sessions.stop(session.id);
+```
+</CodeGroup>
+
+See [Human in the loop](/cloud/agent/human-in-the-loop) for more patterns.
+
+---
+
+## 3. Agent Mail
+
+When 2FA sends a code via email, the agent can read it automatically using Agent Mail — a built-in email inbox for each session.
+
+Agent Mail is **enabled by default** (`agentmail=True`). Each session gets a unique email address (`session.agentmail_email`). The agent can send and receive emails during the task.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+result = await client.run(
+    """
+    1. Go to example.com/signup
+    2. Sign up with the agent's email address (use the email available to you)
+    3. Check your email inbox for the verification code
+    4. Enter the code on the website
+    5. Complete the registration
+    """,
+    agentmail=True,  # default, shown for clarity
+)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+
+const result = await client.run(
+  `1. Go to example.com/signup
+   2. Sign up with the agent's email address (use the email available to you)
+   3. Check your email inbox for the verification code
+   4. Enter the code on the website
+   5. Complete the registration`,
+  { agentmail: true }, // default, shown for clarity
+);
+console.log(result.output);
+```
+</CodeGroup>
+
+### For end-client automation
+
+If you're automating on behalf of your users and they need to receive 2FA codes:
+
+1. **Email forwarding:** Have your client set up an email forwarding rule — forward all emails from the service (e.g., `noreply@bank.com`) to a dedicated inbox (a Gmail address or an Agent Mail address).
+2. **Give the agent access:** The agent reads the forwarded 2FA code from that inbox during the task.
+
+This way, your client's real email stays private — the agent only sees the forwarded verification emails.
+
+### Connect external email via Composio
+
+You can also give the agent access to an existing Gmail account using [Composio](https://composio.dev) in the Browser Use dashboard. Once connected, the agent can read emails directly from that account to retrieve 2FA codes.
+
+---
+
+## 4. TOTP secret in prompt
+
+If the site uses an authenticator app (Google Authenticator, Authy, etc.), you can pass the TOTP secret to the agent. Our agent can execute Python code, so it uses the `pyotp` library to generate fresh 6-digit codes on the fly.
+
+When you set up 2FA on a site, instead of only scanning the QR code, also copy the **secret key** (usually shown as "manual entry" or "can't scan the QR code?"). This is a long base32 string like `JBSWY3DPEHPK3PXP`.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+# The TOTP secret from your authenticator setup — NOT the 6-digit code
+totp_secret = "JBSWY3DPEHPK3PXP"
+
+result = await client.run(
+    f"""
+    Log into example.com with username user@example.com and password mypassword.
+    When prompted for a 2FA code, generate one using pyotp:
+
+    import pyotp
+    totp = pyotp.TOTP("{totp_secret}")
+    code = totp.now()
+
+    Enter the generated code.
+    """,
+)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+
+// The TOTP secret from your authenticator setup — NOT the 6-digit code
+const totpSecret = "JBSWY3DPEHPK3PXP";
+
+const result = await client.run(
+  `Log into example.com with username user@example.com and password mypassword.
+   When prompted for a 2FA code, generate one using pyotp:
+
+   import pyotp
+   totp = pyotp.TOTP("${totpSecret}")
+   code = totp.now()
+
+   Enter the generated code.`,
+);
+console.log(result.output);
+```
+</CodeGroup>
+
+This works because the Browser Use agent can execute Python code as part of its task. The agent runs `pyotp.TOTP(secret).now()` to generate a time-based 6-digit code, then types it into the 2FA field.
+
+### Where to find TOTP secrets
+
+- **1Password**: Edit item → One-Time Password → Show secret
+- **Google Authenticator**: During setup, click "Can't scan it?" to see the key
+- **Authy**: Export via desktop app settings
+- **Most sites**: Look for "manual entry" or "setup key" during 2FA enrollment
+
+---
+
+## Which approach should I use?
+
+<AccordionGroup>
+  <Accordion title="I'm automating my own accounts">
+    Start with **Profiles** — log in once, reuse cookies. If cookies expire frequently, add **TOTP secret in prompt** for fully automated re-login.
+  </Accordion>
+  <Accordion title="I'm building a product for end-users">
+    Use **Profiles** with one profile per user. For initial login, use **Human in the loop** — your user logs in once via the live view, then the agent reuses the session. For email 2FA, set up **Agent Mail** with email forwarding from your user.
+  </Accordion>
+  <Accordion title="I need to handle email verification codes">
+    Use **Agent Mail** (enabled by default). For end-client scenarios, have them forward 2FA emails to a dedicated inbox.
+  </Accordion>
+  <Accordion title="I need fully autonomous 2FA without any human">
+    Use **TOTP secret in prompt** — the agent generates codes via pyotp, no human intervention needed.
+  </Accordion>
+</AccordionGroup>
