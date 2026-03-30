@@ -13,6 +13,8 @@
 - Agent benchmark (online Mind2Web): https://browser-use.com/posts/online-mind2web-benchmark
 - Blog: https://browser-use.com/posts
 
+**Use v3** (`from browser_use_sdk.v3 import AsyncBrowserUse` / `import { BrowserUse } from "browser-use-sdk/v3"`). v2 is legacy.
+
 Install (check if already installed and update to latest):
 - Python: `pip install --upgrade browser-use-sdk`
 - TypeScript: `npm install browser-use-sdk@latest`
@@ -32,20 +34,18 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Structured output](https://docs.browser-use.com/cloud/agent/structured-output): Get validated, typed data back from agent tasks.
 - [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks): Run multiple tasks in the same browser session.
 - [Live messages](https://docs.browser-use.com/cloud/agent/streaming): Stream the agent's messages in real time to build custom UIs or monitor progress.
-- [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces): Persistent file storage across sessions. Upload input files, download results, and share data across tasks.
+- [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces): Upload files for the agent, download files the agent creates.
 - [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop): Let a human interact with the live browser while the agent is running. Useful for approvals, payments, complex auth flows, or reviewing agent work before continuing.
 
 ## Browser
 - [Introduction Stealth](https://docs.browser-use.com/cloud/browser/stealth): Best stealth on the planet. We fork Chromium to give agents access to all websites.
 - [Proxies](https://docs.browser-use.com/cloud/browser/proxies): Residential proxies in 195+ countries. On by default.
 - [Live preview & recording](https://docs.browser-use.com/cloud/browser/live-preview): Watch the agent's browser in real time. Embed it in your app.
+- [Playwright, Puppeteer, Selenium](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium): Connect your automation framework to Browser Use's stealth infrastructure via CDP.
 
 ## Authentication
 - [Profiles](https://docs.browser-use.com/cloud/guides/authentication): Persistent browser state — cookies, localStorage, saved passwords. Login once, reuse across sessions.
 - [Sync local and cloud cookies](https://docs.browser-use.com/cloud/guides/profile-sync): Sync your local browser cookies to the cloud — instantly authenticate without managing credentials.
-- [Playwright, Puppeteer, Selenium](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium): Connect your automation framework to Browser Use's stealth infrastructure via CDP.
-
-## More
 
 ## Integrations
 - [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
@@ -59,6 +59,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## Legacy (v2)
 - [Agent (v2)](https://docs.browser-use.com/cloud/legacy/agent): V2 agent models and file handling.
+- [Public share links (v2)](https://docs.browser-use.com/cloud/legacy/public-share): Generate shareable URLs for agent sessions using the v2 API.
 - [Skills](https://docs.browser-use.com/cloud/legacy/skills): Turn any website into a deterministic API endpoint. Create once, call repeatedly.
 - [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password): Auto-fill passwords and TOTP codes from 1Password during agent tasks.
 - [Secrets](https://docs.browser-use.com/cloud/guides/secrets): Pass domain-scoped credentials to the agent securely.

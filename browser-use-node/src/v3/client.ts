@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { HttpClient } from "../core/http.js";
+import { Billing } from "./resources/billing.js";
+import { Browsers } from "./resources/browsers.js";
+import { Profiles } from "./resources/profiles.js";
 import { Sessions } from "./resources/sessions.js";
 import { Workspaces } from "./resources/workspaces.js";
 import { SessionRun } from "./helpers.js";
@@ -21,6 +24,9 @@ export type RunSessionOptions = Partial<Omit<RunTaskRequest, "task">> &
   RunOptions & { schema?: z.ZodType };
 
 export class BrowserUse {
+  readonly billing: Billing;
+  readonly browsers: Browsers;
+  readonly profiles: Profiles;
   readonly sessions: Sessions;
   readonly workspaces: Workspaces;
 
@@ -41,6 +47,9 @@ export class BrowserUse {
       timeout: options.timeout,
     });
 
+    this.billing = new Billing(this.http);
+    this.browsers = new Browsers(this.http);
+    this.profiles = new Profiles(this.http);
     this.sessions = new Sessions(this.http);
     this.workspaces = new Workspaces(this.http);
   }

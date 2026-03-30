@@ -8,6 +8,9 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
+from .resources.billing import AsyncBilling, Billing as BillingResource
+from .resources.browsers import AsyncBrowsers, Browsers as BrowsersResource
+from .resources.profiles import AsyncProfiles, Profiles as ProfilesResource
 from .resources.sessions import AsyncSessions, Sessions
 from .resources.workspaces import AsyncWorkspaces, Workspaces
 from .helpers import AsyncSessionRun, SessionResult, SessionStream, _poll_output
@@ -38,6 +41,9 @@ class BrowserUse:
             api_key=resolved_key,
             timeout=timeout,
         )
+        self.billing = BillingResource(self._http)
+        self.browsers = BrowsersResource(self._http)
+        self.profiles = ProfilesResource(self._http)
         self.sessions = Sessions(self._http)
         self.workspaces = Workspaces(self._http)
 
@@ -54,6 +60,7 @@ class BrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -70,6 +77,7 @@ class BrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -85,6 +93,7 @@ class BrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[str]: ...
 
@@ -101,6 +110,7 @@ class BrowserUse:
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
         workspace_id: str | None = None,
+        enable_recording: bool | None = None,
         **extra: Any,
     ) -> Any:
         """Run a task and block until complete. Returns a SessionResult."""
@@ -123,6 +133,7 @@ class BrowserUse:
             proxy_country_code=proxy_country_code,
             output_schema=schema_dict,
             workspace_id=workspace_id,
+            enable_recording=enable_recording,
             **extra,
         )
         return _poll_output(self.sessions, str(data.id), resolved_schema)
@@ -140,6 +151,7 @@ class BrowserUse:
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
         workspace_id: str | None = None,
+        enable_recording: bool | None = None,
         **extra: Any,
     ) -> SessionStream[Any]:
         """Run a task and yield messages as they happen.
@@ -169,6 +181,7 @@ class BrowserUse:
             proxy_country_code=proxy_country_code,
             output_schema=schema_dict,
             workspace_id=workspace_id,
+            enable_recording=enable_recording,
             **extra,
         )
         return SessionStream(data, self.sessions, resolved_schema)
@@ -204,6 +217,9 @@ class AsyncBrowserUse:
             api_key=resolved_key,
             timeout=timeout,
         )
+        self.billing = AsyncBilling(self._http)
+        self.browsers = AsyncBrowsers(self._http)
+        self.profiles = AsyncProfiles(self._http)
         self.sessions = AsyncSessions(self._http)
         self.workspaces = AsyncWorkspaces(self._http)
 
@@ -220,6 +236,7 @@ class AsyncBrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -236,6 +253,7 @@ class AsyncBrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -251,6 +269,7 @@ class AsyncBrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        enable_recording: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[str]: ...
 
@@ -267,6 +286,7 @@ class AsyncBrowserUse:
         profile_id: str | None = None,
         proxy_country_code: str | None = None,
         workspace_id: str | None = None,
+        enable_recording: bool | None = None,
         **extra: Any,
     ) -> AsyncSessionRun[Any]:
         """Run a task. Await the result for a SessionResult."""
@@ -291,6 +311,7 @@ class AsyncBrowserUse:
                 proxy_country_code=proxy_country_code,
                 output_schema=schema_dict,
                 workspace_id=workspace_id,
+                enable_recording=enable_recording,
                 **extra,
             )
 

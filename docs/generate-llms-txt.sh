@@ -209,6 +209,8 @@ cat > "$CLOUD_INDEX" << 'HEADER'
 - Agent benchmark (online Mind2Web): https://browser-use.com/posts/online-mind2web-benchmark
 - Blog: https://browser-use.com/posts
 
+**Use v3** (`from browser_use_sdk.v3 import AsyncBrowserUse` / `import { BrowserUse } from "browser-use-sdk/v3"`). v2 is legacy.
+
 Install (check if already installed and update to latest):
 - Python: `pip install --upgrade browser-use-sdk`
 - TypeScript: `npm install browser-use-sdk@latest`

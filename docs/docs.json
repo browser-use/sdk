@@ -79,6 +79,7 @@
                       "cloud/browser/stealth",
                       "cloud/browser/proxies",
                       "cloud/browser/live-preview",
+                      "cloud/browser/playwright-puppeteer-selenium",
                       {
                         "group": "Authentication",
                         "icon": "key",
@@ -86,8 +87,7 @@
                           "cloud/guides/authentication",
                           "cloud/guides/profile-sync"
                         ]
-                      },
-                      "cloud/browser/playwright-puppeteer-selenium"
+                      }
                     ]
                   }
                 ]
@@ -109,10 +109,10 @@
                     "group": "Tutorials",
                     "icon": "graduation-cap",
                     "pages": [
-                      "cloud/tutorials/chat-ui"
+                      "cloud/tutorials/chat-ui",
+                      "cloud/faq"
                     ]
                   },
-                  "cloud/faq",
                   {
                     "group": "Legacy (v2)",
                     "icon": "box-archive",
@@ -513,7 +513,7 @@
     {"source": "/concepts/profile", "destination": "/cloud/guides/authentication"},
     {"source": "/concepts/file", "destination": "/cloud/agent/quickstart"},
     {"source": "/concepts/browser", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
-    {"source": "/usage/structured-output", "destination": "/cloud/agent/quickstart"},
+    {"source": "/usage/structured-output", "destination": "/cloud/agent/structured-output"},
     {"source": "/usage/streaming-response", "destination": "/cloud/agent/quickstart"},
     {"source": "/usage/streaming", "destination": "/cloud/agent/quickstart"},
     {"source": "/usage/mcp-server", "destination": "/cloud/guides/mcp-server"},
