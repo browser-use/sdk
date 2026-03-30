@@ -284,37 +284,23 @@ while (true) {
 Source: https://docs.browser-use.com/cloud/agent/workspaces
 
 
-Workspaces are the recommended way to handle all file operations — uploading input files and downloading results. Prefer workspaces over session-level file uploads.
+Workspaces give your agent persistent file storage. Two patterns cover almost every use case:
 
-See your workspace IDs at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=workspaces).
+1. **You upload a file** → agent reads it
+2. **Agent creates a file** → you download it
 
 ## Upload a file
 
-Upload a file to a workspace, then tell the agent to use it.
-
 ```python Python
-import httpx
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
 
-# Get a presigned upload URL
-upload = await client.workspaces.upload_files(
-    workspace.id,
-    files=[{"name": "people.csv", "contentType": "text/csv", "size": 45}],
-)
+# Upload
+await client.workspaces.upload(workspace.id, "people.csv")
 
-# Upload the file
-with open("people.csv", "rb") as f:
-    async with httpx.AsyncClient() as http:
-        await http.put(
-            upload.files[0].upload_url,
-            content=f.read(),
-            headers={"Content-Type": "text/csv", "Content-Length": "45"},
-        )
-
-# Tell the agent to use it
+# Agent can now read it
 result = await client.run(
     "Read people.csv and tell me who works at Google",
     workspace_id=workspace.id,
@@ -323,24 +309,14 @@ print(result.output)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
-import { readFileSync } from "fs";
 
 const client = new BrowserUse();
 const workspace = await client.workspaces.create({ name: "my-workspace" });
 
-// Get a presigned upload URL
-const upload = await client.workspaces.uploadFiles(workspace.id, {
-  files: [{ name: "people.csv", contentType: "text/csv", size: 45 }],
-});
+// Upload
+await client.workspaces.upload(workspace.id, "people.csv");
 
-// Upload the file
-await fetch(upload.files[0].uploadUrl, {
-  method: "PUT",
-  headers: { "Content-Type": "text/csv", "Content-Length": "45" },
-  body: readFileSync("people.csv"),
-});
-
-// Tell the agent to use it
+// Agent can now read it
 const result = await client.run(
   "Read people.csv and tell me who works at Google",
   { workspaceId: workspace.id },
@@ -348,53 +324,56 @@ const result = await client.run(
 console.log(result.output);
 ```
 
-## Download files
-
-Run a task that saves files to a workspace, then download them.
+You can upload multiple files at once:
 
 ```python Python
-import httpx
+await client.workspaces.upload(workspace.id, "data.csv", "config.json", "image.png")
+```
+```typescript TypeScript
+await client.workspaces.upload(workspace.id, "data.csv", "config.json", "image.png");
+```
+
+## Download files
+
+```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
 
-# Agent saves files to the workspace
+# Agent creates a file
 result = await client.run(
     "Go to Hacker News and save the top 3 posts as posts.json",
     workspace_id=workspace.id,
 )
 
-# List and download files
-files = await client.workspaces.files(workspace.id, include_urls=True)
-for f in files.files:
-    print(f"{f.path} ({f.size} bytes)")
+# Download a single file
+await client.workspaces.download(workspace.id, "posts.json", to="./posts.json")
 
-    async with httpx.AsyncClient() as http:
-        resp = await http.get(f.url)
-        with open(f.path, "wb") as out:
-            out.write(resp.content)
+# Or download everything
+paths = await client.workspaces.download_all(workspace.id, to="./output")
+for p in paths:
+    print(f"Downloaded: {p}")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
-import { writeFileSync } from "fs";
 
 const client = new BrowserUse();
 const workspace = await client.workspaces.create({ name: "my-workspace" });
 
-// Agent saves files to the workspace
+// Agent creates a file
 const result = await client.run(
   "Go to Hacker News and save the top 3 posts as posts.json",
   { workspaceId: workspace.id },
 );
 
-// List and download files
-const files = await client.workspaces.files(workspace.id, { includeUrls: true });
-for (const f of files.files) {
-  console.log(`${f.path} (${f.size} bytes)`);
+// Download a single file
+await client.workspaces.download(workspace.id, "posts.json", { to: "./posts.json" });
 
-  const resp = await fetch(f.url);
-  writeFileSync(f.path, Buffer.from(await resp.arrayBuffer()));
+// Or download everything
+const paths = await client.workspaces.downloadAll(workspace.id, { to: "./output" });
+for (const p of paths) {
+  console.log(`Downloaded: ${p}`);
 }
 ```
 
@@ -412,6 +391,8 @@ const updated = await client.workspaces.update(workspaceId, { name: "renamed" })
 const workspaces = await client.workspaces.list();
 await client.workspaces.delete(workspaceId);
 ```
+
+You can also manage workspaces from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=workspaces).
 
   Deleting a workspace permanently removes all its files. This cannot be undone.
 
@@ -683,18 +664,111 @@ for (const url of urls) {
 
   Recording URLs are presigned and **expire after 1 hour**. Download or serve the recording promptly. If you need to access it later, save the MP4 to your own storage.
 
-## Public share links
 
-Generate a public URL that anyone can open to watch the entire agent session — no API key needed. Useful for sharing with teammates, stakeholders, or embedding in dashboards.
+
+# Playwright, Puppeteer, Selenium
+Source: https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium
+
+
+## Option 1: WebSocket URL (no SDK)
+
+Connect with a single URL. All configuration is passed as query parameters.
+
+### Playwright
 
 ```python Python
-share = await client.sessions.create_share(session.id)
-print(share.url)
+from playwright.async_api import async_playwright
+
+WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
+
+async with async_playwright() as p:
+    browser = await p.chromium.connect_over_cdp(WSS_URL)
+    page = browser.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    print(await page.title())
+    await browser.close()
+# Browser is automatically stopped when the WebSocket disconnects
 ```
 ```typescript TypeScript
-const share = await client.sessions.createShare(session.id);
-console.log(share.url);
+import { chromium } from "playwright";
+
+const WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us";
+
+const browser = await chromium.connectOverCDP(WSS_URL);
+const page = browser.contexts()[0].pages()[0];
+await page.goto("https://example.com");
+console.log(await page.title());
+await browser.close();
+// Browser is automatically stopped when the WebSocket disconnects
 ```
+
+### Puppeteer
+
+```typescript
+import puppeteer from "puppeteer-core";
+
+const WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us";
+
+const browser = await puppeteer.connect({ browserWSEndpoint: WSS_URL });
+const [page] = await browser.pages();
+await page.goto("https://example.com");
+console.log(await page.title());
+await browser.close();
+```
+
+### Selenium
+
+```python
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+browser = await client.browsers.create()
+
+options = Options()
+options.debugger_address = browser.cdp_url.replace("ws://", "").replace("/devtools/browser/", "")
+driver = webdriver.Chrome(options=options)
+driver.get("https://example.com")
+print(driver.title)
+driver.quit()
+
+await client.browsers.stop(browser.id)
+```
+
+## Query parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `apiKey` | `string` | **Required.** Your Browser Use API key. |
+| `proxyCountryCode` | `string` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
+| `profileId` | `string` | Load a saved browser profile (cookies, localStorage). |
+| `timeout` | `int` | Session timeout in minutes. Max: 240 (4 hours). |
+| `browserScreenWidth` | `int` | Browser width in pixels. |
+| `browserScreenHeight` | `int` | Browser height in pixels. |
+
+## Option 2: SDK
+
+Create a browser via the SDK, get a `cdp_url`, connect with your framework.
+
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+browser = await client.browsers.create(proxy_country_code="us")
+print(browser.cdp_url)   # ws://...
+print(browser.live_url)  # debug view
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create({ proxyCountryCode: "us" });
+console.log(browser.cdpUrl);
+console.log(browser.liveUrl);
+```
+
+  Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
 
 
 # Profiles
@@ -809,111 +883,6 @@ const result = await client.run("Check my LinkedIn messages", {
   sessionId: session.id,
 });
 ```
-
-
-# Playwright, Puppeteer, Selenium
-Source: https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium
-
-
-## Option 1: WebSocket URL (no SDK)
-
-Connect with a single URL. All configuration is passed as query parameters.
-
-### Playwright
-
-```python Python
-from playwright.async_api import async_playwright
-
-WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
-
-async with async_playwright() as p:
-    browser = await p.chromium.connect_over_cdp(WSS_URL)
-    page = browser.contexts[0].pages[0]
-    await page.goto("https://example.com")
-    print(await page.title())
-    await browser.close()
-# Browser is automatically stopped when the WebSocket disconnects
-```
-```typescript TypeScript
-import { chromium } from "playwright";
-
-const WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us";
-
-const browser = await chromium.connectOverCDP(WSS_URL);
-const page = browser.contexts()[0].pages()[0];
-await page.goto("https://example.com");
-console.log(await page.title());
-await browser.close();
-// Browser is automatically stopped when the WebSocket disconnects
-```
-
-### Puppeteer
-
-```typescript
-import puppeteer from "puppeteer-core";
-
-const WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us";
-
-const browser = await puppeteer.connect({ browserWSEndpoint: WSS_URL });
-const [page] = await browser.pages();
-await page.goto("https://example.com");
-console.log(await page.title());
-await browser.close();
-```
-
-### Selenium
-
-```python
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-browser = await client.browsers.create()
-
-options = Options()
-options.debugger_address = browser.cdp_url.replace("ws://", "").replace("/devtools/browser/", "")
-driver = webdriver.Chrome(options=options)
-driver.get("https://example.com")
-print(driver.title)
-driver.quit()
-
-await client.browsers.stop(browser.id)
-```
-
-## Query parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `apiKey` | `string` | **Required.** Your Browser Use API key. |
-| `proxyCountryCode` | `string` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
-| `profileId` | `string` | Load a saved browser profile (cookies, localStorage). |
-| `timeout` | `int` | Session timeout in minutes. Max: 240 (4 hours). |
-| `browserScreenWidth` | `int` | Browser width in pixels. |
-| `browserScreenHeight` | `int` | Browser height in pixels. |
-
-## Option 2: SDK
-
-Create a browser via the SDK, get a `cdp_url`, connect with your framework.
-
-```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-browser = await client.browsers.create(proxy_country_code="us")
-print(browser.cdp_url)   # ws://...
-print(browser.live_url)  # debug view
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-const browser = await client.browsers.create({ proxyCountryCode: "us" });
-console.log(browser.cdpUrl);
-console.log(browser.liveUrl);
-```
-
-  Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
 
 
 # OpenClaw
@@ -1715,6 +1684,22 @@ console.log(run.result?.output);  // final result after iteration
 | `skill_ids` | `list[str]` | Skills the agent can use during the task. |
 | `op_vault_id` | `str` | 1Password vault ID for auto-fill credentials and 2FA. |
 | `metadata` | `dict[str, str]` | Custom metadata attached to the task. |
+
+
+# Public share links (v2)
+Source: https://docs.browser-use.com/cloud/legacy/public-share
+
+
+Generate a public URL that anyone can open to watch the entire agent session — no API key needed. Useful for sharing with teammates, stakeholders, or embedding in dashboards.
+
+```python Python
+share = await client.sessions.create_share(session.id)
+print(share.url)
+```
+```typescript TypeScript
+const share = await client.sessions.createShare(session.id);
+console.log(share.url);
+```
 
 
 # Skills
