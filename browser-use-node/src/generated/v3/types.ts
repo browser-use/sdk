@@ -624,7 +624,7 @@ export interface components {
         RunTaskRequest: {
             /** Task */
             task?: string | null;
-            /** @default bu-mini */
+            /** @default bu-max */
             model: components["schemas"]["BuModel"];
             /** Sessionid */
             sessionId?: string | null;

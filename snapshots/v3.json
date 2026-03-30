@@ -3034,7 +3034,7 @@
           },
           "model": {
             "$ref": "#/components/schemas/BuModel",
-            "default": "bu-mini"
+            "default": "bu-max"
           },
           "sessionId": {
             "anyOf": [
