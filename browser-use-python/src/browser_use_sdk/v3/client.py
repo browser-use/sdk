@@ -109,6 +109,10 @@ class BrowserUse:
         if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
             schema_dict = resolved_schema.model_json_schema()
 
+        # Auto keep_alive when dispatching to an existing session
+        if session_id is not None and keep_alive is None:
+            keep_alive = True
+
         data = self.sessions.create(
             task,
             model=model,
@@ -151,6 +155,9 @@ class BrowserUse:
         schema_dict: dict[str, Any] | None = None
         if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
             schema_dict = resolved_schema.model_json_schema()
+
+        if session_id is not None and keep_alive is None:
+            keep_alive = True
 
         data = self.sessions.create(
             task,
@@ -268,12 +275,17 @@ class AsyncBrowserUse:
         if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
             schema_dict = resolved_schema.model_json_schema()
 
+        # Auto keep_alive when dispatching to an existing session
+        effective_keep_alive = keep_alive
+        if session_id is not None and keep_alive is None:
+            effective_keep_alive = True
+
         def create_fn() -> Awaitable[SessionResponse]:
             return self.sessions.create(
                 task,
                 model=model,
                 session_id=session_id,
-                keep_alive=keep_alive,
+                keep_alive=effective_keep_alive,
                 max_cost_usd=max_cost_usd,
                 profile_id=profile_id,
                 proxy_country_code=proxy_country_code,
