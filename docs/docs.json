@@ -119,6 +119,7 @@
                     "isDefaultOpen": false,
                     "pages": [
                       "cloud/legacy/agent",
+                      "cloud/legacy/public-share",
                       "cloud/legacy/skills",
                       "cloud/guides/1password",
                       "cloud/guides/secrets"
