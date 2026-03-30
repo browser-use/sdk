@@ -6,6 +6,9 @@ export { BrowserUseError } from "./core/errors.js";
 export { SessionRun } from "./v3/helpers.js";
 export type { RunOptions, SessionResult } from "./v3/helpers.js";
 
+export { Browsers } from "./v3/resources/browsers.js";
+export type { BrowserListParams } from "./v3/resources/browsers.js";
+
 export { Sessions } from "./v3/resources/sessions.js";
 export type { CreateSessionBody, SessionListParams, SessionFilesParams, SessionMessagesParams } from "./v3/resources/sessions.js";
 
@@ -37,6 +40,15 @@ export type FileUploadRequest = S["FileUploadRequest"];
 export type FileUploadItem = S["FileUploadItem"];
 export type WorkspaceCreateRequest = S["WorkspaceCreateRequest"];
 export type WorkspaceUpdateRequest = S["WorkspaceUpdateRequest"];
+
+// Browser types
+export type BrowserSessionItemView = S["BrowserSessionItemView"];
+export type BrowserSessionView = S["BrowserSessionView"];
+export type BrowserSessionListResponse = S["BrowserSessionListResponse"];
+export type CreateBrowserSessionRequest = S["CreateBrowserSessionRequest"];
+export type UpdateBrowserSessionRequest = S["UpdateBrowserSessionRequest"];
+export type BrowserSessionStatus = S["BrowserSessionStatus"];
+export type BrowserSessionUpdateAction = S["BrowserSessionUpdateAction"];
 
 // Enums / string unions
 export type BuAgentSessionStatus = S["BuAgentSessionStatus"];

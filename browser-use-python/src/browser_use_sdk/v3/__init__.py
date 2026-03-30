@@ -3,6 +3,11 @@ from .helpers import AsyncSessionRun, SessionResult
 from .._core.errors import BrowserUseError
 
 from ..generated.v3.models import (
+    BrowserSessionItemView,
+    BrowserSessionListResponse,
+    BrowserSessionStatus,
+    BrowserSessionUpdateAction,
+    BrowserSessionView,
     BuAgentSessionStatus,
     BuModel,
     FileInfo,
@@ -32,6 +37,12 @@ __all__ = [
     "AsyncSessionRun",
     "SessionResult",
     "BrowserUseError",
+    # Browser models
+    "BrowserSessionItemView",
+    "BrowserSessionListResponse",
+    "BrowserSessionStatus",
+    "BrowserSessionUpdateAction",
+    "BrowserSessionView",
     # Response models
     "FileInfo",
     "FileListResponse",
