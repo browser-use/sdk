@@ -1,41 +1,27 @@
 ---
 title: Workspaces & files
-description: "Persistent file storage across sessions. Upload input files, download results, and share data across tasks."
+description: "Upload files for the agent, download files the agent creates."
 icon: folder
 ---
 
-Workspaces are the recommended way to handle all file operations — uploading input files and downloading results. Prefer workspaces over session-level file uploads.
+Workspaces give your agent persistent file storage. Two patterns cover almost every use case:
 
-See your workspace IDs at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=workspaces).
+1. **You upload a file** → agent reads it
+2. **Agent creates a file** → you download it
 
 ## Upload a file
 
-Upload a file to a workspace, then tell the agent to use it.
-
 <CodeGroup>
 ```python Python
-import httpx
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
 
-# Get a presigned upload URL
-upload = await client.workspaces.upload_files(
-    workspace.id,
-    files=[{"name": "people.csv", "contentType": "text/csv", "size": 45}],
-)
+# Upload
+await client.workspaces.upload(workspace.id, "people.csv")
 
-# Upload the file
-with open("people.csv", "rb") as f:
-    async with httpx.AsyncClient() as http:
-        await http.put(
-            upload.files[0].upload_url,
-            content=f.read(),
-            headers={"Content-Type": "text/csv", "Content-Length": "45"},
-        )
-
-# Tell the agent to use it
+# Agent can now read it
 result = await client.run(
     "Read people.csv and tell me who works at Google",
     workspace_id=workspace.id,
@@ -44,24 +30,14 @@ print(result.output)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
-import { readFileSync } from "fs";
 
 const client = new BrowserUse();
 const workspace = await client.workspaces.create({ name: "my-workspace" });
 
-// Get a presigned upload URL
-const upload = await client.workspaces.uploadFiles(workspace.id, {
-  files: [{ name: "people.csv", contentType: "text/csv", size: 45 }],
-});
+// Upload
+await client.workspaces.upload(workspace.id, "people.csv");
 
-// Upload the file
-await fetch(upload.files[0].uploadUrl, {
-  method: "PUT",
-  headers: { "Content-Type": "text/csv", "Content-Length": "45" },
-  body: readFileSync("people.csv"),
-});
-
-// Tell the agent to use it
+// Agent can now read it
 const result = await client.run(
   "Read people.csv and tell me who works at Google",
   { workspaceId: workspace.id },
@@ -70,54 +46,59 @@ console.log(result.output);
 ```
 </CodeGroup>
 
-## Download files
-
-Run a task that saves files to a workspace, then download them.
+You can upload multiple files at once:
 
 <CodeGroup>
 ```python Python
-import httpx
+await client.workspaces.upload(workspace.id, "data.csv", "config.json", "image.png")
+```
+```typescript TypeScript
+await client.workspaces.upload(workspace.id, "data.csv", "config.json", "image.png");
+```
+</CodeGroup>
+
+## Download files
+
+<CodeGroup>
+```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-workspace")
 
-# Agent saves files to the workspace
+# Agent creates a file
 result = await client.run(
     "Go to Hacker News and save the top 3 posts as posts.json",
     workspace_id=workspace.id,
 )
 
-# List and download files
-files = await client.workspaces.files(workspace.id, include_urls=True)
-for f in files.files:
-    print(f"{f.path} ({f.size} bytes)")
+# Download a single file
+await client.workspaces.download(workspace.id, "posts.json", to="./posts.json")
 
-    async with httpx.AsyncClient() as http:
-        resp = await http.get(f.url)
-        with open(f.path, "wb") as out:
-            out.write(resp.content)
+# Or download everything
+paths = await client.workspaces.download_all(workspace.id, to="./output")
+for p in paths:
+    print(f"Downloaded: {p}")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
-import { writeFileSync } from "fs";
 
 const client = new BrowserUse();
 const workspace = await client.workspaces.create({ name: "my-workspace" });
 
-// Agent saves files to the workspace
+// Agent creates a file
 const result = await client.run(
   "Go to Hacker News and save the top 3 posts as posts.json",
   { workspaceId: workspace.id },
 );
 
-// List and download files
-const files = await client.workspaces.files(workspace.id, { includeUrls: true });
-for (const f of files.files) {
-  console.log(`${f.path} (${f.size} bytes)`);
+// Download a single file
+await client.workspaces.download(workspace.id, "posts.json", { to: "./posts.json" });
 
-  const resp = await fetch(f.url);
-  writeFileSync(f.path, Buffer.from(await resp.arrayBuffer()));
+// Or download everything
+const paths = await client.workspaces.downloadAll(workspace.id, { to: "./output" });
+for (const p of paths) {
+  console.log(`Downloaded: ${p}`);
 }
 ```
 </CodeGroup>
@@ -138,6 +119,8 @@ const workspaces = await client.workspaces.list();
 await client.workspaces.delete(workspaceId);
 ```
 </CodeGroup>
+
+You can also manage workspaces from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=workspaces).
 
 <Warning>
   Deleting a workspace permanently removes all its files. This cannot be undone.
