@@ -43,18 +43,3 @@ curl -X POST https://api.browser-use.com/api/v3/sessions \
 
 The best SOTA browser agent — see our [online Mind2Web benchmark](https://browser-use.com/posts/online-mind2web-benchmark).
 
-## Agent vs Browser
-
-| | `client.run()` | `client.browsers.create()` |
-|---|---|---|
-| **What it does** | Run an AI agent task | Just give me a browser |
-| **Best for** | Most users | [Playwright / Puppeteer / Selenium](/cloud/browser/playwright-puppeteer-selenium) |
-| proxy | ✓ | ✓ |
-| custom_proxy | ✓ | ✓ |
-| profile_id | ✓ | ✓ |
-| recording | ✓ | ✓ |
-| workspace_id | ✓ | — |
-| keep_alive | ✓ | — |
-| screen size | — | ✓ |
-| timeout | — | ✓ |
-| task / model | ✓ | — |
