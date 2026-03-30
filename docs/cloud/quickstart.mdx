@@ -44,15 +44,14 @@ console.log(result.output);
 ```
 </CodeGroup>
 
-<Note>
-  Want a full working app? See the [Chat UI example](/cloud/tutorials/chat-ui) — a complete Next.js app with live browser preview, streaming messages, authentication, and session management.
-</Note>
+Want a full working app? Check out the [Chat UI example](/cloud/tutorials/chat-ui).
 
 ## Agent vs Browser
 
-| | `client.sessions.create()` / `client.run()` (wraps sessions.create and polls until done) | `client.browsers.create()` |
+| | **Agent** | **Browser** |
 |---|---|---|
-| **What it does** | Run an AI agent task | Just give me a browser |
+| **Method** | `sessions.create()` / `run()` | `browsers.create()` |
+| **What it does** | AI agent runs your task | Raw browser via CDP |
 | task | ✓ | — |
 | model | ✓ | — |
 | proxy | ✓ | ✓ |
