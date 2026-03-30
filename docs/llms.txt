@@ -27,13 +27,11 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Quick start](https://docs.browser-use.com/cloud/quickstart): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
 - [Prompt for Vibecoders](https://docs.browser-use.com/cloud/vibecoding): Complete Cloud SDK reference for AI coding agents.
 
-## Pillars
-
 ## Agent
 - [Introduction](https://docs.browser-use.com/cloud/agent/quickstart): Easiest way to automate the web. Tell this agent in natural language what it should do, and it can interact with the web like a human.
 - [Structured output](https://docs.browser-use.com/cloud/agent/structured-output): Get validated, typed data back from agent tasks.
 - [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks): Run multiple tasks in the same browser session.
-- [Live messages](https://docs.browser-use.com/cloud/agent/streaming): Poll the agent's message history in real time to build custom UIs or monitor progress.
+- [Live messages](https://docs.browser-use.com/cloud/agent/streaming): Stream the agent's messages in real time to build custom UIs or monitor progress.
 - [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces): Persistent file storage across sessions. Upload input files, download results, and share data across tasks.
 - [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop): Let a human interact with the live browser while the agent is running. Useful for approvals, payments, complex auth flows, or reviewing agent work before continuing.
 
@@ -56,7 +54,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [n8n](https://docs.browser-use.com/cloud/tutorials/integrations/n8n): Use Browser Use as an HTTP node in n8n workflows.
 
 ## Tutorials
-- [Chat UI](https://docs.browser-use.com/cloud/tutorials/chat-ui): Full end-to-end example. Build a chat UI with live browser preview, authentication, streaming messages, and session management. Best starting point for integrating Browser Use as a main agent or sub-agent into your app.
+- [Chat UI](https://docs.browser-use.com/cloud/tutorials/chat-ui): Full end-to-end example. Build a chat UI with live browser preview, follow-up tasks, recording, and streaming messages.
 - [FAQ](https://docs.browser-use.com/cloud/faq): Common questions and solutions.
 
 ## Legacy (v2)
@@ -64,14 +62,6 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Skills](https://docs.browser-use.com/cloud/legacy/skills): Turn any website into a deterministic API endpoint. Create once, call repeatedly.
 - [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password): Auto-fill passwords and TOTP codes from 1Password during agent tasks.
 - [Secrets](https://docs.browser-use.com/cloud/guides/secrets): Pass domain-scoped credentials to the agent securely.
-
-## Get Started
-- [API key](https://docs.browser-use.com/cloud/api-reference): Set your API key to access the Browser Use REST API.
-
-## Endpoints
-
-## Get Started
+- [API Reference](https://docs.browser-use.com/cloud/api-reference): Authenticate and start using the Browser Use REST API.
 - [API key](https://docs.browser-use.com/cloud/api-v2-overview): Set your API key to access the Browser Use v2 REST API.
-
-## Endpoints
 

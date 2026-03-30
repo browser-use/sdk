@@ -15,8 +15,6 @@ Install: `pip install browser-use`
 - [Supported Models](https://docs.browser-use.com/open-source/supported-models): Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider.
 - [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli): Fast, persistent browser automation from the command line.
 
-## Customize
-
 ## Agent
 - [Configuration](https://docs.browser-use.com/open-source/customize/agent/basics): Configure the agent — set your LLM, define tasks, add custom tools, and control behavior with Python.
 - [Prompting Guide](https://docs.browser-use.com/open-source/customize/agent/prompting-guide): Write effective prompts for the agent. Tips for task descriptions, multi-step workflows, and getting reliable structured output.
@@ -40,8 +38,6 @@ Install: `pip install browser-use`
 ## Integration
 - [MCP Server](https://docs.browser-use.com/open-source/customize/integrations/mcp-server): Run browser-use as a local Model Context Protocol server. Connect AI models to browser automation through the MCP standard.
 
-## Legacy
-
 ## Actor
 - [Basics](https://docs.browser-use.com/open-source/legacy/actor/basics): Low-level Playwright-like browser automation with direct and full CDP control and precise element interactions
 - [Examples](https://docs.browser-use.com/open-source/legacy/actor/examples): Comprehensive examples for Browser Actor automation tasks including forms, JavaScript, mouse operations, and AI features
@@ -51,8 +47,6 @@ Install: `pip install browser-use`
 - [Quickstart](https://docs.browser-use.com/open-source/legacy/sandbox/quickstart): Run browser automation in the cloud
 - [Events](https://docs.browser-use.com/open-source/legacy/sandbox/events): Monitor execution with callbacks
 - [All Parameters](https://docs.browser-use.com/open-source/legacy/sandbox/all-parameters): Sandbox configuration reference
-
-## Examples
 
 ## Templates
 - [Fast Agent](https://docs.browser-use.com/open-source/examples/templates/fast-agent): Optimize agent performance for maximum speed and efficiency.
