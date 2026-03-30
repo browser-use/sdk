@@ -3094,7 +3094,7 @@
                             }
                         ],
                         "title": "Maxcostusd",
-                        "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. Defaults to $20 if omitted."
+                        "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance)."
                     },
                     "profileId": {
                         "anyOf": [
