@@ -1,25 +1,29 @@
 ---
 title: Chat UI
-description: "Full end-to-end example. Build a chat UI with live browser preview, authentication, streaming messages, and session management. Best starting point for integrating Browser Use as a main agent or sub-agent into your app."
+description: "Full end-to-end example. Build a chat UI with live browser preview, follow-up tasks, recording, and streaming messages."
 icon: messages
 ---
 
-This tutorial walks through the [chat-ui-example](https://github.com/browser-use/chat-ui-example) — a Next.js app that lets users chat with a Browser Use agent in real time. We will focus on the SDK integration, not the UI components.
+<Card title="Full source code" icon="github" href="https://github.com/browser-use/chat-ui-example">
+  Clone and run in minutes. Next.js + Browser Use SDK v3.
+</Card>
+
+This tutorial walks through the [chat-ui-example](https://github.com/browser-use/chat-ui-example) — a Next.js app that lets users chat with a Browser Use agent in real time. We focus on the SDK integration, not the UI components.
 
 The app has two pages:
 
 1. **Home** — the user types a task, the app creates a session and sends the task.
-2. **Session** — the app polls for messages and lets the user send follow-ups.
+2. **Session** — live browser preview, streaming messages, follow-ups, and recording download.
 
 All SDK calls live in a single file: `src/lib/api.ts`.
 
-## Setup: SDK Clients
+## Setup
 
 ```typescript api.ts
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const apiKey = process.env.NEXT_PUBLIC_BROWSER_USE_API_KEY ?? "";
-const client = new BrowserUse({ apiKey });
+export const client = new BrowserUse({ apiKey });
 ```
 
 <Warning>
@@ -28,191 +32,120 @@ const client = new BrowserUse({ apiKey });
 
 ---
 
-## Section 1: Home Page — Creating a Session
-
-### API layer
-
-Two functions handle session creation:
+## 1. Create a session
 
 ```typescript api.ts
-export async function createSession(opts: {
-  model: string;
-  profileId?: string;
-  workspaceId?: string;
-  proxyCountryCode?: string;
-}) {
+export async function createSession() {
   return client.sessions.create({
-    model: opts.model as "bu-mini" | "bu-max",
     keepAlive: true,
-    ...(opts.profileId && { profileId: opts.profileId }),
-    ...(opts.workspaceId && { workspaceId: opts.workspaceId }),
-    ...(opts.proxyCountryCode && { proxyCountryCode: opts.proxyCountryCode as any }),
+    enableRecording: true,
   });
 }
-
-export async function sendTask(sessionId: string, task: string) {
-  return client.sessions.create({ sessionId, task, keepAlive: true });
-}
 ```
 
-Key details:
+- **`keepAlive: true`** keeps the session open after each task so the user can send follow-ups (default is `false`).
+- **`enableRecording: true`** produces an MP4 video of the browser session.
+- **`liveUrl`** is returned immediately — no waiting or extra call needed.
 
-- **`keepAlive: true`** keeps the session open after the task completes so the user can send follow-ups.
-- **`createSession`** creates the browser without a task — the session starts idle.
-- **`sendTask`** calls `sessions.create()` again with the existing `sessionId` and a `task` to start the agent.
-
-The settings dropdowns are populated by two list calls:
-
-```typescript api.ts
-export async function listProfiles() {
-  return client.profiles.list({ pageSize: 100 });
-}
-
-export async function listWorkspaces() {
-  return client.workspaces.list({ pageSize: 100 });
-}
-```
-
-### Page flow
-
-The home page calls these functions in sequence — create the session, navigate immediately, then fire-and-forget the task:
+The home page creates the session, navigates to the session page (passing `liveUrl` and the initial task via URL params), and the session page takes over from there:
 
 ```typescript page.tsx
 async function handleSend(message: string) {
-  setIsCreating(true);
-  try {
-    // 1. Create an idle session
-    const session = await createSession({
-      model,
-      ...(profileId && { profileId }),
-      ...(workspaceId && { workspaceId }),
-      ...(proxyCountryCode && { proxyCountryCode }),
-    });
+  const session = await createSession();
 
-    // 2. Navigate to the session page immediately
-    router.push(`/session/${session.id}`);
-
-    // 3. Fire-and-forget the first task
-    sendTask(session.id, message).catch((err) =>
-      console.error("Failed to dispatch task:", err)
-    );
-  } catch (err) {
-    setError(err instanceof Error ? err.message : String(err));
-    setIsCreating(false);
-  }
+  router.push(
+    `/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
+  );
 }
 ```
 
-This pattern gives instant navigation — the user sees the session page (with the live browser view) while the task is still being dispatched.
+---
+
+## 2. Stream messages with `for await`
+
+Instead of polling `sessions.get()` and `sessions.messages()` separately, use `client.run()` — it streams messages and resolves when the task completes:
+
+```typescript session-context.tsx
+const streamTask = useCallback(async (task: string) => {
+  const run = client.run(task, { sessionId });
+
+  for await (const msg of run) {
+    setMessages((prev) => [...prev, msg]);
+  }
+
+  // Iterator done — task reached terminal state
+  setSession(run.result);
+}, [sessionId]);
+```
+
+The `for await` loop yields each message as it arrives. When the loop ends, `run.result` contains the final session state (status, output, etc.). No separate status polling needed.
+
+Wire it up in a `useEffect` to auto-run the initial task from URL params:
+
+```typescript session-context.tsx
+useEffect(() => {
+  if (!initialTask) return;
+  sendMessage(initialTask);
+}, []);
+```
 
 ---
 
-## Section 2: Messages Interface — Polling & Follow-ups
+## 3. Follow-up tasks
 
-### API layer
+Follow-ups call the same `streamTask` function. Add an optimistic user message so it appears instantly:
 
-The session page needs three more SDK calls:
+```typescript session-context.tsx
+const sendMessage = useCallback(async (task: string) => {
+  // Optimistic: show the user message immediately
+  setMessages((prev) => [...prev, { id: `opt-${Date.now()}`, role: "user", summary: task }]);
+
+  // Stream the agent's response
+  await streamTask(task);
+}, [streamTask]);
+```
+
+The SDK auto-sets `keepAlive: true` when targeting an existing session, so follow-up tasks work without extra config.
+
+---
+
+## 4. Recording
+
+Fetch the MP4 URL after the session ends (recording was enabled in step 1):
+
+```typescript session-context.tsx
+useEffect(() => {
+  if (!isTerminal) return;
+
+  client.sessions.waitForRecording(sessionId).then((urls) => {
+    if (urls.length) setRecordingUrls(urls);
+  });
+}, [isTerminal, sessionId]);
+```
+
+`waitForRecording` polls for up to 15 seconds and returns presigned MP4 download URLs. Returns an empty array if the agent answered without opening a browser.
+
+---
+
+## 5. Stop a task
 
 ```typescript api.ts
-export async function getSession(id: string) {
-  return client.sessions.get(id);
-}
-
-export async function getMessages(id: string, limit = 100) {
-  return client.sessions.messages(id, { limit });
-}
-
 export async function stopTask(id: string) {
   await client.sessions.stop(id, { strategy: "task" });
 }
 ```
 
-- **`getSession`** returns the session status (`created`, `idle`, `running`, `stopped`, `timed_out`, `error`) and the `liveUrl`.
-- **`getMessages`** returns the conversation history — user messages, agent thoughts, and tool calls.
-- **`stopTask`** stops only the current task (not the session) using `strategy: "task"`, so the user can send another task.
+Using `strategy: "task"` stops only the current task, keeping the session alive for follow-ups.
 
-### Polling with React Query
+---
 
-The session context sets up two parallel polls using [TanStack Query](https://tanstack.com/query):
+## 6. Session page
 
-```typescript session-context.tsx
-const TERMINAL = new Set(["stopped", "error", "timed_out"]);
-
-// Poll session status every 1s, stop when terminal
-const { data: session } = useQuery({
-  queryKey: ["session", sessionId],
-  queryFn: () => api.getSession(sessionId),
-  refetchInterval: (query) => {
-    const s = query.state.data?.status;
-    return s && TERMINAL.has(s) ? false : 1000;
-  },
-});
-
-const isTerminal = !!session && TERMINAL.has(session.status);
-const isActive = !!session && !isTerminal;
-
-// Poll messages every 1s while session is active
-const { data: rawResponse, isLoading } = useQuery({
-  queryKey: ["messages", sessionId],
-  queryFn: () => api.getMessages(sessionId),
-  refetchInterval: isActive ? 1000 : false,
-});
-```
-
-Both polls run at 1-second intervals and automatically stop when the session reaches a terminal status.
-
-### Sending follow-ups
-
-Follow-up messages reuse the same `sendTask` function from the home page. The context adds optimistic updates so the user's message appears instantly:
-
-```typescript session-context.tsx
-const sendMessage = useCallback(async (task: string) => {
-  // Optimistic: show the message immediately
-  const tempMsg = {
-    id: `opt-${Date.now()}`,
-    role: "user",
-    content: task,
-    createdAt: new Date().toISOString(),
-  };
-  setOptimistic((prev) => [...prev, tempMsg]);
-
-  try {
-    await api.sendTask(sessionId, task);
-  } catch (err) {
-    // Roll back on failure
-    setOptimistic((prev) => prev.filter((m) => m.id !== tempMsg.id));
-  }
-}, [sessionId]);
-```
-
-Optimistic messages are automatically filtered out once the server returns the real message with matching content.
-
-### Stopping a task
-
-```typescript session-context.tsx
-const stopTask = useCallback(async () => {
-  await api.stopTask(sessionId);
-}, [sessionId]);
-```
-
-The session page wires `stopTask` to a stop button that appears while the agent is running. Since we used `strategy: "task"`, the session stays alive for follow-ups.
-
-### Session page
-
-The session page consumes everything through the context provider:
+The session page consumes everything through a context provider:
 
 ```typescript session/[id]/page.tsx
-export default function SessionPageWrapper() {
-  const params = useParams<{ id: string }>();
-  return (
-    <SessionProvider sessionId={params.id}>
-      <SessionPage />
-    </SessionProvider>
-  );
-}
-
 function SessionPage() {
-  const { session, turns, isBusy, isTerminal, isSending, sendMessage, stopTask } =
+  const { session, turns, isBusy, isTerminal, recordingUrls, sendMessage, stopTask } =
     useSession();
 
   return (
@@ -222,19 +155,13 @@ function SessionPage() {
         <ChatMessages turns={turns} isBusy={isBusy} />
         <ChatInput
           onSend={sendMessage}
-          isProcessing={isBusy || isSending}
           onStop={stopTask}
           disabled={isTerminal}
-          placeholder={isTerminal ? "Session has ended" : "Send a follow-up…"}
         />
       </div>
 
-      {/* Live browser view */}
-      <BrowserPanel
-        liveUrl={session?.liveUrl}
-        turns={turns}
-        isSessionEnded={isTerminal}
-      />
+      {/* Live browser view — liveUrl available from session creation */}
+      <BrowserPanel liveUrl={session?.liveUrl} />
     </div>
   );
 }
@@ -244,15 +171,9 @@ function SessionPage() {
 
 ## Summary
 
-The full SDK surface used by this app:
-
 | Method | Purpose |
 |--------|---------|
-| `client.sessions.create()` | Create a session, send tasks |
-| `client.sessions.get()` | Poll session status |
-| `client.sessions.messages()` | Poll conversation messages |
+| `client.sessions.create()` | Create a session (returns `liveUrl` immediately) |
+| `client.run()` | Send a task and stream messages with `for await` |
 | `client.sessions.stop()` | Stop the current task |
-| `client.workspaces.list()` | Populate workspace dropdown |
-| `client.profiles.list()` | Populate profile dropdown |
-
-The complete source is at [github.com/browser-use/chat-ui-example](https://github.com/browser-use/chat-ui-example).
+| `client.sessions.waitForRecording()` | Get MP4 recording URLs |
