@@ -9,7 +9,7 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
 
 | Event | When |
 |-------|------|
-| `agent.task.status_update` | Task status changes (`started`, `finished`, or `stopped`) |
+| `agent.task.status_update` | Task status changes (`running`, `idle`, or `stopped`) |
 | `test` | Webhook test ping |
 
 ## Payload
@@ -21,7 +21,7 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
   "payload": {
     "task_id": "task_abc123",
     "session_id": "session_xyz",
-    "status": "finished",
+    "status": "idle",
     "metadata": {}
   }
 }
