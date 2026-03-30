@@ -4,7 +4,7 @@ description: "Run multiple tasks in the same browser session."
 icon: list-check
 ---
 
-When you pass a `session_id`, the session automatically stays alive between tasks.
+When you pass a `session_id`, the session automatically stays alive between tasks. Each task runs a new agent that reuses the same browser — the agents don't share context, but the browser state (page, cookies, tabs) carries over.
 
 <CodeGroup>
 ```python Python
@@ -16,11 +16,11 @@ client = AsyncBrowserUse()
 session = await client.sessions.create()
 
 result1 = await client.run(
-    "Log into example.com with user@test.com",
+    "Go to amazon.com, search for laptops, and open the first result",
     session_id=session.id,
 )
 result2 = await client.run(
-    "Now go to settings and change the timezone",
+    "Extract the customer reviews",
     session_id=session.id,
 )
 
@@ -34,10 +34,10 @@ const client = new BrowserUse();
 // Create a session, then run tasks inside it
 const session = await client.sessions.create();
 
-const result1 = await client.run("Log into example.com with user@test.com", {
+const result1 = await client.run("Go to amazon.com, search for laptops, and open the first result", {
   sessionId: session.id,
 });
-const result2 = await client.run("Now go to settings and change the timezone", {
+const result2 = await client.run("Extract the customer reviews", {
   sessionId: session.id,
 });
 
