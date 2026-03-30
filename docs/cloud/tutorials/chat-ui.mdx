@@ -93,14 +93,10 @@ useEffect(() => {
 
 ## 3. Follow-up tasks
 
-Follow-ups call the same `streamTask` function. Add an optimistic user message so it appears instantly:
+Follow-ups call the same `streamTask` function — the stream already includes the user message, so no optimistic insert is needed:
 
 ```typescript session-context.tsx
 const sendMessage = useCallback(async (task: string) => {
-  // Optimistic: show the user message immediately
-  setMessages((prev) => [...prev, { id: `opt-${Date.now()}`, role: "user", summary: task }]);
-
-  // Stream the agent's response
   await streamTask(task);
 }, [streamTask]);
 ```

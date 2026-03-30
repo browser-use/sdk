@@ -3066,7 +3066,8 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Maxcostusd"
+                        "title": "Maxcostusd",
+                        "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. Defaults to $20 if omitted."
                     },
                     "profileId": {
                         "anyOf": [
@@ -3118,7 +3119,8 @@
                     "enableScheduledTasks": {
                         "type": "boolean",
                         "title": "Enablescheduledtasks",
-                        "default": false
+                        "default": false,
+                        "description": "If true, enables the agent to schedule follow-up tasks (e.g. \"check this page again in 1 hour\"). Most useful with `keepAlive=true` so the session stays alive to execute scheduled tasks."
                     },
                     "enableRecording": {
                         "type": "boolean",
@@ -3214,7 +3216,8 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Output"
+                        "title": "Output",
+                        "description": "The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false."
                     },
                     "outputSchema": {
                         "anyOf": [
