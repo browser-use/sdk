@@ -56,7 +56,7 @@ upload = await client.files.session_url(
 
 with open("input.pdf", "rb") as f:
     async with httpx.AsyncClient() as http:
-        await http.put(upload.presigned_url, content=f.read(), headers={"Content-Type": "application/pdf"})
+        await http.post(upload.url, content=f.read(), headers={"Content-Type": "application/pdf"})
 
 result = await client.run("Summarize the uploaded PDF", session_id=session.id)
 ```
@@ -94,7 +94,7 @@ const result = await client.run("Summarize the uploaded PDF", { sessionId: sessi
 result = await client.tasks.get(task_id)
 for file in result.output_files:
     output = await client.files.task_output(task_id, file.id)
-    print(output.presigned_url)  # download URL
+    print(output.download_url)  # download URL
 ```
 ```typescript TypeScript
 const result = await client.tasks.get(taskId);
