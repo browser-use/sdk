@@ -3118,7 +3118,8 @@
                     "enableScheduledTasks": {
                         "type": "boolean",
                         "title": "Enablescheduledtasks",
-                        "default": false
+                        "default": false,
+                        "description": "If true, the agent can create scheduled tasks that run on a recurring basis (e.g. \"every Monday morning, check my inbox and summarize new emails\"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed."
                     },
                     "enableRecording": {
                         "type": "boolean",
