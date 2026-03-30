@@ -109,13 +109,18 @@ for (const p of paths) {
 ```python Python
 workspace = await client.workspaces.get(workspace_id)
 updated = await client.workspaces.update(workspace_id, name="renamed")
-workspaces = await client.workspaces.list()
+response = await client.workspaces.list()
+for w in response.items:
+    print(w.id, w.name)
 await client.workspaces.delete(workspace_id)
 ```
 ```typescript TypeScript
 const workspace = await client.workspaces.get(workspaceId);
 const updated = await client.workspaces.update(workspaceId, { name: "renamed" });
-const workspaces = await client.workspaces.list();
+const response = await client.workspaces.list();
+for (const w of response.items) {
+  console.log(w.id, w.name);
+}
 await client.workspaces.delete(workspaceId);
 ```
 </CodeGroup>

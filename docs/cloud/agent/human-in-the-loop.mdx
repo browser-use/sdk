@@ -33,7 +33,7 @@ result = await client.run(
 )
 print(result.output)
 
-# 3. Human opens live_url and picks a flight
+# 3. Human opens live_url and picks a product
 input("Press Enter after you've selected a product in the live view...")
 
 # 4. Agent continues where the human left off
@@ -63,7 +63,7 @@ const searchResult = await client.run(
 );
 console.log(searchResult.output);
 
-// 3. Human opens liveUrl and picks a flight
+// 3. Human opens liveUrl and picks a product
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 await new Promise((resolve) =>
   rl.question("Press Enter after you've selected a product in the live view...", resolve),

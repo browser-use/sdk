@@ -22,24 +22,29 @@ All SDK calls live in a single file: `src/lib/api.ts`.
 ```typescript api.ts
 import { BrowserUse } from "browser-use-sdk/v3";
 
-const apiKey = process.env.NEXT_PUBLIC_BROWSER_USE_API_KEY ?? "";
+// Server-only — no NEXT_PUBLIC_ prefix, never exposed to the browser
+const apiKey = process.env.BROWSER_USE_API_KEY ?? "";
 export const client = new BrowserUse({ apiKey });
 ```
 
-<Warning>
-  `NEXT_PUBLIC_` exposes the key to the browser. In production, move SDK calls to server actions or API routes.
-</Warning>
+<Note>
+  The API key uses `BROWSER_USE_API_KEY` (no `NEXT_PUBLIC_` prefix) so it stays server-side. All SDK calls go through [server actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations) — never call the SDK directly from client components.
+</Note>
 
 ---
 
 ## 1. Create a session
 
-```typescript api.ts
+```typescript actions.ts
+"use server";
+import { client } from "./api";
+
 export async function createSession() {
-  return client.sessions.create({
+  const session = await client.sessions.create({
     keepAlive: true,
     enableRecording: true,
   });
+  return { id: session.id, liveUrl: session.liveUrl, status: session.status };
 }
 ```
 
@@ -125,7 +130,7 @@ useEffect(() => {
 
 ## 5. Stop a task
 
-```typescript api.ts
+```typescript actions.ts
 export async function stopTask(id: string) {
   await client.sessions.stop(id, { strategy: "task" });
 }

@@ -37,6 +37,7 @@ class Profiles:
     def list(
         self,
         *,
+        query: str | None = None,
         page: int | None = None,
         page_size: int | None = None,
     ) -> ProfileListResponse:
@@ -45,7 +46,7 @@ class Profiles:
             self._http.request(
                 "GET",
                 "/profiles",
-                params={"page": page, "page_size": page_size},
+                params={"query": query, "page": page, "page_size": page_size},
             )
         )
 
@@ -104,6 +105,7 @@ class AsyncProfiles:
     async def list(
         self,
         *,
+        query: str | None = None,
         page: int | None = None,
         page_size: int | None = None,
     ) -> ProfileListResponse:
@@ -112,7 +114,7 @@ class AsyncProfiles:
             await self._http.request(
                 "GET",
                 "/profiles",
-                params={"page": page, "page_size": page_size},
+                params={"query": query, "page": page, "page_size": page_size},
             )
         )
 
