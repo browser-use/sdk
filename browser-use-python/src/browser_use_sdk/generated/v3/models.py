@@ -631,7 +631,7 @@ class MaxCostUsd(RootModel[str]):
 
 class RunTaskRequest(BaseModel):
     task: str | None = Field(None, title='Task')
-    model: BuModel | None = 'bu-mini'
+    model: BuModel | None = 'bu-max'
     session_id: UUID | None = Field(None, alias='sessionId', title='Sessionid')
     keep_alive: bool | None = Field(False, alias='keepAlive', title='Keepalive')
     max_cost_usd: float | MaxCostUsd | None = Field(

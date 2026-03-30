@@ -3034,7 +3034,7 @@
                     },
                     "model": {
                         "$ref": "#/components/schemas/BuModel",
-                        "default": "bu-mini"
+                        "default": "bu-max"
                     },
                     "sessionId": {
                         "anyOf": [
@@ -3625,10 +3625,10 @@
             "name": "Sessions"
         },
         {
-            "name": "Profiles"
+            "name": "Browsers"
         },
         {
-            "name": "Browsers"
+            "name": "Profiles"
         },
         {
             "name": "Workspaces"

@@ -1483,8 +1483,8 @@ Source: https://docs.browser-use.com/cloud/faq
 
 ## Which model should I use?
 
-- **bu-mini** (default) — faster, cheaper. Good for most tasks.
-- **bu-max** — more capable. Use for complex multi-step workflows.
+- **bu-max** (recommended) — most capable. Use for complex multi-step workflows.
+- **bu-mini** — faster, cheaper. Good for simple tasks.
 
 ## How do I get the live browser URL?
 
@@ -1494,12 +1494,6 @@ Source: https://docs.browser-use.com/cloud/faq
 session = await client.sessions.create(task="Go to example.com")
 print(session.live_url)
 ```
-
-## How do I authenticate on websites?
-
-1. **Profiles** — sync your local browser cookies: `curl -fsSL https://browser-use.com/profile.sh | sh`. See [Profiles](https://docs.browser-use.com/cloud/guides/authentication).
-2. **1Password** — auto-fill passwords and 2FA codes. See [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password) (v2 SDK).
-3. **Secrets** — pass credentials scoped by domain. See [Secrets](https://docs.browser-use.com/cloud/guides/secrets) (v2 SDK).
 
 ## Getting blocked by a website
 

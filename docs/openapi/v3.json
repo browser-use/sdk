@@ -80,8 +80,7 @@
                             "minimum": 1,
                             "default": 1,
                             "title": "Page"
-                        },
-                        "description": "Page number (1-indexed)."
+                        }
                     },
                     {
                         "name": "page_size",
@@ -93,8 +92,7 @@
                             "minimum": 1,
                             "default": 20,
                             "title": "Page Size"
-                        },
-                        "description": "Number of sessions per page (max 100)."
+                        }
                     }
                 ],
                 "responses": {
@@ -348,8 +346,7 @@
                             "minimum": 1,
                             "default": 10,
                             "title": "Limit"
-                        },
-                        "description": "Maximum number of messages to return (max 100)."
+                        }
                     }
                 ],
                 "responses": {
@@ -2069,8 +2066,7 @@
                     "timed_out",
                     "error"
                 ],
-                "title": "BuAgentSessionStatus",
-                "description": "Session lifecycle status. Progresses through: created -> idle -> running -> idle -> ... -> stopped / timed_out / error.\n\n- `created`: Sandbox is starting up. The session is not yet ready to accept tasks.\n- `idle`: Sandbox is healthy and waiting for a task. You can dispatch a task or upload files.\n- `running`: A task is currently being executed by the agent.\n- `stopped`: Session was stopped \u2014 either explicitly via the stop endpoint, or automatically after task completion (when `keepAlive` is false).\n- `timed_out`: Session was cleaned up due to inactivity timeout.\n- `error`: Sandbox failed to start or encountered an unrecoverable error."
+                "title": "BuAgentSessionStatus"
             },
             "BuModel": {
                 "type": "string",
@@ -2079,8 +2075,7 @@
                     "bu-max",
                     "bu-ultra"
                 ],
-                "title": "BuModel",
-                "description": "The model tier to use for the agent. Each tier uses a different underlying LLM with different capabilities and pricing.\n\n- `bu-mini`: Fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max`: Balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra`: Most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions."
+                "title": "BuModel"
             },
             "CreateBrowserSessionRequest": {
                 "properties": {
@@ -2232,19 +2227,16 @@
                 "properties": {
                     "path": {
                         "type": "string",
-                        "title": "Path",
-                        "description": "File path relative to the session workspace root."
+                        "title": "Path"
                     },
                     "size": {
                         "type": "integer",
-                        "title": "Size",
-                        "description": "File size in bytes."
+                        "title": "Size"
                     },
                     "lastModified": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Lastmodified",
-                        "description": "When the file was last modified."
+                        "title": "Lastmodified"
                     },
                     "url": {
                         "anyOf": [
@@ -2255,8 +2247,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Url",
-                        "description": "Presigned download URL (60s expiry). Only included when `includeUrls=true`."
+                        "title": "Url"
                     }
                 },
                 "type": "object",
@@ -2275,8 +2266,7 @@
                             "$ref": "#/components/schemas/FileInfo"
                         },
                         "type": "array",
-                        "title": "Files",
-                        "description": "List of files matching the query."
+                        "title": "Files"
                     },
                     "folders": {
                         "items": {
@@ -2284,7 +2274,7 @@
                         },
                         "type": "array",
                         "title": "Folders",
-                        "description": "Immediate sub-folder names at this prefix level."
+                        "description": "Immediate sub-folder names at this prefix level"
                     },
                     "nextCursor": {
                         "anyOf": [
@@ -2295,14 +2285,12 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Nextcursor",
-                        "description": "Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page."
+                        "title": "Nextcursor"
                     },
                     "hasMore": {
                         "type": "boolean",
                         "title": "Hasmore",
-                        "default": false,
-                        "description": "Whether there are more files beyond this page."
+                        "default": false
                     }
                 },
                 "type": "object",
@@ -2389,18 +2377,16 @@
                 "properties": {
                     "name": {
                         "type": "string",
-                        "title": "Name",
-                        "description": "Original filename as requested."
+                        "title": "Name"
                     },
                     "uploadUrl": {
                         "type": "string",
-                        "title": "Uploadurl",
-                        "description": "Presigned PUT URL. Upload the file by sending a PUT request to this URL with the file content and matching Content-Type header. Expires after 5 minutes."
+                        "title": "Uploadurl"
                     },
                     "path": {
                         "type": "string",
                         "title": "Path",
-                        "description": "Path where the file will be stored in the workspace, e.g. \"uploads/data.csv\"."
+                        "description": "S3-relative path, e.g. \"uploads/data.csv\""
                     }
                 },
                 "type": "object",
@@ -2444,13 +2430,11 @@
                             "$ref": "#/components/schemas/MessageResponse"
                         },
                         "type": "array",
-                        "title": "Messages",
-                        "description": "List of messages in chronological order."
+                        "title": "Messages"
                     },
                     "hasMore": {
                         "type": "boolean",
-                        "title": "Hasmore",
-                        "description": "Whether there are more messages available beyond this page. Use cursor-based pagination with the `after` or `before` query parameters to fetch more."
+                        "title": "Hasmore"
                     }
                 },
                 "type": "object",
@@ -2465,35 +2449,31 @@
                     "id": {
                         "type": "string",
                         "format": "uuid",
-                        "title": "Id",
-                        "description": "Unique message identifier."
+                        "title": "Id"
                     },
                     "sessionId": {
                         "type": "string",
                         "format": "uuid",
-                        "title": "Sessionid",
-                        "description": "ID of the session this message belongs to."
+                        "title": "Sessionid"
                     },
                     "role": {
                         "type": "string",
-                        "title": "Role",
-                        "description": "Message role: \"human\" for user-submitted tasks, \"ai\" for agent actions and responses."
+                        "title": "Role"
                     },
                     "data": {
                         "type": "string",
-                        "title": "Data",
-                        "description": "Raw message content. Format depends on the message type \u2014 may be plain text, JSON, or structured action data."
+                        "title": "Data"
                     },
                     "type": {
                         "type": "string",
                         "title": "Type",
-                        "description": "Message category. Common values: `user_message`, `assistant_message`, `browser_action`, `file_operation`, `code_execution`, `integration`, `planning`, `completion`, `browser_action_result`, `browser_action_error`.",
+                        "description": "Coarse category: user_message, assistant_message, browser_action, file_operation, code_execution, integration, planning, completion, browser_action_result, browser_action_error, etc.",
                         "default": ""
                     },
                     "summary": {
                         "type": "string",
                         "title": "Summary",
-                        "description": "One-liner human-readable description of the message (e.g. \"Navigating to google.com\", \"Clicking element #5\"). Useful for building activity feeds.",
+                        "description": "One-liner human-readable description of the message (e.g. \"Navigating to google.com\", \"Clicking element #5\").",
                         "default": ""
                     },
                     "screenshotUrl": {
@@ -2505,14 +2485,12 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Screenshoturl",
-                        "description": "Browser screenshot captured at the time of this message. Presigned URL, expires after 5 minutes."
+                        "title": "Screenshoturl"
                     },
                     "createdAt": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Createdat",
-                        "description": "When this message was created."
+                        "title": "Createdat"
                     }
                 },
                 "type": "object",
@@ -2523,8 +2501,7 @@
                     "data",
                     "createdAt"
                 ],
-                "title": "MessageResponse",
-                "description": "A single message from the session message stream.\n\nMessages represent the agent actions, observations, and decisions as it executes a task."
+                "title": "MessageResponse"
             },
             "PlanInfo": {
                 "properties": {
@@ -3053,13 +3030,11 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Task",
-                        "description": "The natural-language instruction for the agent to execute (e.g. \"Go to amazon.com and find the best-rated wireless mouse under $50\"). Required when dispatching to an existing session."
+                        "title": "Task"
                     },
                     "model": {
                         "$ref": "#/components/schemas/BuModel",
-                        "default": "bu-mini",
-                        "description": "The model tier to use. `bu-mini` is fast and cheap, `bu-max` is balanced, `bu-ultra` is most capable. See BuModel for details."
+                        "default": "bu-max"
                     },
                     "sessionId": {
                         "anyOf": [
@@ -3071,14 +3046,12 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Sessionid",
-                        "description": "ID of an existing idle session to dispatch the task to. If omitted, a new session is created."
+                        "title": "Sessionid"
                     },
                     "keepAlive": {
                         "type": "boolean",
                         "title": "Keepalive",
-                        "default": false,
-                        "description": "If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files."
+                        "default": false
                     },
                     "maxCostUsd": {
                         "anyOf": [
@@ -3093,8 +3066,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Maxcostusd",
-                        "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. Defaults to $20 if omitted."
+                        "title": "Maxcostusd"
                     },
                     "profileId": {
                         "anyOf": [
@@ -3106,8 +3078,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Profileid",
-                        "description": "ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API."
+                        "title": "Profileid"
                     },
                     "workspaceId": {
                         "anyOf": [
@@ -3119,8 +3090,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Workspaceid",
-                        "description": "ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API."
+                        "title": "Workspaceid"
                     },
                     "proxyCountryCode": {
                         "anyOf": [
@@ -3131,8 +3101,7 @@
                                 "type": "null"
                             }
                         ],
-                        "default": "us",
-                        "description": "Country code for the browser proxy (e.g. \"us\", \"de\", \"jp\"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content."
+                        "default": "us"
                     },
                     "outputSchema": {
                         "anyOf": [
@@ -3144,37 +3113,32 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Outputschema",
-                        "description": "A JSON Schema that the agent final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response."
+                        "title": "Outputschema"
                     },
                     "enableScheduledTasks": {
                         "type": "boolean",
                         "title": "Enablescheduledtasks",
-                        "default": false,
-                        "description": "If true, the agent can create scheduled tasks that run on a recurring basis (e.g. \"every Monday morning, check my inbox and summarize new emails\"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed."
+                        "default": false
                     },
                     "enableRecording": {
                         "type": "boolean",
                         "title": "Enablerecording",
-                        "default": false,
-                        "description": "If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes."
+                        "default": false
                     },
                     "skills": {
                         "type": "boolean",
                         "title": "Skills",
-                        "default": true,
-                        "description": "If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions."
+                        "default": true
                     },
                     "agentmail": {
                         "type": "boolean",
                         "title": "Agentmail",
-                        "default": true,
-                        "description": "If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups."
+                        "default": true
                     }
                 },
                 "type": "object",
                 "title": "RunTaskRequest",
-                "description": "Create a new session, dispatch a task, or both.\n\n- **No `sessionId` + no `task`**: creates an idle session (useful for uploading files before running a task).\n- **No `sessionId` + `task`**: creates a new session and immediately runs the task.\n- **`sessionId` + `task`**: dispatches the task to an existing idle session.\n- **`sessionId` + no `task`**: returns 422 \u2014 a task is required when targeting an existing session."
+                "description": "Unified request for creating a session or dispatching a task.\n\n- Without session_id + without task: creates a new idle session (for file uploads, etc.)\n- Without session_id + with task: creates a new session and dispatches the task\n- With session_id + with task: dispatches the task to an existing idle session\n- With session_id + without task: 422 (task required when dispatching to existing session)"
             },
             "SessionListResponse": {
                 "properties": {
@@ -3183,23 +3147,19 @@
                             "$ref": "#/components/schemas/SessionResponse"
                         },
                         "type": "array",
-                        "title": "Sessions",
-                        "description": "List of sessions."
+                        "title": "Sessions"
                     },
                     "total": {
                         "type": "integer",
-                        "title": "Total",
-                        "description": "Total number of sessions matching the query."
+                        "title": "Total"
                     },
                     "page": {
                         "type": "integer",
-                        "title": "Page",
-                        "description": "Current page number (1-indexed)."
+                        "title": "Page"
                     },
                     "pageSize": {
                         "type": "integer",
-                        "title": "Pagesize",
-                        "description": "Number of sessions per page."
+                        "title": "Pagesize"
                     }
                 },
                 "type": "object",
@@ -3228,16 +3188,13 @@
                     "id": {
                         "type": "string",
                         "format": "uuid",
-                        "title": "Id",
-                        "description": "Unique session identifier."
+                        "title": "Id"
                     },
                     "status": {
-                        "$ref": "#/components/schemas/BuAgentSessionStatus",
-                        "description": "Current session lifecycle status. Progresses through: `created` (sandbox starting) -> `idle` (ready, waiting for task) -> `running` (task executing) -> `stopped` / `timed_out` / `error`. Poll this field to track progress."
+                        "$ref": "#/components/schemas/BuAgentSessionStatus"
                     },
                     "model": {
-                        "$ref": "#/components/schemas/BuModel",
-                        "description": "The model tier used for this session."
+                        "$ref": "#/components/schemas/BuModel"
                     },
                     "title": {
                         "anyOf": [
@@ -3248,8 +3205,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Title",
-                        "description": "Auto-generated short title summarizing the task. Available after the task starts running."
+                        "title": "Title"
                     },
                     "output": {
                         "anyOf": [
@@ -3258,8 +3214,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Output",
-                        "description": "The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false."
+                        "title": "Output"
                     },
                     "outputSchema": {
                         "anyOf": [
@@ -3271,14 +3226,12 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Outputschema",
-                        "description": "The JSON Schema that was requested for structured output, if any."
+                        "title": "Outputschema"
                     },
                     "stepCount": {
                         "type": "integer",
                         "title": "Stepcount",
-                        "default": 0,
-                        "description": "Number of steps the agent has executed so far."
+                        "default": 0
                     },
                     "lastStepSummary": {
                         "anyOf": [
@@ -3289,8 +3242,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Laststepsummary",
-                        "description": "Human-readable summary of the most recent agent step (e.g. \"Clicking the Submit button\"). Useful for showing real-time progress."
+                        "title": "Laststepsummary"
                     },
                     "isTaskSuccessful": {
                         "anyOf": [
@@ -3301,8 +3253,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Istasksuccessful",
-                        "description": "Whether the task completed successfully. `true` if the agent achieved the goal, `false` if it failed or gave up, `null` if the task is still running or no task was dispatched."
+                        "title": "Istasksuccessful"
                     },
                     "liveUrl": {
                         "anyOf": [
@@ -3313,8 +3264,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Liveurl",
-                        "description": "URL to view the live browser session. Available immediately on session creation \u2014 can be embedded in an iframe to show the browser in real time."
+                        "title": "Liveurl"
                     },
                     "recordingUrls": {
                         "items": {
@@ -3322,8 +3272,7 @@
                         },
                         "type": "array",
                         "title": "Recordingurls",
-                        "default": [],
-                        "description": "URLs to download session recordings. Only populated if `enableRecording` was set to true and the task has completed."
+                        "default": []
                     },
                     "profileId": {
                         "anyOf": [
@@ -3335,8 +3284,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Profileid",
-                        "description": "ID of the browser profile loaded in this session, if any."
+                        "title": "Profileid"
                     },
                     "workspaceId": {
                         "anyOf": [
@@ -3348,8 +3296,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Workspaceid",
-                        "description": "ID of the workspace attached to this session, if any."
+                        "title": "Workspaceid"
                     },
                     "proxyCountryCode": {
                         "anyOf": [
@@ -3359,8 +3306,7 @@
                             {
                                 "type": "null"
                             }
-                        ],
-                        "description": "Country code of the proxy used for this session, or null if no proxy."
+                        ]
                     },
                     "maxCostUsd": {
                         "anyOf": [
@@ -3372,55 +3318,47 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Maxcostusd",
-                        "description": "Maximum cost limit in USD set for this session."
+                        "title": "Maxcostusd"
                     },
                     "totalInputTokens": {
                         "type": "integer",
                         "title": "Totalinputtokens",
-                        "default": 0,
-                        "description": "Total LLM input tokens consumed by this session."
+                        "default": 0
                     },
                     "totalOutputTokens": {
                         "type": "integer",
                         "title": "Totaloutputtokens",
-                        "default": 0,
-                        "description": "Total LLM output tokens consumed by this session."
+                        "default": 0
                     },
                     "proxyUsedMb": {
                         "type": "string",
                         "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                         "title": "Proxyusedmb",
-                        "default": "0",
-                        "description": "Proxy bandwidth used in megabytes."
+                        "default": "0"
                     },
                     "llmCostUsd": {
                         "type": "string",
                         "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                         "title": "Llmcostusd",
-                        "default": "0",
-                        "description": "Cost of LLM usage in USD."
+                        "default": "0"
                     },
                     "proxyCostUsd": {
                         "type": "string",
                         "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                         "title": "Proxycostusd",
-                        "default": "0",
-                        "description": "Cost of proxy bandwidth in USD."
+                        "default": "0"
                     },
                     "browserCostUsd": {
                         "type": "string",
                         "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                         "title": "Browsercostusd",
-                        "default": "0",
-                        "description": "Cost of browser compute time in USD."
+                        "default": "0"
                     },
                     "totalCostUsd": {
                         "type": "string",
                         "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                         "title": "Totalcostusd",
-                        "default": "0",
-                        "description": "Total session cost in USD (LLM + proxy + browser)."
+                        "default": "0"
                     },
                     "screenshotUrl": {
                         "anyOf": [
@@ -3431,8 +3369,7 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Screenshoturl",
-                        "description": "URL of the latest browser screenshot. Presigned URL that expires after 5 minutes. A new URL is generated each time you fetch the session."
+                        "title": "Screenshoturl"
                     },
                     "agentmailEmail": {
                         "anyOf": [
@@ -3443,20 +3380,17 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Agentmailemail",
-                        "description": "Temporary email address provisioned for this session (via AgentMail). Only present if `agentmail` was enabled."
+                        "title": "Agentmailemail"
                     },
                     "createdAt": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Createdat",
-                        "description": "When the session was created."
+                        "title": "Createdat"
                     },
                     "updatedAt": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Updatedat",
-                        "description": "When the session was last updated."
+                        "title": "Updatedat"
                     }
                 },
                 "type": "object",
@@ -3467,8 +3401,7 @@
                     "createdAt",
                     "updatedAt"
                 ],
-                "title": "SessionResponse",
-                "description": "Represents a session and its current state.\n\nPoll this endpoint to track task progress. The `status` field indicates the session lifecycle stage, and `output` contains the agent structured result once the task completes."
+                "title": "SessionResponse"
             },
             "SessionTimeoutLimitExceededError": {
                 "properties": {
@@ -3486,8 +3419,7 @@
                 "properties": {
                     "strategy": {
                         "$ref": "#/components/schemas/StopStrategy",
-                        "default": "session",
-                        "description": "How to stop the session. Use `task` to stop only the current task and keep the session alive, or `session` to destroy the sandbox entirely."
+                        "default": "session"
                     }
                 },
                 "type": "object",
@@ -3499,8 +3431,7 @@
                     "task",
                     "session"
                 ],
-                "title": "StopStrategy",
-                "description": "Strategy for stopping a session.\n\n- `task`: Stop the currently running task but keep the session alive in idle state. You can dispatch another task to the same session afterwards.\n- `session`: Stop the session entirely and destroy the sandbox. The session cannot be reused after this."
+                "title": "StopStrategy"
             },
             "TooManyConcurrentActiveSessionsError": {
                 "properties": {
@@ -3688,5 +3619,25 @@
                 "name": "X-Browser-Use-API-Key"
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Sessions"
+        },
+        {
+            "name": "Profiles"
+        },
+        {
+            "name": "Browsers"
+        },
+        {
+            "name": "Workspaces"
+        },
+        {
+            "name": "Files"
+        },
+        {
+            "name": "Billing"
+        }
+    ]
 }
