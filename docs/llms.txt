@@ -62,6 +62,10 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Skills](https://docs.browser-use.com/cloud/legacy/skills): Turn any website into a deterministic API endpoint. Create once, call repeatedly.
 - [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password): Auto-fill passwords and TOTP codes from 1Password during agent tasks.
 - [Secrets](https://docs.browser-use.com/cloud/guides/secrets): Pass domain-scoped credentials to the agent securely.
+
+## API v3
 - [API Reference](https://docs.browser-use.com/cloud/api-reference): Authenticate and start using the Browser Use REST API.
+
+## API v2
 - [API key](https://docs.browser-use.com/cloud/api-v2-overview): Set your API key to access the Browser Use v2 REST API.
 

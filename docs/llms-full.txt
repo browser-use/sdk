@@ -40,17 +40,6 @@ const client = new BrowserUse();
 const result = await client.run("List the top 20 posts on Hacker News today with their points");
 console.log(result.output);
 ```
-```bash curl
-# Create a session
-curl -X POST https://api.browser-use.com/api/v3/sessions \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News today with their points"}'
-
-# Poll for result (replace SESSION_ID from the response above)
-curl https://api.browser-use.com/api/v3/sessions/SESSION_ID \
-  -H "Authorization: Bearer YOUR_API_KEY"
-```
 
   Want a full working app? See the [Chat UI example](https://docs.browser-use.com/cloud/tutorials/chat-ui) — a complete Next.js app with live browser preview, streaming messages, authentication, and session management.
 
@@ -259,7 +248,7 @@ while True:
         cursor = m.id
 
     s = await client.sessions.get(session.id)
-    if s.status in ("idle", "stopped", "error", "timed_out"):
+    if s.status.value in ("idle", "stopped", "error", "timed_out"):
         break
     await asyncio.sleep(2)
 
@@ -1333,7 +1322,7 @@ Add a second **HTTP Request** node in a loop:
 | URL | `https://api.browser-use.com/api/v3/sessions/{{ $json.id }}` |
 | Authentication | Header Auth (from step 1) |
 
-Check the `status` field. The session is done when status is `finished` or `stopped`. Use an **If** node to loop back with a **Wait** node (5–10 seconds) until complete.
+Check the `status` field. The session is done when status is `idle`, `stopped`, `error`, or `timed_out`. Use an **If** node to loop back with a **Wait** node (5–10 seconds) until complete.
 
 The final response contains `output` with the agent's result.
 
@@ -1440,14 +1429,10 @@ useEffect(() => {
 
 ## 3. Follow-up tasks
 
-Follow-ups call the same `streamTask` function. Add an optimistic user message so it appears instantly:
+Follow-ups call the same `streamTask` function — the stream already includes the user message, so no optimistic insert is needed:
 
 ```typescript session-context.tsx
 const sendMessage = useCallback(async (task: string) => {
-  // Optimistic: show the user message immediately
-  setMessages((prev) => [...prev, { id: `opt-${Date.now()}`, role: "user", summary: task }]);
-
-  // Stream the agent's response
   await streamTask(task);
 }, [streamTask]);
 ```
