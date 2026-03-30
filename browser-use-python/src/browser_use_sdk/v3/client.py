@@ -8,6 +8,9 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
+from .resources.billing import AsyncBilling, Billing as BillingResource
+from .resources.browsers import AsyncBrowsers, Browsers as BrowsersResource
+from .resources.profiles import AsyncProfiles, Profiles as ProfilesResource
 from .resources.sessions import AsyncSessions, Sessions
 from .resources.workspaces import AsyncWorkspaces, Workspaces
 from .helpers import AsyncSessionRun, SessionResult, SessionStream, _poll_output
@@ -38,6 +41,9 @@ class BrowserUse:
             api_key=resolved_key,
             timeout=timeout,
         )
+        self.billing = BillingResource(self._http)
+        self.browsers = BrowsersResource(self._http)
+        self.profiles = ProfilesResource(self._http)
         self.sessions = Sessions(self._http)
         self.workspaces = Workspaces(self._http)
 
@@ -204,6 +210,9 @@ class AsyncBrowserUse:
             api_key=resolved_key,
             timeout=timeout,
         )
+        self.billing = AsyncBilling(self._http)
+        self.browsers = AsyncBrowsers(self._http)
+        self.profiles = AsyncProfiles(self._http)
         self.sessions = AsyncSessions(self._http)
         self.workspaces = AsyncWorkspaces(self._http)
 
