@@ -41,13 +41,13 @@ View your profile IDs at [cloud.browser-use.com/settings](https://cloud.browser-
 profile = await client.profiles.create(name="work-account")
 
 # List all
-profiles = await client.profiles.list()
-for p in profiles:
+response = await client.profiles.list()
+for p in response.items:
     print(p.id, p.name)
 
 # Search by name
-results = await client.profiles.list(query="user-id-1")
-profile = results[0]  # first match
+response = await client.profiles.list(query="user-id-1")
+profile = response.items[0]  # first match
 
 # Get one by ID
 profile = await client.profiles.get(profile_id)
@@ -63,14 +63,14 @@ await client.profiles.delete(profile_id)
 const profile = await client.profiles.create({ name: "work-account" });
 
 // List all
-const profiles = await client.profiles.list();
-for (const p of profiles) {
+const response = await client.profiles.list();
+for (const p of response.items) {
   console.log(p.id, p.name);
 }
 
 // Search by name
 const results = await client.profiles.list({ query: "user-id-1" });
-const found = results[0]; // first match
+const found = results.items[0]; // first match
 
 // Get one by ID
 const fetched = await client.profiles.get(profileId);

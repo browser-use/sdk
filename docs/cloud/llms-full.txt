@@ -382,13 +382,18 @@ for (const p of paths) {
 ```python Python
 workspace = await client.workspaces.get(workspace_id)
 updated = await client.workspaces.update(workspace_id, name="renamed")
-workspaces = await client.workspaces.list()
+response = await client.workspaces.list()
+for w in response.items:
+    print(w.id, w.name)
 await client.workspaces.delete(workspace_id)
 ```
 ```typescript TypeScript
 const workspace = await client.workspaces.get(workspaceId);
 const updated = await client.workspaces.update(workspaceId, { name: "renamed" });
-const workspaces = await client.workspaces.list();
+const response = await client.workspaces.list();
+for (const w of response.items) {
+  console.log(w.id, w.name);
+}
 await client.workspaces.delete(workspaceId);
 ```
 
@@ -429,7 +434,7 @@ result = await client.run(
 )
 print(result.output)
 
-# 3. Human opens live_url and picks a flight
+# 3. Human opens live_url and picks a product
 input("Press Enter after you've selected a product in the live view...")
 
 # 4. Agent continues where the human left off
@@ -459,7 +464,7 @@ const searchResult = await client.run(
 );
 console.log(searchResult.output);
 
-// 3. Human opens liveUrl and picks a flight
+// 3. Human opens liveUrl and picks a product
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 await new Promise((resolve) =>
   rl.question("Press Enter after you've selected a product in the live view...", resolve),
@@ -809,13 +814,13 @@ View your profile IDs at [cloud.browser-use.com/settings](https://cloud.browser-
 profile = await client.profiles.create(name="work-account")
 
 # List all
-profiles = await client.profiles.list()
-for p in profiles:
+response = await client.profiles.list()
+for p in response.items:
     print(p.id, p.name)
 
 # Search by name
-results = await client.profiles.list(query="user-id-1")
-profile = results[0]  # first match
+response = await client.profiles.list(query="user-id-1")
+profile = response.items[0]  # first match
 
 # Get one by ID
 profile = await client.profiles.get(profile_id)
@@ -831,14 +836,14 @@ await client.profiles.delete(profile_id)
 const profile = await client.profiles.create({ name: "work-account" });
 
 // List all
-const profiles = await client.profiles.list();
-for (const p of profiles) {
+const response = await client.profiles.list();
+for (const p of response.items) {
   console.log(p.id, p.name);
 }
 
 // Search by name
 const results = await client.profiles.list({ query: "user-id-1" });
-const found = results[0]; // first match
+const found = results.items[0]; // first match
 
 // Get one by ID
 const fetched = await client.profiles.get(profileId);
@@ -1326,11 +1331,12 @@ All SDK calls live in a single file: `src/lib/api.ts`.
 ```typescript api.ts
 import { BrowserUse } from "browser-use-sdk/v3";
 
-const apiKey = process.env.NEXT_PUBLIC_BROWSER_USE_API_KEY ?? "";
+// Server-only — no NEXT_PUBLIC_ prefix, never exposed to the browser
+const apiKey = process.env.BROWSER_USE_API_KEY ?? "";
 export const client = new BrowserUse({ apiKey });
 ```
 
-  `NEXT_PUBLIC_` exposes the key to the browser. In production, move SDK calls to server actions or API routes.
+  The API key uses `BROWSER_USE_API_KEY` (no `NEXT_PUBLIC_` prefix) so it stays server-side. All SDK calls go through server actions — never call the SDK directly from client components.
 
 ---
 

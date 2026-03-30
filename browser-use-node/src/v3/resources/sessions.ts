@@ -36,7 +36,7 @@ export class Sessions {
 
   /** Create a session and optionally dispatch a task. */
   create(body?: CreateSessionBody): Promise<SessionResponse> {
-    return this.http.post<SessionResponse>("/sessions", body);
+    return this.http.post<SessionResponse>("/sessions", body ?? {});
   }
 
   /** List sessions for the authenticated project. */

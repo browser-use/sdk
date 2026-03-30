@@ -7,6 +7,7 @@ type ProfileCreateRequest = components["schemas"]["ProfileCreateRequest"];
 type ProfileUpdateRequest = components["schemas"]["ProfileUpdateRequest"];
 
 export interface ProfileListParams {
+  query?: string;
   page?: number;
   page_size?: number;
 }
