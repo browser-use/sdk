@@ -267,7 +267,7 @@ The npm package `browser-use-sdk@3.3.1` does not export features the docs refere
 | Python Snippets | 3.2 min | 26 checked, 1 bug found |
 | TS Snippets | 7.5 min | 28 checked, 10 issues (SDK publishing gap) |
 | API Types Checker | 3.7 min | 12 discrepancies, auth header critical |
-| Link Checker | 7.5 min | 1 broken external link, 6 orphaned pages |
+| Link Checker | 7.5 min | 1 broken external link, 3 orphaned pages |
 | Persona: AI Startup | 2.7 min | Concurrent execution is #1 gap |
 | Persona: Embedder | 2.4 min | CSP and streaming events undocumented |
 | Persona: QA | 2.0 min | No Playwright compat matrix |
