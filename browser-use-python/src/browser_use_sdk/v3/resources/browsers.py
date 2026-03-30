@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
+from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
     BrowserSessionItemView,
@@ -21,7 +22,7 @@ class Browsers:
         self,
         *,
         profile_id: str | None = None,
-        proxy_country_code: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         timeout: int | None = None,
         browser_screen_width: int | None = None,
         browser_screen_height: int | None = None,
@@ -33,7 +34,7 @@ class Browsers:
         body: dict[str, Any] = {}
         if profile_id is not None:
             body["profileId"] = profile_id
-        if proxy_country_code is not None:
+        if proxy_country_code is not _UNSET:
             body["proxyCountryCode"] = proxy_country_code
         if timeout is not None:
             body["timeout"] = timeout
@@ -92,7 +93,7 @@ class AsyncBrowsers:
         self,
         *,
         profile_id: str | None = None,
-        proxy_country_code: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         timeout: int | None = None,
         browser_screen_width: int | None = None,
         browser_screen_height: int | None = None,
@@ -104,7 +105,7 @@ class AsyncBrowsers:
         body: dict[str, Any] = {}
         if profile_id is not None:
             body["profileId"] = profile_id
-        if proxy_country_code is not None:
+        if proxy_country_code is not _UNSET:
             body["proxyCountryCode"] = proxy_country_code
         if timeout is not None:
             body["timeout"] = timeout

@@ -1,261 +1,276 @@
 # Browser Use Docs Audit Report
 
 **Date:** 2026-03-30
-**Method:** 14 autonomous agents testing docs from different personas, code snippets, API types, links, llms.txt, and e2e flows.
-**Previous audit:** 2026-03-29 (6 agents, 47 issues). This audit is more comprehensive.
+**Method:** 12 parallel AI agents with different personas and test objectives
+**Scope:** All cloud docs, llms.txt, code snippets, API spec, chat UI example, link integrity
 
 ---
 
 ## Executive Summary
 
-| Area | Score | Status |
-|------|-------|--------|
-| **Overall Docs Quality** | **6.2/10** | Good foundation, significant gaps |
-| **Code Snippets (Python)** | **9.5/10** | 49/49 syntax pass, 1 SDK publish issue |
-| **Code Snippets (TypeScript)** | **7.7/10** | 34/44 pass, 4 SDK type bugs, 3 doc bugs |
-| **API Reference** | **5/10** | Wrong auth header (critical), many missing descriptions |
-| **llms.txt** | **7.5/10** | Good structure, needs less marketing, more params |
-| **Broken Links** | **3 found** | 1 internal, 2 external (dead GitHub repos) |
-| **Chat UI Example** | **4/10** | BLOCKER: published SDK missing asyncIterator |
+| Area | Score | Critical Issues |
+|------|-------|-----------------|
+| **llms.txt** | 7/10 | Marketing-heavy blockquote, missing `## Optional`, Python snippet incomplete |
+| **Python Snippets** | 25/26 pass | `proxy_country_code=None` doesn't disable proxies |
+| **TypeScript Snippets** | 18/28 pass | **Published SDK (v3.3.1) missing browsers, profiles, upload/download, async iterator** |
+| **Chat UI Example** | BROKEN | `npm run build` fails -- `SessionRun` has no `[Symbol.asyncIterator]` in published SDK |
+| **API Spec vs Docs** | 12 discrepancies | **Auth header wrong in cURL examples and llms-full.txt** |
+| **Broken Links** | 1 broken | `github.com/browser-use/browser-use-cli` is 404 |
+| **Persona: AI Startup** | 7.4/10 | No concurrency/parallel docs anywhere |
+| **Persona: Sub-agent Embedder** | 7.2/10 | CSP/iframe guidance missing, streaming events undocumented |
+| **Persona: QA Tester** | 5.5/10 | No Playwright feature compatibility matrix, no migration guide |
+| **Persona: Data Extraction** | 5.8/10 | No "scraping at scale" guide, no rate limits, no parallel examples |
+| **Persona: Enterprise** | 5.1/10 | No security/compliance page at all |
+| **File Upload/Profiles** | 6.3/10 | Undocumented SDK methods, inconsistent patterns, missing `stop()` in examples |
+
+**Overall Docs Intuitiveness Score: 6.2/10**
 
 ---
 
-## BLOCKERS (Fix Before Anything Else)
+## P0: Critical / Blocking Issues
 
-### 1. Published npm SDK (v3.3.1) missing `Symbol.asyncIterator`
-- **Impact:** `for await (const msg of run)` throws "run is not async iterable"
-- **Affects:** Chat UI example, streaming docs, every persona that tried streaming
-- **Root cause:** Local source has it (`helpers.ts:102`), but published dist is an older build (207 lines vs 451)
-- **Fix:** Republish npm package from current source
-- **Found by:** Chat UI tester, Automation persona, Embedder persona
+### 1. Chat UI Example is Broken
+- `npm run build` fails: `SessionRun<string>` has no `[Symbol.asyncIterator]()` in published SDK (v3.2.0)
+- The core streaming feature doesn't work -- users cannot clone and run this
+- Docs show simplified architecture that doesn't match actual code (SSE route handler missing from tutorial)
+- Docs reference `src/lib/session-context.tsx` but actual path is `src/context/session-context.tsx`
 
-### 2. Published PyPI SDK (v3.3.1) missing v3 resources
-- **Impact:** `client.browsers`, `client.profiles`, `client.billing` don't exist on published package
-- **Affects:** Proxies docs, Playwright integration, profile/auth docs
-- **Root cause:** Local source has all 5 resources, published package only has `sessions` + `workspaces`
-- **Fix:** Republish PyPI package from current source
-- **Found by:** Python snippets tester
+### 2. Auth Header Wrong in cURL Examples + llms-full.txt
+- OpenAPI spec: `X-Browser-Use-API-Key` header
+- `agent/quickstart.mdx` cURL: uses `Authorization: Bearer` -- **WRONG**
+- Both `llms-full.txt` files: use `Authorization: Bearer` -- **WRONG**
+- Every LLM consuming llms-full.txt will generate broken API calls
 
-### 3. `api-reference.mdx` uses wrong auth header
-- **Impact:** Every curl example on the hand-written API reference page fails
-- **Current (wrong):** `Authorization: Bearer bu_your_key_here`
-- **Correct:** `X-Browser-Use-API-Key: bu_your_key_here`
-- **Note:** Auto-generated Mintlify API pages are correct; only the hand-written overview is wrong
-- **Found by:** API types checker
+### 3. Published TS SDK Missing Major Features
+The npm package `browser-use-sdk@3.3.1` does not export features the docs reference:
+- `client.browsers` (6 snippets broken)
+- `client.profiles` (2 snippets broken)
+- `workspaces.upload()`, `.download()`, `.downloadAll()` (3 snippets broken)
+- `sessions.waitForRecording()` (1 snippet broken)
+- `SessionRun[Symbol.asyncIterator]` (streaming broken)
+- **~35% of TS code examples in docs fail with the published package**
 
----
-
-## Code Snippet Audit
-
-### Python (49 snippets tested)
-- **49/49 syntax pass** (100%)
-- **9/11 live tests pass** (2 failures were test setup issues, not doc bugs)
-- **1 warning:** `browsers.create(custom_proxy=...)` sends snake_case key via `**extra` instead of camelCase `customProxy`. Need to add `custom_proxy` as explicit parameter.
-
-### TypeScript (44 snippets tested)
-- **34/44 pass** (77%)
-- **4 SDK type bugs:** `browsers.create()` requires `timeout`, `allowResizing`, `enableRecording` as required fields (they have API defaults, should be optional in types)
-- **3 doc bugs (wrong property names):**
-  - `legacy/agent.mdx`: `upload.presignedUrl` → should be `upload.url`
-  - `legacy/agent.mdx`: `output.presignedUrl` → should be `output.downloadUrl`
-  - `legacy/public-share.mdx`: `share.url` → should be `share.shareUrl`
-- **1 null-safety issue:** `streaming.mdx`: `run.result.output` → should be `run.result!.output` or `run.result?.output`
-- **2 expected failures:** External deps (playwright, puppeteer-core) not installed
+### 4. `proxy_country_code=None` Doesn't Disable Proxies
+- SDK uses `if proxy_country_code is not None:` guard -- passing `None` just omits the field
+- API default (US proxy) still applies
+- Docs claim this disables proxies -- it doesn't
+- Affects both Python and TS SDKs
 
 ---
 
-## Broken Links
+## P1: High Priority Issues
 
-| Type | File | Link | Issue |
-|------|------|------|-------|
-| Internal | `cloud/browser/proxies.mdx:7` | `/cloud/api-v3/browsers/create-browser` | 404 — correct: `/cloud/api-v3/browsers/create-browser-session` |
-| External | `open-source/browser-use-cli.mdx:274` | `github.com/browser-use/profile-use` | Repo doesn't exist |
-| External | `open-source/customize/integrations/mcp-server.mdx:240` | `github.com/browser-use/browser-use/tree/main/examples/mcp` | Directory doesn't exist |
+### 5. Concurrency/Parallel Execution Not Documented Anywhere
+- Zero examples of running parallel sessions across entire docs
+- No `asyncio.gather()` / `Promise.all()` patterns shown
+- No rate limits documented (just "contact support")
+- No concurrency caps mentioned
+- **Blocks: AI startups, data extraction, QA testing personas**
 
----
+### 6. Model Values Undocumented
+- OpenAPI spec defines `bu-mini`, `bu-max`, `bu-ultra`
+- No docs page lists available models or explains the differences
+- Users have to guess or read the spec
 
-## API Reference Discrepancies
+### 7. SessionResponse Rich Fields Never Documented
+- `isTaskSuccessful` -- success/failure boolean
+- `totalCostUsd`, `llmCostUsd`, `proxyCostUsd`, `browserCostUsd` -- cost breakdown
+- `totalInputTokens`, `totalOutputTokens` -- token usage
+- `stepCount`, `lastStepSummary` -- progress tracking
+- `screenshotUrl` -- last screenshot
+- Users don't know these exist
 
-| # | Severity | Issue |
-|---|----------|-------|
-| 1 | **Critical** | Auth header wrong in `api-reference.mdx` (see Blockers) |
-| 2 | Should fix | `RunTaskRequest` — 13 fields have no description in OpenAPI spec |
-| 3 | Should fix | `SessionResponse` — all fields missing descriptions (titles are just camelCase names) |
-| 4 | Should fix | `GET /workspaces/{id}/size` — response schema is `{}` (empty) |
-| 5 | Should fix | Default `maxCostUsd` of $20 is undocumented |
-| 6 | Nice to have | `totalInputTokens`/`totalOutputTokens` meaning unclear |
-| 7 | Nice to have | `agentmailEmail` returned by default but not explained |
-| 8 | Nice to have | `output` field typed as "any" in spec but rendered as "object" in docs |
-
----
-
-## Persona Scorecard
-
-### Persona 1: AI Automation Startup ("just run tasks fast")
-| Metric | Score |
-|--------|-------|
-| Intuitiveness | 7/10 |
-| Time-to-value | 8/10 |
-| Completeness | 5/10 |
-
-**Journey:** 4 pages to first successful task. `client.run()` is genuinely simple.
-**Friction:** Two quickstart pages confuse; streaming broken; no pricing/cost info; no error handling examples.
-**Key ask:** Consolidate quickstarts, add pricing section, fix streaming.
-
-### Persona 2: Enterprise User
-| Metric | Score |
-|--------|-------|
-| Security docs | 4/10 |
-| Enterprise readiness | 3/10 |
-| Clarity | 6/10 |
-
-**Gaps (critical for enterprise):**
-- No compliance page (SOC 2, GDPR, data residency)
-- No data retention/deletion policy
-- No API key scoping, rotation, or RBAC
+### 8. No Security/Compliance Page
+- No SOC 2, GDPR, DPA documentation
+- No data retention policy
+- No encryption (at rest/in transit) documentation
+- No RBAC or API key scoping
 - No audit logging
-- No SLA documentation
-- `curl | sh` profile sync is a red flag
-- Auth story fragmented across 4 pages with no unifying guide
+- TOTP secrets travel as plaintext in prompts
+- **Blocks enterprise adoption**
 
-### Persona 3: Sub-agent Embedder (live browser in app)
-| Metric | Score |
-|--------|-------|
-| Embed docs | 6/10 |
-| Streaming docs | 3/10 |
-| Overall flow | 5/10 |
+### 9. Task Lifecycle/Status Mapping Never Explained
+- Webhook statuses: `running`, `idle`, `stopped` -- but no `completed`?
+- `idle` listed as terminal in streaming docs but means "session alive, task done"
+- No state diagram showing: created -> running -> idle/stopped/error/timed_out
+- Confusing across multiple pages
 
-**Friction:** Must read 4 pages to assemble the embed pattern. `liveUrl` is null from simple `run()` — not documented. Streaming broken in published SDK.
-**Key ask:** Add "Embed in Your App" recipe page showing full flow in one place.
-
-### Persona 4: QA Tester
-| Metric | Score |
-|--------|-------|
-| QA docs | 4/10 |
-| Playwright integration | 8/10 |
-| Clarity | 6/10 |
-
-**Friction:** No dedicated QA/testing guide. No CI/CD examples. No screenshot example on Playwright page. No parallel session guidance.
-**Key ask:** Add a "Testing & QA" guide page with pytest/Jest fixtures, CI/CD patterns, visual regression.
-
-### Persona 5: Data Extraction at Scale
-| Metric | Score |
-|--------|-------|
-| Extraction docs | 4/10 |
-| Structured output | 6/10 |
-| Proxy docs | 4/10 |
-
-**Friction:** No dedicated extraction guide. No concurrency/parallel execution docs. No pagination guidance. No cost estimation. No complex schema examples.
-**Key ask:** Add "Data Extraction at Scale" guide with parallel patterns, pagination, proxy rotation.
+### 10. `sessions.stop()` Missing From Profile Examples
+- Warning says "Always call `sessions.stop()` when done" to persist profile state
+- Zero code examples actually call `sessions.stop()`
+- Data-loss footgun -- users copy examples, skip stop, lose profile state
 
 ---
 
-## llms.txt Evaluation
+## P2: Medium Priority Issues
 
-**Score: 7.5/10**
+### 11. llms.txt Improvements
+- Blockquote too marketing-heavy -- should be technical ("Browser Use Cloud is a managed API for...")
+- Missing `## Optional` section -- Legacy/v2 content should go there
+- Python quick start missing `asyncio.run()` wrapper
+- Duplicate GitHub link (lines 5 and 8)
+- No curl example
+- No LLM behavioral instructions (e.g., "Always use v3")
 
-**What's good:**
-- Strong structure, clear hierarchy
-- Inline code for quick start (most llms.txt files don't do this)
-- v3 callout prevents outdated code generation
-- Pointer to llms-full.txt
+### 12. Profile Docs Inconsistencies
+- Two-step flow shown when `client.run(..., profile_id=...)` works directly (simpler)
+- Workspaces docs use the simpler one-step pattern -- inconsistent
+- `user_id` field on `profiles.create()` undocumented (key production pattern)
+- No full lifecycle example (create -> login -> save -> reuse later)
+- Profile sync page too thin -- doesn't explain what the `curl | sh` script does
 
-**What to improve:**
-1. Blockquote is too marketing-heavy ("most SOTA", "most scalable") — LLMs need facts, not persuasion
-2. Duplicate GitHub link (lines 5 and 8)
-3. No `## Optional` section for legacy/v2 content (per llmstxt.org spec)
-4. Top-level links are unstructured — should be under `## Resources`
-5. No size hint for llms-full.txt (~60KB)
-6. Links point to HTML pages, not `.md` variants (if Mintlify supports them)
-7. Missing key parameters list for `client.run()`
+### 13. Workspace Docs Gaps
+- `workspaces.files()` undocumented -- users can't inspect workspace contents
+- `workspaces.delete_file()` undocumented
+- `workspaces.size()` undocumented
+- `prefix` parameter for directory organization undocumented
+- No file size limits or supported types documented
+- No explanation of how agent accesses files (mount path?)
+- **TS SDK bug**: `download()` doesn't paginate -- fails for workspaces with many files
 
-**llms.txt navigation test (can AI build from it alone?):**
-- llms.txt navigability: **8/10** — great sitemap, but not enough to write code beyond basics
-- llms-full.txt completeness: **7/10** — good but has zod v4 omission and wrong `client.profiles` examples for TS
+### 14. QA Testing Gaps
+- No Playwright feature compatibility matrix (screenshots? network interception? tracing?)
+- No migration guide from existing Playwright tests
+- No CI integration guidance (GitHub Actions, Jenkins)
+- Network/staging access model undocumented ("Can the browser reach my private server?")
+- No parallel browser session docs for test suites
+
+### 15. Data Extraction Gaps
+- No "Scraping at Scale" guide
+- Proxy rotation across sessions undocumented
+- Pagination patterns not covered
+- No batch/queue API guidance
+- CAPTCHA solving mentioned in quickstart but never explained
+- No cost estimation guidance
+
+### 16. Streaming Event Types Undocumented
+- `role` and `type` fields mentioned but all possible values never listed
+- Developers building UIs must guess what event shapes look like
+- No error handling/reconnection patterns for stream failures
+
+### 17. CSP/iframe Embedding Undocumented
+- Live preview iframe embedding shown but CSP `frame-ancestors` issues never mentioned
+- Guaranteed production blocker for anyone embedding the browser view
+- No responsive sizing guidance
+
+### 18. Human-in-the-Loop is CLI-Only
+- Examples use `input()` / readline -- only works in CLI
+- No web app pattern (webhook, button click, state machine)
+- No timeout/cleanup guidance (what if human never resumes?)
 
 ---
 
-## Chat UI Example
+## P3: Low Priority / Polish
 
-**Score: 4/10**
+### 19. Broken External Link
+- `https://github.com/browser-use/browser-use-cli` in `browser-use-cli.mdx` -- 404
 
-**BLOCKER:** Published SDK doesn't have `Symbol.asyncIterator`, so `npm run build` fails with:
-```
-Type 'SessionRun<string>' must have a '[Symbol.asyncIterator]()' method
-```
+### 20. Orphaned Pages
+- `open-source/development.mdx` -- not in navigation, not linked
+- `open-source/customize/skills/basics.mdx` -- only referenced from agent params page
+- `open-source/development/roadmap.mdx` -- empty ("Big things coming soon!")
 
-**Other issues:**
-- Docs page has ZERO setup commands (no `git clone`, `npm install`, `npm run dev`)
-- It's a conceptual guide, not a tutorial — setup instructions only exist in the GitHub repo README
-- Should at minimum include quick-start commands on the docs page
+### 21. Minor Type Issues
+- `browsers.create()` -- OpenAPI codegen makes defaulted fields required instead of optional
+- `run.result.output` -- null safety issue (`result` can be null)
+- `profileId` type UUID vs string inconsistency between spec and SDK
 
----
-
-## File Upload/Download
-
-**Score: Docs 6/10, Functionality 8/10**
-
-**What works:** All file types upload/download correctly. Round-trip integrity confirmed. Agent can read uploaded files and write new ones.
-
-**What's missing from docs:**
-- File size limits
-- Supported file types (SDK supports 20+ MIME types, undocumented)
-- `prefix` parameter for organizing files
-- `delete_file()` method
-- `size()` endpoint
-- Workspace lifecycle/persistence
-- Agent leaves cache artifacts in workspace (undocumented)
+### 22. Docs vs Chat UI Code Discrepancies
+- Docs import only v3, actual code imports both v2 and v3 (profiles not on v3 yet)
+- Docs show `for await` in context, actual code uses SSE route handler pattern
+- SSE route handler architecture completely absent from tutorial
+- `createSession` in actual code accepts many more params than docs show
 
 ---
 
-## Profile System
+## Persona Scorecards
 
-**Score: Docs 7/10, API 8/10, SDK 9/10**
+### AI Automation Startup (15-20 min to first success)
+| Page | Clarity | Completeness | Time to Success | Code Quality |
+|------|---------|-------------|-----------------|-------------|
+| Quickstart | 8 | 6 | 9 | 8 |
+| Structured Output | 9 | 7 | 8 | 9 |
+| Agent Quickstart | 7 | 5 | 8 | 7 |
+| Webhooks | 8 | 7 | 7 | 8 |
+| Vibecoding | 6 | 3 | N/A | N/A |
+| **Blocking issue:** No concurrent/parallel execution docs |||||
 
-**Key issue:** Main profiles doc is `authentication.mdx` at URL `/guides/authentication` under sidebar group "Authentication". A user searching for "profiles" won't find it easily.
+### Sub-agent Embedder (2-4 hours to prototype)
+| Page | Score | Notes |
+|------|-------|-------|
+| Quickstart | 7 | No mention of liveUrl, streaming, or sessions |
+| Live Preview | 6 | No CSP guidance, no responsive sizing |
+| Streaming | 8 | Best page -- `for await` is the aha moment |
+| Human in the Loop | 7 | CLI-only examples |
+| Follow-up Tasks | 7 | "Agents don't share context" is alarming, under-explained |
+| Chat UI Tutorial | 8 | Ties everything together, but broken in practice |
+| **Blocking issue:** CSP, streaming event reference, broken chat UI ||
 
-**Missing:**
-- No explanation of what a profile actually stores
-- `user_id` field is undocumented
-- No curl/raw API examples
-- Warning about `sessions.stop()` saving profile state is buried at bottom
+### QA Tester (2-4 hours basic migration)
+| Page | Score | Notes |
+|------|-------|-------|
+| Quickstart | 5 | Not oriented toward QA use case |
+| Playwright/CDP | 8 | Strongest page -- CDP flow crystal clear |
+| Stealth | 4 | Low relevance for testing own app |
+| Proxies | 5 | Doesn't explain network access model |
+| Authentication | 7 | No Playwright-with-profile flow shown |
+| Live Preview | 7 | No screenshot support clarity |
+| **Blocking issue:** No feature compatibility matrix, no parallel sessions, no CI guide ||
+
+### Data Extraction at Scale
+| Page | Score | Notes |
+|------|-------|-------|
+| Quickstart | 5 | No scale/batch patterns |
+| Structured Output | 7 | Good pattern, no failure handling |
+| Proxies | 6 | No rotation docs |
+| Stealth | 6 | No success rate info |
+| Agent Quickstart | 7 | Mentions "thousands of listings" but no example |
+| FAQ | 4 | Rate limits = "contact support" |
+| **Blocking issue:** No scale guide, no concurrency docs, no pricing ||
+
+### Enterprise Architect (5.1/10 overall)
+| Area | Score | Notes |
+|------|-------|-------|
+| API Key Security | 4 | No RBAC, no key scoping, no rotation docs |
+| Data Handling | 3 | No retention policy, no encryption docs |
+| Compliance | 1 | No SOC 2, GDPR, DPA -- nothing |
+| Webhooks | 8 | Proper HMAC-SHA256 -- best security page |
+| Integration | 5 | MCP works, no SSO/SAML |
+| Reliability | 3 | No SLA, no status page, no error codes |
+| **Blocking issue:** No security page exists at all ||
 
 ---
 
 ## Top 10 Recommendations (Priority Order)
 
-### Must Fix Now
-1. **Republish npm package** — include `Symbol.asyncIterator` in v3 dist
-2. **Republish PyPI package** — include `browsers`, `profiles`, `billing` resources in v3
-3. **Fix auth header in `api-reference.mdx`** — change `Authorization: Bearer` to `X-Browser-Use-API-Key`
-4. **Fix 3 broken links** (proxies internal link, 2 dead GitHub repos)
-
-### Should Fix Soon
-5. **Fix TS doc bugs** — wrong property names in legacy docs (`presignedUrl` → `url`/`downloadUrl`, `share.url` → `share.shareUrl`)
-6. **Fix SDK types** — make `CreateBrowserSessionRequest` fields with defaults optional; add `custom_proxy` as explicit param to Python `browsers.create()`
-7. **Add setup commands to chat-ui tutorial page** (clone, install, env, run)
-
-### Should Add (New Content)
-8. **"Embed in Your App" recipe page** — single page showing full embed flow
-9. **"Data Extraction at Scale" guide** — parallel patterns, pagination, complex schemas
-10. **"Testing & QA" guide** — pytest/Jest fixtures, CI/CD, screenshots, parallel sessions
-
-### Nice to Have
-- Consolidate two quickstart pages into one
-- Add OpenAPI field descriptions for RunTaskRequest and SessionResponse
-- Add `## Optional` section to llms.txt for legacy content
-- Rewrite llms.txt blockquote to be factual, not marketing
-- Add pricing/cost section to docs
-- Add error handling examples
-- Document `maxCostUsd` default of $20
-- Document workspace lifecycle and file size limits
-- Rename `authentication.mdx` → `profiles.mdx` (or add "Profiles" to sidebar title)
-- Add unified "Authentication Architecture" page for enterprise users
-- Add compliance/security page for enterprise evaluation
-- Document concurrency limits and parallel execution patterns
-- Add zod v4 requirement note to structured output docs
+1. **Publish the SDK** -- browsers, profiles, upload/download, waitForRecording, async iterator all need to ship to npm/PyPI
+2. **Fix auth header** in `agent/quickstart.mdx` cURL and both `llms-full.txt` files (use `X-Browser-Use-API-Key`)
+3. **Fix chat UI example** -- either publish SDK with async iterator or rewrite to use polling
+4. **Add concurrency/parallel docs** -- examples, rate limits, caps. Every persona needs this
+5. **Add a security/trust page** -- SOC 2 status, data retention, encryption, DPA availability
+6. **Document model values** -- what are `bu-mini`, `bu-max`, `bu-ultra` and when to use each
+7. **Document SessionResponse fields** -- cost breakdown, token usage, isTaskSuccessful
+8. **Add task lifecycle state diagram** -- created -> running -> idle/stopped/error/timed_out
+9. **Fix proxy disable docs** -- `None`/`null` doesn't disable proxies, document the correct way
+10. **Add `sessions.stop()` to all profile examples** -- prevent data loss
 
 ---
 
-*Report generated by 14 autonomous agents testing docs from different angles.*
-*Full path: `/Users/magnus/.superset/worktrees/sdk/magnus/citrine-function/docs-audit-report.md`*
+## Methodology
+
+12 AI agents ran in parallel, each with a specific persona or test objective:
+
+| Agent | Duration | Findings |
+|-------|----------|----------|
+| Chat UI Tester | 4.8 min | Build broken, code/docs mismatch |
+| llms.txt Researcher | 3.0 min | 7/10 score, 7 improvements identified |
+| Python Snippets | 3.2 min | 26 checked, 1 bug found |
+| TS Snippets | 7.5 min | 28 checked, 10 issues (SDK publishing gap) |
+| API Types Checker | 3.7 min | 12 discrepancies, auth header critical |
+| Link Checker | 7.5 min | 1 broken external link, 6 orphaned pages |
+| Persona: AI Startup | 2.7 min | Concurrent execution is #1 gap |
+| Persona: Embedder | 2.4 min | CSP and streaming events undocumented |
+| Persona: QA | 2.0 min | No Playwright compat matrix |
+| Persona: Scraper | 2.3 min | No scale guide |
+| Persona: Enterprise | 2.3 min | No security page |
+| File/Profiles | 3.0 min | Inconsistent patterns, undocumented methods |

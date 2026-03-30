@@ -901,7 +901,7 @@ browser-use open https://abc.trycloudflare.com
 
 ## Profile Management
 
-The `profile` subcommand delegates to the [profile-use](https://github.com/browser-use/profile-use) Go binary, which syncs local browser cookies to Browser-Use cloud.
+The `profile` subcommand delegates to the [profile-use](https://github.com/browser-use/browser-use-cli) Go binary, which syncs local browser cookies to Browser-Use cloud.
 
 The binary is managed at `~/.browser-use/bin/profile-use` and auto-downloaded on first use.
 
@@ -2632,7 +2632,7 @@ uvx --from 'browser-use[cli]' browser-use --mcp
 
 ## Next Steps
 
-- Explore the [examples directory](https://github.com/browser-use/browser-use/tree/main/examples/mcp) for more usage patterns
+- Explore the [examples directory](https://github.com/browser-use/browser-use/tree/main/examples) for more usage patterns
 - Check out [MCP documentation](https://modelcontextprotocol.io/) to learn more about the protocol
 - Join our [Discord](https://link.browser-use.com/discord) for support and discussions
 

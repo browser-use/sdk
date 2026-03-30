@@ -103,7 +103,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sessions/{session_id}/files": {
+    "/browsers": {
         parameters: {
             query?: never;
             header?: never;
@@ -111,43 +111,61 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Session Files
-         * @description List files in a session's workspace.
-         *
-         *     Returns paginated file metadata. Pass includeUrls=true to get
-         *     presigned download URLs (60s expiry) inline with each file.
+         * List Browser Sessions
+         * @description Get paginated list of browser sessions with optional status filtering.
          */
-        get: operations["list_session_files_sessions__session_id__files_get"];
+        get: operations["list_browser_sessions_browsers_get"];
         put?: never;
-        post?: never;
+        /**
+         * Create Browser Session
+         * @description Create a new browser session.
+         *
+         *     **Pricing:** Browser sessions are charged per hour with tiered pricing:
+         *     - Pay As You Go users: $0.06/hour
+         *     - Business/Scaleup subscribers: $0.03/hour (50% discount)
+         *
+         *     The full rate is charged upfront when the session starts.
+         *     When you stop the session, any unused time is automatically refunded proportionally.
+         *
+         *     Billing is rounded up to the minute (minimum 1 minute).
+         *     For example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.
+         *
+         *     **Session Limits:**
+         *     - All users: Up to 4 hours per session
+         */
+        post: operations["create_browser_session_browsers_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/sessions/{session_id}/files/upload": {
+    "/browsers/{session_id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * Upload Session Files
-         * @description Get presigned PUT URLs for uploading files to a session's workspace.
-         *
-         *     Files are placed under ``uploads/`` in the session's S3 prefix. After
-         *     receiving the URLs, PUT each file directly to S3 using the returned
-         *     ``uploadUrl`` with the matching ``Content-Type`` header.
+         * Get Browser Session
+         * @description Get detailed browser session information including status and URLs.
          */
-        post: operations["upload_session_files_sessions__session_id__files_upload_post"];
+        get: operations["get_browser_session_browsers__session_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update Browser Session
+         * @description Stop a browser session.
+         *
+         *     **Refund:** When you stop a session, unused time is automatically refunded.
+         *     If the session ran for less than 1 hour, you'll receive a proportional refund.
+         *     Billing is ceil to the nearest minute (minimum 1 minute).
+         */
+        patch: operations["update_browser_session_browsers__session_id__patch"];
         trace?: never;
     };
     "/profiles": {
@@ -212,91 +230,6 @@ export interface paths {
          * @description Update a browser profile's information.
          */
         patch: operations["update_profile_profiles__profile_id__patch"];
-        trace?: never;
-    };
-    "/billing/account": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Account Billing
-         * @description Get authenticated account information including credit balance and account details.
-         */
-        get: operations["get_account_billing_billing_account_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/browsers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Browser Sessions
-         * @description Get paginated list of browser sessions with optional status filtering.
-         */
-        get: operations["list_browser_sessions_browsers_get"];
-        put?: never;
-        /**
-         * Create Browser Session
-         * @description Create a new browser session.
-         *
-         *     **Pricing:** Browser sessions are charged per hour with tiered pricing:
-         *     - Pay As You Go users: $0.06/hour
-         *     - Business/Scaleup subscribers: $0.03/hour (50% discount)
-         *
-         *     The full rate is charged upfront when the session starts.
-         *     When you stop the session, any unused time is automatically refunded proportionally.
-         *
-         *     Billing is rounded up to the minute (minimum 1 minute).
-         *     For example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.
-         *
-         *     **Session Limits:**
-         *     - All users: Up to 4 hours per session
-         */
-        post: operations["create_browser_session_browsers_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/browsers/{session_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Browser Session
-         * @description Get detailed browser session information including status and URLs.
-         */
-        get: operations["get_browser_session_browsers__session_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Browser Session
-         * @description Stop a browser session.
-         *
-         *     **Refund:** When you stop a session, unused time is automatically refunded.
-         *     If the session ran for less than 1 hour, you'll receive a proportional refund.
-         *     Billing is ceil to the nearest minute (minimum 1 minute).
-         */
-        patch: operations["update_browser_session_browsers__session_id__patch"];
         trace?: never;
     };
     "/workspaces": {
@@ -409,6 +342,73 @@ export interface paths {
          * @description Get presigned PUT URLs for uploading files to a workspace.
          */
         post: operations["upload_workspace_files_workspaces__workspace_id__files_upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{session_id}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Session Files
+         * @description List files in a session's workspace.
+         *
+         *     Returns paginated file metadata. Pass includeUrls=true to get
+         *     presigned download URLs (60s expiry) inline with each file.
+         */
+        get: operations["list_session_files_sessions__session_id__files_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{session_id}/files/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Session Files
+         * @description Get presigned PUT URLs for uploading files to a session's workspace.
+         *
+         *     Files are placed under ``uploads/`` in the session's S3 prefix. After
+         *     receiving the URLs, PUT each file directly to S3 using the returned
+         *     ``uploadUrl`` with the matching ``Content-Type`` header.
+         */
+        post: operations["upload_session_files_sessions__session_id__files_upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Account Billing
+         * @description Get authenticated account information including credit balance and account details.
+         */
+        get: operations["get_account_billing_billing_account_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -890,6 +890,12 @@ export interface components {
             summary: string;
             /** Screenshoturl */
             screenshotUrl?: string | null;
+            /**
+             * Hidden
+             * @description Whether this message should be hidden from the user in a chat UI.
+             * @default false
+             */
+            hidden: boolean;
             /**
              * Createdat
              * Format: date-time
@@ -1549,15 +1555,102 @@ export interface operations {
             };
         };
     };
-    list_session_files_sessions__session_id__files_get: {
+    list_browser_sessions_browsers_get: {
         parameters: {
             query?: {
-                prefix?: string;
-                limit?: number;
-                cursor?: string | null;
-                includeUrls?: boolean;
-                shallow?: boolean;
+                pageSize?: number;
+                pageNumber?: number;
+                filterBy?: components["schemas"]["BrowserSessionStatus"] | null;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserSessionListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_browser_session_browsers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBrowserSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserSessionItemView"];
+                };
+            };
+            /** @description Session timeout limit exceeded (maximum 4 hours) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionTimeoutLimitExceededError"];
+                };
+            };
+            /** @description Profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileNotFoundError"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+            /** @description Too many concurrent active sessions */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TooManyConcurrentActiveSessionsError"];
+                };
+            };
+        };
+    };
+    get_browser_session_browsers__session_id__get: {
+        parameters: {
+            query?: never;
             header?: never;
             path: {
                 session_id: string;
@@ -1572,7 +1665,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FileListResponse"];
+                    "application/json": components["schemas"]["BrowserSessionView"];
+                };
+            };
+            /** @description Session not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotFoundError"];
                 };
             };
             /** @description Validation Error */
@@ -1586,7 +1688,7 @@ export interface operations {
             };
         };
     };
-    upload_session_files_sessions__session_id__files_upload_post: {
+    update_browser_session_browsers__session_id__patch: {
         parameters: {
             query?: never;
             header?: never;
@@ -1597,7 +1699,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FileUploadRequest"];
+                "application/json": components["schemas"]["UpdateBrowserSessionRequest"];
             };
         };
         responses: {
@@ -1607,16 +1709,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FileUploadResponse"];
+                    "application/json": components["schemas"]["BrowserSessionView"];
                 };
             };
-            /** @description Validation Error */
+            /** @description Session not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotFoundError"];
+                };
+            };
+            /** @description Request validation failed */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
         };
@@ -1805,221 +1916,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_account_billing_billing_account_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountView"];
-                };
-            };
-            /** @description Project for a given API key not found! */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountNotFoundError"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_browser_sessions_browsers_get: {
-        parameters: {
-            query?: {
-                pageSize?: number;
-                pageNumber?: number;
-                filterBy?: components["schemas"]["BrowserSessionStatus"] | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserSessionListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_browser_session_browsers_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateBrowserSessionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserSessionItemView"];
-                };
-            };
-            /** @description Session timeout limit exceeded (maximum 4 hours) */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionTimeoutLimitExceededError"];
-                };
-            };
-            /** @description Profile not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProfileNotFoundError"];
-                };
-            };
-            /** @description Request validation failed */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many concurrent active sessions */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TooManyConcurrentActiveSessionsError"];
-                };
-            };
-        };
-    };
-    get_browser_session_browsers__session_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                session_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserSessionView"];
-                };
-            };
-            /** @description Session not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionNotFoundError"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_browser_session_browsers__session_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                session_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateBrowserSessionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserSessionView"];
-                };
-            };
-            /** @description Session not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionNotFoundError"];
-                };
-            };
-            /** @description Request validation failed */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
         };
@@ -2309,6 +2205,116 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FileUploadResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_session_files_sessions__session_id__files_get: {
+        parameters: {
+            query?: {
+                prefix?: string;
+                limit?: number;
+                cursor?: string | null;
+                includeUrls?: boolean;
+                shallow?: boolean;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_session_files_sessions__session_id__files_upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FileUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileUploadResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_account_billing_billing_account_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountView"];
+                };
+            };
+            /** @description Project for a given API key not found! */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountNotFoundError"];
                 };
             };
             /** @description Validation Error */

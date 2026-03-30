@@ -41,21 +41,42 @@ const result = await client.run("List the top 20 posts on Hacker News today with
 console.log(result.output);
 ```
 
-  Want a full working app? See the [Chat UI example](https://docs.browser-use.com/cloud/tutorials/chat-ui) — a complete Next.js app with live browser preview, streaming messages, authentication, and session management.
+Want a full working app? Check out the [Chat UI example](https://docs.browser-use.com/cloud/tutorials/chat-ui).
+
+## Agent vs Browser
+
+| | **Agent** | **Browser** |
+|---|---|---|
+| **Method** | `sessions.create()` / `run()` | `browsers.create()` |
+| **What it does** | AI agent runs your task | Raw browser via CDP |
+| task | ✓ | — |
+| model | ✓ | — |
+| proxy | ✓ | ✓ |
+| custom_proxy | ✓ | ✓ |
+| profile_id | ✓ | ✓ |
+| recording | ✓ | ✓ |
+| workspace_id | ✓ | — |
+| keep_alive | ✓ | — |
+| screen size | — | ✓ |
+| timeout | — | ✓ |
 
 
 # Prompt for Vibecoders
 Source: https://docs.browser-use.com/cloud/vibecoding
 
 
-[docs.browser-use.com/cloud/llms.txt](https://docs.browser-use.com/cloud/llms.txt)
+Copy this link and paste it into your coding agent (Cursor, Claude Code, Windsurf, etc.) — it contains all the context needed to build with Browser Use.
+
+```
+https://docs.browser-use.com/cloud/llms.txt
+```
 
 
 # Introduction
 Source: https://docs.browser-use.com/cloud/agent/quickstart
 
 
-The SDK is a thin wrapper around the [API v3 Reference](https://docs.browser-use.com/cloud/api-reference).
+The SDK is a thin wrapper around the [API v3 Reference](https://docs.browser-use.com/cloud/api-reference). Every endpoint in the API reference is available as an SDK method — `client.sessions`, `client.browsers`, `client.profiles`, `client.workspaces`, and `client.billing`.
 
 `client.run()` creates a session, polls every 2 seconds until completion (up to 4 hours), and returns the result. It accepts all parameters from the [Create Session](https://docs.browser-use.com/cloud/api-v3/sessions/create-session) endpoint. The result is a [Session object](https://docs.browser-use.com/cloud/api-v3/sessions/get-session) — use `result.output` for the agent's response.
 
@@ -75,7 +96,7 @@ console.log(result.output);
 ```
 ```bash curl
 curl -X POST https://api.browser-use.com/api/v3/sessions \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"task": "List the top 20 posts on Hacker News today with their points"}'
 ```
@@ -93,11 +114,14 @@ curl -X POST https://api.browser-use.com/api/v3/sessions \
 The best SOTA browser agent — see our [online Mind2Web benchmark](https://browser-use.com/posts/online-mind2web-benchmark).
 
 
+
 # Structured output
 Source: https://docs.browser-use.com/cloud/agent/structured-output
 
 
 Pass a Pydantic model (Python) or Zod schema (TypeScript) — `result.output` is automatically validated and converted to the typed object.
+
+  TypeScript requires **Zod v4** (`npm install zod@4`). Zod v3 is not compatible.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
@@ -186,6 +210,10 @@ const result2 = await client.run("Extract the customer reviews", {
 
 await client.sessions.stop(session.id);
 ```
+
+`sessions.create()` returns a `live_url` you can embed to watch each task execute — see [Live preview](https://docs.browser-use.com/cloud/browser/live-preview). To stream messages as each task runs, use `client.run()` with `for await` — see [Live messages](https://docs.browser-use.com/cloud/agent/streaming).
+
+  Sessions time out after 15 minutes of inactivity by default. The maximum session duration is 4 hours.
 
 
 # Live messages
@@ -278,6 +306,11 @@ while (true) {
   await new Promise((r) => setTimeout(r, 2000));
 }
 ```
+
+## Related
+
+- [Live preview & recording](https://docs.browser-use.com/cloud/browser/live-preview) — embed the browser alongside your message stream
+- [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks) — chain multiple tasks in one session while streaming each
 
 
 # Workspaces & files
@@ -502,51 +535,51 @@ Every cloud browser session runs in a hardened Chromium fork with stealth enable
 
 Residential proxies are enabled by default across 195+ countries. This makes browser sessions appear as real users from the target geography. See [Proxies](https://docs.browser-use.com/cloud/browser/proxies) for details on geo-targeting and custom proxy configuration.
 
-## No setup required
-
-Stealth is always on — every `client.run()` call and every session created via the API uses the hardened browser automatically. There are no flags to enable or parameters to set.
-
 
 # Proxies
 Source: https://docs.browser-use.com/cloud/browser/proxies
 
 
-A US residential proxy is active by default on every session. To route through a different country, set `proxy_country_code`.
+A US residential proxy is active by default on every browser. To route through a different country, set `proxy_country_code`. See the [API reference](https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session) for all supported country codes.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-result = await client.run(
-    "Get the price of iPhone 16 on amazon.de",
-    proxy_country_code="de",
-)
+browser = await client.browsers.create(proxy_country_code="de")
+print(browser.cdp_url)   # ws://...
+print(browser.live_url)  # debug view
+
+# With an agent:
+# result = await client.run("Get the price of iPhone 16 on amazon.de", proxy_country_code="de")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const result = await client.run("Get the price of iPhone 16 on amazon.de", {
-  proxyCountryCode: "de",
-});
-```
+const browser = await client.browsers.create({ proxyCountryCode: "de" });
+console.log(browser.cdpUrl);
+console.log(browser.liveUrl);
 
-Common country codes: `us`, `gb`, `de`, `fr`, `jp`, `au`, `br`, `in`, `kr`, `ca`.
+// With an agent:
+// const result = await client.run("Get the price of iPhone 16 on amazon.de", { proxyCountryCode: "de" });
+```
 
 ## Disable proxies
 
 If your use case does not need proxies, for example QA testing.
 
 ```python Python
-result = await client.run(
-    "Go to http://localhost:3000",
-    proxy_country_code=None,
-)
+browser = await client.browsers.create(proxy_country_code=None)
+
+# With an agent:
+# result = await client.run("Go to http://localhost:3000", proxy_country_code=None)
 ```
 ```typescript TypeScript
-const result = await client.run("Go to http://localhost:3000", {
-  proxyCountryCode: null,
-});
+const browser = await client.browsers.create({ proxyCountryCode: null });
+
+// With an agent:
+// const result = await client.run("Go to http://localhost:3000", { proxyCountryCode: null });
 ```
 
 ## Custom proxy
@@ -557,7 +590,7 @@ Bring your own proxy server (HTTP or SOCKS5). Requires custom plan.
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-session = await client.sessions.create(
+browser = await client.browsers.create(
     custom_proxy={
         "host": "proxy.example.com",
         "port": 8080,
@@ -570,7 +603,7 @@ session = await client.sessions.create(
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const session = await client.sessions.create({
+const browser = await client.browsers.create({
   customProxy: {
     host: "proxy.example.com",
     port: 8080,
@@ -604,6 +637,17 @@ const session = await client.sessions.create({
   task: "Check how many GitHub stars browser-use has",
 });
 console.log(session.liveUrl);
+```
+
+`liveUrl` is also returned when creating a standalone browser session:
+
+```python Python
+browser = await client.browsers.create()
+print(browser.live_url)
+```
+```typescript TypeScript
+const browser = await client.browsers.create();
+console.log(browser.liveUrl);
 ```
 
 ## Embed live browser into your app
@@ -667,13 +711,35 @@ for (const url of urls) {
 }
 ```
 
+For standalone browser sessions, pass `enable_recording` when creating the browser and retrieve the URL after stopping it:
+
+```python Python
+browser = await client.browsers.create(enable_recording=True)
+# ... use the browser via CDP ...
+stopped = await client.browsers.stop(browser.id)
+print(stopped.recording_url)  # presigned MP4 download URL
+```
+```typescript TypeScript
+const browser = await client.browsers.create({ enableRecording: true });
+// ... use the browser via CDP ...
+const stopped = await client.browsers.stop(browser.id);
+console.log(stopped.recordingUrl); // presigned MP4 download URL
+```
+
   Recording URLs are presigned and **expire after 1 hour**. Download or serve the recording promptly. If you need to access it later, save the MP4 to your own storage.
+
+## Related
+
+- [Live messages](https://docs.browser-use.com/cloud/agent/streaming) — stream the agent's messages alongside the live browser view
+- [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks) — chain tasks in one session while watching live
 
 
 
 # Playwright, Puppeteer, Selenium
 Source: https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium
 
+
+Every session runs in a [hardened Chromium fork](https://docs.browser-use.com/cloud/browser/stealth) with stealth, anti-fingerprinting, and [residential proxies](https://docs.browser-use.com/cloud/browser/proxies) enabled by default — no configuration needed.
 
 ## Option 1: WebSocket URL (no SDK)
 
@@ -748,7 +814,7 @@ await client.browsers.stop(browser.id)
 | `apiKey` | `string` | **Required.** Your Browser Use API key. |
 | `proxyCountryCode` | `string` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
 | `profileId` | `string` | Load a saved browser profile (cookies, localStorage). |
-| `timeout` | `int` | Session timeout in minutes. Max: 240 (4 hours). |
+| `timeout` | `int` | Session timeout in minutes. Default: 15. Max: 240 (4 hours). |
 | `browserScreenWidth` | `int` | Browser width in pixels. |
 | `browserScreenHeight` | `int` | Browser height in pixels. |
 
@@ -893,14 +959,17 @@ const result = await client.run("Check my LinkedIn messages", {
 # 2FA
 Source: https://docs.browser-use.com/cloud/guides/2fa
 
+
 Sites with 2FA block automated logins. Here are four approaches — pick the one that fits your setup.
 
 | Approach | Best for | Complexity |
 |---|---|---|
-| Profiles (login once) | Sites with long-lived cookies | Lowest |
-| Human in the loop | One-off tasks, complex auth flows | Low |
-| Agent Mail | Email-based 2FA, end-client automation | Medium |
-| TOTP secret in prompt | Authenticator app 2FA (Google Authenticator, Authy) | Medium |
+| [Profiles (login once)](#1-profiles--login-once-reuse-cookies) | Sites with long-lived cookies | Lowest |
+| [Human in the loop](#2-human-in-the-loop) | One-off tasks, complex auth flows | Low |
+| [Agent Mail](#3-agent-mail) | Email-based 2FA, end-client automation | Medium |
+| [TOTP secret in prompt](#4-totp-secret-in-prompt) | Authenticator app 2FA (Google Authenticator, Authy) | Medium |
+
+---
 
 ## 1. Profiles — login once, reuse cookies
 
@@ -937,41 +1006,56 @@ import * as readline from "readline";
 
 const client = new BrowserUse();
 
+// Create a profile and a session
 const profile = await client.profiles.create({ name: "my-account" });
 const session = await client.sessions.create({ profileId: profile.id });
 console.log(`Live view: ${session.liveUrl}`);
 
+// Option A: human logs in via live view
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 await new Promise((resolve) => rl.question("Log in and complete 2FA in the live view, then press Enter...", resolve));
 rl.close();
 
+// Option B: let the agent log in
+// await client.run("Log in to example.com with user@example.com / password123", { sessionId: session.id });
+
+// Stop the session — this saves cookies to the profile
 await client.sessions.stop(session.id);
 
+// Next time: reuse the profile, no 2FA needed
 const newSession = await client.sessions.create({ profileId: profile.id });
 const result = await client.run("Go to example.com/dashboard and get my balance", { sessionId: newSession.id });
 console.log(result.output);
 await client.sessions.stop(newSession.id);
 ```
 
-Cookies expire. Some sites stay logged in for months, others expire daily. Always call `sessions.stop()` — profile state is only saved when the session ends cleanly.
+  Cookies expire. Some sites stay logged in for months, others expire daily. If your sessions start hitting login pages again, re-authenticate and save the profile.
+
+  Always call `sessions.stop()` after you're done — profile state is only saved when the session ends cleanly.
+
+---
 
 ## 2. Human in the loop
 
-Let the agent navigate to the login page, then a human takes over to complete 2FA via the live browser view.
+Let the agent navigate to the login page, then a human takes over to complete 2FA via the live browser view. The agent continues after.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create()
+print(f"Live view: {session.live_url}")
 
+# Agent navigates to login
 result = await client.run(
     "Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
     session_id=session.id,
 )
 
+# Human completes 2FA in the live view
 input("Complete 2FA in the live view, then press Enter...")
 
+# Agent continues
 result = await client.run(
     "You are now logged in. Go to the dashboard and export the monthly report",
     session_id=session.id,
@@ -979,10 +1063,43 @@ result = await client.run(
 print(result.output)
 await client.sessions.stop(session.id)
 ```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import * as readline from "readline";
+
+const client = new BrowserUse();
+const session = await client.sessions.create();
+console.log(`Live view: ${session.liveUrl}`);
+
+// Agent navigates to login
+await client.run(
+  "Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
+  { sessionId: session.id },
+);
+
+// Human completes 2FA in the live view
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+await new Promise((resolve) => rl.question("Complete 2FA in the live view, then press Enter...", resolve));
+rl.close();
+
+// Agent continues
+const result = await client.run(
+  "You are now logged in. Go to the dashboard and export the monthly report",
+  { sessionId: session.id },
+);
+console.log(result.output);
+await client.sessions.stop(session.id);
+```
+
+See [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop) for more patterns.
+
+---
 
 ## 3. Agent Mail
 
-When 2FA sends a code via email, the agent can read it automatically using Agent Mail — a built-in email inbox for each session. Enabled by default (`agentmail=True`).
+When 2FA sends a code via email, the agent can read it automatically using Agent Mail — a built-in email inbox for each session.
+
+Agent Mail is **enabled by default** (`agentmail=True`). Each session gets a unique email address (`session.agentmail_email`). The agent can send and receive emails during the task.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
@@ -997,22 +1114,54 @@ result = await client.run(
     4. Enter the code on the website
     5. Complete the registration
     """,
-    agentmail=True,  # default
+    agentmail=True,  # default, shown for clarity
 )
 print(result.output)
 ```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
 
-For end-client automation: have your client forward 2FA emails from the service (e.g., `noreply@bank.com`) to a dedicated inbox. The agent reads the forwarded code during the task. You can also connect Gmail via Composio in the dashboard.
+const client = new BrowserUse();
+
+const result = await client.run(
+  `1. Go to example.com/signup
+   2. Sign up with the agent's email address (use the email available to you)
+   3. Check your email inbox for the verification code
+   4. Enter the code on the website
+   5. Complete the registration`,
+  { agentmail: true }, // default, shown for clarity
+);
+console.log(result.output);
+```
+
+### For end-client automation
+
+If you're automating on behalf of your users and they need to receive 2FA codes:
+
+1. **Email forwarding:** Have your client set up an email forwarding rule — forward all emails from the service (e.g., `noreply@bank.com`) to a dedicated inbox (a Gmail address or an Agent Mail address).
+2. **Give the agent access:** The agent reads the forwarded 2FA code from that inbox during the task.
+
+This way, your client's real email stays private — the agent only sees the forwarded verification emails.
+
+### Connect external email via Composio
+
+You can also give the agent access to an existing Gmail account using [Composio](https://composio.dev) in the Browser Use dashboard. Once connected, the agent can read emails directly from that account to retrieve 2FA codes.
+
+---
 
 ## 4. TOTP secret in prompt
 
-If the site uses an authenticator app, pass the TOTP secret to the agent. The agent uses pyotp to generate fresh 6-digit codes.
+If the site uses an authenticator app (Google Authenticator, Authy, etc.), you can pass the TOTP secret to the agent. Our agent can execute Python code, so it uses the `pyotp` library to generate fresh 6-digit codes on the fly.
+
+When you set up 2FA on a site, instead of only scanning the QR code, also copy the **secret key** (usually shown as "manual entry" or "can't scan the QR code?"). This is a long base32 string like `JBSWY3DPEHPK3PXP`.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-totp_secret = "JBSWY3DPEHPK3PXP"  # from authenticator setup, NOT the 6-digit code
+
+# The TOTP secret from your authenticator setup — NOT the 6-digit code
+totp_secret = "JBSWY3DPEHPK3PXP"
 
 result = await client.run(
     f"""
@@ -1028,8 +1177,44 @@ result = await client.run(
 )
 print(result.output)
 ```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
 
-Where to find TOTP secrets: 1Password (Edit item → One-Time Password → Show secret), Google Authenticator (click "Can't scan it?"), Authy (desktop export), or "manual entry" during 2FA setup.
+const client = new BrowserUse();
+
+// The TOTP secret from your authenticator setup — NOT the 6-digit code
+const totpSecret = "JBSWY3DPEHPK3PXP";
+
+const result = await client.run(
+  `Log into example.com with username user@example.com and password mypassword.
+   When prompted for a 2FA code, generate one using pyotp:
+
+   import pyotp
+   totp = pyotp.TOTP("${totpSecret}")
+   code = totp.now()
+
+   Enter the generated code.`,
+);
+console.log(result.output);
+```
+
+This works because the Browser Use agent can execute Python code as part of its task. The agent runs `pyotp.TOTP(secret).now()` to generate a time-based 6-digit code, then types it into the 2FA field.
+
+### Where to find TOTP secrets
+
+- **1Password**: Edit item → One-Time Password → Show secret
+- **Google Authenticator**: During setup, click "Can't scan it?" to see the key
+- **Authy**: Export via desktop app settings
+- **Most sites**: Look for "manual entry" or "setup key" during 2FA enrollment
+
+---
+
+## Which approach should I use?
+
+    Start with **Profiles** — log in once, reuse cookies. If cookies expire frequently, add **TOTP secret in prompt** for fully automated re-login.
+    Use **Profiles** with one profile per user. For initial login, use **Human in the loop** — your user logs in once via the live view, then the agent reuses the session. For email 2FA, set up **Agent Mail** with email forwarding from your user.
+    Use **Agent Mail** (enabled by default). For end-client scenarios, have them forward 2FA emails to a dedicated inbox.
+    Use **TOTP secret in prompt** — the agent generates codes via pyotp, no human intervention needed.
 
 
 # OpenClaw
@@ -1471,18 +1656,22 @@ const apiKey = process.env.BROWSER_USE_API_KEY ?? "";
 export const client = new BrowserUse({ apiKey });
 ```
 
-  The API key uses `BROWSER_USE_API_KEY` (no `NEXT_PUBLIC_` prefix) so it stays server-side. All SDK calls go through server actions — never call the SDK directly from client components.
+  The API key uses `BROWSER_USE_API_KEY` (no `NEXT_PUBLIC_` prefix) so it stays server-side. All SDK calls go through [server actions](https://nextjs.org/docs/app/guides/forms) — never call the SDK directly from client components.
 
 ---
 
 ## 1. Create a session
 
-```typescript api.ts
+```typescript actions.ts
+"use server";
+import { client } from "./api";
+
 export async function createSession() {
-  return client.sessions.create({
+  const session = await client.sessions.create({
     keepAlive: true,
     enableRecording: true,
   });
+  return { id: session.id, liveUrl: session.liveUrl, status: session.status };
 }
 ```
 
@@ -1568,7 +1757,7 @@ useEffect(() => {
 
 ## 5. Stop a task
 
-```typescript api.ts
+```typescript actions.ts
 export async function stopTask(id: string) {
   await client.sessions.stop(id, { strategy: "task" });
 }
@@ -2069,10 +2258,10 @@ Source: https://docs.browser-use.com/cloud/api-reference
 
 ## Authentication
 
-All requests require an API key in the `Authorization` header:
+All requests require an API key in the `X-Browser-Use-API-Key` header:
 
 ```
-Authorization: Bearer bu_your_key_here
+X-Browser-Use-API-Key: bu_your_key_here
 ```
 
 Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1). Keys start with `bu_`.
@@ -2088,13 +2277,13 @@ https://api.browser-use.com/api/v3
 ```bash curl
 # Create a session
 curl -X POST https://api.browser-use.com/api/v3/sessions \
-  -H "Authorization: Bearer bu_your_key_here" \
+  -H "X-Browser-Use-API-Key: bu_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{"task": "Find the top 3 trending repos on GitHub today"}'
 
 # Get session result (replace SESSION_ID)
 curl https://api.browser-use.com/api/v3/sessions/SESSION_ID \
-  -H "Authorization: Bearer bu_your_key_here"
+  -H "X-Browser-Use-API-Key: bu_your_key_here"
 ```
 
 ## Environment variable
@@ -2107,7 +2296,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ---
 
-Prefer the SDK? See the [Agent docs](https://docs.browser-use.com/cloud/agent/quickstart).
+Prefer the SDK? See the [Agent docs](https://docs.browser-use.com/cloud/agent/quickstart) — the SDK has all API endpoints available as methods, including `client.browsers.create()`.
 
 ```bash Python
 pip install browser-use-sdk
