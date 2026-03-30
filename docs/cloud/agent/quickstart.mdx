@@ -4,7 +4,7 @@ description: "Easiest way to automate the web. Tell this agent in natural langua
 icon: rocket
 ---
 
-The SDK is a thin wrapper around the [API v3 Reference](/cloud/api-reference).
+The SDK is a thin wrapper around the [API v3 Reference](/cloud/api-reference). Every endpoint in the API reference is available as an SDK method — `client.sessions`, `client.browsers`, `client.profiles`, `client.workspaces`, and `client.billing`.
 
 `client.run()` creates a session, polls every 2 seconds until completion (up to 4 hours), and returns the result. It accepts all parameters from the [Create Session](/cloud/api-v3/sessions/create-session) endpoint. The result is a [Session object](/cloud/api-v3/sessions/get-session) — use `result.output` for the agent's response.
 
@@ -42,3 +42,19 @@ curl -X POST https://api.browser-use.com/api/v3/sessions \
 - **1,000+ integrations** — Gmail, Calendar, Notion, and more
 
 The best SOTA browser agent — see our [online Mind2Web benchmark](https://browser-use.com/posts/online-mind2web-benchmark).
+
+## Agent vs Browser
+
+| | `client.run()` | `client.browsers.create()` |
+|---|---|---|
+| **What it does** | Run an AI agent task | Just give me a browser |
+| **Best for** | Most users | [Playwright / Puppeteer / Selenium](/cloud/browser/playwright-puppeteer-selenium) |
+| proxy | ✓ | ✓ |
+| custom_proxy | ✓ | ✓ |
+| profile_id | ✓ | ✓ |
+| recording | ✓ | ✓ |
+| workspace_id | ✓ | — |
+| keep_alive | ✓ | — |
+| screen size | — | ✓ |
+| timeout | — | ✓ |
+| task / model | ✓ | — |
