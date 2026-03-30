@@ -29,8 +29,9 @@ def _guess_content_type(path: str) -> str:
 
 def _safe_join(base: Path, untrusted: str) -> Path:
     """Join base and untrusted path, raising if result escapes base."""
+    base_resolved = base.resolve()
     resolved = (base / untrusted).resolve()
-    if not str(resolved).startswith(str(base.resolve())):
+    if base_resolved != resolved and base_resolved not in resolved.parents:
         raise ValueError(f"Path traversal detected: {untrusted}")
     return resolved
 
@@ -201,10 +202,17 @@ class Workspaces:
 
             local = client.workspaces.download(ws_id, "uploads/data.csv", to="./data.csv")
         """
-        file_list = self.files(workspace_id, prefix=path, include_urls=True)
-        match = next((f for f in file_list.files if f.path == path), None)
-        if not match:
-            raise FileNotFoundError(f"File not found in workspace: {path}")
+        cursor: str | None = None
+        while True:
+            file_list = self.files(
+                workspace_id, prefix=path, include_urls=True, cursor=cursor,
+            )
+            match = next((f for f in file_list.files if f.path == path), None)
+            if match:
+                break
+            if not file_list.has_more:
+                raise FileNotFoundError(f"File not found in workspace: {path}")
+            cursor = file_list.next_cursor
         dest = Path(to) if to else Path(os.path.basename(match.path))
         dest.parent.mkdir(parents=True, exist_ok=True)
         with httpx.Client(timeout=60) as http:
@@ -415,14 +423,21 @@ class AsyncWorkspaces:
 
             local = await client.workspaces.download(ws_id, "uploads/data.csv", to="./data.csv")
         """
-        file_list = await self.files(workspace_id, prefix=path, include_urls=True, limit=1)
-        if not file_list.files:
-            raise FileNotFoundError(f"File not found in workspace: {path}")
-        url = file_list.files[0].url
-        dest = Path(to) if to else Path(os.path.basename(file_list.files[0].path))
+        cursor: str | None = None
+        while True:
+            file_list = await self.files(
+                workspace_id, prefix=path, include_urls=True, cursor=cursor,
+            )
+            match = next((f for f in file_list.files if f.path == path), None)
+            if match:
+                break
+            if not file_list.has_more:
+                raise FileNotFoundError(f"File not found in workspace: {path}")
+            cursor = file_list.next_cursor
+        dest = Path(to) if to else Path(os.path.basename(match.path))
         dest.parent.mkdir(parents=True, exist_ok=True)
         async with httpx.AsyncClient(timeout=60) as http:
-            resp = await http.get(url)
+            resp = await http.get(match.url)
             resp.raise_for_status()
             dest.write_bytes(resp.content)
         return dest

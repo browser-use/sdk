@@ -3,8 +3,9 @@ import { basename, dirname, extname, join, resolve } from "path";
 import type { HttpClient } from "../../core/http.js";
 
 function safeJoin(base: string, untrusted: string): string {
+  const baseResolved = resolve(base) + "/";
   const resolved = resolve(base, untrusted);
-  if (!resolved.startsWith(resolve(base))) {
+  if (resolved !== resolve(base) && !resolved.startsWith(baseResolved)) {
     throw new Error(`Path traversal detected: ${untrusted}`);
   }
   return resolved;
