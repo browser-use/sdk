@@ -181,7 +181,8 @@ for product_nav in d['navigation']['products']:
     echo "" >> "$out"
     awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}' "$file" \
       | sed "s|](/cloud/|](${BASE_URL}/cloud/|g" \
-      | sed -E '/<\/?(CodeGroup|Note|Tip|Warning|Info|Card|Tabs|Tab|Steps|Step|Accordion|AccordionGroup)[^>]*>/d' >> "$out"
+      | sed -E '/<\/?(CodeGroup|Note|Tip|Warning|Info|Card|Tabs|Tab|Steps|Step|Accordion|AccordionGroup)[^>]*>/d' \
+      | sed -E 's/^[[:space:]]{4}//' >> "$out"
     echo "" >> "$out"
   done
 

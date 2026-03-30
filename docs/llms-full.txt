@@ -27,9 +27,9 @@ import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 async def main():
-    client = AsyncBrowserUse()
-    result = await client.run("List the top 20 posts on Hacker News today with their points")
-    print(result.output)
+client = AsyncBrowserUse()
+result = await client.run("List the top 20 posts on Hacker News today with their points")
+print(result.output)
 
 asyncio.run(main())
 ```
@@ -41,21 +41,42 @@ const result = await client.run("List the top 20 posts on Hacker News today with
 console.log(result.output);
 ```
 
-  Want a full working app? See the [Chat UI example](https://docs.browser-use.com/cloud/tutorials/chat-ui) — a complete Next.js app with live browser preview, streaming messages, authentication, and session management.
+Want a full working app? Check out the [Chat UI example](https://docs.browser-use.com/cloud/tutorials/chat-ui).
+
+## Agent vs Browser
+
+| | **Agent** | **Browser** |
+|---|---|---|
+| **Method** | `sessions.create()` / `run()` | `browsers.create()` |
+| **What it does** | AI agent runs your task | Raw browser via CDP |
+| task | ✓ | — |
+| model | ✓ | — |
+| proxy | ✓ | ✓ |
+| custom_proxy | ✓ | ✓ |
+| profile_id | ✓ | ✓ |
+| recording | ✓ | ✓ |
+| workspace_id | ✓ | — |
+| keep_alive | ✓ | — |
+| screen size | — | ✓ |
+| timeout | — | ✓ |
 
 
 # Prompt for Vibecoders
 Source: https://docs.browser-use.com/cloud/vibecoding
 
 
-[docs.browser-use.com/cloud/llms.txt](https://docs.browser-use.com/cloud/llms.txt)
+Copy this link and paste it into your coding agent (Cursor, Claude Code, Windsurf, etc.) — it contains all the context needed to build with Browser Use.
+
+```
+https://docs.browser-use.com/cloud/llms.txt
+```
 
 
 # Introduction
 Source: https://docs.browser-use.com/cloud/agent/quickstart
 
 
-The SDK is a thin wrapper around the [API v3 Reference](https://docs.browser-use.com/cloud/api-reference).
+The SDK is a thin wrapper around the [API v3 Reference](https://docs.browser-use.com/cloud/api-reference). Every endpoint in the API reference is available as an SDK method — `client.sessions`, `client.browsers`, `client.profiles`, `client.workspaces`, and `client.billing`.
 
 `client.run()` creates a session, polls every 2 seconds until completion (up to 4 hours), and returns the result. It accepts all parameters from the [Create Session](https://docs.browser-use.com/cloud/api-v3/sessions/create-session) endpoint. The result is a [Session object](https://docs.browser-use.com/cloud/api-v3/sessions/get-session) — use `result.output` for the agent's response.
 
@@ -75,7 +96,7 @@ console.log(result.output);
 ```
 ```bash curl
 curl -X POST https://api.browser-use.com/api/v3/sessions \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"task": "List the top 20 posts on Hacker News today with their points"}'
 ```
@@ -93,31 +114,34 @@ curl -X POST https://api.browser-use.com/api/v3/sessions \
 The best SOTA browser agent — see our [online Mind2Web benchmark](https://browser-use.com/posts/online-mind2web-benchmark).
 
 
+
 # Structured output
 Source: https://docs.browser-use.com/cloud/agent/structured-output
 
 
 Pass a Pydantic model (Python) or Zod schema (TypeScript) — `result.output` is automatically validated and converted to the typed object.
 
+  TypeScript requires **Zod v4** (`npm install zod@4`). Zod v3 is not compatible.
+
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 from pydantic import BaseModel
 
 class Post(BaseModel):
-    name: str
-    points: int
-    comments: int
+name: str
+points: int
+comments: int
 
 class HNPosts(BaseModel):
-    posts: list[Post]
+posts: list[Post]
 
 client = AsyncBrowserUse()
 result = await client.run(
-    "List the top 20 posts on Hacker News today with their points",
-    output_schema=HNPosts,
+"List the top 20 posts on Hacker News today with their points",
+output_schema=HNPosts,
 )
 for post in result.output.posts:
-    print(f"{post.name} ({post.points} pts, {post.comments} comments)")
+print(f"{post.name} ({post.points} pts, {post.comments} comments)")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -159,12 +183,12 @@ client = AsyncBrowserUse()
 session = await client.sessions.create()
 
 result1 = await client.run(
-    "Go to amazon.com, search for laptops, and open the first result",
-    session_id=session.id,
+"Go to amazon.com, search for laptops, and open the first result",
+session_id=session.id,
 )
 result2 = await client.run(
-    "Extract the customer reviews",
-    session_id=session.id,
+"Extract the customer reviews",
+session_id=session.id,
 )
 
 await client.sessions.stop(session.id)
@@ -187,6 +211,10 @@ const result2 = await client.run("Extract the customer reviews", {
 await client.sessions.stop(session.id);
 ```
 
+`sessions.create()` returns a `live_url` you can embed to watch each task execute — see [Live preview](https://docs.browser-use.com/cloud/browser/live-preview). To stream messages as each task runs, use `client.run()` with `for await` — see [Live messages](https://docs.browser-use.com/cloud/agent/streaming).
+
+  Sessions time out after 15 minutes of inactivity by default. The maximum session duration is 4 hours.
+
 
 # Live messages
 Source: https://docs.browser-use.com/cloud/agent/streaming
@@ -203,7 +231,7 @@ client = AsyncBrowserUse()
 
 run = client.run("Find the top story on Hacker News")
 async for msg in run:
-    print(f"[{msg.role}] {msg.summary}")
+print(f"[{msg.role}] {msg.summary}")
 
 print(run.result.output)
 ```
@@ -242,15 +270,15 @@ session = await client.sessions.create(task="Find the top story on Hacker News")
 
 cursor = None
 while True:
-    msgs = await client.sessions.messages(session.id, after=cursor, limit=100)
-    for m in msgs.messages:
-        print(f"[{m.role}] {m.summary}")
-        cursor = m.id
+msgs = await client.sessions.messages(session.id, after=cursor, limit=100)
+for m in msgs.messages:
+    print(f"[{m.role}] {m.summary}")
+    cursor = m.id
 
-    s = await client.sessions.get(session.id)
-    if s.status.value in ("idle", "stopped", "error", "timed_out"):
-        break
-    await asyncio.sleep(2)
+s = await client.sessions.get(session.id)
+if s.status.value in ("idle", "stopped", "error", "timed_out"):
+    break
+await asyncio.sleep(2)
 
 print(s.output)
 ```
@@ -266,18 +294,23 @@ let cursor: string | undefined;
 while (true) {
   const msgs = await client.sessions.messages(session.id, { after: cursor, limit: 100 });
   for (const m of msgs.messages) {
-    console.log(`[${m.role}] ${m.summary}`);
-    cursor = m.id;
+console.log(`[${m.role}] ${m.summary}`);
+cursor = m.id;
   }
 
   const s = await client.sessions.get(session.id);
   if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
-    console.log(s.output);
-    break;
+console.log(s.output);
+break;
   }
   await new Promise((r) => setTimeout(r, 2000));
 }
 ```
+
+## Related
+
+- [Live preview & recording](https://docs.browser-use.com/cloud/browser/live-preview) — embed the browser alongside your message stream
+- [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks) — chain multiple tasks in one session while streaming each
 
 
 # Workspaces & files
@@ -302,8 +335,8 @@ await client.workspaces.upload(workspace.id, "people.csv")
 
 # Agent can now read it
 result = await client.run(
-    "Read people.csv and tell me who works at Google",
-    workspace_id=workspace.id,
+"Read people.csv and tell me who works at Google",
+workspace_id=workspace.id,
 )
 print(result.output)
 ```
@@ -343,8 +376,8 @@ workspace = await client.workspaces.create(name="my-workspace")
 
 # Agent creates a file
 result = await client.run(
-    "Go to Hacker News and save the top 3 posts as posts.json",
-    workspace_id=workspace.id,
+"Go to Hacker News and save the top 3 posts as posts.json",
+workspace_id=workspace.id,
 )
 
 # Download a single file
@@ -353,7 +386,7 @@ await client.workspaces.download(workspace.id, "posts.json", to="./posts.json")
 # Or download everything
 paths = await client.workspaces.download_all(workspace.id, to="./output")
 for p in paths:
-    print(f"Downloaded: {p}")
+print(f"Downloaded: {p}")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -384,7 +417,7 @@ workspace = await client.workspaces.get(workspace_id)
 updated = await client.workspaces.update(workspace_id, name="renamed")
 response = await client.workspaces.list()
 for w in response.items:
-    print(w.id, w.name)
+print(w.id, w.name)
 await client.workspaces.delete(workspace_id)
 ```
 ```typescript TypeScript
@@ -429,8 +462,8 @@ print(f"Live view: {session.live_url}")
 
 # 2. Agent does the first part
 result = await client.run(
-    "Go to amazon.com and search for noise cancelling headphones",
-    session_id=session.id,
+"Go to amazon.com and search for noise cancelling headphones",
+session_id=session.id,
 )
 print(result.output)
 
@@ -439,8 +472,8 @@ input("Press Enter after you've selected a product in the live view...")
 
 # 4. Agent continues where the human left off
 result = await client.run(
-    "Get the details of the selected product — name, price, and rating",
-    session_id=session.id,
+"Get the details of the selected product — name, price, and rating",
+session_id=session.id,
 )
 print(result.output)
 
@@ -502,51 +535,51 @@ Every cloud browser session runs in a hardened Chromium fork with stealth enable
 
 Residential proxies are enabled by default across 195+ countries. This makes browser sessions appear as real users from the target geography. See [Proxies](https://docs.browser-use.com/cloud/browser/proxies) for details on geo-targeting and custom proxy configuration.
 
-## No setup required
-
-Stealth is always on — every `client.run()` call and every session created via the API uses the hardened browser automatically. There are no flags to enable or parameters to set.
-
 
 # Proxies
 Source: https://docs.browser-use.com/cloud/browser/proxies
 
 
-A US residential proxy is active by default on every session. To route through a different country, set `proxy_country_code`.
+A US residential proxy is active by default on every browser. To route through a different country, set `proxy_country_code`. See the [API reference](https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session) for all supported country codes.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-result = await client.run(
-    "Get the price of iPhone 16 on amazon.de",
-    proxy_country_code="de",
-)
+browser = await client.browsers.create(proxy_country_code="de")
+print(browser.cdp_url)   # ws://...
+print(browser.live_url)  # debug view
+
+# With an agent:
+# result = await client.run("Get the price of iPhone 16 on amazon.de", proxy_country_code="de")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const result = await client.run("Get the price of iPhone 16 on amazon.de", {
-  proxyCountryCode: "de",
-});
-```
+const browser = await client.browsers.create({ proxyCountryCode: "de" });
+console.log(browser.cdpUrl);
+console.log(browser.liveUrl);
 
-Common country codes: `us`, `gb`, `de`, `fr`, `jp`, `au`, `br`, `in`, `kr`, `ca`.
+// With an agent:
+// const result = await client.run("Get the price of iPhone 16 on amazon.de", { proxyCountryCode: "de" });
+```
 
 ## Disable proxies
 
 If your use case does not need proxies, for example QA testing.
 
 ```python Python
-result = await client.run(
-    "Go to http://localhost:3000",
-    proxy_country_code=None,
-)
+browser = await client.browsers.create(proxy_country_code=None)
+
+# With an agent:
+# result = await client.run("Go to http://localhost:3000", proxy_country_code=None)
 ```
 ```typescript TypeScript
-const result = await client.run("Go to http://localhost:3000", {
-  proxyCountryCode: null,
-});
+const browser = await client.browsers.create({ proxyCountryCode: null });
+
+// With an agent:
+// const result = await client.run("Go to http://localhost:3000", { proxyCountryCode: null });
 ```
 
 ## Custom proxy
@@ -557,25 +590,25 @@ Bring your own proxy server (HTTP or SOCKS5). Requires custom plan.
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-session = await client.sessions.create(
-    custom_proxy={
-        "host": "proxy.example.com",
-        "port": 8080,
-        "username": "user",
-        "password": "pass",
-    },
+browser = await client.browsers.create(
+custom_proxy={
+    "host": "proxy.example.com",
+    "port": 8080,
+    "username": "user",
+    "password": "pass",
+},
 )
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const session = await client.sessions.create({
+const browser = await client.browsers.create({
   customProxy: {
-    host: "proxy.example.com",
-    port: 8080,
-    username: "user",
-    password: "pass",
+host: "proxy.example.com",
+port: 8080,
+username: "user",
+password: "pass",
   },
 });
 ```
@@ -604,6 +637,17 @@ const session = await client.sessions.create({
   task: "Check how many GitHub stars browser-use has",
 });
 console.log(session.liveUrl);
+```
+
+`liveUrl` is also returned when creating a standalone browser session:
+
+```python Python
+browser = await client.browsers.create()
+print(browser.live_url)
+```
+```typescript TypeScript
+const browser = await client.browsers.create();
+console.log(browser.liveUrl);
 ```
 
 ## Embed live browser into your app
@@ -643,14 +687,14 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-    "Check how many GitHub stars browser-use has",
-    enable_recording=True,
+"Check how many GitHub stars browser-use has",
+enable_recording=True,
 )
 
 # Waits up to 15s for recording to be ready. Returns [] if no browser was opened.
 urls = await client.sessions.wait_for_recording(result.id)
 for url in urls:
-    print(url)  # presigned MP4 download URL
+print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -667,13 +711,35 @@ for (const url of urls) {
 }
 ```
 
+For standalone browser sessions, pass `enable_recording` when creating the browser and retrieve the URL after stopping it:
+
+```python Python
+browser = await client.browsers.create(enable_recording=True)
+# ... use the browser via CDP ...
+stopped = await client.browsers.stop(browser.id)
+print(stopped.recording_url)  # presigned MP4 download URL
+```
+```typescript TypeScript
+const browser = await client.browsers.create({ enableRecording: true });
+// ... use the browser via CDP ...
+const stopped = await client.browsers.stop(browser.id);
+console.log(stopped.recordingUrl); // presigned MP4 download URL
+```
+
   Recording URLs are presigned and **expire after 1 hour**. Download or serve the recording promptly. If you need to access it later, save the MP4 to your own storage.
+
+## Related
+
+- [Live messages](https://docs.browser-use.com/cloud/agent/streaming) — stream the agent's messages alongside the live browser view
+- [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks) — chain tasks in one session while watching live
 
 
 
 # Playwright, Puppeteer, Selenium
 Source: https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium
 
+
+Every session runs in a [hardened Chromium fork](https://docs.browser-use.com/cloud/browser/stealth) with stealth, anti-fingerprinting, and [residential proxies](https://docs.browser-use.com/cloud/browser/proxies) enabled by default — no configuration needed.
 
 ## Option 1: WebSocket URL (no SDK)
 
@@ -687,11 +753,11 @@ from playwright.async_api import async_playwright
 WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
 
 async with async_playwright() as p:
-    browser = await p.chromium.connect_over_cdp(WSS_URL)
-    page = browser.contexts[0].pages[0]
-    await page.goto("https://example.com")
-    print(await page.title())
-    await browser.close()
+browser = await p.chromium.connect_over_cdp(WSS_URL)
+page = browser.contexts[0].pages[0]
+await page.goto("https://example.com")
+print(await page.title())
+await browser.close()
 # Browser is automatically stopped when the WebSocket disconnects
 ```
 ```typescript TypeScript
@@ -748,7 +814,7 @@ await client.browsers.stop(browser.id)
 | `apiKey` | `string` | **Required.** Your Browser Use API key. |
 | `proxyCountryCode` | `string` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
 | `profileId` | `string` | Load a saved browser profile (cookies, localStorage). |
-| `timeout` | `int` | Session timeout in minutes. Max: 240 (4 hours). |
+| `timeout` | `int` | Session timeout in minutes. Default: 15. Max: 240 (4 hours). |
 | `browserScreenWidth` | `int` | Browser width in pixels. |
 | `browserScreenHeight` | `int` | Browser height in pixels. |
 
@@ -816,7 +882,7 @@ profile = await client.profiles.create(name="work-account")
 # List all
 response = await client.profiles.list()
 for p in response.items:
-    print(p.id, p.name)
+print(p.id, p.name)
 
 # Search by name
 response = await client.profiles.list(query="user-id-1")
@@ -893,14 +959,17 @@ const result = await client.run("Check my LinkedIn messages", {
 # 2FA
 Source: https://docs.browser-use.com/cloud/guides/2fa
 
+
 Sites with 2FA block automated logins. Here are four approaches — pick the one that fits your setup.
 
 | Approach | Best for | Complexity |
 |---|---|---|
-| Profiles (login once) | Sites with long-lived cookies | Lowest |
-| Human in the loop | One-off tasks, complex auth flows | Low |
-| Agent Mail | Email-based 2FA, end-client automation | Medium |
-| TOTP secret in prompt | Authenticator app 2FA (Google Authenticator, Authy) | Medium |
+| [Profiles (login once)](#1-profiles--login-once-reuse-cookies) | Sites with long-lived cookies | Lowest |
+| [Human in the loop](#2-human-in-the-loop) | One-off tasks, complex auth flows | Low |
+| [Agent Mail](#3-agent-mail) | Email-based 2FA, end-client automation | Medium |
+| [TOTP secret in prompt](#4-totp-secret-in-prompt) | Authenticator app 2FA (Google Authenticator, Authy) | Medium |
+
+---
 
 ## 1. Profiles — login once, reuse cookies
 
@@ -937,52 +1006,100 @@ import * as readline from "readline";
 
 const client = new BrowserUse();
 
+// Create a profile and a session
 const profile = await client.profiles.create({ name: "my-account" });
 const session = await client.sessions.create({ profileId: profile.id });
 console.log(`Live view: ${session.liveUrl}`);
 
+// Option A: human logs in via live view
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 await new Promise((resolve) => rl.question("Log in and complete 2FA in the live view, then press Enter...", resolve));
 rl.close();
 
+// Option B: let the agent log in
+// await client.run("Log in to example.com with user@example.com / password123", { sessionId: session.id });
+
+// Stop the session — this saves cookies to the profile
 await client.sessions.stop(session.id);
 
+// Next time: reuse the profile, no 2FA needed
 const newSession = await client.sessions.create({ profileId: profile.id });
 const result = await client.run("Go to example.com/dashboard and get my balance", { sessionId: newSession.id });
 console.log(result.output);
 await client.sessions.stop(newSession.id);
 ```
 
-Cookies expire. Some sites stay logged in for months, others expire daily. Always call `sessions.stop()` — profile state is only saved when the session ends cleanly.
+  Cookies expire. Some sites stay logged in for months, others expire daily. If your sessions start hitting login pages again, re-authenticate and save the profile.
+
+  Always call `sessions.stop()` after you're done — profile state is only saved when the session ends cleanly.
+
+---
 
 ## 2. Human in the loop
 
-Let the agent navigate to the login page, then a human takes over to complete 2FA via the live browser view.
+Let the agent navigate to the login page, then a human takes over to complete 2FA via the live browser view. The agent continues after.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create()
+print(f"Live view: {session.live_url}")
 
+# Agent navigates to login
 result = await client.run(
-    "Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
-    session_id=session.id,
+"Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
+session_id=session.id,
 )
 
+# Human completes 2FA in the live view
 input("Complete 2FA in the live view, then press Enter...")
 
+# Agent continues
 result = await client.run(
-    "You are now logged in. Go to the dashboard and export the monthly report",
-    session_id=session.id,
+"You are now logged in. Go to the dashboard and export the monthly report",
+session_id=session.id,
 )
 print(result.output)
 await client.sessions.stop(session.id)
 ```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import * as readline from "readline";
+
+const client = new BrowserUse();
+const session = await client.sessions.create();
+console.log(`Live view: ${session.liveUrl}`);
+
+// Agent navigates to login
+await client.run(
+  "Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
+  { sessionId: session.id },
+);
+
+// Human completes 2FA in the live view
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+await new Promise((resolve) => rl.question("Complete 2FA in the live view, then press Enter...", resolve));
+rl.close();
+
+// Agent continues
+const result = await client.run(
+  "You are now logged in. Go to the dashboard and export the monthly report",
+  { sessionId: session.id },
+);
+console.log(result.output);
+await client.sessions.stop(session.id);
+```
+
+See [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop) for more patterns.
+
+---
 
 ## 3. Agent Mail
 
-When 2FA sends a code via email, the agent can read it automatically using Agent Mail — a built-in email inbox for each session. Enabled by default (`agentmail=True`).
+When 2FA sends a code via email, the agent can read it automatically using Agent Mail — a built-in email inbox for each session.
+
+Agent Mail is **enabled by default** (`agentmail=True`). Each session gets a unique email address (`session.agentmail_email`). The agent can send and receive emails during the task.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
@@ -990,46 +1107,114 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 
 result = await client.run(
-    """
-    1. Go to example.com/signup
-    2. Sign up with the agent's email address (use the email available to you)
-    3. Check your email inbox for the verification code
-    4. Enter the code on the website
-    5. Complete the registration
-    """,
-    agentmail=True,  # default
+"""
+1. Go to example.com/signup
+2. Sign up with the agent's email address (use the email available to you)
+3. Check your email inbox for the verification code
+4. Enter the code on the website
+5. Complete the registration
+""",
+agentmail=True,  # default, shown for clarity
 )
 print(result.output)
 ```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
 
-For end-client automation: have your client forward 2FA emails from the service (e.g., `noreply@bank.com`) to a dedicated inbox. The agent reads the forwarded code during the task. You can also connect Gmail via Composio in the dashboard.
+const client = new BrowserUse();
+
+const result = await client.run(
+  `1. Go to example.com/signup
+   2. Sign up with the agent's email address (use the email available to you)
+   3. Check your email inbox for the verification code
+   4. Enter the code on the website
+   5. Complete the registration`,
+  { agentmail: true }, // default, shown for clarity
+);
+console.log(result.output);
+```
+
+### For end-client automation
+
+If you're automating on behalf of your users and they need to receive 2FA codes:
+
+1. **Email forwarding:** Have your client set up an email forwarding rule — forward all emails from the service (e.g., `noreply@bank.com`) to a dedicated inbox (a Gmail address or an Agent Mail address).
+2. **Give the agent access:** The agent reads the forwarded 2FA code from that inbox during the task.
+
+This way, your client's real email stays private — the agent only sees the forwarded verification emails.
+
+### Connect external email via Composio
+
+You can also give the agent access to an existing Gmail account using [Composio](https://composio.dev) in the Browser Use dashboard. Once connected, the agent can read emails directly from that account to retrieve 2FA codes.
+
+---
 
 ## 4. TOTP secret in prompt
 
-If the site uses an authenticator app, pass the TOTP secret to the agent. The agent uses pyotp to generate fresh 6-digit codes.
+If the site uses an authenticator app (Google Authenticator, Authy, etc.), you can pass the TOTP secret to the agent. Our agent can execute Python code, so it uses the `pyotp` library to generate fresh 6-digit codes on the fly.
+
+When you set up 2FA on a site, instead of only scanning the QR code, also copy the **secret key** (usually shown as "manual entry" or "can't scan the QR code?"). This is a long base32 string like `JBSWY3DPEHPK3PXP`.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-totp_secret = "JBSWY3DPEHPK3PXP"  # from authenticator setup, NOT the 6-digit code
+
+# The TOTP secret from your authenticator setup — NOT the 6-digit code
+totp_secret = "JBSWY3DPEHPK3PXP"
 
 result = await client.run(
-    f"""
-    Log into example.com with username user@example.com and password mypassword.
-    When prompted for a 2FA code, generate one using pyotp:
+f"""
+Log into example.com with username user@example.com and password mypassword.
+When prompted for a 2FA code, generate one using pyotp:
 
-    import pyotp
-    totp = pyotp.TOTP("{totp_secret}")
-    code = totp.now()
+import pyotp
+totp = pyotp.TOTP("{totp_secret}")
+code = totp.now()
 
-    Enter the generated code.
-    """,
+Enter the generated code.
+""",
 )
 print(result.output)
 ```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
 
-Where to find TOTP secrets: 1Password (Edit item → One-Time Password → Show secret), Google Authenticator (click "Can't scan it?"), Authy (desktop export), or "manual entry" during 2FA setup.
+const client = new BrowserUse();
+
+// The TOTP secret from your authenticator setup — NOT the 6-digit code
+const totpSecret = "JBSWY3DPEHPK3PXP";
+
+const result = await client.run(
+  `Log into example.com with username user@example.com and password mypassword.
+   When prompted for a 2FA code, generate one using pyotp:
+
+   import pyotp
+   totp = pyotp.TOTP("${totpSecret}")
+   code = totp.now()
+
+   Enter the generated code.`,
+);
+console.log(result.output);
+```
+
+This works because the Browser Use agent can execute Python code as part of its task. The agent runs `pyotp.TOTP(secret).now()` to generate a time-based 6-digit code, then types it into the 2FA field.
+
+### Where to find TOTP secrets
+
+- **1Password**: Edit item → One-Time Password → Show secret
+- **Google Authenticator**: During setup, click "Can't scan it?" to see the key
+- **Authy**: Export via desktop app settings
+- **Most sites**: Look for "manual entry" or "setup key" during 2FA enrollment
+
+---
+
+## Which approach should I use?
+
+Start with **Profiles** — log in once, reuse cookies. If cookies expire frequently, add **TOTP secret in prompt** for fully automated re-login.
+Use **Profiles** with one profile per user. For initial login, use **Human in the loop** — your user logs in once via the live view, then the agent reuses the session. For email 2FA, set up **Agent Mail** with email forwarding from your user.
+Use **Agent Mail** (enabled by default). For end-client scenarios, have them forward 2FA emails to a dedicated inbox.
+Use **TOTP secret in prompt** — the agent generates codes via pyotp, no human intervention needed.
 
 
 # OpenClaw
@@ -1059,16 +1244,16 @@ Open `~/.openclaw/openclaw.json` and add a `browser-use` profile:
 ```json5
 {
   browser: {
-    enabled: true,
-    defaultProfile: "browser-use",
-    remoteCdpTimeoutMs: 3000,
-    remoteCdpHandshakeTimeoutMs: 5000,
-    profiles: {
-      "browser-use": {
-        cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
-        color: "#ff750e",
-      },
-    },
+enabled: true,
+defaultProfile: "browser-use",
+remoteCdpTimeoutMs: 3000,
+remoteCdpHandshakeTimeoutMs: 5000,
+profiles: {
+  "browser-use": {
+    cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
+    color: "#ff750e",
+  },
+},
   },
 }
 ```
@@ -1151,12 +1336,12 @@ Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "browser-use": {
-      "url": "https://api.browser-use.com/v3/mcp",
-      "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
-      }
-    }
+"browser-use": {
+  "url": "https://api.browser-use.com/v3/mcp",
+  "headers": {
+    "x-browser-use-api-key": "YOUR_API_KEY"
+  }
+}
   }
 }
 ```
@@ -1168,12 +1353,12 @@ Add to `.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-    "browser-use": {
-      "url": "https://api.browser-use.com/v3/mcp",
-      "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
-      }
-    }
+"browser-use": {
+  "url": "https://api.browser-use.com/v3/mcp",
+  "headers": {
+    "x-browser-use-api-key": "YOUR_API_KEY"
+  }
+}
   }
 }
 ```
@@ -1185,12 +1370,12 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 ```json
 {
   "mcpServers": {
-    "browser-use": {
-      "serverUrl": "https://api.browser-use.com/v3/mcp",
-      "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
-      }
-    }
+"browser-use": {
+  "serverUrl": "https://api.browser-use.com/v3/mcp",
+  "headers": {
+    "x-browser-use-api-key": "YOUR_API_KEY"
+  }
+}
   }
 }
 ```
@@ -1228,10 +1413,10 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
   "type": "agent.task.status_update",
   "timestamp": "2025-01-15T10:30:00Z",
   "payload": {
-    "task_id": "task_abc123",
-    "session_id": "session_xyz",
-    "status": "idle",
-    "metadata": {}
+"task_id": "task_abc123",
+"session_id": "session_xyz",
+"status": "idle",
+"metadata": {}
   }
 }
 ```
@@ -1252,17 +1437,17 @@ import json
 import time
 
 def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
-    # Reject requests older than 5 minutes
-    try:
-        ts = int(timestamp)
-    except (ValueError, TypeError):
-        return False
-    if abs(time.time() - ts) > 300:
-        return False
-    payload = json.loads(body)
-    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
-    expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected, signature)
+# Reject requests older than 5 minutes
+try:
+    ts = int(timestamp)
+except (ValueError, TypeError):
+    return False
+if abs(time.time() - ts) > 300:
+    return False
+payload = json.loads(body)
+message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+return hmac.compare_digest(expected, signature)
 ```
 ```typescript TypeScript
 import { createHmac, timingSafeEqual } from "crypto";
@@ -1270,12 +1455,12 @@ import { createHmac, timingSafeEqual } from "crypto";
 function sortKeys(obj: unknown): unknown {
   if (Array.isArray(obj)) return obj.map(sortKeys);
   if (obj !== null && typeof obj === "object") {
-    return Object.keys(obj as object)
-      .sort()
-      .reduce((acc, key) => {
-        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
-        return acc;
-      }, {} as Record<string, unknown>);
+return Object.keys(obj as object)
+  .sort()
+  .reduce((acc, key) => {
+    (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+    return acc;
+  }, {} as Record<string, unknown>);
   }
   return obj;
 }
@@ -1304,12 +1489,12 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
 function sortKeys(obj: unknown): unknown {
   if (Array.isArray(obj)) return obj.map(sortKeys);
   if (obj !== null && typeof obj === "object") {
-    return Object.keys(obj as object)
-      .sort()
-      .reduce((acc, key) => {
-        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
-        return acc;
-      }, {} as Record<string, unknown>);
+return Object.keys(obj as object)
+  .sort()
+  .reduce((acc, key) => {
+    (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+    return acc;
+  }, {} as Record<string, unknown>);
   }
   return obj;
 }
@@ -1319,7 +1504,7 @@ app.post("/webhook", (req, res) => {
   const timestamp = req.headers["x-browser-use-timestamp"] as string;
 
   if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
-    return res.status(401).send("Request too old");
+return res.status(401).send("Request too old");
   }
 
   const body = req.body.toString();
@@ -1328,12 +1513,12 @@ app.post("/webhook", (req, res) => {
   const expected = createHmac("sha256", WEBHOOK_SECRET).update(message).digest("hex");
 
   if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
-    return res.status(401).send("Invalid signature");
+return res.status(401).send("Invalid signature");
   }
 
   if (payload.type === "agent.task.status_update") {
-    const { task_id, status, session_id } = payload.payload;
-    console.log(`Task ${task_id} is now ${status}`);
+const { task_id, status, session_id } = payload.payload;
+console.log(`Task ${task_id} is now ${status}`);
   }
 
   res.status(200).send("OK");
@@ -1358,31 +1543,31 @@ WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
 
 @app.post("/webhook")
 async def handle_webhook(request: Request):
-    body = await request.body()
-    signature = request.headers.get("x-browser-use-signature", "")
-    timestamp = request.headers.get("x-browser-use-timestamp", "")
+body = await request.body()
+signature = request.headers.get("x-browser-use-signature", "")
+timestamp = request.headers.get("x-browser-use-timestamp", "")
 
-    # Reject requests older than 5 minutes
-    try:
-        ts = int(timestamp)
-    except (ValueError, TypeError):
-        raise HTTPException(status_code=401, detail="Invalid timestamp")
-    if abs(time.time() - ts) > 300:
-        raise HTTPException(status_code=401, detail="Request too old")
+# Reject requests older than 5 minutes
+try:
+    ts = int(timestamp)
+except (ValueError, TypeError):
+    raise HTTPException(status_code=401, detail="Invalid timestamp")
+if abs(time.time() - ts) > 300:
+    raise HTTPException(status_code=401, detail="Request too old")
 
-    payload = json.loads(body)
-    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
-    expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
+payload = json.loads(body)
+message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
 
-    if not hmac.compare_digest(expected, signature):
-        raise HTTPException(status_code=401, detail="Invalid signature")
+if not hmac.compare_digest(expected, signature):
+    raise HTTPException(status_code=401, detail="Invalid signature")
 
-    if payload["type"] == "agent.task.status_update":
-        task_id = payload["payload"]["task_id"]
-        status = payload["payload"]["status"]
-        print(f"Task {task_id} is now {status}")
+if payload["type"] == "agent.task.status_update":
+    task_id = payload["payload"]["task_id"]
+    status = payload["payload"]["status"]
+    print(f"Task {task_id} is now {status}")
 
-    return {"status": "ok"}
+return {"status": "ok"}
 ```
 
   For local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose your local server: `ngrok http 3000`. Then set the ngrok URL as your webhook endpoint in the dashboard.
@@ -1471,18 +1656,22 @@ const apiKey = process.env.BROWSER_USE_API_KEY ?? "";
 export const client = new BrowserUse({ apiKey });
 ```
 
-  The API key uses `BROWSER_USE_API_KEY` (no `NEXT_PUBLIC_` prefix) so it stays server-side. All SDK calls go through server actions — never call the SDK directly from client components.
+  The API key uses `BROWSER_USE_API_KEY` (no `NEXT_PUBLIC_` prefix) so it stays server-side. All SDK calls go through [server actions](https://nextjs.org/docs/app/guides/forms) — never call the SDK directly from client components.
 
 ---
 
 ## 1. Create a session
 
-```typescript api.ts
+```typescript actions.ts
+"use server";
+import { client } from "./api";
+
 export async function createSession() {
-  return client.sessions.create({
-    keepAlive: true,
-    enableRecording: true,
+  const session = await client.sessions.create({
+keepAlive: true,
+enableRecording: true,
   });
+  return { id: session.id, liveUrl: session.liveUrl, status: session.status };
 }
 ```
 
@@ -1497,7 +1686,7 @@ async function handleSend(message: string) {
   const session = await createSession();
 
   router.push(
-    `/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
+`/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
   );
 }
 ```
@@ -1513,7 +1702,7 @@ const streamTask = useCallback(async (task: string) => {
   const run = client.run(task, { sessionId });
 
   for await (const msg of run) {
-    setMessages((prev) => [...prev, msg]);
+setMessages((prev) => [...prev, msg]);
   }
 
   // Iterator done — task reached terminal state
@@ -1557,7 +1746,7 @@ useEffect(() => {
   if (!isTerminal) return;
 
   client.sessions.waitForRecording(sessionId).then((urls) => {
-    if (urls.length) setRecordingUrls(urls);
+if (urls.length) setRecordingUrls(urls);
   });
 }, [isTerminal, sessionId]);
 ```
@@ -1568,7 +1757,7 @@ useEffect(() => {
 
 ## 5. Stop a task
 
-```typescript api.ts
+```typescript actions.ts
 export async function stopTask(id: string) {
   await client.sessions.stop(id, { strategy: "task" });
 }
@@ -1585,23 +1774,23 @@ The session page consumes everything through a context provider:
 ```typescript session/[id]/page.tsx
 function SessionPage() {
   const { session, turns, isBusy, isTerminal, recordingUrls, sendMessage, stopTask } =
-    useSession();
+useSession();
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      {/* Chat column */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <ChatMessages turns={turns} isBusy={isBusy} />
-        <ChatInput
-          onSend={sendMessage}
-          onStop={stopTask}
-          disabled={isTerminal}
-        />
-      </div>
+<div className="flex h-screen w-full overflow-hidden">
+  {/* Chat column */}
+  <div className="flex-1 flex flex-col min-w-0">
+    <ChatMessages turns={turns} isBusy={isBusy} />
+    <ChatInput
+      onSend={sendMessage}
+      onStop={stopTask}
+      disabled={isTerminal}
+    />
+  </div>
 
-      {/* Live browser view — liveUrl available from session creation */}
-      <BrowserPanel liveUrl={session?.liveUrl} />
-    </div>
+  {/* Live browser view — liveUrl available from session creation */}
+  <BrowserPanel liveUrl={session?.liveUrl} />
+</div>
   );
 }
 ```
@@ -1704,7 +1893,7 @@ Upload images, PDFs, documents, and text files (10 MB max) to sessions, and down
 
 ### Upload a file
 
-Get a presigned URL, then upload via PUT.
+Get a presigned URL, then upload via POST.
 
 ```python Python
 import httpx
@@ -1714,15 +1903,15 @@ client = AsyncBrowserUse()
 session = await client.sessions.create()
 
 upload = await client.files.session_url(
-    session.id,
-    file_name="input.pdf",
-    content_type="application/pdf",
-    size_bytes=1024,
+session.id,
+file_name="input.pdf",
+content_type="application/pdf",
+size_bytes=1024,
 )
 
 with open("input.pdf", "rb") as f:
-    async with httpx.AsyncClient() as http:
-        await http.put(upload.presigned_url, content=f.read(), headers={"Content-Type": "application/pdf"})
+async with httpx.AsyncClient() as http:
+    await http.post(upload.url, content=f.read(), headers={"Content-Type": "application/pdf"})
 
 result = await client.run("Summarize the uploaded PDF", session_id=session.id)
 ```
@@ -1739,8 +1928,8 @@ const upload = await client.files.sessionUrl(session.id, {
   sizeBytes: 1024,
 });
 
-await fetch(upload.presignedUrl, {
-  method: "PUT",
+await fetch(upload.url, {
+  method: "POST",
   body: readFileSync("input.pdf"),
   headers: { "Content-Type": "application/pdf" },
 });
@@ -1755,14 +1944,14 @@ const result = await client.run("Summarize the uploaded PDF", { sessionId: sessi
 ```python Python
 result = await client.tasks.get(task_id)
 for file in result.output_files:
-    output = await client.files.task_output(task_id, file.id)
-    print(output.presigned_url)  # download URL
+output = await client.files.task_output(task_id, file.id)
+print(output.download_url)  # download URL
 ```
 ```typescript TypeScript
 const result = await client.tasks.get(taskId);
 for (const file of result.outputFiles) {
   const output = await client.files.taskOutput(taskId, file.id);
-  console.log(output.presignedUrl);
+  console.log(output.downloadUrl);
 }
 ```
 
@@ -1778,8 +1967,8 @@ from browser_use_sdk import AsyncBrowserUse
 client = AsyncBrowserUse()
 run = client.run("Find the most upvoted post on Reddit r/technology today")
 async for step in run:
-    print(f"Step {step.number}: {step.next_goal}")
-    print(f"  URL: {step.url}")
+print(f"Step {step.number}: {step.next_goal}")
+print(f"  URL: {step.url}")
 
 print(run.result.output)  # final result after iteration
 ```
@@ -1829,11 +2018,11 @@ Generate a public URL that anyone can open to watch the entire agent session —
 
 ```python Python
 share = await client.sessions.create_share(session.id)
-print(share.url)
+print(share.share_url)
 ```
 ```typescript TypeScript
 const share = await client.sessions.createShare(session.id);
-console.log(share.url);
+console.log(share.shareUrl);
 ```
 
 
@@ -1860,8 +2049,8 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 skill = await client.skills.create(
-    goal="Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
-    agent_prompt="Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
+goal="Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
+agent_prompt="Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
 )
 print(skill.id)
 ```
@@ -1882,8 +2071,8 @@ Skill creation takes ~30 seconds. You can also create skills visually from the [
 
 ```python Python
 result = await client.skills.execute(
-    skill.id,
-    parameters={"X": 10},
+skill.id,
+parameters={"X": 10},
 )
 print(result)
 ```
@@ -1955,9 +2144,9 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-    "Log into my Jira account and create a new ticket",
-    op_vault_id="your-vault-id",
-    allowed_domains=["*.atlassian.net"],
+"Log into my Jira account and create a new ticket",
+op_vault_id="your-vault-id",
+allowed_domains=["*.atlassian.net"],
 )
 print(result.output)
 ```
@@ -1968,8 +2157,8 @@ const client = new BrowserUse();
 const result = await client.run(
   "Log into my Jira account and create a new ticket",
   {
-    opVaultId: "your-vault-id",
-    allowedDomains: ["*.atlassian.net"],
+opVaultId: "your-vault-id",
+allowedDomains: ["*.atlassian.net"],
   },
 );
 console.log(result.output);
@@ -1979,17 +2168,17 @@ For SSO/OAuth redirects, include all required domains:
 
 ```python Python
 result = await client.run(
-    "Log into Jira and create a ticket for the Q4 release",
-    op_vault_id="your-vault-id",
-    allowed_domains=["*.atlassian.net", "*.okta.com"],
+"Log into Jira and create a ticket for the Q4 release",
+op_vault_id="your-vault-id",
+allowed_domains=["*.atlassian.net", "*.okta.com"],
 )
 ```
 ```typescript TypeScript
 const result = await client.run(
   "Log into Jira and create a ticket for the Q4 release",
   {
-    opVaultId: "your-vault-id",
-    allowedDomains: ["*.atlassian.net", "*.okta.com"],
+opVaultId: "your-vault-id",
+allowedDomains: ["*.atlassian.net", "*.okta.com"],
   },
 );
 ```
@@ -2017,9 +2206,9 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-    "Log into GitHub and star the browser-use/browser-use repo",
-    secrets={"github.com": "username:password123"},
-    allowed_domains=["github.com"],
+"Log into GitHub and star the browser-use/browser-use repo",
+secrets={"github.com": "username:password123"},
+allowed_domains=["github.com"],
 )
 ```
 ```typescript TypeScript
@@ -2029,8 +2218,8 @@ const client = new BrowserUse();
 const result = await client.run(
   "Log into GitHub and star the browser-use/browser-use repo",
   {
-    secrets: { "github.com": "username:password123" },
-    allowedDomains: ["github.com"],
+secrets: { "github.com": "username:password123" },
+allowedDomains: ["github.com"],
   },
 );
 ```
@@ -2041,23 +2230,23 @@ For SSO/OAuth redirects, include all domains in the auth flow:
 
 ```python Python
 result = await client.run(
-    "Log into the company portal and download the Q4 report",
-    secrets={
-        "portal.example.com": "user@company.com:password123",
-        "okta.com": "user@company.com:password123",
-    },
-    allowed_domains=["portal.example.com", "*.okta.com"],
+"Log into the company portal and download the Q4 report",
+secrets={
+    "portal.example.com": "user@company.com:password123",
+    "okta.com": "user@company.com:password123",
+},
+allowed_domains=["portal.example.com", "*.okta.com"],
 )
 ```
 ```typescript TypeScript
 const result = await client.run(
   "Log into the company portal and download the Q4 report",
   {
-    secrets: {
-      "portal.example.com": "user@company.com:password123",
-      "okta.com": "user@company.com:password123",
-    },
-    allowedDomains: ["portal.example.com", "*.okta.com"],
+secrets: {
+  "portal.example.com": "user@company.com:password123",
+  "okta.com": "user@company.com:password123",
+},
+allowedDomains: ["portal.example.com", "*.okta.com"],
   },
 );
 ```
@@ -2069,10 +2258,10 @@ Source: https://docs.browser-use.com/cloud/api-reference
 
 ## Authentication
 
-All requests require an API key in the `Authorization` header:
+All requests require an API key in the `X-Browser-Use-API-Key` header:
 
 ```
-Authorization: Bearer bu_your_key_here
+X-Browser-Use-API-Key: bu_your_key_here
 ```
 
 Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1). Keys start with `bu_`.
@@ -2088,13 +2277,13 @@ https://api.browser-use.com/api/v3
 ```bash curl
 # Create a session
 curl -X POST https://api.browser-use.com/api/v3/sessions \
-  -H "Authorization: Bearer bu_your_key_here" \
+  -H "X-Browser-Use-API-Key: bu_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{"task": "Find the top 3 trending repos on GitHub today"}'
 
 # Get session result (replace SESSION_ID)
 curl https://api.browser-use.com/api/v3/sessions/SESSION_ID \
-  -H "Authorization: Bearer bu_your_key_here"
+  -H "X-Browser-Use-API-Key: bu_your_key_here"
 ```
 
 ## Environment variable
@@ -2107,7 +2296,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ---
 
-Prefer the SDK? See the [Agent docs](https://docs.browser-use.com/cloud/agent/quickstart).
+Prefer the SDK? See the [Agent docs](https://docs.browser-use.com/cloud/agent/quickstart) — the SDK has all API endpoints available as methods, including `client.browsers.create()`.
 
 ```bash Python
 pip install browser-use-sdk

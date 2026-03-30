@@ -2487,6 +2487,12 @@
                         ],
                         "title": "Screenshoturl"
                     },
+                    "hidden": {
+                        "type": "boolean",
+                        "title": "Hidden",
+                        "description": "Whether this message should be hidden from the user in a chat UI.",
+                        "default": false
+                    },
                     "createdAt": {
                         "type": "string",
                         "format": "date-time",

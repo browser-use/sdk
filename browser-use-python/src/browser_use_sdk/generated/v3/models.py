@@ -257,6 +257,11 @@ class MessageResponse(BaseModel):
     screenshot_url: str | None = Field(
         None, alias='screenshotUrl', title='Screenshoturl'
     )
+    hidden: bool | None = Field(
+        False,
+        description='Whether this message should be hidden from the user in a chat UI.',
+        title='Hidden',
+    )
     created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
 
 

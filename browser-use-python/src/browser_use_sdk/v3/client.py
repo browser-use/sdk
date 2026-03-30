@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from .._core import _UNSET
 from .._core.http import AsyncHttpClient, SyncHttpClient
 from .resources.billing import AsyncBilling, Billing as BillingResource
 from .resources.browsers import AsyncBrowsers, Browsers as BrowsersResource
@@ -111,7 +112,7 @@ class BrowserUse:
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
-        proxy_country_code: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         custom_proxy: dict[str, Any] | None = None,
@@ -154,7 +155,7 @@ class BrowserUse:
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
-        proxy_country_code: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         custom_proxy: dict[str, Any] | None = None,
@@ -294,7 +295,7 @@ class AsyncBrowserUse:
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
-        proxy_country_code: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         custom_proxy: dict[str, Any] | None = None,

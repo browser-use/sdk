@@ -4,6 +4,7 @@ import asyncio
 import time
 from typing import TYPE_CHECKING, Any
 
+from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
     FileListResponse,
@@ -31,7 +32,7 @@ class Sessions:
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
-        proxy_country_code: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         output_schema: dict[str, Any] | None = None,
         workspace_id: str | None = None,
         enable_scheduled_tasks: bool | None = None,
@@ -53,7 +54,7 @@ class Sessions:
             body["maxCostUsd"] = max_cost_usd
         if profile_id is not None:
             body["profileId"] = profile_id
-        if proxy_country_code is not None:
+        if proxy_country_code is not _UNSET:
             body["proxyCountryCode"] = proxy_country_code
         if output_schema is not None:
             body["outputSchema"] = output_schema
@@ -208,7 +209,7 @@ class AsyncSessions:
         keep_alive: bool | None = None,
         max_cost_usd: float | None = None,
         profile_id: str | None = None,
-        proxy_country_code: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         output_schema: dict[str, Any] | None = None,
         workspace_id: str | None = None,
         enable_scheduled_tasks: bool | None = None,
@@ -230,7 +231,7 @@ class AsyncSessions:
             body["maxCostUsd"] = max_cost_usd
         if profile_id is not None:
             body["profileId"] = profile_id
-        if proxy_country_code is not None:
+        if proxy_country_code is not _UNSET:
             body["proxyCountryCode"] = proxy_country_code
         if output_schema is not None:
             body["outputSchema"] = output_schema
