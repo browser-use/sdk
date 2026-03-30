@@ -47,3 +47,21 @@ console.log(result.output);
 <Note>
   Want a full working app? See the [Chat UI example](/cloud/tutorials/chat-ui) — a complete Next.js app with live browser preview, streaming messages, authentication, and session management.
 </Note>
+
+## Agent vs Browser
+
+`client.run()` / `client.sessions.create()` run an AI agent task. `run()` is a wrapper around `sessions.create()` that polls until the task is done and returns the result. `client.browsers.create()` gives you a raw browser for [Playwright / Puppeteer / Selenium](/cloud/browser/playwright-puppeteer-selenium).
+
+| | `client.run()` / `client.sessions.create()` | `client.browsers.create()` |
+|---|---|---|
+| **What it does** | Run an AI agent task (run polls until done) | Just give me a browser |
+| task | ✓ | — |
+| model | ✓ | — |
+| proxy | ✓ | ✓ |
+| custom_proxy | ✓ | ✓ |
+| profile_id | ✓ | ✓ |
+| recording | ✓ | ✓ |
+| workspace_id | ✓ | — |
+| keep_alive | ✓ | — |
+| screen size | — | ✓ |
+| timeout | — | ✓ |
