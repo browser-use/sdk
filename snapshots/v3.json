@@ -373,14 +373,14 @@
                 }
             }
         },
-        "/sessions/{session_id}/files": {
+        "/browsers": {
             "get": {
                 "tags": [
-                    "Files"
+                    "Browsers"
                 ],
-                "summary": "List Session Files",
-                "description": "List files in a session's workspace.\n\nReturns paginated file metadata. Pass includeUrls=true to get\npresigned download URLs (60s expiry) inline with each file.",
-                "operationId": "list_session_files_sessions__session_id__files_get",
+                "summary": "List Browser Sessions",
+                "description": "Get paginated list of browser sessions with optional status filtering.",
+                "operationId": "list_browser_sessions_browsers_get",
                 "security": [
                     {
                         "APIKeyHeader": []
@@ -388,71 +388,42 @@
                 ],
                 "parameters": [
                     {
-                        "name": "session_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "title": "Session Id"
-                        }
-                    },
-                    {
-                        "name": "prefix",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "default": "",
-                            "title": "Prefix"
-                        }
-                    },
-                    {
-                        "name": "limit",
+                        "name": "pageSize",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "integer",
                             "maximum": 100,
                             "minimum": 1,
-                            "default": 50,
-                            "title": "Limit"
+                            "default": 10,
+                            "title": "Pagesize"
                         }
                     },
                     {
-                        "name": "cursor",
+                        "name": "pageNumber",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1,
+                            "title": "Pagenumber"
+                        }
+                    },
+                    {
+                        "name": "filterBy",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "$ref": "#/components/schemas/BrowserSessionStatus"
                                 },
                                 {
                                     "type": "null"
                                 }
                             ],
-                            "title": "Cursor"
-                        }
-                    },
-                    {
-                        "name": "includeUrls",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean",
-                            "default": false,
-                            "title": "Includeurls"
-                        }
-                    },
-                    {
-                        "name": "shallow",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean",
-                            "default": false,
-                            "title": "Shallow"
+                            "title": "Filterby"
                         }
                     }
                 ],
@@ -462,7 +433,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/FileListResponse"
+                                    "$ref": "#/components/schemas/BrowserSessionListResponse"
                                 }
                             }
                         }
@@ -478,16 +449,148 @@
                         }
                     }
                 }
-            }
-        },
-        "/sessions/{session_id}/files/upload": {
+            },
             "post": {
                 "tags": [
-                    "Files"
+                    "Browsers"
                 ],
-                "summary": "Upload Session Files",
-                "description": "Get presigned PUT URLs for uploading files to a session's workspace.\n\nFiles are placed under ``uploads/`` in the session's S3 prefix. After\nreceiving the URLs, PUT each file directly to S3 using the returned\n``uploadUrl`` with the matching ``Content-Type`` header.",
-                "operationId": "upload_session_files_sessions__session_id__files_upload_post",
+                "summary": "Create Browser Session",
+                "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged per hour with tiered pricing:\n- Pay As You Go users: $0.06/hour\n- Business/Scaleup subscribers: $0.03/hour (50% discount)\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
+                "operationId": "create_browser_session_browsers_post",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateBrowserSessionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BrowserSessionItemView"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Session timeout limit exceeded (maximum 4 hours)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionTimeoutLimitExceededError"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Profile not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileNotFoundError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Request validation failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many concurrent active sessions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/browsers/{session_id}": {
+            "get": {
+                "tags": [
+                    "Browsers"
+                ],
+                "summary": "Get Browser Session",
+                "description": "Get detailed browser session information including status and URLs.",
+                "operationId": "get_browser_session_browsers__session_id__get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BrowserSessionView"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Session not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionNotFoundError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Browsers"
+                ],
+                "summary": "Update Browser Session",
+                "description": "Stop a browser session.\n\n**Refund:** When you stop a session, unused time is automatically refunded.\nIf the session ran for less than 1 hour, you'll receive a proportional refund.\nBilling is ceil to the nearest minute (minimum 1 minute).",
+                "operationId": "update_browser_session_browsers__session_id__patch",
                 "security": [
                     {
                         "APIKeyHeader": []
@@ -510,7 +613,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/FileUploadRequest"
+                                "$ref": "#/components/schemas/UpdateBrowserSessionRequest"
                             }
                         }
                     }
@@ -521,17 +624,27 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/FileUploadResponse"
+                                    "$ref": "#/components/schemas/BrowserSessionView"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Session not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionNotFoundError"
                                 }
                             }
                         }
                     },
                     "422": {
-                        "description": "Validation Error",
+                        "description": "Request validation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                    "$ref": "#/components/schemas/ValidationError"
                                 }
                             }
                         }
@@ -831,332 +944,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/billing/account": {
-            "get": {
-                "tags": [
-                    "Billing"
-                ],
-                "summary": "Get Account Billing",
-                "description": "Get authenticated account information including credit balance and account details.",
-                "operationId": "get_account_billing_billing_account_get",
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AccountView"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Project for a given API key not found!",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AccountNotFoundError"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "APIKeyHeader": []
-                    }
-                ]
-            }
-        },
-        "/browsers": {
-            "get": {
-                "tags": [
-                    "Browsers"
-                ],
-                "summary": "List Browser Sessions",
-                "description": "Get paginated list of browser sessions with optional status filtering.",
-                "operationId": "list_browser_sessions_browsers_get",
-                "security": [
-                    {
-                        "APIKeyHeader": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "pageSize",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "maximum": 100,
-                            "minimum": 1,
-                            "default": 10,
-                            "title": "Pagesize"
-                        }
-                    },
-                    {
-                        "name": "pageNumber",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "default": 1,
-                            "title": "Pagenumber"
-                        }
-                    },
-                    {
-                        "name": "filterBy",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "$ref": "#/components/schemas/BrowserSessionStatus"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "title": "Filterby"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/BrowserSessionListResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "Browsers"
-                ],
-                "summary": "Create Browser Session",
-                "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged per hour with tiered pricing:\n- Pay As You Go users: $0.06/hour\n- Business/Scaleup subscribers: $0.03/hour (50% discount)\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
-                "operationId": "create_browser_session_browsers_post",
-                "security": [
-                    {
-                        "APIKeyHeader": []
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CreateBrowserSessionRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/BrowserSessionItemView"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Session timeout limit exceeded (maximum 4 hours)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SessionTimeoutLimitExceededError"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Profile not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ProfileNotFoundError"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Request validation failed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationError"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too many concurrent active sessions",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/browsers/{session_id}": {
-            "get": {
-                "tags": [
-                    "Browsers"
-                ],
-                "summary": "Get Browser Session",
-                "description": "Get detailed browser session information including status and URLs.",
-                "operationId": "get_browser_session_browsers__session_id__get",
-                "security": [
-                    {
-                        "APIKeyHeader": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "session_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "title": "Session Id"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/BrowserSessionView"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Session not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SessionNotFoundError"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "tags": [
-                    "Browsers"
-                ],
-                "summary": "Update Browser Session",
-                "description": "Stop a browser session.\n\n**Refund:** When you stop a session, unused time is automatically refunded.\nIf the session ran for less than 1 hour, you'll receive a proportional refund.\nBilling is ceil to the nearest minute (minimum 1 minute).",
-                "operationId": "update_browser_session_browsers__session_id__patch",
-                "security": [
-                    {
-                        "APIKeyHeader": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "session_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "title": "Session Id"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateBrowserSessionRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/BrowserSessionView"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Session not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SessionNotFoundError"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Request validation failed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ValidationError"
                                 }
                             }
                         }
@@ -1690,6 +1477,219 @@
                         }
                     }
                 }
+            }
+        },
+        "/sessions/{session_id}/files": {
+            "get": {
+                "tags": [
+                    "Files"
+                ],
+                "summary": "List Session Files",
+                "description": "List files in a session's workspace.\n\nReturns paginated file metadata. Pass includeUrls=true to get\npresigned download URLs (60s expiry) inline with each file.",
+                "operationId": "list_session_files_sessions__session_id__files_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    },
+                    {
+                        "name": "prefix",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "",
+                            "title": "Prefix"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "default": 50,
+                            "title": "Limit"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Cursor"
+                        }
+                    },
+                    {
+                        "name": "includeUrls",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Includeurls"
+                        }
+                    },
+                    {
+                        "name": "shallow",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Shallow"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FileListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{session_id}/files/upload": {
+            "post": {
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Upload Session Files",
+                "description": "Get presigned PUT URLs for uploading files to a session's workspace.\n\nFiles are placed under ``uploads/`` in the session's S3 prefix. After\nreceiving the URLs, PUT each file directly to S3 using the returned\n``uploadUrl`` with the matching ``Content-Type`` header.",
+                "operationId": "upload_session_files_sessions__session_id__files_upload_post",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FileUploadRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FileUploadResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/billing/account": {
+            "get": {
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Get Account Billing",
+                "description": "Get authenticated account information including credit balance and account details.",
+                "operationId": "get_account_billing_billing_account_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AccountView"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Project for a given API key not found!",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AccountNotFoundError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
             }
         }
     },
