@@ -73,8 +73,8 @@ const upload = await client.files.sessionUrl(session.id, {
   sizeBytes: 1024,
 });
 
-await fetch(upload.presignedUrl, {
-  method: "PUT",
+await fetch(upload.url, {
+  method: "POST",
   body: readFileSync("input.pdf"),
   headers: { "Content-Type": "application/pdf" },
 });
@@ -100,7 +100,7 @@ for file in result.output_files:
 const result = await client.tasks.get(taskId);
 for (const file of result.outputFiles) {
   const output = await client.files.taskOutput(taskId, file.id);
-  console.log(output.presignedUrl);
+  console.log(output.downloadUrl);
 }
 ```
 </CodeGroup>
