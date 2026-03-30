@@ -9,10 +9,10 @@ Generate a public URL that anyone can open to watch the entire agent session —
 <CodeGroup>
 ```python Python
 share = await client.sessions.create_share(session.id)
-print(share.url)
+print(share.share_url)
 ```
 ```typescript TypeScript
 const share = await client.sessions.createShare(session.id);
-console.log(share.url);
+console.log(share.shareUrl);
 ```
 </CodeGroup>
