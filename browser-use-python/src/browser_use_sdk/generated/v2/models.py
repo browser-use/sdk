@@ -717,7 +717,7 @@ class SessionSettings(BaseModel):
         title='Profile ID',
     )
     proxy_country_code: ProxyCountryCode | None = Field(
-        'us',
+        ProxyCountryCode.us,
         alias='proxyCountryCode',
         description='Proxy country code for geo-targeted browsing. Defaults to US. Set to null to disable proxy.',
         title='Proxy Country Code',
@@ -1412,7 +1412,7 @@ class CreateBrowserSessionRequest(BaseModel):
         title='Profile ID',
     )
     proxy_country_code: ProxyCountryCode | None = Field(
-        'us',
+        ProxyCountryCode.us,
         alias='proxyCountryCode',
         description='Country code for proxy location. Defaults to US. Set to null to disable proxy.',
         title='Proxy Country Code',
@@ -1462,7 +1462,7 @@ class CreateSessionRequest(BaseModel):
         title='Profile ID',
     )
     proxy_country_code: ProxyCountryCode | None = Field(
-        'us',
+        ProxyCountryCode.us,
         alias='proxyCountryCode',
         description='Country code for proxy location. Defaults to US. Set to null to disable proxy.',
         title='Proxy Country Code',
@@ -1520,7 +1520,7 @@ class CreateTaskRequest(BaseModel):
         title='Task',
     )
     llm: SupportedLLMs | None = Field(
-        'browser-use-2.0',
+        SupportedLLMs.browser_use_2_0,
         description='The LLM model to use for the agent.',
         title='LLM',
     )

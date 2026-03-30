@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
@@ -9,7 +8,8 @@ from ...generated.v3.models import (
     ProfileView,
 )
 
-_ID = str | UUID
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 class Profiles:
@@ -50,7 +50,7 @@ class Profiles:
             )
         )
 
-    def get(self, profile_id: _ID) -> ProfileView:
+    def get(self, profile_id: str | UUID) -> ProfileView:
         """Get profile details."""
         return ProfileView.model_validate(
             self._http.request("GET", f"/profiles/{profile_id}")
@@ -58,7 +58,7 @@ class Profiles:
 
     def update(
         self,
-        profile_id: _ID,
+        profile_id: str | UUID,
         *,
         name: str | None = None,
         user_id: str | None = None,
@@ -75,7 +75,7 @@ class Profiles:
             self._http.request("PATCH", f"/profiles/{profile_id}", json=body)
         )
 
-    def delete(self, profile_id: _ID) -> None:
+    def delete(self, profile_id: str | UUID) -> None:
         """Delete a profile."""
         self._http.request("DELETE", f"/profiles/{profile_id}")
 
@@ -118,7 +118,7 @@ class AsyncProfiles:
             )
         )
 
-    async def get(self, profile_id: _ID) -> ProfileView:
+    async def get(self, profile_id: str | UUID) -> ProfileView:
         """Get profile details."""
         return ProfileView.model_validate(
             await self._http.request("GET", f"/profiles/{profile_id}")
@@ -126,7 +126,7 @@ class AsyncProfiles:
 
     async def update(
         self,
-        profile_id: _ID,
+        profile_id: str | UUID,
         *,
         name: str | None = None,
         user_id: str | None = None,
@@ -143,6 +143,6 @@ class AsyncProfiles:
             await self._http.request("PATCH", f"/profiles/{profile_id}", json=body)
         )
 
-    async def delete(self, profile_id: _ID) -> None:
+    async def delete(self, profile_id: str | UUID) -> None:
         """Delete a profile."""
         await self._http.request("DELETE", f"/profiles/{profile_id}")
