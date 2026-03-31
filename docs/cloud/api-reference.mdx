@@ -23,14 +23,14 @@ https://api.browser-use.com/api/v3
 
 ## Quick example
 
-```bash curl
-# Create a session
+```bash Create a session
 curl -X POST https://api.browser-use.com/api/v3/sessions \
   -H "X-Browser-Use-API-Key: bu_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{"task": "Find the top 3 trending repos on GitHub today"}'
+```
 
-# Get session result (replace SESSION_ID)
+```bash Get session result (replace SESSION_ID)
 curl https://api.browser-use.com/api/v3/sessions/SESSION_ID \
   -H "X-Browser-Use-API-Key: bu_your_key_here"
 ```

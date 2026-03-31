@@ -202,7 +202,6 @@ cat > "$CLOUD_INDEX" << 'HEADER'
 - GitHub: https://github.com/browser-use/browser-use
 - Dashboard: https://cloud.browser-use.com
 - API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
-- Open Source: https://github.com/browser-use/browser-use
 - Docs: https://docs.browser-use.com
 - OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
 - Chat UI example: https://docs.browser-use.com/cloud/tutorials/chat-ui — Full end-to-end example with live browser, streaming, auth. Best starting point to build a prototype.
