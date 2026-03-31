@@ -90,12 +90,14 @@ class AsyncSessionRun(Generic[T]):
         *,
         timeout: float = 14400,
         interval: float = 2,
+        _start_cursor: str | None = None,
     ) -> None:
         self._create_fn = create_fn
         self._sessions = sessions
         self._output_schema = output_schema
         self._timeout = timeout
         self._interval = interval
+        self._start_cursor = _start_cursor
         self.session_id: str | None = None
         self.result: SessionResult[T] | None = None
 
@@ -132,7 +134,7 @@ class AsyncSessionRun(Generic[T]):
         """
         data = await self._create_fn()
         self.session_id = str(data.id)
-        cursor: str | None = None
+        cursor: str | None = self._start_cursor
         deadline = time.monotonic() + self._timeout
 
         while time.monotonic() < deadline:
@@ -178,12 +180,14 @@ class SessionStream(Generic[T]):
         *,
         timeout: float = 14400,
         interval: float = 2,
+        _start_cursor: str | None = None,
     ) -> None:
         self.session_id = str(session.id)
         self._sessions = sessions
         self._output_schema = output_schema
         self._timeout = timeout
         self._interval = interval
+        self._start_cursor = _start_cursor
         self.result: SessionResult[T] | None = None
 
     @property
@@ -192,7 +196,7 @@ class SessionStream(Generic[T]):
         return self.result.output if self.result else None
 
     def __iter__(self) -> Iterator[MessageResponse]:
-        cursor: str | None = None
+        cursor: str | None = self._start_cursor
         deadline = time.monotonic() + self._timeout
 
         while time.monotonic() < deadline:

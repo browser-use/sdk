@@ -79,6 +79,27 @@ export class BrowserUse {
     if (body.sessionId && body.keepAlive === undefined) {
       body.keepAlive = true;
     }
+    // For follow-up runs on an existing session, snapshot the latest message
+    // cursor before creating the new task so the iterator skips old messages.
+    if (body.sessionId) {
+      const sid = body.sessionId;
+      const sessions = this.sessions;
+      let startCursor: string | undefined;
+      const promise = sessions
+        .messages(sid, { limit: 1 })
+        .then((resp) => {
+          const last = resp.messages[resp.messages.length - 1];
+          startCursor = last?.id;
+        })
+        .then(() => sessions.create(body));
+      // startCursor is set before createPromise resolves, so the iterator
+      // (which awaits _ensureSessionId first) will see the correct value.
+      return new SessionRun(promise, this.sessions, schema, {
+        timeout,
+        interval,
+        get _startCursor() { return startCursor; },
+      });
+    }
     const promise = this.sessions.create(body);
     return new SessionRun(promise, this.sessions, schema, { timeout, interval });
   }
