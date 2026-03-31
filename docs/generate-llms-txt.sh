@@ -197,25 +197,22 @@ CLOUD_FULL="$SCRIPT_DIR/llms-full.txt"
 cat > "$CLOUD_INDEX" << 'HEADER'
 # Browser Use Cloud SDK
 
-> The most SOTA browser agent and the most scalable browser infrastructure. Built on the largest AI browser automation open-source library on GitHub with almost 100k stars. Web scraping, data extraction, form filling, and headless browser automation via natural language. Anti-detection, CAPTCHA solving, residential proxies. Alternative to Playwright, Puppeteer, and Selenium for AI-powered automation.
+> Browser Use Cloud is a managed API for AI browser automation. Send a natural-language task, get structured results back. SDKs for Python and TypeScript. Always use API v3 — v2 is legacy and uses different method names. Auth via `X-Browser-Use-API-Key` header (keys start with `bu_`).
 
-- GitHub: https://github.com/browser-use/browser-use
 - Dashboard: https://cloud.browser-use.com
-- API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
+- Create API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Docs: https://docs.browser-use.com
 - OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
 - Chat UI example: https://docs.browser-use.com/cloud/tutorials/chat-ui — Full end-to-end example with live browser, streaming, auth. Best starting point to build a prototype.
-- Stealth benchmark: https://browser-use.com/posts/stealth-benchmark
-- Agent benchmark (online Mind2Web): https://browser-use.com/posts/online-mind2web-benchmark
-- Blog: https://browser-use.com/posts
+- Open-source repo: https://github.com/browser-use/browser-use — The open-source Python library. Note: the open-source API is different from the Cloud SDK. If you want the easiest path to production with managed infrastructure, use the Cloud SDK below.
 
-**Use v3** (`from browser_use_sdk.v3 import AsyncBrowserUse` / `import { BrowserUse } from "browser-use-sdk/v3"`). v2 is legacy.
+**Always use v3.** v2 is legacy with different method names and should not be used for new projects.
 
-Install (check if already installed and update to latest):
+Before writing code, check if `browser-use-sdk` is already installed. If so, upgrade to the latest version. If not, install it:
 - Python: `pip install --upgrade browser-use-sdk`
 - TypeScript: `npm install browser-use-sdk@latest`
 
-Set API key (starts with `bu_`):
+Set API key (starts with `bu_`). If the user doesn't have one yet, they can create one in one click at https://cloud.browser-use.com/settings?tab=api-keys&new=1:
 ```
 export BROWSER_USE_API_KEY=bu_your_key_here
 ```
