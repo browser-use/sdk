@@ -72,6 +72,9 @@ export class BrowserUse {
   run(task: string, options?: RunSessionOptions): SessionRun<any> {
     const { schema, timeout, interval, ...rest } = options ?? {};
     const body = { task, ...rest } as RunTaskRequest;
+    if (body.proxyCountryCode) {
+      body.proxyCountryCode = body.proxyCountryCode.toLowerCase() as any;
+    }
     if (schema) {
       body.outputSchema = z.toJSONSchema(schema) as Record<string, unknown>;
     }

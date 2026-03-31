@@ -88,6 +88,10 @@ https://live.browser-use.com?wss=...&ui=false
 
 ## Recording
 
+<Note>
+  `waitForRecording` / `wait_for_recording` requires the **v3 SDK** (`from browser_use_sdk.v3 import AsyncBrowserUse` / `import { BrowserUse } from "browser-use-sdk/v3"`).
+</Note>
+
 Enable recording to get an MP4 video of the browser session. Only available when the agent actually opens a browser — tasks answered without browsing produce no recording. If you run multiple tasks in the same session (with `keep_alive`), you may get multiple recordings.
 
 <CodeGroup>
