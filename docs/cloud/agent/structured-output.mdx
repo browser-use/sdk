@@ -55,3 +55,75 @@ for (const post of result.output.posts) {
 }
 ```
 </CodeGroup>
+
+## Scrape multiple sites concurrently
+
+Each `client.run()` call creates its own session, so you can run them in parallel with `asyncio.gather` (Python) or `Promise.all` (TypeScript). Every result is fully typed.
+
+<CodeGroup>
+```python Python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+from pydantic import BaseModel
+
+class Product(BaseModel):
+    name: str
+    price: str
+    url: str
+
+class Results(BaseModel):
+    products: list[Product]
+
+async def main():
+    client = AsyncBrowserUse()
+
+    sites = [
+        "Find the top 3 laptops on amazon.com with their prices",
+        "Find the top 3 laptops on bestbuy.com with their prices",
+        "Find the top 3 laptops on newegg.com with their prices",
+    ]
+
+    results = await asyncio.gather(*[
+        client.run(task, output_schema=Results)
+        for task in sites
+    ])
+
+    for result in results:
+        for p in result.output.products:
+            print(f"{p.name} — {p.price}")
+
+asyncio.run(main())
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { z } from "zod";
+
+const Product = z.object({
+  name: z.string(),
+  price: z.string(),
+  url: z.string(),
+});
+
+const Results = z.object({
+  products: z.array(Product),
+});
+
+const client = new BrowserUse();
+
+const sites = [
+  "Find the top 3 laptops on amazon.com with their prices",
+  "Find the top 3 laptops on bestbuy.com with their prices",
+  "Find the top 3 laptops on newegg.com with their prices",
+];
+
+const results = await Promise.all(
+  sites.map((task) => client.run(task, { schema: Results }))
+);
+
+for (const result of results) {
+  for (const p of result.output.products) {
+    console.log(`${p.name} — ${p.price}`);
+  }
+}
+```
+</CodeGroup>
