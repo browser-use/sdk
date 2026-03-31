@@ -1138,7 +1138,8 @@ export interface components {
              */
             id: string;
             status: components["schemas"]["BuAgentSessionStatus"];
-            model: components["schemas"]["BuModel"];
+            /** The model used. May be a BuModel alias or a resolved model name. */
+            model: string;
             /** Title */
             title?: string | null;
             /** Output */

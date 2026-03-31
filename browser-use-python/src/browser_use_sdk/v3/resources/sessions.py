@@ -55,7 +55,7 @@ class Sessions:
         if profile_id is not None:
             body["profileId"] = profile_id
         if proxy_country_code is not _UNSET:
-            body["proxyCountryCode"] = proxy_country_code
+            body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
         if output_schema is not None:
             body["outputSchema"] = output_schema
         if workspace_id is not None:
@@ -232,7 +232,7 @@ class AsyncSessions:
         if profile_id is not None:
             body["profileId"] = profile_id
         if proxy_country_code is not _UNSET:
-            body["proxyCountryCode"] = proxy_country_code
+            body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
         if output_schema is not None:
             body["outputSchema"] = output_schema
         if workspace_id is not None:

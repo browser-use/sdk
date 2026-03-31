@@ -668,7 +668,7 @@ class SessionResponse(BaseModel):
     )
     id: UUID = Field(..., title='Id')
     status: BuAgentSessionStatus
-    model: BuModel
+    model: str
     title: str | None = Field(None, title='Title')
     output: Any = Field(None, title='Output')
     output_schema: dict[str, Any] | None = Field(
