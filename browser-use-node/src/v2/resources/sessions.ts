@@ -20,6 +20,9 @@ export class Sessions {
 
   /** Create a new session. */
   create(body?: CreateSessionBody): Promise<SessionItemView> {
+    if (body?.proxyCountryCode) {
+      body = { ...body, proxyCountryCode: body.proxyCountryCode.toLowerCase() as any };
+    }
     return this.http.post<SessionItemView>("/sessions", body);
   }
 

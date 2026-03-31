@@ -29,7 +29,7 @@ def _build_create_body(
     if profile_id is not None:
         body["profileId"] = profile_id
     if proxy_country_code is not None:
-        body["proxyCountryCode"] = proxy_country_code
+        body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
     if start_url is not None:
         body["startUrl"] = start_url
     if browser_screen_width is not None:

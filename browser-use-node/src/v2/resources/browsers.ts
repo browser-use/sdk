@@ -19,6 +19,9 @@ export class Browsers {
 
   /** Create a new browser session. */
   create(body: CreateBrowserBody = {}): Promise<BrowserSessionItemView> {
+    if (body.proxyCountryCode) {
+      body = { ...body, proxyCountryCode: body.proxyCountryCode.toLowerCase() as any };
+    }
     return this.http.post<BrowserSessionItemView>("/browsers", body);
   }
 
