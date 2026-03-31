@@ -56,6 +56,22 @@ Useful for human interaction or to see live what's happening.
 ></iframe>
 ```
 
+The live URL is hosted on `live.browser-use.com`. If your app sets a Content Security Policy, add it to your `frame-src` directive:
+
+```
+Content-Security-Policy: frame-src 'self' https://live.browser-use.com;
+```
+
+For responsive sizing, use CSS instead of fixed dimensions:
+
+```html
+<iframe
+  src="{live_url}"
+  style="width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px;"
+  allow="autoplay"
+></iframe>
+```
+
 ## Customize
 
 Append query parameters to the `liveUrl`:

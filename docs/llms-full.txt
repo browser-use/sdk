@@ -430,6 +430,64 @@ for (const w of response.items) {
 await client.workspaces.delete(workspaceId);
 ```
 
+## Organize with prefixes
+
+Use `prefix` to organize files into directories within a workspace:
+
+```python Python
+# Upload into a subdirectory
+await client.workspaces.upload(workspace.id, "report.pdf", prefix="reports/")
+
+# List files in a subdirectory
+files = await client.workspaces.files(workspace.id, prefix="reports/")
+for f in files.items:
+print(f.path, f.size)
+
+# Download only files from a subdirectory
+await client.workspaces.download_all(workspace.id, to="./output", prefix="reports/")
+```
+```typescript TypeScript
+// Upload into a subdirectory
+await client.workspaces.upload(workspace.id, "report.pdf", { prefix: "reports/" });
+
+// List files in a subdirectory
+const files = await client.workspaces.files(workspace.id, { prefix: "reports/" });
+for (const f of files.items) {
+  console.log(f.path, f.size);
+}
+
+// Download only files from a subdirectory
+await client.workspaces.downloadAll(workspace.id, { to: "./output", prefix: "reports/" });
+```
+
+## List and delete files
+
+```python Python
+# List all files
+files = await client.workspaces.files(workspace.id)
+for f in files.items:
+print(f.path, f.size)
+
+# Delete a single file
+await client.workspaces.delete_file(workspace.id, "old-report.pdf")
+
+# Check workspace storage usage
+size = await client.workspaces.size(workspace.id)
+print(f"Used: {size}")
+```
+```typescript TypeScript
+// List all files
+const files = await client.workspaces.files(workspace.id);
+for (const f of files.items) {
+  console.log(f.path, f.size);
+}
+
+// Delete a single file
+await client.workspaces.deleteFile(workspace.id, "old-report.pdf");
+```
+
+## Manage workspaces
+
 You can also manage workspaces from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=workspaces).
 
   Deleting a workspace permanently removes all its files. This cannot be undone.
@@ -661,6 +719,22 @@ Useful for human interaction or to see live what's happening.
   height="720"
   allow="autoplay"
   style="border: none; border-radius: 8px;"
+></iframe>
+```
+
+The live URL is hosted on `live.browser-use.com`. If your app sets a Content Security Policy, add it to your `frame-src` directive:
+
+```
+Content-Security-Policy: frame-src 'self' https://live.browser-use.com;
+```
+
+For responsive sizing, use CSS instead of fixed dimensions:
+
+```html
+<iframe
+  src="{live_url}"
+  style="width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px;"
+  allow="autoplay"
 ></iframe>
 ```
 
@@ -1813,7 +1887,8 @@ Source: https://docs.browser-use.com/cloud/faq
 
 ## Which model should I use?
 
-- **bu-max** (recommended) — most capable. Use for complex multi-step workflows.
+- **bu-ultra** — most capable. Use for the hardest tasks that need maximum accuracy.
+- **bu-max** (default) — best balance of capability and cost. Use for complex multi-step workflows.
 - **bu-mini** — faster, cheaper. Good for simple tasks.
 
 ## How do I get the live browser URL?
@@ -2274,14 +2349,14 @@ https://api.browser-use.com/api/v3
 
 ## Quick example
 
-```bash curl
-# Create a session
+```bash Create a session
 curl -X POST https://api.browser-use.com/api/v3/sessions \
   -H "X-Browser-Use-API-Key: bu_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{"task": "Find the top 3 trending repos on GitHub today"}'
+```
 
-# Get session result (replace SESSION_ID)
+```bash Get session result (replace SESSION_ID)
 curl https://api.browser-use.com/api/v3/sessions/SESSION_ID \
   -H "X-Browser-Use-API-Key: bu_your_key_here"
 ```

@@ -125,6 +125,68 @@ await client.workspaces.delete(workspaceId);
 ```
 </CodeGroup>
 
+## Organize with prefixes
+
+Use `prefix` to organize files into directories within a workspace:
+
+<CodeGroup>
+```python Python
+# Upload into a subdirectory
+await client.workspaces.upload(workspace.id, "report.pdf", prefix="reports/")
+
+# List files in a subdirectory
+files = await client.workspaces.files(workspace.id, prefix="reports/")
+for f in files.items:
+    print(f.path, f.size)
+
+# Download only files from a subdirectory
+await client.workspaces.download_all(workspace.id, to="./output", prefix="reports/")
+```
+```typescript TypeScript
+// Upload into a subdirectory
+await client.workspaces.upload(workspace.id, "report.pdf", { prefix: "reports/" });
+
+// List files in a subdirectory
+const files = await client.workspaces.files(workspace.id, { prefix: "reports/" });
+for (const f of files.items) {
+  console.log(f.path, f.size);
+}
+
+// Download only files from a subdirectory
+await client.workspaces.downloadAll(workspace.id, { to: "./output", prefix: "reports/" });
+```
+</CodeGroup>
+
+## List and delete files
+
+<CodeGroup>
+```python Python
+# List all files
+files = await client.workspaces.files(workspace.id)
+for f in files.items:
+    print(f.path, f.size)
+
+# Delete a single file
+await client.workspaces.delete_file(workspace.id, "old-report.pdf")
+
+# Check workspace storage usage
+size = await client.workspaces.size(workspace.id)
+print(f"Used: {size}")
+```
+```typescript TypeScript
+// List all files
+const files = await client.workspaces.files(workspace.id);
+for (const f of files.items) {
+  console.log(f.path, f.size);
+}
+
+// Delete a single file
+await client.workspaces.deleteFile(workspace.id, "old-report.pdf");
+```
+</CodeGroup>
+
+## Manage workspaces
+
 You can also manage workspaces from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=workspaces).
 
 <Warning>
