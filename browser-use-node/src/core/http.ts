@@ -90,16 +90,20 @@ export class HttpClient {
         } catch {
           /* ignore parse errors */
         }
-        const message =
+        const raw =
           typeof errorBody === "object" && errorBody !== null
-            ? String(
-                "message" in errorBody
-                  ? (errorBody as Record<string, unknown>).message
-                  : "detail" in errorBody
-                    ? (errorBody as Record<string, unknown>).detail
-                    : `HTTP ${response.status}`,
-              )
-            : `HTTP ${response.status}`;
+            ? "message" in errorBody
+              ? (errorBody as Record<string, unknown>).message
+              : "detail" in errorBody
+                ? (errorBody as Record<string, unknown>).detail
+                : undefined
+            : undefined;
+        const message =
+          raw === undefined
+            ? `HTTP ${response.status}`
+            : typeof raw === "string"
+              ? raw
+              : JSON.stringify(raw);
         throw new BrowserUseError(response.status, message, errorBody);
       } catch (error) {
         clearTimeout(timeoutId);
