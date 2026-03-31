@@ -178,6 +178,14 @@ class BrowserUse:
         if session_id is not None and keep_alive is None:
             keep_alive = True
 
+        # For follow-up runs, snapshot the latest message cursor so the
+        # stream skips messages from previous tasks on this session.
+        start_cursor: str | None = None
+        if session_id is not None:
+            resp = self.sessions.messages(session_id, limit=1)
+            if resp.messages:
+                start_cursor = str(resp.messages[-1].id)
+
         data = self.sessions.create(
             task,
             model=model,
@@ -192,7 +200,7 @@ class BrowserUse:
             custom_proxy=custom_proxy,
             **extra,
         )
-        return SessionStream(data, self.sessions, resolved_schema)
+        return SessionStream(data, self.sessions, resolved_schema, _start_cursor=start_cursor)
 
     def close(self) -> None:
         """Close the underlying HTTP client."""
@@ -312,8 +320,17 @@ class AsyncBrowserUse:
         if session_id is not None and keep_alive is None:
             effective_keep_alive = True
 
-        def create_fn() -> Awaitable[SessionResponse]:
-            return self.sessions.create(
+        # For follow-up runs, snapshot the latest message cursor so the
+        # iterator skips messages from previous tasks on this session.
+        start_cursor: str | None = None
+
+        async def create_fn() -> SessionResponse:
+            nonlocal start_cursor
+            if session_id is not None:
+                resp = await self.sessions.messages(str(session_id), limit=1)
+                if resp.messages:
+                    start_cursor = str(resp.messages[-1].id)
+            return await self.sessions.create(
                 task,
                 model=model,
                 session_id=session_id,
@@ -328,7 +345,7 @@ class AsyncBrowserUse:
                 **extra,
             )
 
-        return AsyncSessionRun(create_fn, self.sessions, resolved_schema)
+        return AsyncSessionRun(create_fn, self.sessions, resolved_schema, _start_cursor_ref=lambda: start_cursor)
 
     async def close(self) -> None:
         """Close the underlying HTTP client."""

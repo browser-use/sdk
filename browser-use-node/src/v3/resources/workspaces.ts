@@ -126,15 +126,28 @@ export class Workspaces {
    *
    * ```ts
    * await client.workspaces.upload(wsId, "data.csv", "config.json");
+   * await client.workspaces.upload(wsId, "data.csv", { prefix: "uploads/" });
    * ```
    */
-  async upload(workspaceId: string, ...paths: string[]): Promise<string[]> {
+  async upload(workspaceId: string, ...args: (string | { prefix?: string })[]): Promise<string[]> {
+    let prefix: string | undefined;
+    const paths: string[] = [];
+    for (const arg of args) {
+      if (typeof arg === "string") {
+        paths.push(arg);
+      } else if (typeof arg === "object" && arg !== null) {
+        prefix = arg.prefix;
+      }
+    }
+    if (paths.length === 0) {
+      throw new Error("At least one file path is required");
+    }
     const items = paths.map((p) => ({
       name: basename(p),
       contentType: guessContentType(p),
       size: statSync(p).size,
     }));
-    const resp = await this.uploadFiles(workspaceId, { files: items });
+    const resp = await this.uploadFiles(workspaceId, { files: items }, prefix ? { prefix } : undefined);
     for (let i = 0; i < paths.length; i++) {
       const body = readFileSync(paths[i]);
       const res = await fetch(resp.files[i].uploadUrl, {

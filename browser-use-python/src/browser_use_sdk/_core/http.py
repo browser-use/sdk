@@ -45,12 +45,18 @@ def _raise_for_status(response: httpx.Response) -> None:
         body = response.json()
     except Exception:
         body = None
-    message = ""
     detail = body
     if isinstance(body, dict):
-        message = body.get("message", body.get("detail", response.reason_phrase or ""))
+        raw = body.get("message", body.get("detail"))
     else:
+        raw = None
+    if raw is None:
         message = response.reason_phrase or str(response.status_code)
+    elif isinstance(raw, str):
+        message = raw
+    else:
+        import json
+        message = json.dumps(raw)
     raise BrowserUseError(response.status_code, message, detail)
 
 

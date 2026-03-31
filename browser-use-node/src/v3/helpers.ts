@@ -12,6 +12,8 @@ export interface RunOptions {
   timeout?: number;
   /** Polling interval in milliseconds. Default: 2_000. */
   interval?: number;
+  /** @internal Starting message cursor for follow-up runs on an existing session. */
+  _startCursor?: string;
 }
 
 /** Session result with typed output. All SessionResponse fields are directly accessible. */
@@ -27,6 +29,7 @@ export class SessionRun<T = string> implements PromiseLike<SessionResult<T>> {
   private readonly _schema?: z.ZodType<T>;
   private readonly _timeout: number;
   private readonly _interval: number;
+  private readonly _options?: RunOptions;
   private _sessionId: string | null = null;
   private _result: SessionResult<T> | null = null;
 
@@ -41,6 +44,7 @@ export class SessionRun<T = string> implements PromiseLike<SessionResult<T>> {
     this._schema = schema;
     this._timeout = options?.timeout ?? 14_400_000;
     this._interval = options?.interval ?? 2_000;
+    this._options = options;
   }
 
   /** The session ID, available after task creation resolves. */
@@ -101,7 +105,7 @@ export class SessionRun<T = string> implements PromiseLike<SessionResult<T>> {
    */
   async *[Symbol.asyncIterator](): AsyncGenerator<MessageResponse> {
     const sessionId = await this._ensureSessionId();
-    let cursor: string | undefined;
+    let cursor: string | undefined = this._options?._startCursor;
     const deadline = Date.now() + this._timeout;
 
     while (Date.now() < deadline) {
