@@ -172,6 +172,37 @@ class Sessions:
             )
         )
 
+    def rerun(
+        self,
+        task_id: str,
+        workspace_id: str | UUID,
+        *,
+        params: dict[str, Any] | None = None,
+        auto: bool = False,
+        model: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
+        profile_id: str | None = None,
+        **extra: Any,
+    ) -> SessionResponse:
+        """Re-execute a cached script without LLM. Returns session for polling."""
+        body: dict[str, Any] = {
+            "taskId": task_id,
+            "workspaceId": str(workspace_id),
+            "auto": auto,
+        }
+        if params is not None:
+            body["params"] = params
+        if model is not None:
+            body["model"] = model
+        if proxy_country_code is not _UNSET:
+            body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
+        if profile_id is not None:
+            body["profileId"] = profile_id
+        body.update(extra)
+        return SessionResponse.model_validate(
+            self._http.request("POST", "/sessions/rerun", json=body)
+        )
+
     def wait_for_recording(
         self,
         session_id: str | UUID,
@@ -347,6 +378,37 @@ class AsyncSessions:
                     "limit": limit,
                 },
             )
+        )
+
+    async def rerun(
+        self,
+        task_id: str,
+        workspace_id: str | UUID,
+        *,
+        params: dict[str, Any] | None = None,
+        auto: bool = False,
+        model: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
+        profile_id: str | None = None,
+        **extra: Any,
+    ) -> SessionResponse:
+        """Re-execute a cached script without LLM. Returns session for polling."""
+        body: dict[str, Any] = {
+            "taskId": task_id,
+            "workspaceId": str(workspace_id),
+            "auto": auto,
+        }
+        if params is not None:
+            body["params"] = params
+        if model is not None:
+            body["model"] = model
+        if proxy_country_code is not _UNSET:
+            body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
+        if profile_id is not None:
+            body["profileId"] = profile_id
+        body.update(extra)
+        return SessionResponse.model_validate(
+            await self._http.request("POST", "/sessions/rerun", json=body)
         )
 
     async def wait_for_recording(
