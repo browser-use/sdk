@@ -20,6 +20,8 @@ Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/sett
 export BROWSER_USE_API_KEY=your_key
 ```
 
+If the user doesn't have a Browser Use API key yet, please ask them to create one — it's one click at https://cloud.browser-use.com/settings?tab=api-keys&new=1. They can paste the key right into the chat.
+
 ## 2. Run your first task
 
 ```python Python

@@ -365,6 +365,7 @@
     {"source": "/cloud/guides/skills", "destination": "/cloud/legacy/skills"},
     {"source": "/introduction", "destination": "/cloud/quickstart"},
     {"source": "/cloud/introduction", "destination": "/cloud/quickstart"},
+    {"source": "/cloud/browsers", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
     {"source": "/quickstart", "destination": "/open-source/quickstart"},
     {"source": "/quickstart_llm", "destination": "/open-source/vibecoding"},
     {"source": "/supported-models", "destination": "/open-source/supported-models"},

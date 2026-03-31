@@ -23,6 +23,36 @@ Set API key (starts with `bu_`):
 export BROWSER_USE_API_KEY=bu_your_key_here
 ```
 
+If the user doesn't have a Browser Use API key yet, please ask them to create one — it's one click at https://cloud.browser-use.com/settings?tab=api-keys&new=1. They can paste the key right into the chat.
+
+## Quick Connect (no SDK needed)
+
+Connect Playwright, Puppeteer, or any CDP client to a stealth browser with one URL:
+```
+wss://connect.browser-use.com?apiKey=YOUR_KEY
+```
+
+Query params: `proxyCountryCode` (e.g. `us`, `de`), `profileId`, `timeout` (minutes), `browserScreenWidth`, `browserScreenHeight`.
+
+```python Playwright (Python)
+from playwright.async_api import async_playwright
+async with async_playwright() as p:
+    browser = await p.chromium.connect_over_cdp("wss://connect.browser-use.com?apiKey=YOUR_KEY")
+    page = browser.contexts[0].pages[0]
+    await page.goto("https://example.com")
+```
+```javascript Playwright (Node)
+import { chromium } from "playwright";
+const browser = await chromium.connectOverCDP("wss://connect.browser-use.com?apiKey=YOUR_KEY");
+const page = browser.contexts()[0].pages()[0];
+await page.goto("https://example.com");
+```
+```javascript Puppeteer
+import puppeteer from "puppeteer-core";
+const browser = await puppeteer.connect({ browserWSEndpoint: "wss://connect.browser-use.com?apiKey=YOUR_KEY" });
+const [page] = await browser.pages();
+await page.goto("https://example.com");
+```
 
 ## Get Started
 - [Quick start](https://docs.browser-use.com/cloud/quickstart): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
