@@ -136,7 +136,7 @@ await client.workspaces.upload(workspace.id, "report.pdf", prefix="reports/")
 
 # List files in a subdirectory
 files = await client.workspaces.files(workspace.id, prefix="reports/")
-for f in files.items:
+for f in files.files:
     print(f.path, f.size)
 
 # Download only files from a subdirectory
@@ -148,7 +148,7 @@ await client.workspaces.upload(workspace.id, "report.pdf", { prefix: "reports/" 
 
 // List files in a subdirectory
 const files = await client.workspaces.files(workspace.id, { prefix: "reports/" });
-for (const f of files.items) {
+for (const f of files.files) {
   console.log(f.path, f.size);
 }
 
@@ -163,7 +163,7 @@ await client.workspaces.downloadAll(workspace.id, { to: "./output", prefix: "rep
 ```python Python
 # List all files
 files = await client.workspaces.files(workspace.id)
-for f in files.items:
+for f in files.files:
     print(f.path, f.size)
 
 # Delete a single file
@@ -176,7 +176,7 @@ print(f"Used: {size}")
 ```typescript TypeScript
 // List all files
 const files = await client.workspaces.files(workspace.id);
-for (const f of files.items) {
+for (const f of files.files) {
   console.log(f.path, f.size);
 }
 
