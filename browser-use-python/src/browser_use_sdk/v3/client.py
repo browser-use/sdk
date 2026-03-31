@@ -320,16 +320,16 @@ class AsyncBrowserUse:
         if session_id is not None and keep_alive is None:
             effective_keep_alive = True
 
-        # For follow-up runs, we need to snapshot the latest message cursor
-        # before creating the task. We wrap create_fn to do this lazily.
-        run_holder: list[AsyncSessionRun[Any]] = []
+        # For follow-up runs, snapshot the latest message cursor so the
+        # iterator skips messages from previous tasks on this session.
+        start_cursor: str | None = None
 
         async def create_fn() -> SessionResponse:
-            # Snapshot latest message cursor for follow-up runs
-            if session_id is not None and run_holder:
+            nonlocal start_cursor
+            if session_id is not None:
                 resp = await self.sessions.messages(str(session_id), limit=1)
                 if resp.messages:
-                    run_holder[0]._start_cursor = str(resp.messages[-1].id)
+                    start_cursor = str(resp.messages[-1].id)
             return await self.sessions.create(
                 task,
                 model=model,
@@ -345,9 +345,7 @@ class AsyncBrowserUse:
                 **extra,
             )
 
-        run = AsyncSessionRun(create_fn, self.sessions, resolved_schema)
-        run_holder.append(run)
-        return run
+        return AsyncSessionRun(create_fn, self.sessions, resolved_schema, _start_cursor_ref=lambda: start_cursor)
 
     async def close(self) -> None:
         """Close the underlying HTTP client."""
