@@ -167,7 +167,7 @@ for f in files.files:
     print(f.path, f.size)
 
 # Delete a single file
-await client.workspaces.delete_file(workspace.id, "old-report.pdf")
+await client.workspaces.delete_file(workspace.id, path="old-report.pdf")
 
 # Check workspace storage usage
 size = await client.workspaces.size(workspace.id)
