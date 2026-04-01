@@ -116,15 +116,19 @@ class BrowserUse:
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         custom_proxy: dict[str, Any] | None = None,
-        save_script: bool = False,
+        cache_script: bool | None = None,
         **extra: Any,
     ) -> Any:
         """Run a task and block until complete. Returns a SessionResult.
 
-        If save_script=True, the agent creates a deterministic Python script on the
-        first call. On subsequent calls with the same task template, the cached script
-        executes directly with $0 LLM cost. Use {{value}} brackets for parameters.
-        Requires workspace_id.
+        Script caching (cache_script):
+        - None (default): auto-detected. If the task contains {{value}} brackets
+          and a workspace is attached, caching is enabled automatically.
+        - True: force-enable caching (even without brackets).
+        - False: force-disable caching.
+
+        When active, the first call runs the full agent and saves a reusable script.
+        Subsequent calls with the same task template execute the script with $0 LLM cost.
         """
         resolved_schema = schema or output_schema
         schema_dict: dict[str, Any] | None = None
@@ -147,7 +151,7 @@ class BrowserUse:
             workspace_id=workspace_id,
             enable_recording=enable_recording,
             custom_proxy=custom_proxy,
-            save_script=save_script,
+            cache_script=cache_script,
             **extra,
         )
         return _poll_output(self.sessions, str(data.id), resolved_schema)
@@ -315,7 +319,7 @@ class AsyncBrowserUse:
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         custom_proxy: dict[str, Any] | None = None,
-        save_script: bool = False,
+        cache_script: bool | None = None,
         **extra: Any,
     ) -> AsyncSessionRun[Any]:
         """Run a task. Await the result for a SessionResult.
@@ -356,7 +360,7 @@ class AsyncBrowserUse:
                 workspace_id=workspace_id,
                 enable_recording=enable_recording,
                 custom_proxy=custom_proxy,
-                save_script=save_script,
+                cache_script=cache_script,
                 **extra,
             )
 
