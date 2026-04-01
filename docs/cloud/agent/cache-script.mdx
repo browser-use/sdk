@@ -166,25 +166,25 @@ result = await client.run(
 <CodeGroup>
 ```python Python
 result = await client.run(
-    "Go to {{https://help.netflix.com}} and get subscription prices for {{Germany,France,Japan}}",
+    "Go to help.netflix.com and get subscription prices for {{Germany,France,Japan}}",
     workspace_id=str(workspace.id),
 )
 
 # Different countries — cached
 result2 = await client.run(
-    "Go to {{https://help.netflix.com}} and get subscription prices for {{US,UK,Brazil}}",
+    "Go to help.netflix.com and get subscription prices for {{US,UK,Brazil}}",
     workspace_id=str(workspace.id),
 )
 ```
 ```typescript TypeScript
 let result = await client.run(
-  "Go to {{https://help.netflix.com}} and get subscription prices for {{Germany,France,Japan}}",
+  "Go to help.netflix.com and get subscription prices for {{Germany,France,Japan}}",
   { workspaceId: workspace.id },
 );
 
 // Different countries — cached
 result = await client.run(
-  "Go to {{https://help.netflix.com}} and get subscription prices for {{US,UK,Brazil}}",
+  "Go to help.netflix.com and get subscription prices for {{US,UK,Brazil}}",
   { workspaceId: workspace.id },
 );
 ```
