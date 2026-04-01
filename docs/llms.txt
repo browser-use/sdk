@@ -31,6 +31,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks): Run multiple tasks in the same browser session.
 - [Live messages](https://docs.browser-use.com/cloud/agent/streaming): Stream the agent's messages in real time to build custom UIs or monitor progress.
 - [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces): Upload files for the agent, download files the agent creates.
+- [Deterministic rerun](https://docs.browser-use.com/cloud/agent/cache-script): Run a task once, then re-execute it for $0 LLM cost.
 - [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop): Let a human interact with the live browser while the agent is running. Useful for approvals, payments, complex auth flows, or reviewing agent work before continuing.
 
 ## Browser
