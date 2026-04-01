@@ -17,6 +17,7 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 session = await client.sessions.create(profile_id="your_synced_profile_id")
 result = await client.run("Check my LinkedIn messages", session_id=session.id)
+await client.sessions.stop(session.id)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -26,5 +27,6 @@ const session = await client.sessions.create({ profileId: "your_synced_profile_i
 const result = await client.run("Check my LinkedIn messages", {
   sessionId: session.id,
 });
+await client.sessions.stop(session.id);
 ```
 </CodeGroup>

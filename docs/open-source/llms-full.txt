@@ -8,8 +8,8 @@ Source: https://docs.browser-use.com/open-source/introduction
 <img src="/images/intro-oss-light.svg" alt="Browser Use Open Source" noZoom className="block dark:hidden" />
 <img src="/images/intro-oss-dark.svg" alt="Browser Use Open Source" noZoom className="hidden dark:block" />
 
-Install and run your first agent.
-Full SDK reference in a single page.
+    Install and run your first agent.
+    Full SDK reference in a single page.
 
   Try [Browser Use Cloud](https://docs.browser-use.com/cloud/introduction) for our SOTA model, stealth browsers, CAPTCHA solving, and managed infrastructure.
 
@@ -84,13 +84,13 @@ import asyncio
 load_dotenv()
 
 async def main():
-llm = ChatBrowserUse()
-task = "Find the number 1 post on Show HN"
-agent = Agent(task=task, llm=llm)
-await agent.run()
+    llm = ChatBrowserUse()
+    task = "Find the number 1 post on Show HN"
+    agent = Agent(task=task, llm=llm)
+    await agent.run()
 
 if __name__ == "__main__":
-asyncio.run(main())
+    asyncio.run(main())
 ```
 ```python Google
 from browser_use import Agent, ChatGoogle
@@ -100,13 +100,13 @@ import asyncio
 load_dotenv()
 
 async def main():
-llm = ChatGoogle(model="gemini-flash-latest")
-task = "Find the number 1 post on Show HN"
-agent = Agent(task=task, llm=llm)
-await agent.run()
+    llm = ChatGoogle(model="gemini-flash-latest")
+    task = "Find the number 1 post on Show HN"
+    agent = Agent(task=task, llm=llm)
+    await agent.run()
 
 if __name__ == "__main__":
-asyncio.run(main())
+    asyncio.run(main())
 ```
 ```python OpenAI
 from browser_use import Agent, ChatOpenAI
@@ -116,13 +116,13 @@ import asyncio
 load_dotenv()
 
 async def main():
-llm = ChatOpenAI(model="gpt-4.1-mini")
-task = "Find the number 1 post on Show HN"
-agent = Agent(task=task, llm=llm)
-await agent.run()
+    llm = ChatOpenAI(model="gpt-4.1-mini")
+    task = "Find the number 1 post on Show HN"
+    agent = Agent(task=task, llm=llm)
+    await agent.run()
 
 if __name__ == "__main__":
-asyncio.run(main())
+    asyncio.run(main())
 ```
 ```python Anthropic
 from browser_use import Agent, ChatAnthropic
@@ -132,13 +132,13 @@ import asyncio
 load_dotenv()
 
 async def main():
-llm = ChatAnthropic(model='claude-sonnet-4-0', temperature=0.0)
-task = "Find the number 1 post on Show HN"
-agent = Agent(task=task, llm=llm)
-await agent.run()
+    llm = ChatAnthropic(model='claude-sonnet-4-0', temperature=0.0)
+    task = "Find the number 1 post on Show HN"
+    agent = Agent(task=task, llm=llm)
+    await agent.run()
 
 if __name__ == "__main__":
-asyncio.run(main())
+    asyncio.run(main())
 ```
 
 
@@ -155,15 +155,15 @@ from browser_use.agent.service import Agent
 
 @sandbox(cloud_profile_id='your-profile-id')
 async def production_task(browser: Browser):
-agent = Agent(
-    task="Your authenticated task",
-    browser=browser,
-    llm=ChatBrowserUse(),
-)
-await agent.run()
+    agent = Agent(
+        task="Your authenticated task",
+        browser=browser,
+        llm=ChatBrowserUse(),
+    )
+    await agent.run()
 
 if __name__ == "__main__":
-asyncio.run(production_task())
+    asyncio.run(production_task())
 ```
 
 See [Browser Use Cloud](https://docs.browser-use.com/cloud/quickstart) for how to sync your cookies to the cloud.
@@ -199,8 +199,8 @@ llm = ChatBrowserUse(model='bu-2-0')
 
 # Create agent with the model
 agent = Agent(
-task="...", # Your task here
-llm=llm
+    task="...", # Your task here
+    llm=llm
 )
 ```
 
@@ -254,8 +254,8 @@ llm = ChatGoogle(model='gemini-flash-latest')
 
 # Create agent with the model
 agent = Agent(
-task="Your task here",
-llm=llm
+    task="Your task here",
+    llm=llm
 )
 ```
 
@@ -275,13 +275,13 @@ from browser_use import Agent, ChatOpenAI
 
 # Initialize the model
 llm = ChatOpenAI(
-model="o3",
+    model="o3",
 )
 
 # Create agent with the model
 agent = Agent(
-task="...", # Your task here
-llm=llm
+    task="...", # Your task here
+    llm=llm
 )
 ```
 
@@ -302,13 +302,13 @@ from browser_use import Agent, ChatAnthropic
 
 # Initialize the model
 llm = ChatAnthropic(
-model="claude-sonnet-4-0",
+    model="claude-sonnet-4-0",
 )
 
 # Create agent with the model
 agent = Agent(
-task="...", # Your task here
-llm=llm
+    task="...", # Your task here
+    llm=llm
 )
 ```
 
@@ -327,13 +327,13 @@ import os
 
 # Initialize the model
 llm = ChatAzureOpenAI(
-model="o4-mini",
+    model="o4-mini",
 )
 
 # Create agent with the model
 agent = Agent(
-task="...", # Your task here
-llm=llm
+    task="...", # Your task here
+    llm=llm
 )
 ```
 
@@ -359,20 +359,20 @@ from browser_use import Agent, ChatAzureOpenAI
 
 # Auto-detection (recommended) - uses Responses API for gpt-5.1-codex-mini
 llm = ChatAzureOpenAI(
-model="gpt-5.1-codex-mini",
-api_version="2025-03-01-preview",  # Required for Responses API
+    model="gpt-5.1-codex-mini",
+    api_version="2025-03-01-preview",  # Required for Responses API
 )
 
 # Or explicitly enable/disable Responses API for any model
 llm = ChatAzureOpenAI(
-model="gpt-4o",
-api_version="2025-03-01-preview",
-use_responses_api=True,  # Force Responses API (True/False/'auto')
+    model="gpt-4o",
+    api_version="2025-03-01-preview",
+    use_responses_api=True,  # Force Responses API (True/False/'auto')
 )
 
 agent = Agent(
-task="...",
-llm=llm
+    task="...",
+    llm=llm
 )
 ```
 
@@ -393,14 +393,14 @@ from browser_use.llm import ChatAWSBedrock
 
 # Works with any Bedrock model (Anthropic, Meta, AI21, etc.)
 llm = ChatAWSBedrock(
-model="anthropic.claude-3-5-sonnet-20240620-v1:0",  # or any Bedrock model
-aws_region="us-east-1",
+    model="anthropic.claude-3-5-sonnet-20240620-v1:0",  # or any Bedrock model
+    aws_region="us-east-1",
 )
 
 # Create agent with the model
 agent = Agent(
-task="Your task here",
-llm=llm
+    task="Your task here",
+    llm=llm
 )
 ```
 
@@ -412,14 +412,14 @@ from browser_use.llm import ChatAnthropicBedrock
 
 # Anthropic-specific class with Claude defaults
 llm = ChatAnthropicBedrock(
-model="anthropic.claude-3-5-sonnet-20240620-v1:0",
-aws_region="us-east-1",
+    model="anthropic.claude-3-5-sonnet-20240620-v1:0",
+    aws_region="us-east-1",
 )
 
 # Create agent with the model
 agent = Agent(
-task="Your task here",
-llm=llm
+    task="Your task here",
+    llm=llm
 )
 ```
 
@@ -449,8 +449,8 @@ from browser_use import Agent, ChatGroq
 llm = ChatGroq(model="meta-llama/llama-4-maverick-17b-128e-instruct")
 
 agent = Agent(
-task="Your task here",
-llm=llm
+    task="Your task here",
+    llm=llm
 )
 ```
 
@@ -469,21 +469,21 @@ from browser_use import Agent, ChatOCIRaw
 
 # Initialize the OCI model
 llm = ChatOCIRaw(
-model_id="ocid1.generativeaimodel.oc1.us-chicago-1.amaaaaaask7dceya...",
-service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
-compartment_id="ocid1.tenancy.oc1..aaaaaaaayeiis5uk2nuubznrekd...",
-provider="meta",  # or "cohere"
-temperature=0.7,
-max_tokens=800,
-top_p=0.9,
-auth_type="API_KEY",
-auth_profile="DEFAULT"
+    model_id="ocid1.generativeaimodel.oc1.us-chicago-1.amaaaaaask7dceya...",
+    service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+    compartment_id="ocid1.tenancy.oc1..aaaaaaaayeiis5uk2nuubznrekd...",
+    provider="meta",  # or "cohere"
+    temperature=0.7,
+    max_tokens=800,
+    top_p=0.9,
+    auth_type="API_KEY",
+    auth_profile="DEFAULT"
 )
 
 # Create agent with the model
 agent = Agent(
-task="Your task here",
-llm=llm
+    task="Your task here",
+    llm=llm
 )
 ```
 
@@ -532,9 +532,9 @@ base_url = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
 llm = ChatOpenAI(model='qwen-vl-max', api_key=api_key, base_url=base_url)
 
 agent = Agent(
-task="Your task here",
-llm=llm,
-use_vision=True
+    task="Your task here",
+    llm=llm,
+    use_vision=True
 )
 ```
 
@@ -560,9 +560,9 @@ base_url = 'https://api-inference.modelscope.cn/v1/'
 llm = ChatOpenAI(model='Qwen/Qwen2.5-VL-72B-Instruct', api_key=api_key, base_url=base_url)
 
 agent = Agent(
-task="Your task here",
-llm=llm,
-use_vision=True
+    task="Your task here",
+    llm=llm,
+    use_vision=True
 )
 ```
 
@@ -588,29 +588,29 @@ load_dotenv()
 # Get API key (https://vercel.com/ai-gateway)
 api_key = os.getenv('VERCEL_API_KEY')
 if not api_key:
-raise ValueError('VERCEL_API_KEY is not set')
+    raise ValueError('VERCEL_API_KEY is not set')
 
 # Basic usage
 llm = ChatVercel(
-model='openai/gpt-4o',
-api_key=api_key,
+    model='openai/gpt-4o',
+    api_key=api_key,
 )
 
 # With provider options - control which providers are used and in what order
 # This will try Vertex AI first, then fall back to Anthropic if Vertex fails
 llm_with_provider_options = ChatVercel(
-model='anthropic/claude-sonnet-4',
-api_key=api_key,
-provider_options={
-    'gateway': {
-        'order': ['vertex', 'anthropic']  # Try Vertex AI first, then Anthropic
-    }
-},
+    model='anthropic/claude-sonnet-4',
+    api_key=api_key,
+    provider_options={
+        'gateway': {
+            'order': ['vertex', 'anthropic']  # Try Vertex AI first, then Anthropic
+        }
+    },
 )
 
 agent = Agent(
-task="Your task here",
-llm=llm
+    task="Your task here",
+    llm=llm
 )
 ```
 
@@ -982,8 +982,8 @@ browser-use eval "Array.from(document.querySelectorAll('.titleline a')).slice(0,
 browser-use open https://example.com
 browser-use python "
 for i in range(5):
-browser.scroll('down')
-browser.wait(0.5)
+    browser.scroll('down')
+    browser.wait(0.5)
 browser.screenshot('scrolled.png')
 "
 ```
@@ -1075,12 +1075,12 @@ Source: https://docs.browser-use.com/open-source/customize/agent/basics
 from browser_use import Agent, ChatBrowserUse
 
 agent = Agent(
-task="Search for latest news about AI",
-llm=ChatBrowserUse(),
+    task="Search for latest news about AI",
+    llm=ChatBrowserUse(),
 )
 
 async def main():
-history = await agent.run(max_steps=100)
+    history = await agent.run(max_steps=100)
 ```
 
 - `task`: The task you want to automate.
@@ -1157,8 +1157,8 @@ If the submit button cannot be clicked:
 # When you have custom actions
 @controller.action("Get 2FA code from authenticator app")
 async def get_2fa_code():
-# Your implementation
-pass
+    # Your implementation
+    pass
 
 task = """
 Login with 2FA:
@@ -1429,9 +1429,9 @@ from browser_use import Agent, Browser, ChatBrowserUse
 browser = Browser.from_system_chrome()
 
 agent = Agent(
-task='Check my Gmail inbox',
-browser=browser,
-llm=ChatBrowserUse(),
+    task='Check my Gmail inbox',
+    browser=browser,
+    llm=ChatBrowserUse(),
 )
 await agent.run()
 ```
@@ -1463,9 +1463,9 @@ from browser_use import Agent, Browser, ChatBrowserUse
 browser = Browser(storage_state='auth.json')
 
 agent = Agent(
-task='Check my notifications',
-browser=browser,
-llm=ChatBrowserUse(),
+    task='Check my notifications',
+    browser=browser,
+    llm=ChatBrowserUse(),
 )
 await agent.run()
 ```
@@ -1489,24 +1489,24 @@ The JSON file follows Playwright's format:
 ```json
 {
   "cookies": [
-{
-  "name": "session_id",
-  "value": "abc123",
-  "domain": ".example.com",
-  "path": "/",
-  "expires": 1704067200,
-  "httpOnly": true,
-  "secure": true,
-  "sameSite": "Lax"
-}
+    {
+      "name": "session_id",
+      "value": "abc123",
+      "domain": ".example.com",
+      "path": "/",
+      "expires": 1704067200,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
   ],
   "origins": [
-{
-  "origin": "https://example.com",
-  "localStorage": [
-    {"name": "auth_token", "value": "xyz789"}
-  ]
-}
+    {
+      "origin": "https://example.com",
+      "localStorage": [
+        {"name": "auth_token", "value": "xyz789"}
+      ]
+    }
   ]
 }
 ```
@@ -1533,17 +1533,17 @@ from browser_use import Agent, ChatBrowserUse
 totp_secret = 'JBSWY3DPEHPK3PXP'
 
 agent = Agent(
-task='''
-1. Go to https://example.com/login
-2. Enter username x_user and password x_pass
-3. When prompted for 2FA, enter bu_2fa_code
-''',
-sensitive_data={
-    'x_user': 'myusername',
-    'x_pass': 'mypassword',
-    'bu_2fa_code': totp_secret,  # suffix must be bu_2fa_code
-},
-llm=ChatBrowserUse(),
+    task='''
+    1. Go to https://example.com/login
+    2. Enter username x_user and password x_pass
+    3. When prompted for 2FA, enter bu_2fa_code
+    ''',
+    sensitive_data={
+        'x_user': 'myusername',
+        'x_pass': 'mypassword',
+        'bu_2fa_code': totp_secret,  # suffix must be bu_2fa_code
+    },
+    llm=ChatBrowserUse(),
 )
 await agent.run()
 ```
@@ -1578,19 +1578,19 @@ tools = Tools()
 
 @tools.registry.action('Get email address for signup')
 async def get_email_address():
-return ActionResult(extracted_content=inbox.inbox_id)
+    return ActionResult(extracted_content=inbox.inbox_id)
 
 @tools.registry.action('Get verification code from email')
 async def get_verification_code():
-emails = await email_client.inboxes.messages.list(inbox_id=inbox.inbox_id)
-if emails.messages:
-    return ActionResult(extracted_content=emails.messages[0].text)
-return ActionResult(error='No emails found')
+    emails = await email_client.inboxes.messages.list(inbox_id=inbox.inbox_id)
+    if emails.messages:
+        return ActionResult(extracted_content=emails.messages[0].text)
+    return ActionResult(error='No emails found')
 
 agent = Agent(
-task='Sign up at example.com, get verification code from email',
-tools=tools,
-llm=ChatBrowserUse(),
+    task='Sign up at example.com, get verification code from email',
+    tools=tools,
+    llm=ChatBrowserUse(),
 )
 await agent.run()
 ```
@@ -1610,18 +1610,18 @@ tools = Tools()
 
 @tools.registry.action('Get 2FA code from 1Password', domains=['*.google.com'])
 async def get_1password_2fa():
-client = await Client.authenticate(
-    auth=os.environ['OP_SERVICE_ACCOUNT_TOKEN'],
-    integration_name='Browser-Use',
-    integration_version='v1.0.0',
-)
-code = await client.secrets.resolve('op://Private/Google/One-time passcode')
-return ActionResult(extracted_content=code)
+    client = await Client.authenticate(
+        auth=os.environ['OP_SERVICE_ACCOUNT_TOKEN'],
+        integration_name='Browser-Use',
+        integration_version='v1.0.0',
+    )
+    code = await client.secrets.resolve('op://Private/Google/One-time passcode')
+    return ActionResult(extracted_content=code)
 
 agent = Agent(
-task='Login to Google and check email',
-tools=tools,
-llm=ChatBrowserUse(),
+    task='Login to Google and check email',
+    tools=tools,
+    llm=ChatBrowserUse(),
 )
 await agent.run()
 ```
@@ -1641,9 +1641,9 @@ tools = Tools()
 register_gmail_actions(tools, gmail_service=gmail_service)
 
 agent = Agent(
-task='Login to example.com, then get the verification code from Gmail',
-tools=tools,
-llm=ChatBrowserUse(),
+    task='Login to example.com, then get the verification code from Gmail',
+    tools=tools,
+    llm=ChatBrowserUse(),
 )
 await agent.run()
 ```
@@ -1667,7 +1667,7 @@ Limit where the browser can navigate to prevent credential leaks:
 
 ```python
 browser = Browser(
-allowed_domains=['*.example.com', 'auth.example.com'],
+    allowed_domains=['*.example.com', 'auth.example.com'],
 )
 ```
 
@@ -1677,10 +1677,10 @@ Prevent screenshots from being sent to the LLM:
 
 ```python
 agent = Agent(
-task='Login and check balance',
-use_vision=False,  # No screenshots sent to LLM
-sensitive_data={'password': 'secret123'},
-llm=ChatBrowserUse(),
+    task='Login and check balance',
+    use_vision=False,  # No screenshots sent to LLM
+    sensitive_data={'password': 'secret123'},
+    llm=ChatBrowserUse(),
 )
 ```
 
@@ -1690,14 +1690,14 @@ Route credentials to specific domains only:
 
 ```python
 sensitive_data = {
-'https://*.work.com': {
-    'work_user': 'alice@work.com',
-    'work_pass': 'work_password',
-},
-'https://personal.com': {
-    'personal_user': 'alice@gmail.com',
-    'personal_pass': 'personal_password',
-},
+    'https://*.work.com': {
+        'work_user': 'alice@work.com',
+        'work_pass': 'work_password',
+    },
+    'https://personal.com': {
+        'personal_user': 'alice@gmail.com',
+        'personal_pass': 'personal_password',
+    },
 }
 ```
 
@@ -1718,9 +1718,9 @@ from browser_use import Agent, Browser, ChatBrowserUse
 browser = Browser(cdp_url='wss://cloud.browser-use.com/...')
 
 agent = Agent(
-task='Check my orders',
-browser=browser,
-llm=ChatBrowserUse(),
+    task='Check my orders',
+    browser=browser,
+    llm=ChatBrowserUse(),
 )
 await agent.run()
 ```
@@ -1743,16 +1743,16 @@ from browser_use import Agent, Browser, ChatOpenAI
 browser = Browser.from_system_chrome()
 
 agent = Agent(
-task='Visit https://duckduckgo.com and search for "browser-use founders"',
-browser=browser,
-llm=ChatOpenAI(model='gpt-4.1-mini'),
+    task='Visit https://duckduckgo.com and search for "browser-use founders"',
+    browser=browser,
+    llm=ChatOpenAI(model='gpt-4.1-mini'),
 )
 
 async def main():
-await agent.run()
+    await agent.run()
 
 if __name__ == "__main__":
-asyncio.run(main())
+    asyncio.run(main())
 ```
 
 
@@ -1766,7 +1766,7 @@ from browser_use import Browser
 # List available profiles
 profiles = Browser.list_chrome_profiles()
 for p in profiles:
-print(f"{p['directory']}: {p['name']}")
+    print(f"{p['directory']}: {p['name']}")
 # Output:
 # Profile 1: Work
 # Profile 5: Personal
@@ -1782,9 +1782,9 @@ If auto-detection does not work, specify paths manually:
 
 ```python
 browser = Browser(
-executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-user_data_dir='~/Library/Application Support/Google/Chrome',
-profile_directory='Default',
+    executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    user_data_dir='~/Library/Application Support/Google/Chrome',
+    profile_directory='Default',
 )
 ```
 
@@ -1814,26 +1814,26 @@ from browser_use import Agent, Browser, ChatBrowserUse
 
 # Simple: Use Browser-Use cloud browser service
 browser = Browser(
-use_cloud=True,  # Automatically provisions a cloud browser
+    use_cloud=True,  # Automatically provisions a cloud browser
 )
 
 # Advanced: Configure cloud browser parameters
 # Using this settings can bypass any captcha protection on any website
 browser = Browser(
-cloud_profile_id='your-profile-id',  # Optional: specific browser profile
-cloud_proxy_country_code='us',  # Optional: proxy location (us, uk, fr, it, jp, au, de, fi, ca, in)
-cloud_timeout=30,  # Optional: session timeout in minutes (MAX free: 15min, paid: 240min)
+    cloud_profile_id='your-profile-id',  # Optional: specific browser profile
+    cloud_proxy_country_code='us',  # Optional: proxy location (us, uk, fr, it, jp, au, de, fi, ca, in)
+    cloud_timeout=30,  # Optional: session timeout in minutes (MAX free: 15min, paid: 240min)
 )
 
 # Or use a CDP URL from any cloud browser provider
 browser = Browser(
-cdp_url="http://remote-server:9222"  # Get a CDP URL from any provider
+    cdp_url="http://remote-server:9222"  # Get a CDP URL from any provider
 )
 
 agent = Agent(
-task="Your task here",
-llm=ChatBrowserUse(),
-browser=browser,
+    task="Your task here",
+    llm=ChatBrowserUse(),
+    browser=browser,
 )
 ```
 
@@ -1866,20 +1866,20 @@ from browser_use import Agent, Browser, ChatBrowserUse
 from browser_use.browser import ProxySettings
 
 browser = Browser(
-headless=False,
-proxy=ProxySettings(
-    server="http://proxy-server:8080",
-    username="proxy-user",
-    password="proxy-pass"
-),
-cdp_url="http://remote-server:9222"
+    headless=False,
+    proxy=ProxySettings(
+        server="http://proxy-server:8080",
+        username="proxy-user",
+        password="proxy-pass"
+    ),
+    cdp_url="http://remote-server:9222"
 )
 
 
 agent = Agent(
-task="Your task here",
-llm=ChatBrowserUse(),
-browser=browser,
+    task="Your task here",
+    llm=ChatBrowserUse(),
+    browser=browser,
 )
 ```
 
@@ -2052,7 +2052,7 @@ from browser_use import Browser
 
 profiles = Browser.list_chrome_profiles()
 for p in profiles:
-print(f"{p['directory']}: {p['name']}")
+    print(f"{p['directory']}: {p['name']}")
 # Output:
 # Profile 1: Work
 # Profile 5: Personal
@@ -2063,9 +2063,9 @@ print(f"{p['directory']}: {p['name']}")
 **Example return value:**
 ```python
 [
-{'directory': 'Default', 'name': 'Person 1'},
-{'directory': 'Profile 1', 'name': 'Work'},
-{'directory': 'Profile 5', 'name': 'Personal'}
+    {'directory': 'Default', 'name': 'Person 1'},
+    {'directory': 'Profile 1', 'name': 'Work'},
+    {'directory': 'Profile 5', 'name': 'Personal'}
 ]
 ```
 
@@ -2085,13 +2085,13 @@ tools = Tools()
 
 @tools.action('Ask human for help with a question')
 async def ask_human(question: str, browser_session: BrowserSession) -> ActionResult:
-answer = input(f'{question} > ')
-return ActionResult(extracted_content=f'The human responded with: {answer}')
+    answer = input(f'{question} > ')
+    return ActionResult(extracted_content=f'The human responded with: {answer}')
 
 agent = Agent(
-task='Ask human for help',
-llm=llm,
-tools=tools,
+    task='Ask human for help',
+    llm=llm,
+    tools=tools,
 )
 ```
 
@@ -2174,8 +2174,8 @@ tools = Tools()
 
 @tools.action(description='Ask human for help with a question')
 async def ask_human(question: str) -> ActionResult:
-answer = input(f'{question} > ')
-return ActionResult(extracted_content=f'The human responded with: {answer}')
+    answer = input(f'{question} > ')
+    return ActionResult(extracted_content=f'The human responded with: {answer}')
 ```
 
 ```python
@@ -2215,19 +2215,19 @@ tools = Tools()
 
 @tools.action(description='Click the submit button using CSS selector')
 async def click_submit_button(browser_session: BrowserSession):
-# Get the current page
-page = await browser_session.must_get_current_page()
+    # Get the current page
+    page = await browser_session.must_get_current_page()
 
-# Get element(s) by CSS selector
-elements = await page.get_elements_by_css_selector('button[type="submit"]')
+    # Get element(s) by CSS selector
+    elements = await page.get_elements_by_css_selector('button[type="submit"]')
 
-if not elements:
-    return ActionResult(extracted_content='No submit button found')
+    if not elements:
+        return ActionResult(extracted_content='No submit button found')
 
-# Click the first matching element
-await elements[0].click()
+    # Click the first matching element
+    await elements[0].click()
 
-return ActionResult(extracted_content='Submit button clicked!')
+    return ActionResult(extracted_content='Submit button clicked!')
 ```
 
 
@@ -2250,14 +2250,14 @@ You can use Pydantic for the tool parameters:
 from pydantic import BaseModel
 
 class Cars(BaseModel):
-name: str = Field(description='The name of the car, e.g. "Toyota Camry"')
-price: int = Field(description='The price of the car as int in USD, e.g. 25000')
+    name: str = Field(description='The name of the car, e.g. "Toyota Camry"')
+    price: int = Field(description='The price of the car as int in USD, e.g. 25000')
 
 @tools.action(description='Save cars to file')
 def save_cars(cars: list[Cars]) -> str:
-with open('cars.json', 'w') as f:
-    json.dump(cars, f)
-return f'Saved {len(cars)} cars to file'
+    with open('cars.json', 'w') as f:
+        json.dump(cars, f)
+    return f'Saved {len(cars)} cars to file'
 
 task = "find cars and save them to file"
 ```
@@ -2267,12 +2267,12 @@ Limit tools to specific domains:
 
 ```python
 @tools.action(
-description='Fill out banking forms',
-allowed_domains=['https://mybank.com']
+    description='Fill out banking forms',
+    allowed_domains=['https://mybank.com']
 )
 def fill_bank_form(account_number: str) -> str:
-# Only works on mybank.com
-return f'Filled form for account {account_number}'
+    # Only works on mybank.com
+    return f'Filled form for account {account_number}'
 ```
 
 ## Advanced Example
@@ -2293,8 +2293,8 @@ from browser_use import Tools, ActionResult, Browser
 
 @tools.action('My action')
 def my_action(browser: Browser) -> ActionResult:  # WRONG!
-# This will NOT receive the browser session
-pass
+    # This will NOT receive the browser session
+    pass
 ```
 
 ### ✅ Correct: Using `browser_session: BrowserSession`
@@ -2304,9 +2304,9 @@ from browser_use import Tools, ActionResult, BrowserSession
 
 @tools.action('My action')
 async def my_action(browser_session: BrowserSession) -> ActionResult:  # CORRECT!
-page = await browser_session.must_get_current_page()
-# Now you have access to the browser
-return ActionResult(extracted_content='Done')
+    page = await browser_session.must_get_current_page()
+    # Now you have access to the browser
+    return ActionResult(extracted_content='Done')
 ```
 
 ### Key Points
@@ -2341,18 +2341,18 @@ Tools return results using `ActionResult` or simple strings.
 ```python
 @tools.action('My tool')
 def my_tool() -> str:
-return "Task completed successfully"
+    return "Task completed successfully"
 
 @tools.action('Advanced tool')
 def advanced_tool() -> ActionResult:
-return ActionResult(
-    extracted_content="Main result",
-    long_term_memory="Remember this info",
-    error="Something went wrong",
-    is_done=True,
-    success=True,
-    attachments=["file.pdf"],
-)
+    return ActionResult(
+        extracted_content="Main result",
+        long_term_memory="Remember this info",
+        error="Something went wrong",
+        is_done=True,
+        success=True,
+        attachments=["file.pdf"],
+    )
 ```
 
 ## ActionResult Properties
@@ -2372,15 +2372,15 @@ With this you control the context for the LLM.
 ### 1. Include short content always in context
 ```python
 def simple_tool() -> str:
-return "Hello, world!"  # Keep in context for all future steps 
+    return "Hello, world!"  # Keep in context for all future steps 
 ```
 
 ### 2. Show long content once, remember subset in context
 ```python
 return ActionResult(
-extracted_content="[500 lines of product data...]",     # Shows to LLM once
-include_extracted_content_only_once=True,               # Never show full output again
-long_term_memory="Found 50 products"        # Only this in future steps
+    extracted_content="[500 lines of product data...]",     # Shows to LLM once
+    include_extracted_content_only_once=True,               # Never show full output again
+    long_term_memory="Found 50 products"        # Only this in future steps
 )
 ```
 We save the full `extracted_content` to files which the LLM can read in future steps.
@@ -2388,8 +2388,8 @@ We save the full `extracted_content` to files which the LLM can read in future s
 ### 3. Don't show long content, remember subset in context
 ```python
 return ActionResult(
-extracted_content="[500 lines of product data...]",      # The LLM never sees this because `long_term_memory` overrides it and `include_extracted_content_only_once` is not used
-long_term_memory="Saved user's favorite products",      # This is shown to the LLM in future steps
+    extracted_content="[500 lines of product data...]",      # The LLM never sees this because `long_term_memory` overrides it and `include_extracted_content_only_once` is not used
+    long_term_memory="Saved user's favorite products",      # This is shown to the LLM in future steps
 )
 ```
 
@@ -2400,11 +2400,11 @@ Set `is_done=True` to stop the agent completely. Use when your tool finishes the
 ```python
 @tools.action(description='Complete the task')
 def finish_task() -> ActionResult:
-return ActionResult(
-    extracted_content="Task completed!",
-    is_done=True,        # Stops the agent
-    success=True         # Task succeeded 
-)
+    return ActionResult(
+        extracted_content="Task completed!",
+        is_done=True,        # Stops the agent
+        success=True         # Task succeeded 
+    )
 ```
 
 
@@ -2436,13 +2436,13 @@ Add to your Claude Desktop config file:
 ```json
 {
   "mcpServers": {
-"browser-use": {
-  "command": "/Users/your-username/.local/bin/uvx",
-  "args": ["--from", "browser-use[cli]", "browser-use", "--mcp"],
-  "env": {
-    "OPENAI_API_KEY": "your-openai-api-key-here"
-  }
-}
+    "browser-use": {
+      "command": "/Users/your-username/.local/bin/uvx",
+      "args": ["--from", "browser-use[cli]", "browser-use", "--mcp"],
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key-here"
+      }
+    }
   }
 }
 ```
@@ -2452,13 +2452,13 @@ Add to your Claude Desktop config file:
 ```json
 {
   "mcpServers": {
-"browser-use": {
-  "command": "uvx",
-  "args": ["--from", "browser-use[cli]", "browser-use", "--mcp"],
-  "env": {
-    "OPENAI_API_KEY": "your-openai-api-key-here"
-  }
-}
+    "browser-use": {
+      "command": "uvx",
+      "args": ["--from", "browser-use[cli]", "browser-use", "--mcp"],
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key-here"
+      }
+    }
   }
 }
 ```
@@ -2476,13 +2476,13 @@ Add to `~/.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-"browser-use": {
-  "command": "uvx",
-  "args": ["--from", "browser-use[cli]", "browser-use", "--mcp"],
-  "env": {
-    "OPENAI_API_KEY": "your-openai-api-key-here"
-  }
-}
+    "browser-use": {
+      "command": "uvx",
+      "args": ["--from", "browser-use[cli]", "browser-use", "--mcp"],
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key-here"
+      }
+    }
   }
 }
 ```
@@ -2491,13 +2491,13 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 ```json
 {
   "mcpServers": {
-"browser-use": {
-  "command": "uvx",
-  "args": ["--from", "browser-use[cli]", "browser-use", "--mcp"],
-  "env": {
-    "OPENAI_API_KEY": "your-openai-api-key-here"
-  }
-}
+    "browser-use": {
+      "command": "uvx",
+      "args": ["--from", "browser-use[cli]", "browser-use", "--mcp"],
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key-here"
+      }
+    }
   }
 }
 ```
@@ -2559,29 +2559,29 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 async def use_browser_mcp():
-# Connect to browser-use MCP server
-server_params = StdioServerParameters(
-    command="uvx",
-    args=["--from", "browser-use[cli]", "browser-use", "--mcp"]
-)
+    # Connect to browser-use MCP server
+    server_params = StdioServerParameters(
+        command="uvx",
+        args=["--from", "browser-use[cli]", "browser-use", "--mcp"]
+    )
 
-async with stdio_client(server_params) as (read, write):
-    async with ClientSession(read, write) as session:
-        await session.initialize()
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
 
-        # Navigate to a website
-        result = await session.call_tool(
-            "browser_navigate",
-            arguments={"url": "https://example.com"}
-        )
-        print(result.content[0].text)
+            # Navigate to a website
+            result = await session.call_tool(
+                "browser_navigate",
+                arguments={"url": "https://example.com"}
+            )
+            print(result.content[0].text)
 
-        # Get page state
-        result = await session.call_tool(
-            "browser_get_state",
-            arguments={"include_screenshot": True}
-        )
-        print("Page state retrieved!")
+            # Get page state
+            result = await session.call_tool(
+                "browser_get_state",
+                arguments={"include_screenshot": True}
+            )
+            print("Page state retrieved!")
 
 asyncio.run(use_browser_mcp())
 ```
@@ -2645,13 +2645,13 @@ Source: https://docs.browser-use.com/open-source/legacy/actor/basics
 
 ```mermaid
 graph TD
-A[Browser] --> B[Page]
-B --> C[Element]
-B --> D[Mouse]
-B --> E[AI Features]
-C --> F[DOM Interactions]
-D --> G[Coordinate Operations]
-E --> H[LLM Integration]
+    A[Browser] --> B[Page]
+    B --> C[Element]
+    B --> D[Mouse]
+    B --> E[AI Features]
+    C --> F[DOM Interactions]
+    D --> G[Coordinate Operations]
+    E --> H[LLM Integration]
 ```
 
 ### Core Classes
@@ -2668,20 +2668,20 @@ from browser_use import Browser, Agent
 from browser_use.llm.openai.chat import ChatOpenAI
 
 async def main():
-llm = ChatOpenAI(api_key="your-api-key")
-browser = Browser()
-await browser.start()
+    llm = ChatOpenAI(api_key="your-api-key")
+    browser = Browser()
+    await browser.start()
 
-# 1. Actor: Precise navigation and element interactions
-page = await browser.new_page("https://github.com/login")
-email_input = await page.must_get_element_by_prompt("username field", llm=llm)
-await email_input.fill("your-username")
+    # 1. Actor: Precise navigation and element interactions
+    page = await browser.new_page("https://github.com/login")
+    email_input = await page.must_get_element_by_prompt("username field", llm=llm)
+    await email_input.fill("your-username")
 
-# 2. Agent: AI-driven complex tasks
-agent = Agent(browser=browser, llm=llm)
-await agent.run("Complete login and navigate to my repositories")
+    # 2. Agent: AI-driven complex tasks
+    agent = Agent(browser=browser, llm=llm)
+    await agent.run("Complete login and navigate to my repositories")
 
-await browser.stop()
+    await browser.stop()
 ```
 
 ## Important Notes
@@ -2750,13 +2750,13 @@ await button.click()
 
 # Extract structured data
 class ProductInfo(BaseModel):
-name: str
-price: float
+    name: str
+    price: float
 
 product = await page.extract_content(
-"Extract product name and price",
-ProductInfo,
-llm=llm
+    "Extract product name and price",
+    ProductInfo,
+    llm=llm
 )
 ```
 
@@ -2771,8 +2771,8 @@ result = await page.evaluate('(x, y) => x + y', 10, 20)
 
 # Complex operations
 stats = await page.evaluate('''() => ({
-url: location.href,
-links: document.querySelectorAll('a').length
+    url: location.href,
+    links: document.querySelectorAll('a').length
 })''')
 ```
 
@@ -2906,8 +2906,8 @@ from browser_use.agent.service import Agent
 
 @sandbox()
 async def my_task(browser: Browser):
-agent = Agent(task="Find the top HN post", browser=browser, llm=ChatBrowserUse())
-await agent.run()
+    agent = Agent(task="Find the top HN post", browser=browser, llm=ChatBrowserUse())
+    await agent.run()
 
 await my_task()
 ```
@@ -2916,13 +2916,13 @@ await my_task()
 
 ```python
 @sandbox(
-cloud_profile_id='your-profile-id',      # Use saved cookies/auth
-cloud_proxy_country_code='us',           # Bypass captchas, cloudflare, geo-restrictions
-cloud_timeout=60,                        # Max session time (minutes)
+    cloud_profile_id='your-profile-id',      # Use saved cookies/auth
+    cloud_proxy_country_code='us',           # Bypass captchas, cloudflare, geo-restrictions
+    cloud_timeout=60,                        # Max session time (minutes)
 )
 async def task(browser: Browser, url: str):
-agent = Agent(task=f"Visit {url}", browser=browser, llm=ChatBrowserUse())
-await agent.run()
+    agent = Agent(task=f"Visit {url}", browser=browser, llm=ChatBrowserUse())
+    await agent.run()
 
 await task(url="https://example.com")
 ```
@@ -2946,8 +2946,8 @@ Source: https://docs.browser-use.com/open-source/legacy/sandbox/events
 ```python
 @sandbox(on_browser_created=lambda data: print(f'👁️  {data.live_url}'))
 async def task(browser: Browser):
-agent = Agent(task="your task", browser=browser, llm=ChatBrowserUse())
-await agent.run()
+    agent = Agent(task="your task", browser=browser, llm=ChatBrowserUse())
+    await agent.run()
 ```
 
 ## All Events
@@ -2956,13 +2956,13 @@ await agent.run()
 from browser_use.sandbox import BrowserCreatedData, LogData, ResultData, ErrorData
 
 @sandbox(
-on_browser_created=lambda data: print(f'Live: {data.live_url}'),
-on_log=lambda log: print(f'{log.level}: {log.message}'),
-on_result=lambda result: print('Done!'),
-on_error=lambda error: print(f'Error: {error.error}'),
+    on_browser_created=lambda data: print(f'Live: {data.live_url}'),
+    on_log=lambda log: print(f'{log.level}: {log.message}'),
+    on_result=lambda result: print('Done!'),
+    on_error=lambda error: print(f'Error: {error.error}'),
 )
 async def task(browser: Browser):
-# Your code
+    # Your code
 ```
 
 All callbacks can be sync or async.
@@ -2989,14 +2989,14 @@ Source: https://docs.browser-use.com/open-source/legacy/sandbox/all-parameters
 
 ```python
 @sandbox(
-cloud_profile_id='550e8400-e29b-41d4-a716-446655440000',
-cloud_proxy_country_code='us',
-cloud_timeout=60,
-on_browser_created=lambda data: print(f'Live: {data.live_url}'),
+    cloud_profile_id='550e8400-e29b-41d4-a716-446655440000',
+    cloud_proxy_country_code='us',
+    cloud_timeout=60,
+    on_browser_created=lambda data: print(f'Live: {data.live_url}'),
 )
 async def task(browser: Browser):
-agent = Agent(task="your task", browser=browser, llm=ChatBrowserUse())
-await agent.run()
+    agent = Agent(task="your task", browser=browser, llm=ChatBrowserUse())
+    await agent.run()
 ```
 
 
@@ -3043,7 +3043,7 @@ async def main():
 	task = """
 	1. Go to reddit https://www.reddit.com/search/?q=browser+agent&type=communities 
 	2. Click directly on the first 5 communities to open each in new tabs
-3. Find out what the latest post is about, and switch directly to the next tab
+    3. Find out what the latest post is about, and switch directly to the next tab
 	4. Return the latest post summary for each page
 	"""
 
@@ -3079,19 +3079,19 @@ llm = ChatGoogle(model='gemini-flash-lite-latest')
 ### 2. Browser Optimizations
 ```python
 browser_profile = BrowserProfile(
-minimum_wait_page_load_time=0.1,    # Reduce wait time
-wait_between_actions=0.1,           # Faster action execution
-headless=True,                      # No GUI overhead
+    minimum_wait_page_load_time=0.1,    # Reduce wait time
+    wait_between_actions=0.1,           # Faster action execution
+    headless=True,                      # No GUI overhead
 )
 ```
 
 ### 3. Agent Optimizations
 ```python
 agent = Agent(
-task=task,
-llm=llm,
-flash_mode=True,                    # Skip LLM thinking process
-extend_system_message=SPEED_PROMPT, # Optimize LLM behavior
+    task=task,
+    llm=llm,
+    flash_mode=True,                    # Skip LLM thinking process
+    extend_system_message=SPEED_PROMPT, # Optimize LLM behavior
 )
 ```
 
@@ -3279,15 +3279,15 @@ async def start_chrome_with_debug_port(port: int = 9222):
 	for path in chrome_paths:
 		if os.path.exists(path) or path in ['chrome', 'chromium']:
 			try:
-# Test if executable works
-test_proc = await asyncio.create_subprocess_exec(
-	path, '--version', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-)
-await test_proc.wait()
-chrome_exe = path
-break
+				# Test if executable works
+				test_proc = await asyncio.create_subprocess_exec(
+					path, '--version', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+				)
+				await test_proc.wait()
+				chrome_exe = path
+				break
 			except Exception:
-continue
+				continue
 
 	if not chrome_exe:
 		raise RuntimeError('❌ Chrome not found. Please install Chrome or Chromium.')
@@ -3311,12 +3311,12 @@ continue
 	for _ in range(20):  # 20 second timeout
 		try:
 			async with aiohttp.ClientSession() as session:
-async with session.get(
-	f'http://localhost:{port}/json/version', timeout=aiohttp.ClientTimeout(total=1)
-) as response:
-	if response.status == 200:
-		cdp_ready = True
-		break
+				async with session.get(
+					f'http://localhost:{port}/json/version', timeout=aiohttp.ClientTimeout(total=1)
+				) as response:
+					if response.status == 200:
+						cdp_ready = True
+						break
 		except Exception:
 			pass
 		await asyncio.sleep(1)
@@ -3399,9 +3399,9 @@ async def playwright_fill_form(params: PlaywrightFillFormAction, browser_session
 			# For radio buttons, find the checked one
 			checked_radio = playwright_page.locator('input[name="size"]:checked')
 			if await checked_radio.count() > 0:
-form_data['size'] = await checked_radio.get_attribute('value')
+				form_data['size'] = await checked_radio.get_attribute('value')
 			else:
-form_data['size'] = 'none selected'
+				form_data['size'] = 'none selected'
 
 		success_msg = f'✅ Form filled successfully with Playwright: {form_data}'
 
@@ -3466,19 +3466,19 @@ async def playwright_get_text(params: PlaywrightGetTextAction, browser_session: 
 			# Use page.title() for title element
 			text_content = await playwright_page.title()
 			result_data = {
-'selector': 'title',
-'text_content': text_content,
-'inner_text': text_content,
-'tag_name': 'TITLE',
-'is_visible': True,
+				'selector': 'title',
+				'text_content': text_content,
+				'inner_text': text_content,
+				'tag_name': 'TITLE',
+				'is_visible': True,
 			}
 		else:
 			# Use Playwright's robust element selection and text extraction
 			element = playwright_page.locator(params.selector).first
 
 			if await element.count() == 0:
-error_msg = f'❌ No element found with selector: {params.selector}'
-return ActionResult(error=error_msg)
+				error_msg = f'❌ No element found with selector: {params.selector}'
+				return ActionResult(error=error_msg)
 
 			text_content = await element.text_content()
 			inner_text = await element.inner_text()
@@ -3488,11 +3488,11 @@ return ActionResult(error=error_msg)
 			is_visible = await element.is_visible()
 
 			result_data = {
-'selector': params.selector,
-'text_content': text_content,
-'inner_text': inner_text,
-'tag_name': tag_name,
-'is_visible': is_visible,
+				'selector': params.selector,
+				'text_content': text_content,
+				'inner_text': inner_text,
+				'tag_name': tag_name,
+				'is_visible': is_visible,
 			}
 
 		success_msg = f'✅ Extracted text using Playwright: {result_data}'
@@ -3533,10 +3533,10 @@ async def main():
 			
 			1. First, navigate to https://httpbin.org/forms/post
 			2. Use the 'playwright_fill_form' action to fill the form with these details:
-  - Customer name: "Alice Johnson"
-  - Phone: "555-9876"
-  - Email: "alice@demo.com"
-  - Size: "large"
+			   - Customer name: "Alice Johnson"
+			   - Phone: "555-9876"
+			   - Email: "alice@demo.com"
+			   - Size: "large"
 			3. Take a screenshot using the 'playwright_screenshot' action and save it as "form_demo.png"
 			4. Extract the title of the page using 'playwright_get_text' action with selector "title"
 			5. Finally, submit the form and tell me what happened
@@ -3572,9 +3572,9 @@ async def main():
 		if chrome_process:
 			chrome_process.terminate()
 			try:
-await asyncio.wait_for(chrome_process.wait(), 5)
+				await asyncio.wait_for(chrome_process.wait(), 5)
 			except TimeoutError:
-chrome_process.kill()
+				chrome_process.kill()
 
 		print('✅ Cleanup complete')
 
@@ -3612,13 +3612,13 @@ sensitive_data = company_credentials
 
 
 agent = Agent(
-task='Log into example.com with username x_user and password x_pass',
-sensitive_data=sensitive_data,
-use_vision=False,  #  Disable vision to prevent LLM seeing sensitive data in screenshots
-llm=ChatOpenAI(model='gpt-4.1-mini'),
+    task='Log into example.com with username x_user and password x_pass',
+    sensitive_data=sensitive_data,
+    use_vision=False,  #  Disable vision to prevent LLM seeing sensitive data in screenshots
+    llm=ChatOpenAI(model='gpt-4.1-mini'),
 )
 async def main():
-await agent.run()
+    await agent.run()
 ```
 
 ## How it Works
@@ -3654,8 +3654,8 @@ llm = ChatAzureOpenAI(model='gpt-4.1-mini', api_key=api_key, azure_endpoint=azur
 
 # Secure browser configuration
 browser_profile = BrowserProfile(
-allowed_domains=['*google.com', 'browser-use.com'], 
-enable_default_extensions=False
+    allowed_domains=['*google.com', 'browser-use.com'], 
+    enable_default_extensions=False
 )
 
 # Sensitive data filtering
@@ -3663,14 +3663,14 @@ sensitive_data = {'company_name': 'browser-use'}
 
 # Create secure agent
 agent = Agent(
-task='Find the founders of the sensitive company_name',
-llm=llm,
-browser_profile=browser_profile,
-sensitive_data=sensitive_data
+    task='Find the founders of the sensitive company_name',
+    llm=llm,
+    browser_profile=browser_profile,
+    sensitive_data=sensitive_data
 )
 
 async def main():
-await agent.run(max_steps=10)
+    await agent.run(max_steps=10)
 
 asyncio.run(main())
 ```
@@ -3776,11 +3776,11 @@ import asyncio
 from ad_generator import create_ad_from_landing_page
 
 async def main():
-results = await create_ad_from_landing_page(
-    url="https://your-landing-page.com",
-    debug=False
-)
-print(f"Generated ads: {results}")
+    results = await create_ad_from_landing_page(
+        url="https://your-landing-page.com",
+        debug=False
+    )
+    print(f"Generated ads: {results}")
 
 asyncio.run(main())
 ```
@@ -3857,12 +3857,12 @@ claude mcp add vibetest /full/path/to/vibetest-use/.venv/bin/vibetest-mcp \
 ```json
 {
   "mcpServers": {
-"vibetest": {
-  "command": "/full/path/to/vibetest-use/.venv/bin/vibetest-mcp",
-  "env": {
-    "GOOGLE_API_KEY": "your_api_key"
-  }
-}
+    "vibetest": {
+      "command": "/full/path/to/vibetest-use/.venv/bin/vibetest-mcp",
+      "env": {
+        "GOOGLE_API_KEY": "your_api_key"
+      }
+    }
   }
 }
 ```
@@ -3968,12 +3968,12 @@ All extracted articles are saved to `news_data.json` with complete metadata:
   "hash": "a1b2c3d4...",
   "pulled_at": "2025-09-11T02:49:21Z",
   "data": {
-"title": "Klarna's IPO pops, raising $1.4B",
-"url": "https://techcrunch.com/2025/09/11/klarna-ipo/",
-"posting_time": "12:11 PM PDT · September 10, 2025",
-"short_summary": "Klarna's IPO raises $1.4B, benefiting existing investors like Sequoia.",
-"long_summary": "Fintech Klarna successfully IPO'd on the NYSE...",
-"sentiment": "positive"
+    "title": "Klarna's IPO pops, raising $1.4B",
+    "url": "https://techcrunch.com/2025/09/11/klarna-ipo/",
+    "posting_time": "12:11 PM PDT · September 10, 2025",
+    "short_summary": "Klarna's IPO raises $1.4B, benefiting existing investors like Sequoia.",
+    "long_summary": "Fintech Klarna successfully IPO'd on the NYSE...",
+    "sentiment": "positive"
   }
 }
 ```
@@ -3985,17 +3985,17 @@ import asyncio
 from news_monitor import extract_latest_article
 
 async def main():
-# Extract latest article from any news site
-result = await extract_latest_article(
-    site_url="https://techcrunch.com",
-    debug=False
-)
-
-if result["status"] == "success":
-    article = result["data"]
-    print(f"📰 {article['title']}")
-    print(f"😊 Sentiment: {article['sentiment']}")
-    print(f"📝 Summary: {article['short_summary']}")
+    # Extract latest article from any news site
+    result = await extract_latest_article(
+        site_url="https://techcrunch.com",
+        debug=False
+    )
+    
+    if result["status"] == "success":
+        article = result["data"]
+        print(f"📰 {article['title']}")
+        print(f"😊 Sentiment: {article['sentiment']}")
+        print(f"📝 Summary: {article['short_summary']}")
 
 asyncio.run(main())
 ```
@@ -4005,14 +4005,14 @@ asyncio.run(main())
 ```python
 # Custom monitoring with filters
 async def monitor_with_filters():
-while True:
-    result = await extract_latest_article("https://bloomberg.com")
-    if result["status"] == "success":
-        article = result["data"]
-        # Only alert on negative market news
-        if article["sentiment"] == "negative" and "market" in article["title"].lower():
-            send_alert(article)
-    await asyncio.sleep(300)  # Check every 5 minutes
+    while True:
+        result = await extract_latest_article("https://bloomberg.com")
+        if result["status"] == "success":
+            article = result["data"]
+            # Only alert on negative market news
+            if article["sentiment"] == "negative" and "market" in article["title"].lower():
+                send_alert(article)
+        await asyncio.sleep(300)  # Check every 5 minutes
 ```
 
 ## Source Code
@@ -4100,11 +4100,11 @@ import asyncio
 from scheduler import schedule_messages
 
 async def main():
-messages = [
-    "Send hello to John at 15:30",
-    "Remind Sarah about meeting tomorrow at 9am"
-]
-await schedule_messages(messages, debug=False)
+    messages = [
+        "Send hello to John at 15:30",
+        "Remind Sarah about meeting tomorrow at 9am"
+    ]
+    await schedule_messages(messages, debug=False)
 
 asyncio.run(main())
 ```
@@ -4116,22 +4116,22 @@ The scheduler processes natural language and outputs structured results:
 ```json
 [
   {
-"contact": "Magnus",
-"original_message": "Hi",
-"composed_message": "Hi",
-"scheduled_time": "2025-06-13 18:15"
+    "contact": "Magnus",
+    "original_message": "Hi",
+    "composed_message": "Hi",
+    "scheduled_time": "2025-06-13 18:15"
   },
   {
-"contact": "Camila", 
-"original_message": "I miss her",
-"composed_message": "I miss you ❤️",
-"scheduled_time": "2025-06-14 20:00"
+    "contact": "Camila", 
+    "original_message": "I miss her",
+    "composed_message": "I miss you ❤️",
+    "scheduled_time": "2025-06-14 20:00"
   },
   {
-"contact": "sister",
-"original_message": "happy birthday message", 
-"composed_message": "Happy birthday! 🎉 Wishing you an amazing day, sis! Hope you have the best birthday ever! ❤️🎂🎈",
-"scheduled_time": "2025-06-15 09:00"
+    "contact": "sister",
+    "original_message": "happy birthday message", 
+    "composed_message": "Happy birthday! 🎉 Wishing you an amazing day, sis! Hope you have the best birthday ever! ❤️🎂🎈",
+    "scheduled_time": "2025-06-15 09:00"
   }
 ]
 ```
@@ -4380,11 +4380,11 @@ import os
 Laminar.initialize(project_api_key=os.getenv('LMNR_PROJECT_API_KEY'))
 
 async def main():
-agent = Agent(
-    task="go to ycombinator.com, summarize 3 startups from the latest batch",
-    llm=ChatGoogle(model="gemini-2.5-flash"),
-)
-await agent.run()
+    agent = Agent(
+        task="go to ycombinator.com, summarize 3 startups from the latest batch",
+        llm=ChatGoogle(model="gemini-2.5-flash"),
+    )
+    await agent.run()
 
 asyncio.run(main())
 ```
@@ -4616,9 +4616,9 @@ To track token usage and costs, enable cost calculation:
 from browser_use import Agent, ChatBrowserUse
 
 agent = Agent(
-task="Search for latest news about AI",
-llm=ChatBrowserUse(),
-calculate_cost=True  # Enable cost tracking
+    task="Search for latest news about AI",
+    llm=ChatBrowserUse(),
+    calculate_cost=True  # Enable cost tracking
 )
 
 history = await agent.run()

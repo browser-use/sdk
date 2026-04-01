@@ -171,7 +171,7 @@ await client.workspaces.delete_file(workspace.id, path="old-report.pdf")
 
 # Check workspace storage usage
 size = await client.workspaces.size(workspace.id)
-print(f"Used: {size.used_bytes} bytes")
+print(f"Used: {size['usedBytes']} bytes")
 ```
 ```typescript TypeScript
 // List all files
@@ -184,7 +184,7 @@ for (const f of files.files) {
 await client.workspaces.deleteFile(workspace.id, "old-report.pdf");
 
 // Check workspace storage usage
-const size = await client.workspaces.size(workspace.id);
+const size = await client.workspaces.size(workspace.id) as any;
 console.log(`Used: ${size.usedBytes} bytes`);
 ```
 </CodeGroup>

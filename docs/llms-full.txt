@@ -27,9 +27,9 @@ import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 async def main():
-client = AsyncBrowserUse()
-result = await client.run("List the top 20 posts on Hacker News today with their points")
-print(result.output)
+    client = AsyncBrowserUse()
+    result = await client.run("List the top 20 posts on Hacker News today with their points")
+    print(result.output)
 
 asyncio.run(main())
 ```
@@ -139,8 +139,8 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"List the top 20 posts on Hacker News today with their points",
-model="claude-sonnet-4-6",
+    "List the top 20 posts on Hacker News today with their points",
+    model="claude-sonnet-4-6",
 )
 print(result.output)
 ```
@@ -175,20 +175,20 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 from pydantic import BaseModel
 
 class Post(BaseModel):
-name: str
-points: int
-comments: int
+    name: str
+    points: int
+    comments: int
 
 class HNPosts(BaseModel):
-posts: list[Post]
+    posts: list[Post]
 
 client = AsyncBrowserUse()
 result = await client.run(
-"List the top 20 posts on Hacker News today with their points",
-output_schema=HNPosts,
+    "List the top 20 posts on Hacker News today with their points",
+    output_schema=HNPosts,
 )
 for post in result.output.posts:
-print(f"{post.name} ({post.points} pts, {post.comments} comments)")
+    print(f"{post.name} ({post.points} pts, {post.comments} comments)")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -230,12 +230,12 @@ client = AsyncBrowserUse()
 session = await client.sessions.create()
 
 result1 = await client.run(
-"Go to amazon.com, search for laptops, and open the first result",
-session_id=session.id,
+    "Go to amazon.com, search for laptops, and open the first result",
+    session_id=session.id,
 )
 result2 = await client.run(
-"Extract the customer reviews",
-session_id=session.id,
+    "Extract the customer reviews",
+    session_id=session.id,
 )
 
 await client.sessions.stop(session.id)
@@ -278,7 +278,7 @@ client = AsyncBrowserUse()
 
 run = client.run("Find the top story on Hacker News")
 async for msg in run:
-print(f"[{msg.role}] {msg.summary}")
+    print(f"[{msg.role}] {msg.summary}")
 
 print(run.result.output)
 ```
@@ -317,15 +317,15 @@ session = await client.sessions.create(task="Find the top story on Hacker News")
 
 cursor = None
 while True:
-msgs = await client.sessions.messages(session.id, after=cursor, limit=100)
-for m in msgs.messages:
-    print(f"[{m.role}] {m.summary}")
-    cursor = m.id
+    msgs = await client.sessions.messages(session.id, after=cursor, limit=100)
+    for m in msgs.messages:
+        print(f"[{m.role}] {m.summary}")
+        cursor = m.id
 
-s = await client.sessions.get(session.id)
-if s.status.value in ("idle", "stopped", "error", "timed_out"):
-    break
-await asyncio.sleep(2)
+    s = await client.sessions.get(session.id)
+    if s.status.value in ("idle", "stopped", "error", "timed_out"):
+        break
+    await asyncio.sleep(2)
 
 print(s.output)
 ```
@@ -341,14 +341,14 @@ let cursor: string | undefined;
 while (true) {
   const msgs = await client.sessions.messages(session.id, { after: cursor, limit: 100 });
   for (const m of msgs.messages) {
-console.log(`[${m.role}] ${m.summary}`);
-cursor = m.id;
+    console.log(`[${m.role}] ${m.summary}`);
+    cursor = m.id;
   }
 
   const s = await client.sessions.get(session.id);
   if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
-console.log(s.output);
-break;
+    console.log(s.output);
+    break;
   }
   await new Promise((r) => setTimeout(r, 2000));
 }
@@ -382,8 +382,8 @@ await client.workspaces.upload(workspace.id, "people.csv")
 
 # Agent can now read it
 result = await client.run(
-"Read people.csv and tell me who works at Google",
-workspace_id=workspace.id,
+    "Read people.csv and tell me who works at Google",
+    workspace_id=workspace.id,
 )
 print(result.output)
 ```
@@ -423,8 +423,8 @@ workspace = await client.workspaces.create(name="my-workspace")
 
 # Agent creates a file
 result = await client.run(
-"Go to Hacker News and save the top 3 posts as posts.json",
-workspace_id=workspace.id,
+    "Go to Hacker News and save the top 3 posts as posts.json",
+    workspace_id=workspace.id,
 )
 
 # Download a single file
@@ -433,7 +433,7 @@ await client.workspaces.download(workspace.id, "posts.json", to="./posts.json")
 # Or download everything
 paths = await client.workspaces.download_all(workspace.id, to="./output")
 for p in paths:
-print(f"Downloaded: {p}")
+    print(f"Downloaded: {p}")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -464,7 +464,7 @@ workspace = await client.workspaces.get(workspace_id)
 updated = await client.workspaces.update(workspace_id, name="renamed")
 response = await client.workspaces.list()
 for w in response.items:
-print(w.id, w.name)
+    print(w.id, w.name)
 await client.workspaces.delete(workspace_id)
 ```
 ```typescript TypeScript
@@ -488,7 +488,7 @@ await client.workspaces.upload(workspace.id, "report.pdf", prefix="reports/")
 # List files in a subdirectory
 files = await client.workspaces.files(workspace.id, prefix="reports/")
 for f in files.files:
-print(f.path, f.size)
+    print(f.path, f.size)
 
 # Download only files from a subdirectory
 await client.workspaces.download_all(workspace.id, to="./output", prefix="reports/")
@@ -513,14 +513,14 @@ await client.workspaces.downloadAll(workspace.id, { to: "./output", prefix: "rep
 # List all files
 files = await client.workspaces.files(workspace.id)
 for f in files.files:
-print(f.path, f.size)
+    print(f.path, f.size)
 
 # Delete a single file
 await client.workspaces.delete_file(workspace.id, path="old-report.pdf")
 
 # Check workspace storage usage
 size = await client.workspaces.size(workspace.id)
-print(f"Used: {size.used_bytes} bytes")
+print(f"Used: {size['usedBytes']} bytes")
 ```
 ```typescript TypeScript
 // List all files
@@ -533,7 +533,7 @@ for (const f of files.files) {
 await client.workspaces.deleteFile(workspace.id, "old-report.pdf");
 
 // Check workspace storage usage
-const size = await client.workspaces.size(workspace.id);
+const size = await client.workspaces.size(workspace.id) as any;
 console.log(`Used: ${size.usedBytes} bytes`);
 ```
 
@@ -562,14 +562,14 @@ workspace = await client.workspaces.create(name="my-scraper")
 
 # First call — agent explores, creates script (~$0.10, ~60s)
 result = await client.run(
-"Get the top {{5}} stories from https://news.ycombinator.com as JSON",
-workspace_id=str(workspace.id),
+    "Get the top {{5}} stories from https://news.ycombinator.com as JSON",
+    workspace_id=str(workspace.id),
 )
 
 # Second call — cached script, different param ($0 LLM, ~5s)
 result2 = await client.run(
-"Get the top {{10}} stories from https://news.ycombinator.com as JSON",
-workspace_id=str(workspace.id),
+    "Get the top {{10}} stories from https://news.ycombinator.com as JSON",
+    workspace_id=str(workspace.id),
 )
 ```
 ```typescript TypeScript
@@ -593,20 +593,20 @@ const result2 = await client.run(
 
 ## How it works
 
-The brackets mark which parts are parameters:
+    The brackets mark which parts are parameters:
 
-```
-"Get prices from {{example.com}} for {{electronics}}"
-```
+    ```
+    "Get prices from {{example.com}} for {{electronics}}"
+    ```
 
-- `{{example.com}}` → parameter 1
-- `{{electronics}}` → parameter 2
+    - `{{example.com}}` → parameter 1
+    - `{{electronics}}` → parameter 2
 
-The system strips the values to create a **template**: `"Get prices from {{}} for {{}}"`.
-Template `"Get prices from {{}} for {{}}"` is hashed to a unique ID like `a7f3b2c1`.
-The system checks the workspace for `scripts/a7f3b2c1.py`.
-If no script exists, the full agent runs your task. After completing it, the agent saves a standalone Python script that reproduces the result deterministically — no AI needed.
-If the script exists, it runs directly with the new parameter values. No agent, no LLM. Just the script in a sandbox with browser and proxy.
+    The system strips the values to create a **template**: `"Get prices from {{}} for {{}}"`.
+    Template `"Get prices from {{}} for {{}}"` is hashed to a unique ID like `a7f3b2c1`.
+    The system checks the workspace for `scripts/a7f3b2c1.py`.
+    If no script exists, the full agent runs your task. After completing it, the agent saves a standalone Python script that reproduces the result deterministically — no AI needed.
+    If the script exists, it runs directly with the new parameter values. No agent, no LLM. Just the script in a sandbox with browser and proxy.
 
 ## Auto-detection
 
@@ -631,17 +631,17 @@ Run once, then loop over different keywords at $0 LLM each:
 ```python Python
 # Agent figures out how to scrape intro.co on first call
 result = await client.run(
-"Go to {{https://intro.co/marketplace}} and get all {{logistics}} experts as JSON",
-workspace_id=str(workspace.id),
+    "Go to {{https://intro.co/marketplace}} and get all {{logistics}} experts as JSON",
+    workspace_id=str(workspace.id),
 )
 
 # Instant reruns with different keywords
 for keyword in ["CEO", "marketing", "finance", "e-commerce"]:
-result = await client.run(
-    f"Go to {{{{https://intro.co/marketplace}}}} and get all {{{{{keyword}}}}} experts as JSON",
-    workspace_id=str(workspace.id),
-)
-print(f"{keyword}: {len(result.output)} experts, LLM cost: ${result.llm_cost_usd}")
+    result = await client.run(
+        f"Go to {{{{https://intro.co/marketplace}}}} and get all {{{{{keyword}}}}} experts as JSON",
+        workspace_id=str(workspace.id),
+    )
+    print(f"{keyword}: {len(result.output)} experts, LLM cost: ${result.llm_cost_usd}")
 ```
 ```typescript TypeScript
 // Agent figures out how to scrape intro.co on first call
@@ -653,8 +653,8 @@ let result = await client.run(
 // Instant reruns with different keywords
 for (const keyword of ["CEO", "marketing", "finance", "e-commerce"]) {
   result = await client.run(
-`Go to {{https://intro.co/marketplace}} and get all {{${keyword}}} experts as JSON`,
-{ workspaceId: workspace.id },
+    `Go to {{https://intro.co/marketplace}} and get all {{${keyword}}} experts as JSON`,
+    { workspaceId: workspace.id },
   );
   console.log(`${keyword}: ${result.output.length} experts`);
 }
@@ -666,14 +666,14 @@ Append empty brackets `{{}}` to signal "cache this exact task":
 
 ```python Python
 result = await client.run(
-"Get the current Bitcoin price from coinmarketcap.com {{}}",
-workspace_id=str(workspace.id),
+    "Get the current Bitcoin price from coinmarketcap.com {{}}",
+    workspace_id=str(workspace.id),
 )
 
 # Same task again — cached
 result2 = await client.run(
-"Get the current Bitcoin price from coinmarketcap.com {{}}",
-workspace_id=str(workspace.id),
+    "Get the current Bitcoin price from coinmarketcap.com {{}}",
+    workspace_id=str(workspace.id),
 )
 ```
 ```typescript TypeScript
@@ -693,14 +693,14 @@ result = await client.run(
 
 ```python Python
 result = await client.run(
-"Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for {{Germany,France,Japan}}",
-workspace_id=str(workspace.id),
+    "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for {{Germany,France,Japan}}",
+    workspace_id=str(workspace.id),
 )
 
 # Different countries — cached
 result2 = await client.run(
-"Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for {{US,UK,Brazil}}",
-workspace_id=str(workspace.id),
+    "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for {{US,UK,Brazil}}",
+    workspace_id=str(workspace.id),
 )
 ```
 ```typescript TypeScript
@@ -721,16 +721,16 @@ result = await client.run(
 ```python Python
 # Force-enable without brackets
 result = await client.run(
-"Get the top stories from Hacker News",
-workspace_id=str(workspace.id),
-cache_script=True,
+    "Get the top stories from Hacker News",
+    workspace_id=str(workspace.id),
+    cache_script=True,
 )
 
 # Force-disable even with brackets
 result = await client.run(
-"Explain what {{templates}} means in Jinja",
-workspace_id=str(workspace.id),
-cache_script=False,
+    "Explain what {{templates}} means in Jinja",
+    workspace_id=str(workspace.id),
+    cache_script=False,
 )
 ```
 ```typescript TypeScript
@@ -754,7 +754,7 @@ You can download and inspect the scripts the agent created:
 ```python Python
 files = await client.workspaces.files(workspace.id, prefix="scripts/")
 for f in files.files:
-print(f"{f.path}  ({f.size} bytes)")
+    print(f"{f.path}  ({f.size} bytes)")
 
 # Download a script to inspect it
 await client.workspaces.download(workspace.id, "scripts/a7f3b2c1.py", to="./my_script.py")
@@ -805,8 +805,8 @@ print(f"Live view: {session.live_url}")
 
 # 2. Agent does the first part
 result = await client.run(
-"Go to amazon.com and search for noise cancelling headphones",
-session_id=session.id,
+    "Go to amazon.com and search for noise cancelling headphones",
+    session_id=session.id,
 )
 print(result.output)
 
@@ -815,8 +815,8 @@ input("Press Enter after you've selected a product in the live view...")
 
 # 4. Agent continues where the human left off
 result = await client.run(
-"Get the details of the selected product — name, price, and rating",
-session_id=session.id,
+    "Get the details of the selected product — name, price, and rating",
+    session_id=session.id,
 )
 print(result.output)
 
@@ -934,12 +934,12 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 browser = await client.browsers.create(
-custom_proxy={
-    "host": "proxy.example.com",
-    "port": 8080,
-    "username": "user",
-    "password": "pass",
-},
+    custom_proxy={
+        "host": "proxy.example.com",
+        "port": 8080,
+        "username": "user",
+        "password": "pass",
+    },
 )
 ```
 ```typescript TypeScript
@@ -948,10 +948,10 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const browser = await client.browsers.create({
   customProxy: {
-host: "proxy.example.com",
-port: 8080,
-username: "user",
-password: "pass",
+    host: "proxy.example.com",
+    port: 8080,
+    username: "user",
+    password: "pass",
   },
 });
 ```
@@ -1048,14 +1048,14 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"Check how many GitHub stars browser-use has",
-enable_recording=True,
+    "Check how many GitHub stars browser-use has",
+    enable_recording=True,
 )
 
 # Waits up to 15s for recording to be ready. Returns [] if no browser was opened.
 urls = await client.sessions.wait_for_recording(result.id)
 for url in urls:
-print(url)  # presigned MP4 download URL
+    print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -1114,11 +1114,11 @@ from playwright.async_api import async_playwright
 WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
 
 async with async_playwright() as p:
-browser = await p.chromium.connect_over_cdp(WSS_URL)
-page = browser.contexts[0].pages[0]
-await page.goto("https://example.com")
-print(await page.title())
-await browser.close()
+    browser = await p.chromium.connect_over_cdp(WSS_URL)
+    page = browser.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    print(await page.title())
+    await browser.close()
 # Browser is automatically stopped when the WebSocket disconnects
 ```
 ```typescript TypeScript
@@ -1158,11 +1158,11 @@ from playwright.sync_api import sync_playwright
 WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
 
 with sync_playwright() as p:
-browser = p.chromium.connect_over_cdp(WSS_URL)
-page = browser.contexts[0].pages[0]
-page.goto("https://example.com")
-print(page.title())
-browser.close()
+    browser = p.chromium.connect_over_cdp(WSS_URL)
+    page = browser.contexts[0].pages[0]
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()
 ```
 
   Selenium's `debugger_address` only supports local `host:port` connections. For remote CDP over WebSocket, use Playwright or Puppeteer instead.
@@ -1194,11 +1194,11 @@ print(browser.cdp_url)   # https://uuid.cdpN.browser-use.com
 print(browser.live_url)  # https://live.browser-use.com?wss=...
 
 async with async_playwright() as p:
-pw_browser = await p.chromium.connect_over_cdp(browser.cdp_url)
-page = pw_browser.contexts[0].pages[0]
-await page.goto("https://example.com")
-print(await page.title())
-await pw_browser.close()
+    pw_browser = await p.chromium.connect_over_cdp(browser.cdp_url)
+    page = pw_browser.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    print(await page.title())
+    await pw_browser.close()
 
 await client.browsers.stop(browser.id)
 ```
@@ -1291,7 +1291,7 @@ profile = await client.profiles.create(name="work-account")
 # List all
 response = await client.profiles.list()
 for p in response.items:
-print(p.id, p.name)
+    print(p.id, p.name)
 
 # Search by name
 response = await client.profiles.list(query="user-id-1")
@@ -1353,6 +1353,7 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 session = await client.sessions.create(profile_id="your_synced_profile_id")
 result = await client.run("Check my LinkedIn messages", session_id=session.id)
+await client.sessions.stop(session.id)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -1362,6 +1363,7 @@ const session = await client.sessions.create({ profileId: "your_synced_profile_i
 const result = await client.run("Check my LinkedIn messages", {
   sessionId: session.id,
 });
+await client.sessions.stop(session.id);
 ```
 
 
@@ -1457,8 +1459,8 @@ print(f"Live view: {session.live_url}")
 
 # Agent navigates to login
 result = await client.run(
-"Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
-session_id=session.id,
+    "Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
+    session_id=session.id,
 )
 
 # Human completes 2FA in the live view
@@ -1466,8 +1468,8 @@ input("Complete 2FA in the live view, then press Enter...")
 
 # Agent continues
 result = await client.run(
-"You are now logged in. Go to the dashboard and export the monthly report",
-session_id=session.id,
+    "You are now logged in. Go to the dashboard and export the monthly report",
+    session_id=session.id,
 )
 print(result.output)
 await client.sessions.stop(session.id)
@@ -1516,14 +1518,14 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 
 result = await client.run(
-"""
-1. Go to example.com/signup
-2. Sign up with the agent's email address (use the email available to you)
-3. Check your email inbox for the verification code
-4. Enter the code on the website
-5. Complete the registration
-""",
-agentmail=True,  # default, shown for clarity
+    """
+    1. Go to example.com/signup
+    2. Sign up with the agent's email address (use the email available to you)
+    3. Check your email inbox for the verification code
+    4. Enter the code on the website
+    5. Complete the registration
+    """,
+    agentmail=True,  # default, shown for clarity
 )
 print(result.output)
 ```
@@ -1573,16 +1575,16 @@ client = AsyncBrowserUse()
 totp_secret = "JBSWY3DPEHPK3PXP"
 
 result = await client.run(
-f"""
-Log into example.com with username user@example.com and password mypassword.
-When prompted for a 2FA code, generate one using pyotp:
+    f"""
+    Log into example.com with username user@example.com and password mypassword.
+    When prompted for a 2FA code, generate one using pyotp:
 
-import pyotp
-totp = pyotp.TOTP("{totp_secret}")
-code = totp.now()
+    import pyotp
+    totp = pyotp.TOTP("{totp_secret}")
+    code = totp.now()
 
-Enter the generated code.
-""",
+    Enter the generated code.
+    """,
 )
 print(result.output)
 ```
@@ -1620,10 +1622,10 @@ This works because the Browser Use agent can execute Python code as part of its 
 
 ## Which approach should I use?
 
-Start with **Profiles** — log in once, reuse cookies. If cookies expire frequently, add **TOTP secret in prompt** for fully automated re-login.
-Use **Profiles** with one profile per user. For initial login, use **Human in the loop** — your user logs in once via the live view, then the agent reuses the session. For email 2FA, set up **Agent Mail** with email forwarding from your user.
-Use **Agent Mail** (enabled by default). For end-client scenarios, have them forward 2FA emails to a dedicated inbox.
-Use **TOTP secret in prompt** — the agent generates codes via pyotp, no human intervention needed.
+    Start with **Profiles** — log in once, reuse cookies. If cookies expire frequently, add **TOTP secret in prompt** for fully automated re-login.
+    Use **Profiles** with one profile per user. For initial login, use **Human in the loop** — your user logs in once via the live view, then the agent reuses the session. For email 2FA, set up **Agent Mail** with email forwarding from your user.
+    Use **Agent Mail** (enabled by default). For end-client scenarios, have them forward 2FA emails to a dedicated inbox.
+    Use **TOTP secret in prompt** — the agent generates codes via pyotp, no human intervention needed.
 
 
 # OpenClaw
@@ -1653,16 +1655,16 @@ Open `~/.openclaw/openclaw.json` and add a `browser-use` profile:
 ```json5
 {
   browser: {
-enabled: true,
-defaultProfile: "browser-use",
-remoteCdpTimeoutMs: 3000,
-remoteCdpHandshakeTimeoutMs: 5000,
-profiles: {
-  "browser-use": {
-    cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
-    color: "#ff750e",
-  },
-},
+    enabled: true,
+    defaultProfile: "browser-use",
+    remoteCdpTimeoutMs: 3000,
+    remoteCdpHandshakeTimeoutMs: 5000,
+    profiles: {
+      "browser-use": {
+        cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
+        color: "#ff750e",
+      },
+    },
   },
 }
 ```
@@ -1745,12 +1747,12 @@ Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-"browser-use": {
-  "url": "https://api.browser-use.com/v3/mcp",
-  "headers": {
-    "x-browser-use-api-key": "YOUR_API_KEY"
-  }
-}
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
   }
 }
 ```
@@ -1762,12 +1764,12 @@ Add to `.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-"browser-use": {
-  "url": "https://api.browser-use.com/v3/mcp",
-  "headers": {
-    "x-browser-use-api-key": "YOUR_API_KEY"
-  }
-}
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
   }
 }
 ```
@@ -1779,12 +1781,12 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 ```json
 {
   "mcpServers": {
-"browser-use": {
-  "serverUrl": "https://api.browser-use.com/v3/mcp",
-  "headers": {
-    "x-browser-use-api-key": "YOUR_API_KEY"
-  }
-}
+    "browser-use": {
+      "serverUrl": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
   }
 }
 ```
@@ -1822,10 +1824,10 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
   "type": "agent.task.status_update",
   "timestamp": "2025-01-15T10:30:00Z",
   "payload": {
-"task_id": "task_abc123",
-"session_id": "session_xyz",
-"status": "idle",
-"metadata": {}
+    "task_id": "task_abc123",
+    "session_id": "session_xyz",
+    "status": "idle",
+    "metadata": {}
   }
 }
 ```
@@ -1846,17 +1848,17 @@ import json
 import time
 
 def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
-# Reject requests older than 5 minutes
-try:
-    ts = int(timestamp)
-except (ValueError, TypeError):
-    return False
-if abs(time.time() - ts) > 300:
-    return False
-payload = json.loads(body)
-message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
-expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
-return hmac.compare_digest(expected, signature)
+    # Reject requests older than 5 minutes
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        return False
+    if abs(time.time() - ts) > 300:
+        return False
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
 ```
 ```typescript TypeScript
 import { createHmac, timingSafeEqual } from "crypto";
@@ -1864,12 +1866,12 @@ import { createHmac, timingSafeEqual } from "crypto";
 function sortKeys(obj: unknown): unknown {
   if (Array.isArray(obj)) return obj.map(sortKeys);
   if (obj !== null && typeof obj === "object") {
-return Object.keys(obj as object)
-  .sort()
-  .reduce((acc, key) => {
-    (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
-    return acc;
-  }, {} as Record<string, unknown>);
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
   }
   return obj;
 }
@@ -1898,12 +1900,12 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
 function sortKeys(obj: unknown): unknown {
   if (Array.isArray(obj)) return obj.map(sortKeys);
   if (obj !== null && typeof obj === "object") {
-return Object.keys(obj as object)
-  .sort()
-  .reduce((acc, key) => {
-    (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
-    return acc;
-  }, {} as Record<string, unknown>);
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
   }
   return obj;
 }
@@ -1913,7 +1915,7 @@ app.post("/webhook", (req, res) => {
   const timestamp = req.headers["x-browser-use-timestamp"] as string;
 
   if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
-return res.status(401).send("Request too old");
+    return res.status(401).send("Request too old");
   }
 
   const body = req.body.toString();
@@ -1922,12 +1924,12 @@ return res.status(401).send("Request too old");
   const expected = createHmac("sha256", WEBHOOK_SECRET).update(message).digest("hex");
 
   if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
-return res.status(401).send("Invalid signature");
+    return res.status(401).send("Invalid signature");
   }
 
   if (payload.type === "agent.task.status_update") {
-const { task_id, status, session_id } = payload.payload;
-console.log(`Task ${task_id} is now ${status}`);
+    const { task_id, status, session_id } = payload.payload;
+    console.log(`Task ${task_id} is now ${status}`);
   }
 
   res.status(200).send("OK");
@@ -1952,31 +1954,31 @@ WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
 
 @app.post("/webhook")
 async def handle_webhook(request: Request):
-body = await request.body()
-signature = request.headers.get("x-browser-use-signature", "")
-timestamp = request.headers.get("x-browser-use-timestamp", "")
+    body = await request.body()
+    signature = request.headers.get("x-browser-use-signature", "")
+    timestamp = request.headers.get("x-browser-use-timestamp", "")
 
-# Reject requests older than 5 minutes
-try:
-    ts = int(timestamp)
-except (ValueError, TypeError):
-    raise HTTPException(status_code=401, detail="Invalid timestamp")
-if abs(time.time() - ts) > 300:
-    raise HTTPException(status_code=401, detail="Request too old")
+    # Reject requests older than 5 minutes
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid timestamp")
+    if abs(time.time() - ts) > 300:
+        raise HTTPException(status_code=401, detail="Request too old")
 
-payload = json.loads(body)
-message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
-expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
 
-if not hmac.compare_digest(expected, signature):
-    raise HTTPException(status_code=401, detail="Invalid signature")
+    if not hmac.compare_digest(expected, signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
 
-if payload["type"] == "agent.task.status_update":
-    task_id = payload["payload"]["task_id"]
-    status = payload["payload"]["status"]
-    print(f"Task {task_id} is now {status}")
+    if payload["type"] == "agent.task.status_update":
+        task_id = payload["payload"]["task_id"]
+        status = payload["payload"]["status"]
+        print(f"Task {task_id} is now {status}")
 
-return {"status": "ok"}
+    return {"status": "ok"}
 ```
 
   For local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose your local server: `ngrok http 3000`. Then set the ngrok URL as your webhook endpoint in the dashboard.
@@ -2077,8 +2079,8 @@ import { client } from "./api";
 
 export async function createSession() {
   const session = await client.sessions.create({
-keepAlive: true,
-enableRecording: true,
+    keepAlive: true,
+    enableRecording: true,
   });
   return { id: session.id, liveUrl: session.liveUrl, status: session.status };
 }
@@ -2095,7 +2097,7 @@ async function handleSend(message: string) {
   const session = await createSession();
 
   router.push(
-`/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
+    `/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
   );
 }
 ```
@@ -2111,7 +2113,7 @@ const streamTask = useCallback(async (task: string) => {
   const run = client.run(task, { sessionId });
 
   for await (const msg of run) {
-setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => [...prev, msg]);
   }
 
   // Iterator done — task reached terminal state
@@ -2155,7 +2157,7 @@ useEffect(() => {
   if (!isTerminal) return;
 
   client.sessions.waitForRecording(sessionId).then((urls) => {
-if (urls.length) setRecordingUrls(urls);
+    if (urls.length) setRecordingUrls(urls);
   });
 }, [isTerminal, sessionId]);
 ```
@@ -2183,23 +2185,23 @@ The session page consumes everything through a context provider:
 ```typescript session/[id]/page.tsx
 function SessionPage() {
   const { session, turns, isBusy, isTerminal, recordingUrls, sendMessage, stopTask } =
-useSession();
+    useSession();
 
   return (
-<div className="flex h-screen w-full overflow-hidden">
-  {/* Chat column */}
-  <div className="flex-1 flex flex-col min-w-0">
-    <ChatMessages turns={turns} isBusy={isBusy} />
-    <ChatInput
-      onSend={sendMessage}
-      onStop={stopTask}
-      disabled={isTerminal}
-    />
-  </div>
+    <div className="flex h-screen w-full overflow-hidden">
+      {/* Chat column */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <ChatMessages turns={turns} isBusy={isBusy} />
+        <ChatInput
+          onSend={sendMessage}
+          onStop={stopTask}
+          disabled={isTerminal}
+        />
+      </div>
 
-  {/* Live browser view — liveUrl available from session creation */}
-  <BrowserPanel liveUrl={session?.liveUrl} />
-</div>
+      {/* Live browser view — liveUrl available from session creation */}
+      <BrowserPanel liveUrl={session?.liveUrl} />
+    </div>
   );
 }
 ```
@@ -2313,15 +2315,15 @@ client = AsyncBrowserUse()
 session = await client.sessions.create()
 
 upload = await client.files.session_url(
-session.id,
-file_name="input.pdf",
-content_type="application/pdf",
-size_bytes=1024,
+    session.id,
+    file_name="input.pdf",
+    content_type="application/pdf",
+    size_bytes=1024,
 )
 
 with open("input.pdf", "rb") as f:
-async with httpx.AsyncClient() as http:
-    await http.post(upload.url, content=f.read(), headers={"Content-Type": "application/pdf"})
+    async with httpx.AsyncClient() as http:
+        await http.post(upload.url, content=f.read(), headers={"Content-Type": "application/pdf"})
 
 result = await client.run("Summarize the uploaded PDF", session_id=session.id)
 ```
@@ -2354,8 +2356,8 @@ const result = await client.run("Summarize the uploaded PDF", { sessionId: sessi
 ```python Python
 result = await client.tasks.get(task_id)
 for file in result.output_files:
-output = await client.files.task_output(task_id, file.id)
-print(output.download_url)  # download URL
+    output = await client.files.task_output(task_id, file.id)
+    print(output.download_url)  # download URL
 ```
 ```typescript TypeScript
 const result = await client.tasks.get(taskId);
@@ -2377,8 +2379,8 @@ from browser_use_sdk import AsyncBrowserUse
 client = AsyncBrowserUse()
 run = client.run("Find the most upvoted post on Reddit r/technology today")
 async for step in run:
-print(f"Step {step.number}: {step.next_goal}")
-print(f"  URL: {step.url}")
+    print(f"Step {step.number}: {step.next_goal}")
+    print(f"  URL: {step.url}")
 
 print(run.result.output)  # final result after iteration
 ```
@@ -2459,8 +2461,8 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 skill = await client.skills.create(
-goal="Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
-agent_prompt="Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
+    goal="Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
+    agent_prompt="Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
 )
 print(skill.id)
 ```
@@ -2481,8 +2483,8 @@ Skill creation takes ~30 seconds. You can also create skills visually from the [
 
 ```python Python
 result = await client.skills.execute(
-skill.id,
-parameters={"X": 10},
+    skill.id,
+    parameters={"X": 10},
 )
 print(result)
 ```
@@ -2554,9 +2556,9 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"Log into my Jira account and create a new ticket",
-op_vault_id="your-vault-id",
-allowed_domains=["*.atlassian.net"],
+    "Log into my Jira account and create a new ticket",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net"],
 )
 print(result.output)
 ```
@@ -2567,8 +2569,8 @@ const client = new BrowserUse();
 const result = await client.run(
   "Log into my Jira account and create a new ticket",
   {
-opVaultId: "your-vault-id",
-allowedDomains: ["*.atlassian.net"],
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net"],
   },
 );
 console.log(result.output);
@@ -2578,17 +2580,17 @@ For SSO/OAuth redirects, include all required domains:
 
 ```python Python
 result = await client.run(
-"Log into Jira and create a ticket for the Q4 release",
-op_vault_id="your-vault-id",
-allowed_domains=["*.atlassian.net", "*.okta.com"],
+    "Log into Jira and create a ticket for the Q4 release",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net", "*.okta.com"],
 )
 ```
 ```typescript TypeScript
 const result = await client.run(
   "Log into Jira and create a ticket for the Q4 release",
   {
-opVaultId: "your-vault-id",
-allowedDomains: ["*.atlassian.net", "*.okta.com"],
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net", "*.okta.com"],
   },
 );
 ```
@@ -2616,9 +2618,9 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"Log into GitHub and star the browser-use/browser-use repo",
-secrets={"github.com": "username:password123"},
-allowed_domains=["github.com"],
+    "Log into GitHub and star the browser-use/browser-use repo",
+    secrets={"github.com": "username:password123"},
+    allowed_domains=["github.com"],
 )
 ```
 ```typescript TypeScript
@@ -2628,8 +2630,8 @@ const client = new BrowserUse();
 const result = await client.run(
   "Log into GitHub and star the browser-use/browser-use repo",
   {
-secrets: { "github.com": "username:password123" },
-allowedDomains: ["github.com"],
+    secrets: { "github.com": "username:password123" },
+    allowedDomains: ["github.com"],
   },
 );
 ```
@@ -2640,23 +2642,23 @@ For SSO/OAuth redirects, include all domains in the auth flow:
 
 ```python Python
 result = await client.run(
-"Log into the company portal and download the Q4 report",
-secrets={
-    "portal.example.com": "user@company.com:password123",
-    "okta.com": "user@company.com:password123",
-},
-allowed_domains=["portal.example.com", "*.okta.com"],
+    "Log into the company portal and download the Q4 report",
+    secrets={
+        "portal.example.com": "user@company.com:password123",
+        "okta.com": "user@company.com:password123",
+    },
+    allowed_domains=["portal.example.com", "*.okta.com"],
 )
 ```
 ```typescript TypeScript
 const result = await client.run(
   "Log into the company portal and download the Q4 report",
   {
-secrets: {
-  "portal.example.com": "user@company.com:password123",
-  "okta.com": "user@company.com:password123",
-},
-allowedDomains: ["portal.example.com", "*.okta.com"],
+    secrets: {
+      "portal.example.com": "user@company.com:password123",
+      "okta.com": "user@company.com:password123",
+    },
+    allowedDomains: ["portal.example.com", "*.okta.com"],
   },
 );
 ```
