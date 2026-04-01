@@ -65,6 +65,7 @@
                     "icon": "robot",
                     "pages": [
                       "cloud/agent/quickstart",
+                      "cloud/agent/models",
                       "cloud/agent/structured-output",
                       "cloud/agent/follow-up-tasks",
                       "cloud/agent/streaming",
@@ -111,10 +112,10 @@
                     "group": "Tutorials",
                     "icon": "graduation-cap",
                     "pages": [
-                      "cloud/tutorials/chat-ui",
-                      "cloud/faq"
+                      "cloud/tutorials/chat-ui"
                     ]
                   },
+                  "cloud/faq",
                   {
                     "group": "Legacy (v2)",
                     "icon": "box-archive",

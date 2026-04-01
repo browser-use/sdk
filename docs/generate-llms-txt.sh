@@ -101,7 +101,12 @@ def process_group(group, indent=0):
             elif not any(isinstance(p, dict) and 'openapi' in p for p in group.get('pages', [])):
                 # Sub-group container (like Pillars) — skip header but process children
                 pass
-        for page in group.get('pages', []):
+        # Process direct page slugs first, then sub-groups
+        direct = [p for p in group.get('pages', []) if isinstance(p, str)]
+        subgroups = [p for p in group.get('pages', []) if isinstance(p, dict)]
+        for page in direct:
+            lines.extend(process_group(page, indent+1))
+        for page in subgroups:
             lines.extend(process_group(page, indent+1))
     return lines
 
