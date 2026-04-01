@@ -15,6 +15,9 @@ profile = await client.profiles.create(name="user-id-1")
 session = await client.sessions.create(profile_id=profile.id)
 result = await client.run("Check browser-use github stars", session_id=session.id)
 print(result.output)
+
+# Always stop the session to persist profile state
+await client.sessions.stop(session.id)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -28,6 +31,9 @@ const result = await client.run("Check browser-use github stars", {
   sessionId: session.id,
 });
 console.log(result.output);
+
+// Always stop the session to persist profile state
+await client.sessions.stop(session.id);
 ```
 </CodeGroup>
 
@@ -88,5 +94,5 @@ await client.profiles.delete(profileId);
 - **Per-user profiles:** Create one profile per end-user. Query by name to get the profile ID, or store a mapping between your users and their profile IDs in your database.
 
 <Warning>
-  Profile state is only saved when the session ends. Always call `sessions.stop()` when you are done — if a session is left open or times out, changes may not be persisted.
+  Profile state is only saved when the session ends. Always call `sessions.stop()` when you are done — if a session is left open or times out, changes may not be persisted. Every code path that uses a profile must stop the session, including error handlers.
 </Warning>

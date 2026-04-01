@@ -76,6 +76,12 @@ export class BrowserUse {
       body.proxyCountryCode = body.proxyCountryCode.toLowerCase() as any;
     }
     if (schema) {
+      if (typeof schema !== "object" || !("_zod" in schema || "_def" in schema)) {
+        throw new Error(
+          "schema must be a Zod schema (e.g. z.object({...})). " +
+          "Make sure you are using Zod v4: npm install zod@4"
+        );
+      }
       body.outputSchema = z.toJSONSchema(schema) as Record<string, unknown>;
     }
     // Auto keep_alive when dispatching to an existing session

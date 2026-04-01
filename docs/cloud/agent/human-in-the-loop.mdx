@@ -9,6 +9,10 @@ icon: hand
 - Human navigates a complex auth flow, then hands back to agent
 - Human reviews what the agent did before the agent continues
 
+<Warning>
+  Sessions time out after 15 minutes of inactivity. The maximum session duration is 4 hours. If the human needs more time, send a lightweight follow-up task (e.g. "wait") to reset the inactivity timer.
+</Warning>
+
 ## Flow
 
 1. Create a session — it stays alive automatically when you pass `session_id` to `run()`
