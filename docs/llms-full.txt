@@ -130,9 +130,7 @@ Pass `model` to select a model:
 | ----- | ---------- | --------------------- | ---------------------- |
 | Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$3.60 | \$18.00 |
 | Claude Opus 4.6 | `claude-opus-4-6` | \$6.00 | \$30.00 |
-| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$3.60 | \$18.00 |
 | Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.60 | \$3.60 |
-| Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$2.40 | \$14.40 |
 
   We recommend **Claude Sonnet 4.6** (`claude-sonnet-4-6`). It's the model we optimize for the most right now.
 
