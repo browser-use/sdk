@@ -5,7 +5,6 @@
 - Dashboard: https://cloud.browser-use.com
 - Create API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Docs: https://docs.browser-use.com
-- Full SDK reference (all code examples): https://docs.browser-use.com/cloud/llms-full.txt
 - OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
 - Chat UI example: https://docs.browser-use.com/cloud/tutorials/chat-ui — Full end-to-end example with live browser, streaming, auth. Best starting point to build a prototype.
 - Open-source repo: https://github.com/browser-use/browser-use — The open-source Python library. Note: the open-source API is different from the Cloud SDK. If you want the easiest path to production with managed infrastructure, use the Cloud SDK below.
@@ -21,27 +20,6 @@ Set API key (starts with `bu_`). If the user doesn't have one yet, they can crea
 export BROWSER_USE_API_KEY=bu_your_key_here
 ```
 
-## Quick start
-
-```python
-import asyncio
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-async def main():
-    client = AsyncBrowserUse()
-    result = await client.run("List the top 20 posts on Hacker News today with their points")
-    print(result.output)
-
-asyncio.run(main())
-```
-
-```typescript
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-const result = await client.run("List the top 20 posts on Hacker News today with their points");
-console.log(result.output);
-```
 
 ## Get Started
 - [Quick start](https://docs.browser-use.com/cloud/quickstart): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
@@ -69,6 +47,7 @@ console.log(result.output);
 - [2FA](https://docs.browser-use.com/cloud/guides/2fa): Best practices for handling two-factor authentication in automated browser sessions.
 
 ## More
+- [FAQ](https://docs.browser-use.com/cloud/faq): Common questions and solutions.
 
 ## Integrations
 - [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
@@ -78,7 +57,6 @@ console.log(result.output);
 
 ## Tutorials
 - [Chat UI](https://docs.browser-use.com/cloud/tutorials/chat-ui): Full end-to-end example. Build a chat UI with live browser preview, follow-up tasks, recording, and streaming messages.
-- [FAQ](https://docs.browser-use.com/cloud/faq): Common questions and solutions.
 
 ## Legacy (v2)
 - [Agent (v2)](https://docs.browser-use.com/cloud/legacy/agent): V2 agent models and file handling.
