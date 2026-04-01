@@ -120,6 +120,51 @@ The best SOTA browser agent — see our [online Mind2Web benchmark](https://brow
 If you are an LLM, read/include [docs.browser-use.com/llms-full.txt](https://docs.browser-use.com/llms-full.txt) — it contains the complete SDK reference with all code examples in a single file optimized for LLMs.
 
 
+# Models
+Source: https://docs.browser-use.com/cloud/agent/models
+
+
+Pass `model` to select a model:
+
+| Model | API String | Cost per Step |
+| ----- | ---------- | ------------- |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$0.05 |
+| Claude Opus 4.6 | `claude-opus-4-6` | \$0.05 |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
+| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.01 |
+| Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$0.03 |
+| O3 | `o3` | \$0.03 |
+
+  We recommend **Claude Sonnet 4.6** (`claude-sonnet-4-6`). It's the model we optimize for the most right now.
+
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+"List the top 20 posts on Hacker News today with their points",
+model="claude-sonnet-4-6",
+)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "List the top 20 posts on Hacker News today with their points",
+  { model: "claude-sonnet-4-6" },
+);
+console.log(result.output);
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v3/sessions \
+  -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4-6"}'
+```
+
+
 # Structured output
 Source: https://docs.browser-use.com/cloud/agent/structured-output
 

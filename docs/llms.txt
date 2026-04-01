@@ -27,6 +27,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## Agent
 - [Introduction](https://docs.browser-use.com/cloud/agent/quickstart): Easiest way to automate the web. Tell this agent in natural language what it should do, and it can interact with the web like a human.
+- [Models](https://docs.browser-use.com/cloud/agent/models): Choose the right model for your task.
 - [Structured output](https://docs.browser-use.com/cloud/agent/structured-output): Get validated, typed data back from agent tasks.
 - [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks): Run multiple tasks in the same browser session.
 - [Live messages](https://docs.browser-use.com/cloud/agent/streaming): Stream the agent's messages in real time to build custom UIs or monitor progress.
@@ -44,6 +45,8 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Profiles](https://docs.browser-use.com/cloud/guides/authentication): Persistent browser state — cookies, localStorage, saved passwords. Login once, reuse across sessions.
 - [Sync local and cloud cookies](https://docs.browser-use.com/cloud/guides/profile-sync): Sync your local browser cookies to the cloud — instantly authenticate without managing credentials.
 - [2FA](https://docs.browser-use.com/cloud/guides/2fa): Best practices for handling two-factor authentication in automated browser sessions.
+
+## More
 
 ## Integrations
 - [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
