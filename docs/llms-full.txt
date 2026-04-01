@@ -126,14 +126,13 @@ Source: https://docs.browser-use.com/cloud/agent/models
 
 Pass `model` to select a model:
 
-| Model | API String | Cost per Step |
-| ----- | ---------- | ------------- |
-| Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$0.05 |
-| Claude Opus 4.6 | `claude-opus-4-6` | \$0.05 |
-| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
-| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.01 |
-| Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$0.03 |
-| O3 | `o3` | \$0.03 |
+| Model | API String | Input (per 1M tokens) | Output (per 1M tokens) |
+| ----- | ---------- | --------------------- | ---------------------- |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$3.60 | \$18.00 |
+| Claude Opus 4.6 | `claude-opus-4-6` | \$6.00 | \$30.00 |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$3.60 | \$18.00 |
+| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.60 | \$3.60 |
+| Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$2.40 | \$14.40 |
 
   We recommend **Claude Sonnet 4.6** (`claude-sonnet-4-6`). It's the model we optimize for the most right now.
 
