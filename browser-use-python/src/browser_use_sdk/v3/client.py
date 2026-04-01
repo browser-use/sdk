@@ -138,7 +138,12 @@ class BrowserUse:
 
         resolved_schema = schema or output_schema
         schema_dict: dict[str, Any] | None = None
-        if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
+        if resolved_schema is not None:
+            if not issubclass(resolved_schema, BaseModel):
+                raise TypeError(
+                    "output_schema must be a Pydantic BaseModel subclass, "
+                    f"got {resolved_schema!r}"
+                )
             schema_dict = resolved_schema.model_json_schema()
 
         # Auto keep_alive when dispatching to an existing session
@@ -177,6 +182,7 @@ class BrowserUse:
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         custom_proxy: dict[str, Any] | None = None,
+        cache_script: bool | None = None,
         **extra: Any,
     ) -> SessionStream[Any]:
         """Run a task and yield messages as they happen.
@@ -188,9 +194,17 @@ class BrowserUse:
                 print(f"[{msg.role}] {msg.summary}")
             print(stream.result.output)
         """
+        if cache_script is True and not workspace_id:
+            raise ValueError("workspace_id is required when cache_script=True")
+
         resolved_schema = schema or output_schema
         schema_dict: dict[str, Any] | None = None
-        if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
+        if resolved_schema is not None:
+            if not issubclass(resolved_schema, BaseModel):
+                raise TypeError(
+                    "output_schema must be a Pydantic BaseModel subclass, "
+                    f"got {resolved_schema!r}"
+                )
             schema_dict = resolved_schema.model_json_schema()
 
         if session_id is not None and keep_alive is None:
@@ -216,6 +230,7 @@ class BrowserUse:
             workspace_id=workspace_id,
             enable_recording=enable_recording,
             custom_proxy=custom_proxy,
+            cache_script=cache_script,
             **extra,
         )
         return SessionStream(data, self.sessions, resolved_schema, _start_cursor=start_cursor)
@@ -347,7 +362,12 @@ class AsyncBrowserUse:
 
         resolved_schema = schema or output_schema
         schema_dict: dict[str, Any] | None = None
-        if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
+        if resolved_schema is not None:
+            if not issubclass(resolved_schema, BaseModel):
+                raise TypeError(
+                    "output_schema must be a Pydantic BaseModel subclass, "
+                    f"got {resolved_schema!r}"
+                )
             schema_dict = resolved_schema.model_json_schema()
 
         # Auto keep_alive when dispatching to an existing session

@@ -171,7 +171,7 @@ await client.workspaces.delete_file(workspace.id, path="old-report.pdf")
 
 # Check workspace storage usage
 size = await client.workspaces.size(workspace.id)
-print(f"Used: {size}")
+print(f"Used: {size.used_bytes} bytes")
 ```
 ```typescript TypeScript
 // List all files
@@ -182,10 +182,14 @@ for (const f of files.files) {
 
 // Delete a single file
 await client.workspaces.deleteFile(workspace.id, "old-report.pdf");
+
+// Check workspace storage usage
+const size = await client.workspaces.size(workspace.id);
+console.log(`Used: ${size.usedBytes} bytes`);
 ```
 </CodeGroup>
 
-## Manage workspaces
+## Cloud dashboard
 
 You can also manage workspaces from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=workspaces).
 
