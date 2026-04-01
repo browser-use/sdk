@@ -4,15 +4,20 @@ description: "Choose the right model for your task."
 icon: microchip
 ---
 
-## Available models
-
-| Model | API String | Best for |
-| ----- | ---------- | -------- |
-| **bu-ultra** | `bu-ultra` | Hardest tasks that need maximum accuracy |
-| **bu-max** (default) | `bu-max` | Complex multi-step workflows — best balance of capability and cost |
-| **bu-mini** | `bu-mini` | Simple tasks — faster and cheaper |
-
 Pass `model` to select a model:
+
+| Model | API String | Cost per Step |
+| ----- | ---------- | ------------- |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$0.05 |
+| Claude Opus 4.6 | `claude-opus-4-6` | \$0.05 |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
+| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.01 |
+| Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$0.03 |
+| O3 | `o3` | \$0.03 |
+
+<Tip>
+  We recommend **Claude Sonnet 4.6** (`claude-sonnet-4-6`). It's the model we optimize for the most right now.
+</Tip>
 
 <CodeGroup>
 ```python Python
@@ -21,7 +26,7 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 result = await client.run(
     "List the top 20 posts on Hacker News today with their points",
-    model="bu-ultra",
+    model="claude-sonnet-4-6",
 )
 print(result.output)
 ```
@@ -31,7 +36,7 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const result = await client.run(
   "List the top 20 posts on Hacker News today with their points",
-  { model: "bu-ultra" },
+  { model: "claude-sonnet-4-6" },
 );
 console.log(result.output);
 ```
@@ -39,37 +44,6 @@ console.log(result.output);
 curl -X POST https://api.browser-use.com/api/v3/sessions \
   -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News", "model": "bu-ultra"}'
+  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4-6"}'
 ```
 </CodeGroup>
-
-## Third-party models
-
-You can also pass a third-party model directly:
-
-| Model | API String | Cost per Step |
-| ----- | ---------- | ------------- |
-| Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$0.05 |
-| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
-| Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$0.03 |
-| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.01 |
-| O3 | `o3` | \$0.03 |
-
-<CodeGroup>
-```python Python
-result = await client.run(
-    "Extract all product prices from this page",
-    model="claude-sonnet-4-6",
-)
-```
-```typescript TypeScript
-const result = await client.run(
-  "Extract all product prices from this page",
-  { model: "claude-sonnet-4-6" },
-);
-```
-</CodeGroup>
-
-<Tip>
-  We recommend **Claude Sonnet 4.6** (`claude-sonnet-4-6`) if you want to use a third-party model directly. It's the model we optimize for the most right now.
-</Tip>
