@@ -37,7 +37,7 @@ async def main():
         "Get the top {{5}} stories from https://news.ycombinator.com as JSON with title, url, points",
         workspace_id=ws_id,
     )
-    print(f"  LLM cost: ${r1.total_cost_usd}")
+    print(f"  Total cost: ${r1.total_cost_usd}")
     print(f"  Output: {str(r1.output)[:200]}")
 
     # Second call — cached, $0
@@ -59,7 +59,7 @@ async def main():
         "Go to {{https://intro.co/marketplace}} and get all {{logistics}} experts as JSON",
         workspace_id=ws_id,
     )
-    print(f"  LLM cost: ${r3.total_cost_usd}")
+    print(f"  Total cost: ${r3.total_cost_usd}")
 
     for keyword in ["CEO", "marketing", "finance"]:
         print(f"\n→ Cached rerun: keyword={keyword}...")
@@ -80,7 +80,7 @@ async def main():
         "Get the current top mass shooting statistics from Wikipedia {{}}",
         workspace_id=ws_id,
     )
-    print(f"  LLM cost: ${r5.total_cost_usd}")
+    print(f"  Total cost: ${r5.total_cost_usd}")
 
     print("\n→ Cached rerun...")
     r6 = await client.run(
