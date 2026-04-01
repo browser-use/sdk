@@ -1,10 +1,10 @@
 ---
-title: Script caching
+title: Deterministic rerun
 description: "Run a task once, then re-execute it for $0 LLM cost."
 icon: bolt
 ---
 
-Script caching lets you run a browser task once with a full agent, then **re-execute the same task instantly** using a cached deterministic script — no LLM, up to 99% cheaper.
+Deterministic rerun lets you run a browser task once with a full agent, then **re-execute the same task instantly** using a cached script — no LLM, up to 99% cheaper.
 
 ## Quick start
 
@@ -53,12 +53,16 @@ const result2 = await client.run(
 
 <Steps>
   <Step title="You send a task with {{brackets}}">
-    The brackets mark which parts are parameters. The system strips the values to create a **template**.
+    The brackets mark which parts are parameters:
 
     ```
-    "Get prices from {{https://example.com}} for {{electronics}}"
-                      └── param 1 ──────────┘     └── param 2 ──┘
+    "Get prices from {{example.com}} for {{electronics}}"
     ```
+
+    - `{{example.com}}` → parameter 1
+    - `{{electronics}}` → parameter 2
+
+    The system strips the values to create a **template**: `"Get prices from {{}} for {{}}"`.
   </Step>
   <Step title="System hashes the template">
     Template `"Get prices from {{}} for {{}}"` is hashed to a unique ID like `a7f3b2c1`.
