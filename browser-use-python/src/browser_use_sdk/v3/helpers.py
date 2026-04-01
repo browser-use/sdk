@@ -21,7 +21,7 @@ class SessionResult(Generic[T]):
     session: SessionResponse
     output: T
 
-    def __init__(self, session: SessionResponse, output: T) -> None:
+    def __init__(self, session: SessionResponse, output: T, **_kwargs: Any) -> None:
         self.session = session
         self.output = output
 

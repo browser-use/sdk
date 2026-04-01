@@ -38,6 +38,7 @@ class Sessions:
         enable_scheduled_tasks: bool | None = None,
         enable_recording: bool | None = None,
         custom_proxy: dict[str, Any] | None = None,
+        cache_script: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -66,6 +67,8 @@ class Sessions:
             body["enableRecording"] = enable_recording
         if custom_proxy is not None:
             body["customProxy"] = custom_proxy
+        if cache_script is not None:
+            body["cacheScript"] = cache_script
         body.update(extra)
         return SessionResponse.model_validate(
             self._http.request("POST", "/sessions", json=body)
@@ -215,6 +218,7 @@ class AsyncSessions:
         enable_scheduled_tasks: bool | None = None,
         enable_recording: bool | None = None,
         custom_proxy: dict[str, Any] | None = None,
+        cache_script: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -243,6 +247,8 @@ class AsyncSessions:
             body["enableRecording"] = enable_recording
         if custom_proxy is not None:
             body["customProxy"] = custom_proxy
+        if cache_script is not None:
+            body["cacheScript"] = cache_script
         body.update(extra)
         return SessionResponse.model_validate(
             await self._http.request("POST", "/sessions", json=body)

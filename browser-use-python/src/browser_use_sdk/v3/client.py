@@ -63,6 +63,7 @@ class BrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         custom_proxy: dict[str, Any] | None = ...,
+        cache_script: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -81,6 +82,7 @@ class BrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         custom_proxy: dict[str, Any] | None = ...,
+        cache_script: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -98,6 +100,7 @@ class BrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         custom_proxy: dict[str, Any] | None = ...,
+        cache_script: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[str]: ...
 
@@ -116,9 +119,23 @@ class BrowserUse:
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         custom_proxy: dict[str, Any] | None = None,
+        cache_script: bool | None = None,
         **extra: Any,
     ) -> Any:
-        """Run a task and block until complete. Returns a SessionResult."""
+        """Run a task and block until complete. Returns a SessionResult.
+
+        Script caching (cache_script):
+        - None (default): auto-detected. If the task contains {{value}} brackets
+          and a workspace is attached, caching is enabled automatically.
+        - True: force-enable caching (even without brackets).
+        - False: force-disable caching.
+
+        When active, the first call runs the full agent and saves a reusable script.
+        Subsequent calls with the same task template execute the script with $0 LLM cost.
+        """
+        if cache_script is True and not workspace_id:
+            raise ValueError("workspace_id is required when cache_script=True")
+
         resolved_schema = schema or output_schema
         schema_dict: dict[str, Any] | None = None
         if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
@@ -140,6 +157,7 @@ class BrowserUse:
             workspace_id=workspace_id,
             enable_recording=enable_recording,
             custom_proxy=custom_proxy,
+            cache_script=cache_script,
             **extra,
         )
         return _poll_output(self.sessions, str(data.id), resolved_schema)
@@ -254,6 +272,7 @@ class AsyncBrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         custom_proxy: dict[str, Any] | None = ...,
+        cache_script: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -272,6 +291,7 @@ class AsyncBrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         custom_proxy: dict[str, Any] | None = ...,
+        cache_script: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -289,6 +309,7 @@ class AsyncBrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         custom_proxy: dict[str, Any] | None = ...,
+        cache_script: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[str]: ...
 
@@ -307,9 +328,23 @@ class AsyncBrowserUse:
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         custom_proxy: dict[str, Any] | None = None,
+        cache_script: bool | None = None,
         **extra: Any,
     ) -> AsyncSessionRun[Any]:
-        """Run a task. Await the result for a SessionResult."""
+        """Run a task. Await the result for a SessionResult.
+
+        Script caching (cache_script):
+        - None (default): auto-detected. If the task contains {{value}} brackets
+          and a workspace is attached, caching is enabled automatically.
+        - True: force-enable caching (even without brackets).
+        - False: force-disable caching.
+
+        When active, the first call runs the full agent and saves a reusable script.
+        Subsequent calls with the same task template execute the script with $0 LLM cost.
+        """
+        if cache_script is True and not workspace_id:
+            raise ValueError("workspace_id is required when cache_script=True")
+
         resolved_schema = schema or output_schema
         schema_dict: dict[str, Any] | None = None
         if resolved_schema is not None and issubclass(resolved_schema, BaseModel):
@@ -342,6 +377,7 @@ class AsyncBrowserUse:
                 workspace_id=workspace_id,
                 enable_recording=enable_recording,
                 custom_proxy=custom_proxy,
+                cache_script=cache_script,
                 **extra,
             )
 
