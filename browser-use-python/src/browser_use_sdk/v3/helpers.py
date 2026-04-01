@@ -20,19 +20,16 @@ class SessionResult(Generic[T]):
 
     session: SessionResponse
     output: T
-    task_id: str | None
 
-    def __init__(self, session: SessionResponse, output: T, task_id: str | None = None) -> None:
+    def __init__(self, session: SessionResponse, output: T, **_kwargs: Any) -> None:
         self.session = session
         self.output = output
-        self.task_id = task_id
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.session, name)
 
     def __repr__(self) -> str:
-        extra = f", task_id={self.task_id!r}" if self.task_id else ""
-        return f"SessionResult(id={self.session.id}, status={self.session.status.value}, output={self.output!r}{extra})"
+        return f"SessionResult(id={self.session.id}, status={self.session.status.value}, output={self.output!r})"
 
 
 def _parse_output(output: Any, output_schema: type[Any] | None) -> Any:
@@ -105,7 +102,6 @@ class AsyncSessionRun(Generic[T]):
         self._start_cursor_ref = _start_cursor_ref
         self.session_id: str | None = None
         self.result: SessionResult[T] | None = None
-        self._cache_task_id: str | None = None  # Set by client when cache=True
 
     @property
     def output(self) -> T | None:
@@ -122,8 +118,6 @@ class AsyncSessionRun(Generic[T]):
             timeout=self._timeout,
             interval=self._interval,
         )
-        if self._cache_task_id:
-            result.task_id = self._cache_task_id
         self.result = result
         return result
 
@@ -162,7 +156,7 @@ class AsyncSessionRun(Generic[T]):
                     for msg in resp.messages:
                         yield msg
                         cursor = str(msg.id)
-                self.result = SessionResult(session, _parse_output(session.output, self._output_schema), task_id=self._cache_task_id)
+                self.result = SessionResult(session, _parse_output(session.output, self._output_schema))
                 return
 
             await asyncio.sleep(self._interval)
