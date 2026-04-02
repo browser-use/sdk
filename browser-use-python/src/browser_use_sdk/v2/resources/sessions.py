@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v2.models import (
     CustomProxy,
@@ -16,7 +17,7 @@ from ...generated.v2.models import (
 def _build_create_body(
     *,
     profile_id: str | None = None,
-    proxy_country_code: str | None = None,
+    proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
     start_url: str | None = None,
     browser_screen_width: int | None = None,
     browser_screen_height: int | None = None,
@@ -28,7 +29,7 @@ def _build_create_body(
     body: dict[str, Any] = {}
     if profile_id is not None:
         body["profileId"] = profile_id
-    if proxy_country_code is not None:
+    if proxy_country_code is not _UNSET:
         body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
     if start_url is not None:
         body["startUrl"] = start_url
@@ -54,7 +55,7 @@ class Sessions:
         self,
         *,
         profile_id: str | None = None,
-        proxy_country_code: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         start_url: str | None = None,
         browser_screen_width: int | None = None,
         browser_screen_height: int | None = None,
@@ -158,7 +159,7 @@ class AsyncSessions:
         self,
         *,
         profile_id: str | None = None,
-        proxy_country_code: str | None = None,
+        proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         start_url: str | None = None,
         browser_screen_width: int | None = None,
         browser_screen_height: int | None = None,
