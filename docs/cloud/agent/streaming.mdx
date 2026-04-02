@@ -45,6 +45,35 @@ console.log(run.result.output);
 [tool] Done Autonomous: The top story on Hacker News is "Coding Agents Could Make Free Software Matter Again"
 ```
 
+## Cancel a running task
+
+Use `stop(strategy="task")` to cancel the current task without destroying the session. The session goes back to `idle` and can accept a new task.
+
+<CodeGroup>
+```python Python
+run = client.run("Find the top story on Hacker News")
+async for msg in run:
+    if should_cancel():
+        await client.sessions.stop(run.session_id, strategy="task")
+        break
+# Session is now idle — send a different task or close it
+```
+```typescript TypeScript
+const run = client.run("Find the top story on Hacker News");
+for await (const msg of run) {
+  if (shouldCancel()) {
+    await client.sessions.stop(run.sessionId!, { strategy: "task" });
+    break;
+  }
+}
+// Session is now idle — send a different task or close it
+```
+</CodeGroup>
+
+<Warning>
+  `run.result` is only available **after** the iterator finishes (all messages consumed or task completes). If you break early from `async for` / `for await`, the task may still be running — call `stop(strategy="task")` to cancel it before sending a follow-up.
+</Warning>
+
 ## Manual polling
 
 If you need full control over the polling loop (e.g. custom interval, filtering):
