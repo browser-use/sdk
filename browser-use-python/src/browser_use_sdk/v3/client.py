@@ -385,7 +385,7 @@ class AsyncBrowserUse:
                 output_schema=schema_dict,
                 workspace_id=workspace_id,
                 enable_recording=enable_recording,
-                    cache_script=cache_script,
+                cache_script=cache_script,
                 **extra,
             )
 
