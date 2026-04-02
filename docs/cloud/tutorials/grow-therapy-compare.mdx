@@ -1,0 +1,170 @@
+---
+title: Grow Therapy provider search
+description: "Search Grow Therapy for therapists by location, insurance, and specialty — with cached reruns."
+icon: seedling
+---
+
+This tutorial builds a provider search tool for [Grow Therapy](https://www.growtherapy.com) — a therapy marketplace that handles insurance credentialing for providers. We combine [structured output](/cloud/agent/structured-output) with [deterministic rerun](/cloud/agent/cache-script) to build a fast, repeatable search pipeline.
+
+## What you'll build
+
+A script that:
+1. Searches Grow Therapy's provider directory with filters (location, insurance, specialty)
+2. Extracts therapist profiles with ratings and availability
+3. Caches the search so you can sweep across geographies or specialties instantly
+
+---
+
+## Setup
+
+<CodeGroup>
+```python Python
+import asyncio
+import json
+from pydantic import BaseModel
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { z } from "zod";
+
+const client = new BrowserUse();
+```
+</CodeGroup>
+
+## 1. Define the output schema
+
+<CodeGroup>
+```python Python
+class Provider(BaseModel):
+    name: str
+    title: str
+    specialties: list[str]
+    insurance_plans: list[str]
+    rating: float | None = None
+    next_available: str | None = None
+
+class ProviderSearch(BaseModel):
+    providers: list[Provider]
+    total_found: int | None = None
+    location: str
+    specialty: str
+```
+```typescript TypeScript
+const ProviderSearch = z.object({
+  providers: z.array(z.object({
+    name: z.string(),
+    title: z.string(),
+    specialties: z.array(z.string()),
+    insurancePlans: z.array(z.string()),
+    rating: z.number().nullable(),
+    nextAvailable: z.string().nullable(),
+  })),
+  totalFound: z.number().nullable(),
+  location: z.string(),
+  specialty: z.string(),
+});
+```
+</CodeGroup>
+
+## 2. Create a workspace
+
+<CodeGroup>
+```python Python
+workspace = await client.workspaces.create(name="grow-therapy-search")
+```
+```typescript TypeScript
+const workspace = await client.workspaces.create({ name: "grow-therapy-search" });
+```
+</CodeGroup>
+
+## 3. Search for providers
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Go to growtherapy.com and search for therapists in {{New York}} "
+    "who specialize in {{anxiety}} and accept insurance. "
+    "Return the first 5 provider profiles as JSON.",
+    workspace_id=str(workspace.id),
+    schema=ProviderSearch,
+)
+
+for p in result.output.providers:
+    print(f"{p.name} ({p.title})")
+    print(f"  Specialties: {', '.join(p.specialties)}")
+    print(f"  Rating: {p.rating}")
+    print(f"  Next available: {p.next_available}")
+    print()
+```
+```typescript TypeScript
+const result = await client.run(
+  "Go to growtherapy.com and search for therapists in {{New York}} " +
+  "who specialize in {{anxiety}} and accept insurance. " +
+  "Return the first 5 provider profiles as JSON.",
+  { workspaceId: workspace.id, schema: ProviderSearch },
+);
+
+for (const p of result.output.providers) {
+  console.log(`${p.name} (${p.title})`);
+  console.log(`  Specialties: ${p.specialties.join(", ")}`);
+  console.log(`  Rating: ${p.rating}`);
+  console.log(`  Next available: ${p.nextAvailable}`);
+}
+```
+</CodeGroup>
+
+## 4. Sweep across locations and specialties
+
+After the first run caches the search flow, sweep across different parameters at $0 LLM cost:
+
+<CodeGroup>
+```python Python
+locations = ["Los Angeles", "Chicago", "Houston", "Miami"]
+specialties = ["depression", "trauma", "ADHD"]
+
+for location in locations:
+    for specialty in specialties:
+        result = await client.run(
+            f"Go to growtherapy.com and search for therapists in {{{{{location}}}}} "
+            f"who specialize in {{{{{specialty}}}}} and accept insurance. "
+            f"Return the first 5 provider profiles as JSON.",
+            workspace_id=str(workspace.id),
+            schema=ProviderSearch,
+        )
+        count = len(result.output.providers)
+        print(f"{location} / {specialty}: {count} providers found")
+```
+```typescript TypeScript
+const locations = ["Los Angeles", "Chicago", "Houston", "Miami"];
+const specialties = ["depression", "trauma", "ADHD"];
+
+for (const location of locations) {
+  for (const specialty of specialties) {
+    const result = await client.run(
+      `Go to growtherapy.com and search for therapists in {{${location}}} ` +
+      `who specialize in {{${specialty}}} and accept insurance. ` +
+      `Return the first 5 provider profiles as JSON.`,
+      { workspaceId: workspace.id, schema: ProviderSearch },
+    );
+    console.log(`${location} / ${specialty}: ${result.output.providers.length} providers`);
+  }
+}
+```
+</CodeGroup>
+
+---
+
+## Summary
+
+| Step | What happens | Cost |
+|------|-------------|------|
+| First search | Agent navigates Grow Therapy, caches the flow | ~$0.10 |
+| 12 cached sweeps (4 cities x 3 specialties) | Script reruns with new params | **$0 LLM each** |
+| Site layout change | [Auto-healing](/cloud/agent/cache-script#auto-healing) regenerates the script | ~$0.10 |
+
+<Info>
+Therapy platforms have dynamic UIs that can change frequently. [Auto-healing](/cloud/agent/cache-script#auto-healing) ensures your cached scripts stay working without manual maintenance.
+</Info>

@@ -6,23 +6,12 @@ type RunTaskRequest = components["schemas"]["RunTaskRequest"];
 export type CreateSessionBody = Partial<RunTaskRequest>;
 type SessionResponse = components["schemas"]["SessionResponse"];
 type SessionListResponse = components["schemas"]["SessionListResponse"];
-type FileListResponse = components["schemas"]["FileListResponse"];
 type StopSessionRequest = components["schemas"]["StopSessionRequest"];
-type FileUploadRequest = components["schemas"]["FileUploadRequest"];
-type FileUploadResponse = components["schemas"]["FileUploadResponse"];
 type MessageListResponse = components["schemas"]["MessageListResponse"];
 
 export interface SessionListParams {
   page?: number;
   page_size?: number;
-}
-
-export interface SessionFilesParams {
-  prefix?: string;
-  limit?: number;
-  cursor?: string | null;
-  includeUrls?: boolean;
-  shallow?: boolean;
 }
 
 export interface SessionMessagesParams {
@@ -57,19 +46,6 @@ export class Sessions {
   /** Soft-delete a session. */
   delete(sessionId: string): Promise<void> {
     return this.http.delete<void>(`/sessions/${sessionId}`);
-  }
-
-  /** Get presigned upload URLs for session files. */
-  uploadFiles(sessionId: string, body: FileUploadRequest): Promise<FileUploadResponse> {
-    return this.http.post<FileUploadResponse>(`/sessions/${sessionId}/files/upload`, body);
-  }
-
-  /** List files in a session's workspace. */
-  files(sessionId: string, params?: SessionFilesParams): Promise<FileListResponse> {
-    return this.http.get<FileListResponse>(
-      `/sessions/${sessionId}/files`,
-      params as Record<string, unknown>,
-    );
   }
 
   /** List messages for a session with cursor-based pagination. */

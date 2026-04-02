@@ -15,7 +15,7 @@ export { Profiles } from "./v3/resources/profiles.js";
 export type { ProfileListParams } from "./v3/resources/profiles.js";
 
 export { Sessions } from "./v3/resources/sessions.js";
-export type { CreateSessionBody, SessionListParams, SessionFilesParams, SessionMessagesParams } from "./v3/resources/sessions.js";
+export type { CreateSessionBody, SessionListParams, SessionMessagesParams } from "./v3/resources/sessions.js";
 
 export { Workspaces } from "./v3/resources/workspaces.js";
 export type { WorkspaceListParams, WorkspaceFilesParams } from "./v3/resources/workspaces.js";

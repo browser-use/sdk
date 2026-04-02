@@ -348,53 +348,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sessions/{session_id}/files": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Session Files
-         * @description List files in a session's workspace.
-         *
-         *     Returns paginated file metadata. Pass includeUrls=true to get
-         *     presigned download URLs (60s expiry) inline with each file.
-         */
-        get: operations["list_session_files_sessions__session_id__files_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sessions/{session_id}/files/upload": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Upload Session Files
-         * @description Get presigned PUT URLs for uploading files to a session's workspace.
-         *
-         *     Files are placed under ``uploads/`` in the session's S3 prefix. After
-         *     receiving the URLs, PUT each file directly to S3 using the returned
-         *     ``uploadUrl`` with the matching ``Content-Type`` header.
-         */
-        post: operations["upload_session_files_sessions__session_id__files_upload_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/billing/account": {
         parameters: {
             query?: never;
@@ -663,14 +616,27 @@ export interface components {
         };
         /**
          * BuAgentSessionStatus
+         * @description Session lifecycle status. Progresses through: created → idle → running → idle → ... → stopped / timed_out / error.
+         *
+         *     - `created`: Sandbox is starting up. The session is not yet ready to accept tasks.
+         *     - `idle`: Sandbox is healthy and waiting for a task. You can dispatch a task or upload files.
+         *     - `running`: A task is currently being executed by the agent.
+         *     - `stopped`: Session was stopped — either explicitly via the stop endpoint, or automatically after task completion (when `keepAlive` is false).
+         *     - `timed_out`: Session was cleaned up due to inactivity timeout.
+         *     - `error`: Sandbox failed to start or encountered an unrecoverable error.
          * @enum {string}
          */
         BuAgentSessionStatus: "created" | "idle" | "running" | "stopped" | "timed_out" | "error";
         /**
          * BuModel
+         * @description The model to use for the agent. Each model has different capabilities and pricing.
+         *
+         *     - `bu-mini` / `gemini-3-flash`: Gemini 3 Flash — fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.
+         *     - `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 — balanced performance. Best for multi-step workflows that require reasoning and decision-making.
+         *     - `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 — most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.
          * @enum {string}
          */
-        BuModel: "bu-mini" | "bu-max" | "bu-ultra";
+        BuModel: "bu-mini" | "bu-max" | "bu-ultra" | "gemini-3-flash" | "claude-sonnet-4.6" | "claude-opus-4.6";
         /**
          * CreateBrowserSessionRequest
          * @description Request model for creating a browser session.
@@ -711,7 +677,7 @@ export interface components {
             allowResizing: boolean;
             /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available on the Custom Enterprise plan.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
@@ -752,16 +718,26 @@ export interface components {
          * @description A file in a session's workspace.
          */
         FileInfo: {
-            /** Path */
+            /**
+             * Path
+             * @description File path relative to the session workspace root.
+             */
             path: string;
-            /** Size */
+            /**
+             * Size
+             * @description File size in bytes.
+             */
             size: number;
             /**
              * Lastmodified
              * Format: date-time
+             * @description When the file was last modified.
              */
             lastModified: string;
-            /** Url */
+            /**
+             * Url
+             * @description Presigned download URL (60s expiry). Only included when `includeUrls=true`.
+             */
             url?: string | null;
         };
         /**
@@ -776,10 +752,14 @@ export interface components {
              * @description Immediate sub-folder names at this prefix level
              */
             folders?: string[];
-            /** Nextcursor */
+            /**
+             * Nextcursor
+             * @description Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page.
+             */
             nextCursor?: string | null;
             /**
              * Hasmore
+             * @description Whether there are more files beyond this page.
              * @default false
              */
             hasMore: boolean;
@@ -827,13 +807,19 @@ export interface components {
          * @description Presigned upload URL for a single file.
          */
         FileUploadResponseItem: {
-            /** Name */
+            /**
+             * Name
+             * @description Original filename as requested.
+             */
             name: string;
-            /** Uploadurl */
+            /**
+             * Uploadurl
+             * @description Presigned PUT URL. Upload the file by sending a PUT request to this URL with the file content and matching Content-Type header. Expires after 5 minutes.
+             */
             uploadUrl: string;
             /**
              * Path
-             * @description S3-relative path, e.g. "uploads/data.csv"
+             * @description Path where the file will be stored in the workspace, e.g. "uploads/data.csv".
              */
             path: string;
         };
@@ -855,40 +841,62 @@ export interface components {
         };
         /** MessageListResponse */
         MessageListResponse: {
-            /** Messages */
+            /**
+             * Messages
+             * @description List of messages in chronological order.
+             */
             messages: components["schemas"]["MessageResponse"][];
-            /** Hasmore */
+            /**
+             * Hasmore
+             * @description Whether there are more messages available beyond this page. Use cursor-based pagination with the `after` or `before` query parameters to fetch more.
+             */
             hasMore: boolean;
         };
-        /** MessageResponse */
+        /**
+         * MessageResponse
+         * @description A single message from the session's message stream.
+         *
+         *     Messages represent the agent's actions, observations, and decisions as it executes a task.
+         */
         MessageResponse: {
             /**
              * Id
              * Format: uuid
+             * @description Unique message identifier.
              */
             id: string;
             /**
              * Sessionid
              * Format: uuid
+             * @description ID of the session this message belongs to.
              */
             sessionId: string;
-            /** Role */
+            /**
+             * Role
+             * @description Message role: "human" for user-submitted tasks, "ai" for agent actions and responses.
+             */
             role: string;
-            /** Data */
+            /**
+             * Data
+             * @description Raw message content. Format depends on the message type — may be plain text, JSON, or structured action data.
+             */
             data: string;
             /**
              * Type
-             * @description Coarse category: user_message, assistant_message, browser_action, file_operation, code_execution, integration, planning, completion, browser_action_result, browser_action_error, etc.
+             * @description Message category. Common values: `user_message`, `assistant_message`, `browser_action`, `file_operation`, `code_execution`, `integration`, `planning`, `completion`, `browser_action_result`, `browser_action_error`.
              * @default
              */
             type: string;
             /**
              * Summary
-             * @description One-liner human-readable description of the message (e.g. "Navigating to google.com", "Clicking element #5").
+             * @description One-liner human-readable description of the message (e.g. "Navigating to google.com", "Clicking element #5"). Useful for building activity feeds.
              * @default
              */
             summary: string;
-            /** Screenshoturl */
+            /**
+             * Screenshoturl
+             * @description Browser screenshot captured at the time of this message. Presigned URL, expires after 5 minutes.
+             */
             screenshotUrl?: string | null;
             /**
              * Hidden
@@ -899,6 +907,7 @@ export interface components {
             /**
              * Createdat
              * Format: date-time
+             * @description When this message was created.
              */
             createdAt: string;
         };
@@ -1056,67 +1065,119 @@ export interface components {
         ProxyCountryCode: "ad" | "ae" | "af" | "ag" | "ai" | "al" | "am" | "an" | "ao" | "aq" | "ar" | "as" | "at" | "au" | "aw" | "az" | "ba" | "bb" | "bd" | "be" | "bf" | "bg" | "bh" | "bi" | "bj" | "bl" | "bm" | "bn" | "bo" | "bq" | "br" | "bs" | "bt" | "bv" | "bw" | "by" | "bz" | "ca" | "cc" | "cd" | "cf" | "cg" | "ch" | "ck" | "cl" | "cm" | "co" | "cr" | "cs" | "cu" | "cv" | "cw" | "cx" | "cy" | "cz" | "de" | "dj" | "dk" | "dm" | "do" | "dz" | "ec" | "ee" | "eg" | "eh" | "er" | "es" | "et" | "fi" | "fj" | "fk" | "fm" | "fo" | "fr" | "ga" | "gd" | "ge" | "gf" | "gg" | "gh" | "gi" | "gl" | "gm" | "gn" | "gp" | "gq" | "gr" | "gs" | "gt" | "gu" | "gw" | "gy" | "hk" | "hm" | "hn" | "hr" | "ht" | "hu" | "id" | "ie" | "il" | "im" | "in" | "iq" | "ir" | "is" | "it" | "je" | "jm" | "jo" | "jp" | "ke" | "kg" | "kh" | "ki" | "km" | "kn" | "kp" | "kr" | "kw" | "ky" | "kz" | "la" | "lb" | "lc" | "li" | "lk" | "lr" | "ls" | "lt" | "lu" | "lv" | "ly" | "ma" | "mc" | "md" | "me" | "mf" | "mg" | "mh" | "mk" | "ml" | "mm" | "mn" | "mo" | "mp" | "mq" | "mr" | "ms" | "mt" | "mu" | "mv" | "mw" | "mx" | "my" | "mz" | "na" | "nc" | "ne" | "nf" | "ng" | "ni" | "nl" | "no" | "np" | "nr" | "nu" | "nz" | "om" | "pa" | "pe" | "pf" | "pg" | "ph" | "pk" | "pl" | "pm" | "pn" | "pr" | "ps" | "pt" | "pw" | "py" | "qa" | "re" | "ro" | "rs" | "ru" | "rw" | "sa" | "sb" | "sc" | "sd" | "se" | "sg" | "sh" | "si" | "sj" | "sk" | "sl" | "sm" | "sn" | "so" | "sr" | "ss" | "st" | "sv" | "sx" | "sy" | "sz" | "tc" | "td" | "tf" | "tg" | "th" | "tj" | "tk" | "tl" | "tm" | "tn" | "to" | "tr" | "tt" | "tv" | "tw" | "tz" | "ua" | "ug" | "uk" | "us" | "uy" | "uz" | "va" | "vc" | "ve" | "vg" | "vi" | "vn" | "vu" | "wf" | "ws" | "xk" | "ye" | "yt" | "za" | "zm" | "zw";
         /**
          * RunTaskRequest
-         * @description Unified request for creating a session or dispatching a task.
+         * @description Create a new session, dispatch a task, or both.
          *
-         *     - Without session_id + without task: creates a new idle session (for file uploads, etc.)
-         *     - Without session_id + with task: creates a new session and dispatches the task
-         *     - With session_id + with task: dispatches the task to an existing idle session
-         *     - With session_id + without task: 422 (task required when dispatching to existing session)
+         *     - **No `sessionId` + no `task`**: creates an idle session (useful for uploading files before running a task).
+         *     - **No `sessionId` + `task`**: creates a new session and immediately runs the task.
+         *     - **`sessionId` + `task`**: dispatches the task to an existing idle session.
+         *     - **`sessionId` + no `task`**: returns 422 — a task is required when targeting an existing session.
          */
         RunTaskRequest: {
-            /** Task */
+            /**
+             * Task
+             * @description The natural-language instruction for the agent to execute (e.g. "Go to amazon.com and find the best-rated wireless mouse under $50"). Required when dispatching to an existing session.
+             */
             task?: string | null;
-            /** @default bu-max */
+            /**
+             * @description The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-4.6" is balanced, "claude-opus-4.6" is most capable. See BuModel for details.
+             * @default claude-sonnet-4.6
+             */
             model: components["schemas"]["BuModel"];
-            /** Sessionid */
+            /**
+             * Sessionid
+             * @description ID of an existing idle session to dispatch the task to. If omitted, a new session is created.
+             */
             sessionId?: string | null;
             /**
              * Keepalive
+             * @description If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.
              * @default false
              */
             keepAlive: boolean;
-            /** Maxcostusd */
+            /**
+             * Maxcostusd
+             * @description Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance).
+             */
             maxCostUsd?: number | string | null;
-            /** Profileid */
+            /**
+             * Profileid
+             * @description ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API.
+             */
             profileId?: string | null;
-            /** Workspaceid */
+            /**
+             * Workspaceid
+             * @description ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API.
+             */
             workspaceId?: string | null;
-            /** @default us */
+            /**
+             * @description Country code for the browser proxy (e.g. "US", "DE", "JP"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.
+             * @default us
+             */
             proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
-            /** Outputschema */
+            /**
+             * Outputschema
+             * @description A JSON Schema that the agent's final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {"type": "object", "properties": {"price": {"type": "number"}, "title": {"type": "string"}}}.
+             */
             outputSchema?: {
                 [key: string]: unknown;
             } | null;
             /**
              * Enablescheduledtasks
+             * @description If true, the agent can create scheduled tasks that run on a recurring basis (e.g. "every Monday morning, check my inbox and summarize new emails"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.
              * @default false
              */
             enableScheduledTasks: boolean;
             /**
              * Enablerecording
+             * @description If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.
              * @default false
              */
             enableRecording: boolean;
             /**
              * Skills
+             * @description If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.
              * @default true
              */
             skills: boolean;
             /**
              * Agentmail
+             * @description If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.
              * @default true
              */
             agentmail: boolean;
+            /**
+             * Cachescript
+             * @description Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from {{https://example.com}} for {{electronics}}".
+             */
+            cacheScript?: boolean | null;
+            /**
+             * Autoheal
+             * @description When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.
+             * @default true
+             */
+            autoHeal: boolean;
         };
         /** SessionListResponse */
         SessionListResponse: {
-            /** Sessions */
+            /**
+             * Sessions
+             * @description List of sessions.
+             */
             sessions: components["schemas"]["SessionResponse"][];
-            /** Total */
+            /**
+             * Total
+             * @description Total number of sessions matching the query.
+             */
             total: number;
-            /** Page */
+            /**
+             * Page
+             * @description Current page number (1-indexed).
+             */
             page: number;
-            /** Pagesize */
+            /**
+             * Pagesize
+             * @description Number of sessions per page.
+             */
             pageSize: number;
         };
         /**
@@ -1130,94 +1191,147 @@ export interface components {
              */
             detail: string;
         };
-        /** SessionResponse */
+        /**
+         * SessionResponse
+         * @description Represents a session and its current state.
+         *
+         *     Poll this endpoint to track task progress. The `status` field indicates the session lifecycle stage,
+         *     and `output` contains the agent's structured result once the task completes.
+         */
         SessionResponse: {
             /**
              * Id
              * Format: uuid
+             * @description Unique session identifier.
              */
             id: string;
+            /** @description Current session lifecycle status. Progresses through: `created` (sandbox starting) → `idle` (ready, waiting for task) → `running` (task executing) → `stopped` / `timed_out` / `error`. Poll this field to track progress. */
             status: components["schemas"]["BuAgentSessionStatus"];
-            /** The model used. May be a BuModel alias or a resolved model name. */
-            model: string;
-            /** Title */
+            /** @description The model tier used for this session. */
+            model: components["schemas"]["BuModel"];
+            /**
+             * Title
+             * @description Auto-generated short title summarizing the task. Available after the task starts running.
+             */
             title?: string | null;
-            /** Output */
+            /**
+             * Output
+             * @description The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false.
+             */
             output?: unknown | null;
-            /** Outputschema */
+            /**
+             * Outputschema
+             * @description The JSON Schema that was requested for structured output, if any.
+             */
             outputSchema?: {
                 [key: string]: unknown;
             } | null;
             /**
              * Stepcount
+             * @description Number of steps the agent has executed so far.
              * @default 0
              */
             stepCount: number;
-            /** Laststepsummary */
+            /**
+             * Laststepsummary
+             * @description Human-readable summary of the most recent agent step (e.g. "Clicking the Submit button"). Useful for showing real-time progress.
+             */
             lastStepSummary?: string | null;
-            /** Istasksuccessful */
+            /**
+             * Istasksuccessful
+             * @description Whether the task completed successfully. `true` if the agent achieved the goal, `false` if it failed or gave up, `null` if the task is still running or no task was dispatched.
+             */
             isTaskSuccessful?: boolean | null;
-            /** Liveurl */
+            /**
+             * Liveurl
+             * @description URL to view the live browser session. Available immediately on session creation — can be embedded in an iframe to show the browser in real time.
+             */
             liveUrl?: string | null;
             /**
              * Recordingurls
+             * @description URLs to download session recordings. Only populated if `enableRecording` was set to true and the task has completed.
              * @default []
              */
             recordingUrls: string[];
-            /** Profileid */
+            /**
+             * Profileid
+             * @description ID of the browser profile loaded in this session, if any.
+             */
             profileId?: string | null;
-            /** Workspaceid */
+            /**
+             * Workspaceid
+             * @description ID of the workspace attached to this session, if any.
+             */
             workspaceId?: string | null;
+            /** @description Country code of the proxy used for this session, or null if no proxy. */
             proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
-            /** Maxcostusd */
+            /**
+             * Maxcostusd
+             * @description Maximum cost limit in USD set for this session.
+             */
             maxCostUsd?: string | null;
             /**
              * Totalinputtokens
+             * @description Total LLM input tokens consumed by this session.
              * @default 0
              */
             totalInputTokens: number;
             /**
              * Totaloutputtokens
+             * @description Total LLM output tokens consumed by this session.
              * @default 0
              */
             totalOutputTokens: number;
             /**
              * Proxyusedmb
+             * @description Proxy bandwidth used in megabytes.
              * @default 0
              */
             proxyUsedMb: string;
             /**
              * Llmcostusd
+             * @description Cost of LLM usage in USD.
              * @default 0
              */
             llmCostUsd: string;
             /**
              * Proxycostusd
+             * @description Cost of proxy bandwidth in USD.
              * @default 0
              */
             proxyCostUsd: string;
             /**
              * Browsercostusd
+             * @description Cost of browser compute time in USD.
              * @default 0
              */
             browserCostUsd: string;
             /**
              * Totalcostusd
+             * @description Total session cost in USD (LLM + proxy + browser).
              * @default 0
              */
             totalCostUsd: string;
-            /** Screenshoturl */
+            /**
+             * Screenshoturl
+             * @description URL of the latest browser screenshot. This is a presigned URL that expires after 5 minutes. A new URL is generated each time you fetch the session.
+             */
             screenshotUrl?: string | null;
-            /** Agentmailemail */
+            /**
+             * Agentmailemail
+             * @description Temporary email address provisioned for this session (via AgentMail). Only present if `agentmail` was enabled.
+             */
             agentmailEmail?: string | null;
             /**
              * Createdat
              * Format: date-time
+             * @description When the session was created.
              */
             createdAt: string;
             /**
              * Updatedat
              * Format: date-time
+             * @description When the session was last updated.
              */
             updatedAt: string;
         };
@@ -1234,11 +1348,18 @@ export interface components {
         };
         /** StopSessionRequest */
         StopSessionRequest: {
-            /** @default session */
+            /**
+             * @description How to stop the session. Use "task" to stop only the current task and keep the session alive, or "session" to destroy the sandbox entirely.
+             * @default session
+             */
             strategy: components["schemas"]["StopStrategy"];
         };
         /**
          * StopStrategy
+         * @description Strategy for stopping a session.
+         *
+         *     - `task`: Stop the currently running task but keep the session alive in idle state. You can dispatch another task to the same session afterwards.
+         *     - `session`: Stop the session entirely and destroy the sandbox. The session cannot be reused after this.
          * @enum {string}
          */
         StopStrategy: "task" | "session";
@@ -1362,7 +1483,9 @@ export interface operations {
     list_sessions_sessions_get: {
         parameters: {
             query?: {
+                /** @description Page number (1-indexed). */
                 page?: number;
+                /** @description Number of sessions per page (max 100). */
                 page_size?: number;
             };
             header?: never;
@@ -1526,6 +1649,7 @@ export interface operations {
                 after?: string | null;
                 /** @description Cursor: return messages before this message ID */
                 before?: string | null;
+                /** @description Maximum number of messages to return (max 100). */
                 limit?: number;
             };
             header?: never;
@@ -2190,78 +2314,6 @@ export interface operations {
             header?: never;
             path: {
                 workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FileUploadRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FileUploadResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_session_files_sessions__session_id__files_get: {
-        parameters: {
-            query?: {
-                prefix?: string;
-                limit?: number;
-                cursor?: string | null;
-                includeUrls?: boolean;
-                shallow?: boolean;
-            };
-            header?: never;
-            path: {
-                session_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FileListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upload_session_files_sessions__session_id__files_upload_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                session_id: string;
             };
             cookie?: never;
         };

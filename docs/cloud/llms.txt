@@ -57,6 +57,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## Tutorials
 - [Chat UI](https://docs.browser-use.com/cloud/tutorials/chat-ui): Full end-to-end example. Build a chat UI with live browser preview, follow-up tasks, recording, and streaming messages.
+- [Grow Therapy provider search](https://docs.browser-use.com/cloud/tutorials/grow-therapy-compare): Search Grow Therapy for therapists by location, insurance, and specialty — with cached reruns.
 
 ## Legacy (v2)
 - [Agent (v2)](https://docs.browser-use.com/cloud/legacy/agent): V2 agent models and file handling.

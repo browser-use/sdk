@@ -62,7 +62,6 @@ class BrowserUse:
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
-        custom_proxy: dict[str, Any] | None = ...,
         cache_script: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
@@ -81,7 +80,6 @@ class BrowserUse:
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
-        custom_proxy: dict[str, Any] | None = ...,
         cache_script: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
@@ -99,7 +97,6 @@ class BrowserUse:
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
-        custom_proxy: dict[str, Any] | None = ...,
         cache_script: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[str]: ...
@@ -118,7 +115,6 @@ class BrowserUse:
         proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
-        custom_proxy: dict[str, Any] | None = None,
         cache_script: bool | None = None,
         **extra: Any,
     ) -> Any:
@@ -161,7 +157,6 @@ class BrowserUse:
             output_schema=schema_dict,
             workspace_id=workspace_id,
             enable_recording=enable_recording,
-            custom_proxy=custom_proxy,
             cache_script=cache_script,
             **extra,
         )
@@ -181,7 +176,6 @@ class BrowserUse:
         proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
-        custom_proxy: dict[str, Any] | None = None,
         cache_script: bool | None = None,
         **extra: Any,
     ) -> SessionStream[Any]:
@@ -229,7 +223,6 @@ class BrowserUse:
             output_schema=schema_dict,
             workspace_id=workspace_id,
             enable_recording=enable_recording,
-            custom_proxy=custom_proxy,
             cache_script=cache_script,
             **extra,
         )
@@ -286,7 +279,6 @@ class AsyncBrowserUse:
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
-        custom_proxy: dict[str, Any] | None = ...,
         cache_script: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
@@ -305,7 +297,6 @@ class AsyncBrowserUse:
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
-        custom_proxy: dict[str, Any] | None = ...,
         cache_script: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
@@ -323,7 +314,6 @@ class AsyncBrowserUse:
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
-        custom_proxy: dict[str, Any] | None = ...,
         cache_script: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[str]: ...
@@ -342,7 +332,6 @@ class AsyncBrowserUse:
         proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
-        custom_proxy: dict[str, Any] | None = None,
         cache_script: bool | None = None,
         **extra: Any,
     ) -> AsyncSessionRun[Any]:
@@ -396,8 +385,7 @@ class AsyncBrowserUse:
                 output_schema=schema_dict,
                 workspace_id=workspace_id,
                 enable_recording=enable_recording,
-                custom_proxy=custom_proxy,
-                cache_script=cache_script,
+                    cache_script=cache_script,
                 **extra,
             )
 

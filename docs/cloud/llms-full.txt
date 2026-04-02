@@ -766,6 +766,30 @@ for (const f of files.files) {
 }
 ```
 
+## Auto-healing
+
+Cached scripts can break when a website changes its layout, adds new elements, or alters its structure. Auto-healing detects these failures and automatically regenerates the script.
+
+### How it works
+
+When a cached script runs, the system validates its output:
+
+1. **Fast checks** (no LLM) — detects empty results, error fields in JSON, or exception keywords in output.
+2. **LLM judge** — if fast checks pass, a lightweight model validates whether the output looks correct for the original task.
+3. **Heal** — if validation fails, the full agent re-runs the task and saves an updated script.
+
+Auto-healing is **limited to 1 attempt per run** to prevent runaway costs. If the healed script also fails, the output is returned as-is.
+
+### Cost impact
+
+| Scenario | LLM cost |
+|----------|----------|
+| Cached script succeeds | **$0** |
+| Cached script fails, auto-heals | ~$0.05–1.00 (one full agent run) |
+| Healed script also fails | Same as above (returns best-effort output) |
+
+Auto-healing is enabled by default for all cached scripts. No configuration needed.
+
 ## Cost comparison
 
 | | LLM cost | Browser + proxy | Time |
@@ -2214,6 +2238,164 @@ useSession();
 | `client.run()` | Send a task and stream messages with `for await` |
 | `client.sessions.stop()` | Stop the current task |
 | `client.sessions.waitForRecording()` | Get MP4 recording URLs |
+
+
+# Grow Therapy provider search
+Source: https://docs.browser-use.com/cloud/tutorials/grow-therapy-compare
+
+
+This tutorial builds a provider search tool for [Grow Therapy](https://www.growtherapy.com) — a therapy marketplace that handles insurance credentialing for providers. We combine [structured output](https://docs.browser-use.com/cloud/agent/structured-output) with [deterministic rerun](https://docs.browser-use.com/cloud/agent/cache-script) to build a fast, repeatable search pipeline.
+
+## What you'll build
+
+A script that:
+1. Searches Grow Therapy's provider directory with filters (location, insurance, specialty)
+2. Extracts therapist profiles with ratings and availability
+3. Caches the search so you can sweep across geographies or specialties instantly
+
+---
+
+## Setup
+
+```python Python
+import asyncio
+import json
+from pydantic import BaseModel
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { z } from "zod";
+
+const client = new BrowserUse();
+```
+
+## 1. Define the output schema
+
+```python Python
+class Provider(BaseModel):
+name: str
+title: str
+specialties: list[str]
+insurance_plans: list[str]
+rating: float | None = None
+next_available: str | None = None
+
+class ProviderSearch(BaseModel):
+providers: list[Provider]
+total_found: int | None = None
+location: str
+specialty: str
+```
+```typescript TypeScript
+const ProviderSearch = z.object({
+  providers: z.array(z.object({
+name: z.string(),
+title: z.string(),
+specialties: z.array(z.string()),
+insurancePlans: z.array(z.string()),
+rating: z.number().nullable(),
+nextAvailable: z.string().nullable(),
+  })),
+  totalFound: z.number().nullable(),
+  location: z.string(),
+  specialty: z.string(),
+});
+```
+
+## 2. Create a workspace
+
+```python Python
+workspace = await client.workspaces.create(name="grow-therapy-search")
+```
+```typescript TypeScript
+const workspace = await client.workspaces.create({ name: "grow-therapy-search" });
+```
+
+## 3. Search for providers
+
+```python Python
+result = await client.run(
+"Go to growtherapy.com and search for therapists in {{New York}} "
+"who specialize in {{anxiety}} and accept insurance. "
+"Return the first 5 provider profiles as JSON.",
+workspace_id=str(workspace.id),
+schema=ProviderSearch,
+)
+
+for p in result.output.providers:
+print(f"{p.name} ({p.title})")
+print(f"  Specialties: {', '.join(p.specialties)}")
+print(f"  Rating: {p.rating}")
+print(f"  Next available: {p.next_available}")
+print()
+```
+```typescript TypeScript
+const result = await client.run(
+  "Go to growtherapy.com and search for therapists in {{New York}} " +
+  "who specialize in {{anxiety}} and accept insurance. " +
+  "Return the first 5 provider profiles as JSON.",
+  { workspaceId: workspace.id, schema: ProviderSearch },
+);
+
+for (const p of result.output.providers) {
+  console.log(`${p.name} (${p.title})`);
+  console.log(`  Specialties: ${p.specialties.join(", ")}`);
+  console.log(`  Rating: ${p.rating}`);
+  console.log(`  Next available: ${p.nextAvailable}`);
+}
+```
+
+## 4. Sweep across locations and specialties
+
+After the first run caches the search flow, sweep across different parameters at $0 LLM cost:
+
+```python Python
+locations = ["Los Angeles", "Chicago", "Houston", "Miami"]
+specialties = ["depression", "trauma", "ADHD"]
+
+for location in locations:
+for specialty in specialties:
+    result = await client.run(
+        f"Go to growtherapy.com and search for therapists in {{{{{location}}}}} "
+        f"who specialize in {{{{{specialty}}}}} and accept insurance. "
+        f"Return the first 5 provider profiles as JSON.",
+        workspace_id=str(workspace.id),
+        schema=ProviderSearch,
+    )
+    count = len(result.output.providers)
+    print(f"{location} / {specialty}: {count} providers found")
+```
+```typescript TypeScript
+const locations = ["Los Angeles", "Chicago", "Houston", "Miami"];
+const specialties = ["depression", "trauma", "ADHD"];
+
+for (const location of locations) {
+  for (const specialty of specialties) {
+const result = await client.run(
+  `Go to growtherapy.com and search for therapists in {{${location}}} ` +
+  `who specialize in {{${specialty}}} and accept insurance. ` +
+  `Return the first 5 provider profiles as JSON.`,
+  { workspaceId: workspace.id, schema: ProviderSearch },
+);
+console.log(`${location} / ${specialty}: ${result.output.providers.length} providers`);
+  }
+}
+```
+
+---
+
+## Summary
+
+| Step | What happens | Cost |
+|------|-------------|------|
+| First search | Agent navigates Grow Therapy, caches the flow | ~$0.10 |
+| 12 cached sweeps (4 cities x 3 specialties) | Script reruns with new params | **$0 LLM each** |
+| Site layout change | [Auto-healing](https://docs.browser-use.com/cloud/agent/cache-script#auto-healing) regenerates the script | ~$0.10 |
+
+Therapy platforms have dynamic UIs that can change frequently. [Auto-healing](https://docs.browser-use.com/cloud/agent/cache-script#auto-healing) ensures your cached scripts stay working without manual maintenance.
 
 
 # FAQ

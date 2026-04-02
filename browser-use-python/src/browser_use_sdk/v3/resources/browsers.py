@@ -35,7 +35,7 @@ class Browsers:
         if profile_id is not None:
             body["profileId"] = profile_id
         if proxy_country_code is not _UNSET:
-            body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
+            body["proxyCountryCode"] = proxy_country_code
         if timeout is not None:
             body["timeout"] = timeout
         if browser_screen_width is not None:
@@ -106,7 +106,7 @@ class AsyncBrowsers:
         if profile_id is not None:
             body["profileId"] = profile_id
         if proxy_country_code is not _UNSET:
-            body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
+            body["proxyCountryCode"] = proxy_country_code
         if timeout is not None:
             body["timeout"] = timeout
         if browser_screen_width is not None:
