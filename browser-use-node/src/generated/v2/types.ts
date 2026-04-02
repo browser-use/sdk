@@ -998,7 +998,7 @@ export interface components {
             allowResizing: boolean;
             /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available on the Custom Enterprise plan.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
@@ -1053,7 +1053,7 @@ export interface components {
             keepAlive: boolean;
             /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available on the Custom Enterprise plan.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**

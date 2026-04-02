@@ -155,63 +155,6 @@ for (const location of locations) {
 ```
 </CodeGroup>
 
-## 5. Cross-platform comparison
-
-Combine this with the [Rula tutorial](/cloud/tutorials/rula-therapist-finder) to compare providers across both platforms:
-
-<CodeGroup>
-```python Python
-# Create a separate workspace for each platform
-rula_ws = await client.workspaces.create(name="rula-search")
-grow_ws = await client.workspaces.create(name="grow-therapy-search")
-
-async def search_platform(task: str, ws_id: str, schema):
-    return await client.run(task, workspace_id=ws_id, schema=schema)
-
-# Run both searches concurrently
-rula_result, grow_result = await asyncio.gather(
-    search_platform(
-        "Go to rula.com and search for therapists who accept {{Aetna}} insurance "
-        "and specialize in {{anxiety}}. Return the first 5 results as JSON.",
-        str(rula_ws.id),
-        TherapistResults,
-    ),
-    search_platform(
-        "Go to growtherapy.com and search for therapists in {{New York}} "
-        "who specialize in {{anxiety}} and accept insurance. "
-        "Return the first 5 provider profiles as JSON.",
-        str(grow_ws.id),
-        ProviderSearch,
-    ),
-)
-print(f"Rula: {len(rula_result.output.therapists)} therapists")
-print(f"Grow Therapy: {len(grow_result.output.providers)} providers")
-```
-```typescript TypeScript
-// Create a separate workspace for each platform
-const rulaWs = await client.workspaces.create({ name: "rula-search" });
-const growWs = await client.workspaces.create({ name: "grow-therapy-search" });
-
-// Run both searches concurrently
-const [rulaResult, growResult] = await Promise.all([
-  client.run(
-    "Go to rula.com and search for therapists who accept {{Aetna}} insurance " +
-    "and specialize in {{anxiety}}. Return the first 5 results as JSON.",
-    { workspaceId: rulaWs.id, schema: TherapistResults },
-  ),
-  client.run(
-    "Go to growtherapy.com and search for therapists in {{New York}} " +
-    "who specialize in {{anxiety}} and accept insurance. " +
-    "Return the first 5 provider profiles as JSON.",
-    { workspaceId: growWs.id, schema: ProviderSearch },
-  ),
-]);
-
-console.log(`Rula: ${rulaResult.output.therapists.length} therapists`);
-console.log(`Grow Therapy: ${growResult.output.providers.length} providers`);
-```
-</CodeGroup>
-
 ---
 
 ## Summary
@@ -223,5 +166,5 @@ console.log(`Grow Therapy: ${growResult.output.providers.length} providers`);
 | Site layout change | [Auto-healing](/cloud/agent/cache-script#auto-healing) regenerates the script | ~$0.10 |
 
 <Info>
-Both Rula and Grow Therapy have dynamic UIs that can change frequently. [Auto-healing](/cloud/agent/cache-script#auto-healing) ensures your cached scripts stay working without manual maintenance.
+Therapy platforms have dynamic UIs that can change frequently. [Auto-healing](/cloud/agent/cache-script#auto-healing) ensures your cached scripts stay working without manual maintenance.
 </Info>
