@@ -10,6 +10,94 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
+class AccountNotFoundError(BaseModel):
+    detail: str | None = Field('Account not found', title='Detail')
+
+
+class BrowserSessionStatus(Enum):
+    active = 'active'
+    stopped = 'stopped'
+
+
+class BrowserSessionUpdateAction(Enum):
+    stop = 'stop'
+
+
+class BrowserSessionView(BaseModel):
+    model_config = ConfigDict(
+        regex_engine="python-re",
+    )
+    id: UUID = Field(..., description='Unique identifier for the session', title='ID')
+    status: BrowserSessionStatus = Field(
+        ...,
+        description='Current status of the session (active/stopped)',
+        title='Status',
+    )
+    live_url: str | None = Field(
+        None,
+        alias='liveUrl',
+        description='URL where the browser can be viewed live in real-time',
+        title='Live URL',
+    )
+    cdp_url: str | None = Field(
+        None,
+        alias='cdpUrl',
+        description='Chrome DevTools Protocol URL for browser automation',
+        title='CDP URL',
+    )
+    timeout_at: AwareDatetime = Field(
+        ...,
+        alias='timeoutAt',
+        description='Timestamp when the session will timeout',
+        title='Timeout At',
+    )
+    started_at: AwareDatetime = Field(
+        ...,
+        alias='startedAt',
+        description='Timestamp when the session was created and started',
+        title='Started At',
+    )
+    finished_at: AwareDatetime | None = Field(
+        None,
+        alias='finishedAt',
+        description='Timestamp when the session was stopped (None if still active)',
+        title='Finished At',
+    )
+    proxy_used_mb: str | None = Field(
+        '0',
+        alias='proxyUsedMb',
+        description='Amount of proxy data used in MB',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxy Used MB',
+    )
+    proxy_cost: str | None = Field(
+        '0',
+        alias='proxyCost',
+        description='Cost of proxy usage in USD',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxy Cost',
+    )
+    browser_cost: str | None = Field(
+        '0',
+        alias='browserCost',
+        description='Cost of browser session hosting in USD',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Browser Cost',
+    )
+    agent_session_id: UUID | None = Field(
+        None,
+        alias='agentSessionId',
+        description='ID of the agent session that created this browser (None for standalone BaaS sessions)',
+        title='Agent Session ID',
+    )
+    recording_url: str | None = Field(
+        None,
+        alias='recordingUrl',
+        description='Presigned URL to download the session recording (available after session ends, if recording was enabled)',
+        title='Recording URL',
+    )
+
+
 class BuAgentSessionStatus(Enum):
     created = 'created'
     idle = 'idle'
@@ -20,18 +108,91 @@ class BuAgentSessionStatus(Enum):
 
 
 class BuModel(Enum):
+    bu_mini = 'bu-mini'
+    bu_max = 'bu-max'
+    bu_ultra = 'bu-ultra'
     gemini_3_flash = 'gemini-3-flash'
     claude_sonnet_4_6 = 'claude-sonnet-4.6'
     claude_opus_4_6 = 'claude-opus-4.6'
 
 
-class FileInfo(BaseModel):
-    path: str = Field(..., title='Path')
-    size: int = Field(..., title='Size')
-    last_modified: AwareDatetime = Field(
-        ..., alias='lastModified', title='Lastmodified'
+class BrowserScreenWidth(RootModel[int]):
+    root: int = Field(
+        ...,
+        description='Custom screen width in pixels for the browser.',
+        ge=320,
+        le=6144,
+        title='Browser Screen Width',
     )
-    url: str | None = Field(None, title='Url')
+
+
+class BrowserScreenHeight(RootModel[int]):
+    root: int = Field(
+        ...,
+        description='Custom screen height in pixels for the browser.',
+        ge=320,
+        le=3456,
+        title='Browser Screen Height',
+    )
+
+
+class Username(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Username for proxy authentication.',
+        max_length=255,
+        min_length=1,
+        title='Username',
+    )
+
+
+class Password(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Password for proxy authentication.',
+        max_length=255,
+        min_length=1,
+        title='Password',
+    )
+
+
+class CustomProxy(BaseModel):
+    host: str = Field(
+        ...,
+        description='Host of the proxy.',
+        max_length=255,
+        min_length=1,
+        title='Host',
+    )
+    port: int = Field(
+        ..., description='Port of the proxy.', ge=1, le=65535, title='Port'
+    )
+    username: Username | None = Field(
+        None, description='Username for proxy authentication.', title='Username'
+    )
+    password: Password | None = Field(
+        None, description='Password for proxy authentication.', title='Password'
+    )
+
+
+class FileInfo(BaseModel):
+    path: str = Field(
+        ...,
+        description='File path relative to the session workspace root.',
+        title='Path',
+    )
+    size: int = Field(..., description='File size in bytes.', title='Size')
+    last_modified: AwareDatetime = Field(
+        ...,
+        alias='lastModified',
+        description='When the file was last modified.',
+        title='Lastmodified',
+    )
+    url: str | None = Field(
+        None,
+        description='Presigned download URL (60s expiry). Only included when `includeUrls=true`.',
+        title='Url',
+    )
 
 
 class FileListResponse(BaseModel):
@@ -41,8 +202,18 @@ class FileListResponse(BaseModel):
         description='Immediate sub-folder names at this prefix level',
         title='Folders',
     )
-    next_cursor: str | None = Field(None, alias='nextCursor', title='Nextcursor')
-    has_more: bool | None = Field(False, alias='hasMore', title='Hasmore')
+    next_cursor: str | None = Field(
+        None,
+        alias='nextCursor',
+        description='Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page.',
+        title='Nextcursor',
+    )
+    has_more: bool | None = Field(
+        False,
+        alias='hasMore',
+        description='Whether there are more files beyond this page.',
+        title='Hasmore',
+    )
 
 
 class Size(RootModel[int]):
@@ -81,10 +252,17 @@ class FileUploadRequest(BaseModel):
 
 
 class FileUploadResponseItem(BaseModel):
-    name: str = Field(..., title='Name')
-    upload_url: str = Field(..., alias='uploadUrl', title='Uploadurl')
+    name: str = Field(..., description='Original filename as requested.', title='Name')
+    upload_url: str = Field(
+        ...,
+        alias='uploadUrl',
+        description='Presigned PUT URL. Upload the file by sending a PUT request to this URL with the file content and matching Content-Type header. Expires after 5 minutes.',
+        title='Uploadurl',
+    )
     path: str = Field(
-        ..., description='S3-relative path, e.g. "uploads/data.csv"', title='Path'
+        ...,
+        description='Path where the file will be stored in the workspace, e.g. "uploads/data.csv".',
+        title='Path',
     )
 
 
@@ -93,21 +271,80 @@ class InsufficientCreditsError(BaseModel):
 
 
 class MessageResponse(BaseModel):
-    id: UUID = Field(..., title='Id')
-    session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
-    role: str = Field(..., title='Role')
-    data: str = Field(..., title='Data')
+    id: UUID = Field(..., description='Unique message identifier.', title='Id')
+    session_id: UUID = Field(
+        ...,
+        alias='sessionId',
+        description='ID of the session this message belongs to.',
+        title='Sessionid',
+    )
+    role: str = Field(
+        ...,
+        description='Message role: "human" for user-submitted tasks, "ai" for agent actions and responses.',
+        title='Role',
+    )
+    data: str = Field(
+        ...,
+        description='Raw message content. Format depends on the message type — may be plain text, JSON, or structured action data.',
+        title='Data',
+    )
     type: str | None = Field(
         '',
-        description='Coarse category: user_message, assistant_message, browser_action, file_operation, code_execution, integration, planning, completion, browser_action_result, browser_action_error, etc.',
+        description='Message category. Common values: `user_message`, `assistant_message`, `browser_action`, `file_operation`, `code_execution`, `integration`, `planning`, `completion`, `browser_action_result`, `browser_action_error`.',
         title='Type',
     )
     summary: str | None = Field(
         '',
-        description='One-liner human-readable description of the message (e.g. "Navigating to google.com", "Clicking element #5").',
+        description='One-liner human-readable description of the message (e.g. "Navigating to google.com", "Clicking element #5"). Useful for building activity feeds.',
         title='Summary',
     )
-    created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
+    screenshot_url: str | None = Field(
+        None,
+        alias='screenshotUrl',
+        description='Browser screenshot captured at the time of this message. Presigned URL, expires after 5 minutes.',
+        title='Screenshoturl',
+    )
+    hidden: bool | None = Field(
+        False,
+        description='Whether this message should be hidden from the user in a chat UI.',
+        title='Hidden',
+    )
+    created_at: AwareDatetime = Field(
+        ...,
+        alias='createdAt',
+        description='When this message was created.',
+        title='Createdat',
+    )
+
+
+class PlanInfo(BaseModel):
+    plan_name: str = Field(
+        ..., alias='planName', description='The name of the plan', title='Plan Name'
+    )
+    subscription_status: str | None = Field(
+        ...,
+        alias='subscriptionStatus',
+        description='The status of the subscription',
+        title='Subscription Status',
+    )
+    subscription_id: str | None = Field(
+        ...,
+        alias='subscriptionId',
+        description='The ID of the subscription',
+        title='Subscription ID',
+    )
+    subscription_current_period_end: str | None = Field(
+        ...,
+        alias='subscriptionCurrentPeriodEnd',
+        description='The end of the current period',
+        title='Subscription Current Period End',
+    )
+    subscription_canceled_at: str | None = Field(
+        ...,
+        alias='subscriptionCanceledAt',
+        description='The date the subscription was canceled',
+        title='Subscription Canceled At',
+    )
 
 
 class Name(RootModel[str]):
@@ -445,109 +682,290 @@ class MaxCostUsd(RootModel[str]):
         regex_engine="python-re",
     )
     root: str = Field(
-        ..., pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$', title='Maxcostusd'
+        ...,
+        description='Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance).',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Maxcostusd',
     )
 
 
 class RunTaskRequest(BaseModel):
-    task: str | None = Field(None, title='Task')
-    model: BuModel | None = BuModel.claude_sonnet_4_6
-    session_id: UUID | None = Field(None, alias='sessionId', title='Sessionid')
-    keep_alive: bool | None = Field(False, alias='keepAlive', title='Keepalive')
-    max_cost_usd: float | MaxCostUsd | None = Field(
-        None, alias='maxCostUsd', title='Maxcostusd'
+    task: str | None = Field(
+        None,
+        description='The natural-language instruction for the agent to execute (e.g. "Go to amazon.com and find the best-rated wireless mouse under $50"). Required when dispatching to an existing session.',
+        title='Task',
     )
-    profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
-    workspace_id: UUID | None = Field(None, alias='workspaceId', title='Workspaceid')
-    proxy_country_code: ProxyCountryCode | None = Field(ProxyCountryCode.us, alias='proxyCountryCode')
+    model: BuModel | None = Field(
+        BuModel.claude_sonnet_4_6,
+        description='The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-4.6" is balanced, "claude-opus-4.6" is most capable. See BuModel for details.',
+    )
+    session_id: UUID | None = Field(
+        None,
+        alias='sessionId',
+        description='ID of an existing idle session to dispatch the task to. If omitted, a new session is created.',
+        title='Sessionid',
+    )
+    keep_alive: bool | None = Field(
+        False,
+        alias='keepAlive',
+        description='If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.',
+        title='Keepalive',
+    )
+    max_cost_usd: float | MaxCostUsd | None = Field(
+        None,
+        alias='maxCostUsd',
+        description='Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance).',
+        title='Maxcostusd',
+    )
+    profile_id: UUID | None = Field(
+        None,
+        alias='profileId',
+        description='ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API.',
+        title='Profileid',
+    )
+    workspace_id: UUID | None = Field(
+        None,
+        alias='workspaceId',
+        description='ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API.',
+        title='Workspaceid',
+    )
+    proxy_country_code: ProxyCountryCode | None = Field(
+        ProxyCountryCode.us,
+        alias='proxyCountryCode',
+        description='Country code for the browser proxy (e.g. "US", "DE", "JP"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.',
+    )
     output_schema: Dict[str, Any] | None = Field(
-        None, alias='outputSchema', title='Outputschema'
+        None,
+        alias='outputSchema',
+        description='A JSON Schema that the agent\'s final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {"type": "object", "properties": {"price": {"type": "number"}, "title": {"type": "string"}}}.',
+        title='Outputschema',
     )
     enable_scheduled_tasks: bool | None = Field(
-        False, alias='enableScheduledTasks', title='Enablescheduledtasks'
+        False,
+        alias='enableScheduledTasks',
+        description='If true, the agent can create scheduled tasks that run on a recurring basis (e.g. "every Monday morning, check my inbox and summarize new emails"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.',
+        title='Enablescheduledtasks',
     )
     enable_recording: bool | None = Field(
-        False, alias='enableRecording', title='Enablerecording'
+        False,
+        alias='enableRecording',
+        description='If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.',
+        title='Enablerecording',
     )
-    skills: bool | None = Field(True, title='Skills')
-    agentmail: bool | None = Field(True, title='Agentmail')
+    skills: bool | None = Field(
+        True,
+        description='If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.',
+        title='Skills',
+    )
+    agentmail: bool | None = Field(
+        True,
+        description='If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.',
+        title='Agentmail',
+    )
+    cache_script: bool | None = Field(
+        None,
+        alias='cacheScript',
+        description='Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from {{https://example.com}} for {{electronics}}".',
+        title='Cachescript',
+    )
+    auto_heal: bool | None = Field(
+        True,
+        alias='autoHeal',
+        description='When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.',
+        title='Autoheal',
+    )
+
+
+class SessionNotFoundError(BaseModel):
+    detail: str | None = Field('Session not found', title='Detail')
+
+
+class MaxCostUsd1(RootModel[str]):
+    model_config = ConfigDict(
+        regex_engine="python-re",
+    )
+    root: str = Field(
+        ...,
+        description='Maximum cost limit in USD set for this session.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Maxcostusd',
+    )
 
 
 class SessionResponse(BaseModel):
     model_config = ConfigDict(
         regex_engine="python-re",
     )
-    id: UUID = Field(..., title='Id')
-    status: BuAgentSessionStatus
-    model: BuModel
-    title: str | None = Field(None, title='Title')
-    output: Any = Field(None, title='Output')
-    output_schema: Dict[str, Any] | None = Field(
-        None, alias='outputSchema', title='Outputschema'
+    id: UUID = Field(..., description='Unique session identifier.', title='Id')
+    status: BuAgentSessionStatus = Field(
+        ...,
+        description='Current session lifecycle status. Progresses through: `created` (sandbox starting) → `idle` (ready, waiting for task) → `running` (task executing) → `stopped` / `timed_out` / `error`. Poll this field to track progress.',
     )
-    step_count: int | None = Field(0, alias='stepCount', title='Stepcount')
+    model: BuModel = Field(..., description='The model tier used for this session.')
+    title: str | None = Field(
+        None,
+        description='Auto-generated short title summarizing the task. Available after the task starts running.',
+        title='Title',
+    )
+    output: Any = Field(
+        None,
+        description="The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false.",
+        title='Output',
+    )
+    output_schema: Dict[str, Any] | None = Field(
+        None,
+        alias='outputSchema',
+        description='The JSON Schema that was requested for structured output, if any.',
+        title='Outputschema',
+    )
+    step_count: int | None = Field(
+        0,
+        alias='stepCount',
+        description='Number of steps the agent has executed so far.',
+        title='Stepcount',
+    )
     last_step_summary: str | None = Field(
-        None, alias='lastStepSummary', title='Laststepsummary'
+        None,
+        alias='lastStepSummary',
+        description='Human-readable summary of the most recent agent step (e.g. "Clicking the Submit button"). Useful for showing real-time progress.',
+        title='Laststepsummary',
     )
     is_task_successful: bool | None = Field(
-        None, alias='isTaskSuccessful', title='Istasksuccessful'
+        None,
+        alias='isTaskSuccessful',
+        description='Whether the task completed successfully. `true` if the agent achieved the goal, `false` if it failed or gave up, `null` if the task is still running or no task was dispatched.',
+        title='Istasksuccessful',
     )
-    live_url: str | None = Field(None, alias='liveUrl', title='Liveurl')
+    live_url: str | None = Field(
+        None,
+        alias='liveUrl',
+        description='URL to view the live browser session. Available immediately on session creation — can be embedded in an iframe to show the browser in real time.',
+        title='Liveurl',
+    )
     recording_urls: List[str] | None = Field(
-        [], alias='recordingUrls', title='Recordingurls'
+        [],
+        alias='recordingUrls',
+        description='URLs to download session recordings. Only populated if `enableRecording` was set to true and the task has completed.',
+        title='Recordingurls',
     )
-    profile_id: UUID | None = Field(None, alias='profileId', title='Profileid')
-    workspace_id: UUID | None = Field(None, alias='workspaceId', title='Workspaceid')
-    proxy_country_code: ProxyCountryCode | None = Field(None, alias='proxyCountryCode')
-    max_cost_usd: MaxCostUsd | None = Field(
-        None, alias='maxCostUsd', title='Maxcostusd'
+    profile_id: UUID | None = Field(
+        None,
+        alias='profileId',
+        description='ID of the browser profile loaded in this session, if any.',
+        title='Profileid',
+    )
+    workspace_id: UUID | None = Field(
+        None,
+        alias='workspaceId',
+        description='ID of the workspace attached to this session, if any.',
+        title='Workspaceid',
+    )
+    proxy_country_code: ProxyCountryCode | None = Field(
+        None,
+        alias='proxyCountryCode',
+        description='Country code of the proxy used for this session, or null if no proxy.',
+    )
+    max_cost_usd: MaxCostUsd1 | None = Field(
+        None,
+        alias='maxCostUsd',
+        description='Maximum cost limit in USD set for this session.',
+        title='Maxcostusd',
     )
     total_input_tokens: int | None = Field(
-        0, alias='totalInputTokens', title='Totalinputtokens'
+        0,
+        alias='totalInputTokens',
+        description='Total LLM input tokens consumed by this session.',
+        title='Totalinputtokens',
     )
     total_output_tokens: int | None = Field(
-        0, alias='totalOutputTokens', title='Totaloutputtokens'
+        0,
+        alias='totalOutputTokens',
+        description='Total LLM output tokens consumed by this session.',
+        title='Totaloutputtokens',
     )
     proxy_used_mb: str | None = Field(
         '0',
         alias='proxyUsedMb',
+        description='Proxy bandwidth used in megabytes.',
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Proxyusedmb',
     )
     llm_cost_usd: str | None = Field(
         '0',
         alias='llmCostUsd',
+        description='Cost of LLM usage in USD.',
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Llmcostusd',
     )
     proxy_cost_usd: str | None = Field(
         '0',
         alias='proxyCostUsd',
+        description='Cost of proxy bandwidth in USD.',
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Proxycostusd',
     )
     browser_cost_usd: str | None = Field(
         '0',
         alias='browserCostUsd',
+        description='Cost of browser compute time in USD.',
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Browsercostusd',
     )
     total_cost_usd: str | None = Field(
         '0',
         alias='totalCostUsd',
+        description='Total session cost in USD (LLM + proxy + browser).',
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Totalcostusd',
     )
-    agentmail_email: str | None = Field(
-        None, alias='agentmailEmail', title='Agentmailemail'
+    screenshot_url: str | None = Field(
+        None,
+        alias='screenshotUrl',
+        description='URL of the latest browser screenshot. This is a presigned URL that expires after 5 minutes. A new URL is generated each time you fetch the session.',
+        title='Screenshoturl',
     )
-    created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
-    updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
+    agentmail_email: str | None = Field(
+        None,
+        alias='agentmailEmail',
+        description='Temporary email address provisioned for this session (via AgentMail). Only present if `agentmail` was enabled.',
+        title='Agentmailemail',
+    )
+    created_at: AwareDatetime = Field(
+        ...,
+        alias='createdAt',
+        description='When the session was created.',
+        title='Createdat',
+    )
+    updated_at: AwareDatetime = Field(
+        ...,
+        alias='updatedAt',
+        description='When the session was last updated.',
+        title='Updatedat',
+    )
+
+
+class SessionTimeoutLimitExceededError(BaseModel):
+    detail: str | None = Field(
+        'Maximum session timeout is 4 hours (240 minutes).', title='Detail'
+    )
 
 
 class StopStrategy(Enum):
     task = 'task'
     session = 'session'
+
+
+class TooManyConcurrentActiveSessionsError(BaseModel):
+    detail: str | None = Field(
+        'Too many concurrent active sessions. Please wait for one to finish, kill one, or upgrade your plan.',
+        title='Detail',
+    )
+
+
+class UpdateBrowserSessionRequest(BaseModel):
+    action: BrowserSessionUpdateAction = Field(
+        ..., description='The action to perform on the session', title='Action'
+    )
 
 
 class ValidationError(BaseModel):
@@ -590,266 +1008,6 @@ class WorkspaceView(BaseModel):
         alias='updatedAt',
         description='Timestamp when the workspace was last updated',
         title='Updated At',
-    )
-
-
-class AccountNotFoundError(BaseModel):
-    detail: str | None = Field('Account not found', title='Detail')
-
-
-class BrowserSessionStatus(Enum):
-    active = 'active'
-    stopped = 'stopped'
-
-
-class BrowserSessionUpdateAction(Enum):
-    stop = 'stop'
-
-
-class BrowserSessionView(BaseModel):
-    model_config = ConfigDict(
-        regex_engine="python-re",
-    )
-    id: UUID = Field(..., description='Unique identifier for the session', title='ID')
-    status: BrowserSessionStatus = Field(
-        ...,
-        description='Current status of the session (active/stopped)',
-        title='Status',
-    )
-    live_url: str | None = Field(
-        None,
-        alias='liveUrl',
-        description='URL where the browser can be viewed live in real-time',
-        title='Live URL',
-    )
-    cdp_url: str | None = Field(
-        None,
-        alias='cdpUrl',
-        description='Chrome DevTools Protocol URL for browser automation',
-        title='CDP URL',
-    )
-    timeout_at: AwareDatetime = Field(
-        ...,
-        alias='timeoutAt',
-        description='Timestamp when the session will timeout',
-        title='Timeout At',
-    )
-    started_at: AwareDatetime = Field(
-        ...,
-        alias='startedAt',
-        description='Timestamp when the session was created and started',
-        title='Started At',
-    )
-    finished_at: AwareDatetime | None = Field(
-        None,
-        alias='finishedAt',
-        description='Timestamp when the session was stopped (None if still active)',
-        title='Finished At',
-    )
-    proxy_used_mb: str | None = Field(
-        '0',
-        alias='proxyUsedMb',
-        description='Amount of proxy data used in MB',
-        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
-        title='Proxy Used MB',
-    )
-    proxy_cost: str | None = Field(
-        '0',
-        alias='proxyCost',
-        description='Cost of proxy usage in USD',
-        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
-        title='Proxy Cost',
-    )
-    browser_cost: str | None = Field(
-        '0',
-        alias='browserCost',
-        description='Cost of browser session hosting in USD',
-        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
-        title='Browser Cost',
-    )
-    agent_session_id: UUID | None = Field(
-        None,
-        alias='agentSessionId',
-        description='ID of the agent session that created this browser (None for standalone BaaS sessions)',
-        title='Agent Session ID',
-    )
-    recording_url: str | None = Field(
-        None,
-        alias='recordingUrl',
-        description='Presigned URL to download the session recording (available after session ends, if recording was enabled)',
-        title='Recording URL',
-    )
-
-
-class BrowserScreenWidth(RootModel[int]):
-    root: int = Field(
-        ...,
-        description='Custom screen width in pixels for the browser.',
-        ge=320,
-        le=6144,
-        title='Browser Screen Width',
-    )
-
-
-class BrowserScreenHeight(RootModel[int]):
-    root: int = Field(
-        ...,
-        description='Custom screen height in pixels for the browser.',
-        ge=320,
-        le=3456,
-        title='Browser Screen Height',
-    )
-
-
-class Username(RootModel[str]):
-    root: str = Field(
-        ...,
-        description='Username for proxy authentication.',
-        max_length=255,
-        min_length=1,
-        title='Username',
-    )
-
-
-class Password(RootModel[str]):
-    root: str = Field(
-        ...,
-        description='Password for proxy authentication.',
-        max_length=255,
-        min_length=1,
-        title='Password',
-    )
-
-
-class CustomProxy(BaseModel):
-    host: str = Field(
-        ...,
-        description='Host of the proxy.',
-        max_length=255,
-        min_length=1,
-        title='Host',
-    )
-    port: int = Field(
-        ..., description='Port of the proxy.', ge=1, le=65535, title='Port'
-    )
-    username: Username | None = Field(
-        None, description='Username for proxy authentication.', title='Username'
-    )
-    password: Password | None = Field(
-        None, description='Password for proxy authentication.', title='Password'
-    )
-
-
-class PlanInfo(BaseModel):
-    plan_name: str = Field(
-        ..., alias='planName', description='The name of the plan', title='Plan Name'
-    )
-    subscription_status: str | None = Field(
-        ...,
-        alias='subscriptionStatus',
-        description='The status of the subscription',
-        title='Subscription Status',
-    )
-    subscription_id: str | None = Field(
-        ...,
-        alias='subscriptionId',
-        description='The ID of the subscription',
-        title='Subscription ID',
-    )
-    subscription_current_period_end: str | None = Field(
-        ...,
-        alias='subscriptionCurrentPeriodEnd',
-        description='The end of the current period',
-        title='Subscription Current Period End',
-    )
-    subscription_canceled_at: str | None = Field(
-        ...,
-        alias='subscriptionCanceledAt',
-        description='The date the subscription was canceled',
-        title='Subscription Canceled At',
-    )
-
-
-class SessionNotFoundError(BaseModel):
-    detail: str | None = Field('Session not found', title='Detail')
-
-
-class SessionTimeoutLimitExceededError(BaseModel):
-    detail: str | None = Field(
-        'Maximum session timeout is 4 hours (240 minutes).', title='Detail'
-    )
-
-
-class TooManyConcurrentActiveSessionsError(BaseModel):
-    detail: str | None = Field(
-        'Too many concurrent active sessions. Please wait for one to finish, kill one, or upgrade your plan.',
-        title='Detail',
-    )
-
-
-class UpdateBrowserSessionRequest(BaseModel):
-    action: BrowserSessionUpdateAction = Field(
-        ..., description='The action to perform on the session', title='Action'
-    )
-
-
-class FileUploadResponse(BaseModel):
-    files: List[FileUploadResponseItem] = Field(..., title='Files')
-
-
-class HTTPValidationError(BaseModel):
-    detail: List[ValidationError] | None = Field(None, title='Detail')
-
-
-class MessageListResponse(BaseModel):
-    messages: List[MessageResponse] = Field(..., title='Messages')
-    has_more: bool = Field(..., alias='hasMore', title='Hasmore')
-
-
-class ProfileListResponse(BaseModel):
-    items: List[ProfileView] = Field(
-        ..., description='List of profile views for the current page', title='Items'
-    )
-    total_items: int = Field(
-        ...,
-        alias='totalItems',
-        description='Total number of items in the list',
-        title='Total Items',
-    )
-    page_number: int = Field(
-        ..., alias='pageNumber', description='Page number', title='Page Number'
-    )
-    page_size: int = Field(
-        ..., alias='pageSize', description='Number of items per page', title='Page Size'
-    )
-
-
-class SessionListResponse(BaseModel):
-    sessions: List[SessionResponse] = Field(..., title='Sessions')
-    total: int = Field(..., title='Total')
-    page: int = Field(..., title='Page')
-    page_size: int = Field(..., alias='pageSize', title='Pagesize')
-
-
-class StopSessionRequest(BaseModel):
-    strategy: StopStrategy | None = StopStrategy.session
-
-
-class WorkspaceListResponse(BaseModel):
-    items: List[WorkspaceView] = Field(
-        ..., description='List of workspace views for the current page', title='Items'
-    )
-    total_items: int = Field(
-        ...,
-        alias='totalItems',
-        description='Total number of items in the list',
-        title='Total Items',
-    )
-    page_number: int = Field(
-        ..., alias='pageNumber', description='Page number', title='Page Number'
-    )
-    page_size: int = Field(
-        ..., alias='pageSize', description='Number of items per page', title='Page Size'
     )
 
 
@@ -1021,7 +1179,7 @@ class CreateBrowserSessionRequest(BaseModel):
     custom_proxy: CustomProxy | None = Field(
         None,
         alias='customProxy',
-        description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available on the Custom Enterprise plan.',
+        description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.',
         title='Custom Proxy',
     )
     enable_recording: bool | None = Field(
@@ -1029,4 +1187,83 @@ class CreateBrowserSessionRequest(BaseModel):
         alias='enableRecording',
         description='If True, enables session recording. Defaults to False.',
         title='Enable Recording',
+    )
+
+
+class FileUploadResponse(BaseModel):
+    files: List[FileUploadResponseItem] = Field(..., title='Files')
+
+
+class HTTPValidationError(BaseModel):
+    detail: List[ValidationError] | None = Field(None, title='Detail')
+
+
+class MessageListResponse(BaseModel):
+    messages: List[MessageResponse] = Field(
+        ..., description='List of messages in chronological order.', title='Messages'
+    )
+    has_more: bool = Field(
+        ...,
+        alias='hasMore',
+        description='Whether there are more messages available beyond this page. Use cursor-based pagination with the `after` or `before` query parameters to fetch more.',
+        title='Hasmore',
+    )
+
+
+class ProfileListResponse(BaseModel):
+    items: List[ProfileView] = Field(
+        ..., description='List of profile views for the current page', title='Items'
+    )
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
+    )
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
+    )
+
+
+class SessionListResponse(BaseModel):
+    sessions: List[SessionResponse] = Field(
+        ..., description='List of sessions.', title='Sessions'
+    )
+    total: int = Field(
+        ..., description='Total number of sessions matching the query.', title='Total'
+    )
+    page: int = Field(..., description='Current page number (1-indexed).', title='Page')
+    page_size: int = Field(
+        ...,
+        alias='pageSize',
+        description='Number of sessions per page.',
+        title='Pagesize',
+    )
+
+
+class StopSessionRequest(BaseModel):
+    strategy: StopStrategy | None = Field(
+        StopStrategy.session,
+        description='How to stop the session. Use "task" to stop only the current task and keep the session alive, or "session" to destroy the sandbox entirely.',
+    )
+
+
+class WorkspaceListResponse(BaseModel):
+    items: List[WorkspaceView] = Field(
+        ..., description='List of workspace views for the current page', title='Items'
+    )
+    total_items: int = Field(
+        ...,
+        alias='totalItems',
+        description='Total number of items in the list',
+        title='Total Items',
+    )
+    page_number: int = Field(
+        ..., alias='pageNumber', description='Page number', title='Page Number'
+    )
+    page_size: int = Field(
+        ..., alias='pageSize', description='Number of items per page', title='Page Size'
     )

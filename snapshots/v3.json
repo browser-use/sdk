@@ -78,9 +78,11 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
+              "description": "Page number (1-indexed).",
               "default": 1,
               "title": "Page"
-            }
+            },
+            "description": "Page number (1-indexed)."
           },
           {
             "name": "page_size",
@@ -90,9 +92,11 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
+              "description": "Number of sessions per page (max 100).",
               "default": 20,
               "title": "Page Size"
-            }
+            },
+            "description": "Number of sessions per page (max 100)."
           }
         ],
         "responses": {
@@ -344,9 +348,11 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
+              "description": "Maximum number of messages to return (max 100).",
               "default": 10,
               "title": "Limit"
-            }
+            },
+            "description": "Maximum number of messages to return (max 100)."
           }
         ],
         "responses": {
@@ -366,6 +372,285 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browsers": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "List Browser Sessions",
+        "description": "Get paginated list of browser sessions with optional status filtering.",
+        "operationId": "list_browser_sessions_browsers_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          },
+          {
+            "name": "filterBy",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/BrowserSessionStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filterby"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserSessionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Create Browser Session",
+        "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged per hour with tiered pricing:\n- Pay As You Go users: $0.06/hour\n- Business/Scaleup subscribers: $0.03/hour (50% discount)\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
+        "operationId": "create_browser_session_browsers_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBrowserSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserSessionItemView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Session timeout limit exceeded (maximum 4 hours)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionTimeoutLimitExceededError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Profile not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many concurrent active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browsers/{session_id}": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Get Browser Session",
+        "description": "Get detailed browser session information including status and URLs.",
+        "operationId": "get_browser_session_browsers__session_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserSessionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Update Browser Session",
+        "description": "Stop a browser session.\n\n**Refund:** When you stop a session, unused time is automatically refunded.\nIf the session ran for less than 1 hour, you'll receive a proportional refund.\nBilling is ceil to the nearest minute (minimum 1 minute).",
+        "operationId": "update_browser_session_browsers__session_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrowserSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserSessionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
                 }
               }
             }
@@ -1200,285 +1485,6 @@
         }
       }
     },
-    "/browsers": {
-      "get": {
-        "tags": [
-          "Browsers"
-        ],
-        "summary": "List Browser Sessions",
-        "description": "Get paginated list of browser sessions with optional status filtering.",
-        "operationId": "list_browser_sessions_browsers_get",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 10,
-              "title": "Pagesize"
-            }
-          },
-          {
-            "name": "pageNumber",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 1,
-              "title": "Pagenumber"
-            }
-          },
-          {
-            "name": "filterBy",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/BrowserSessionStatus"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Filterby"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BrowserSessionListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Browsers"
-        ],
-        "summary": "Create Browser Session",
-        "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged per hour with tiered pricing:\n- Pay As You Go users: $0.06/hour\n- Business/Scaleup subscribers: $0.03/hour (50% discount)\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
-        "operationId": "create_browser_session_browsers_post",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateBrowserSessionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BrowserSessionItemView"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Session timeout limit exceeded (maximum 4 hours)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SessionTimeoutLimitExceededError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Profile not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProfileNotFoundError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request validation failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many concurrent active sessions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/browsers/{session_id}": {
-      "get": {
-        "tags": [
-          "Browsers"
-        ],
-        "summary": "Get Browser Session",
-        "description": "Get detailed browser session information including status and URLs.",
-        "operationId": "get_browser_session_browsers__session_id__get",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Session Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BrowserSessionView"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Session not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SessionNotFoundError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Browsers"
-        ],
-        "summary": "Update Browser Session",
-        "description": "Stop a browser session.\n\n**Refund:** When you stop a session, unused time is automatically refunded.\nIf the session ran for less than 1 hour, you'll receive a proportional refund.\nBilling is ceil to the nearest minute (minimum 1 minute).",
-        "operationId": "update_browser_session_browsers__session_id__patch",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Session Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateBrowserSessionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BrowserSessionView"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Session not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SessionNotFoundError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request validation failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/billing/account": {
       "get": {
         "tags": [
@@ -1529,6 +1535,367 @@
   },
   "components": {
     "schemas": {
+      "AccountNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Account not found"
+          }
+        },
+        "type": "object",
+        "title": "AccountNotFoundError",
+        "description": "Error response when an account is not found"
+      },
+      "AccountView": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "The name of the user"
+          },
+          "totalCreditsBalanceUsd": {
+            "type": "number",
+            "title": "Credits Balance USD",
+            "description": "The total credits balance in USD"
+          },
+          "monthlyCreditsBalanceUsd": {
+            "type": "number",
+            "title": "Monthly Credits Balance USD",
+            "description": "Monthly subscription credits balance in USD"
+          },
+          "additionalCreditsBalanceUsd": {
+            "type": "number",
+            "title": "Additional Credits Balance USD",
+            "description": "Additional top-up credits balance in USD"
+          },
+          "rateLimit": {
+            "type": "integer",
+            "title": "Rate Limit",
+            "description": "The rate limit for the account"
+          },
+          "planInfo": {
+            "$ref": "#/components/schemas/PlanInfo",
+            "title": "Plan Info",
+            "description": "The plan information"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project ID",
+            "description": "The ID of the project"
+          }
+        },
+        "type": "object",
+        "required": [
+          "totalCreditsBalanceUsd",
+          "monthlyCreditsBalanceUsd",
+          "additionalCreditsBalanceUsd",
+          "rateLimit",
+          "planInfo",
+          "projectId"
+        ],
+        "title": "AccountView",
+        "description": "View model for account information."
+      },
+      "BrowserSessionItemView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the session"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BrowserSessionStatus",
+            "title": "Status",
+            "description": "Current status of the session (active/stopped)"
+          },
+          "liveUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live URL",
+            "description": "URL where the browser can be viewed live in real-time"
+          },
+          "cdpUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "CDP URL",
+            "description": "Chrome DevTools Protocol URL for browser automation"
+          },
+          "timeoutAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timeout At",
+            "description": "Timestamp when the session will timeout"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At",
+            "description": "Timestamp when the session was created and started"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At",
+            "description": "Timestamp when the session was stopped (None if still active)"
+          },
+          "proxyUsedMb": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Used MB",
+            "description": "Amount of proxy data used in MB",
+            "default": "0"
+          },
+          "proxyCost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Cost",
+            "description": "Cost of proxy usage in USD",
+            "default": "0"
+          },
+          "browserCost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Browser Cost",
+            "description": "Cost of browser session hosting in USD",
+            "default": "0"
+          },
+          "agentSessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Session ID",
+            "description": "ID of the agent session that created this browser (None for standalone BaaS sessions)"
+          },
+          "recordingUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recording URL",
+            "description": "Presigned URL to download the session recording (available after session ends, if recording was enabled)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "timeoutAt",
+          "startedAt"
+        ],
+        "title": "BrowserSessionItemView",
+        "description": "View model for representing a browser session in list views."
+      },
+      "BrowserSessionListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserSessionItemView"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of browser session views for the current page"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "BrowserSessionListResponse",
+        "description": "Response model for paginated browser session list requests."
+      },
+      "BrowserSessionStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "stopped"
+        ],
+        "title": "BrowserSessionStatus",
+        "description": "Enumeration of possible browser session states\n\nAttributes:\n    ACTIVE: Session is currently active and running (browser is running)\n    STOPPED: Session has been stopped and is no longer active (browser is stopped)"
+      },
+      "BrowserSessionUpdateAction": {
+        "type": "string",
+        "enum": [
+          "stop"
+        ],
+        "title": "BrowserSessionUpdateAction",
+        "description": "Available actions that can be performed on a browser session\n\nAttributes:\n    STOP: Stop the browser session (cannot be undone)"
+      },
+      "BrowserSessionView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Unique identifier for the session"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BrowserSessionStatus",
+            "title": "Status",
+            "description": "Current status of the session (active/stopped)"
+          },
+          "liveUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live URL",
+            "description": "URL where the browser can be viewed live in real-time"
+          },
+          "cdpUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "CDP URL",
+            "description": "Chrome DevTools Protocol URL for browser automation"
+          },
+          "timeoutAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timeout At",
+            "description": "Timestamp when the session will timeout"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At",
+            "description": "Timestamp when the session was created and started"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At",
+            "description": "Timestamp when the session was stopped (None if still active)"
+          },
+          "proxyUsedMb": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Used MB",
+            "description": "Amount of proxy data used in MB",
+            "default": "0"
+          },
+          "proxyCost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Proxy Cost",
+            "description": "Cost of proxy usage in USD",
+            "default": "0"
+          },
+          "browserCost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Browser Cost",
+            "description": "Cost of browser session hosting in USD",
+            "default": "0"
+          },
+          "agentSessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Session ID",
+            "description": "ID of the agent session that created this browser (None for standalone BaaS sessions)"
+          },
+          "recordingUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recording URL",
+            "description": "Presigned URL to download the session recording (available after session ends, if recording was enabled)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "timeoutAt",
+          "startedAt"
+        ],
+        "title": "BrowserSessionView",
+        "description": "View model for representing a browser session."
+      },
       "BuAgentSessionStatus": {
         "type": "string",
         "enum": [
@@ -1539,31 +1906,185 @@
           "timed_out",
           "error"
         ],
-        "title": "BuAgentSessionStatus"
+        "title": "BuAgentSessionStatus",
+        "description": "Session lifecycle status. Progresses through: created \u2192 idle \u2192 running \u2192 idle \u2192 ... \u2192 stopped / timed_out / error.\n\n- `created`: Sandbox is starting up. The session is not yet ready to accept tasks.\n- `idle`: Sandbox is healthy and waiting for a task. You can dispatch a task or upload files.\n- `running`: A task is currently being executed by the agent.\n- `stopped`: Session was stopped \u2014 either explicitly via the stop endpoint, or automatically after task completion (when `keepAlive` is false).\n- `timed_out`: Session was cleaned up due to inactivity timeout.\n- `error`: Sandbox failed to start or encountered an unrecoverable error."
       },
       "BuModel": {
         "type": "string",
         "enum": [
+          "bu-mini",
+          "bu-max",
+          "bu-ultra",
           "gemini-3-flash",
           "claude-sonnet-4.6",
           "claude-opus-4.6"
         ],
-        "title": "BuModel"
+        "title": "BuModel",
+        "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash \u2014 fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 \u2014 balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 \u2014 most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions."
+      },
+      "CreateBrowserSessionRequest": {
+        "properties": {
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile ID",
+            "description": "The ID of the profile to use for the session"
+          },
+          "proxyCountryCode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProxyCountryCode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proxy Country Code",
+            "description": "Country code for proxy location. Defaults to US. Set to null to disable proxy.",
+            "default": "us"
+          },
+          "timeout": {
+            "type": "integer",
+            "title": "Timeout",
+            "description": "The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.",
+            "default": 60,
+            "ge": 1,
+            "le": 240
+          },
+          "browserScreenWidth": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 6144.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Screen Width",
+            "description": "Custom screen width in pixels for the browser."
+          },
+          "browserScreenHeight": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3456.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser Screen Height",
+            "description": "Custom screen height in pixels for the browser."
+          },
+          "allowResizing": {
+            "type": "boolean",
+            "title": "Allow Resizing",
+            "description": "Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).",
+            "default": false
+          },
+          "customProxy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CustomProxy"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Proxy",
+            "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription."
+          },
+          "enableRecording": {
+            "type": "boolean",
+            "title": "Enable Recording",
+            "description": "If True, enables session recording. Defaults to False.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "CreateBrowserSessionRequest",
+        "description": "Request model for creating a browser session."
+      },
+      "CustomProxy": {
+        "properties": {
+          "host": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Host",
+            "description": "Host of the proxy."
+          },
+          "port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Port",
+            "description": "Port of the proxy."
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username",
+            "description": "Username for proxy authentication."
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password",
+            "description": "Password for proxy authentication."
+          }
+        },
+        "type": "object",
+        "required": [
+          "host",
+          "port"
+        ],
+        "title": "CustomProxy",
+        "description": "Request model for creating a custom proxy."
       },
       "FileInfo": {
         "properties": {
           "path": {
             "type": "string",
-            "title": "Path"
+            "title": "Path",
+            "description": "File path relative to the session workspace root."
           },
           "size": {
             "type": "integer",
-            "title": "Size"
+            "title": "Size",
+            "description": "File size in bytes."
           },
           "lastModified": {
             "type": "string",
             "format": "date-time",
-            "title": "Lastmodified"
+            "title": "Lastmodified",
+            "description": "When the file was last modified."
           },
           "url": {
             "anyOf": [
@@ -1574,7 +2095,8 @@
                 "type": "null"
               }
             ],
-            "title": "Url"
+            "title": "Url",
+            "description": "Presigned download URL (60s expiry). Only included when `includeUrls=true`."
           }
         },
         "type": "object",
@@ -1612,11 +2134,13 @@
                 "type": "null"
               }
             ],
-            "title": "Nextcursor"
+            "title": "Nextcursor",
+            "description": "Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page."
           },
           "hasMore": {
             "type": "boolean",
             "title": "Hasmore",
+            "description": "Whether there are more files beyond this page.",
             "default": false
           }
         },
@@ -1704,16 +2228,18 @@
         "properties": {
           "name": {
             "type": "string",
-            "title": "Name"
+            "title": "Name",
+            "description": "Original filename as requested."
           },
           "uploadUrl": {
             "type": "string",
-            "title": "Uploadurl"
+            "title": "Uploadurl",
+            "description": "Presigned PUT URL. Upload the file by sending a PUT request to this URL with the file content and matching Content-Type header. Expires after 5 minutes."
           },
           "path": {
             "type": "string",
             "title": "Path",
-            "description": "S3-relative path, e.g. \"uploads/data.csv\""
+            "description": "Path where the file will be stored in the workspace, e.g. \"uploads/data.csv\"."
           }
         },
         "type": "object",
@@ -1757,11 +2283,13 @@
               "$ref": "#/components/schemas/MessageResponse"
             },
             "type": "array",
-            "title": "Messages"
+            "title": "Messages",
+            "description": "List of messages in chronological order."
           },
           "hasMore": {
             "type": "boolean",
-            "title": "Hasmore"
+            "title": "Hasmore",
+            "description": "Whether there are more messages available beyond this page. Use cursor-based pagination with the `after` or `before` query parameters to fetch more."
           }
         },
         "type": "object",
@@ -1776,37 +2304,60 @@
           "id": {
             "type": "string",
             "format": "uuid",
-            "title": "Id"
+            "title": "Id",
+            "description": "Unique message identifier."
           },
           "sessionId": {
             "type": "string",
             "format": "uuid",
-            "title": "Sessionid"
+            "title": "Sessionid",
+            "description": "ID of the session this message belongs to."
           },
           "role": {
             "type": "string",
-            "title": "Role"
+            "title": "Role",
+            "description": "Message role: \"human\" for user-submitted tasks, \"ai\" for agent actions and responses."
           },
           "data": {
             "type": "string",
-            "title": "Data"
+            "title": "Data",
+            "description": "Raw message content. Format depends on the message type \u2014 may be plain text, JSON, or structured action data."
           },
           "type": {
             "type": "string",
             "title": "Type",
-            "description": "Coarse category: user_message, assistant_message, browser_action, file_operation, code_execution, integration, planning, completion, browser_action_result, browser_action_error, etc.",
+            "description": "Message category. Common values: `user_message`, `assistant_message`, `browser_action`, `file_operation`, `code_execution`, `integration`, `planning`, `completion`, `browser_action_result`, `browser_action_error`.",
             "default": ""
           },
           "summary": {
             "type": "string",
             "title": "Summary",
-            "description": "One-liner human-readable description of the message (e.g. \"Navigating to google.com\", \"Clicking element #5\").",
+            "description": "One-liner human-readable description of the message (e.g. \"Navigating to google.com\", \"Clicking element #5\"). Useful for building activity feeds.",
             "default": ""
+          },
+          "screenshotUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenshoturl",
+            "description": "Browser screenshot captured at the time of this message. Presigned URL, expires after 5 minutes."
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden",
+            "description": "Whether this message should be hidden from the user in a chat UI.",
+            "default": false
           },
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "title": "Createdat"
+            "title": "Createdat",
+            "description": "When this message was created."
           }
         },
         "type": "object",
@@ -1817,7 +2368,75 @@
           "data",
           "createdAt"
         ],
-        "title": "MessageResponse"
+        "title": "MessageResponse",
+        "description": "A single message from the session's message stream.\n\nMessages represent the agent's actions, observations, and decisions as it executes a task."
+      },
+      "PlanInfo": {
+        "properties": {
+          "planName": {
+            "type": "string",
+            "title": "Plan Name",
+            "description": "The name of the plan"
+          },
+          "subscriptionStatus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Status",
+            "description": "The status of the subscription"
+          },
+          "subscriptionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription ID",
+            "description": "The ID of the subscription"
+          },
+          "subscriptionCurrentPeriodEnd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Current Period End",
+            "description": "The end of the current period"
+          },
+          "subscriptionCanceledAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Canceled At",
+            "description": "The date the subscription was canceled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "planName",
+          "subscriptionStatus",
+          "subscriptionId",
+          "subscriptionCurrentPeriodEnd",
+          "subscriptionCanceledAt"
+        ],
+        "title": "PlanInfo",
+        "description": "View model for plan information"
       },
       "ProfileCreateRequest": {
         "properties": {
@@ -2279,10 +2898,12 @@
                 "type": "null"
               }
             ],
-            "title": "Task"
+            "title": "Task",
+            "description": "The natural-language instruction for the agent to execute (e.g. \"Go to amazon.com and find the best-rated wireless mouse under $50\"). Required when dispatching to an existing session."
           },
           "model": {
             "$ref": "#/components/schemas/BuModel",
+            "description": "The model to use. \"gemini-3-flash\" is fast and cheap, \"claude-sonnet-4.6\" is balanced, \"claude-opus-4.6\" is most capable. See BuModel for details.",
             "default": "claude-sonnet-4.6"
           },
           "sessionId": {
@@ -2295,11 +2916,13 @@
                 "type": "null"
               }
             ],
-            "title": "Sessionid"
+            "title": "Sessionid",
+            "description": "ID of an existing idle session to dispatch the task to. If omitted, a new session is created."
           },
           "keepAlive": {
             "type": "boolean",
             "title": "Keepalive",
+            "description": "If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.",
             "default": false
           },
           "maxCostUsd": {
@@ -2315,7 +2938,8 @@
                 "type": "null"
               }
             ],
-            "title": "Maxcostusd"
+            "title": "Maxcostusd",
+            "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance)."
           },
           "profileId": {
             "anyOf": [
@@ -2327,7 +2951,8 @@
                 "type": "null"
               }
             ],
-            "title": "Profileid"
+            "title": "Profileid",
+            "description": "ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API."
           },
           "workspaceId": {
             "anyOf": [
@@ -2339,7 +2964,8 @@
                 "type": "null"
               }
             ],
-            "title": "Workspaceid"
+            "title": "Workspaceid",
+            "description": "ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API."
           },
           "proxyCountryCode": {
             "anyOf": [
@@ -2350,6 +2976,7 @@
                 "type": "null"
               }
             ],
+            "description": "Country code for the browser proxy (e.g. \"US\", \"DE\", \"JP\"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.",
             "default": "us"
           },
           "outputSchema": {
@@ -2362,32 +2989,55 @@
                 "type": "null"
               }
             ],
-            "title": "Outputschema"
+            "title": "Outputschema",
+            "description": "A JSON Schema that the agent's final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {\"type\": \"object\", \"properties\": {\"price\": {\"type\": \"number\"}, \"title\": {\"type\": \"string\"}}}."
           },
           "enableScheduledTasks": {
             "type": "boolean",
             "title": "Enablescheduledtasks",
+            "description": "If true, the agent can create scheduled tasks that run on a recurring basis (e.g. \"every Monday morning, check my inbox and summarize new emails\"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.",
             "default": false
           },
           "enableRecording": {
             "type": "boolean",
             "title": "Enablerecording",
+            "description": "If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.",
             "default": false
           },
           "skills": {
             "type": "boolean",
             "title": "Skills",
+            "description": "If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.",
             "default": true
           },
           "agentmail": {
             "type": "boolean",
             "title": "Agentmail",
+            "description": "If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.",
+            "default": true
+          },
+          "cacheScript": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cachescript",
+            "description": "Controls deterministic script caching. `null` (default): auto-detected \u2014 enabled when the task contains `{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: \"Get prices from {{https://example.com}} for {{electronics}}\"."
+          },
+          "autoHeal": {
+            "type": "boolean",
+            "title": "Autoheal",
+            "description": "When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.",
             "default": true
           }
         },
         "type": "object",
         "title": "RunTaskRequest",
-        "description": "Unified request for creating a session or dispatching a task.\n\n- Without session_id + without task: creates a new idle session (for file uploads, etc.)\n- Without session_id + with task: creates a new session and dispatches the task\n- With session_id + with task: dispatches the task to an existing idle session\n- With session_id + without task: 422 (task required when dispatching to existing session)"
+        "description": "Create a new session, dispatch a task, or both.\n\n- **No `sessionId` + no `task`**: creates an idle session (useful for uploading files before running a task).\n- **No `sessionId` + `task`**: creates a new session and immediately runs the task.\n- **`sessionId` + `task`**: dispatches the task to an existing idle session.\n- **`sessionId` + no `task`**: returns 422 \u2014 a task is required when targeting an existing session."
       },
       "SessionListResponse": {
         "properties": {
@@ -2396,19 +3046,23 @@
               "$ref": "#/components/schemas/SessionResponse"
             },
             "type": "array",
-            "title": "Sessions"
+            "title": "Sessions",
+            "description": "List of sessions."
           },
           "total": {
             "type": "integer",
-            "title": "Total"
+            "title": "Total",
+            "description": "Total number of sessions matching the query."
           },
           "page": {
             "type": "integer",
-            "title": "Page"
+            "title": "Page",
+            "description": "Current page number (1-indexed)."
           },
           "pageSize": {
             "type": "integer",
-            "title": "Pagesize"
+            "title": "Pagesize",
+            "description": "Number of sessions per page."
           }
         },
         "type": "object",
@@ -2420,18 +3074,33 @@
         ],
         "title": "SessionListResponse"
       },
+      "SessionNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Session not found"
+          }
+        },
+        "type": "object",
+        "title": "SessionNotFoundError",
+        "description": "Error response when a session is not found"
+      },
       "SessionResponse": {
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid",
-            "title": "Id"
+            "title": "Id",
+            "description": "Unique session identifier."
           },
           "status": {
-            "$ref": "#/components/schemas/BuAgentSessionStatus"
+            "$ref": "#/components/schemas/BuAgentSessionStatus",
+            "description": "Current session lifecycle status. Progresses through: `created` (sandbox starting) \u2192 `idle` (ready, waiting for task) \u2192 `running` (task executing) \u2192 `stopped` / `timed_out` / `error`. Poll this field to track progress."
           },
           "model": {
-            "$ref": "#/components/schemas/BuModel"
+            "$ref": "#/components/schemas/BuModel",
+            "description": "The model tier used for this session."
           },
           "title": {
             "anyOf": [
@@ -2442,7 +3111,8 @@
                 "type": "null"
               }
             ],
-            "title": "Title"
+            "title": "Title",
+            "description": "Auto-generated short title summarizing the task. Available after the task starts running."
           },
           "output": {
             "anyOf": [
@@ -2451,7 +3121,8 @@
                 "type": "null"
               }
             ],
-            "title": "Output"
+            "title": "Output",
+            "description": "The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false."
           },
           "outputSchema": {
             "anyOf": [
@@ -2463,11 +3134,13 @@
                 "type": "null"
               }
             ],
-            "title": "Outputschema"
+            "title": "Outputschema",
+            "description": "The JSON Schema that was requested for structured output, if any."
           },
           "stepCount": {
             "type": "integer",
             "title": "Stepcount",
+            "description": "Number of steps the agent has executed so far.",
             "default": 0
           },
           "lastStepSummary": {
@@ -2479,7 +3152,8 @@
                 "type": "null"
               }
             ],
-            "title": "Laststepsummary"
+            "title": "Laststepsummary",
+            "description": "Human-readable summary of the most recent agent step (e.g. \"Clicking the Submit button\"). Useful for showing real-time progress."
           },
           "isTaskSuccessful": {
             "anyOf": [
@@ -2490,7 +3164,8 @@
                 "type": "null"
               }
             ],
-            "title": "Istasksuccessful"
+            "title": "Istasksuccessful",
+            "description": "Whether the task completed successfully. `true` if the agent achieved the goal, `false` if it failed or gave up, `null` if the task is still running or no task was dispatched."
           },
           "liveUrl": {
             "anyOf": [
@@ -2501,7 +3176,8 @@
                 "type": "null"
               }
             ],
-            "title": "Liveurl"
+            "title": "Liveurl",
+            "description": "URL to view the live browser session. Available immediately on session creation \u2014 can be embedded in an iframe to show the browser in real time."
           },
           "recordingUrls": {
             "items": {
@@ -2509,6 +3185,7 @@
             },
             "type": "array",
             "title": "Recordingurls",
+            "description": "URLs to download session recordings. Only populated if `enableRecording` was set to true and the task has completed.",
             "default": []
           },
           "profileId": {
@@ -2521,7 +3198,8 @@
                 "type": "null"
               }
             ],
-            "title": "Profileid"
+            "title": "Profileid",
+            "description": "ID of the browser profile loaded in this session, if any."
           },
           "workspaceId": {
             "anyOf": [
@@ -2533,7 +3211,8 @@
                 "type": "null"
               }
             ],
-            "title": "Workspaceid"
+            "title": "Workspaceid",
+            "description": "ID of the workspace attached to this session, if any."
           },
           "proxyCountryCode": {
             "anyOf": [
@@ -2543,7 +3222,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Country code of the proxy used for this session, or null if no proxy."
           },
           "maxCostUsd": {
             "anyOf": [
@@ -2555,47 +3235,67 @@
                 "type": "null"
               }
             ],
-            "title": "Maxcostusd"
+            "title": "Maxcostusd",
+            "description": "Maximum cost limit in USD set for this session."
           },
           "totalInputTokens": {
             "type": "integer",
             "title": "Totalinputtokens",
+            "description": "Total LLM input tokens consumed by this session.",
             "default": 0
           },
           "totalOutputTokens": {
             "type": "integer",
             "title": "Totaloutputtokens",
+            "description": "Total LLM output tokens consumed by this session.",
             "default": 0
           },
           "proxyUsedMb": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Proxyusedmb",
+            "description": "Proxy bandwidth used in megabytes.",
             "default": "0"
           },
           "llmCostUsd": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Llmcostusd",
+            "description": "Cost of LLM usage in USD.",
             "default": "0"
           },
           "proxyCostUsd": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Proxycostusd",
+            "description": "Cost of proxy bandwidth in USD.",
             "default": "0"
           },
           "browserCostUsd": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Browsercostusd",
+            "description": "Cost of browser compute time in USD.",
             "default": "0"
           },
           "totalCostUsd": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Totalcostusd",
+            "description": "Total session cost in USD (LLM + proxy + browser).",
             "default": "0"
+          },
+          "screenshotUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenshoturl",
+            "description": "URL of the latest browser screenshot. This is a presigned URL that expires after 5 minutes. A new URL is generated each time you fetch the session."
           },
           "agentmailEmail": {
             "anyOf": [
@@ -2606,17 +3306,20 @@
                 "type": "null"
               }
             ],
-            "title": "Agentmailemail"
+            "title": "Agentmailemail",
+            "description": "Temporary email address provisioned for this session (via AgentMail). Only present if `agentmail` was enabled."
           },
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "title": "Createdat"
+            "title": "Createdat",
+            "description": "When the session was created."
           },
           "updatedAt": {
             "type": "string",
             "format": "date-time",
-            "title": "Updatedat"
+            "title": "Updatedat",
+            "description": "When the session was last updated."
           }
         },
         "type": "object",
@@ -2627,12 +3330,26 @@
           "createdAt",
           "updatedAt"
         ],
-        "title": "SessionResponse"
+        "title": "SessionResponse",
+        "description": "Represents a session and its current state.\n\nPoll this endpoint to track task progress. The `status` field indicates the session lifecycle stage,\nand `output` contains the agent's structured result once the task completes."
+      },
+      "SessionTimeoutLimitExceededError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Maximum session timeout is 4 hours (240 minutes)."
+          }
+        },
+        "type": "object",
+        "title": "SessionTimeoutLimitExceededError",
+        "description": "Error response when session timeout exceeds the maximum allowed limit"
       },
       "StopSessionRequest": {
         "properties": {
           "strategy": {
             "$ref": "#/components/schemas/StopStrategy",
+            "description": "How to stop the session. Use \"task\" to stop only the current task and keep the session alive, or \"session\" to destroy the sandbox entirely.",
             "default": "session"
           }
         },
@@ -2645,7 +3362,35 @@
           "task",
           "session"
         ],
-        "title": "StopStrategy"
+        "title": "StopStrategy",
+        "description": "Strategy for stopping a session.\n\n- `task`: Stop the currently running task but keep the session alive in idle state. You can dispatch another task to the same session afterwards.\n- `session`: Stop the session entirely and destroy the sandbox. The session cannot be reused after this."
+      },
+      "TooManyConcurrentActiveSessionsError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Too many concurrent active sessions. Please wait for one to finish, kill one, or upgrade your plan."
+          }
+        },
+        "type": "object",
+        "title": "TooManyConcurrentActiveSessionsError",
+        "description": "Error response when user has too many concurrent active sessions"
+      },
+      "UpdateBrowserSessionRequest": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/BrowserSessionUpdateAction",
+            "title": "Action",
+            "description": "The action to perform on the session"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "UpdateBrowserSessionRequest",
+        "description": "Request model for updating browser session state."
       },
       "ValidationError": {
         "properties": {
@@ -2797,631 +3542,6 @@
         ],
         "title": "WorkspaceView",
         "description": "View model for a workspace \u2014 persistent shared storage across sessions."
-      },
-      "AccountNotFoundError": {
-        "properties": {
-          "detail": {
-            "type": "string",
-            "title": "Detail",
-            "default": "Account not found"
-          }
-        },
-        "type": "object",
-        "title": "AccountNotFoundError",
-        "description": "Error response when an account is not found"
-      },
-      "AccountView": {
-        "properties": {
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name",
-            "description": "The name of the user"
-          },
-          "totalCreditsBalanceUsd": {
-            "type": "number",
-            "title": "Credits Balance USD",
-            "description": "The total credits balance in USD"
-          },
-          "monthlyCreditsBalanceUsd": {
-            "type": "number",
-            "title": "Monthly Credits Balance USD",
-            "description": "Monthly subscription credits balance in USD"
-          },
-          "additionalCreditsBalanceUsd": {
-            "type": "number",
-            "title": "Additional Credits Balance USD",
-            "description": "Additional top-up credits balance in USD"
-          },
-          "rateLimit": {
-            "type": "integer",
-            "title": "Rate Limit",
-            "description": "The rate limit for the account"
-          },
-          "planInfo": {
-            "$ref": "#/components/schemas/PlanInfo",
-            "title": "Plan Info",
-            "description": "The plan information"
-          },
-          "projectId": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Project ID",
-            "description": "The ID of the project"
-          }
-        },
-        "type": "object",
-        "required": [
-          "totalCreditsBalanceUsd",
-          "monthlyCreditsBalanceUsd",
-          "additionalCreditsBalanceUsd",
-          "rateLimit",
-          "planInfo",
-          "projectId"
-        ],
-        "title": "AccountView",
-        "description": "View model for account information."
-      },
-      "BrowserSessionItemView": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "ID",
-            "description": "Unique identifier for the session"
-          },
-          "status": {
-            "$ref": "#/components/schemas/BrowserSessionStatus",
-            "title": "Status",
-            "description": "Current status of the session (active/stopped)"
-          },
-          "liveUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Live URL",
-            "description": "URL where the browser can be viewed live in real-time"
-          },
-          "cdpUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "CDP URL",
-            "description": "Chrome DevTools Protocol URL for browser automation"
-          },
-          "timeoutAt": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timeout At",
-            "description": "Timestamp when the session will timeout"
-          },
-          "startedAt": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Started At",
-            "description": "Timestamp when the session was created and started"
-          },
-          "finishedAt": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finished At",
-            "description": "Timestamp when the session was stopped (None if still active)"
-          },
-          "proxyUsedMb": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Proxy Used MB",
-            "description": "Amount of proxy data used in MB",
-            "default": "0"
-          },
-          "proxyCost": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Proxy Cost",
-            "description": "Cost of proxy usage in USD",
-            "default": "0"
-          },
-          "browserCost": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Browser Cost",
-            "description": "Cost of browser session hosting in USD",
-            "default": "0"
-          },
-          "agentSessionId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Agent Session ID",
-            "description": "ID of the agent session that created this browser (None for standalone BaaS sessions)"
-          },
-          "recordingUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Recording URL",
-            "description": "Presigned URL to download the session recording (available after session ends, if recording was enabled)"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "status",
-          "timeoutAt",
-          "startedAt"
-        ],
-        "title": "BrowserSessionItemView",
-        "description": "View model for representing a browser session in list views."
-      },
-      "BrowserSessionListResponse": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/BrowserSessionItemView"
-            },
-            "type": "array",
-            "title": "Items",
-            "description": "List of browser session views for the current page"
-          },
-          "totalItems": {
-            "type": "integer",
-            "title": "Total Items",
-            "description": "Total number of items in the list"
-          },
-          "pageNumber": {
-            "type": "integer",
-            "title": "Page Number",
-            "description": "Page number"
-          },
-          "pageSize": {
-            "type": "integer",
-            "title": "Page Size",
-            "description": "Number of items per page"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "totalItems",
-          "pageNumber",
-          "pageSize"
-        ],
-        "title": "BrowserSessionListResponse",
-        "description": "Response model for paginated browser session list requests."
-      },
-      "BrowserSessionStatus": {
-        "type": "string",
-        "enum": [
-          "active",
-          "stopped"
-        ],
-        "title": "BrowserSessionStatus",
-        "description": "Enumeration of possible browser session states\n\nAttributes:\n    ACTIVE: Session is currently active and running (browser is running)\n    STOPPED: Session has been stopped and is no longer active (browser is stopped)"
-      },
-      "BrowserSessionUpdateAction": {
-        "type": "string",
-        "enum": [
-          "stop"
-        ],
-        "title": "BrowserSessionUpdateAction",
-        "description": "Available actions that can be performed on a browser session\n\nAttributes:\n    STOP: Stop the browser session (cannot be undone)"
-      },
-      "BrowserSessionView": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "ID",
-            "description": "Unique identifier for the session"
-          },
-          "status": {
-            "$ref": "#/components/schemas/BrowserSessionStatus",
-            "title": "Status",
-            "description": "Current status of the session (active/stopped)"
-          },
-          "liveUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Live URL",
-            "description": "URL where the browser can be viewed live in real-time"
-          },
-          "cdpUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "CDP URL",
-            "description": "Chrome DevTools Protocol URL for browser automation"
-          },
-          "timeoutAt": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timeout At",
-            "description": "Timestamp when the session will timeout"
-          },
-          "startedAt": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Started At",
-            "description": "Timestamp when the session was created and started"
-          },
-          "finishedAt": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Finished At",
-            "description": "Timestamp when the session was stopped (None if still active)"
-          },
-          "proxyUsedMb": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Proxy Used MB",
-            "description": "Amount of proxy data used in MB",
-            "default": "0"
-          },
-          "proxyCost": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Proxy Cost",
-            "description": "Cost of proxy usage in USD",
-            "default": "0"
-          },
-          "browserCost": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Browser Cost",
-            "description": "Cost of browser session hosting in USD",
-            "default": "0"
-          },
-          "agentSessionId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Agent Session ID",
-            "description": "ID of the agent session that created this browser (None for standalone BaaS sessions)"
-          },
-          "recordingUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Recording URL",
-            "description": "Presigned URL to download the session recording (available after session ends, if recording was enabled)"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "status",
-          "timeoutAt",
-          "startedAt"
-        ],
-        "title": "BrowserSessionView",
-        "description": "View model for representing a browser session."
-      },
-      "CreateBrowserSessionRequest": {
-        "properties": {
-          "profileId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Profile ID",
-            "description": "The ID of the profile to use for the session"
-          },
-          "proxyCountryCode": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ProxyCountryCode"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Proxy Country Code",
-            "description": "Country code for proxy location. Defaults to US. Set to null to disable proxy.",
-            "default": "us"
-          },
-          "timeout": {
-            "type": "integer",
-            "title": "Timeout",
-            "description": "The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.",
-            "default": 60,
-            "ge": 1,
-            "le": 240
-          },
-          "browserScreenWidth": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 6144.0,
-                "minimum": 320.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Browser Screen Width",
-            "description": "Custom screen width in pixels for the browser."
-          },
-          "browserScreenHeight": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 3456.0,
-                "minimum": 320.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Browser Screen Height",
-            "description": "Custom screen height in pixels for the browser."
-          },
-          "allowResizing": {
-            "type": "boolean",
-            "title": "Allow Resizing",
-            "description": "Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).",
-            "default": false
-          },
-          "customProxy": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/CustomProxy"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Custom Proxy",
-            "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available on the Custom Enterprise plan."
-          },
-          "enableRecording": {
-            "type": "boolean",
-            "title": "Enable Recording",
-            "description": "If True, enables session recording. Defaults to False.",
-            "default": false
-          }
-        },
-        "type": "object",
-        "title": "CreateBrowserSessionRequest",
-        "description": "Request model for creating a browser session."
-      },
-      "CustomProxy": {
-        "properties": {
-          "host": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Host",
-            "description": "Host of the proxy."
-          },
-          "port": {
-            "type": "integer",
-            "maximum": 65535.0,
-            "minimum": 1.0,
-            "title": "Port",
-            "description": "Port of the proxy."
-          },
-          "username": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 255,
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Username",
-            "description": "Username for proxy authentication."
-          },
-          "password": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 255,
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Password",
-            "description": "Password for proxy authentication."
-          }
-        },
-        "type": "object",
-        "required": [
-          "host",
-          "port"
-        ],
-        "title": "CustomProxy",
-        "description": "Request model for creating a custom proxy."
-      },
-      "PlanInfo": {
-        "properties": {
-          "planName": {
-            "type": "string",
-            "title": "Plan Name",
-            "description": "The name of the plan"
-          },
-          "subscriptionStatus": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Subscription Status",
-            "description": "The status of the subscription"
-          },
-          "subscriptionId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Subscription ID",
-            "description": "The ID of the subscription"
-          },
-          "subscriptionCurrentPeriodEnd": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Subscription Current Period End",
-            "description": "The end of the current period"
-          },
-          "subscriptionCanceledAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Subscription Canceled At",
-            "description": "The date the subscription was canceled"
-          }
-        },
-        "type": "object",
-        "required": [
-          "planName",
-          "subscriptionStatus",
-          "subscriptionId",
-          "subscriptionCurrentPeriodEnd",
-          "subscriptionCanceledAt"
-        ],
-        "title": "PlanInfo",
-        "description": "View model for plan information"
-      },
-      "SessionNotFoundError": {
-        "properties": {
-          "detail": {
-            "type": "string",
-            "title": "Detail",
-            "default": "Session not found"
-          }
-        },
-        "type": "object",
-        "title": "SessionNotFoundError",
-        "description": "Error response when a session is not found"
-      },
-      "SessionTimeoutLimitExceededError": {
-        "properties": {
-          "detail": {
-            "type": "string",
-            "title": "Detail",
-            "default": "Maximum session timeout is 4 hours (240 minutes)."
-          }
-        },
-        "type": "object",
-        "title": "SessionTimeoutLimitExceededError",
-        "description": "Error response when session timeout exceeds the maximum allowed limit"
-      },
-      "TooManyConcurrentActiveSessionsError": {
-        "properties": {
-          "detail": {
-            "type": "string",
-            "title": "Detail",
-            "default": "Too many concurrent active sessions. Please wait for one to finish, kill one, or upgrade your plan."
-          }
-        },
-        "type": "object",
-        "title": "TooManyConcurrentActiveSessionsError",
-        "description": "Error response when user has too many concurrent active sessions"
-      },
-      "UpdateBrowserSessionRequest": {
-        "properties": {
-          "action": {
-            "$ref": "#/components/schemas/BrowserSessionUpdateAction",
-            "title": "Action",
-            "description": "The action to perform on the session"
-          }
-        },
-        "type": "object",
-        "required": [
-          "action"
-        ],
-        "title": "UpdateBrowserSessionRequest",
-        "description": "Request model for updating browser session state."
       }
     },
     "securitySchemes": {
