@@ -62,7 +62,7 @@ async for msg in run:
 const run = client.run("Find the top story on Hacker News");
 for await (const msg of run) {
   if (shouldCancel()) {
-    await client.sessions.stop(run.sessionId, { strategy: "task" });
+    await client.sessions.stop(run.sessionId!, { strategy: "task" });
     break;
   }
 }
