@@ -161,41 +161,49 @@ Combine this with the [Rula tutorial](/cloud/tutorials/rula-therapist-finder) to
 
 <CodeGroup>
 ```python Python
+# Create a separate workspace for each platform
+rula_ws = await client.workspaces.create(name="rula-search")
+grow_ws = await client.workspaces.create(name="grow-therapy-search")
+
 async def search_platform(task: str, ws_id: str, schema):
     return await client.run(task, workspace_id=ws_id, schema=schema)
 
 # Run both searches concurrently
-rula_task = search_platform(
-    "Go to rula.com and search for therapists who accept {{Aetna}} insurance "
-    "and specialize in {{anxiety}}. Return the first 5 results as JSON.",
-    str(rula_workspace.id),
-    TherapistResults,
+rula_result, grow_result = await asyncio.gather(
+    search_platform(
+        "Go to rula.com and search for therapists who accept {{Aetna}} insurance "
+        "and specialize in {{anxiety}}. Return the first 5 results as JSON.",
+        str(rula_ws.id),
+        TherapistResults,
+    ),
+    search_platform(
+        "Go to growtherapy.com and search for therapists in {{New York}} "
+        "who specialize in {{anxiety}} and accept insurance. "
+        "Return the first 5 provider profiles as JSON.",
+        str(grow_ws.id),
+        ProviderSearch,
+    ),
 )
-grow_task = search_platform(
-    "Go to growtherapy.com and search for therapists in {{New York}} "
-    "who specialize in {{anxiety}} and accept insurance. "
-    "Return the first 5 provider profiles as JSON.",
-    str(grow_workspace.id),
-    ProviderSearch,
-)
-
-rula_result, grow_result = await asyncio.gather(rula_task, grow_task)
 print(f"Rula: {len(rula_result.output.therapists)} therapists")
 print(f"Grow Therapy: {len(grow_result.output.providers)} providers")
 ```
 ```typescript TypeScript
+// Create a separate workspace for each platform
+const rulaWs = await client.workspaces.create({ name: "rula-search" });
+const growWs = await client.workspaces.create({ name: "grow-therapy-search" });
+
 // Run both searches concurrently
 const [rulaResult, growResult] = await Promise.all([
   client.run(
     "Go to rula.com and search for therapists who accept {{Aetna}} insurance " +
     "and specialize in {{anxiety}}. Return the first 5 results as JSON.",
-    { workspaceId: rulaWorkspace.id, schema: TherapistResults },
+    { workspaceId: rulaWs.id, schema: TherapistResults },
   ),
   client.run(
     "Go to growtherapy.com and search for therapists in {{New York}} " +
     "who specialize in {{anxiety}} and accept insurance. " +
     "Return the first 5 provider profiles as JSON.",
-    { workspaceId: growWorkspace.id, schema: ProviderSearch },
+    { workspaceId: growWs.id, schema: ProviderSearch },
   ),
 ]);
 

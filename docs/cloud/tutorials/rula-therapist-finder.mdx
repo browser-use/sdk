@@ -154,18 +154,18 @@ For a better UX, stream the agent's progress as it navigates Rula:
 
 <CodeGroup>
 ```python Python
-stream = client.stream(
+run = client.run(
     "Go to rula.com and search for therapists who accept {{Aetna}} insurance "
     "and specialize in {{anxiety}}. Return the first 5 results as JSON.",
     workspace_id=str(workspace.id),
     schema=TherapistResults,
 )
 
-async for msg in stream:
+async for msg in run:
     if msg.summary:
         print(f"[{msg.type}] {msg.summary}")
 
-print(f"\nResult: {stream.result.output}")
+print(f"\nResult: {run.result.output}")
 ```
 ```typescript TypeScript
 const run = client.run(
