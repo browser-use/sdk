@@ -103,71 +103,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/browsers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Browser Sessions
-         * @description Get paginated list of browser sessions with optional status filtering.
-         */
-        get: operations["list_browser_sessions_browsers_get"];
-        put?: never;
-        /**
-         * Create Browser Session
-         * @description Create a new browser session.
-         *
-         *     **Pricing:** Browser sessions are charged per hour with tiered pricing:
-         *     - Pay As You Go users: $0.06/hour
-         *     - Business/Scaleup subscribers: $0.03/hour (50% discount)
-         *
-         *     The full rate is charged upfront when the session starts.
-         *     When you stop the session, any unused time is automatically refunded proportionally.
-         *
-         *     Billing is rounded up to the minute (minimum 1 minute).
-         *     For example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.
-         *
-         *     **Session Limits:**
-         *     - All users: Up to 4 hours per session
-         */
-        post: operations["create_browser_session_browsers_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/browsers/{session_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Browser Session
-         * @description Get detailed browser session information including status and URLs.
-         */
-        get: operations["get_browser_session_browsers__session_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Browser Session
-         * @description Stop a browser session.
-         *
-         *     **Refund:** When you stop a session, unused time is automatically refunded.
-         *     If the session ran for less than 1 hour, you'll receive a proportional refund.
-         *     Billing is ceil to the nearest minute (minimum 1 minute).
-         */
-        patch: operations["update_browser_session_browsers__session_id__patch"];
-        trace?: never;
-    };
     "/profiles": {
         parameters: {
             query?: never;
@@ -348,319 +283,10 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sessions/{session_id}/files": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Session Files
-         * @description List files in a session's workspace.
-         *
-         *     Returns paginated file metadata. Pass includeUrls=true to get
-         *     presigned download URLs (60s expiry) inline with each file.
-         */
-        get: operations["list_session_files_sessions__session_id__files_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sessions/{session_id}/files/upload": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Upload Session Files
-         * @description Get presigned PUT URLs for uploading files to a session's workspace.
-         *
-         *     Files are placed under ``uploads/`` in the session's S3 prefix. After
-         *     receiving the URLs, PUT each file directly to S3 using the returned
-         *     ``uploadUrl`` with the matching ``Content-Type`` header.
-         */
-        post: operations["upload_session_files_sessions__session_id__files_upload_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/billing/account": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Account Billing
-         * @description Get authenticated account information including credit balance and account details.
-         */
-        get: operations["get_account_billing_billing_account_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /**
-         * AccountNotFoundError
-         * @description Error response when an account is not found
-         */
-        AccountNotFoundError: {
-            /**
-             * Detail
-             * @default Account not found
-             */
-            detail: string;
-        };
-        /**
-         * AccountView
-         * @description View model for account information.
-         */
-        AccountView: {
-            /**
-             * Name
-             * @description The name of the user
-             */
-            name?: string | null;
-            /**
-             * Credits Balance USD
-             * @description The total credits balance in USD
-             */
-            totalCreditsBalanceUsd: number;
-            /**
-             * Monthly Credits Balance USD
-             * @description Monthly subscription credits balance in USD
-             */
-            monthlyCreditsBalanceUsd: number;
-            /**
-             * Additional Credits Balance USD
-             * @description Additional top-up credits balance in USD
-             */
-            additionalCreditsBalanceUsd: number;
-            /**
-             * Rate Limit
-             * @description The rate limit for the account
-             */
-            rateLimit: number;
-            /**
-             * Plan Info
-             * @description The plan information
-             */
-            planInfo: components["schemas"]["PlanInfo"];
-            /**
-             * Project ID
-             * Format: uuid
-             * @description The ID of the project
-             */
-            projectId: string;
-        };
-        /**
-         * BrowserSessionItemView
-         * @description View model for representing a browser session in list views.
-         */
-        BrowserSessionItemView: {
-            /**
-             * ID
-             * Format: uuid
-             * @description Unique identifier for the session
-             */
-            id: string;
-            /**
-             * Status
-             * @description Current status of the session (active/stopped)
-             */
-            status: components["schemas"]["BrowserSessionStatus"];
-            /**
-             * Live URL
-             * @description URL where the browser can be viewed live in real-time
-             */
-            liveUrl?: string | null;
-            /**
-             * CDP URL
-             * @description Chrome DevTools Protocol URL for browser automation
-             */
-            cdpUrl?: string | null;
-            /**
-             * Timeout At
-             * Format: date-time
-             * @description Timestamp when the session will timeout
-             */
-            timeoutAt: string;
-            /**
-             * Started At
-             * Format: date-time
-             * @description Timestamp when the session was created and started
-             */
-            startedAt: string;
-            /**
-             * Finished At
-             * @description Timestamp when the session was stopped (None if still active)
-             */
-            finishedAt?: string | null;
-            /**
-             * Proxy Used MB
-             * @description Amount of proxy data used in MB
-             * @default 0
-             */
-            proxyUsedMb: string;
-            /**
-             * Proxy Cost
-             * @description Cost of proxy usage in USD
-             * @default 0
-             */
-            proxyCost: string;
-            /**
-             * Browser Cost
-             * @description Cost of browser session hosting in USD
-             * @default 0
-             */
-            browserCost: string;
-            /**
-             * Agent Session ID
-             * @description ID of the agent session that created this browser (None for standalone BaaS sessions)
-             */
-            agentSessionId?: string | null;
-            /**
-             * Recording URL
-             * @description Presigned URL to download the session recording (available after session ends, if recording was enabled)
-             */
-            recordingUrl?: string | null;
-        };
-        /**
-         * BrowserSessionListResponse
-         * @description Response model for paginated browser session list requests.
-         */
-        BrowserSessionListResponse: {
-            /**
-             * Items
-             * @description List of browser session views for the current page
-             */
-            items: components["schemas"]["BrowserSessionItemView"][];
-            /**
-             * Total Items
-             * @description Total number of items in the list
-             */
-            totalItems: number;
-            /**
-             * Page Number
-             * @description Page number
-             */
-            pageNumber: number;
-            /**
-             * Page Size
-             * @description Number of items per page
-             */
-            pageSize: number;
-        };
-        /**
-         * BrowserSessionStatus
-         * @description Enumeration of possible browser session states
-         *
-         *     Attributes:
-         *         ACTIVE: Session is currently active and running (browser is running)
-         *         STOPPED: Session has been stopped and is no longer active (browser is stopped)
-         * @enum {string}
-         */
-        BrowserSessionStatus: "active" | "stopped";
-        /**
-         * BrowserSessionUpdateAction
-         * @description Available actions that can be performed on a browser session
-         *
-         *     Attributes:
-         *         STOP: Stop the browser session (cannot be undone)
-         * @enum {string}
-         */
-        BrowserSessionUpdateAction: "stop";
-        /**
-         * BrowserSessionView
-         * @description View model for representing a browser session.
-         */
-        BrowserSessionView: {
-            /**
-             * ID
-             * Format: uuid
-             * @description Unique identifier for the session
-             */
-            id: string;
-            /**
-             * Status
-             * @description Current status of the session (active/stopped)
-             */
-            status: components["schemas"]["BrowserSessionStatus"];
-            /**
-             * Live URL
-             * @description URL where the browser can be viewed live in real-time
-             */
-            liveUrl?: string | null;
-            /**
-             * CDP URL
-             * @description Chrome DevTools Protocol URL for browser automation
-             */
-            cdpUrl?: string | null;
-            /**
-             * Timeout At
-             * Format: date-time
-             * @description Timestamp when the session will timeout
-             */
-            timeoutAt: string;
-            /**
-             * Started At
-             * Format: date-time
-             * @description Timestamp when the session was created and started
-             */
-            startedAt: string;
-            /**
-             * Finished At
-             * @description Timestamp when the session was stopped (None if still active)
-             */
-            finishedAt?: string | null;
-            /**
-             * Proxy Used MB
-             * @description Amount of proxy data used in MB
-             * @default 0
-             */
-            proxyUsedMb: string;
-            /**
-             * Proxy Cost
-             * @description Cost of proxy usage in USD
-             * @default 0
-             */
-            proxyCost: string;
-            /**
-             * Browser Cost
-             * @description Cost of browser session hosting in USD
-             * @default 0
-             */
-            browserCost: string;
-            /**
-             * Agent Session ID
-             * @description ID of the agent session that created this browser (None for standalone BaaS sessions)
-             */
-            agentSessionId?: string | null;
-            /**
-             * Recording URL
-             * @description Presigned URL to download the session recording (available after session ends, if recording was enabled)
-             */
-            recordingUrl?: string | null;
-        };
         /**
          * BuAgentSessionStatus
          * @enum {string}
@@ -670,83 +296,7 @@ export interface components {
          * BuModel
          * @enum {string}
          */
-        BuModel: "bu-mini" | "bu-max" | "bu-ultra";
-        /**
-         * CreateBrowserSessionRequest
-         * @description Request model for creating a browser session.
-         */
-        CreateBrowserSessionRequest: {
-            /**
-             * Profile ID
-             * @description The ID of the profile to use for the session
-             */
-            profileId?: string | null;
-            /**
-             * Proxy Country Code
-             * @description Country code for proxy location. Defaults to US. Set to null to disable proxy.
-             * @default us
-             */
-            proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
-            /**
-             * Timeout
-             * @description The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.
-             * @default 60
-             */
-            timeout: number;
-            /**
-             * Browser Screen Width
-             * @description Custom screen width in pixels for the browser.
-             */
-            browserScreenWidth?: number | null;
-            /**
-             * Browser Screen Height
-             * @description Custom screen height in pixels for the browser.
-             */
-            browserScreenHeight?: number | null;
-            /**
-             * Allow Resizing
-             * @description Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).
-             * @default false
-             */
-            allowResizing: boolean;
-            /**
-             * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available on the Custom Enterprise plan.
-             */
-            customProxy?: components["schemas"]["CustomProxy"] | null;
-            /**
-             * Enable Recording
-             * @description If True, enables session recording. Defaults to False.
-             * @default false
-             */
-            enableRecording: boolean;
-        };
-        /**
-         * CustomProxy
-         * @description Request model for creating a custom proxy.
-         */
-        CustomProxy: {
-            /**
-             * Host
-             * @description Host of the proxy.
-             */
-            host: string;
-            /**
-             * Port
-             * @description Port of the proxy.
-             */
-            port: number;
-            /**
-             * Username
-             * @description Username for proxy authentication.
-             */
-            username?: string | null;
-            /**
-             * Password
-             * @description Password for proxy authentication.
-             */
-            password?: string | null;
-        };
+        BuModel: "gemini-3-flash" | "claude-sonnet-4.6" | "claude-opus-4.6";
         /**
          * FileInfo
          * @description A file in a session's workspace.
@@ -888,50 +438,11 @@ export interface components {
              * @default
              */
             summary: string;
-            /** Screenshoturl */
-            screenshotUrl?: string | null;
-            /**
-             * Hidden
-             * @description Whether this message should be hidden from the user in a chat UI.
-             * @default false
-             */
-            hidden: boolean;
             /**
              * Createdat
              * Format: date-time
              */
             createdAt: string;
-        };
-        /**
-         * PlanInfo
-         * @description View model for plan information
-         */
-        PlanInfo: {
-            /**
-             * Plan Name
-             * @description The name of the plan
-             */
-            planName: string;
-            /**
-             * Subscription Status
-             * @description The status of the subscription
-             */
-            subscriptionStatus: string | null;
-            /**
-             * Subscription ID
-             * @description The ID of the subscription
-             */
-            subscriptionId: string | null;
-            /**
-             * Subscription Current Period End
-             * @description The end of the current period
-             */
-            subscriptionCurrentPeriodEnd: string | null;
-            /**
-             * Subscription Canceled At
-             * @description The date the subscription was canceled
-             */
-            subscriptionCanceledAt: string | null;
         };
         /**
          * ProfileCreateRequest
@@ -1066,7 +577,7 @@ export interface components {
         RunTaskRequest: {
             /** Task */
             task?: string | null;
-            /** @default bu-max */
+            /** @default claude-sonnet-4.6 */
             model: components["schemas"]["BuModel"];
             /** Sessionid */
             sessionId?: string | null;
@@ -1119,17 +630,6 @@ export interface components {
             /** Pagesize */
             pageSize: number;
         };
-        /**
-         * SessionNotFoundError
-         * @description Error response when a session is not found
-         */
-        SessionNotFoundError: {
-            /**
-             * Detail
-             * @default Session not found
-             */
-            detail: string;
-        };
         /** SessionResponse */
         SessionResponse: {
             /**
@@ -1138,8 +638,7 @@ export interface components {
              */
             id: string;
             status: components["schemas"]["BuAgentSessionStatus"];
-            /** The model used. May be a BuModel alias or a resolved model name. */
-            model: string;
+            model: components["schemas"]["BuModel"];
             /** Title */
             title?: string | null;
             /** Output */
@@ -1206,8 +705,6 @@ export interface components {
              * @default 0
              */
             totalCostUsd: string;
-            /** Screenshoturl */
-            screenshotUrl?: string | null;
             /** Agentmailemail */
             agentmailEmail?: string | null;
             /**
@@ -1221,17 +718,6 @@ export interface components {
              */
             updatedAt: string;
         };
-        /**
-         * SessionTimeoutLimitExceededError
-         * @description Error response when session timeout exceeds the maximum allowed limit
-         */
-        SessionTimeoutLimitExceededError: {
-            /**
-             * Detail
-             * @default Maximum session timeout is 4 hours (240 minutes).
-             */
-            detail: string;
-        };
         /** StopSessionRequest */
         StopSessionRequest: {
             /** @default session */
@@ -1242,28 +728,6 @@ export interface components {
          * @enum {string}
          */
         StopStrategy: "task" | "session";
-        /**
-         * TooManyConcurrentActiveSessionsError
-         * @description Error response when user has too many concurrent active sessions
-         */
-        TooManyConcurrentActiveSessionsError: {
-            /**
-             * Detail
-             * @default Too many concurrent active sessions. Please wait for one to finish, kill one, or upgrade your plan.
-             */
-            detail: string;
-        };
-        /**
-         * UpdateBrowserSessionRequest
-         * @description Request model for updating browser session state.
-         */
-        UpdateBrowserSessionRequest: {
-            /**
-             * Action
-             * @description The action to perform on the session
-             */
-            action: components["schemas"]["BrowserSessionUpdateAction"];
-        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1552,183 +1016,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_browser_sessions_browsers_get: {
-        parameters: {
-            query?: {
-                pageSize?: number;
-                pageNumber?: number;
-                filterBy?: components["schemas"]["BrowserSessionStatus"] | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserSessionListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_browser_session_browsers_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateBrowserSessionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserSessionItemView"];
-                };
-            };
-            /** @description Session timeout limit exceeded (maximum 4 hours) */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionTimeoutLimitExceededError"];
-                };
-            };
-            /** @description Profile not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProfileNotFoundError"];
-                };
-            };
-            /** @description Request validation failed */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many concurrent active sessions */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TooManyConcurrentActiveSessionsError"];
-                };
-            };
-        };
-    };
-    get_browser_session_browsers__session_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                session_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserSessionView"];
-                };
-            };
-            /** @description Session not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionNotFoundError"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_browser_session_browsers__session_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                session_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateBrowserSessionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowserSessionView"];
-                };
-            };
-            /** @description Session not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionNotFoundError"];
-                };
-            };
-            /** @description Request validation failed */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
         };
@@ -2206,116 +1493,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FileUploadResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_session_files_sessions__session_id__files_get: {
-        parameters: {
-            query?: {
-                prefix?: string;
-                limit?: number;
-                cursor?: string | null;
-                includeUrls?: boolean;
-                shallow?: boolean;
-            };
-            header?: never;
-            path: {
-                session_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FileListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upload_session_files_sessions__session_id__files_upload_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                session_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FileUploadRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FileUploadResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_account_billing_billing_account_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountView"];
-                };
-            };
-            /** @description Project for a given API key not found! */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountNotFoundError"];
                 };
             };
             /** @description Validation Error */

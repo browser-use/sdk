@@ -7,9 +7,6 @@ from typing import TYPE_CHECKING, Any
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
-    FileListResponse,
-    FileUploadItem,
-    FileUploadResponse,
     MessageListResponse,
     SessionListResponse,
     SessionResponse,
@@ -37,7 +34,6 @@ class Sessions:
         workspace_id: str | None = None,
         enable_scheduled_tasks: bool | None = None,
         enable_recording: bool | None = None,
-        custom_proxy: dict[str, Any] | None = None,
         cache_script: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
@@ -65,8 +61,6 @@ class Sessions:
             body["enableScheduledTasks"] = enable_scheduled_tasks
         if enable_recording is not None:
             body["enableRecording"] = enable_recording
-        if custom_proxy is not None:
-            body["customProxy"] = custom_proxy
         if cache_script is not None:
             body["cacheScript"] = cache_script
         body.update(extra)
@@ -113,46 +107,6 @@ class Sessions:
     def delete(self, session_id: str | UUID) -> None:
         """Soft-delete a session."""
         self._http.request("DELETE", f"/sessions/{session_id}")
-
-    def upload_files(
-        self,
-        session_id: str | UUID,
-        files: list[FileUploadItem],
-        **extra: Any,
-    ) -> FileUploadResponse:
-        """Get presigned upload URLs for session files."""
-        body: dict[str, Any] = {
-            "files": [f.model_dump(by_alias=True, exclude_none=True) for f in files],
-        }
-        body.update(extra)
-        return FileUploadResponse.model_validate(
-            self._http.request("POST", f"/sessions/{session_id}/files/upload", json=body)
-        )
-
-    def files(
-        self,
-        session_id: str | UUID,
-        *,
-        prefix: str | None = None,
-        limit: int | None = None,
-        cursor: str | None = None,
-        include_urls: bool | None = None,
-        shallow: bool | None = None,
-    ) -> FileListResponse:
-        """List files in a session's workspace."""
-        return FileListResponse.model_validate(
-            self._http.request(
-                "GET",
-                f"/sessions/{session_id}/files",
-                params={
-                    "prefix": prefix,
-                    "limit": limit,
-                    "cursor": cursor,
-                    "includeUrls": include_urls,
-                    "shallow": shallow,
-                },
-            )
-        )
 
     def messages(
         self,
@@ -217,7 +171,6 @@ class AsyncSessions:
         workspace_id: str | None = None,
         enable_scheduled_tasks: bool | None = None,
         enable_recording: bool | None = None,
-        custom_proxy: dict[str, Any] | None = None,
         cache_script: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
@@ -245,8 +198,6 @@ class AsyncSessions:
             body["enableScheduledTasks"] = enable_scheduled_tasks
         if enable_recording is not None:
             body["enableRecording"] = enable_recording
-        if custom_proxy is not None:
-            body["customProxy"] = custom_proxy
         if cache_script is not None:
             body["cacheScript"] = cache_script
         body.update(extra)
@@ -293,46 +244,6 @@ class AsyncSessions:
     async def delete(self, session_id: str | UUID) -> None:
         """Soft-delete a session."""
         await self._http.request("DELETE", f"/sessions/{session_id}")
-
-    async def upload_files(
-        self,
-        session_id: str | UUID,
-        files: list[FileUploadItem],
-        **extra: Any,
-    ) -> FileUploadResponse:
-        """Get presigned upload URLs for session files."""
-        body: dict[str, Any] = {
-            "files": [f.model_dump(by_alias=True, exclude_none=True) for f in files],
-        }
-        body.update(extra)
-        return FileUploadResponse.model_validate(
-            await self._http.request("POST", f"/sessions/{session_id}/files/upload", json=body)
-        )
-
-    async def files(
-        self,
-        session_id: str | UUID,
-        *,
-        prefix: str | None = None,
-        limit: int | None = None,
-        cursor: str | None = None,
-        include_urls: bool | None = None,
-        shallow: bool | None = None,
-    ) -> FileListResponse:
-        """List files in a session's workspace."""
-        return FileListResponse.model_validate(
-            await self._http.request(
-                "GET",
-                f"/sessions/{session_id}/files",
-                params={
-                    "prefix": prefix,
-                    "limit": limit,
-                    "cursor": cursor,
-                    "includeUrls": include_urls,
-                    "shallow": shallow,
-                },
-            )
-        )
 
     async def messages(
         self,

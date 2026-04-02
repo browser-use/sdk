@@ -6,16 +6,11 @@ export { BrowserUseError } from "./core/errors.js";
 export { SessionRun } from "./v3/helpers.js";
 export type { RunOptions, SessionResult } from "./v3/helpers.js";
 
-export { Billing } from "./v3/resources/billing.js";
-
-export { Browsers } from "./v3/resources/browsers.js";
-export type { BrowserListParams } from "./v3/resources/browsers.js";
-
 export { Profiles } from "./v3/resources/profiles.js";
 export type { ProfileListParams } from "./v3/resources/profiles.js";
 
 export { Sessions } from "./v3/resources/sessions.js";
-export type { CreateSessionBody, SessionListParams, SessionFilesParams, SessionMessagesParams } from "./v3/resources/sessions.js";
+export type { CreateSessionBody, SessionListParams, SessionMessagesParams } from "./v3/resources/sessions.js";
 
 export { Workspaces } from "./v3/resources/workspaces.js";
 export type { WorkspaceListParams, WorkspaceFilesParams } from "./v3/resources/workspaces.js";
@@ -46,24 +41,11 @@ export type FileUploadItem = S["FileUploadItem"];
 export type WorkspaceCreateRequest = S["WorkspaceCreateRequest"];
 export type WorkspaceUpdateRequest = S["WorkspaceUpdateRequest"];
 
-// Browser types
-export type BrowserSessionItemView = S["BrowserSessionItemView"];
-export type BrowserSessionView = S["BrowserSessionView"];
-export type BrowserSessionListResponse = S["BrowserSessionListResponse"];
-export type CreateBrowserSessionRequest = S["CreateBrowserSessionRequest"];
-export type UpdateBrowserSessionRequest = S["UpdateBrowserSessionRequest"];
-export type BrowserSessionStatus = S["BrowserSessionStatus"];
-export type BrowserSessionUpdateAction = S["BrowserSessionUpdateAction"];
-
 // Profile types
 export type ProfileView = S["ProfileView"];
 export type ProfileListResponse = S["ProfileListResponse"];
 export type ProfileCreateRequest = S["ProfileCreateRequest"];
 export type ProfileUpdateRequest = S["ProfileUpdateRequest"];
-
-// Billing types
-export type AccountView = S["AccountView"];
-export type PlanInfo = S["PlanInfo"];
 
 // Enums / string unions
 export type BuAgentSessionStatus = S["BuAgentSessionStatus"];

@@ -104,8 +104,6 @@ _V3_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("delete", "/sessions/{session_id}"): ("sessions", "delete"),
     ("post", "/sessions/{session_id}/stop"): ("sessions", "stop"),
     ("get", "/sessions/{session_id}/messages"): ("sessions", "messages"),
-    ("get", "/sessions/{session_id}/files"): ("sessions", "files"),
-    ("post", "/sessions/{session_id}/files/upload"): ("sessions", "upload_files"),
     # profiles
     ("post", "/profiles"): ("profiles", "create"),
     ("get", "/profiles"): ("profiles", "list"),

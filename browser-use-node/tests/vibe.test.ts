@@ -128,8 +128,6 @@ function v3EndpointToSdkMethod(
   if (method === "delete" && path === "/sessions/{session_id}") return { resource: "sessions", method: "delete" };
   if (method === "post" && path === "/sessions/{session_id}/stop") return { resource: "sessions", method: "stop" };
   if (method === "get" && path === "/sessions/{session_id}/messages") return { resource: "sessions", method: "messages" };
-  if (method === "get" && path === "/sessions/{session_id}/files") return { resource: "sessions", method: "files" };
-  if (method === "post" && path === "/sessions/{session_id}/files/upload") return { resource: "sessions", method: "uploadFiles" };
 
   // Profiles
   if (method === "post" && path === "/profiles") return { resource: "profiles", method: "create" };

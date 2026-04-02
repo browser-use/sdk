@@ -64,6 +64,7 @@ Install: `pip install browser-use`
 - [Msg-Use (WhatsApp Sender)](https://docs.browser-use.com/open-source/examples/apps/msg-use): AI-powered WhatsApp message scheduler using browser agents and Gemini. Schedule personalized messages in natural language.
 
 ## Development
+- [Get Help](https://docs.browser-use.com/open-source/development/get-help): Get help — join 20k+ developers on Discord, search GitHub issues, or ask the community.
 
 ## Contribution
 - [Local Development Setup](https://docs.browser-use.com/open-source/development/setup/local-setup): Set up for local development. Clone the repo, install dependencies, and run tests to start contributing.
@@ -77,5 +78,4 @@ Install: `pip install browser-use`
 - [OpenLIT](https://docs.browser-use.com/open-source/development/monitoring/openlit): Complete observability with OpenLIT tracing.
 - [Telemetry](https://docs.browser-use.com/open-source/development/monitoring/telemetry): Understanding Browser Use's telemetry
 - [Costs](https://docs.browser-use.com/open-source/development/monitoring/costs): Track token usage and API costs for your browser automation tasks
-- [Get Help](https://docs.browser-use.com/open-source/development/get-help): Get help — join 20k+ developers on Discord, search GitHub issues, or ask the community.
 

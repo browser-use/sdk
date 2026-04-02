@@ -766,6 +766,30 @@ for (const f of files.files) {
 }
 ```
 
+## Auto-healing
+
+Cached scripts can break when a website changes its layout, adds new elements, or alters its structure. Auto-healing detects these failures and automatically regenerates the script.
+
+### How it works
+
+When a cached script runs, the system validates its output:
+
+1. **Fast checks** (no LLM) — detects empty results, error fields in JSON, or exception keywords in output.
+2. **LLM judge** — if fast checks pass, a lightweight model validates whether the output looks correct for the original task.
+3. **Heal** — if validation fails, the full agent re-runs the task and saves an updated script.
+
+Auto-healing is **limited to 1 attempt per run** to prevent runaway costs. If the healed script also fails, the output is returned as-is.
+
+### Cost impact
+
+| Scenario | LLM cost |
+|----------|----------|
+| Cached script succeeds | **$0** |
+| Cached script fails, auto-heals | ~$0.05–1.00 (one full agent run) |
+| Healed script also fails | Same as above (returns best-effort output) |
+
+Auto-healing is enabled by default for all cached scripts. No configuration needed.
+
 ## Cost comparison
 
 | | LLM cost | Browser + proxy | Time |
@@ -2214,6 +2238,394 @@ useSession();
 | `client.run()` | Send a task and stream messages with `for await` |
 | `client.sessions.stop()` | Stop the current task |
 | `client.sessions.waitForRecording()` | Get MP4 recording URLs |
+
+
+# Rula therapist finder
+Source: https://docs.browser-use.com/cloud/tutorials/rula-therapist-finder
+
+
+This tutorial builds a therapist finder that searches [Rula](https://www.rula.com) — an insurance-backed online therapy marketplace — and returns structured results. We use [deterministic rerun](https://docs.browser-use.com/cloud/agent/cache-script) so the first search uses the full agent, and subsequent searches with different criteria execute instantly at $0 LLM cost.
+
+## What you'll build
+
+A script that:
+1. Searches Rula for therapists matching an insurance plan and specialty
+2. Returns structured JSON with therapist name, specialties, and availability
+3. Caches the search flow so follow-up searches are instant
+
+---
+
+## Setup
+
+```python Python
+import asyncio
+import json
+from pydantic import BaseModel
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { z } from "zod";
+
+const client = new BrowserUse();
+```
+
+## 1. Define the output schema
+
+```python Python
+class Therapist(BaseModel):
+name: str
+specialties: list[str]
+insurance_accepted: list[str]
+next_available: str | None = None
+
+class TherapistResults(BaseModel):
+therapists: list[Therapist]
+search_criteria: str
+```
+```typescript TypeScript
+const TherapistResults = z.object({
+  therapists: z.array(z.object({
+name: z.string(),
+specialties: z.array(z.string()),
+insuranceAccepted: z.array(z.string()),
+nextAvailable: z.string().nullable(),
+  })),
+  searchCriteria: z.string(),
+});
+```
+
+## 2. Create a workspace for caching
+
+```python Python
+workspace = await client.workspaces.create(name="rula-search")
+```
+```typescript TypeScript
+const workspace = await client.workspaces.create({ name: "rula-search" });
+```
+
+## 3. Search for therapists
+
+Use `{{brackets}}` to mark the parameters that change between searches. The first call runs the full agent; subsequent calls with the same template are cached.
+
+```python Python
+result = await client.run(
+"Go to rula.com and search for therapists who accept {{Aetna}} insurance "
+"and specialize in {{anxiety}}. Return the first 5 results as JSON.",
+workspace_id=str(workspace.id),
+schema=TherapistResults,
+)
+
+for t in result.output.therapists:
+print(f"{t.name} — {', '.join(t.specialties)}")
+print(f"  Insurance: {', '.join(t.insurance_accepted)}")
+print(f"  Next available: {t.next_available}")
+print()
+```
+```typescript TypeScript
+const result = await client.run(
+  "Go to rula.com and search for therapists who accept {{Aetna}} insurance " +
+  "and specialize in {{anxiety}}. Return the first 5 results as JSON.",
+  { workspaceId: workspace.id, schema: TherapistResults },
+);
+
+for (const t of result.output.therapists) {
+  console.log(`${t.name} — ${t.specialties.join(", ")}`);
+  console.log(`  Insurance: ${t.insuranceAccepted.join(", ")}`);
+  console.log(`  Next available: ${t.nextAvailable}`);
+}
+```
+
+## 4. Run cached searches with different criteria
+
+Now loop over different insurance plans and specialties. Each call reuses the cached script — $0 LLM cost, ~5 seconds.
+
+```python Python
+searches = [
+("UnitedHealthcare", "depression"),
+("Blue Cross Blue Shield", "PTSD"),
+("Cigna", "couples therapy"),
+]
+
+for insurance, specialty in searches:
+result = await client.run(
+    f"Go to rula.com and search for therapists who accept {{{{{insurance}}}}} insurance "
+    f"and specialize in {{{{{specialty}}}}}. Return the first 5 results as JSON.",
+    workspace_id=str(workspace.id),
+    schema=TherapistResults,
+)
+print(f"\n--- {insurance} / {specialty} ---")
+print(f"Found {len(result.output.therapists)} therapists")
+print(f"LLM cost: ${result.llm_cost_usd}")
+```
+```typescript TypeScript
+const searches = [
+  ["UnitedHealthcare", "depression"],
+  ["Blue Cross Blue Shield", "PTSD"],
+  ["Cigna", "couples therapy"],
+];
+
+for (const [insurance, specialty] of searches) {
+  const result = await client.run(
+`Go to rula.com and search for therapists who accept {{${insurance}}} insurance ` +
+`and specialize in {{${specialty}}}. Return the first 5 results as JSON.`,
+{ workspaceId: workspace.id, schema: TherapistResults },
+  );
+  console.log(`\n--- ${insurance} / ${specialty} ---`);
+  console.log(`Found ${result.output.therapists.length} therapists`);
+}
+```
+
+## 5. Stream results in real time
+
+For a better UX, stream the agent's progress as it navigates Rula:
+
+```python Python
+stream = client.stream(
+"Go to rula.com and search for therapists who accept {{Aetna}} insurance "
+"and specialize in {{anxiety}}. Return the first 5 results as JSON.",
+workspace_id=str(workspace.id),
+schema=TherapistResults,
+)
+
+async for msg in stream:
+if msg.summary:
+    print(f"[{msg.type}] {msg.summary}")
+
+print(f"\nResult: {stream.result.output}")
+```
+```typescript TypeScript
+const run = client.run(
+  "Go to rula.com and search for therapists who accept {{Aetna}} insurance " +
+  "and specialize in {{anxiety}}. Return the first 5 results as JSON.",
+  { workspaceId: workspace.id, schema: TherapistResults },
+);
+
+for await (const msg of run) {
+  if (msg.summary) console.log(`[${msg.type}] ${msg.summary}`);
+}
+
+console.log(`\nResult:`, run.result.output);
+```
+
+---
+
+## Summary
+
+| Step | What happens | Cost |
+|------|-------------|------|
+| First search | Full agent navigates Rula, caches the flow | ~$0.10 |
+| Subsequent searches | Cached script with new parameters | **$0 LLM** |
+| Auto-heal (if site changes) | Agent regenerates the script automatically | ~$0.10 |
+
+If Rula changes their site layout, [auto-healing](https://docs.browser-use.com/cloud/agent/cache-script#auto-healing) automatically detects the failure and regenerates the cached script — no manual intervention needed.
+
+
+# Grow Therapy provider search
+Source: https://docs.browser-use.com/cloud/tutorials/grow-therapy-compare
+
+
+This tutorial builds a provider search tool for [Grow Therapy](https://www.growtherapy.com) — a therapy marketplace that handles insurance credentialing for providers. We combine [structured output](https://docs.browser-use.com/cloud/agent/structured-output) with [deterministic rerun](https://docs.browser-use.com/cloud/agent/cache-script) to build a fast, repeatable search pipeline.
+
+## What you'll build
+
+A script that:
+1. Searches Grow Therapy's provider directory with filters (location, insurance, specialty)
+2. Extracts therapist profiles with ratings and availability
+3. Caches the search so you can sweep across geographies or specialties instantly
+
+---
+
+## Setup
+
+```python Python
+import asyncio
+import json
+from pydantic import BaseModel
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { z } from "zod";
+
+const client = new BrowserUse();
+```
+
+## 1. Define the output schema
+
+```python Python
+class Provider(BaseModel):
+name: str
+title: str
+specialties: list[str]
+insurance_plans: list[str]
+rating: float | None = None
+next_available: str | None = None
+
+class ProviderSearch(BaseModel):
+providers: list[Provider]
+total_found: int | None = None
+location: str
+specialty: str
+```
+```typescript TypeScript
+const ProviderSearch = z.object({
+  providers: z.array(z.object({
+name: z.string(),
+title: z.string(),
+specialties: z.array(z.string()),
+insurancePlans: z.array(z.string()),
+rating: z.number().nullable(),
+nextAvailable: z.string().nullable(),
+  })),
+  totalFound: z.number().nullable(),
+  location: z.string(),
+  specialty: z.string(),
+});
+```
+
+## 2. Create a workspace
+
+```python Python
+workspace = await client.workspaces.create(name="grow-therapy-search")
+```
+```typescript TypeScript
+const workspace = await client.workspaces.create({ name: "grow-therapy-search" });
+```
+
+## 3. Search for providers
+
+```python Python
+result = await client.run(
+"Go to growtherapy.com and search for therapists in {{New York}} "
+"who specialize in {{anxiety}} and accept insurance. "
+"Return the first 5 provider profiles as JSON.",
+workspace_id=str(workspace.id),
+schema=ProviderSearch,
+)
+
+for p in result.output.providers:
+print(f"{p.name} ({p.title})")
+print(f"  Specialties: {', '.join(p.specialties)}")
+print(f"  Rating: {p.rating}")
+print(f"  Next available: {p.next_available}")
+print()
+```
+```typescript TypeScript
+const result = await client.run(
+  "Go to growtherapy.com and search for therapists in {{New York}} " +
+  "who specialize in {{anxiety}} and accept insurance. " +
+  "Return the first 5 provider profiles as JSON.",
+  { workspaceId: workspace.id, schema: ProviderSearch },
+);
+
+for (const p of result.output.providers) {
+  console.log(`${p.name} (${p.title})`);
+  console.log(`  Specialties: ${p.specialties.join(", ")}`);
+  console.log(`  Rating: ${p.rating}`);
+  console.log(`  Next available: ${p.nextAvailable}`);
+}
+```
+
+## 4. Sweep across locations and specialties
+
+After the first run caches the search flow, sweep across different parameters at $0 LLM cost:
+
+```python Python
+locations = ["Los Angeles", "Chicago", "Houston", "Miami"]
+specialties = ["depression", "trauma", "ADHD"]
+
+for location in locations:
+for specialty in specialties:
+    result = await client.run(
+        f"Go to growtherapy.com and search for therapists in {{{{{location}}}}} "
+        f"who specialize in {{{{{specialty}}}}} and accept insurance. "
+        f"Return the first 5 provider profiles as JSON.",
+        workspace_id=str(workspace.id),
+        schema=ProviderSearch,
+    )
+    count = len(result.output.providers)
+    print(f"{location} / {specialty}: {count} providers found")
+```
+```typescript TypeScript
+const locations = ["Los Angeles", "Chicago", "Houston", "Miami"];
+const specialties = ["depression", "trauma", "ADHD"];
+
+for (const location of locations) {
+  for (const specialty of specialties) {
+const result = await client.run(
+  `Go to growtherapy.com and search for therapists in {{${location}}} ` +
+  `who specialize in {{${specialty}}} and accept insurance. ` +
+  `Return the first 5 provider profiles as JSON.`,
+  { workspaceId: workspace.id, schema: ProviderSearch },
+);
+console.log(`${location} / ${specialty}: ${result.output.providers.length} providers`);
+  }
+}
+```
+
+## 5. Cross-platform comparison
+
+Combine this with the [Rula tutorial](https://docs.browser-use.com/cloud/tutorials/rula-therapist-finder) to compare providers across both platforms:
+
+```python Python
+async def search_platform(task: str, ws_id: str, schema):
+return await client.run(task, workspace_id=ws_id, schema=schema)
+
+# Run both searches concurrently
+rula_task = search_platform(
+"Go to rula.com and search for therapists who accept {{Aetna}} insurance "
+"and specialize in {{anxiety}}. Return the first 5 results as JSON.",
+str(rula_workspace.id),
+TherapistResults,
+)
+grow_task = search_platform(
+"Go to growtherapy.com and search for therapists in {{New York}} "
+"who specialize in {{anxiety}} and accept insurance. "
+"Return the first 5 provider profiles as JSON.",
+str(grow_workspace.id),
+ProviderSearch,
+)
+
+rula_result, grow_result = await asyncio.gather(rula_task, grow_task)
+print(f"Rula: {len(rula_result.output.therapists)} therapists")
+print(f"Grow Therapy: {len(grow_result.output.providers)} providers")
+```
+```typescript TypeScript
+// Run both searches concurrently
+const [rulaResult, growResult] = await Promise.all([
+  client.run(
+"Go to rula.com and search for therapists who accept {{Aetna}} insurance " +
+"and specialize in {{anxiety}}. Return the first 5 results as JSON.",
+{ workspaceId: rulaWorkspace.id, schema: TherapistResults },
+  ),
+  client.run(
+"Go to growtherapy.com and search for therapists in {{New York}} " +
+"who specialize in {{anxiety}} and accept insurance. " +
+"Return the first 5 provider profiles as JSON.",
+{ workspaceId: growWorkspace.id, schema: ProviderSearch },
+  ),
+]);
+
+console.log(`Rula: ${rulaResult.output.therapists.length} therapists`);
+console.log(`Grow Therapy: ${growResult.output.providers.length} providers`);
+```
+
+---
+
+## Summary
+
+| Step | What happens | Cost |
+|------|-------------|------|
+| First search | Agent navigates Grow Therapy, caches the flow | ~$0.10 |
+| 12 cached sweeps (4 cities x 3 specialties) | Script reruns with new params | **$0 LLM each** |
+| Site layout change | [Auto-healing](https://docs.browser-use.com/cloud/agent/cache-script#auto-healing) regenerates the script | ~$0.10 |
+
+Both Rula and Grow Therapy have dynamic UIs that can change frequently. [Auto-healing](https://docs.browser-use.com/cloud/agent/cache-script#auto-healing) ensures your cached scripts stay working without manual maintenance.
 
 
 # FAQ

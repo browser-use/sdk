@@ -244,6 +244,30 @@ for (const f of files.files) {
 ```
 </CodeGroup>
 
+## Auto-healing
+
+Cached scripts can break when a website changes its layout, adds new elements, or alters its structure. Auto-healing detects these failures and automatically regenerates the script.
+
+### How it works
+
+When a cached script runs, the system validates its output:
+
+1. **Fast checks** (no LLM) — detects empty results, error fields in JSON, or exception keywords in output.
+2. **LLM judge** — if fast checks pass, a lightweight model validates whether the output looks correct for the original task.
+3. **Heal** — if validation fails, the full agent re-runs the task and saves an updated script.
+
+Auto-healing is **limited to 1 attempt per run** to prevent runaway costs. If the healed script also fails, the output is returned as-is.
+
+### Cost impact
+
+| Scenario | LLM cost |
+|----------|----------|
+| Cached script succeeds | **$0** |
+| Cached script fails, auto-heals | ~$0.05–1.00 (one full agent run) |
+| Healed script also fails | Same as above (returns best-effort output) |
+
+Auto-healing is enabled by default for all cached scripts. No configuration needed.
+
 ## Cost comparison
 
 | | LLM cost | Browser + proxy | Time |
