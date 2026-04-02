@@ -1,6 +1,6 @@
 {
   "name": "browser-use-sdk",
-  "version": "3.5.0",
+  "version": "4.1.0",
   "description": "Official TypeScript SDK for the Browser Use API",
   "author": "Browser Use",
   "license": "MIT",
