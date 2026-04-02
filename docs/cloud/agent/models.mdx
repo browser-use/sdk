@@ -8,12 +8,12 @@ Pass `model` to select a model:
 
 | Model | API String | Input (per 1M tokens) | Output (per 1M tokens) |
 | ----- | ---------- | --------------------- | ---------------------- |
-| Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$3.60 | \$18.00 |
-| Claude Opus 4.6 | `claude-opus-4-6` | \$6.00 | \$30.00 |
-| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.60 | \$3.60 |
+| Claude Sonnet 4.6 | `claude-sonnet-4.6` | \$3.60 | \$18.00 |
+| Claude Opus 4.6 | `claude-opus-4.6` | \$6.00 | \$30.00 |
+| Gemini 3 Flash Preview | `gemini-3-flash` | \$0.60 | \$3.60 |
 
 <Tip>
-  We recommend **Claude Sonnet 4.6** (`claude-sonnet-4-6`). It's the model we optimize for the most right now.
+  We recommend **Claude Sonnet 4.6** (`claude-sonnet-4.6`). It's the model we optimize for the most right now.
 </Tip>
 
 <CodeGroup>
@@ -23,7 +23,7 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 result = await client.run(
     "List the top 20 posts on Hacker News today with their points",
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-4.6",
 )
 print(result.output)
 ```
@@ -33,7 +33,7 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const result = await client.run(
   "List the top 20 posts on Hacker News today with their points",
-  { model: "claude-sonnet-4-6" },
+  { model: "claude-sonnet-4.6" },
 );
 console.log(result.output);
 ```
@@ -41,6 +41,6 @@ console.log(result.output);
 curl -X POST https://api.browser-use.com/api/v3/sessions \
   -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4-6"}'
+  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4.6"}'
 ```
 </CodeGroup>

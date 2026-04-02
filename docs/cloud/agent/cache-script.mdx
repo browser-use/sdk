@@ -110,7 +110,7 @@ for keyword in ["CEO", "marketing", "finance", "e-commerce"]:
         f"Go to {{{{https://intro.co/marketplace}}}} and get all {{{{{keyword}}}}} experts as JSON",
         workspace_id=str(workspace.id),
     )
-    print(f"{keyword}: {len(result.output)} experts, LLM cost: ${result.llm_cost_usd}")
+    print(f"{keyword}: {result.output}, LLM cost: ${result.llm_cost_usd}")
 ```
 ```typescript TypeScript
 // Agent figures out how to scrape intro.co on first call
@@ -125,7 +125,7 @@ for (const keyword of ["CEO", "marketing", "finance", "e-commerce"]) {
     `Go to {{https://intro.co/marketplace}} and get all {{${keyword}}} experts as JSON`,
     { workspaceId: workspace.id },
   );
-  console.log(`${keyword}: ${result.output.length} experts`);
+  console.log(`${keyword}: ${result.output}`);
 }
 ```
 </CodeGroup>

@@ -89,7 +89,7 @@ result = await client.run(
     "who specialize in {{anxiety}} and accept insurance. "
     "Return the first 5 provider profiles as JSON.",
     workspace_id=str(workspace.id),
-    schema=ProviderSearch,
+    output_schema=ProviderSearch,
 )
 
 for p in result.output.providers:
@@ -132,7 +132,7 @@ for location in locations:
             f"who specialize in {{{{{specialty}}}}} and accept insurance. "
             f"Return the first 5 provider profiles as JSON.",
             workspace_id=str(workspace.id),
-            schema=ProviderSearch,
+            output_schema=ProviderSearch,
         )
         count = len(result.output.providers)
         print(f"{location} / {specialty}: {count} providers found")
@@ -168,3 +168,9 @@ for (const location of locations) {
 <Info>
 Therapy platforms have dynamic UIs that can change frequently. [Auto-healing](/cloud/agent/cache-script#auto-healing) ensures your cached scripts stay working without manual maintenance.
 </Info>
+
+## Next steps
+
+- [Structured output](/cloud/agent/structured-output) — Learn more about extracting typed data with Pydantic and Zod schemas.
+- [Human in the loop](/cloud/agent/human-in-the-loop) — Let a human review or interact with the browser mid-task, useful for auth flows or approving results before continuing.
+- [Deterministic rerun](/cloud/agent/cache-script) — Deep dive into how caching and auto-healing work.

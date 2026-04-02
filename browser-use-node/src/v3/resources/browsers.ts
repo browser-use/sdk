@@ -16,7 +16,7 @@ export class Browsers {
   constructor(private readonly http: HttpClient) {}
 
   /** Create a standalone browser session. */
-  create(body?: Partial<CreateBrowserSessionRequest>): Promise<BrowserSessionItemView> {
+  create(body: Partial<CreateBrowserSessionRequest> = {}): Promise<BrowserSessionItemView> {
     return this.http.post<BrowserSessionItemView>("/browsers", body);
   }
 

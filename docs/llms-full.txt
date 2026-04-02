@@ -128,11 +128,11 @@ Pass `model` to select a model:
 
 | Model | API String | Input (per 1M tokens) | Output (per 1M tokens) |
 | ----- | ---------- | --------------------- | ---------------------- |
-| Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$3.60 | \$18.00 |
-| Claude Opus 4.6 | `claude-opus-4-6` | \$6.00 | \$30.00 |
-| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.60 | \$3.60 |
+| Claude Sonnet 4.6 | `claude-sonnet-4.6` | \$3.60 | \$18.00 |
+| Claude Opus 4.6 | `claude-opus-4.6` | \$6.00 | \$30.00 |
+| Gemini 3 Flash Preview | `gemini-3-flash` | \$0.60 | \$3.60 |
 
-  We recommend **Claude Sonnet 4.6** (`claude-sonnet-4-6`). It's the model we optimize for the most right now.
+  We recommend **Claude Sonnet 4.6** (`claude-sonnet-4.6`). It's the model we optimize for the most right now.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
@@ -140,7 +140,7 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 result = await client.run(
 "List the top 20 posts on Hacker News today with their points",
-model="claude-sonnet-4-6",
+model="claude-sonnet-4.6",
 )
 print(result.output)
 ```
@@ -150,7 +150,7 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const result = await client.run(
   "List the top 20 posts on Hacker News today with their points",
-  { model: "claude-sonnet-4-6" },
+  { model: "claude-sonnet-4.6" },
 );
 console.log(result.output);
 ```
@@ -158,7 +158,7 @@ console.log(result.output);
 curl -X POST https://api.browser-use.com/api/v3/sessions \
   -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4-6"}'
+  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4.6"}'
 ```
 
 
@@ -641,7 +641,7 @@ result = await client.run(
     f"Go to {{{{https://intro.co/marketplace}}}} and get all {{{{{keyword}}}}} experts as JSON",
     workspace_id=str(workspace.id),
 )
-print(f"{keyword}: {len(result.output)} experts, LLM cost: ${result.llm_cost_usd}")
+print(f"{keyword}: {result.output}, LLM cost: ${result.llm_cost_usd}")
 ```
 ```typescript TypeScript
 // Agent figures out how to scrape intro.co on first call
@@ -656,7 +656,7 @@ for (const keyword of ["CEO", "marketing", "finance", "e-commerce"]) {
 `Go to {{https://intro.co/marketplace}} and get all {{${keyword}}} experts as JSON`,
 { workspaceId: workspace.id },
   );
-  console.log(`${keyword}: ${result.output.length} experts`);
+  console.log(`${keyword}: ${result.output}`);
 }
 ```
 
@@ -1817,7 +1817,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 | Tool | Description |
 |------|-------------|
-| `run_session` | Create a session and run a task. Supports `keep_alive`, `model` (`bu-mini`, `bu-max`), `output_schema`, and `profile_id`. |
+| `run_session` | Create a session and run a task. Supports `keep_alive`, `model` (`gemini-3-flash`, `claude-sonnet-4.6`, `claude-opus-4.6`), `output_schema`, and `profile_id`. |
 | `get_session` | Poll session status and output. Returns status, step count, cost breakdown, and live URL. |
 | `send_task` | Send a follow-up task to an idle keep-alive session. |
 | `stop_session` | Stop a session. `strategy: "task"` stops only the task, `"session"` destroys the sandbox. |
@@ -2322,7 +2322,7 @@ result = await client.run(
 "who specialize in {{anxiety}} and accept insurance. "
 "Return the first 5 provider profiles as JSON.",
 workspace_id=str(workspace.id),
-schema=ProviderSearch,
+output_schema=ProviderSearch,
 )
 
 for p in result.output.providers:
@@ -2363,7 +2363,7 @@ for specialty in specialties:
         f"who specialize in {{{{{specialty}}}}} and accept insurance. "
         f"Return the first 5 provider profiles as JSON.",
         workspace_id=str(workspace.id),
-        schema=ProviderSearch,
+        output_schema=ProviderSearch,
     )
     count = len(result.output.providers)
     print(f"{location} / {specialty}: {count} providers found")
@@ -2396,6 +2396,12 @@ console.log(`${location} / ${specialty}: ${result.output.providers.length} provi
 | Site layout change | [Auto-healing](https://docs.browser-use.com/cloud/agent/cache-script#auto-healing) regenerates the script | ~$0.10 |
 
 Therapy platforms have dynamic UIs that can change frequently. [Auto-healing](https://docs.browser-use.com/cloud/agent/cache-script#auto-healing) ensures your cached scripts stay working without manual maintenance.
+
+## Next steps
+
+- [Structured output](https://docs.browser-use.com/cloud/agent/structured-output) — Learn more about extracting typed data with Pydantic and Zod schemas.
+- [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop) — Let a human review or interact with the browser mid-task, useful for auth flows or approving results before continuing.
+- [Deterministic rerun](https://docs.browser-use.com/cloud/agent/cache-script) — Deep dive into how caching and auto-healing work.
 
 
 # FAQ
@@ -2462,11 +2468,11 @@ Source: https://docs.browser-use.com/cloud/legacy/agent
 | Browser Use LLM | `browser-use-llm` | \$0.002 |
 | O3 | `o3` | \$0.03 |
 | Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$0.03 |
-| Gemini 3 Flash Preview | `gemini-3-flash-preview` | \$0.01 |
+| Gemini 3 Flash Preview | `gemini-3-flash` | \$0.01 |
 | Gemini Flash Latest | `gemini-flash-latest` | \$0.0075 |
 | Gemini Flash Lite Latest | `gemini-flash-lite-latest` | \$0.005 |
 | Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
-| Claude Sonnet 4.6 | `claude-sonnet-4-6` | \$0.05 |
+| Claude Sonnet 4.6 | `claude-sonnet-4.6` | \$0.05 |
 
 Pass `llm` explicitly to select a model:
 
