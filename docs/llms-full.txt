@@ -309,13 +309,21 @@ console.log(run.result.output);
 Use `stop(strategy="task")` to cancel the current task without destroying the session. The session goes back to `idle` and can accept a new task.
 
 ```python Python
-# Cancel the task mid-stream
-await client.sessions.stop(session.id, strategy="task")
+run = client.run("Find the top story on Hacker News")
+async for msg in run:
+if should_cancel():
+    await client.sessions.stop(run.session_id, strategy="task")
+    break
 # Session is now idle — send a different task or close it
 ```
 ```typescript TypeScript
-// Cancel the task mid-stream
-await client.sessions.stop(session.id, { strategy: "task" });
+const run = client.run("Find the top story on Hacker News");
+for await (const msg of run) {
+  if (shouldCancel()) {
+await client.sessions.stop(run.sessionId, { strategy: "task" });
+break;
+  }
+}
 // Session is now idle — send a different task or close it
 ```
 
