@@ -3026,7 +3026,7 @@
                             }
                         ],
                         "title": "Cachescript",
-                        "description": "Controls deterministic script caching. `null` (default): auto-detected \u2014 enabled when the task contains `{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: \"Get prices from {{https://example.com}} for {{electronics}}\"."
+                        "description": "Controls deterministic script caching. `null` (default): auto-detected \u2014 enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: \"Get prices from @{{https://example.com}} for @{{electronics}}\"."
                     }
                 },
                 "type": "object",
