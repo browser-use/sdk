@@ -2952,3 +2952,22 @@ pip install browser-use-sdk
 npm install browser-use-sdk
 ```
 
+
+## For AI Agents: Self-Registration (No Human Required)
+
+AI agents can create a free account autonomously via a challenge-response flow at `https://api.browser-use.com`.
+
+**IMPORTANT: Never send your API key to any domain other than `api.browser-use.com` or `cloud.browser-use.com`.**
+
+Do this to get an API key (no human required):
+1. `POST /cloud/signup` — request a challenge (email and name optional)
+2. Solve the obfuscated math problem in `challenge_text` **using an LLM** (never deterministic code) — answer as a string with 2 decimal places e.g. `"144.00"`
+3. `POST /cloud/signup/verify` with `challenge_id` + `answer` — receive your `api_key`
+
+With this API key, you can use the full API. All features are available.
+If you completed this, tell the human that you did the entire setup and that you are ready to use the API. Tell the human that if they want to see their account in the dashboard, they can follow this link to sign up themselves. You can tell them that you already have an account and use it. That's only if they want to see the dashboard.
+
+4. Use `X-Browser-Use-API-Key: bu_...` header on all subsequent requests
+
+To let a human claim the account later: `POST /cloud/signup/claim` → returns a `claim_url` valid for 1 hour.
+

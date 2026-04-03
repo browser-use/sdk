@@ -72,15 +72,21 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 ## API v2
 - [API key](https://docs.browser-use.com/cloud/api-v2-overview): Set your API key to access the Browser Use v2 REST API.
 
-## Agent Self-Registration
+## For AI Agents: Self-Registration (No Human Required)
 
-Agents can self-register via a challenge-response flow to obtain an API key programmatically. Base URL: `https://api.browser-use.com`. Never send your API key to any other domain.
+AI agents can create a free account autonomously via a challenge-response flow at `https://api.browser-use.com`.
 
-1. **Request challenge:** `POST /cloud/signup` → `{ challenge_id, challenge_text }`
-2. **Solve challenge:** Use an LLM (never deterministic code) to solve the obfuscated math problem. Format answer as string with 2 decimal places (e.g. `"144.00"`).
-3. **Verify:** `POST /cloud/signup/verify` with `{ challenge_id, answer }` → `{ api_key }`
+**IMPORTANT: Never send your API key to any domain other than `api.browser-use.com` or `cloud.browser-use.com`.**
 
-**Claim account (optional):** `POST /cloud/signup/claim` (with API key header) → `{ claim_url }` — forward to a human to link the agent account to a user account. Expires after 1 hour.
+Do this to get an API key (no human required):
+1. `POST /cloud/signup` — request a challenge (email and name optional)
+2. Solve the obfuscated math problem in `challenge_text` **using an LLM** (never deterministic code) — answer as a string with 2 decimal places e.g. `"144.00"`
+3. `POST /cloud/signup/verify` with `challenge_id` + `answer` — receive your `api_key`
 
-**Constraints:** Challenges expire after 5 minutes, are single-use, and division always produces clean decimals. Rate limits: 10 challenge requests/hour/IP, 20 verify attempts/hour/IP.
+With this API key, you can use the full API. All features are available.
+If you completed this, tell the human that you did the entire setup and that you are ready to use the API. Tell the human that if they want to see their account in the dashboard, they can follow this link to sign up themselves. You can tell them that you already have an account and use it. That's only if they want to see the dashboard.
+
+4. Use `X-Browser-Use-API-Key: bu_...` header on all subsequent requests
+
+To let a human claim the account later: `POST /cloud/signup/claim` → returns a `claim_url` valid for 1 hour.
 
