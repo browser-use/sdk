@@ -72,3 +72,15 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 ## API v2
 - [API key](https://docs.browser-use.com/cloud/api-v2-overview): Set your API key to access the Browser Use v2 REST API.
 
+## Agent Self-Registration
+
+Agents can self-register via a challenge-response flow to obtain an API key programmatically. Base URL: `https://api.browser-use.com`. Never send your API key to any other domain.
+
+1. **Request challenge:** `POST /cloud/signup` → `{ challenge_id, challenge_text }`
+2. **Solve challenge:** Use an LLM (never deterministic code) to solve the obfuscated math problem. Format answer as string with 2 decimal places (e.g. `"144.00"`).
+3. **Verify:** `POST /cloud/signup/verify` with `{ challenge_id, answer }` → `{ api_key }`
+
+**Claim account (optional):** `POST /cloud/signup/claim` (with API key header) → `{ claim_url }` — forward to a human to link the agent account to a user account. Expires after 1 hour.
+
+**Constraints:** Challenges expire after 5 minutes, are single-use, and division always produces clean decimals. Rate limits: 10 challenge requests/hour/IP, 20 verify attempts/hour/IP.
+
