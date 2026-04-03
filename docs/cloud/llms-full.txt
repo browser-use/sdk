@@ -552,7 +552,7 @@ Deterministic rerun lets you run a browser task once with a full agent, then **r
 
 ## Quick start
 
-Use `{{double brackets}}` around values that can change between runs. The first call runs the full agent. Every subsequent call with the same template uses the cached script.
+Use `@{{double brackets}}` around values that can change between runs. The first call runs the full agent. Every subsequent call with the same template uses the cached script.
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
@@ -562,13 +562,13 @@ workspace = await client.workspaces.create(name="my-scraper")
 
 # First call — agent explores, creates script (~$0.10, ~60s)
 result = await client.run(
-"Get the top {{5}} stories from https://news.ycombinator.com as JSON",
+"Get the top @{{5}} stories from https://news.ycombinator.com as JSON",
 workspace_id=str(workspace.id),
 )
 
 # Second call — cached script, different param ($0 LLM, ~5s)
 result2 = await client.run(
-"Get the top {{10}} stories from https://news.ycombinator.com as JSON",
+"Get the top @{{10}} stories from https://news.ycombinator.com as JSON",
 workspace_id=str(workspace.id),
 )
 ```
@@ -580,13 +580,13 @@ const workspace = await client.workspaces.create({ name: "my-scraper" });
 
 // First call — agent explores, creates script (~$0.10, ~60s)
 const result = await client.run(
-  "Get the top {{5}} stories from https://news.ycombinator.com as JSON",
+  "Get the top @{{5}} stories from https://news.ycombinator.com as JSON",
   { workspaceId: workspace.id },
 );
 
 // Second call — cached script, different param ($0 LLM, ~5s)
 const result2 = await client.run(
-  "Get the top {{10}} stories from https://news.ycombinator.com as JSON",
+  "Get the top @{{10}} stories from https://news.ycombinator.com as JSON",
   { workspaceId: workspace.id },
 );
 ```
@@ -596,14 +596,14 @@ const result2 = await client.run(
 The brackets mark which parts are parameters:
 
 ```
-"Get prices from {{example.com}} for {{electronics}}"
+"Get prices from @{{example.com}} for @{{electronics}}"
 ```
 
-- `{{example.com}}` → parameter 1
-- `{{electronics}}` → parameter 2
+- `@{{example.com}}` → parameter 1
+- `@{{electronics}}` → parameter 2
 
-The system strips the values to create a **template**: `"Get prices from {{}} for {{}}"`.
-Template `"Get prices from {{}} for {{}}"` is hashed to a unique ID like `a7f3b2c1`.
+The system strips the values to create a **template**: `"Get prices from @{{}} for @{{}}"`.
+Template `"Get prices from @{{}} for @{{}}"` is hashed to a unique ID like `a7f3b2c1`.
 The system checks the workspace for `scripts/a7f3b2c1.py`.
 If no script exists, the full agent runs your task. After completing it, the agent saves a standalone Python script that reproduces the result deterministically — no AI needed.
 If the script exists, it runs directly with the new parameter values. No agent, no LLM. Just the script in a sandbox with browser and proxy.
@@ -611,14 +611,14 @@ If the script exists, it runs directly with the new parameter values. No agent, 
 ## Auto-detection
 
 Caching activates **automatically** when both conditions are met:
-- The task contains `{{` and `}}`
+- The task contains `@{{` and `}}`
 - A `workspace_id` is provided
 
 No extra flags needed. You can override with `cache_script`:
 
 | Value | Behavior |
 |-------|----------|
-| `None` (default) | Auto-detect from `{{brackets}}` + workspace |
+| `None` (default) | Auto-detect from `@{{brackets}}` + workspace |
 | `True` | Force-enable, even without brackets |
 | `False` | Force-disable, even if brackets are present |
 
@@ -631,14 +631,14 @@ Run once, then loop over different keywords at $0 LLM each:
 ```python Python
 # Agent figures out how to scrape intro.co on first call
 result = await client.run(
-"Go to {{https://intro.co/marketplace}} and get all {{logistics}} experts as JSON",
+"Go to @{{https://intro.co/marketplace}} and get all @{{logistics}} experts as JSON",
 workspace_id=str(workspace.id),
 )
 
 # Instant reruns with different keywords
 for keyword in ["CEO", "marketing", "finance", "e-commerce"]:
 result = await client.run(
-    f"Go to {{{{https://intro.co/marketplace}}}} and get all {{{{{keyword}}}}} experts as JSON",
+    f"Go to @{{{{https://intro.co/marketplace}}}} and get all @{{{{{keyword}}}}} experts as JSON",
     workspace_id=str(workspace.id),
 )
 print(f"{keyword}: {len(result.output)} experts, LLM cost: ${result.llm_cost_usd}")
@@ -646,14 +646,14 @@ print(f"{keyword}: {len(result.output)} experts, LLM cost: ${result.llm_cost_usd
 ```typescript TypeScript
 // Agent figures out how to scrape intro.co on first call
 let result = await client.run(
-  "Go to {{https://intro.co/marketplace}} and get all {{logistics}} experts as JSON",
+  "Go to @{{https://intro.co/marketplace}} and get all @{{logistics}} experts as JSON",
   { workspaceId: workspace.id },
 );
 
 // Instant reruns with different keywords
 for (const keyword of ["CEO", "marketing", "finance", "e-commerce"]) {
   result = await client.run(
-`Go to {{https://intro.co/marketplace}} and get all {{${keyword}}} experts as JSON`,
+`Go to @{{https://intro.co/marketplace}} and get all @{{${keyword}}} experts as JSON`,
 { workspaceId: workspace.id },
   );
   console.log(`${keyword}: ${result.output.length} experts`);
@@ -662,29 +662,29 @@ for (const keyword of ["CEO", "marketing", "finance", "e-commerce"]) {
 
 ### No parameters — cache the exact task
 
-Append empty brackets `{{}}` to signal "cache this exact task":
+Append empty brackets `@{{}}` to signal "cache this exact task":
 
 ```python Python
 result = await client.run(
-"Get the current Bitcoin price from coinmarketcap.com {{}}",
+"Get the current Bitcoin price from coinmarketcap.com @{{}}",
 workspace_id=str(workspace.id),
 )
 
 # Same task again — cached
 result2 = await client.run(
-"Get the current Bitcoin price from coinmarketcap.com {{}}",
+"Get the current Bitcoin price from coinmarketcap.com @{{}}",
 workspace_id=str(workspace.id),
 )
 ```
 ```typescript TypeScript
 let result = await client.run(
-  "Get the current Bitcoin price from coinmarketcap.com {{}}",
+  "Get the current Bitcoin price from coinmarketcap.com @{{}}",
   { workspaceId: workspace.id },
 );
 
 // Same task again — cached
 result = await client.run(
-  "Get the current Bitcoin price from coinmarketcap.com {{}}",
+  "Get the current Bitcoin price from coinmarketcap.com @{{}}",
   { workspaceId: workspace.id },
 );
 ```
@@ -693,25 +693,25 @@ result = await client.run(
 
 ```python Python
 result = await client.run(
-"Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for {{Germany,France,Japan}}",
+"Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{Germany,France,Japan}}",
 workspace_id=str(workspace.id),
 )
 
 # Different countries — cached
 result2 = await client.run(
-"Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for {{US,UK,Brazil}}",
+"Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{US,UK,Brazil}}",
 workspace_id=str(workspace.id),
 )
 ```
 ```typescript TypeScript
 let result = await client.run(
-  "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for {{Germany,France,Japan}}",
+  "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{Germany,France,Japan}}",
   { workspaceId: workspace.id },
 );
 
 // Different countries — cached
 result = await client.run(
-  "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for {{US,UK,Brazil}}",
+  "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{US,UK,Brazil}}",
   { workspaceId: workspace.id },
 );
 ```
@@ -728,7 +728,7 @@ cache_script=True,
 
 # Force-disable even with brackets
 result = await client.run(
-"Explain what {{templates}} means in Jinja",
+"Explain what @{{templates}} means in Jinja",
 workspace_id=str(workspace.id),
 cache_script=False,
 )
@@ -742,7 +742,7 @@ let result = await client.run(
 
 // Force-disable even with brackets
 result = await client.run(
-  "Explain what {{templates}} means in Jinja",
+  "Explain what @{{templates}} means in Jinja",
   { workspaceId: workspace.id, cacheScript: false },
 );
 ```
