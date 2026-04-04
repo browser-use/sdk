@@ -2280,7 +2280,7 @@ export interface components {
          * SupportedLLMs
          * @enum {string}
          */
-        SupportedLLMs: "browser-use-llm" | "browser-use-2.0" | "gpt-4.1" | "gpt-4.1-mini" | "o4-mini" | "o3" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-3-pro-preview" | "gemini-3-flash-preview" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "claude-sonnet-4-20250514" | "claude-sonnet-4-5-20250929" | "claude-sonnet-4-6" | "claude-opus-4-5-20251101" | "gpt-4o" | "gpt-4o-mini" | "llama-4-maverick-17b-128e-instruct" | "claude-3-7-sonnet-20250219";
+        SupportedLLMs: "browser-use-llm" | "browser-use-2.0" | "gpt-4.1" | "gpt-4.1-mini" | "o4-mini" | "o3" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-3-pro-preview" | "gemini-3-flash-preview" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "claude-sonnet-4-20250514" | "claude-sonnet-4-5-20250929" | "claude-sonnet-4-6" | "claude-opus-4-5-20251101" | "llama-4-maverick-17b-128e-instruct" | "claude-3-7-sonnet-20250219";
         /**
          * TaskCreatedResponse
          * @description Response model for creating a task

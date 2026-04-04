@@ -634,9 +634,10 @@ export interface components {
          *     - `bu-mini` / `gemini-3-flash`: Gemini 3 Flash — fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.
          *     - `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 — balanced performance. Best for multi-step workflows that require reasoning and decision-making.
          *     - `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 — most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.
+         *     - `gpt-5.4-mini`: GPT-5.4 mini — OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities.
          * @enum {string}
          */
-        BuModel: "bu-mini" | "bu-max" | "bu-ultra" | "gemini-3-flash" | "claude-sonnet-4.6" | "claude-opus-4.6";
+        BuModel: "bu-mini" | "bu-max" | "bu-ultra" | "gemini-3-flash" | "claude-sonnet-4.6" | "claude-opus-4.6" | "gpt-5.4-mini";
         /**
          * CreateBrowserSessionRequest
          * @description Request model for creating a browser session.
@@ -1147,7 +1148,7 @@ export interface components {
             agentmail: boolean;
             /**
              * Cachescript
-             * @description Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from {{https://example.com}} for {{electronics}}".
+             * @description Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from @{{https://example.com}} for @{{electronics}}".
              */
             cacheScript?: boolean | null;
             /**
