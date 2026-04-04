@@ -121,7 +121,7 @@ class BrowserUse:
         """Run a task and block until complete. Returns a SessionResult.
 
         Script caching (cache_script):
-        - None (default): auto-detected. If the task contains {{value}} brackets
+        - None (default): auto-detected. If the task contains @{{value}} brackets
           and a workspace is attached, caching is enabled automatically.
         - True: force-enable caching (even without brackets).
         - False: force-disable caching.
@@ -338,7 +338,7 @@ class AsyncBrowserUse:
         """Run a task. Await the result for a SessionResult.
 
         Script caching (cache_script):
-        - None (default): auto-detected. If the task contains {{value}} brackets
+        - None (default): auto-detected. If the task contains @{{value}} brackets
           and a workspace is attached, caching is enabled automatically.
         - True: force-enable caching (even without brackets).
         - False: force-disable caching.
