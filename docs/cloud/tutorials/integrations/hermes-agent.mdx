@@ -68,7 +68,17 @@ curl -fsSL https://browser-use.com/cli/install.sh | bash
 browser-use doctor
 ```
 
-**3. Connect to cloud browsers**
+**3. Install the skill**
+
+The Browser Use skill teaches Hermes the full CLI command set. Install it from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use):
+
+```bash
+hermes skills install skills-sh/browser-use/browser-use/browser-use
+```
+
+Or ask Hermes directly in chat to install it.
+
+**4. Connect to cloud browsers**
 
 Log in with your API key:
 
@@ -78,9 +88,9 @@ browser-use cloud login <your-api-key>
 
 Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
 
-**4. Use it**
+**5. Use it**
 
-Hermes can use the CLI commands directly via its terminal tool:
+Once the skill is loaded, Hermes can drive the browser through CLI commands via its terminal tool:
 
 ```
 > Use browser-use to open github.com/trending and summarize the top repos
