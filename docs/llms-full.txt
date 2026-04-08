@@ -130,7 +130,6 @@ Pass `model` to select a model:
 | ----- | ---------- | --------------------- | ---------------------- |
 | Claude Sonnet 4.6 | `claude-sonnet-4.6` | \$3.60 | \$18.00 |
 | Claude Opus 4.6 | `claude-opus-4.6` | \$6.00 | \$30.00 |
-| Gemini 3 Flash Preview | `gemini-3-flash` | \$0.60 | \$3.60 |
 
   We recommend **Claude Sonnet 4.6** (`claude-sonnet-4.6`). It's the model we optimize for the most right now.
 
@@ -1842,7 +1841,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 | Tool | Description |
 |------|-------------|
-| `run_session` | Create a session and run a task. Supports `keep_alive`, `model` (`gemini-3-flash`, `claude-sonnet-4.6`, `claude-opus-4.6`), `output_schema`, and `profile_id`. |
+| `run_session` | Create a session and run a task. Supports `keep_alive`, `model` (`claude-sonnet-4.6`, `claude-opus-4.6`), `output_schema`, and `profile_id`. |
 | `get_session` | Poll session status and output. Returns status, step count, cost breakdown, and live URL. |
 | `send_task` | Send a follow-up task to an idle keep-alive session. |
 | `stop_session` | Stop a session. `strategy: "task"` stops only the task, `"session"` destroys the sandbox. |
@@ -2437,7 +2436,6 @@ Source: https://docs.browser-use.com/cloud/faq
 
 - **Claude Opus 4.6** (`claude-opus-4.6`) — most capable. Use for the hardest tasks that need maximum accuracy.
 - **Claude Sonnet 4.6** (`claude-sonnet-4.6`, default) — best balance of capability and cost. Use for complex multi-step workflows.
-- **Gemini 3 Flash** (`gemini-3-flash`) — faster, cheaper. Good for simple tasks.
 
 ## How do I get the live browser URL?
 
@@ -2492,8 +2490,6 @@ Source: https://docs.browser-use.com/cloud/legacy/agent
 | Browser Use 2.0 (default) | `browser-use-2.0` | \$0.006 |
 | Browser Use LLM | `browser-use-llm` | \$0.002 |
 | O3 | `o3` | \$0.03 |
-| Gemini 3 Pro Preview | `gemini-3-pro-preview` | \$0.03 |
-| Gemini 3 Flash Preview | `gemini-3-flash` | \$0.01 |
 | Gemini Flash Latest | `gemini-flash-latest` | \$0.0075 |
 | Gemini Flash Lite Latest | `gemini-flash-lite-latest` | \$0.005 |
 | Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
