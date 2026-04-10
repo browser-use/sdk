@@ -102,14 +102,14 @@ browser-use open https://example.com
 # Visible browser window
 browser-use --headed open https://example.com
 
-# Use your real Chrome with Default profile (with existing logins/cookies)
-browser-use --profile "Default" open https://gmail.com
+# Connect to user's Chrome (preserves logins/cookies)
+browser-use connect
 
 # Use a specific Chrome profile
-browser-use --profile "Profile 1" open https://gmail.com
+browser-use --profile "Default" open https://gmail.com
 
-# Auto-discover and connect to running Chrome
-browser-use --connect open https://example.com
+# Cloud browser (zero-config, requires API key)
+browser-use cloud connect
 
 # Connect to an existing browser via CDP URL
 browser-use --cdp-url http://localhost:9222 open https://example.com
@@ -117,6 +117,8 @@ browser-use --cdp-url http://localhost:9222 open https://example.com
 # WebSocket CDP URL also works
 browser-use --cdp-url ws://localhost:9222/devtools/browser/... state
 ```
+
+After `connect` or `cloud connect`, all subsequent commands go to that browser — no extra flags needed.
 
 ## All Commands
 
@@ -154,9 +156,10 @@ browser-use --cdp-url ws://localhost:9222/devtools/browser/... state
 ### Tabs
 | Command | Description |
 |---------|-------------|
-| `switch <tab>` | Switch to tab by index |
-| `close-tab` | Close current tab |
-| `close-tab <tab>` | Close specific tab |
+| `tab list` | List all tabs |
+| `tab new [url]` | Open new tab (blank or with URL) |
+| `tab switch <index>` | Switch to tab by index |
+| `tab close [index...]` | Close tab(s) (current if no index) |
 
 ### Cookies
 | Command | Description |
@@ -213,18 +216,18 @@ Generic REST passthrough to the Browser-Use Cloud API, plus cloud browser provis
 
 | Command | Description |
 |---------|-------------|
-| `cloud connect` | Provision cloud browser and connect |
-| `cloud connect --timeout 120` | Cloud browser with custom timeout |
-| `cloud connect --proxy-country US` | Cloud browser with proxy |
-| `cloud connect --profile-id <id>` | Cloud browser with profile |
+| `cloud connect` | Provision cloud browser and connect (zero-config, auto-manages profile) |
 | `cloud login <api-key>` | Save API key |
 | `cloud logout` | Remove API key |
+| `cloud close` | Disconnect and stop cloud browser |
 | `cloud v2 GET <path>` | GET request to API v2 |
 | `cloud v2 POST <path> '<json>'` | POST request to API v2 |
 | `cloud v3 POST <path> '<json>'` | POST request to API v3 |
 | `cloud v2 poll <task-id>` | Poll task until done |
 | `cloud v2 --help` | Show API v2 endpoints (from OpenAPI spec) |
 | `cloud v3 --help` | Show API v3 endpoints |
+
+`cloud connect` provisions a cloud browser with a persistent profile (auto-created on first use), connects via CDP, and prints a live URL. For custom browser settings (proxy, timeout, specific profile), use `cloud v2 POST /browsers` directly.
 
 ```bash
 # Save API key (or set BROWSER_USE_API_KEY env var)
@@ -323,11 +326,24 @@ BROWSER_USE_SESSION=work browser-use state
 |--------|-------------|
 | `--headed` | Show browser window |
 | `--profile [NAME]` | Use real Chrome (bare `--profile` uses "Default") |
-| `--connect` | Auto-discover and connect to running Chrome via CDP |
+| `--connect` | Auto-discover and connect to running Chrome via CDP (prefer `connect` command instead) |
 | `--cdp-url <url>` | Connect to existing browser via CDP URL (`http://` or `ws://`) |
 | `--session NAME` | Target a named session (default: "default", env: `BROWSER_USE_SESSION`) |
 | `--json` | Output as JSON |
 | `--mcp` | Run as MCP server via stdin/stdout |
+
+## Configuration
+
+```bash
+browser-use config list                            # Show all config values
+browser-use config set cloud_connect_proxy jp      # Set a value
+browser-use config get cloud_connect_proxy         # Get a value
+browser-use config unset cloud_connect_timeout     # Remove a value
+browser-use doctor                                 # Shows config + diagnostics
+browser-use setup                                  # Interactive post-install setup
+```
+
+Config stored in `~/.browser-use/config.json`.
 
 ## Examples
 
@@ -392,6 +408,7 @@ All CLI-managed files live under `~/.browser-use/` (override with `BROWSER_USE_H
 ├── tunnels/
 │   ├── {port}.json      # Tunnel metadata
 │   └── {port}.log       # Tunnel logs
+├── default.state.json   # Daemon lifecycle state (phase, PID, config)
 ├── default.sock         # Daemon socket (ephemeral)
 ├── default.pid          # Daemon PID (ephemeral)
 └── cli.log              # Daemon log
