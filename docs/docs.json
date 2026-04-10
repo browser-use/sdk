@@ -102,6 +102,7 @@
                     "group": "Integrations",
                     "icon": "plug",
                     "pages": [
+                      "cloud/tutorials/integrations/claude-code",
                       "cloud/tutorials/integrations/openclaw",
                       "cloud/tutorials/integrations/hermes-agent",
                       "cloud/guides/mcp-server",
