@@ -336,6 +336,7 @@ class AsyncBrowserUse:
         profile_id: str | None = None,
         proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         workspace_id: str | None = None,
+        sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
         **extra: Any,
