@@ -33,6 +33,7 @@ class Sessions:
         output_schema: dict[str, Any] | None = None,
         workspace_id: str | None = None,
         enable_scheduled_tasks: bool | None = None,
+        sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
         **extra: Any,
@@ -59,6 +60,8 @@ class Sessions:
             body["workspaceId"] = workspace_id
         if enable_scheduled_tasks is not None:
             body["enableScheduledTasks"] = enable_scheduled_tasks
+        if sensitive_data is not None:
+            body["sensitiveData"] = sensitive_data
         if enable_recording is not None:
             body["enableRecording"] = enable_recording
         if cache_script is not None:
@@ -170,6 +173,7 @@ class AsyncSessions:
         output_schema: dict[str, Any] | None = None,
         workspace_id: str | None = None,
         enable_scheduled_tasks: bool | None = None,
+        sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
         **extra: Any,
@@ -196,6 +200,8 @@ class AsyncSessions:
             body["workspaceId"] = workspace_id
         if enable_scheduled_tasks is not None:
             body["enableScheduledTasks"] = enable_scheduled_tasks
+        if sensitive_data is not None:
+            body["sensitiveData"] = sensitive_data
         if enable_recording is not None:
             body["enableRecording"] = enable_recording
         if cache_script is not None:

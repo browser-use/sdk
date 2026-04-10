@@ -747,6 +747,12 @@ class RunTaskRequest(BaseModel):
         description='If true, the agent can create scheduled tasks that run on a recurring basis (e.g. "every Monday morning, check my inbox and summarize new emails"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.',
         title='Enablescheduledtasks',
     )
+    sensitive_data: Dict[str, str] | None = Field(
+        None,
+        alias='sensitiveData',
+        description='Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values. WARNING: sensitive data may be visible in screenshots if the page renders values in unmasked form fields.',
+        title='Sensitivedata',
+    )
     enable_recording: bool | None = Field(
         False,
         alias='enableRecording',
