@@ -1,9 +1,9 @@
 ---
 title: Claude Code
-description: Give Claude Code browser automation with Browser Use — cloud browsers or your own Chrome.
+description: Give Claude Code cloud browser automation with Browser Use.
 ---
 
-[Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) is Anthropic's agentic coding tool that runs in the terminal. Add Browser Use and it can automate any browser — either free cloud browsers with anti-detect profiles, CAPTCHA solving, residential proxies in 195+ countries, and stealth browsing, or your own local Chrome with your existing logins and extensions.
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) is Anthropic's agentic coding tool that runs in the terminal. Add Browser Use and it gets full cloud browser automation — anti-detect profiles, CAPTCHA solving, residential proxies in 195+ countries, persistent profiles, and stealth browsing.
 
 ## Setup
 
@@ -27,15 +27,9 @@ The Browser Use skill teaches Claude Code the full CLI command set. Install it f
 npx skills add https://github.com/browser-use/browser-use --skill browser-use
 ```
 
-**4. Connect a browser**
+**4. Connect to cloud browsers**
 
-Use your own Chrome — Claude Code connects to your running browser with your existing logins and cookies:
-
-```bash
-browser-use connect
-```
-
-Or use a cloud browser instead. Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and connect:
+Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and connect:
 
 ```bash
 browser-use cloud login <your-api-key>
@@ -43,8 +37,6 @@ browser-use cloud connect
 ```
 
 Or let Claude Code provision a free API key itself — see [Agent Self-Registration](#agent-self-registration) below.
-
-After either `connect` or `cloud connect`, all subsequent commands go to that browser — no extra flags needed.
 
 **5. Use it**
 
