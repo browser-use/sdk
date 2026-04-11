@@ -1129,6 +1129,13 @@ export interface components {
              */
             enableScheduledTasks: boolean;
             /**
+             * Sensitivedata
+             * @description Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values. WARNING: sensitive data may be visible in screenshots if the page renders values in unmasked form fields.
+             */
+            sensitiveData?: {
+                [key: string]: string;
+            } | null;
+            /**
              * Enablerecording
              * @description If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.
              * @default false
