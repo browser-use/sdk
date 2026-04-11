@@ -36,10 +36,6 @@ Every webhook request includes two headers:
 
 The signature is computed over `{timestamp}.{body}`, where `body` is the JSON-serialized payload with keys sorted alphabetically and no extra whitespace. Verify it to ensure the request is authentic and to prevent replay attacks.
 
-<Note>
-  The Python example below uses an f-string with nested quotes that requires **Python 3.12+**. On older versions, extract `separators=(',', ':')` into a variable first.
-</Note>
-
 <CodeGroup>
 ```python Python
 import hashlib

@@ -1199,7 +1199,7 @@ await browser.close();
 
 ### Selenium
 
-Selenium does not support remote CDP over WebSocket directly. Connect through Playwright's CDP bridge instead:
+Selenium requires a local WebSocket proxy to connect to Browser Use's remote CDP endpoint. Use [selenium-wire](https://github.com/wkeeling/selenium-wire) or connect through Playwright's CDP bridge instead:
 
 ```python
 from playwright.sync_api import sync_playwright
@@ -1675,96 +1675,6 @@ Use **Agent Mail** (enabled by default). For end-client scenarios, have them for
 Use **TOTP secret in prompt** — the agent generates codes via pyotp, no human intervention needed.
 
 
-# Claude Code
-Source: https://docs.browser-use.com/cloud/tutorials/integrations/claude-code
-
-
-[Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) is Anthropic's agentic coding tool that runs in the terminal. Add Browser Use and it gets full cloud browser automation — anti-detect profiles, CAPTCHA solving, residential proxies in 195+ countries, persistent profiles, and stealth browsing.
-
-## Setup
-
-**1. Install the CLI**
-
-```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
-```
-
-**2. Verify the installation**
-
-```bash
-browser-use doctor
-```
-
-**3. Install the skill**
-
-The Browser Use skill teaches Claude Code the full CLI command set. Install it from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use):
-
-```bash
-npx skills add https://github.com/browser-use/browser-use --skill browser-use
-```
-
-**4. Connect to cloud browsers**
-
-Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and connect:
-
-```bash
-browser-use cloud login <your-api-key>
-browser-use cloud connect
-```
-
-Or let Claude Code provision a free API key itself — see [Agent Self-Registration](#agent-self-registration) below.
-
-**5. Use it**
-
-Claude Code uses its bash tool to run CLI commands directly:
-
-```
-> Use browser-use to open github.com/trending and summarize the top repos
-```
-
-For the complete CLI reference and advanced features like sessions, tunnels, and Python execution, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
-
-## Agent Self-Registration
-
-Claude Code can provision its own Browser Use API key autonomously — no human interaction needed. The free tier includes unlimited browser hours, free proxies in 195+ countries, persistent browser profiles, CAPTCHA solving, and stealth browsing at zero cost.
-
-Install the Browser Use CLI:
-
-```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
-```
-
-Claude Code runs two CLI commands using its bash tool:
-
-**1. Request a challenge**
-
-```bash
-browser-use cloud signup
-```
-
-Returns a `Challenge ID` and `Challenge` — an obfuscated math problem that requires LLM reasoning to solve.
-
-**2. Solve the challenge and verify**
-
-Claude Code solves the math problem, then verifies with the answer (a string with 2 decimal places, e.g. `"13.60"`):
-
-```bash
-browser-use cloud signup --verify <challenge-id> <answer>
-```
-
-The CLI saves the API key to `~/.browser-use/config.json` automatically. No extra configuration needed — Claude Code can start using cloud browser commands immediately.
-
-### Claim the account (optional)
-
-If the human wants to see the account in the dashboard later:
-
-```bash
-browser-use cloud signup --claim
-```
-
-Returns a claim URL valid for 1 hour. The human can follow the link to sign up and claim the agent-created account.
-
-
 # OpenClaw
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/openclaw
 
@@ -1859,156 +1769,6 @@ npx skills add https://github.com/browser-use/browser-use --skill browser-use
 Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to navigate pages, click elements, fill forms, take screenshots, extract data, and more. The skill file teaches the agent the full command set.
 
 For the complete CLI reference and advanced features like cloud browsers, tunnels, sessions, and Python execution, see the [README](https://github.com/browser-use/browser-use/blob/main/browser_use/skill_cli/README.md) and the [Browser Use docs](https://docs.browser-use.com).
-
-
-# Hermes Agent
-Source: https://docs.browser-use.com/cloud/tutorials/integrations/hermes-agent
-
-
-[Hermes Agent](https://github.com/nousresearch/hermes-agent) is an open-source, self-improving AI agent by Nous Research. It has built-in browser automation tools that work with local Chromium out of the box. Add Browser Use and those tools run on cloud browsers with anti-detect profiles, residential proxies in 195+ countries, and stealth browsing.
-
-Two ways to set it up: configure Browser Use as Hermes's cloud browser backend, or install the Browser Use CLI and let Hermes drive it directly.
-
-## Option 1: Cloud Browser Backend
-
-Hermes has built-in browser tools (`browser_navigate`, `browser_click`, `browser_snapshot`, etc.) that default to local Chromium. Point them at Browser Use cloud browsers instead — no extra dependencies, same Hermes experience.
-
-### Setup
-
-**1. Get your API key**
-
-Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and copy your API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
-
-Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
-
-**2. Configure Hermes**
-
-Run the setup wizard:
-
-```bash
-hermes setup tools
-```
-
-Select **Browser Automation**, then **Browser Use**, and paste your API key when prompted.
-
-Or configure manually — add your key to `~/.hermes/.env`:
-
-```bash
-BROWSER_USE_API_KEY=your_key_here
-```
-
-And set the provider in `~/.hermes/config.yaml`:
-
-```yaml
-browser:
-  cloud_provider: browser-use
-```
-
-**3. Use it**
-
-Just chat with Hermes — any browsing tasks automatically route through Browser Use cloud browsers:
-
-```
-> Find the top trending repositories on GitHub today and summarize them
-```
-
-## Option 2: Browser Use CLI
-
-The [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli) is a standalone tool that gives Hermes browser automation through terminal commands. Hermes drives the browser directly via its terminal tool — giving you shared browser sessions across agents, persistent logins and cookies, profile management, and access to Browser Use's full command surface.
-
-### Setup
-
-**1. Install the CLI**
-
-```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
-```
-
-**2. Verify the installation**
-
-```bash
-browser-use doctor
-```
-
-**3. Install the skill**
-
-The Browser Use skill teaches Hermes the full CLI command set. Install it from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use):
-
-```bash
-hermes skills install skills-sh/browser-use/browser-use/browser-use
-```
-
-Or ask Hermes directly in chat to install it.
-
-**4. Connect to cloud browsers**
-
-Log in with your API key:
-
-```bash
-browser-use cloud login <your-api-key>
-```
-
-Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
-
-**5. Use it**
-
-Once the skill is loaded, Hermes can drive the browser through CLI commands via its terminal tool:
-
-```
-> Use browser-use to open github.com/trending and summarize the top repos
-```
-
-For the complete CLI reference and advanced features like cloud browsers, tunnels, sessions, and Python execution, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
-
-## Agent Self-Registration
-
-Hermes can provision its own Browser Use API key autonomously — no human interaction needed. This works with both options above.
-
-Install the Browser Use CLI:
-
-```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
-```
-
-The agent runs three CLI commands using its terminal tool:
-
-**1. Request a challenge**
-
-```bash
-browser-use cloud signup
-```
-
-Returns a `Challenge ID` and `Challenge` — an obfuscated math problem that requires LLM reasoning to solve.
-
-**2. Solve the challenge and verify**
-
-The agent solves the math problem, then verifies with the answer (a string with 2 decimal places, e.g. `"13.60"`):
-
-```bash
-browser-use cloud signup --verify <challenge-id> <answer>
-```
-
-The CLI saves the API key to `~/.browser-use/config.json` automatically.
-
-**3. Copy the key to Hermes config**
-
-For the cloud browser backend (Option 1):
-
-```bash
-hermes config set BROWSER_USE_API_KEY $(browser-use config get api_key)
-```
-
-For CLI mode (Option 2), the key is already saved — no extra step needed.
-
-### Claim the account (optional)
-
-If the human wants to see the account in the dashboard later:
-
-```bash
-browser-use cloud signup --claim
-```
-
-Returns a claim URL valid for 1 hour. The human can follow the link to sign up and claim the agent-created account.
 
 
 # MCP Server
@@ -2127,8 +1887,6 @@ Every webhook request includes two headers:
 - `X-Browser-Use-Timestamp` — Unix timestamp (seconds) when the request was sent
 
 The signature is computed over `{timestamp}.{body}`, where `body` is the JSON-serialized payload with keys sorted alphabetically and no extra whitespace. Verify it to ensure the request is authentic and to prevent replay attacks.
-
-  The Python example below uses an f-string with nested quotes that requires **Python 3.12+**. On older versions, extract `separators=(',', ':')` into a variable first.
 
 ```python Python
 import hashlib
