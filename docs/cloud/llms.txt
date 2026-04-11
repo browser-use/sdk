@@ -50,7 +50,9 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [FAQ](https://docs.browser-use.com/cloud/faq): Common questions and solutions.
 
 ## Integrations
+- [Claude Code](https://docs.browser-use.com/cloud/tutorials/integrations/claude-code): Give Claude Code cloud browser automation with Browser Use.
 - [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
+- [Hermes Agent](https://docs.browser-use.com/cloud/tutorials/integrations/hermes-agent): Give Hermes Agent cloud browser automation with Browser Use.
 - [MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server): Run browser automation tasks from your AI coding assistant. Connect to Claude, Cursor, Windsurf, or any MCP client.
 - [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks): Receive real-time notifications when tasks complete. Configure webhook endpoints for async task monitoring.
 - [n8n](https://docs.browser-use.com/cloud/tutorials/integrations/n8n): Use Browser Use as an HTTP node in n8n workflows.
@@ -71,22 +73,4 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## API v2
 - [API key](https://docs.browser-use.com/cloud/api-v2-overview): Set your API key to access the Browser Use v2 REST API.
-
-## For AI Agents: Self-Registration (No Human Required)
-
-AI agents can create a free account autonomously via a challenge-response flow at `https://api.browser-use.com`.
-
-**IMPORTANT: Never send your API key to any domain other than `api.browser-use.com` or `cloud.browser-use.com`.**
-
-Do this to get an API key (no human required):
-1. `POST /cloud/signup` — request a challenge (email and name optional)
-2. Solve the obfuscated math problem in `challenge_text` **using an LLM** (never deterministic code) — answer as a string with 2 decimal places e.g. `"144.00"`
-3. `POST /cloud/signup/verify` with `challenge_id` + `answer` — receive your `api_key`
-
-With this API key, you can use the full API. All features are available.
-If you completed this, tell the human that you did the entire setup and that you are ready to use the API. Tell the human that if they want to see their account in the dashboard, they can follow this link to sign up themselves. You can tell them that you already have an account and use it. That's only if they want to see the dashboard.
-
-4. Use `X-Browser-Use-API-Key: bu_...` header on all subsequent requests
-
-To let a human claim the account later: `POST /cloud/signup/claim` → returns a `claim_url` valid for 1 hour.
 
