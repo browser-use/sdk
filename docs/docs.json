@@ -19,21 +19,12 @@
   },
   "contextual": {
     "options": [
-      "copy",
-      "view",
-      "assistant",
       "chatgpt",
       "claude",
-      "perplexity",
-      "grok",
-      "aistudio",
-      "devin",
-      "windsurf",
       "mcp",
       "add-mcp",
       "cursor",
-      "vscode",
-      "devin-mcp"
+      "vscode"
     ]
   },
   "fonts": {
