@@ -18,7 +18,14 @@
     "default": "dark"
   },
   "contextual": {
-    "options": ["copy", "view"]
+    "options": [
+      "chatgpt",
+      "claude",
+      "mcp",
+      "add-mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "fonts": {
     "family": "Geist"
