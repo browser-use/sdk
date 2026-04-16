@@ -18,7 +18,23 @@
     "default": "dark"
   },
   "contextual": {
-    "options": ["copy", "view"]
+    "options": [
+      "copy",
+      "view",
+      "assistant",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "grok",
+      "aistudio",
+      "devin",
+      "windsurf",
+      "mcp",
+      "add-mcp",
+      "cursor",
+      "vscode",
+      "devin-mcp"
+    ]
   },
   "fonts": {
     "family": "Geist"
