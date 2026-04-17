@@ -21,6 +21,19 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 ```
 
 
+Concurrent scraping — each `run()` creates its own session, so run them in parallel:
+```python
+results = await asyncio.gather(*[
+    client.run(task, output_schema=MySchema)
+    for task in ["Scrape site A", "Scrape site B", "Scrape site C"]
+])
+```
+```javascript
+const results = await Promise.all(
+  tasks.map((task) => client.run(task, { schema: MySchema }))
+);
+```
+
 ## Get Started
 - [Quick start](https://docs.browser-use.com/cloud/quickstart): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
 - [Prompt for Vibecoders](https://docs.browser-use.com/cloud/vibecoding): Complete Cloud SDK reference for AI coding agents.
