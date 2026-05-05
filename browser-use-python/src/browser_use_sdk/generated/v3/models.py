@@ -14,6 +14,124 @@ class AccountNotFoundError(BaseModel):
     detail: str | None = Field('Account not found', title='Detail')
 
 
+class Size(Enum):
+    small = 'small'
+    medium = 'medium'
+    large = 'large'
+
+
+class BoxCreateRequest(BaseModel):
+    profile_id: UUID | None = Field(None, title='Profile Id')
+    size: Size | None = Field(None, title='Size')
+
+
+class BoxPatchRequest(BaseModel):
+    dsp_enabled: bool | None = Field(None, title='Dsp Enabled')
+
+
+class BoxResizeRequest(BaseModel):
+    size: Size = Field(..., title='Size')
+
+
+class BoxRestartMode(Enum):
+    service = 'service'
+    reboot = 'reboot'
+
+
+class BoxRestartRequest(BaseModel):
+    mode: BoxRestartMode | None = BoxRestartMode.service
+
+
+class Default(Enum):
+    small = 'small'
+    medium = 'medium'
+    large = 'large'
+
+
+class Name(Enum):
+    small = 'small'
+    medium = 'medium'
+    large = 'large'
+
+
+class BoxSizeSpecView(BaseModel):
+    name: Name = Field(..., title='Name')
+    vcpu: int = Field(..., title='Vcpu')
+    ram_gb: int = Field(..., title='Ram Gb')
+    disk_gb: int = Field(..., title='Disk Gb')
+    daily_usd: float = Field(..., title='Daily Usd')
+    min_balance_usd: float = Field(..., title='Min Balance Usd')
+
+
+class BoxStatus(Enum):
+    provisioning = 'provisioning'
+    awaiting_oauth = 'awaiting_oauth'
+    ready = 'ready'
+    resizing = 'resizing'
+    error = 'error'
+    halted = 'halted'
+    destroyed = 'destroyed'
+
+
+class BoxView(BaseModel):
+    id: UUID = Field(..., title='Id')
+    project_id: UUID = Field(..., title='Project Id')
+    profile_id: UUID | None = Field(..., title='Profile Id')
+    size: Size = Field(..., title='Size')
+    size_spec: BoxSizeSpecView
+    ec2_instance_id: str | None = Field(..., title='Ec2 Instance Id')
+    public_ip: str | None = Field(..., title='Public Ip')
+    status: BoxStatus
+    status_detail: str | None = Field(..., title='Status Detail')
+    claude_authed: bool = Field(..., title='Claude Authed')
+    tg_installed: bool = Field(..., title='Tg Installed')
+    tg_bot_username: str | None = Field(..., title='Tg Bot Username')
+    dsp_enabled: bool = Field(..., title='Dsp Enabled')
+    live_browser_url: str | None = Field(..., title='Live Browser Url')
+    last_heartbeat_at: AwareDatetime | None = Field(..., title='Last Heartbeat At')
+    trial_ends_at: AwareDatetime | None = Field(None, title='Trial Ends At')
+    created_at: AwareDatetime = Field(..., title='Created At')
+    updated_at: AwareDatetime = Field(..., title='Updated At')
+
+
+class BrowserDownloadFile(BaseModel):
+    path: str = Field(
+        ...,
+        description='File name (basename relative to the session downloads prefix)',
+        title='Path',
+    )
+    size: int = Field(..., description='File size in bytes', title='Size')
+    last_modified: AwareDatetime = Field(
+        ...,
+        alias='lastModified',
+        description='When the file was last modified in S3',
+        title='Lastmodified',
+    )
+    url: str | None = Field(
+        None,
+        description='Presigned download URL (15 min expiry). Only included when `includeUrls=true`.',
+        title='Url',
+    )
+
+
+class BrowserDownloadListResponse(BaseModel):
+    files: List[BrowserDownloadFile] = Field(
+        ..., description='List of files downloaded by the browser', title='Files'
+    )
+    next_cursor: str | None = Field(
+        None,
+        alias='nextCursor',
+        description='Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page.',
+        title='Nextcursor',
+    )
+    has_more: bool | None = Field(
+        False,
+        alias='hasMore',
+        description='Whether there are more files beyond this page.',
+        title='Hasmore',
+    )
+
+
 class BrowserSessionStatus(Enum):
     active = 'active'
     stopped = 'stopped'
@@ -114,7 +232,12 @@ class BuModel(Enum):
     gemini_3_flash = 'gemini-3-flash'
     claude_sonnet_4_6 = 'claude-sonnet-4.6'
     claude_opus_4_6 = 'claude-opus-4.6'
+    claude_opus_4_7 = 'claude-opus-4.7'
     gpt_5_4_mini = 'gpt-5.4-mini'
+
+
+class ClaudeLoginCodeRequest(BaseModel):
+    code: str = Field(..., title='Code')
 
 
 class BrowserScreenWidth(RootModel[int]):
@@ -174,6 +297,12 @@ class CustomProxy(BaseModel):
     password: Password | None = Field(
         None, description='Password for proxy authentication.', title='Password'
     )
+    ignore_cert_errors: bool | None = Field(
+        False,
+        alias='ignoreCertErrors',
+        description='Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).',
+        title='Ignore Certificate Errors',
+    )
 
 
 class FileInfo(BaseModel):
@@ -217,7 +346,7 @@ class FileListResponse(BaseModel):
     )
 
 
-class Size(RootModel[int]):
+class Size3(RootModel[int]):
     root: int = Field(
         ...,
         description='File size in bytes (required for workspace uploads)',
@@ -241,7 +370,7 @@ class FileUploadItem(BaseModel):
         max_length=255,
         title='Contenttype',
     )
-    size: Size | None = Field(
+    size: Size3 | None = Field(
         None,
         description='File size in bytes (required for workspace uploads)',
         title='Size',
@@ -348,7 +477,7 @@ class PlanInfo(BaseModel):
     )
 
 
-class Name(RootModel[str]):
+class Name1(RootModel[str]):
     root: str = Field(
         ..., description='Optional name for the profile', max_length=100, title='Name'
     )
@@ -364,7 +493,7 @@ class UserId(RootModel[str]):
 
 
 class ProfileCreateRequest(BaseModel):
-    name: Name | None = Field(
+    name: Name1 | None = Field(
         None, description='Optional name for the profile', title='Name'
     )
     user_id: UserId | None = Field(
@@ -380,7 +509,7 @@ class ProfileNotFoundError(BaseModel):
 
 
 class ProfileUpdateRequest(BaseModel):
-    name: Name | None = Field(
+    name: Name1 | None = Field(
         None, description='Optional name for the profile', title='Name'
     )
     user_id: UserId | None = Field(
@@ -684,7 +813,7 @@ class MaxCostUsd(RootModel[str]):
     )
     root: str = Field(
         ...,
-        description='Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance).',
+        description="Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default.",
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Maxcostusd',
     )
@@ -697,8 +826,8 @@ class RunTaskRequest(BaseModel):
         title='Task',
     )
     model: BuModel | None = Field(
-        BuModel.claude_sonnet_4_6,
-        description='The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-4.6" is balanced, "claude-opus-4.6" is most capable. See BuModel for details.',
+        BuModel.claude_opus_4_7,
+        description='The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-4.6" is balanced, "claude-opus-4.7" is most capable (default). See BuModel for details.',
     )
     session_id: UUID | None = Field(
         None,
@@ -715,7 +844,7 @@ class RunTaskRequest(BaseModel):
     max_cost_usd: float | MaxCostUsd | None = Field(
         None,
         alias='maxCostUsd',
-        description='Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance).',
+        description="Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default.",
         title='Maxcostusd',
     )
     profile_id: UUID | None = Field(
@@ -747,6 +876,12 @@ class RunTaskRequest(BaseModel):
         description='If true, the agent can create scheduled tasks that run on a recurring basis (e.g. "every Monday morning, check my inbox and summarize new emails"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.',
         title='Enablescheduledtasks',
     )
+    sensitive_data: Dict[str, str] | None = Field(
+        None,
+        alias='sensitiveData',
+        description='Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values.',
+        title='Sensitivedata',
+    )
     enable_recording: bool | None = Field(
         False,
         alias='enableRecording',
@@ -763,11 +898,23 @@ class RunTaskRequest(BaseModel):
         description='If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.',
         title='Agentmail',
     )
+    code_mode: bool | None = Field(
+        False,
+        alias='codeMode',
+        description='When true, the agent returns structured output with `text` (summary) and `code` (validated Python source) fields instead of free-form text.',
+        title='Codemode',
+    )
     cache_script: bool | None = Field(
         None,
         alias='cacheScript',
         description='Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from @{{https://example.com}} for @{{electronics}}".',
         title='Cachescript',
+    )
+    use_own_key: bool | None = Field(
+        False,
+        alias='useOwnKey',
+        description="If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2× of provider list prices). If no key is configured for the model's provider, the request is rejected.",
+        title='Useownkey',
     )
     auto_heal: bool | None = Field(
         True,
@@ -810,7 +957,7 @@ class SessionResponse(BaseModel):
     )
     output: Any = Field(
         None,
-        description="The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false.",
+        description="The agent's final output. If `codeMode` was true, this will be an object with `text` (summary), `code` (Python source), and optionally `output` (execution result). If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null.",
         title='Output',
     )
     output_schema: Dict[str, Any] | None = Field(
@@ -931,6 +1078,12 @@ class SessionResponse(BaseModel):
         description='Temporary email address provisioned for this session (via AgentMail). Only present if `agentmail` was enabled.',
         title='Agentmailemail',
     )
+    integrations_used: List[str] | None = Field(
+        None,
+        alias='integrationsUsed',
+        description='List of integration providers used during this session (e.g. ["gmail", "slack", "agentmail"]).',
+        title='Integrationsused',
+    )
     created_at: AwareDatetime = Field(
         ...,
         alias='createdAt',
@@ -951,9 +1104,73 @@ class SessionTimeoutLimitExceededError(BaseModel):
     )
 
 
+class ShellResponse(BaseModel):
+    url: str = Field(..., title='Url')
+    expires_in_seconds: int | None = Field(900, title='Expires In Seconds')
+
+
 class StopStrategy(Enum):
     task = 'task'
     session = 'session'
+
+
+class TelegramInstallRequest(BaseModel):
+    bot_token: str = Field(..., title='Bot Token')
+
+
+class TelegramInstallResponse(BaseModel):
+    installed: bool = Field(..., title='Installed')
+    bot_username: str = Field(..., title='Bot Username')
+    deeplink: str = Field(..., title='Deeplink')
+    setup_token: str = Field(..., title='Setup Token')
+
+
+class State(Enum):
+    pending_browser = 'pending_browser'
+    waiting_scan = 'waiting_scan'
+    login_detected = 'login_detected'
+    minting = 'minting'
+    installing = 'installing'
+    installed = 'installed'
+    failed = 'failed'
+    expired = 'expired'
+
+
+class ErrorCode(Enum):
+    bu_cloud_auth = 'bu_cloud_auth'
+    bu_cloud_unavailable = 'bu_cloud_unavailable'
+    bu_cloud_rate_limited = 'bu_cloud_rate_limited'
+    bu_cloud_timeout = 'bu_cloud_timeout'
+    scan_timeout = 'scan_timeout'
+    agent_dispatch_failed = 'agent_dispatch_failed'
+    agent_timeout = 'agent_timeout'
+    agent_no_output = 'agent_no_output'
+    agent_failed = 'agent_failed'
+    invalid_token = 'invalid_token'
+    bot_username_collision = 'bot_username_collision'
+    rate_limited_botfather = 'rate_limited_botfather'
+    box_not_ready = 'box_not_ready'
+    tg_already_installed = 'tg_already_installed'
+    install_telegram_failed = 'install_telegram_failed'
+    box_offline = 'box_offline'
+    cancelled = 'cancelled'
+    concurrent_limit = 'concurrent_limit'
+    internal = 'internal'
+
+
+class TgAutoSessionView(BaseModel):
+    id: UUID = Field(..., title='Id')
+    state: State = Field(..., title='State')
+    live_url: str | None = Field(..., title='Live Url')
+    bot_username: str | None = Field(..., title='Bot Username')
+    error_code: ErrorCode | None = Field(..., title='Error Code')
+    error_message: str | None = Field(..., title='Error Message')
+    created_at: AwareDatetime = Field(..., title='Created At')
+    updated_at: AwareDatetime = Field(..., title='Updated At')
+
+
+class TgAutoStartResponse(BaseModel):
+    session: TgAutoSessionView
 
 
 class TooManyConcurrentActiveSessionsError(BaseModel):
@@ -961,6 +1178,18 @@ class TooManyConcurrentActiveSessionsError(BaseModel):
         'Too many concurrent active sessions. Please wait for one to finish, kill one, or upgrade your plan.',
         title='Detail',
     )
+
+
+class Reason(Enum):
+    already_used = 'already_used'
+    not_free_tier = 'not_free_tier'
+    no_owner = 'no_owner'
+
+
+class TrialEligibilityView(BaseModel):
+    eligible: bool = Field(..., title='Eligible')
+    reason: Reason | None = Field(None, title='Reason')
+    message: str | None = Field(None, title='Message')
 
 
 class UpdateBrowserSessionRequest(BaseModel):
@@ -975,20 +1204,35 @@ class ValidationError(BaseModel):
     type: str = Field(..., title='Error Type')
 
 
-class Name2(RootModel[str]):
+class WindowCreateRequest(BaseModel):
+    label: str | None = Field(None, title='Label')
+
+
+class WindowRenameRequest(BaseModel):
+    label: str = Field(..., title='Label')
+
+
+class WindowView(BaseModel):
+    id: str = Field(..., title='Id')
+    label: str | None = Field('', title='Label')
+    attached: bool | None = Field(False, title='Attached')
+    created_at: int | None = Field(0, title='Created At')
+
+
+class Name3(RootModel[str]):
     root: str = Field(
         ..., description='Optional name for the workspace', max_length=100, title='Name'
     )
 
 
 class WorkspaceCreateRequest(BaseModel):
-    name: Name2 | None = Field(
+    name: Name3 | None = Field(
         None, description='Optional name for the workspace', title='Name'
     )
 
 
 class WorkspaceUpdateRequest(BaseModel):
-    name: Name2 | None = Field(
+    name: Name3 | None = Field(
         None, description='Optional name for the workspace', title='Name'
     )
 
@@ -1010,6 +1254,10 @@ class WorkspaceView(BaseModel):
         description='Timestamp when the workspace was last updated',
         title='Updated At',
     )
+
+
+class AppEndpointsApiV3BoxesViewsRunTaskRequest(BaseModel):
+    prompt: str = Field(..., title='Prompt')
 
 
 class AccountView(BaseModel):
@@ -1041,9 +1289,24 @@ class AccountView(BaseModel):
     plan_info: PlanInfo = Field(
         ..., alias='planInfo', description='The plan information', title='Plan Info'
     )
+    is_free_tier: bool | None = Field(
+        False,
+        alias='isFreeTier',
+        description='Whether the account is on the free tier',
+        title='Is Free Tier',
+    )
     project_id: UUID = Field(
         ..., alias='projectId', description='The ID of the project', title='Project ID'
     )
+
+
+class BoxCreateResponse(BaseModel):
+    box: BoxView
+
+
+class BoxSizeListResponse(BaseModel):
+    sizes: List[BoxSizeSpecView] = Field(..., title='Sizes')
+    default: Default = Field(..., title='Default')
 
 
 class BrowserSessionItemView(BaseModel):
@@ -1250,6 +1513,10 @@ class StopSessionRequest(BaseModel):
         StopStrategy.session,
         description='How to stop the session. Use "task" to stop only the current task and keep the session alive, or "session" to destroy the sandbox entirely.',
     )
+
+
+class WindowListResponse(BaseModel):
+    windows: List[WindowView] = Field(..., title='Windows')
 
 
 class WorkspaceListResponse(BaseModel):

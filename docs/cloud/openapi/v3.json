@@ -2998,6 +2998,21 @@
                         "description": "If true, the agent can create scheduled tasks that run on a recurring basis (e.g. \"every Monday morning, check my inbox and summarize new emails\"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.",
                         "default": false
                     },
+                    "sensitiveData": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sensitivedata",
+                        "description": "Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values. WARNING: sensitive data may be visible in screenshots if the page renders values in unmasked form fields."
+                    },
                     "enableRecording": {
                         "type": "boolean",
                         "title": "Enablerecording",
@@ -3027,6 +3042,18 @@
                         ],
                         "title": "Cachescript",
                         "description": "Controls deterministic script caching. `null` (default): auto-detected \u2014 enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: \"Get prices from @{{https://example.com}} for @{{electronics}}\"."
+                    },
+                    "useOwnKey": {
+                        "type": "boolean",
+                        "title": "Useownkey",
+                        "description": "If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2\u00d7 of provider list prices). If no key is configured for the model's provider, the request is rejected.",
+                        "default": false
+                    },
+                    "autoHeal": {
+                        "type": "boolean",
+                        "title": "Autoheal",
+                        "description": "When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.",
+                        "default": true
                     }
                 },
                 "type": "object",

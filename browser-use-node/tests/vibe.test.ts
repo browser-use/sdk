@@ -94,6 +94,7 @@ function v2EndpointToSdkMethod(
   if (method === "get" && path === "/browsers") return { resource: "browsers", method: "list" };
   if (method === "get" && path === "/browsers/{session_id}") return { resource: "browsers", method: "get" };
   if (method === "patch" && path === "/browsers/{session_id}") return { resource: "browsers", method: "stop" };
+  if (method === "get" && path === "/browsers/{session_id}/downloads") return { resource: "browsers", method: "downloads" };
 
   // Skills
   if (method === "post" && path === "/skills") return { resource: "skills", method: "create" };
@@ -137,6 +138,7 @@ function v3EndpointToSdkMethod(
   if (method === "get" && path === "/browsers") return { resource: "browsers", method: "list" };
   if (method === "get" && path === "/browsers/{session_id}") return { resource: "browsers", method: "get" };
   if (method === "patch" && path === "/browsers/{session_id}") return { resource: "browsers", method: "stop" };
+  if (method === "get" && path === "/browsers/{session_id}/downloads") return { resource: "browsers", method: "downloads" };
 
   // Profiles
   if (method === "post" && path === "/profiles") return { resource: "profiles", method: "create" };
@@ -349,9 +351,13 @@ describe("V3 SDK coverage", () => {
 
   const client = new BrowserUseV3({ apiKey: "test" });
 
+  // Endpoints intentionally not exposed in the SDK yet.
+  const v3SkippedPaths = (path: string) => path.startsWith("/boxes");
+
   it("should map every v3 endpoint to a known SDK method", () => {
     const unmapped: string[] = [];
     for (const ep of endpoints) {
+      if (v3SkippedPaths(ep.path)) continue;
       const mapping = v3EndpointToSdkMethod(ep);
       if (!mapping) {
         unmapped.push(`${ep.method.toUpperCase()} ${ep.path}`);

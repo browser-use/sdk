@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
+    BrowserDownloadListResponse,
     MessageListResponse,
     SessionListResponse,
     SessionResponse,
@@ -33,8 +34,11 @@ class Sessions:
         output_schema: dict[str, Any] | None = None,
         workspace_id: str | None = None,
         enable_scheduled_tasks: bool | None = None,
+        sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        code_mode: bool | None = None,
+        use_own_key: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -59,10 +63,16 @@ class Sessions:
             body["workspaceId"] = workspace_id
         if enable_scheduled_tasks is not None:
             body["enableScheduledTasks"] = enable_scheduled_tasks
+        if sensitive_data is not None:
+            body["sensitiveData"] = sensitive_data
         if enable_recording is not None:
             body["enableRecording"] = enable_recording
         if cache_script is not None:
             body["cacheScript"] = cache_script
+        if code_mode is not None:
+            body["codeMode"] = code_mode
+        if use_own_key is not None:
+            body["useOwnKey"] = use_own_key
         body.update(extra)
         return SessionResponse.model_validate(
             self._http.request("POST", "/sessions", json=body)
@@ -170,8 +180,11 @@ class AsyncSessions:
         output_schema: dict[str, Any] | None = None,
         workspace_id: str | None = None,
         enable_scheduled_tasks: bool | None = None,
+        sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        code_mode: bool | None = None,
+        use_own_key: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -196,10 +209,16 @@ class AsyncSessions:
             body["workspaceId"] = workspace_id
         if enable_scheduled_tasks is not None:
             body["enableScheduledTasks"] = enable_scheduled_tasks
+        if sensitive_data is not None:
+            body["sensitiveData"] = sensitive_data
         if enable_recording is not None:
             body["enableRecording"] = enable_recording
         if cache_script is not None:
             body["cacheScript"] = cache_script
+        if code_mode is not None:
+            body["codeMode"] = code_mode
+        if use_own_key is not None:
+            body["useOwnKey"] = use_own_key
         body.update(extra)
         return SessionResponse.model_validate(
             await self._http.request("POST", "/sessions", json=body)

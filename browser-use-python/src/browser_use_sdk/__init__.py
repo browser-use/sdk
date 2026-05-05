@@ -10,6 +10,8 @@ from .v2.helpers import AsyncTaskRun, TaskResult, TaskStream
 
 from .generated.v2.models import (
     AccountView,
+    BrowserDownloadFile,
+    BrowserDownloadListResponse,
     BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionView,
@@ -81,6 +83,8 @@ __all__ = [
     "TaskResult",
     # Response models
     "AccountView",
+    "BrowserDownloadFile",
+    "BrowserDownloadListResponse",
     "BrowserSessionItemView",
     "BrowserSessionListResponse",
     "BrowserSessionView",

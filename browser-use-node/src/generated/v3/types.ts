@@ -168,6 +168,30 @@ export interface paths {
         patch: operations["update_browser_session_browsers__session_id__patch"];
         trace?: never;
     };
+    "/browsers/{session_id}/downloads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Browser Session Downloads
+         * @description List files the browser downloaded to S3 during the session.
+         *
+         *     Pass ``includeUrls=true`` to receive presigned download URLs (15 min expiry) inline.
+         *     Files are stored at ``downloads/projects/{project_id}/sessions/{session_id}/`` in
+         *     the private bucket.
+         */
+        get: operations["list_browser_session_downloads_browsers__session_id__downloads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/profiles": {
         parameters: {
             query?: never;
@@ -368,6 +392,501 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/boxes/sizes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Box Sizes
+         * @description Public catalog of available box sizes for the deploy picker.
+         *
+         *     Static data — no auth, no DB. Lives server-side (instead of being
+         *     hardcoded in the frontend) so re-tiering or running a promo is a
+         *     one-file edit in `sizing.py` with no frontend redeploy needed.
+         */
+        get: operations["list_box_sizes_boxes_sizes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/trial-eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Trial Eligibility
+         * @description Tell the FE whether to render a 'try free for 7 days' CTA.
+         *
+         *     Returns a tagged answer:
+         *       - eligible=True   → show the trial CTA on the empty-state.
+         *       - eligible=False, reason='already_used' → show "trial used,
+         *         upgrade to deploy".
+         *       - eligible=False, reason='not_free_tier' → no special copy, the
+         *         normal balance flow handles them.
+         *
+         *     Cheap call: one profile lookup. The FE polls /me + /sizes already,
+         *     this is one more cheap GET on the deploy page.
+         */
+        get: operations["get_trial_eligibility_boxes_me_trial_eligibility_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Provision Box
+         * @description Provision a new box for the authenticated project.
+         *
+         *     Idempotent-ish: if a live box already exists, returns 409. After `bux down`,
+         *     the row is reused (preserving profile_id + size — the user's previous
+         *     choice carries over unless they explicitly pass a new `size`).
+         *
+         *     Requires a paying / comped project. Free-tier projects are rejected
+         *     with 402. Min-balance scales by size ($5 / $10 / $20 for small /
+         *     medium / large) so users with ~5 days of runway can deploy. See
+         *     `common/models/bux/sizing.py`.
+         */
+        post: operations["provision_box_boxes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Box
+         * @description Return the current box for the authenticated project. 404 if none.
+         */
+        get: operations["get_my_box_boxes_me_get"];
+        put?: never;
+        post?: never;
+        /**
+         * Destroy My Box
+         * @description Terminate the EC2. Profile persists. Row is kept so `bux up` can reuse it.
+         */
+        delete: operations["destroy_my_box_boxes_me_delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Patch My Box
+         * @description Update box flags. Currently only dsp_enabled (dangerously skip permissions).
+         *
+         *     The flag is persisted in DB and pushed to the box-agent over WS so the
+         *     *next* shell launch picks it up. Existing terminal sessions keep their
+         *     original setting until the user closes and reopens.
+         */
+        patch: operations["patch_my_box_boxes_me_patch"];
+        trace?: never;
+    };
+    "/boxes/me/resize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resize My Box
+         * @description Resize the project's box to a larger tier (upgrade-only).
+         *
+         *     The actual stop → modify → start dance runs in a background task; this
+         *     handler returns immediately with status=RESIZING. The FE polls /me to
+         *     watch the box flip back to READY when the new instance is up. Takes
+         *     ~60-90s end-to-end (stop ~30s, start ~30s, growpart instant).
+         *
+         *     Constraints enforced here:
+         *       - new size must be a known tier
+         *       - new size must be strictly larger than current (downsize → 400)
+         *       - box must be in READY state (otherwise → 409)
+         *       - project must clear the eligibility gate at the *new* size's
+         *         min-balance (a small box upgrading to large is now playing by
+         *         large-box rules)
+         */
+        post: operations["resize_my_box_boxes_me_resize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/restart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restart My Box
+         * @description Restart a box without destroying it.
+         *
+         *     The escape hatch from ERROR — before this endpoint, a box with a
+         *     stale heartbeat (CPU spike / OOM / agent crash) could only be
+         *     destroyed by the user, which loses the EBS volume and forces a
+         *     fresh setup. Now the user can:
+         *
+         *       - mode=service (default): SSM `systemctl restart bux-tg`. ~5s.
+         *         Fixes most cases (agent process crash, wedged long-poll).
+         *       - mode=reboot: AWS rebootInstances. ~30-60s. Public IP and EBS
+         *         preserved (only resize/upgrade changes the IP). Fallback for
+         *         kernel-hung / SSM-unreachable boxes.
+         *
+         *     Allowed when status is READY or ERROR. PROVISIONING / RESIZING /
+         *     AWAITING_OAUTH / DESTROYED → 409 (no instance to restart, or a
+         *     long-running operation is already in flight).
+         *
+         *     Returns the box view; status is unchanged here. The next bux_health
+         *     tick + box-agent heartbeat is what authoritatively flips ERROR →
+         *     READY when the agent comes back up. The FE polls /me to watch.
+         */
+        post: operations["restart_my_box_boxes_me_restart_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/shell": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get Shell
+         * @description Mint a short-lived terminal URL. User opens it in a browser → live shell.
+         *
+         *     `launch` controls what runs when the terminal connects:
+         *       - "bash" (default) → plain login shell.
+         *       - "claude" → auto-run the claude UI; Ctrl+C drops to bash.
+         *
+         *     `w` (optional) selects which tmux window to attach to (e.g. `bux-w2`).
+         *     Defaults to `bux-w1` — the box-agent auto-creates that window on first
+         *     attach so single-window callers see no behavior change.
+         */
+        post: operations["get_shell_boxes_me_shell_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/windows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Windows List */
+        get: operations["windows_list_boxes_me_windows_get"];
+        put?: never;
+        /** Windows Create */
+        post: operations["windows_create_boxes_me_windows_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/windows/{window_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Windows Delete */
+        delete: operations["windows_delete_boxes_me_windows__window_id__delete"];
+        options?: never;
+        head?: never;
+        /** Windows Rename */
+        patch: operations["windows_rename_boxes_me_windows__window_id__patch"];
+        trace?: never;
+    };
+    "/boxes/me/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Task
+         * @description Fire a one-shot `claude -p "<prompt>"` on the box. Streams output as SSE.
+         *
+         *     Events:
+         *       - data: {"chunk": "..."}      — stdout chunks
+         *       - event: done, data: {"rc": 0} — final exit code
+         */
+        post: operations["run_task_boxes_me_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update Box Agent
+         * @description Tell the box-agent to git-pull + restart from the OSS repo.
+         *
+         *     Default `branch` is whatever the box is currently tracking (the agent
+         *     resolves it from `git rev-parse --abbrev-ref HEAD`); pass `branch=main`
+         *     or `branch=stable` to switch tracks.
+         *
+         *     Returns the old + new SHA so the FE can show "updated to a3f9c1d".
+         *     The agent restarts itself at the tail of the update — the next hello
+         *     will report the new version. We wait up to 90s for the update_result
+         *     reply since git fetch + bootstrap.sh can stretch on slow networks.
+         */
+        post: operations["update_box_agent_boxes_me_update_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/tg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tg Install
+         * @description Install a Telegram bot on the box. Returns a deeplink the user taps to pair.
+         */
+        post: operations["tg_install_boxes_me_tg_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/tg/auto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tg Auto Start
+         * @description Kick off the QR-scan + scripted-CDP Telegram bot creation flow.
+         *
+         *     Idempotent: if a non-terminal QR session already exists for this box,
+         *     returns it instead of spawning another browser. The FE keeps polling
+         *     `GET /me/tg/auto/{id}` until the session reaches a terminal state.
+         *
+         *     No external BU Cloud API key is needed — the orchestrator provisions
+         *     the chromium VM via the cloud's internal browser service, which auths
+         *     via app_config.use_browser_api_key (already set in every env).
+         */
+        post: operations["tg_auto_start_boxes_me_tg_auto_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/tg/auto/{qr_session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tg Auto Status
+         * @description Poll a running QR session. Read-only — never advances the state
+         *     machine. Tenant-scoped: 404 if the session isn't owned by this project.
+         */
+        get: operations["tg_auto_status_boxes_me_tg_auto__qr_session_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Tg Auto Cancel
+         * @description User-initiated cancel. Marks the session failed/cancelled; the
+         *     driver task observes the terminal state on its next poll and exits its
+         *     finally-block (which stops the chromium VM).
+         */
+        delete: operations["tg_auto_cancel_boxes_me_tg_auto__qr_session_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/claude-login/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claude Login Start
+         * @description Kick off a guided claude /login flow on the box.
+         *
+         *     Box-agent forks `claude /login` as a pty subprocess, drives the
+         *     OAuth picker, and ships the URL back over WS. The FE polls
+         *     GET /me/claude-login/state and shows the URL as a tappable link
+         *     + a paste box for the OAuth callback code.
+         *
+         *     Calling this again kills any in-flight attempt and starts fresh.
+         *     The user can also bail via POST /me/claude-login/cancel.
+         */
+        post: operations["claude_login_start_boxes_me_claude_login_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/claude-login/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Claude Login State Get
+         * @description Poll-based view of the active /login flow's state.
+         */
+        get: operations["claude_login_state_get_boxes_me_claude_login_state_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/claude-login/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claude Login Code
+         * @description Pump the OAuth callback code into the box's pty stdin.
+         *
+         *     No real validation here — claude itself surfaces "invalid code"
+         *     on the next pty stdout line, which our claude_login_failed event
+         *     captures.
+         */
+        post: operations["claude_login_code_boxes_me_claude_login_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/me/claude-login/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Claude Login Cancel */
+        post: operations["claude_login_cancel_boxes_me_claude_login_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boxes/terminal/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Terminal Page
+         * @description HTML page the user opens in their browser → xterm.js terminal.
+         *
+         *     Renders the current window_id into a script tag so the JS knows
+         *     which tab is "active" without an extra round-trip. We don't render
+         *     the full window list here — the JS asks the parent for that on
+         *     mount via the bux-react postMessage protocol, so the list always
+         *     reflects the latest state (a tab created in another browser session
+         *     since the URL was minted shows up immediately).
+         */
+        get: operations["terminal_page_boxes_terminal__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -419,11 +938,211 @@ export interface components {
              */
             planInfo: components["schemas"]["PlanInfo"];
             /**
+             * Is Free Tier
+             * @description Whether the account is on the free tier
+             * @default false
+             */
+            isFreeTier: boolean;
+            /**
              * Project ID
              * Format: uuid
              * @description The ID of the project
              */
             projectId: string;
+        };
+        /** BoxCreateRequest */
+        BoxCreateRequest: {
+            /** Profile Id */
+            profile_id?: string | null;
+            /** Size */
+            size?: ("small" | "medium" | "large") | null;
+        };
+        /** BoxCreateResponse */
+        BoxCreateResponse: {
+            box: components["schemas"]["BoxView"];
+        };
+        /** BoxPatchRequest */
+        BoxPatchRequest: {
+            /** Dsp Enabled */
+            dsp_enabled?: boolean | null;
+        };
+        /**
+         * BoxResizeRequest
+         * @description Resize an existing box to a larger tier.
+         *
+         *     Upgrade-only: the backend rejects requests where `size` isn't strictly
+         *     larger than the box's current size. Downsize → 400 with a hint to
+         *     destroy + redeploy. Same size → 409 (idempotent failure — no work to do).
+         */
+        BoxResizeRequest: {
+            /**
+             * Size
+             * @enum {string}
+             */
+            size: "small" | "medium" | "large";
+        };
+        /**
+         * BoxRestartMode
+         * @description How aggressive a /me/restart should be.
+         *
+         *     `service` — fastest, fixes ~95% of cases (agent process crash, OOM,
+         *       wedged TG long-poll). SSM `systemctl restart bux-tg`. ~5s.
+         *     `reboot`  — fallback for kernel-hung / SSM-unreachable boxes. AWS
+         *       rebootInstances. ~30-60s. IP + EBS preserved.
+         * @enum {string}
+         */
+        BoxRestartMode: "service" | "reboot";
+        /** BoxRestartRequest */
+        BoxRestartRequest: {
+            /** @default service */
+            mode: components["schemas"]["BoxRestartMode"];
+        };
+        /**
+         * BoxSizeListResponse
+         * @description Catalog of available size tiers, returned to the deploy picker.
+         *
+         *     Keeping the list server-side (instead of hardcoding prices in the
+         *     frontend) means the day we re-tier or run a promo, we don't have
+         *     to ship a frontend deploy. Just edit `sizing.py`.
+         */
+        BoxSizeListResponse: {
+            /** Sizes */
+            sizes: components["schemas"]["BoxSizeSpecView"][];
+            /**
+             * Default
+             * @enum {string}
+             */
+            default: "small" | "medium" | "large";
+        };
+        /**
+         * BoxSizeSpecView
+         * @description User-visible spec sheet for one size tier. Returned alongside
+         *     BoxView so the UI can render the tooltip ("2 vCPU · 4 GB · 20 GB")
+         *     without a second round trip + so the picker on /bux can show all
+         *     three rows without us hardcoding prices in the frontend.
+         */
+        BoxSizeSpecView: {
+            /**
+             * Name
+             * @enum {string}
+             */
+            name: "small" | "medium" | "large";
+            /** Vcpu */
+            vcpu: number;
+            /** Ram Gb */
+            ram_gb: number;
+            /** Disk Gb */
+            disk_gb: number;
+            /** Daily Usd */
+            daily_usd: number;
+            /** Min Balance Usd */
+            min_balance_usd: number;
+        };
+        /**
+         * BoxStatus
+         * @enum {string}
+         */
+        BoxStatus: "provisioning" | "awaiting_oauth" | "ready" | "resizing" | "error" | "halted" | "destroyed";
+        /** BoxView */
+        BoxView: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Profile Id */
+            profile_id: string | null;
+            /**
+             * Size
+             * @enum {string}
+             */
+            size: "small" | "medium" | "large";
+            size_spec: components["schemas"]["BoxSizeSpecView"];
+            /** Ec2 Instance Id */
+            ec2_instance_id: string | null;
+            /** Public Ip */
+            public_ip: string | null;
+            status: components["schemas"]["BoxStatus"];
+            /** Status Detail */
+            status_detail: string | null;
+            /** Claude Authed */
+            claude_authed: boolean;
+            /** Tg Installed */
+            tg_installed: boolean;
+            /** Tg Bot Username */
+            tg_bot_username: string | null;
+            /** Dsp Enabled */
+            dsp_enabled: boolean;
+            /** Live Browser Url */
+            live_browser_url: string | null;
+            /** Last Heartbeat At */
+            last_heartbeat_at: string | null;
+            /** Trial Ends At */
+            trial_ends_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * BrowserDownloadFile
+         * @description A single file the browser downloaded during the session.
+         */
+        BrowserDownloadFile: {
+            /**
+             * Path
+             * @description File name (basename relative to the session downloads prefix)
+             */
+            path: string;
+            /**
+             * Size
+             * @description File size in bytes
+             */
+            size: number;
+            /**
+             * Lastmodified
+             * Format: date-time
+             * @description When the file was last modified in S3
+             */
+            lastModified: string;
+            /**
+             * Url
+             * @description Presigned download URL (15 min expiry). Only included when `includeUrls=true`.
+             */
+            url?: string | null;
+        };
+        /**
+         * BrowserDownloadListResponse
+         * @description Paginated list of browser downloads with optional presigned URLs.
+         */
+        BrowserDownloadListResponse: {
+            /**
+             * Files
+             * @description List of files downloaded by the browser
+             */
+            files: components["schemas"]["BrowserDownloadFile"][];
+            /**
+             * Nextcursor
+             * @description Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page.
+             */
+            nextCursor?: string | null;
+            /**
+             * Hasmore
+             * @description Whether there are more files beyond this page.
+             * @default false
+             */
+            hasMore: boolean;
         };
         /**
          * BrowserSessionItemView
@@ -633,11 +1352,17 @@ export interface components {
          *
          *     - `bu-mini` / `gemini-3-flash`: Gemini 3 Flash — fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.
          *     - `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 — balanced performance. Best for multi-step workflows that require reasoning and decision-making.
-         *     - `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 — most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.
+         *     - `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 — capable general-purpose Opus tier.
+         *     - `claude-opus-4.7`: Claude Opus 4.7 — most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.
          *     - `gpt-5.4-mini`: GPT-5.4 mini — OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities.
          * @enum {string}
          */
-        BuModel: "bu-mini" | "bu-max" | "bu-ultra" | "gemini-3-flash" | "claude-sonnet-4.6" | "claude-opus-4.6" | "gpt-5.4-mini";
+        BuModel: "bu-mini" | "bu-max" | "bu-ultra" | "gemini-3-flash" | "claude-sonnet-4.6" | "claude-opus-4.6" | "claude-opus-4.7" | "gpt-5.4-mini";
+        /** ClaudeLoginCodeRequest */
+        ClaudeLoginCodeRequest: {
+            /** Code */
+            code: string;
+        };
         /**
          * CreateBrowserSessionRequest
          * @description Request model for creating a browser session.
@@ -713,6 +1438,12 @@ export interface components {
              * @description Password for proxy authentication.
              */
             password?: string | null;
+            /**
+             * Ignore Certificate Errors
+             * @description Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).
+             * @default false
+             */
+            ignoreCertErrors: boolean;
         };
         /**
          * FileInfo
@@ -1080,8 +1811,8 @@ export interface components {
              */
             task?: string | null;
             /**
-             * @description The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-4.6" is balanced, "claude-opus-4.6" is most capable. See BuModel for details.
-             * @default claude-sonnet-4.6
+             * @description The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-4.6" is balanced, "claude-opus-4.7" is most capable (default). See BuModel for details.
+             * @default claude-opus-4.7
              */
             model: components["schemas"]["BuModel"];
             /**
@@ -1097,7 +1828,7 @@ export interface components {
             keepAlive: boolean;
             /**
              * Maxcostusd
-             * @description Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance).
+             * @description Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default.
              */
             maxCostUsd?: number | string | null;
             /**
@@ -1129,6 +1860,13 @@ export interface components {
              */
             enableScheduledTasks: boolean;
             /**
+             * Sensitivedata
+             * @description Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values.
+             */
+            sensitiveData?: {
+                [key: string]: string;
+            } | null;
+            /**
              * Enablerecording
              * @description If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.
              * @default false
@@ -1147,10 +1885,22 @@ export interface components {
              */
             agentmail: boolean;
             /**
+             * Codemode
+             * @description When true, the agent returns structured output with `text` (summary) and `code` (validated Python source) fields instead of free-form text.
+             * @default false
+             */
+            codeMode: boolean;
+            /**
              * Cachescript
              * @description Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from @{{https://example.com}} for @{{electronics}}".
              */
             cacheScript?: boolean | null;
+            /**
+             * Useownkey
+             * @description If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2× of provider list prices). If no key is configured for the model's provider, the request is rejected.
+             * @default false
+             */
+            useOwnKey: boolean;
             /**
              * Autoheal
              * @description When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.
@@ -1217,7 +1967,7 @@ export interface components {
             title?: string | null;
             /**
              * Output
-             * @description The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false.
+             * @description The agent's final output. If `codeMode` was true, this will be an object with `text` (summary), `code` (Python source), and optionally `output` (execution result). If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null.
              */
             output?: unknown | null;
             /**
@@ -1324,6 +2074,11 @@ export interface components {
              */
             agentmailEmail?: string | null;
             /**
+             * Integrationsused
+             * @description List of integration providers used during this session (e.g. ["gmail", "slack", "agentmail"]).
+             */
+            integrationsUsed?: string[];
+            /**
              * Createdat
              * Format: date-time
              * @description When the session was created.
@@ -1347,6 +2102,19 @@ export interface components {
              */
             detail: string;
         };
+        /**
+         * ShellResponse
+         * @description Terminal URL — user opens this in their browser, gets a live shell.
+         */
+        ShellResponse: {
+            /** Url */
+            url: string;
+            /**
+             * Expires In Seconds
+             * @default 900
+             */
+            expires_in_seconds: number;
+        };
         /** StopSessionRequest */
         StopSessionRequest: {
             /**
@@ -1364,6 +2132,65 @@ export interface components {
          * @enum {string}
          */
         StopStrategy: "task" | "session";
+        /** TelegramInstallRequest */
+        TelegramInstallRequest: {
+            /** Bot Token */
+            bot_token: string;
+        };
+        /** TelegramInstallResponse */
+        TelegramInstallResponse: {
+            /** Installed */
+            installed: boolean;
+            /** Bot Username */
+            bot_username: string;
+            /** Deeplink */
+            deeplink: string;
+            /** Setup Token */
+            setup_token: string;
+        };
+        /**
+         * TgAutoSessionView
+         * @description Snapshot of a QR onboarding session. Returned by start, status, and
+         *     cancel — same shape so the FE renders a single view component.
+         */
+        TgAutoSessionView: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "pending_browser" | "waiting_scan" | "login_detected" | "minting" | "installing" | "installed" | "failed" | "expired";
+            /** Live Url */
+            live_url: string | null;
+            /** Bot Username */
+            bot_username: string | null;
+            /** Error Code */
+            error_code: ("bu_cloud_auth" | "bu_cloud_unavailable" | "bu_cloud_rate_limited" | "bu_cloud_timeout" | "scan_timeout" | "agent_dispatch_failed" | "agent_timeout" | "agent_no_output" | "agent_failed" | "invalid_token" | "bot_username_collision" | "rate_limited_botfather" | "box_not_ready" | "tg_already_installed" | "install_telegram_failed" | "box_offline" | "cancelled" | "concurrent_limit" | "internal") | null;
+            /** Error Message */
+            error_message: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * TgAutoStartResponse
+         * @description Returned by POST /me/tg/auto. The session is already running by the
+         *     time this returns — frontend opens the iframe and starts polling.
+         */
+        TgAutoStartResponse: {
+            session: components["schemas"]["TgAutoSessionView"];
+        };
         /**
          * TooManyConcurrentActiveSessionsError
          * @description Error response when user has too many concurrent active sessions
@@ -1374,6 +2201,26 @@ export interface components {
              * @default Too many concurrent active sessions. Please wait for one to finish, kill one, or upgrade your plan.
              */
             detail: string;
+        };
+        /**
+         * TrialEligibilityView
+         * @description GET /me/trial-eligibility — is this user eligible for a free trial?
+         *
+         *     `reason` is a stable machine-readable code the FE branches on:
+         *       - 'already_used' — user has already started a trial in their
+         *         lifetime. Render an "upgrade to deploy" CTA.
+         *       - 'not_free_tier' — paying customer; FE shows the normal flow.
+         *       - 'no_owner' — couldn't resolve the project's owner profile (rare,
+         *         older projects). FE falls back to generic "add credits" copy.
+         *       - None when eligible=True.
+         */
+        TrialEligibilityView: {
+            /** Eligible */
+            eligible: boolean;
+            /** Reason */
+            reason?: ("already_used" | "not_free_tier" | "no_owner") | null;
+            /** Message */
+            message?: string | null;
         };
         /**
          * UpdateBrowserSessionRequest
@@ -1394,6 +2241,50 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WindowCreateRequest */
+        WindowCreateRequest: {
+            /** Label */
+            label?: string | null;
+        };
+        /** WindowListResponse */
+        WindowListResponse: {
+            /** Windows */
+            windows: components["schemas"]["WindowView"][];
+        };
+        /** WindowRenameRequest */
+        WindowRenameRequest: {
+            /** Label */
+            label: string;
+        };
+        /**
+         * WindowView
+         * @description One tmux window on the box. id is the tmux session name (`bux-w<n>`).
+         *
+         *     `label` is a user-supplied name (max 64 chars) stored as a tmux
+         *     per-session option (@bux-label). `attached` is True if any tmux
+         *     client is currently connected to the window. The FE shows a small
+         *     indicator next to attached windows so users know which one a phone
+         *     is currently mirroring.
+         */
+        WindowView: {
+            /** Id */
+            id: string;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+            /**
+             * Attached
+             * @default false
+             */
+            attached: boolean;
+            /**
+             * Created At
+             * @default 0
+             */
+            created_at: number;
         };
         /**
          * WorkspaceCreateRequest
@@ -1471,6 +2362,11 @@ export interface components {
              * @description Timestamp when the workspace was last updated
              */
             updatedAt: string;
+        };
+        /** RunTaskRequest */
+        app__endpoints__api__v3__boxes__views__RunTaskRequest: {
+            /** Prompt */
+            prompt: string;
         };
     };
     responses: never;
@@ -1854,6 +2750,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+        };
+    };
+    list_browser_session_downloads_browsers__session_id__downloads_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                includeUrls?: boolean;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserDownloadListResponse"];
+                };
+            };
+            /** @description Session not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotFoundError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -2369,6 +3309,744 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountNotFoundError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_box_sizes_boxes_sizes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoxSizeListResponse"];
+                };
+            };
+        };
+    };
+    get_trial_eligibility_boxes_me_trial_eligibility_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrialEligibilityView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    provision_box_boxes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BoxCreateRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoxCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_box_boxes_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoxView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    destroy_my_box_boxes_me_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoxView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_my_box_boxes_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BoxPatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoxView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resize_my_box_boxes_me_resize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BoxResizeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoxView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restart_my_box_boxes_me_restart_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BoxRestartRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoxView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_shell_boxes_me_shell_post: {
+        parameters: {
+            query?: {
+                launch?: string;
+                w?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShellResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    windows_list_boxes_me_windows_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WindowListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    windows_create_boxes_me_windows_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WindowCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WindowView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    windows_delete_boxes_me_windows__window_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                window_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    windows_rename_boxes_me_windows__window_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                window_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WindowRenameRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WindowView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_task_boxes_me_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__endpoints__api__v3__boxes__views__RunTaskRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_box_agent_boxes_me_update_post: {
+        parameters: {
+            query?: {
+                branch?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tg_install_boxes_me_tg_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TelegramInstallRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelegramInstallResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tg_auto_start_boxes_me_tg_auto_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TgAutoStartResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tg_auto_status_boxes_me_tg_auto__qr_session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                qr_session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TgAutoSessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tg_auto_cancel_boxes_me_tg_auto__qr_session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                qr_session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TgAutoSessionView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claude_login_start_boxes_me_claude_login_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claude_login_state_get_boxes_me_claude_login_state_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claude_login_code_boxes_me_claude_login_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClaudeLoginCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claude_login_cancel_boxes_me_claude_login_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    terminal_page_boxes_terminal__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
                 };
             };
             /** @description Validation Error */

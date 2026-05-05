@@ -4,6 +4,8 @@ from .._core.errors import BrowserUseError
 
 from ..generated.v3.models import (
     AccountView,
+    BrowserDownloadFile,
+    BrowserDownloadListResponse,
     BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionStatus,
@@ -47,6 +49,8 @@ __all__ = [
     "AccountView",
     "PlanInfo",
     # Browser models
+    "BrowserDownloadFile",
+    "BrowserDownloadListResponse",
     "BrowserSessionItemView",
     "BrowserSessionListResponse",
     "BrowserSessionStatus",
