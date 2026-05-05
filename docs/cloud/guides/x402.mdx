@@ -126,7 +126,7 @@ async with x402HttpxClient(client, timeout=120.0) as http:
 
 - **EVM wallet** (MetaMask, Rabby, Coinbase Wallet, etc.) with its private key available to your app
 - **USD Coin (USDC) on Base mainnet**
-- **Minimum top-up:** `$1.00` USDC per request
+- **Default top-up:** `$5.00` USDC per request (`$1.00` minimum for budget-constrained wallets)
 
 You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIPS/eip-3009), so you sign offchain, and the facilitator pays gas.
 
@@ -136,7 +136,11 @@ You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIP
 
 ## Pricing and credits
 
-Each x402 payment adds `$1` of credits to your project. When credits hit zero, the next request returns `402`, and the SDK automatically signs another `$1` payment to keep going. **You don't manage top-ups manually; just make sure your wallet has enough USDC for your expected usage.**
+Each x402 payment adds `$5` of credits to your project by default (or `$1` if your wallet falls back to the smaller option). When credits hit zero, the next request returns `402`, and the SDK automatically signs another payment to keep going. **You don't manage top-ups manually; just make sure your wallet has enough USDC for your expected usage.**
+
+<Warning>
+  **Mid-task drain still terminates the task.** Browser Use sessions run on a worker that doesn't see x402, so once a long-running task starts and burns through its credits, it stops with `INSUFFICIENT_CREDITS` — it does not pause and wait for the next x402 payment. The `$5` default exists so most tasks complete without hitting this; for expensive models (e.g. Opus) or long sessions, pre-fund with multiple requests before kicking off the task.
+</Warning>
 
 See the [pricing page](https://browser-use.com/pricing) for model and browser costs.
 
@@ -153,7 +157,7 @@ client = AsyncBrowserUse(
     x402_private_key="0x...",             # wallet that pays
     base_url="https://x402.api.browser-use.com/api/v3",
 )
-result = await client.run("...")          # $1 USDC charged, credited to the API key's project
+result = await client.run("...")          # $5 USDC charged, credited to the API key's project
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -175,14 +179,14 @@ When the backend sees both a payment and a valid API key, the credit goes to the
 
 ## How it works
 
-Your code asks for something, we say "$1 please", your wallet pays automatically, we run your request.
+Your code asks for something, we say "$5 please", your wallet pays automatically, we run your request.
 
 A bit more detail:
 
 1. Your code makes a request (e.g. "run this task").
-2. If your project has no credits, we respond with "Payment required: $1".
-3. The SDK auto-signs a `$1` USDC payment from your wallet and resends the request.
-4. Coinbase moves the `$1` on-chain. We add `$1` to your project's credit balance.
+2. If your project has no credits, we respond with "Payment required: $5" (or `$1` as a fallback for smaller wallets).
+3. The SDK auto-signs the payment from your wallet and resends the request.
+4. Coinbase moves the USDC on-chain. We add the same amount to your project's credit balance.
 5. We run your task and send back the result.
 
 ## Wallet setup
