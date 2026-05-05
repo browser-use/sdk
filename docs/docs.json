@@ -114,6 +114,7 @@
                       "cloud/tutorials/integrations/hermes-agent",
                       "cloud/guides/mcp-server",
                       "cloud/guides/webhooks",
+                      "cloud/guides/x402",
                       "cloud/tutorials/integrations/n8n"
                     ]
                   },

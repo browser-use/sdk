@@ -107,7 +107,14 @@ class SyncHttpClient:
 
 
 class AsyncHttpClient:
-    """Asynchronous HTTP client with retry and error handling."""
+    """Asynchronous HTTP client with retry and error handling.
+
+    Pass ``x402_client`` to authenticate via the x402 payment protocol instead
+    of an API key. When ``x402_client`` is set, an ``x402HttpxClient`` is used
+    as the underlying transport. ``api_key`` is optional in that mode — if
+    non-empty, it triggers top-up behavior (backend credits the API key's
+    project instead of one auto-created from the wallet).
+    """
 
     def __init__(
         self,
@@ -115,13 +122,21 @@ class AsyncHttpClient:
         api_key: str,
         timeout: float = 30.0,
         max_retries: int = _DEFAULT_MAX_RETRIES,
+        *,
+        x402_client: Any = None,
     ) -> None:
         self._max_retries = max_retries
-        self._client = httpx.AsyncClient(
-            base_url=base_url,
-            headers={"X-Browser-Use-API-Key": api_key},
-            timeout=timeout,
-        )
+        if x402_client is not None:
+            from .x402 import x402_async_httpx_client
+            self._client = x402_async_httpx_client(
+                x402_client, base_url=base_url, timeout=timeout, api_key=api_key
+            )
+        else:
+            self._client = httpx.AsyncClient(
+                base_url=base_url,
+                headers={"X-Browser-Use-API-Key": api_key},
+                timeout=timeout,
+            )
 
     async def request(
         self,
