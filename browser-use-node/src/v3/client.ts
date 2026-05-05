@@ -65,6 +65,9 @@ export class BrowserUse {
         const x402Client = options.x402 ?? (await x402ClientFromPrivateKey(x402PrivateKey!));
         return wrapFetchWithX402(globalThis.fetch, x402Client);
       })();
+      // Suppress unhandled-rejection warnings if the user constructs the client
+      // but never makes a request
+      fetchPromise.catch(() => {});
       this.http = new HttpClient({
         apiKey: topupKey,
         baseUrl: options.baseUrl ?? X402_BASE_URL_DEFAULT,
