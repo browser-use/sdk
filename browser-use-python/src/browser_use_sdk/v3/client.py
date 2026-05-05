@@ -61,8 +61,11 @@ class BrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        sensitive_data: dict[str, str] | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        code_mode: bool | None = ...,
+        use_own_key: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -79,8 +82,11 @@ class BrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        sensitive_data: dict[str, str] | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        code_mode: bool | None = ...,
+        use_own_key: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -99,6 +105,8 @@ class BrowserUse:
         sensitive_data: dict[str, str] | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        code_mode: bool | None = ...,
+        use_own_key: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[str]: ...
 
@@ -291,8 +299,11 @@ class AsyncBrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        sensitive_data: dict[str, str] | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        code_mode: bool | None = ...,
+        use_own_key: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -309,8 +320,11 @@ class AsyncBrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        sensitive_data: dict[str, str] | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        code_mode: bool | None = ...,
+        use_own_key: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -326,8 +340,11 @@ class AsyncBrowserUse:
         profile_id: str | None = ...,
         proxy_country_code: str | None = ...,
         workspace_id: str | None = ...,
+        sensitive_data: dict[str, str] | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        code_mode: bool | None = ...,
+        use_own_key: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[str]: ...
 
