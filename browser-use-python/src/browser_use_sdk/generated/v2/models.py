@@ -14,6 +14,44 @@ class AccountNotFoundError(BaseModel):
     detail: str | None = Field('Account not found', title='Detail')
 
 
+class BrowserDownloadFile(BaseModel):
+    path: str = Field(
+        ...,
+        description='File name (basename relative to the session downloads prefix)',
+        title='Path',
+    )
+    size: int = Field(..., description='File size in bytes', title='Size')
+    last_modified: AwareDatetime = Field(
+        ...,
+        alias='lastModified',
+        description='When the file was last modified in S3',
+        title='Lastmodified',
+    )
+    url: str | None = Field(
+        None,
+        description='Presigned download URL (15 min expiry). Only included when `includeUrls=true`.',
+        title='Url',
+    )
+
+
+class BrowserDownloadListResponse(BaseModel):
+    files: List[BrowserDownloadFile] = Field(
+        ..., description='List of files downloaded by the browser', title='Files'
+    )
+    next_cursor: str | None = Field(
+        None,
+        alias='nextCursor',
+        description='Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page.',
+        title='Nextcursor',
+    )
+    has_more: bool | None = Field(
+        False,
+        alias='hasMore',
+        description='Whether there are more files beyond this page.',
+        title='Hasmore',
+    )
+
+
 class BrowserSessionStatus(Enum):
     active = 'active'
     stopped = 'stopped'
@@ -233,6 +271,12 @@ class CustomProxy(BaseModel):
     )
     password: Password | None = Field(
         None, description='Password for proxy authentication.', title='Password'
+    )
+    ignore_cert_errors: bool | None = Field(
+        False,
+        alias='ignoreCertErrors',
+        description='Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).',
+        title='Ignore Certificate Errors',
     )
 
 
@@ -897,6 +941,7 @@ class SupportedLLMs(Enum):
     claude_sonnet_4_5_20250929 = 'claude-sonnet-4-5-20250929'
     claude_sonnet_4_6 = 'claude-sonnet-4-6'
     claude_opus_4_5_20251101 = 'claude-opus-4-5-20251101'
+    claude_opus_4_7 = 'claude-opus-4-7'
     llama_4_maverick_17b_128e_instruct = 'llama-4-maverick-17b-128e-instruct'
     claude_3_7_sonnet_20250219 = 'claude-3-7-sonnet-20250219'
 
@@ -1301,6 +1346,12 @@ class AccountView(BaseModel):
     )
     plan_info: PlanInfo = Field(
         ..., alias='planInfo', description='The plan information', title='Plan Info'
+    )
+    is_free_tier: bool | None = Field(
+        False,
+        alias='isFreeTier',
+        description='Whether the account is on the free tier',
+        title='Is Free Tier',
     )
     project_id: UUID = Field(
         ..., alias='projectId', description='The ID of the project', title='Project ID'

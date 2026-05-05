@@ -7,11 +7,18 @@ type BrowserSessionItemView = components["schemas"]["BrowserSessionItemView"];
 type BrowserSessionListResponse = components["schemas"]["BrowserSessionListResponse"];
 type BrowserSessionView = components["schemas"]["BrowserSessionView"];
 type UpdateBrowserSessionRequest = components["schemas"]["UpdateBrowserSessionRequest"];
+type BrowserDownloadListResponse = components["schemas"]["BrowserDownloadListResponse"];
 
 export interface BrowserListParams {
   pageSize?: number;
   pageNumber?: number;
   filterBy?: string;
+}
+
+export interface BrowserDownloadsParams {
+  limit?: number;
+  cursor?: string;
+  includeUrls?: boolean;
 }
 
 export class Browsers {
@@ -46,5 +53,13 @@ export class Browsers {
   /** Stop a browser session. */
   stop(sessionId: string): Promise<BrowserSessionView> {
     return this.update(sessionId, { action: "stop" });
+  }
+
+  /** List files the browser downloaded to S3 during the session. */
+  downloads(sessionId: string, params?: BrowserDownloadsParams): Promise<BrowserDownloadListResponse> {
+    return this.http.get<BrowserDownloadListResponse>(
+      `/browsers/${sessionId}/downloads`,
+      params as Record<string, unknown>,
+    );
   }
 }

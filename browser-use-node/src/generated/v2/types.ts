@@ -427,6 +427,30 @@ export interface paths {
         patch: operations["update_browser_session_browsers__session_id__patch"];
         trace?: never;
     };
+    "/browsers/{session_id}/downloads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Browser Session Downloads
+         * @description List files the browser downloaded to S3 during the session.
+         *
+         *     Pass ``includeUrls=true`` to receive presigned download URLs (15 min expiry) inline.
+         *     Files are stored at ``downloads/projects/{project_id}/sessions/{session_id}/`` in
+         *     the private bucket.
+         */
+        get: operations["list_browser_session_downloads_browsers__session_id__downloads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/skills": {
         parameters: {
             query?: never;
@@ -730,11 +754,66 @@ export interface components {
              */
             planInfo: components["schemas"]["PlanInfo"];
             /**
+             * Is Free Tier
+             * @description Whether the account is on the free tier
+             * @default false
+             */
+            isFreeTier: boolean;
+            /**
              * Project ID
              * Format: uuid
              * @description The ID of the project
              */
             projectId: string;
+        };
+        /**
+         * BrowserDownloadFile
+         * @description A single file the browser downloaded during the session.
+         */
+        BrowserDownloadFile: {
+            /**
+             * Path
+             * @description File name (basename relative to the session downloads prefix)
+             */
+            path: string;
+            /**
+             * Size
+             * @description File size in bytes
+             */
+            size: number;
+            /**
+             * Lastmodified
+             * Format: date-time
+             * @description When the file was last modified in S3
+             */
+            lastModified: string;
+            /**
+             * Url
+             * @description Presigned download URL (15 min expiry). Only included when `includeUrls=true`.
+             */
+            url?: string | null;
+        };
+        /**
+         * BrowserDownloadListResponse
+         * @description Paginated list of browser downloads with optional presigned URLs.
+         */
+        BrowserDownloadListResponse: {
+            /**
+             * Files
+             * @description List of files downloaded by the browser
+             */
+            files: components["schemas"]["BrowserDownloadFile"][];
+            /**
+             * Nextcursor
+             * @description Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page.
+             */
+            nextCursor?: string | null;
+            /**
+             * Hasmore
+             * @description Whether there are more files beyond this page.
+             * @default false
+             */
+            hasMore: boolean;
         };
         /**
          * BrowserSessionItemView
@@ -1244,6 +1323,12 @@ export interface components {
              * @description Password for proxy authentication.
              */
             password?: string | null;
+            /**
+             * Ignore Certificate Errors
+             * @description Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).
+             * @default false
+             */
+            ignoreCertErrors: boolean;
         };
         /**
          * DownloadUrlGenerationError
@@ -2280,7 +2365,7 @@ export interface components {
          * SupportedLLMs
          * @enum {string}
          */
-        SupportedLLMs: "browser-use-llm" | "browser-use-2.0" | "gpt-4.1" | "gpt-4.1-mini" | "o4-mini" | "o3" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-3-pro-preview" | "gemini-3-flash-preview" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "claude-sonnet-4-20250514" | "claude-sonnet-4-5-20250929" | "claude-sonnet-4-6" | "claude-opus-4-5-20251101" | "llama-4-maverick-17b-128e-instruct" | "claude-3-7-sonnet-20250219";
+        SupportedLLMs: "browser-use-llm" | "browser-use-2.0" | "gpt-4.1" | "gpt-4.1-mini" | "o4-mini" | "o3" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-3-pro-preview" | "gemini-3-flash-preview" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "claude-sonnet-4-20250514" | "claude-sonnet-4-5-20250929" | "claude-sonnet-4-6" | "claude-opus-4-5-20251101" | "claude-opus-4-7" | "llama-4-maverick-17b-128e-instruct" | "claude-3-7-sonnet-20250219";
         /**
          * TaskCreatedResponse
          * @description Response model for creating a task
@@ -4038,6 +4123,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+        };
+    };
+    list_browser_session_downloads_browsers__session_id__downloads_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                includeUrls?: boolean;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserDownloadListResponse"];
+                };
+            };
+            /** @description Session not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotFoundError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

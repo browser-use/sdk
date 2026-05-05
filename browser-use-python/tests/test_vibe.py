@@ -78,6 +78,7 @@ _V2_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/browsers"): ("browsers", "list"),
     ("get", "/browsers/{session_id}"): ("browsers", "get"),
     ("patch", "/browsers/{session_id}"): ("browsers", "stop"),
+    ("get", "/browsers/{session_id}/downloads"): ("browsers", "downloads"),
     # skills
     ("post", "/skills"): ("skills", "create"),
     ("get", "/skills"): ("skills", "list"),
@@ -111,6 +112,7 @@ _V3_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/browsers"): ("browsers", "list"),
     ("get", "/browsers/{session_id}"): ("browsers", "get"),
     ("patch", "/browsers/{session_id}"): ("browsers", "update"),
+    ("get", "/browsers/{session_id}/downloads"): ("browsers", "downloads"),
     # profiles
     ("post", "/profiles"): ("profiles", "create"),
     ("get", "/profiles"): ("profiles", "list"),
@@ -216,6 +218,8 @@ class TestV3Coverage:
 
     def test_all_spec_endpoints_mapped(self) -> None:
         spec_eps = _spec_endpoints(self.spec)
+        # /boxes/* endpoints are intentionally not exposed in the SDK yet.
+        spec_eps = {ep for ep in spec_eps if not ep[1].startswith("/boxes")}
         mapped = set(_V3_MAP.keys())
         missing = spec_eps - mapped
         assert not missing, f"Unmapped v3 endpoints: {missing}"

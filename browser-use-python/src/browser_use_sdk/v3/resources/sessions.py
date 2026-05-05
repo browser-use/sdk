@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
+    BrowserDownloadListResponse,
     MessageListResponse,
     SessionListResponse,
     SessionResponse,
@@ -36,6 +37,8 @@ class Sessions:
         sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        code_mode: bool | None = None,
+        use_own_key: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -66,6 +69,10 @@ class Sessions:
             body["enableRecording"] = enable_recording
         if cache_script is not None:
             body["cacheScript"] = cache_script
+        if code_mode is not None:
+            body["codeMode"] = code_mode
+        if use_own_key is not None:
+            body["useOwnKey"] = use_own_key
         body.update(extra)
         return SessionResponse.model_validate(
             self._http.request("POST", "/sessions", json=body)
@@ -176,6 +183,8 @@ class AsyncSessions:
         sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        code_mode: bool | None = None,
+        use_own_key: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -206,6 +215,10 @@ class AsyncSessions:
             body["enableRecording"] = enable_recording
         if cache_script is not None:
             body["cacheScript"] = cache_script
+        if code_mode is not None:
+            body["codeMode"] = code_mode
+        if use_own_key is not None:
+            body["useOwnKey"] = use_own_key
         body.update(extra)
         return SessionResponse.model_validate(
             await self._http.request("POST", "/sessions", json=body)

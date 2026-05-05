@@ -9,7 +9,7 @@ export type { RunOptions, SessionResult } from "./v3/helpers.js";
 export { Billing } from "./v3/resources/billing.js";
 
 export { Browsers } from "./v3/resources/browsers.js";
-export type { BrowserListParams } from "./v3/resources/browsers.js";
+export type { BrowserListParams, BrowserDownloadsParams } from "./v3/resources/browsers.js";
 
 export { Profiles } from "./v3/resources/profiles.js";
 export type { ProfileListParams } from "./v3/resources/profiles.js";
@@ -47,6 +47,8 @@ export type WorkspaceCreateRequest = S["WorkspaceCreateRequest"];
 export type WorkspaceUpdateRequest = S["WorkspaceUpdateRequest"];
 
 // Browser types
+export type BrowserDownloadFile = S["BrowserDownloadFile"];
+export type BrowserDownloadListResponse = S["BrowserDownloadListResponse"];
 export type BrowserSessionItemView = S["BrowserSessionItemView"];
 export type BrowserSessionView = S["BrowserSessionView"];
 export type BrowserSessionListResponse = S["BrowserSessionListResponse"];

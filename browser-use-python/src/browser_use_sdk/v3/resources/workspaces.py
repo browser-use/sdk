@@ -12,7 +12,7 @@ from ...generated.v3.models import (
     FileListResponse,
     FileUploadItem,
     FileUploadResponse,
-    Size,
+    Size3 as FileSize,
     WorkspaceCreateRequest,
     WorkspaceListResponse,
     WorkspaceUpdateRequest,
@@ -176,7 +176,7 @@ class Workspaces:
             FileUploadItem(
                 name=p.name,
                 contentType=_guess_content_type(str(p)),
-                size=Size(p.stat().st_size),
+                size=FileSize(p.stat().st_size),
             )
             for p in resolved
         ]
@@ -400,7 +400,7 @@ class AsyncWorkspaces:
             FileUploadItem(
                 name=p.name,
                 contentType=_guess_content_type(str(p)),
-                size=Size(p.stat().st_size),
+                size=FileSize(p.stat().st_size),
             )
             for p in resolved
         ]

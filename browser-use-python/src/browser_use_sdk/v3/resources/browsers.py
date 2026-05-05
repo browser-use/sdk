@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
+    BrowserDownloadListResponse,
     BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionView,
@@ -84,6 +85,27 @@ class Browsers:
         """Stop a browser session."""
         return self.update(session_id, action="stop")
 
+    def downloads(
+        self,
+        session_id: str | UUID,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        include_urls: bool | None = None,
+    ) -> BrowserDownloadListResponse:
+        """List files the browser downloaded to S3 during the session."""
+        return BrowserDownloadListResponse.model_validate(
+            self._http.request(
+                "GET",
+                f"/browsers/{session_id}/downloads",
+                params={
+                    "limit": limit,
+                    "cursor": cursor,
+                    "includeUrls": include_urls,
+                },
+            )
+        )
+
 
 class AsyncBrowsers:
     def __init__(self, http: AsyncHttpClient) -> None:
@@ -154,3 +176,24 @@ class AsyncBrowsers:
     async def stop(self, session_id: str | UUID) -> BrowserSessionView:
         """Stop a browser session."""
         return await self.update(session_id, action="stop")
+
+    async def downloads(
+        self,
+        session_id: str | UUID,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        include_urls: bool | None = None,
+    ) -> BrowserDownloadListResponse:
+        """List files the browser downloaded to S3 during the session."""
+        return BrowserDownloadListResponse.model_validate(
+            await self._http.request(
+                "GET",
+                f"/browsers/{session_id}/downloads",
+                params={
+                    "limit": limit,
+                    "cursor": cursor,
+                    "includeUrls": include_urls,
+                },
+            )
+        )

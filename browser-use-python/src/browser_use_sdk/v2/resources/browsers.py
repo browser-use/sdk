@@ -5,6 +5,7 @@ from typing import Any
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v2.models import (
+    BrowserDownloadListResponse,
     BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionUpdateAction,
@@ -111,6 +112,27 @@ class Browsers:
         """Stop a running browser session."""
         return self.update(session_id, action=BrowserSessionUpdateAction.stop, **extra)
 
+    def downloads(
+        self,
+        session_id: str,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        include_urls: bool | None = None,
+    ) -> BrowserDownloadListResponse:
+        """List files the browser downloaded to S3 during the session."""
+        return BrowserDownloadListResponse.model_validate(
+            self._http.request(
+                "GET",
+                f"/browsers/{session_id}/downloads",
+                params={
+                    "limit": limit,
+                    "cursor": cursor,
+                    "includeUrls": include_urls,
+                },
+            )
+        )
+
 
 class AsyncBrowsers:
     def __init__(self, http: AsyncHttpClient) -> None:
@@ -179,3 +201,24 @@ class AsyncBrowsers:
     async def stop(self, session_id: str, **extra: Any) -> BrowserSessionView:
         """Stop a running browser session."""
         return await self.update(session_id, action=BrowserSessionUpdateAction.stop, **extra)
+
+    async def downloads(
+        self,
+        session_id: str,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        include_urls: bool | None = None,
+    ) -> BrowserDownloadListResponse:
+        """List files the browser downloaded to S3 during the session."""
+        return BrowserDownloadListResponse.model_validate(
+            await self._http.request(
+                "GET",
+                f"/browsers/{session_id}/downloads",
+                params={
+                    "limit": limit,
+                    "cursor": cursor,
+                    "includeUrls": include_urls,
+                },
+            )
+        )

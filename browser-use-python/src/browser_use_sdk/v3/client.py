@@ -118,6 +118,8 @@ class BrowserUse:
         sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        code_mode: bool | None = None,
+        use_own_key: bool | None = None,
         **extra: Any,
     ) -> Any:
         """Run a task and block until complete. Returns a SessionResult.
@@ -161,6 +163,8 @@ class BrowserUse:
             sensitive_data=sensitive_data,
             enable_recording=enable_recording,
             cache_script=cache_script,
+            code_mode=code_mode,
+            use_own_key=use_own_key,
             **extra,
         )
         return _poll_output(self.sessions, str(data.id), resolved_schema)
@@ -181,6 +185,8 @@ class BrowserUse:
         sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        code_mode: bool | None = None,
+        use_own_key: bool | None = None,
         **extra: Any,
     ) -> SessionStream[Any]:
         """Run a task and yield messages as they happen.
@@ -229,6 +235,8 @@ class BrowserUse:
             sensitive_data=sensitive_data,
             enable_recording=enable_recording,
             cache_script=cache_script,
+            code_mode=code_mode,
+            use_own_key=use_own_key,
             **extra,
         )
         return SessionStream(data, self.sessions, resolved_schema, _start_cursor=start_cursor)
@@ -339,6 +347,8 @@ class AsyncBrowserUse:
         sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        code_mode: bool | None = None,
+        use_own_key: bool | None = None,
         **extra: Any,
     ) -> AsyncSessionRun[Any]:
         """Run a task. Await the result for a SessionResult.
@@ -393,6 +403,8 @@ class AsyncBrowserUse:
                 sensitive_data=sensitive_data,
                 enable_recording=enable_recording,
                 cache_script=cache_script,
+                code_mode=code_mode,
+                use_own_key=use_own_key,
                 **extra,
             )
 
