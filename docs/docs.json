@@ -99,6 +99,16 @@
                         ]
                       }
                     ]
+                  },
+                  {
+                    "group": "BUX",
+                    "icon": "cube",
+                    "pages": [
+                      "cloud/bux/introduction",
+                      "cloud/bux/quickstart",
+                      "cloud/bux/interfaces",
+                      "cloud/bux/authentication"
+                    ]
                   }
                 ]
               },
