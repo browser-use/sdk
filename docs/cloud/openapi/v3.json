@@ -18,7 +18,7 @@
                     "Sessions"
                 ],
                 "summary": "Create Session",
-                "description": "Create a session and/or dispatch a task.\n\n- Without session_id, without task: creates a new idle session (e.g. for file uploads).\n- Without session_id, with task: creates a new session and dispatches the task.\n- With session_id, with task: dispatches the task to an existing idle session.\n- With session_id, without task: 422 \u2014 task is required when targeting an existing session.\n\nIf keep_alive is false (default), the session auto-stops when the task finishes.\nIf keep_alive is true, the session stays idle after the task, ready for follow-ups.",
+                "description": "Create a session and/or dispatch a task.\n\n- Without session_id, without task: creates a new idle session (e.g. for file uploads).\n- Without session_id, with task: creates a new session and dispatches the task.\n- With session_id, with task: dispatches the task to an existing idle session.\n- With session_id, without task: 422 — task is required when targeting an existing session.\n\nIf keep_alive is false (default), the session auto-stops when the task finishes.\nIf keep_alive is true, the session stays idle after the task, ready for follow-ups.",
                 "operationId": "create_session_sessions_post",
                 "security": [
                     {
@@ -30,7 +30,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/RunTaskRequest"
+                                "$ref": "#/components/schemas/app__endpoints__api__v3__sessions__views__RunTaskRequest"
                             }
                         }
                     }
@@ -218,7 +218,7 @@
                     "Sessions"
                 ],
                 "summary": "Stop Session",
-                "description": "Stop a session or the running task.\n\n- strategy=session (default): destroy sandbox entirely, session \u2192 stopped.\n- strategy=task: stop the running query, session stays alive (\u2192 idle).",
+                "description": "Stop a session or the running task.\n\n- strategy=session (default): destroy sandbox entirely, session → stopped.\n- strategy=task: stop the running query, session stays alive (→ idle).",
                 "operationId": "stop_session_sessions__session_id__stop_post",
                 "security": [
                     {
@@ -651,6 +651,103 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/browsers/{session_id}/downloads": {
+            "get": {
+                "tags": [
+                    "Browsers"
+                ],
+                "summary": "List Browser Session Downloads",
+                "description": "List files the browser downloaded to S3 during the session.\n\nPass ``includeUrls=true`` to receive presigned download URLs (15 min expiry) inline.\nFiles are stored at ``downloads/projects/{project_id}/sessions/{session_id}/`` in\nthe private bucket.",
+                "operationId": "list_browser_session_downloads_browsers__session_id__downloads_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "default": 50,
+                            "title": "Limit"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Cursor"
+                        }
+                    },
+                    {
+                        "name": "includeUrls",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Includeurls"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BrowserDownloadListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Session not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionNotFoundError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
                                 }
                             }
                         }
@@ -1531,6 +1628,1045 @@
                     }
                 ]
             }
+        },
+        "/boxes/sizes": {
+            "get": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "List Box Sizes",
+                "description": "Public catalog of available box sizes for the deploy picker.\n\nStatic data — no auth, no DB. Lives server-side (instead of being\nhardcoded in the frontend) so re-tiering or running a promo is a\none-file edit in `sizing.py` with no frontend redeploy needed.",
+                "operationId": "list_box_sizes_boxes_sizes_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BoxSizeListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/boxes/me/trial-eligibility": {
+            "get": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Get Trial Eligibility",
+                "description": "Tell the FE whether to render a 'try free for 7 days' CTA.\n\nAccount-scoped — any user (free-tier or paid) without a prior\n`bux_trial_started_at` stamp is eligible for one free 7-day trial.\n\nReturns a tagged answer:\n  - eligible=True   → show the trial CTA on the empty-state.\n  - eligible=False, reason='already_used' → show \"trial used,\n    upgrade to deploy\".\n  - eligible=False, reason='no_owner' → fallback for older projects\n    we can't resolve an owner for; FE shows generic \"add credits\".\n\nCheap call: one profile lookup. The FE polls /me + /sizes already,\nthis is one more cheap GET on the deploy page.",
+                "operationId": "get_trial_eligibility_boxes_me_trial_eligibility_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrialEligibilityView"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Provision Box",
+                "description": "Provision a new box for the authenticated project.\n\nIdempotent-ish: if a live box already exists, returns 409. After `bux down`,\nthe row is reused (preserving profile_id + size — the user's previous\nchoice carries over unless they explicitly pass a new `size`).\n\nRequires a paying / comped project. Free-tier projects are rejected\nwith 402. Min-balance scales by size ($5 / $10 / $20 for small /\nmedium / large) so users with ~5 days of runway can deploy. See\n`common/models/bux/sizing.py`.",
+                "operationId": "provision_box_boxes_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "anyOf": [
+                                    {
+                                        "$ref": "#/components/schemas/BoxCreateRequest"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "title": "Body"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BoxCreateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me": {
+            "get": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Get My Box",
+                "description": "Return the current box for the authenticated project. 404 if none.",
+                "operationId": "get_my_box_boxes_me_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BoxView"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Destroy My Box",
+                "description": "Terminate the EC2. Profile persists. Row is kept so `bux up` can reuse it.",
+                "operationId": "destroy_my_box_boxes_me_delete",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BoxView"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Patch My Box",
+                "description": "Update box flags. Currently only dsp_enabled (dangerously skip permissions).\n\nThe flag is persisted in DB and pushed to the box-agent over WS so the\n*next* shell launch picks it up. Existing terminal sessions keep their\noriginal setting until the user closes and reopens.",
+                "operationId": "patch_my_box_boxes_me_patch",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BoxPatchRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BoxView"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me/resize": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Resize My Box",
+                "description": "Resize the project's box to a larger tier (upgrade-only).\n\nThe actual stop → modify → start dance runs in a background task; this\nhandler returns immediately with status=RESIZING. The FE polls /me to\nwatch the box flip back to READY when the new instance is up. Takes\n~60-90s end-to-end (stop ~30s, start ~30s, growpart instant).\n\nConstraints enforced here:\n  - new size must be a known tier\n  - new size must be strictly larger than current (downsize → 400)\n  - box must be in READY state (otherwise → 409)\n  - project must clear the eligibility gate at the *new* size's\n    min-balance (a small box upgrading to large is now playing by\n    large-box rules)",
+                "operationId": "resize_my_box_boxes_me_resize_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BoxResizeRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BoxView"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me/restart": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Restart My Box",
+                "description": "Restart a box without destroying it.\n\nThe escape hatch from ERROR — before this endpoint, a box with a\nstale heartbeat (CPU spike / OOM / agent crash) could only be\ndestroyed by the user, which loses the EBS volume and forces a\nfresh setup. Now the user can:\n\n  - mode=service (default): SSM `systemctl restart bux-tg`. ~5s.\n    Fixes most cases (agent process crash, wedged long-poll).\n  - mode=reboot: AWS rebootInstances. ~30-60s. Public IP and EBS\n    preserved (only resize/upgrade changes the IP). Fallback for\n    kernel-hung / SSM-unreachable boxes.\n\nAllowed when status is READY or ERROR. PROVISIONING / RESIZING /\nAWAITING_OAUTH / DESTROYED → 409 (no instance to restart, or a\nlong-running operation is already in flight).\n\nReturns the box view; status is unchanged here. The next bux_health\ntick + box-agent heartbeat is what authoritatively flips ERROR →\nREADY when the agent comes back up. The FE polls /me to watch.",
+                "operationId": "restart_my_box_boxes_me_restart_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BoxRestartRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BoxView"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me/shell": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Get Shell",
+                "description": "Mint a short-lived terminal URL. User opens it in a browser → live shell.\n\n`launch` controls what runs when the terminal connects:\n  - \"bash\" (default) → plain login shell.\n  - \"claude\" → auto-run the claude UI; Ctrl+C drops to bash.\n\n`w` (optional) selects which tmux window to attach to (e.g. `bux-w2`).\nDefaults to `bux-w1` — the box-agent auto-creates that window on first\nattach so single-window callers see no behavior change.",
+                "operationId": "get_shell_boxes_me_shell_post",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "launch",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "bash",
+                            "title": "Launch"
+                        }
+                    },
+                    {
+                        "name": "w",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "W"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ShellResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/boxes/me/windows": {
+            "get": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Windows List",
+                "operationId": "windows_list_boxes_me_windows_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WindowListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Windows Create",
+                "operationId": "windows_create_boxes_me_windows_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WindowCreateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WindowView"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me/windows/{window_id}": {
+            "delete": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Windows Delete",
+                "operationId": "windows_delete_boxes_me_windows__window_id__delete",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "window_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Window Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Windows Rename",
+                "operationId": "windows_rename_boxes_me_windows__window_id__patch",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "window_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Window Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WindowRenameRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WindowView"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/boxes/me/run": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Run Task",
+                "description": "Fire a one-shot `claude -p \"<prompt>\"` on the box. Streams output as SSE.\n\nEvents:\n  - data: {\"chunk\": \"...\"}      — stdout chunks\n  - event: done, data: {\"rc\": 0} — final exit code",
+                "operationId": "run_task_boxes_me_run_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RunTaskRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me/update": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Update Box Agent",
+                "description": "Tell the box-agent to git-pull + restart from the OSS repo.\n\nDefault `branch` is whatever the box is currently tracking (the agent\nresolves it from `git rev-parse --abbrev-ref HEAD`); pass `branch=main`\nor `branch=stable` to switch tracks.\n\nReturns the old + new SHA so the FE can show \"updated to a3f9c1d\".\nThe agent restarts itself at the tail of the update — the next hello\nwill report the new version. We wait up to 90s for the update_result\nreply since git fetch + bootstrap.sh can stretch on slow networks.",
+                "operationId": "update_box_agent_boxes_me_update_post",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "branch",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Branch"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/boxes/me/tg": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Tg Install",
+                "description": "Install a Telegram bot on the box. Returns a deeplink the user taps to pair.",
+                "operationId": "tg_install_boxes_me_tg_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TelegramInstallRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TelegramInstallResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me/tg/auto": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Tg Auto Start",
+                "description": "Kick off the QR-scan + scripted-CDP Telegram bot creation flow.\n\nIdempotent: if a non-terminal QR session already exists for this box,\nreturns it instead of spawning another browser. The FE keeps polling\n`GET /me/tg/auto/{id}` until the session reaches a terminal state.\n\nNo external BU Cloud API key is needed — the orchestrator provisions\nthe chromium VM via the cloud's internal browser service, which auths\nvia app_config.use_browser_api_key (already set in every env).",
+                "operationId": "tg_auto_start_boxes_me_tg_auto_post",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TgAutoStartResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me/tg/auto/{qr_session_id}": {
+            "get": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Tg Auto Status",
+                "description": "Poll a running QR session. Read-only — never advances the state\nmachine. Tenant-scoped: 404 if the session isn't owned by this project.",
+                "operationId": "tg_auto_status_boxes_me_tg_auto__qr_session_id__get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "qr_session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Qr Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TgAutoSessionView"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Tg Auto Cancel",
+                "description": "User-initiated cancel. Marks the session failed/cancelled; the\ndriver task observes the terminal state on its next poll and exits its\nfinally-block (which stops the chromium VM).",
+                "operationId": "tg_auto_cancel_boxes_me_tg_auto__qr_session_id__delete",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "qr_session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Qr Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TgAutoSessionView"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/boxes/me/claude-login/start": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Claude Login Start",
+                "description": "Kick off a guided claude /login flow on the box.\n\nBox-agent forks `claude /login` as a pty subprocess, drives the\nOAuth picker, and ships the URL back over WS. The FE polls\nGET /me/claude-login/state and shows the URL as a tappable link\n+ a paste box for the OAuth callback code.\n\nCalling this again kills any in-flight attempt and starts fresh.\nThe user can also bail via POST /me/claude-login/cancel.",
+                "operationId": "claude_login_start_boxes_me_claude_login_start_post",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me/claude-login/state": {
+            "get": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Claude Login State Get",
+                "description": "Poll-based view of the active /login flow's state.",
+                "operationId": "claude_login_state_get_boxes_me_claude_login_state_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me/claude-login/code": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Claude Login Code",
+                "description": "Pump the OAuth callback code into the box's pty stdin.\n\nNo real validation here — claude itself surfaces \"invalid code\"\non the next pty stdout line, which our claude_login_failed event\ncaptures.",
+                "operationId": "claude_login_code_boxes_me_claude_login_code_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ClaudeLoginCodeRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/me/claude-login/cancel": {
+            "post": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Claude Login Cancel",
+                "operationId": "claude_login_cancel_boxes_me_claude_login_cancel_post",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/boxes/terminal/{token}": {
+            "get": {
+                "tags": [
+                    "Boxes"
+                ],
+                "summary": "Terminal Page",
+                "description": "HTML page the user opens in their browser → xterm.js terminal.\n\nRenders the current window_id into a script tag so the JS knows\nwhich tab is \"active\" without an extra round-trip. We don't render\nthe full window list here — the JS asks the parent for that on\nmount via the bux-react postMessage protocol, so the list always\nreflects the latest state (a tab created in another browser session\nsince the URL was minted shows up immediately).",
+                "operationId": "terminal_page_boxes_terminal__token__get",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Token"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -1586,6 +2722,12 @@
                         "title": "Plan Info",
                         "description": "The plan information"
                     },
+                    "isFreeTier": {
+                        "type": "boolean",
+                        "title": "Is Free Tier",
+                        "description": "Whether the account is on the free tier",
+                        "default": false
+                    },
                     "projectId": {
                         "type": "string",
                         "format": "uuid",
@@ -1604,6 +2746,430 @@
                 ],
                 "title": "AccountView",
                 "description": "View model for account information."
+            },
+            "BoxCreateRequest": {
+                "properties": {
+                    "profile_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Id"
+                    },
+                    "size": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "small",
+                                    "medium",
+                                    "large"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Size"
+                    }
+                },
+                "type": "object",
+                "title": "BoxCreateRequest"
+            },
+            "BoxCreateResponse": {
+                "properties": {
+                    "box": {
+                        "$ref": "#/components/schemas/BoxView"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "box"
+                ],
+                "title": "BoxCreateResponse"
+            },
+            "BoxPatchRequest": {
+                "properties": {
+                    "dsp_enabled": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Dsp Enabled"
+                    }
+                },
+                "type": "object",
+                "title": "BoxPatchRequest"
+            },
+            "BoxResizeRequest": {
+                "properties": {
+                    "size": {
+                        "type": "string",
+                        "enum": [
+                            "small",
+                            "medium",
+                            "large"
+                        ],
+                        "title": "Size"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "size"
+                ],
+                "title": "BoxResizeRequest",
+                "description": "Resize an existing box to a larger tier.\n\nUpgrade-only: the backend rejects requests where `size` isn't strictly\nlarger than the box's current size. Downsize → 400 with a hint to\ndestroy + redeploy. Same size → 409 (idempotent failure — no work to do)."
+            },
+            "BoxRestartMode": {
+                "type": "string",
+                "enum": [
+                    "service",
+                    "reboot"
+                ],
+                "title": "BoxRestartMode",
+                "description": "How aggressive a /me/restart should be.\n\n`service` — fastest, fixes ~95% of cases (agent process crash, OOM,\n  wedged TG long-poll). SSM `systemctl restart bux-tg`. ~5s.\n`reboot`  — fallback for kernel-hung / SSM-unreachable boxes. AWS\n  rebootInstances. ~30-60s. IP + EBS preserved."
+            },
+            "BoxRestartRequest": {
+                "properties": {
+                    "mode": {
+                        "$ref": "#/components/schemas/BoxRestartMode",
+                        "default": "service"
+                    }
+                },
+                "type": "object",
+                "title": "BoxRestartRequest"
+            },
+            "BoxSizeListResponse": {
+                "properties": {
+                    "sizes": {
+                        "items": {
+                            "$ref": "#/components/schemas/BoxSizeSpecView"
+                        },
+                        "type": "array",
+                        "title": "Sizes"
+                    },
+                    "default": {
+                        "type": "string",
+                        "enum": [
+                            "small",
+                            "medium",
+                            "large"
+                        ],
+                        "title": "Default"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "sizes",
+                    "default"
+                ],
+                "title": "BoxSizeListResponse",
+                "description": "Catalog of available size tiers, returned to the deploy picker.\n\nKeeping the list server-side (instead of hardcoding prices in the\nfrontend) means the day we re-tier or run a promo, we don't have\nto ship a frontend deploy. Just edit `sizing.py`."
+            },
+            "BoxSizeSpecView": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "enum": [
+                            "small",
+                            "medium",
+                            "large"
+                        ],
+                        "title": "Name"
+                    },
+                    "vcpu": {
+                        "type": "integer",
+                        "title": "Vcpu"
+                    },
+                    "ram_gb": {
+                        "type": "integer",
+                        "title": "Ram Gb"
+                    },
+                    "disk_gb": {
+                        "type": "integer",
+                        "title": "Disk Gb"
+                    },
+                    "daily_usd": {
+                        "type": "number",
+                        "title": "Daily Usd"
+                    },
+                    "min_balance_usd": {
+                        "type": "number",
+                        "title": "Min Balance Usd"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "vcpu",
+                    "ram_gb",
+                    "disk_gb",
+                    "daily_usd",
+                    "min_balance_usd"
+                ],
+                "title": "BoxSizeSpecView",
+                "description": "User-visible spec sheet for one size tier. Returned alongside\nBoxView so the UI can render the tooltip (\"2 vCPU · 4 GB · 20 GB\")\nwithout a second round trip + so the picker on /bux can show all\nthree rows without us hardcoding prices in the frontend."
+            },
+            "BoxStatus": {
+                "type": "string",
+                "enum": [
+                    "provisioning",
+                    "awaiting_oauth",
+                    "ready",
+                    "resizing",
+                    "error",
+                    "halted",
+                    "destroyed"
+                ],
+                "title": "BoxStatus"
+            },
+            "BoxView": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "project_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Project Id"
+                    },
+                    "profile_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Id"
+                    },
+                    "size": {
+                        "type": "string",
+                        "enum": [
+                            "small",
+                            "medium",
+                            "large"
+                        ],
+                        "title": "Size"
+                    },
+                    "size_spec": {
+                        "$ref": "#/components/schemas/BoxSizeSpecView"
+                    },
+                    "ec2_instance_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ec2 Instance Id"
+                    },
+                    "public_ip": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Public Ip"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/BoxStatus"
+                    },
+                    "status_detail": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Status Detail"
+                    },
+                    "claude_authed": {
+                        "type": "boolean",
+                        "title": "Claude Authed"
+                    },
+                    "tg_installed": {
+                        "type": "boolean",
+                        "title": "Tg Installed"
+                    },
+                    "tg_bot_username": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Tg Bot Username"
+                    },
+                    "dsp_enabled": {
+                        "type": "boolean",
+                        "title": "Dsp Enabled"
+                    },
+                    "live_browser_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Live Browser Url"
+                    },
+                    "last_heartbeat_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Last Heartbeat At"
+                    },
+                    "trial_ends_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Trial Ends At"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "project_id",
+                    "profile_id",
+                    "size",
+                    "size_spec",
+                    "ec2_instance_id",
+                    "public_ip",
+                    "status",
+                    "status_detail",
+                    "claude_authed",
+                    "tg_installed",
+                    "tg_bot_username",
+                    "dsp_enabled",
+                    "live_browser_url",
+                    "last_heartbeat_at",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "BoxView"
+            },
+            "BrowserDownloadFile": {
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "title": "Path",
+                        "description": "File name (basename relative to the session downloads prefix)"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "title": "Size",
+                        "description": "File size in bytes"
+                    },
+                    "lastModified": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Lastmodified",
+                        "description": "When the file was last modified in S3"
+                    },
+                    "url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Url",
+                        "description": "Presigned download URL (15 min expiry). Only included when `includeUrls=true`."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "path",
+                    "size",
+                    "lastModified"
+                ],
+                "title": "BrowserDownloadFile",
+                "description": "A single file the browser downloaded during the session."
+            },
+            "BrowserDownloadListResponse": {
+                "properties": {
+                    "files": {
+                        "items": {
+                            "$ref": "#/components/schemas/BrowserDownloadFile"
+                        },
+                        "type": "array",
+                        "title": "Files",
+                        "description": "List of files downloaded by the browser"
+                    },
+                    "nextCursor": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nextcursor",
+                        "description": "Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page."
+                    },
+                    "hasMore": {
+                        "type": "boolean",
+                        "title": "Hasmore",
+                        "description": "Whether there are more files beyond this page.",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "files"
+                ],
+                "title": "BrowserDownloadListResponse",
+                "description": "Paginated list of browser downloads with optional presigned URLs."
             },
             "BrowserSessionItemView": {
                 "properties": {
@@ -1907,7 +3473,7 @@
                     "error"
                 ],
                 "title": "BuAgentSessionStatus",
-                "description": "Session lifecycle status. Progresses through: created \u2192 idle \u2192 running \u2192 idle \u2192 ... \u2192 stopped / timed_out / error.\n\n- `created`: Sandbox is starting up. The session is not yet ready to accept tasks.\n- `idle`: Sandbox is healthy and waiting for a task. You can dispatch a task or upload files.\n- `running`: A task is currently being executed by the agent.\n- `stopped`: Session was stopped \u2014 either explicitly via the stop endpoint, or automatically after task completion (when `keepAlive` is false).\n- `timed_out`: Session was cleaned up due to inactivity timeout.\n- `error`: Sandbox failed to start or encountered an unrecoverable error."
+                "description": "Session lifecycle status. Progresses through: created → idle → running → idle → ... → stopped / timed_out / error.\n\n- `created`: Sandbox is starting up. The session is not yet ready to accept tasks.\n- `idle`: Sandbox is healthy and waiting for a task. You can dispatch a task or upload files.\n- `running`: A task is currently being executed by the agent.\n- `stopped`: Session was stopped — either explicitly via the stop endpoint, or automatically after task completion (when `keepAlive` is false).\n- `timed_out`: Session was cleaned up due to inactivity timeout.\n- `error`: Sandbox failed to start or encountered an unrecoverable error."
             },
             "BuModel": {
                 "type": "string",
@@ -1917,10 +3483,25 @@
                     "bu-ultra",
                     "gemini-3-flash",
                     "claude-sonnet-4.6",
-                    "claude-opus-4.6"
+                    "claude-opus-4.6",
+                    "claude-opus-4.7",
+                    "gpt-5.4-mini"
                 ],
                 "title": "BuModel",
-                "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash \u2014 fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 \u2014 balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 \u2014 most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions."
+                "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash — fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 — balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 — capable general-purpose Opus tier.\n- `claude-opus-4.7`: Claude Opus 4.7 — most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.\n- `gpt-5.4-mini`: GPT-5.4 mini — OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities."
+            },
+            "ClaudeLoginCodeRequest": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "title": "Code"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "code"
+                ],
+                "title": "ClaudeLoginCodeRequest"
             },
             "CreateBrowserSessionRequest": {
                 "properties": {
@@ -2058,6 +3639,12 @@
                         ],
                         "title": "Password",
                         "description": "Password for proxy authentication."
+                    },
+                    "ignoreCertErrors": {
+                        "type": "boolean",
+                        "title": "Ignore Certificate Errors",
+                        "description": "Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).",
+                        "default": false
                     }
                 },
                 "type": "object",
@@ -2321,7 +3908,7 @@
                     "data": {
                         "type": "string",
                         "title": "Data",
-                        "description": "Raw message content. Format depends on the message type \u2014 may be plain text, JSON, or structured action data."
+                        "description": "Raw message content. Format depends on the message type — may be plain text, JSON, or structured action data."
                     },
                     "type": {
                         "type": "string",
@@ -2889,176 +4476,16 @@
             },
             "RunTaskRequest": {
                 "properties": {
-                    "task": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Task",
-                        "description": "The natural-language instruction for the agent to execute (e.g. \"Go to amazon.com and find the best-rated wireless mouse under $50\"). Required when dispatching to an existing session."
-                    },
-                    "model": {
-                        "$ref": "#/components/schemas/BuModel",
-                        "description": "The model to use. \"gemini-3-flash\" is fast and cheap, \"claude-sonnet-4.6\" is balanced, \"claude-opus-4.6\" is most capable. See BuModel for details.",
-                        "default": "claude-sonnet-4.6"
-                    },
-                    "sessionId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "format": "uuid"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Sessionid",
-                        "description": "ID of an existing idle session to dispatch the task to. If omitted, a new session is created."
-                    },
-                    "keepAlive": {
-                        "type": "boolean",
-                        "title": "Keepalive",
-                        "description": "If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.",
-                        "default": false
-                    },
-                    "maxCostUsd": {
-                        "anyOf": [
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "string",
-                                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Maxcostusd",
-                        "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance)."
-                    },
-                    "profileId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "format": "uuid"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Profileid",
-                        "description": "ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API."
-                    },
-                    "workspaceId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "format": "uuid"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Workspaceid",
-                        "description": "ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API."
-                    },
-                    "proxyCountryCode": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/ProxyCountryCode"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Country code for the browser proxy (e.g. \"US\", \"DE\", \"JP\"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.",
-                        "default": "us"
-                    },
-                    "outputSchema": {
-                        "anyOf": [
-                            {
-                                "additionalProperties": true,
-                                "type": "object"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Outputschema",
-                        "description": "A JSON Schema that the agent's final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {\"type\": \"object\", \"properties\": {\"price\": {\"type\": \"number\"}, \"title\": {\"type\": \"string\"}}}."
-                    },
-                    "enableScheduledTasks": {
-                        "type": "boolean",
-                        "title": "Enablescheduledtasks",
-                        "description": "If true, the agent can create scheduled tasks that run on a recurring basis (e.g. \"every Monday morning, check my inbox and summarize new emails\"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.",
-                        "default": false
-                    },
-                    "sensitiveData": {
-                        "anyOf": [
-                            {
-                                "additionalProperties": {
-                                    "type": "string"
-                                },
-                                "type": "object"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Sensitivedata",
-                        "description": "Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values. WARNING: sensitive data may be visible in screenshots if the page renders values in unmasked form fields."
-                    },
-                    "enableRecording": {
-                        "type": "boolean",
-                        "title": "Enablerecording",
-                        "description": "If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.",
-                        "default": false
-                    },
-                    "skills": {
-                        "type": "boolean",
-                        "title": "Skills",
-                        "description": "If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.",
-                        "default": true
-                    },
-                    "agentmail": {
-                        "type": "boolean",
-                        "title": "Agentmail",
-                        "description": "If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.",
-                        "default": true
-                    },
-                    "cacheScript": {
-                        "anyOf": [
-                            {
-                                "type": "boolean"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Cachescript",
-                        "description": "Controls deterministic script caching. `null` (default): auto-detected \u2014 enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: \"Get prices from @{{https://example.com}} for @{{electronics}}\"."
-                    },
-                    "useOwnKey": {
-                        "type": "boolean",
-                        "title": "Useownkey",
-                        "description": "If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2\u00d7 of provider list prices). If no key is configured for the model's provider, the request is rejected.",
-                        "default": false
-                    },
-                    "autoHeal": {
-                        "type": "boolean",
-                        "title": "Autoheal",
-                        "description": "When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.",
-                        "default": true
+                    "prompt": {
+                        "type": "string",
+                        "title": "Prompt"
                     }
                 },
                 "type": "object",
-                "title": "RunTaskRequest",
-                "description": "Create a new session, dispatch a task, or both.\n\n- **No `sessionId` + no `task`**: creates an idle session (useful for uploading files before running a task).\n- **No `sessionId` + `task`**: creates a new session and immediately runs the task.\n- **`sessionId` + `task`**: dispatches the task to an existing idle session.\n- **`sessionId` + no `task`**: returns 422 \u2014 a task is required when targeting an existing session."
+                "required": [
+                    "prompt"
+                ],
+                "title": "RunTaskRequest"
             },
             "SessionListResponse": {
                 "properties": {
@@ -3117,7 +4544,7 @@
                     },
                     "status": {
                         "$ref": "#/components/schemas/BuAgentSessionStatus",
-                        "description": "Current session lifecycle status. Progresses through: `created` (sandbox starting) \u2192 `idle` (ready, waiting for task) \u2192 `running` (task executing) \u2192 `stopped` / `timed_out` / `error`. Poll this field to track progress."
+                        "description": "Current session lifecycle status. Progresses through: `created` (sandbox starting) → `idle` (ready, waiting for task) → `running` (task executing) → `stopped` / `timed_out` / `error`. Poll this field to track progress."
                     },
                     "model": {
                         "$ref": "#/components/schemas/BuModel",
@@ -3143,7 +4570,7 @@
                             }
                         ],
                         "title": "Output",
-                        "description": "The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false."
+                        "description": "The agent's final output. If `codeMode` was true, this will be an object with `text` (summary), `code` (Python source), and optionally `output` (execution result). If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null."
                     },
                     "outputSchema": {
                         "anyOf": [
@@ -3198,7 +4625,7 @@
                             }
                         ],
                         "title": "Liveurl",
-                        "description": "URL to view the live browser session. Available immediately on session creation \u2014 can be embedded in an iframe to show the browser in real time."
+                        "description": "URL to view the live browser session. Available immediately on session creation — can be embedded in an iframe to show the browser in real time."
                     },
                     "recordingUrls": {
                         "items": {
@@ -3330,6 +4757,14 @@
                         "title": "Agentmailemail",
                         "description": "Temporary email address provisioned for this session (via AgentMail). Only present if `agentmail` was enabled."
                     },
+                    "integrationsUsed": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Integrationsused",
+                        "description": "List of integration providers used during this session (e.g. [\"gmail\", \"slack\", \"agentmail\"])."
+                    },
                     "createdAt": {
                         "type": "string",
                         "format": "date-time",
@@ -3366,6 +4801,25 @@
                 "title": "SessionTimeoutLimitExceededError",
                 "description": "Error response when session timeout exceeds the maximum allowed limit"
             },
+            "ShellResponse": {
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "title": "Url"
+                    },
+                    "expires_in_seconds": {
+                        "type": "integer",
+                        "title": "Expires In Seconds",
+                        "default": 900
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "url"
+                ],
+                "title": "ShellResponse",
+                "description": "Terminal URL — user opens this in their browser, gets a live shell."
+            },
             "StopSessionRequest": {
                 "properties": {
                     "strategy": {
@@ -3386,6 +4840,171 @@
                 "title": "StopStrategy",
                 "description": "Strategy for stopping a session.\n\n- `task`: Stop the currently running task but keep the session alive in idle state. You can dispatch another task to the same session afterwards.\n- `session`: Stop the session entirely and destroy the sandbox. The session cannot be reused after this."
             },
+            "TelegramInstallRequest": {
+                "properties": {
+                    "bot_token": {
+                        "type": "string",
+                        "title": "Bot Token"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "bot_token"
+                ],
+                "title": "TelegramInstallRequest"
+            },
+            "TelegramInstallResponse": {
+                "properties": {
+                    "installed": {
+                        "type": "boolean",
+                        "title": "Installed"
+                    },
+                    "bot_username": {
+                        "type": "string",
+                        "title": "Bot Username"
+                    },
+                    "deeplink": {
+                        "type": "string",
+                        "title": "Deeplink"
+                    },
+                    "setup_token": {
+                        "type": "string",
+                        "title": "Setup Token"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "installed",
+                    "bot_username",
+                    "deeplink",
+                    "setup_token"
+                ],
+                "title": "TelegramInstallResponse"
+            },
+            "TgAutoSessionView": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "state": {
+                        "type": "string",
+                        "enum": [
+                            "pending_browser",
+                            "waiting_scan",
+                            "login_detected",
+                            "minting",
+                            "installing",
+                            "installed",
+                            "failed",
+                            "expired"
+                        ],
+                        "title": "State"
+                    },
+                    "live_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Live Url"
+                    },
+                    "bot_username": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Bot Username"
+                    },
+                    "error_code": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "bu_cloud_auth",
+                                    "bu_cloud_unavailable",
+                                    "bu_cloud_rate_limited",
+                                    "bu_cloud_timeout",
+                                    "scan_timeout",
+                                    "agent_dispatch_failed",
+                                    "agent_timeout",
+                                    "agent_no_output",
+                                    "agent_failed",
+                                    "invalid_token",
+                                    "bot_username_collision",
+                                    "rate_limited_botfather",
+                                    "box_not_ready",
+                                    "tg_already_installed",
+                                    "install_telegram_failed",
+                                    "box_offline",
+                                    "cancelled",
+                                    "concurrent_limit",
+                                    "internal"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Error Code"
+                    },
+                    "error_message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Error Message"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "state",
+                    "live_url",
+                    "bot_username",
+                    "error_code",
+                    "error_message",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "TgAutoSessionView",
+                "description": "Snapshot of a QR onboarding session. Returned by start, status, and\ncancel — same shape so the FE renders a single view component."
+            },
+            "TgAutoStartResponse": {
+                "properties": {
+                    "session": {
+                        "$ref": "#/components/schemas/TgAutoSessionView"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "session"
+                ],
+                "title": "TgAutoStartResponse",
+                "description": "Returned by POST /me/tg/auto. The session is already running by the\ntime this returns — frontend opens the iframe and starts polling."
+            },
             "TooManyConcurrentActiveSessionsError": {
                 "properties": {
                     "detail": {
@@ -3397,6 +5016,46 @@
                 "type": "object",
                 "title": "TooManyConcurrentActiveSessionsError",
                 "description": "Error response when user has too many concurrent active sessions"
+            },
+            "TrialEligibilityView": {
+                "properties": {
+                    "eligible": {
+                        "type": "boolean",
+                        "title": "Eligible"
+                    },
+                    "reason": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "already_used",
+                                    "no_owner"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Reason"
+                    },
+                    "message": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "eligible"
+                ],
+                "title": "TrialEligibilityView",
+                "description": "GET /me/trial-eligibility — is this user eligible for a free trial?\n\nAccount-scoped — paid users see this too (one free trial per user,\nregardless of payment tier).\n\n`reason` is a stable machine-readable code the FE branches on:\n  - 'already_used' — user has already started a trial in their\n    lifetime. Render an \"upgrade to deploy\" CTA.\n  - 'no_owner' — couldn't resolve the project's owner profile (rare,\n    older projects). FE falls back to generic \"add credits\" copy.\n  - None when eligible=True."
             },
             "UpdateBrowserSessionRequest": {
                 "properties": {
@@ -3445,6 +5104,81 @@
                     "type"
                 ],
                 "title": "ValidationError"
+            },
+            "WindowCreateRequest": {
+                "properties": {
+                    "label": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Label"
+                    }
+                },
+                "type": "object",
+                "title": "WindowCreateRequest"
+            },
+            "WindowListResponse": {
+                "properties": {
+                    "windows": {
+                        "items": {
+                            "$ref": "#/components/schemas/WindowView"
+                        },
+                        "type": "array",
+                        "title": "Windows"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "windows"
+                ],
+                "title": "WindowListResponse"
+            },
+            "WindowRenameRequest": {
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "title": "Label"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "label"
+                ],
+                "title": "WindowRenameRequest"
+            },
+            "WindowView": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id"
+                    },
+                    "label": {
+                        "type": "string",
+                        "title": "Label",
+                        "default": ""
+                    },
+                    "attached": {
+                        "type": "boolean",
+                        "title": "Attached",
+                        "default": false
+                    },
+                    "created_at": {
+                        "type": "integer",
+                        "title": "Created At",
+                        "default": 0
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id"
+                ],
+                "title": "WindowView",
+                "description": "One tmux window on the box. id is the tmux session name (`bux-w<n>`).\n\n`label` is a user-supplied name (max 64 chars) stored as a tmux\nper-session option (@bux-label). `attached` is True if any tmux\nclient is currently connected to the window. The FE shows a small\nindicator next to attached windows so users know which one a phone\nis currently mirroring."
             },
             "WorkspaceCreateRequest": {
                 "properties": {
@@ -3562,7 +5296,186 @@
                     "updatedAt"
                 ],
                 "title": "WorkspaceView",
-                "description": "View model for a workspace \u2014 persistent shared storage across sessions."
+                "description": "View model for a workspace — persistent shared storage across sessions."
+            },
+            "app__endpoints__api__v3__sessions__views__RunTaskRequest": {
+                "properties": {
+                    "task": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Task",
+                        "description": "The natural-language instruction for the agent to execute (e.g. \"Go to amazon.com and find the best-rated wireless mouse under $50\"). Required when dispatching to an existing session."
+                    },
+                    "model": {
+                        "$ref": "#/components/schemas/BuModel",
+                        "description": "The model to use. \"gemini-3-flash\" is fast and cheap, \"claude-sonnet-4.6\" is balanced, \"claude-opus-4.7\" is most capable (default). See BuModel for details.",
+                        "default": "claude-opus-4.7"
+                    },
+                    "sessionId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sessionid",
+                        "description": "ID of an existing idle session to dispatch the task to. If omitted, a new session is created."
+                    },
+                    "keepAlive": {
+                        "type": "boolean",
+                        "title": "Keepalive",
+                        "description": "If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.",
+                        "default": false
+                    },
+                    "maxCostUsd": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "string",
+                                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Maxcostusd",
+                        "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default."
+                    },
+                    "profileId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profileid",
+                        "description": "ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API."
+                    },
+                    "workspaceId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Workspaceid",
+                        "description": "ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API."
+                    },
+                    "proxyCountryCode": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ProxyCountryCode"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Country code for the browser proxy (e.g. \"US\", \"DE\", \"JP\"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.",
+                        "default": "us"
+                    },
+                    "outputSchema": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Outputschema",
+                        "description": "A JSON Schema that the agent's final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {\"type\": \"object\", \"properties\": {\"price\": {\"type\": \"number\"}, \"title\": {\"type\": \"string\"}}}."
+                    },
+                    "enableScheduledTasks": {
+                        "type": "boolean",
+                        "title": "Enablescheduledtasks",
+                        "description": "If true, the agent can create scheduled tasks that run on a recurring basis (e.g. \"every Monday morning, check my inbox and summarize new emails\"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.",
+                        "default": false
+                    },
+                    "sensitiveData": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sensitivedata",
+                        "description": "Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values."
+                    },
+                    "enableRecording": {
+                        "type": "boolean",
+                        "title": "Enablerecording",
+                        "description": "If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.",
+                        "default": false
+                    },
+                    "skills": {
+                        "type": "boolean",
+                        "title": "Skills",
+                        "description": "If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.",
+                        "default": true
+                    },
+                    "agentmail": {
+                        "type": "boolean",
+                        "title": "Agentmail",
+                        "description": "If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.",
+                        "default": true
+                    },
+                    "codeMode": {
+                        "type": "boolean",
+                        "title": "Codemode",
+                        "description": "When true, the agent returns structured output with `text` (summary) and `code` (validated Python source) fields instead of free-form text.",
+                        "default": false
+                    },
+                    "cacheScript": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Cachescript",
+                        "description": "Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: \"Get prices from @{{https://example.com}} for @{{electronics}}\"."
+                    },
+                    "useOwnKey": {
+                        "type": "boolean",
+                        "title": "Useownkey",
+                        "description": "If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2× of provider list prices). If no key is configured for the model's provider, the request is rejected.",
+                        "default": false
+                    },
+                    "autoHeal": {
+                        "type": "boolean",
+                        "title": "Autoheal",
+                        "description": "When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.",
+                        "default": true
+                    }
+                },
+                "type": "object",
+                "title": "RunTaskRequest",
+                "description": "Create a new session, dispatch a task, or both.\n\n- **No `sessionId` + no `task`**: creates an idle session (useful for uploading files before running a task).\n- **No `sessionId` + `task`**: creates a new session and immediately runs the task.\n- **`sessionId` + `task`**: dispatches the task to an existing idle session.\n- **`sessionId` + no `task`**: returns 422 — a task is required when targeting an existing session."
             }
         },
         "securitySchemes": {

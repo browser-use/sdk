@@ -9,7 +9,7 @@ import { SessionRun } from "./helpers.js";
 import type { components } from "../generated/v3/types.js";
 import type { RunOptions } from "./helpers.js";
 
-type RunTaskRequest = components["schemas"]["RunTaskRequest"];
+type RunTaskRequest = components["schemas"]["app__endpoints__api__v3__sessions__views__RunTaskRequest"];
 
 const DEFAULT_BASE_URL = "https://api.browser-use.com/api/v3";
 

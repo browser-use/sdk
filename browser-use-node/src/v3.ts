@@ -39,7 +39,7 @@ export type WorkspaceView = S["WorkspaceView"];
 export type WorkspaceListResponse = S["WorkspaceListResponse"];
 
 // Input / request models
-export type RunTaskRequest = S["RunTaskRequest"];
+export type RunTaskRequest = S["app__endpoints__api__v3__sessions__views__RunTaskRequest"];
 export type StopSessionRequest = S["StopSessionRequest"];
 export type FileUploadRequest = S["FileUploadRequest"];
 export type FileUploadItem = S["FileUploadItem"];

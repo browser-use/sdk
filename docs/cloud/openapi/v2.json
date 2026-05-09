@@ -192,7 +192,7 @@
                     "Tasks"
                 ],
                 "summary": "Create Task",
-                "description": "Create and start a new task.\n\nYou can either:\n1. Start a new task without a sessionId (auto-creates a session with US proxy by default).\n   Note: Tasks without a sessionId are one-off tasks that automatically close the session\n   upon completion (keep_alive=false). Use sessionSettings to configure the auto-created\n   session (e.g. proxyCountryCode, profileId, screen dimensions).\n2. Start a new task in an existing session (reuse for follow-up tasks or custom configuration)\n\nNote: Without sessionSettings, a US proxy is enabled by default. Providing sessionSettings\noverrides defaults \u2014 proxy is only enabled if proxyCountryCode is set. For full control over\nsession configuration (e.g. keep_alive), create a session first via POST /sessions with your\ndesired settings, then pass that sessionId when creating tasks.",
+                "description": "Create and start a new task.\n\nYou can either:\n1. Start a new task without a sessionId (auto-creates a session with US proxy by default).\n   Note: Tasks without a sessionId are one-off tasks that automatically close the session\n   upon completion (keep_alive=false). Use sessionSettings to configure the auto-created\n   session (e.g. proxyCountryCode, profileId, screen dimensions).\n2. Start a new task in an existing session (reuse for follow-up tasks or custom configuration)\n\nNote: Without sessionSettings, a US proxy is enabled by default. Providing sessionSettings\noverrides defaults — proxy is only enabled if proxyCountryCode is set. For full control over\nsession configuration (e.g. keep_alive), create a session first via POST /sessions with your\ndesired settings, then pass that sessionId when creating tasks.",
                 "operationId": "create_task_tasks_post",
                 "security": [
                     {
@@ -1924,6 +1924,103 @@
                 }
             }
         },
+        "/browsers/{session_id}/downloads": {
+            "get": {
+                "tags": [
+                    "Browsers"
+                ],
+                "summary": "List Browser Session Downloads",
+                "description": "List files the browser downloaded to S3 during the session.\n\nPass ``includeUrls=true`` to receive presigned download URLs (15 min expiry) inline.\nFiles are stored at ``downloads/projects/{project_id}/sessions/{session_id}/`` in\nthe private bucket.",
+                "operationId": "list_browser_session_downloads_browsers__session_id__downloads_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "default": 50,
+                            "title": "Limit"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Cursor"
+                        }
+                    },
+                    {
+                        "name": "includeUrls",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Includeurls"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BrowserDownloadListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Session not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionNotFoundError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/skills": {
             "get": {
                 "tags": [
@@ -3222,6 +3319,12 @@
                         "title": "Plan Info",
                         "description": "The plan information"
                     },
+                    "isFreeTier": {
+                        "type": "boolean",
+                        "title": "Is Free Tier",
+                        "description": "Whether the account is on the free tier",
+                        "default": false
+                    },
                     "projectId": {
                         "type": "string",
                         "format": "uuid",
@@ -3240,6 +3343,82 @@
                 ],
                 "title": "AccountView",
                 "description": "View model for account information."
+            },
+            "BrowserDownloadFile": {
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "title": "Path",
+                        "description": "File name (basename relative to the session downloads prefix)"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "title": "Size",
+                        "description": "File size in bytes"
+                    },
+                    "lastModified": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Lastmodified",
+                        "description": "When the file was last modified in S3"
+                    },
+                    "url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Url",
+                        "description": "Presigned download URL (15 min expiry). Only included when `includeUrls=true`."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "path",
+                    "size",
+                    "lastModified"
+                ],
+                "title": "BrowserDownloadFile",
+                "description": "A single file the browser downloaded during the session."
+            },
+            "BrowserDownloadListResponse": {
+                "properties": {
+                    "files": {
+                        "items": {
+                            "$ref": "#/components/schemas/BrowserDownloadFile"
+                        },
+                        "type": "array",
+                        "title": "Files",
+                        "description": "List of files downloaded by the browser"
+                    },
+                    "nextCursor": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nextcursor",
+                        "description": "Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page."
+                    },
+                    "hasMore": {
+                        "type": "boolean",
+                        "title": "Hasmore",
+                        "description": "Whether there are more files beyond this page.",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "files"
+                ],
+                "title": "BrowserDownloadListResponse",
+                "description": "Paginated list of browser downloads with optional presigned URLs."
             },
             "BrowserSessionItemView": {
                 "properties": {
@@ -3648,7 +3827,7 @@
                             }
                         ],
                         "title": "Custom Proxy",
-                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available on the Custom Enterprise plan."
+                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription."
                     },
                     "enableRecording": {
                         "type": "boolean",
@@ -3751,7 +3930,7 @@
                             }
                         ],
                         "title": "Custom Proxy",
-                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are only available on the Custom Enterprise plan."
+                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription."
                     },
                     "enableRecording": {
                         "type": "boolean",
@@ -4094,6 +4273,12 @@
                         ],
                         "title": "Password",
                         "description": "Password for proxy authentication."
+                    },
+                    "ignoreCertErrors": {
+                        "type": "boolean",
+                        "title": "Ignore Certificate Errors",
+                        "description": "Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).",
+                        "default": false
                     }
                 },
                 "type": "object",
@@ -6004,8 +6189,7 @@
                     "claude-sonnet-4-5-20250929",
                     "claude-sonnet-4-6",
                     "claude-opus-4-5-20251101",
-                    "gpt-4o",
-                    "gpt-4o-mini",
+                    "claude-opus-4-7",
                     "llama-4-maverick-17b-128e-instruct",
                     "claude-3-7-sonnet-20250219"
                 ],

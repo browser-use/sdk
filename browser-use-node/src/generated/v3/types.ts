@@ -427,12 +427,15 @@ export interface paths {
          * Get Trial Eligibility
          * @description Tell the FE whether to render a 'try free for 7 days' CTA.
          *
+         *     Account-scoped — any user (free-tier or paid) without a prior
+         *     `bux_trial_started_at` stamp is eligible for one free 7-day trial.
+         *
          *     Returns a tagged answer:
          *       - eligible=True   → show the trial CTA on the empty-state.
          *       - eligible=False, reason='already_used' → show "trial used,
          *         upgrade to deploy".
-         *       - eligible=False, reason='not_free_tier' → no special copy, the
-         *         normal balance flow handles them.
+         *       - eligible=False, reason='no_owner' → fallback for older projects
+         *         we can't resolve an owner for; FE shows generic "add credits".
          *
          *     Cheap call: one profile lookup. The FE polls /me + /sizes already,
          *     this is one more cheap GET on the deploy page.
@@ -1795,118 +1798,10 @@ export interface components {
          * @enum {string}
          */
         ProxyCountryCode: "ad" | "ae" | "af" | "ag" | "ai" | "al" | "am" | "an" | "ao" | "aq" | "ar" | "as" | "at" | "au" | "aw" | "az" | "ba" | "bb" | "bd" | "be" | "bf" | "bg" | "bh" | "bi" | "bj" | "bl" | "bm" | "bn" | "bo" | "bq" | "br" | "bs" | "bt" | "bv" | "bw" | "by" | "bz" | "ca" | "cc" | "cd" | "cf" | "cg" | "ch" | "ck" | "cl" | "cm" | "co" | "cr" | "cs" | "cu" | "cv" | "cw" | "cx" | "cy" | "cz" | "de" | "dj" | "dk" | "dm" | "do" | "dz" | "ec" | "ee" | "eg" | "eh" | "er" | "es" | "et" | "fi" | "fj" | "fk" | "fm" | "fo" | "fr" | "ga" | "gd" | "ge" | "gf" | "gg" | "gh" | "gi" | "gl" | "gm" | "gn" | "gp" | "gq" | "gr" | "gs" | "gt" | "gu" | "gw" | "gy" | "hk" | "hm" | "hn" | "hr" | "ht" | "hu" | "id" | "ie" | "il" | "im" | "in" | "iq" | "ir" | "is" | "it" | "je" | "jm" | "jo" | "jp" | "ke" | "kg" | "kh" | "ki" | "km" | "kn" | "kp" | "kr" | "kw" | "ky" | "kz" | "la" | "lb" | "lc" | "li" | "lk" | "lr" | "ls" | "lt" | "lu" | "lv" | "ly" | "ma" | "mc" | "md" | "me" | "mf" | "mg" | "mh" | "mk" | "ml" | "mm" | "mn" | "mo" | "mp" | "mq" | "mr" | "ms" | "mt" | "mu" | "mv" | "mw" | "mx" | "my" | "mz" | "na" | "nc" | "ne" | "nf" | "ng" | "ni" | "nl" | "no" | "np" | "nr" | "nu" | "nz" | "om" | "pa" | "pe" | "pf" | "pg" | "ph" | "pk" | "pl" | "pm" | "pn" | "pr" | "ps" | "pt" | "pw" | "py" | "qa" | "re" | "ro" | "rs" | "ru" | "rw" | "sa" | "sb" | "sc" | "sd" | "se" | "sg" | "sh" | "si" | "sj" | "sk" | "sl" | "sm" | "sn" | "so" | "sr" | "ss" | "st" | "sv" | "sx" | "sy" | "sz" | "tc" | "td" | "tf" | "tg" | "th" | "tj" | "tk" | "tl" | "tm" | "tn" | "to" | "tr" | "tt" | "tv" | "tw" | "tz" | "ua" | "ug" | "uk" | "us" | "uy" | "uz" | "va" | "vc" | "ve" | "vg" | "vi" | "vn" | "vu" | "wf" | "ws" | "xk" | "ye" | "yt" | "za" | "zm" | "zw";
-        /**
-         * RunTaskRequest
-         * @description Create a new session, dispatch a task, or both.
-         *
-         *     - **No `sessionId` + no `task`**: creates an idle session (useful for uploading files before running a task).
-         *     - **No `sessionId` + `task`**: creates a new session and immediately runs the task.
-         *     - **`sessionId` + `task`**: dispatches the task to an existing idle session.
-         *     - **`sessionId` + no `task`**: returns 422 — a task is required when targeting an existing session.
-         */
+        /** RunTaskRequest */
         RunTaskRequest: {
-            /**
-             * Task
-             * @description The natural-language instruction for the agent to execute (e.g. "Go to amazon.com and find the best-rated wireless mouse under $50"). Required when dispatching to an existing session.
-             */
-            task?: string | null;
-            /**
-             * @description The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-4.6" is balanced, "claude-opus-4.7" is most capable (default). See BuModel for details.
-             * @default claude-opus-4.7
-             */
-            model: components["schemas"]["BuModel"];
-            /**
-             * Sessionid
-             * @description ID of an existing idle session to dispatch the task to. If omitted, a new session is created.
-             */
-            sessionId?: string | null;
-            /**
-             * Keepalive
-             * @description If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.
-             * @default false
-             */
-            keepAlive: boolean;
-            /**
-             * Maxcostusd
-             * @description Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default.
-             */
-            maxCostUsd?: number | string | null;
-            /**
-             * Profileid
-             * @description ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API.
-             */
-            profileId?: string | null;
-            /**
-             * Workspaceid
-             * @description ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API.
-             */
-            workspaceId?: string | null;
-            /**
-             * @description Country code for the browser proxy (e.g. "US", "DE", "JP"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.
-             * @default us
-             */
-            proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
-            /**
-             * Outputschema
-             * @description A JSON Schema that the agent's final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {"type": "object", "properties": {"price": {"type": "number"}, "title": {"type": "string"}}}.
-             */
-            outputSchema?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * Enablescheduledtasks
-             * @description If true, the agent can create scheduled tasks that run on a recurring basis (e.g. "every Monday morning, check my inbox and summarize new emails"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.
-             * @default false
-             */
-            enableScheduledTasks: boolean;
-            /**
-             * Sensitivedata
-             * @description Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values.
-             */
-            sensitiveData?: {
-                [key: string]: string;
-            } | null;
-            /**
-             * Enablerecording
-             * @description If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.
-             * @default false
-             */
-            enableRecording: boolean;
-            /**
-             * Skills
-             * @description If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.
-             * @default true
-             */
-            skills: boolean;
-            /**
-             * Agentmail
-             * @description If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.
-             * @default true
-             */
-            agentmail: boolean;
-            /**
-             * Codemode
-             * @description When true, the agent returns structured output with `text` (summary) and `code` (validated Python source) fields instead of free-form text.
-             * @default false
-             */
-            codeMode: boolean;
-            /**
-             * Cachescript
-             * @description Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from @{{https://example.com}} for @{{electronics}}".
-             */
-            cacheScript?: boolean | null;
-            /**
-             * Useownkey
-             * @description If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2× of provider list prices). If no key is configured for the model's provider, the request is rejected.
-             * @default false
-             */
-            useOwnKey: boolean;
-            /**
-             * Autoheal
-             * @description When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.
-             * @default true
-             */
-            autoHeal: boolean;
+            /** Prompt */
+            prompt: string;
         };
         /** SessionListResponse */
         SessionListResponse: {
@@ -2206,10 +2101,12 @@ export interface components {
          * TrialEligibilityView
          * @description GET /me/trial-eligibility — is this user eligible for a free trial?
          *
+         *     Account-scoped — paid users see this too (one free trial per user,
+         *     regardless of payment tier).
+         *
          *     `reason` is a stable machine-readable code the FE branches on:
          *       - 'already_used' — user has already started a trial in their
          *         lifetime. Render an "upgrade to deploy" CTA.
-         *       - 'not_free_tier' — paying customer; FE shows the normal flow.
          *       - 'no_owner' — couldn't resolve the project's owner profile (rare,
          *         older projects). FE falls back to generic "add credits" copy.
          *       - None when eligible=True.
@@ -2218,7 +2115,7 @@ export interface components {
             /** Eligible */
             eligible: boolean;
             /** Reason */
-            reason?: ("already_used" | "not_free_tier" | "no_owner") | null;
+            reason?: ("already_used" | "no_owner") | null;
             /** Message */
             message?: string | null;
         };
@@ -2363,10 +2260,118 @@ export interface components {
              */
             updatedAt: string;
         };
-        /** RunTaskRequest */
-        app__endpoints__api__v3__boxes__views__RunTaskRequest: {
-            /** Prompt */
-            prompt: string;
+        /**
+         * RunTaskRequest
+         * @description Create a new session, dispatch a task, or both.
+         *
+         *     - **No `sessionId` + no `task`**: creates an idle session (useful for uploading files before running a task).
+         *     - **No `sessionId` + `task`**: creates a new session and immediately runs the task.
+         *     - **`sessionId` + `task`**: dispatches the task to an existing idle session.
+         *     - **`sessionId` + no `task`**: returns 422 — a task is required when targeting an existing session.
+         */
+        app__endpoints__api__v3__sessions__views__RunTaskRequest: {
+            /**
+             * Task
+             * @description The natural-language instruction for the agent to execute (e.g. "Go to amazon.com and find the best-rated wireless mouse under $50"). Required when dispatching to an existing session.
+             */
+            task?: string | null;
+            /**
+             * @description The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-4.6" is balanced, "claude-opus-4.7" is most capable (default). See BuModel for details.
+             * @default claude-opus-4.7
+             */
+            model: components["schemas"]["BuModel"];
+            /**
+             * Sessionid
+             * @description ID of an existing idle session to dispatch the task to. If omitted, a new session is created.
+             */
+            sessionId?: string | null;
+            /**
+             * Keepalive
+             * @description If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.
+             * @default false
+             */
+            keepAlive: boolean;
+            /**
+             * Maxcostusd
+             * @description Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default.
+             */
+            maxCostUsd?: number | string | null;
+            /**
+             * Profileid
+             * @description ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API.
+             */
+            profileId?: string | null;
+            /**
+             * Workspaceid
+             * @description ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API.
+             */
+            workspaceId?: string | null;
+            /**
+             * @description Country code for the browser proxy (e.g. "US", "DE", "JP"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.
+             * @default us
+             */
+            proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
+            /**
+             * Outputschema
+             * @description A JSON Schema that the agent's final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {"type": "object", "properties": {"price": {"type": "number"}, "title": {"type": "string"}}}.
+             */
+            outputSchema?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Enablescheduledtasks
+             * @description If true, the agent can create scheduled tasks that run on a recurring basis (e.g. "every Monday morning, check my inbox and summarize new emails"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.
+             * @default false
+             */
+            enableScheduledTasks: boolean;
+            /**
+             * Sensitivedata
+             * @description Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values.
+             */
+            sensitiveData?: {
+                [key: string]: string;
+            } | null;
+            /**
+             * Enablerecording
+             * @description If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.
+             * @default false
+             */
+            enableRecording: boolean;
+            /**
+             * Skills
+             * @description If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.
+             * @default true
+             */
+            skills: boolean;
+            /**
+             * Agentmail
+             * @description If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.
+             * @default true
+             */
+            agentmail: boolean;
+            /**
+             * Codemode
+             * @description When true, the agent returns structured output with `text` (summary) and `code` (validated Python source) fields instead of free-form text.
+             * @default false
+             */
+            codeMode: boolean;
+            /**
+             * Cachescript
+             * @description Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from @{{https://example.com}} for @{{electronics}}".
+             */
+            cacheScript?: boolean | null;
+            /**
+             * Useownkey
+             * @description If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2× of provider list prices). If no key is configured for the model's provider, the request is rejected.
+             * @default false
+             */
+            useOwnKey: boolean;
+            /**
+             * Autoheal
+             * @description When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.
+             * @default true
+             */
+            autoHeal: boolean;
         };
     };
     responses: never;
@@ -2420,7 +2425,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RunTaskRequest"];
+                "application/json": components["schemas"]["app__endpoints__api__v3__sessions__views__RunTaskRequest"];
             };
         };
         responses: {
@@ -3730,7 +3735,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["app__endpoints__api__v3__boxes__views__RunTaskRequest"];
+                "application/json": components["schemas"]["RunTaskRequest"];
             };
         };
         responses: {
