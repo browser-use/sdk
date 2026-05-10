@@ -24,6 +24,18 @@ result = await client.run("Find the top 3 trending repos on GitHub today")
 print(result.output)
 ```
 
+## v3 Bring Your Own LLM Key
+
+Add your provider API key in Browser Use project settings, then enable BYOK for v3 agent runs:
+
+```python
+from browser_use_sdk.v3 import BrowserUse
+
+client = BrowserUse(use_own_key=True)
+result = client.run("Find the top 3 trending repos on GitHub today")
+print(result.output)
+```
+
 ## Docs
 
 [docs.browser-use.com](https://docs.browser-use.com)

@@ -18,6 +18,10 @@ export interface BrowserUseOptions {
   baseUrl?: string;
   maxRetries?: number;
   timeout?: number;
+  /**
+   * Use your own LLM API key configured in Browser Use project settings for v3 agent runs.
+   */
+  useOwnKey?: boolean;
 }
 
 export type RunSessionOptions = Partial<Omit<RunTaskRequest, "task">> &
@@ -50,7 +54,7 @@ export class BrowserUse {
     this.billing = new Billing(this.http);
     this.browsers = new Browsers(this.http);
     this.profiles = new Profiles(this.http);
-    this.sessions = new Sessions(this.http);
+    this.sessions = new Sessions(this.http, { useOwnKey: options.useOwnKey });
     this.workspaces = new Workspaces(this.http);
   }
 

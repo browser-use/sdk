@@ -31,6 +31,7 @@ class BrowserUse:
         *,
         base_url: str | None = None,
         timeout: float = 30.0,
+        use_own_key: bool | None = None,
     ) -> None:
         resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
         if not resolved_key:
@@ -45,7 +46,7 @@ class BrowserUse:
         self.billing = BillingResource(self._http)
         self.browsers = BrowsersResource(self._http)
         self.profiles = ProfilesResource(self._http)
-        self.sessions = Sessions(self._http)
+        self.sessions = Sessions(self._http, use_own_key=use_own_key)
         self.workspaces = Workspaces(self._http)
 
     @overload
@@ -269,6 +270,7 @@ class AsyncBrowserUse:
         *,
         base_url: str | None = None,
         timeout: float = 30.0,
+        use_own_key: bool | None = None,
     ) -> None:
         resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
         if not resolved_key:
@@ -283,7 +285,7 @@ class AsyncBrowserUse:
         self.billing = AsyncBilling(self._http)
         self.browsers = AsyncBrowsers(self._http)
         self.profiles = AsyncProfiles(self._http)
-        self.sessions = AsyncSessions(self._http)
+        self.sessions = AsyncSessions(self._http, use_own_key=use_own_key)
         self.workspaces = AsyncWorkspaces(self._http)
 
     @overload
