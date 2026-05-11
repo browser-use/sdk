@@ -13,12 +13,12 @@ nothing in this file is imported.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+import importlib
+from typing import Any
 
-if TYPE_CHECKING:  # pragma: no cover - typing only
-    from x402 import x402Client as X402Client  # pyright: ignore[reportMissingImports]
-else:
-    X402Client = Any  # runtime alias for annotations
+# Public alias for optional x402.x402Client type
+# Real class is only available when the x402 extra installed (Python 3.10+)
+X402Client = Any
 
 
 X402_BASE_URL_DEFAULT = "https://x402.api.browser-use.com/api/v3"
@@ -47,16 +47,18 @@ def x402_client_from_private_key(private_key: str) -> X402Client:
         register_exact_evm_client(client, EthAccountSigner(Account.from_key(key)))
     """
     try:
-        from eth_account import Account  # pyright: ignore[reportMissingImports]
-        from x402 import x402Client  # pyright: ignore[reportMissingImports]
-        from x402.mechanisms.evm import EthAccountSigner  # pyright: ignore[reportMissingImports]
-        from x402.mechanisms.evm.exact.register import register_exact_evm_client  # pyright: ignore[reportMissingImports]
+        eth_account = importlib.import_module("eth_account")
+        x402_pkg = importlib.import_module("x402")
+        evm_pkg = importlib.import_module("x402.mechanisms.evm")
+        register_pkg = importlib.import_module(
+            "x402.mechanisms.evm.exact.register"
+        )
     except ImportError as e:
         raise _missing_x402() from e
 
-    account = Account.from_key(private_key)
-    client = x402Client()
-    register_exact_evm_client(client, EthAccountSigner(account))
+    account = eth_account.Account.from_key(private_key)
+    client = x402_pkg.x402Client()
+    register_pkg.register_exact_evm_client(client, evm_pkg.EthAccountSigner(account))
     return client
 
 
@@ -74,11 +76,11 @@ def x402_async_httpx_client(
     instead of auto-creating one keyed to the wallet).
     """
     try:
-        from x402.http.clients import x402HttpxClient  # pyright: ignore[reportMissingImports]
+        clients_pkg = importlib.import_module("x402.http.clients")
     except ImportError as e:
         raise _missing_x402() from e
 
     headers = {"X-Browser-Use-API-Key": api_key} if api_key else None
-    return x402HttpxClient(
+    return clients_pkg.x402HttpxClient(
         x402_client, base_url=base_url, timeout=timeout, headers=headers
     )
