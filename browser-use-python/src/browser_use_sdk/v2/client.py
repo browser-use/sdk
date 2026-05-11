@@ -8,6 +8,7 @@ from typing import Any, TypeVar, overload
 from pydantic import BaseModel
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
+from .._core.x402 import X402_BASE_URL_DEFAULT_V2, x402_client_from_private_key
 from ..generated.v2.models import SessionSettings, TaskCreatedResponse
 from .resources.billing import AsyncBilling, Billing
 from .resources.browsers import AsyncBrowsers, Browsers
@@ -24,8 +25,22 @@ _V2_BASE_URL = "https://api.browser-use.com/api/v2"
 T = TypeVar("T")
 
 
+def _resolve_x402(x402: Any | None, x402_private_key: str | None) -> Any | None:
+    """Resolve x402 client from explicit args + env vars. Returns None if unused."""
+    if x402 is not None:
+        return x402
+    key = x402_private_key or os.environ.get("BROWSER_USE_X402_PRIVATE_KEY")
+    if key:
+        return x402_client_from_private_key(key)
+    return None
+
+
 class BrowserUse:
-    """Synchronous Browser Use v2 client."""
+    """Synchronous Browser Use v2 client.
+
+    For x402 (pay-per-request) authentication, use :class:`AsyncBrowserUse` —
+    x402 settlement is async-only.
+    """
 
     def __init__(
         self,
@@ -34,7 +49,14 @@ class BrowserUse:
         base_url: str | None = None,
         timeout: float = 30.0,
         max_retries: int = 3,
+        x402: Any | None = None,
+        x402_private_key: str | None = None,
     ) -> None:
+        if x402 is not None or x402_private_key is not None or os.environ.get("BROWSER_USE_X402_PRIVATE_KEY"):
+            raise ValueError(
+                "x402 mode is async-only. Use AsyncBrowserUse instead of BrowserUse "
+                "(or remove x402 / x402_private_key / BROWSER_USE_X402_PRIVATE_KEY)."
+            )
         resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
         if not resolved_key:
             raise ValueError(
@@ -336,7 +358,15 @@ class BrowserUse:
 
 
 class AsyncBrowserUse:
-    """Asynchronous Browser Use v2 client."""
+    """Asynchronous Browser Use v2 client.
+
+    Auth priority: ``x402`` arg → ``x402_private_key`` arg →
+    ``BROWSER_USE_X402_PRIVATE_KEY`` env → ``api_key`` arg → ``BROWSER_USE_API_KEY``
+    env. When both an API key and x402 are configured, x402 mode is used in
+    "top-up" mode — the API key is forwarded as a header so the backend
+    credits the existing project (instead of auto-creating a wallet-keyed one).
+    x402 mode requires the optional extra: ``pip install "browser-use-sdk[x402]"``.
+    """
 
     def __init__(
         self,
@@ -345,18 +375,33 @@ class AsyncBrowserUse:
         base_url: str | None = None,
         timeout: float = 30.0,
         max_retries: int = 3,
+        x402: Any | None = None,
+        x402_private_key: str | None = None,
     ) -> None:
-        resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
-        if not resolved_key:
-            raise ValueError(
-                "No API key provided. Pass api_key or set BROWSER_USE_API_KEY."
+        x402_client = _resolve_x402(x402, x402_private_key)
+        if x402_client is not None:
+            topup_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
+            self._http = AsyncHttpClient(
+                base_url=base_url or X402_BASE_URL_DEFAULT_V2,
+                api_key=topup_key,
+                timeout=timeout,
+                max_retries=max_retries,
+                x402_client=x402_client,
             )
-        self._http = AsyncHttpClient(
-            base_url=base_url or _V2_BASE_URL,
-            api_key=resolved_key,
-            timeout=timeout,
-            max_retries=max_retries,
-        )
+        else:
+            resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
+            if not resolved_key:
+                raise ValueError(
+                    "No credentials provided. Pass api_key / set BROWSER_USE_API_KEY, "
+                    "or pass x402_private_key / set BROWSER_USE_X402_PRIVATE_KEY for "
+                    "pay-per-request access via USDC."
+                )
+            self._http = AsyncHttpClient(
+                base_url=base_url or _V2_BASE_URL,
+                api_key=resolved_key,
+                timeout=timeout,
+                max_retries=max_retries,
+            )
         self.billing = AsyncBilling(self._http)
         self.tasks = AsyncTasks(self._http)
         self.sessions = AsyncSessions(self._http)
