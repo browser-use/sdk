@@ -74,6 +74,15 @@ curl -X POST https://api.browser-use.com/api/v3/sessions \
 ```
 </CodeGroup>
 
-To default every session on a client to BYOK, pass it once to the constructor: `AsyncBrowserUse(use_own_key=True)` (Python) or `new BrowserUse({ useOwnKey: true })` (TypeScript).
+To default every session on a client to BYOK, set it once on the constructor:
+
+<CodeGroup>
+```python Python
+client = AsyncBrowserUse(use_own_key=True)
+```
+```typescript TypeScript
+const client = new BrowserUse({ useOwnKey: true });
+```
+</CodeGroup>
 
 The provider key on your project must match the model you pick — Claude models use your Anthropic key, GPT models use your OpenAI key, Gemini models use your Google key.
