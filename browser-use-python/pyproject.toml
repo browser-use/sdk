@@ -14,6 +14,11 @@ dependencies = ["httpx>=0.24", "pydantic>=2.0"]
 [project.optional-dependencies]
 dev = ["pytest>=7", "pyright>=1.1"]
 examples = ["python-dotenv>=1.0"]
+# Pay for API access with USDC instead of an API key. Requires Python 3.10+.
+# Install with: pip install "browser-use-sdk[x402]"
+x402 = [
+    "x402[evm]>=2.9.0; python_version >= '3.10'",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/browser_use_sdk"]

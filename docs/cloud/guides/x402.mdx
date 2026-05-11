@@ -1,0 +1,274 @@
+---
+title: x402 (pay-per-request)
+description: "Pay for Browser Use Cloud with crypto (USDC on Base). ~30 seconds from wallet to first request."
+---
+
+[x402](https://www.x402.org) is a payment protocol [created by Coinbase](https://www.coinbase.com/developer-platform/discover/launches/x402) that lets APIs, or AI agents, charge for requests directly with crypto.
+
+x402 lets your code, or an autonomous AI agent, pay Browser Use Cloud directly with cryptocurrency. No account signup, no credit card, and no API key is needed. Your wallet is your identity.
+
+<Note>
+  **New to crypto?** Here's the gist:
+  - **USDC** is a stablecoin pegged 1:1 to the US dollar. 1 USDC = $1.
+  - **Base** is a low-fee blockchain network operated by Coinbase. Sending a payment costs fractions of a cent.
+  - **Wallet** = a public address (your "username") and a private key (your "password"). The private key signs payments.
+  - You'll need at least $5 of USDC on Base in a wallet you control. The Claude Code quickstart below walks you through everything from scratch.
+</Note>
+
+**Three ways to start, ranked by laziness:**
+
+<CardGroup cols={3}>
+  <Card title="Claude Code" icon="terminal" href="#claude-code-quickstart">
+    One command. Claude does the wallet setup, funding walkthrough, and verification for you.
+  </Card>
+  <Card title="SDK" icon="code" href="#sdk-quickstart">
+    One line in your Python or TypeScript app. Bring your own wallet.
+  </Card>
+  <Card title="Raw HTTP" icon="globe" href="#raw-http-quickstart">
+    Skip the SDK. Sign EIP-3009, send `X-PAYMENT` header.
+  </Card>
+</CardGroup>
+
+## Claude Code quickstart
+
+The fastest path. Install the [x402 skill](https://github.com/browser-use/browser-use/tree/main/skills/x402), and Claude walks you through everything:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill x402
+```
+
+Then in Claude Code:
+
+```
+> /x402
+```
+
+Claude generates (or imports) a wallet, walks you through funding it via Coinbase, writes `BROWSER_USE_X402_PRIVATE_KEY` to your `.env`, installs the SDK, and runs a verification task. Total: ~2 minutes if you have a Coinbase account.
+
+<Tip>
+  Already have a Browser Use Cloud account? The skill detects this and switches to **top-up mode**, adding credits to that existing account instead of creating a new, wallet-keyed one.
+</Tip>
+
+## SDK quickstart
+
+The Browser Use SDK has built-in x402 support. Pass a wallet private key, and you're done.
+
+<CodeGroup>
+```bash Python
+pip install "browser-use-sdk[x402]"
+```
+```bash TypeScript
+npm install browser-use-sdk @x402/fetch @x402/evm viem
+```
+</CodeGroup>
+
+<CodeGroup>
+```python Python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse(x402_private_key="0x...")  # EVM wallet w/ USDC on Base
+    result = await client.run("Go to example.com and tell me the heading.")
+    print(result.output)
+
+asyncio.run(main())
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({ x402PrivateKey: "0x..." });  // EVM wallet w/ USDC on Base
+const result = await client.run("Go to example.com and tell me the heading.");
+console.log(result.output);
+```
+</CodeGroup>
+
+Or set `BROWSER_USE_X402_PRIVATE_KEY` in your env, and skip the constructor arg entirely:
+
+<CodeGroup>
+```python Python
+client = AsyncBrowserUse()   # auto-detects from env
+```
+```typescript TypeScript
+const client = new BrowserUse();  // auto-detects from env
+```
+</CodeGroup>
+
+<Note>
+  Python: x402 is async-only. Use `AsyncBrowserUse`, not `BrowserUse`.
+</Note>
+
+## Raw HTTP quickstart
+
+Use this if you're in a language we don't ship an SDK for (Go, Rust, Ruby, etc.), or if you want to use other x402 APIs from the same client library. Hit `https://x402.api.browser-use.com` directly with any [x402 client library](https://github.com/coinbase/x402#all-available-reference-sdks):
+
+```python
+from x402 import x402Client
+from x402.http.clients import x402HttpxClient
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+
+client = x402Client()
+register_exact_evm_client(client, EthAccountSigner(Account.from_key("0x...")))
+
+async with x402HttpxClient(client, timeout=120.0) as http:
+    response = await http.post(
+        "https://x402.api.browser-use.com/api/v3/sessions",
+        json={"task": "..."},
+    )
+    print(response.status_code, response.text[:500])
+```
+
+`https://x402.api.browser-use.com` exposes the same routes as `https://api.browser-use.com`. It supports every `/api/v2/*` and `/api/v3/*` route, gated by an x402 challenge instead of API key auth.
+
+## What you need
+
+- **EVM wallet** (MetaMask, Rabby, Coinbase Wallet, etc.) with its private key available to your app
+- **USD Coin (USDC) on Base mainnet**
+- **Default top-up:** `$5.00` USDC per request (`$1.00` minimum for budget-constrained wallets)
+
+You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIPS/eip-3009), so you sign offchain, and the facilitator pays gas.
+
+<Note>
+  No wallet yet? Jump to [Wallet setup](#wallet-setup) below.
+</Note>
+
+## Pricing and credits
+
+Each x402 payment adds `$5` of credits to your project by default (or `$1` if your wallet falls back to the smaller option). When credits hit zero, the next request returns `402`, and the SDK automatically signs another payment to keep going. **You don't manage top-ups manually; just make sure your wallet has enough USDC for your expected usage.**
+
+<Warning>
+  **Mid-task drain still terminates the task.** Browser Use sessions run on a worker that doesn't see x402, so once a long-running task starts and burns through its credits, it stops with `INSUFFICIENT_CREDITS` — it does not pause and wait for the next x402 payment. The `$5` default exists so most tasks complete without hitting this; for expensive models (e.g. Opus) or long sessions, pre-fund with multiple requests before kicking off the task.
+</Warning>
+
+See the [pricing page](https://browser-use.com/pricing) for model and browser costs.
+
+## Topping up an existing account
+
+If you already have a Browser Use API key (for example, one created via `browser-use cloud signup` or the dashboard), you can use x402 to add credits to **that** account instead of creating a new project based on your crypto wallet. Send your existing API key alongside the payment:
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse(
+    api_key="bu_...",                     # existing API key getting topped up
+    x402_private_key="0x...",             # wallet that pays
+    base_url="https://x402.api.browser-use.com/api/v3",
+)
+result = await client.run("...")          # $5 USDC charged, credited to the API key's project
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({
+  apiKey: "bu_...",
+  x402PrivateKey: "0x...",
+  baseUrl: "https://x402.api.browser-use.com/api/v3",
+});
+const result = await client.run("...");
+```
+</CodeGroup>
+
+When the backend sees both a payment and a valid API key, the credit goes to the key's project rather than auto-creating a new wallet-keyed one. Useful for:
+
+- Agents that ran out of free-tier credits and need to keep going
+- Adding credits via crypto when you already have a regular Browser Use account
+- Multi-wallet setups funding one shared account
+
+## How it works
+
+Your code asks for something, we say "$5 please", your wallet pays automatically, we run your request.
+
+A bit more detail:
+
+1. Your code makes a request (e.g. "run this task").
+2. If your project has no credits, we respond with "Payment required: $5" (or `$1` as a fallback for smaller wallets).
+3. The SDK auto-signs the payment from your wallet and resends the request.
+4. Coinbase moves the USDC on-chain. We add the same amount to your project's credit balance.
+5. We run your task and send back the result.
+
+## Wallet setup
+
+If you don't have a wallet ready, here's one easy path. We use **MetaMask** below. It's a popular crypto wallet (think of it as an in-browser app for holding crypto and signing payments). Any other EVM-compatible wallet works equally well: [Rabby](https://rabby.io), [Coinbase Wallet](https://www.coinbase.com/wallet), [Frame](https://frame.sh), [Trust Wallet](https://trustwallet.com), [Phantom](https://phantom.com), etc. Pick whichever you prefer.
+
+<Steps>
+  <Step title="Install MetaMask (or your wallet of choice)">
+    Get the [MetaMask browser extension](https://metamask.io) via the official site only. Create a new wallet, save the seed phrase somewhere offline, set a password.
+  </Step>
+  <Step title="Add the Base network">
+    By default, most wallets only show Ethereum. You need to add **Base** (the network we accept payments on) so your wallet can hold USDC there.
+  </Step>
+  <Step title="Get USDC into your wallet on Base">
+    Click **"Buy"** inside MetaMask. Pick **USDC**, set network to **Base**, and pay with credit card, bank, etc. The USDC lands directly in your wallet.
+  </Step>
+  <Step title="Export the private key">
+    In MetaMask: click the account menu → **Account details** → **Private keys** → enter your password → copy. That string (starts with `0x`) is your `BROWSER_USE_X402_PRIVATE_KEY`. Other wallets have similar export options in their account settings.
+  </Step>
+</Steps>
+
+<Warning>
+  Wallets hold real money, and anyone with the private key can drain it. Be careful with your keys.
+</Warning>
+
+## Advanced: bring your own x402 client
+
+For custom signers, multi-network setups, or non-EVM wallets, build the x402 client yourself, and pass it as `x402` instead of `x402_private_key`:
+
+<CodeGroup>
+```python Python
+from x402 import x402Client
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+x402 = x402Client()
+register_exact_evm_client(x402, EthAccountSigner(Account.from_key("0x...")))
+client = AsyncBrowserUse(x402=x402)
+```
+```typescript TypeScript
+import { x402Client } from "@x402/fetch";
+import { ExactEvmScheme } from "@x402/evm";
+import { privateKeyToAccount } from "viem/accounts";
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const x402 = new x402Client();
+x402.register("eip155:*", new ExactEvmScheme(privateKeyToAccount("0x...")));
+const client = new BrowserUse({ x402 });
+```
+</CodeGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="HTTP 402 keeps coming back, never settles">
+    Two likely causes:
+
+    - **Wallet has no USDC on Base.** Check your balance. If empty, top it up.
+    - **Your HTTP client isn't x402-aware.** Plain `requests` / `fetch` just sees a 402 and stops; it doesn't know how to read the payment instructions and sign a payment. Use the SDK (which handles this automatically) or wrap your HTTP client with one of the [x402 client libraries](https://github.com/coinbase/x402#all-available-reference-sdks).
+  </Accordion>
+
+  <Accordion title="ImportError / Cannot find module '@x402/fetch'">
+    You haven't installed the optional x402 deps. Run `pip install "browser-use-sdk[x402]"` (Python) or `npm install @x402/fetch @x402/evm viem` (TypeScript).
+  </Accordion>
+
+  <Accordion title='HTTP 500 with "payment was settled but processing failed"'>
+    The on-chain payment may or may not have settled — contact support with your wallet address. This is very rare.
+  </Accordion>
+
+  <Accordion title="Insufficient credits despite paying">
+    Wait a few seconds. Settlement and credit grant happen in the same request, but the response may be sent before the credit grant fully commits. If credits still show `$0` after a few minutes, contact support.
+  </Accordion>
+
+  <Accordion title="Wallet on the wrong network">
+    `eip155:8453` is Base mainnet; `eip155:84532` is Base Sepolia testnet. Browser Use Cloud only accepts mainnet. Withdrawing USDC to Sepolia from Coinbase is **not** the same as Base mainnet, even though both use the same wallet address.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [x402 protocol spec](https://www.x402.org)
+- [Standard API key auth](/cloud/quickstart) — alternative if you don't want pay-per-use
+- [`x402` Claude Code skill source](https://github.com/browser-use/browser-use/tree/main/skills/x402)

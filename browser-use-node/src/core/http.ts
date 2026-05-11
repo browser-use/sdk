@@ -1,10 +1,18 @@
 import { BrowserUseError } from "./errors.js";
+import type { FetchLike } from "./x402.js";
 
 export interface HttpClientOptions {
   apiKey: string;
   baseUrl: string;
   maxRetries?: number;
   timeout?: number;
+  /**
+   * Optional custom fetch implementation. May be a sync value or a Promise
+   * (for lazy resolution of e.g. x402-wrapped fetch). When set, replaces
+   * `globalThis.fetch`. The `X-Browser-Use-API-Key` header is still sent if
+   * `apiKey` is non-empty (top-up mode in x402); pass `apiKey: ""` to omit.
+   */
+  fetch?: FetchLike | Promise<FetchLike>;
 }
 
 export class HttpClient {
@@ -12,12 +20,21 @@ export class HttpClient {
   private readonly baseUrl: string;
   private readonly maxRetries: number;
   private readonly timeout: number;
+  private readonly fetchPromise: Promise<FetchLike>;
+  private readonly useApiKeyHeader: boolean;
 
   constructor(options: HttpClientOptions) {
     this.apiKey = options.apiKey;
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.maxRetries = options.maxRetries ?? 3;
     this.timeout = options.timeout ?? 30_000;
+    this.fetchPromise = Promise.resolve(
+      options.fetch ?? ((input, init) => fetch(input, init)),
+    );
+    // Send the API key header whenever apiKey is non-empty. In x402 mode
+    // an empty apiKey means "accountless" (wallet is identity); a non-empty
+    // apiKey means "top up the existing key's project".
+    this.useApiKeyHeader = options.apiKey !== "";
   }
 
   async request<T>(
@@ -38,9 +55,10 @@ export class HttpClient {
       }
     }
 
-    const headers: Record<string, string> = {
-      "X-Browser-Use-API-Key": this.apiKey,
-    };
+    const headers: Record<string, string> = {};
+    if (this.useApiKeyHeader) {
+      headers["X-Browser-Use-API-Key"] = this.apiKey;
+    }
     if (options?.body !== undefined) {
       headers["Content-Type"] = "application/json";
     }
@@ -60,7 +78,8 @@ export class HttpClient {
       const signal = options?.signal ?? controller.signal;
 
       try {
-        const response = await fetch(url.toString(), {
+        const fetchImpl = await this.fetchPromise;
+        const response = await fetchImpl(url.toString(), {
           method,
           headers,
           body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,

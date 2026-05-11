@@ -87,3 +87,26 @@ browser-use cloud signup --claim
 ```
 
 Returns a claim URL valid for 1 hour. The human can follow the link to sign up and claim the agent-created account.
+
+## Pay with USDC via x402
+
+Two ways to use x402 with Browser Use Cloud:
+
+- **Top up an existing account** — add credits to your API key (e.g. one created via Agent Self-Registration above) using USDC. No credit card required. Use this when free credits run out.
+- **Accountless** — wallet IS the identity, no signup needed. Pure x402 / agent-economy native. Use this for autonomous agents that hold their own wallet.
+
+Install the skill:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill x402
+```
+
+Then in Claude Code:
+
+```
+> /x402
+```
+
+The skill asks whether you have an existing API key (top-up mode) or want accountless mode, then walks you through generating (or importing) an EVM wallet, funding it via Coinbase, and running a verification task. You'll need ~$5 of USDC on Base mainnet. Each top-up is $1.
+
+For the SDK API and protocol details, see the [x402 guide](/cloud/guides/x402).
