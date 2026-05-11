@@ -25,6 +25,10 @@ export interface BrowserUseOptions {
   maxRetries?: number;
   timeout?: number;
   /**
+   * Use your own LLM API key configured in Browser Use project settings for v3 agent runs.
+   */
+  useOwnKey?: boolean;
+  /**
    * Pre-built x402 client (advanced — for custom signers / multi-network).
    * If set, the SDK uses pay-per-request authentication via USDC instead of
    * an API key. Requires the optional peer deps `@x402/fetch`, `@x402/evm`,
@@ -96,7 +100,7 @@ export class BrowserUse {
     this.billing = new Billing(this.http);
     this.browsers = new Browsers(this.http);
     this.profiles = new Profiles(this.http);
-    this.sessions = new Sessions(this.http);
+    this.sessions = new Sessions(this.http, { useOwnKey: options.useOwnKey });
     this.workspaces = new Workspaces(this.http);
   }
 

@@ -20,12 +20,26 @@ export interface SessionMessagesParams {
   limit?: number;
 }
 
+export interface SessionsOptions {
+  useOwnKey?: boolean;
+}
+
 export class Sessions {
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly options: SessionsOptions = {},
+  ) {}
 
   /** Create a session and optionally dispatch a task. */
   create(body?: CreateSessionBody): Promise<SessionResponse> {
-    return this.http.post<SessionResponse>("/sessions", body ?? {});
+    const requestBody = { ...(body ?? {}) };
+    if (
+      this.options.useOwnKey !== undefined &&
+      requestBody.useOwnKey === undefined
+    ) {
+      requestBody.useOwnKey = this.options.useOwnKey;
+    }
+    return this.http.post<SessionResponse>("/sessions", requestBody);
   }
 
   /** List sessions for the authenticated project. */

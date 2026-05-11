@@ -24,6 +24,18 @@ const result = await client.run("Find the top 3 trending repos on GitHub today")
 console.log(result.output);
 ```
 
+## v3 Bring Your Own LLM Key
+
+Add your provider API key in Browser Use project settings, then enable BYOK for v3 agent runs:
+
+```typescript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({ useOwnKey: true });
+const result = await client.run("Find the top 3 trending repos on GitHub today");
+console.log(result.output);
+```
+
 ## Docs
 
 [docs.browser-use.com](https://docs.browser-use.com)

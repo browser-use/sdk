@@ -44,3 +44,45 @@ curl -X POST https://api.browser-use.com/api/v3/sessions \
   -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4.6"}'
 ```
 </CodeGroup>
+
+## Bring your own key
+
+Connect your own Anthropic, OpenAI, or Google API key. You pay your provider directly + a 0.2× orchestration fee on provider list token prices.
+
+1. Add your provider key in the dashboard under **Settings → API Keys → Bring Your Own Key**.
+2. Pass `use_own_key=True` on the session:
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "List the top 20 posts on Hacker News today with their points",
+    model="claude-sonnet-4.6",
+    use_own_key=True,
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "List the top 20 posts on Hacker News today with their points",
+  { model: "claude-sonnet-4.6", useOwnKey: true },
+);
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v3/sessions \
+  -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4.6", "useOwnKey": true}'
+```
+</CodeGroup>
+
+To default every session on a client to BYOK, set it once on the constructor:
+
+<CodeGroup>
+```python Python
+client = AsyncBrowserUse(use_own_key=True)
+```
+```typescript TypeScript
+const client = new BrowserUse({ useOwnKey: true });
+```
+</CodeGroup>
+
+The provider key on your project must match the model you pick — Claude models use your Anthropic key, GPT models use your OpenAI key, Gemini models use your Google key.

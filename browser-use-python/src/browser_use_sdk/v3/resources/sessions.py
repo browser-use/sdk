@@ -18,8 +18,14 @@ if TYPE_CHECKING:
 
 
 class Sessions:
-    def __init__(self, http: SyncHttpClient) -> None:
+    def __init__(
+        self,
+        http: SyncHttpClient,
+        *,
+        use_own_key: bool | None = None,
+    ) -> None:
         self._http = http
+        self._use_own_key = use_own_key
 
     def create(
         self,
@@ -71,8 +77,11 @@ class Sessions:
             body["cacheScript"] = cache_script
         if code_mode is not None:
             body["codeMode"] = code_mode
-        if use_own_key is not None:
-            body["useOwnKey"] = use_own_key
+        effective_use_own_key = (
+            self._use_own_key if use_own_key is None else use_own_key
+        )
+        if effective_use_own_key is not None:
+            body["useOwnKey"] = effective_use_own_key
         body.update(extra)
         return SessionResponse.model_validate(
             self._http.request("POST", "/sessions", json=body)
@@ -164,8 +173,14 @@ class Sessions:
 
 
 class AsyncSessions:
-    def __init__(self, http: AsyncHttpClient) -> None:
+    def __init__(
+        self,
+        http: AsyncHttpClient,
+        *,
+        use_own_key: bool | None = None,
+    ) -> None:
         self._http = http
+        self._use_own_key = use_own_key
 
     async def create(
         self,
@@ -217,8 +232,11 @@ class AsyncSessions:
             body["cacheScript"] = cache_script
         if code_mode is not None:
             body["codeMode"] = code_mode
-        if use_own_key is not None:
-            body["useOwnKey"] = use_own_key
+        effective_use_own_key = (
+            self._use_own_key if use_own_key is None else use_own_key
+        )
+        if effective_use_own_key is not None:
+            body["useOwnKey"] = effective_use_own_key
         body.update(extra)
         return SessionResponse.model_validate(
             await self._http.request("POST", "/sessions", json=body)
