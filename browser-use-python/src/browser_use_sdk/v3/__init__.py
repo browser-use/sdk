@@ -27,7 +27,7 @@ from ..generated.v3.models import (
     MessageListResponse,
     MessageResponse,
     ProxyCountryCode,
-    RunTaskRequest,
+    AppEndpointsApiV3SessionsViewsRunTaskRequest as RunTaskRequest,
     SessionListResponse,
     SessionResponse,
     StopSessionRequest,

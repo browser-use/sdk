@@ -1,7 +1,7 @@
 import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v3/types.js";
 
-type RunTaskRequest = components["schemas"]["RunTaskRequest"];
+type RunTaskRequest = components["schemas"]["app__endpoints__api__v3__sessions__views__RunTaskRequest"];
 /** All fields optional — omit `task` to create an idle session. */
 export type CreateSessionBody = Partial<RunTaskRequest>;
 type SessionResponse = components["schemas"]["SessionResponse"];

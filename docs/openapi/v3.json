@@ -18,7 +18,7 @@
                     "Sessions"
                 ],
                 "summary": "Create Session",
-                "description": "Create a session and/or dispatch a task.\n\n- Without session_id, without task: creates a new idle session (e.g. for file uploads).\n- Without session_id, with task: creates a new session and dispatches the task.\n- With session_id, with task: dispatches the task to an existing idle session.\n- With session_id, without task: 422 \u2014 task is required when targeting an existing session.\n\nIf keep_alive is false (default), the session auto-stops when the task finishes.\nIf keep_alive is true, the session stays idle after the task, ready for follow-ups.",
+                "description": "Create a session and/or dispatch a task.\n\n- Without session_id, without task: creates a new idle session (e.g. for file uploads).\n- Without session_id, with task: creates a new session and dispatches the task.\n- With session_id, with task: dispatches the task to an existing idle session.\n- With session_id, without task: 422 — task is required when targeting an existing session.\n\nIf keep_alive is false (default), the session auto-stops when the task finishes.\nIf keep_alive is true, the session stays idle after the task, ready for follow-ups.",
                 "operationId": "create_session_sessions_post",
                 "security": [
                     {
@@ -30,7 +30,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/RunTaskRequest"
+                                "$ref": "#/components/schemas/app__endpoints__api__v3__sessions__views__RunTaskRequest"
                             }
                         }
                     }
@@ -218,7 +218,7 @@
                     "Sessions"
                 ],
                 "summary": "Stop Session",
-                "description": "Stop a session or the running task.\n\n- strategy=session (default): destroy sandbox entirely, session \u2192 stopped.\n- strategy=task: stop the running query, session stays alive (\u2192 idle).",
+                "description": "Stop a session or the running task.\n\n- strategy=session (default): destroy sandbox entirely, session → stopped.\n- strategy=task: stop the running query, session stays alive (→ idle).",
                 "operationId": "stop_session_sessions__session_id__stop_post",
                 "security": [
                     {
@@ -1635,7 +1635,7 @@
                     "Boxes"
                 ],
                 "summary": "List Box Sizes",
-                "description": "Public catalog of available box sizes for the deploy picker.\n\nStatic data \u2014 no auth, no DB. Lives server-side (instead of being\nhardcoded in the frontend) so re-tiering or running a promo is a\none-file edit in `sizing.py` with no frontend redeploy needed.",
+                "description": "Public catalog of available box sizes for the deploy picker.\n\nStatic data — no auth, no DB. Lives server-side (instead of being\nhardcoded in the frontend) so re-tiering or running a promo is a\none-file edit in `sizing.py` with no frontend redeploy needed.",
                 "operationId": "list_box_sizes_boxes_sizes_get",
                 "responses": {
                     "200": {
@@ -1657,7 +1657,7 @@
                     "Boxes"
                 ],
                 "summary": "Get Trial Eligibility",
-                "description": "Tell the FE whether to render a 'try free for 7 days' CTA.\n\nReturns a tagged answer:\n  - eligible=True   \u2192 show the trial CTA on the empty-state.\n  - eligible=False, reason='already_used' \u2192 show \"trial used,\n    upgrade to deploy\".\n  - eligible=False, reason='not_free_tier' \u2192 no special copy, the\n    normal balance flow handles them.\n\nCheap call: one profile lookup. The FE polls /me + /sizes already,\nthis is one more cheap GET on the deploy page.",
+                "description": "Tell the FE whether to render a 'try free for 7 days' CTA.\n\nAccount-scoped — any user (free-tier or paid) without a prior\n`bux_trial_started_at` stamp is eligible for one free 7-day trial.\n\nReturns a tagged answer:\n  - eligible=True   → show the trial CTA on the empty-state.\n  - eligible=False, reason='already_used' → show \"trial used,\n    upgrade to deploy\".\n  - eligible=False, reason='no_owner' → fallback for older projects\n    we can't resolve an owner for; FE shows generic \"add credits\".\n\nCheap call: one profile lookup. The FE polls /me + /sizes already,\nthis is one more cheap GET on the deploy page.",
                 "operationId": "get_trial_eligibility_boxes_me_trial_eligibility_get",
                 "responses": {
                     "200": {
@@ -1694,7 +1694,7 @@
                     "Boxes"
                 ],
                 "summary": "Provision Box",
-                "description": "Provision a new box for the authenticated project.\n\nIdempotent-ish: if a live box already exists, returns 409. After `bux down`,\nthe row is reused (preserving profile_id + size \u2014 the user's previous\nchoice carries over unless they explicitly pass a new `size`).\n\nRequires a paying / comped project. Free-tier projects are rejected\nwith 402. Min-balance scales by size ($5 / $10 / $20 for small /\nmedium / large) so users with ~5 days of runway can deploy. See\n`common/models/bux/sizing.py`.",
+                "description": "Provision a new box for the authenticated project.\n\nIdempotent-ish: if a live box already exists, returns 409. After `bux down`,\nthe row is reused (preserving profile_id + size — the user's previous\nchoice carries over unless they explicitly pass a new `size`).\n\nRequires a paying / comped project. Free-tier projects are rejected\nwith 402. Min-balance scales by size ($5 / $10 / $20 for small /\nmedium / large) so users with ~5 days of runway can deploy. See\n`common/models/bux/sizing.py`.",
                 "operationId": "provision_box_boxes_post",
                 "requestBody": {
                     "content": {
@@ -1865,7 +1865,7 @@
                     "Boxes"
                 ],
                 "summary": "Resize My Box",
-                "description": "Resize the project's box to a larger tier (upgrade-only).\n\nThe actual stop \u2192 modify \u2192 start dance runs in a background task; this\nhandler returns immediately with status=RESIZING. The FE polls /me to\nwatch the box flip back to READY when the new instance is up. Takes\n~60-90s end-to-end (stop ~30s, start ~30s, growpart instant).\n\nConstraints enforced here:\n  - new size must be a known tier\n  - new size must be strictly larger than current (downsize \u2192 400)\n  - box must be in READY state (otherwise \u2192 409)\n  - project must clear the eligibility gate at the *new* size's\n    min-balance (a small box upgrading to large is now playing by\n    large-box rules)",
+                "description": "Resize the project's box to a larger tier (upgrade-only).\n\nThe actual stop → modify → start dance runs in a background task; this\nhandler returns immediately with status=RESIZING. The FE polls /me to\nwatch the box flip back to READY when the new instance is up. Takes\n~60-90s end-to-end (stop ~30s, start ~30s, growpart instant).\n\nConstraints enforced here:\n  - new size must be a known tier\n  - new size must be strictly larger than current (downsize → 400)\n  - box must be in READY state (otherwise → 409)\n  - project must clear the eligibility gate at the *new* size's\n    min-balance (a small box upgrading to large is now playing by\n    large-box rules)",
                 "operationId": "resize_my_box_boxes_me_resize_post",
                 "requestBody": {
                     "content": {
@@ -1912,7 +1912,7 @@
                     "Boxes"
                 ],
                 "summary": "Restart My Box",
-                "description": "Restart a box without destroying it.\n\nThe escape hatch from ERROR \u2014 before this endpoint, a box with a\nstale heartbeat (CPU spike / OOM / agent crash) could only be\ndestroyed by the user, which loses the EBS volume and forces a\nfresh setup. Now the user can:\n\n  - mode=service (default): SSM `systemctl restart bux-tg`. ~5s.\n    Fixes most cases (agent process crash, wedged long-poll).\n  - mode=reboot: AWS rebootInstances. ~30-60s. Public IP and EBS\n    preserved (only resize/upgrade changes the IP). Fallback for\n    kernel-hung / SSM-unreachable boxes.\n\nAllowed when status is READY or ERROR. PROVISIONING / RESIZING /\nAWAITING_OAUTH / DESTROYED \u2192 409 (no instance to restart, or a\nlong-running operation is already in flight).\n\nReturns the box view; status is unchanged here. The next bux_health\ntick + box-agent heartbeat is what authoritatively flips ERROR \u2192\nREADY when the agent comes back up. The FE polls /me to watch.",
+                "description": "Restart a box without destroying it.\n\nThe escape hatch from ERROR — before this endpoint, a box with a\nstale heartbeat (CPU spike / OOM / agent crash) could only be\ndestroyed by the user, which loses the EBS volume and forces a\nfresh setup. Now the user can:\n\n  - mode=service (default): SSM `systemctl restart bux-tg`. ~5s.\n    Fixes most cases (agent process crash, wedged long-poll).\n  - mode=reboot: AWS rebootInstances. ~30-60s. Public IP and EBS\n    preserved (only resize/upgrade changes the IP). Fallback for\n    kernel-hung / SSM-unreachable boxes.\n\nAllowed when status is READY or ERROR. PROVISIONING / RESIZING /\nAWAITING_OAUTH / DESTROYED → 409 (no instance to restart, or a\nlong-running operation is already in flight).\n\nReturns the box view; status is unchanged here. The next bux_health\ntick + box-agent heartbeat is what authoritatively flips ERROR →\nREADY when the agent comes back up. The FE polls /me to watch.",
                 "operationId": "restart_my_box_boxes_me_restart_post",
                 "requestBody": {
                     "content": {
@@ -1959,7 +1959,7 @@
                     "Boxes"
                 ],
                 "summary": "Get Shell",
-                "description": "Mint a short-lived terminal URL. User opens it in a browser \u2192 live shell.\n\n`launch` controls what runs when the terminal connects:\n  - \"bash\" (default) \u2192 plain login shell.\n  - \"claude\" \u2192 auto-run the claude UI; Ctrl+C drops to bash.\n\n`w` (optional) selects which tmux window to attach to (e.g. `bux-w2`).\nDefaults to `bux-w1` \u2014 the box-agent auto-creates that window on first\nattach so single-window callers see no behavior change.",
+                "description": "Mint a short-lived terminal URL. User opens it in a browser → live shell.\n\n`launch` controls what runs when the terminal connects:\n  - \"bash\" (default) → plain login shell.\n  - \"claude\" → auto-run the claude UI; Ctrl+C drops to bash.\n\n`w` (optional) selects which tmux window to attach to (e.g. `bux-w2`).\nDefaults to `bux-w1` — the box-agent auto-creates that window on first\nattach so single-window callers see no behavior change.",
                 "operationId": "get_shell_boxes_me_shell_post",
                 "security": [
                     {
@@ -2204,13 +2204,13 @@
                     "Boxes"
                 ],
                 "summary": "Run Task",
-                "description": "Fire a one-shot `claude -p \"<prompt>\"` on the box. Streams output as SSE.\n\nEvents:\n  - data: {\"chunk\": \"...\"}      \u2014 stdout chunks\n  - event: done, data: {\"rc\": 0} \u2014 final exit code",
+                "description": "Fire a one-shot `claude -p \"<prompt>\"` on the box. Streams output as SSE.\n\nEvents:\n  - data: {\"chunk\": \"...\"}      — stdout chunks\n  - event: done, data: {\"rc\": 0} — final exit code",
                 "operationId": "run_task_boxes_me_run_post",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/app__endpoints__api__v3__boxes__views__RunTaskRequest"
+                                "$ref": "#/components/schemas/RunTaskRequest"
                             }
                         }
                     },
@@ -2249,7 +2249,7 @@
                     "Boxes"
                 ],
                 "summary": "Update Box Agent",
-                "description": "Tell the box-agent to git-pull + restart from the OSS repo.\n\nDefault `branch` is whatever the box is currently tracking (the agent\nresolves it from `git rev-parse --abbrev-ref HEAD`); pass `branch=main`\nor `branch=stable` to switch tracks.\n\nReturns the old + new SHA so the FE can show \"updated to a3f9c1d\".\nThe agent restarts itself at the tail of the update \u2014 the next hello\nwill report the new version. We wait up to 90s for the update_result\nreply since git fetch + bootstrap.sh can stretch on slow networks.",
+                "description": "Tell the box-agent to git-pull + restart from the OSS repo.\n\nDefault `branch` is whatever the box is currently tracking (the agent\nresolves it from `git rev-parse --abbrev-ref HEAD`); pass `branch=main`\nor `branch=stable` to switch tracks.\n\nReturns the old + new SHA so the FE can show \"updated to a3f9c1d\".\nThe agent restarts itself at the tail of the update — the next hello\nwill report the new version. We wait up to 90s for the update_result\nreply since git fetch + bootstrap.sh can stretch on slow networks.",
                 "operationId": "update_box_agent_boxes_me_update_post",
                 "security": [
                     {
@@ -2349,7 +2349,7 @@
                     "Boxes"
                 ],
                 "summary": "Tg Auto Start",
-                "description": "Kick off the QR-scan + scripted-CDP Telegram bot creation flow.\n\nIdempotent: if a non-terminal QR session already exists for this box,\nreturns it instead of spawning another browser. The FE keeps polling\n`GET /me/tg/auto/{id}` until the session reaches a terminal state.\n\nNo external BU Cloud API key is needed \u2014 the orchestrator provisions\nthe chromium VM via the cloud's internal browser service, which auths\nvia app_config.use_browser_api_key (already set in every env).",
+                "description": "Kick off the QR-scan + scripted-CDP Telegram bot creation flow.\n\nIdempotent: if a non-terminal QR session already exists for this box,\nreturns it instead of spawning another browser. The FE keeps polling\n`GET /me/tg/auto/{id}` until the session reaches a terminal state.\n\nNo external BU Cloud API key is needed — the orchestrator provisions\nthe chromium VM via the cloud's internal browser service, which auths\nvia app_config.use_browser_api_key (already set in every env).",
                 "operationId": "tg_auto_start_boxes_me_tg_auto_post",
                 "responses": {
                     "200": {
@@ -2386,7 +2386,7 @@
                     "Boxes"
                 ],
                 "summary": "Tg Auto Status",
-                "description": "Poll a running QR session. Read-only \u2014 never advances the state\nmachine. Tenant-scoped: 404 if the session isn't owned by this project.",
+                "description": "Poll a running QR session. Read-only — never advances the state\nmachine. Tenant-scoped: 404 if the session isn't owned by this project.",
                 "operationId": "tg_auto_status_boxes_me_tg_auto__qr_session_id__get",
                 "security": [
                     {
@@ -2552,7 +2552,7 @@
                     "Boxes"
                 ],
                 "summary": "Claude Login Code",
-                "description": "Pump the OAuth callback code into the box's pty stdin.\n\nNo real validation here \u2014 claude itself surfaces \"invalid code\"\non the next pty stdout line, which our claude_login_failed event\ncaptures.",
+                "description": "Pump the OAuth callback code into the box's pty stdin.\n\nNo real validation here — claude itself surfaces \"invalid code\"\non the next pty stdout line, which our claude_login_failed event\ncaptures.",
                 "operationId": "claude_login_code_boxes_me_claude_login_code_post",
                 "requestBody": {
                     "content": {
@@ -2631,7 +2631,7 @@
                     "Boxes"
                 ],
                 "summary": "Terminal Page",
-                "description": "HTML page the user opens in their browser \u2192 xterm.js terminal.\n\nRenders the current window_id into a script tag so the JS knows\nwhich tab is \"active\" without an extra round-trip. We don't render\nthe full window list here \u2014 the JS asks the parent for that on\nmount via the bux-react postMessage protocol, so the list always\nreflects the latest state (a tab created in another browser session\nsince the URL was minted shows up immediately).",
+                "description": "HTML page the user opens in their browser → xterm.js terminal.\n\nRenders the current window_id into a script tag so the JS knows\nwhich tab is \"active\" without an extra round-trip. We don't render\nthe full window list here — the JS asks the parent for that on\nmount via the bux-react postMessage protocol, so the list always\nreflects the latest state (a tab created in another browser session\nsince the URL was minted shows up immediately).",
                 "operationId": "terminal_page_boxes_terminal__token__get",
                 "parameters": [
                     {
@@ -2827,7 +2827,7 @@
                     "size"
                 ],
                 "title": "BoxResizeRequest",
-                "description": "Resize an existing box to a larger tier.\n\nUpgrade-only: the backend rejects requests where `size` isn't strictly\nlarger than the box's current size. Downsize \u2192 400 with a hint to\ndestroy + redeploy. Same size \u2192 409 (idempotent failure \u2014 no work to do)."
+                "description": "Resize an existing box to a larger tier.\n\nUpgrade-only: the backend rejects requests where `size` isn't strictly\nlarger than the box's current size. Downsize → 400 with a hint to\ndestroy + redeploy. Same size → 409 (idempotent failure — no work to do)."
             },
             "BoxRestartMode": {
                 "type": "string",
@@ -2836,7 +2836,7 @@
                     "reboot"
                 ],
                 "title": "BoxRestartMode",
-                "description": "How aggressive a /me/restart should be.\n\n`service` \u2014 fastest, fixes ~95% of cases (agent process crash, OOM,\n  wedged TG long-poll). SSM `systemctl restart bux-tg`. ~5s.\n`reboot`  \u2014 fallback for kernel-hung / SSM-unreachable boxes. AWS\n  rebootInstances. ~30-60s. IP + EBS preserved."
+                "description": "How aggressive a /me/restart should be.\n\n`service` — fastest, fixes ~95% of cases (agent process crash, OOM,\n  wedged TG long-poll). SSM `systemctl restart bux-tg`. ~5s.\n`reboot`  — fallback for kernel-hung / SSM-unreachable boxes. AWS\n  rebootInstances. ~30-60s. IP + EBS preserved."
             },
             "BoxRestartRequest": {
                 "properties": {
@@ -2917,7 +2917,7 @@
                     "min_balance_usd"
                 ],
                 "title": "BoxSizeSpecView",
-                "description": "User-visible spec sheet for one size tier. Returned alongside\nBoxView so the UI can render the tooltip (\"2 vCPU \u00b7 4 GB \u00b7 20 GB\")\nwithout a second round trip + so the picker on /bux can show all\nthree rows without us hardcoding prices in the frontend."
+                "description": "User-visible spec sheet for one size tier. Returned alongside\nBoxView so the UI can render the tooltip (\"2 vCPU · 4 GB · 20 GB\")\nwithout a second round trip + so the picker on /bux can show all\nthree rows without us hardcoding prices in the frontend."
             },
             "BoxStatus": {
                 "type": "string",
@@ -3473,7 +3473,7 @@
                     "error"
                 ],
                 "title": "BuAgentSessionStatus",
-                "description": "Session lifecycle status. Progresses through: created \u2192 idle \u2192 running \u2192 idle \u2192 ... \u2192 stopped / timed_out / error.\n\n- `created`: Sandbox is starting up. The session is not yet ready to accept tasks.\n- `idle`: Sandbox is healthy and waiting for a task. You can dispatch a task or upload files.\n- `running`: A task is currently being executed by the agent.\n- `stopped`: Session was stopped \u2014 either explicitly via the stop endpoint, or automatically after task completion (when `keepAlive` is false).\n- `timed_out`: Session was cleaned up due to inactivity timeout.\n- `error`: Sandbox failed to start or encountered an unrecoverable error."
+                "description": "Session lifecycle status. Progresses through: created → idle → running → idle → ... → stopped / timed_out / error.\n\n- `created`: Sandbox is starting up. The session is not yet ready to accept tasks.\n- `idle`: Sandbox is healthy and waiting for a task. You can dispatch a task or upload files.\n- `running`: A task is currently being executed by the agent.\n- `stopped`: Session was stopped — either explicitly via the stop endpoint, or automatically after task completion (when `keepAlive` is false).\n- `timed_out`: Session was cleaned up due to inactivity timeout.\n- `error`: Sandbox failed to start or encountered an unrecoverable error."
             },
             "BuModel": {
                 "type": "string",
@@ -3488,7 +3488,7 @@
                     "gpt-5.4-mini"
                 ],
                 "title": "BuModel",
-                "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash \u2014 fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 \u2014 balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 \u2014 capable general-purpose Opus tier.\n- `claude-opus-4.7`: Claude Opus 4.7 \u2014 most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.\n- `gpt-5.4-mini`: GPT-5.4 mini \u2014 OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities."
+                "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash — fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 — balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 — capable general-purpose Opus tier.\n- `claude-opus-4.7`: Claude Opus 4.7 — most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.\n- `gpt-5.4-mini`: GPT-5.4 mini — OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities."
             },
             "ClaudeLoginCodeRequest": {
                 "properties": {
@@ -3908,7 +3908,7 @@
                     "data": {
                         "type": "string",
                         "title": "Data",
-                        "description": "Raw message content. Format depends on the message type \u2014 may be plain text, JSON, or structured action data."
+                        "description": "Raw message content. Format depends on the message type — may be plain text, JSON, or structured action data."
                     },
                     "type": {
                         "type": "string",
@@ -4476,182 +4476,16 @@
             },
             "RunTaskRequest": {
                 "properties": {
-                    "task": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Task",
-                        "description": "The natural-language instruction for the agent to execute (e.g. \"Go to amazon.com and find the best-rated wireless mouse under $50\"). Required when dispatching to an existing session."
-                    },
-                    "model": {
-                        "$ref": "#/components/schemas/BuModel",
-                        "description": "The model to use. \"gemini-3-flash\" is fast and cheap, \"claude-sonnet-4.6\" is balanced, \"claude-opus-4.7\" is most capable (default). See BuModel for details.",
-                        "default": "claude-opus-4.7"
-                    },
-                    "sessionId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "format": "uuid"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Sessionid",
-                        "description": "ID of an existing idle session to dispatch the task to. If omitted, a new session is created."
-                    },
-                    "keepAlive": {
-                        "type": "boolean",
-                        "title": "Keepalive",
-                        "description": "If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.",
-                        "default": false
-                    },
-                    "maxCostUsd": {
-                        "anyOf": [
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "string",
-                                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Maxcostusd",
-                        "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default."
-                    },
-                    "profileId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "format": "uuid"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Profileid",
-                        "description": "ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API."
-                    },
-                    "workspaceId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "format": "uuid"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Workspaceid",
-                        "description": "ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API."
-                    },
-                    "proxyCountryCode": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/ProxyCountryCode"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Country code for the browser proxy (e.g. \"US\", \"DE\", \"JP\"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.",
-                        "default": "us"
-                    },
-                    "outputSchema": {
-                        "anyOf": [
-                            {
-                                "additionalProperties": true,
-                                "type": "object"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Outputschema",
-                        "description": "A JSON Schema that the agent's final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {\"type\": \"object\", \"properties\": {\"price\": {\"type\": \"number\"}, \"title\": {\"type\": \"string\"}}}."
-                    },
-                    "enableScheduledTasks": {
-                        "type": "boolean",
-                        "title": "Enablescheduledtasks",
-                        "description": "If true, the agent can create scheduled tasks that run on a recurring basis (e.g. \"every Monday morning, check my inbox and summarize new emails\"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.",
-                        "default": false
-                    },
-                    "sensitiveData": {
-                        "anyOf": [
-                            {
-                                "additionalProperties": {
-                                    "type": "string"
-                                },
-                                "type": "object"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Sensitivedata",
-                        "description": "Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values."
-                    },
-                    "enableRecording": {
-                        "type": "boolean",
-                        "title": "Enablerecording",
-                        "description": "If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.",
-                        "default": false
-                    },
-                    "skills": {
-                        "type": "boolean",
-                        "title": "Skills",
-                        "description": "If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.",
-                        "default": true
-                    },
-                    "agentmail": {
-                        "type": "boolean",
-                        "title": "Agentmail",
-                        "description": "If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.",
-                        "default": true
-                    },
-                    "codeMode": {
-                        "type": "boolean",
-                        "title": "Codemode",
-                        "description": "When true, the agent returns structured output with `text` (summary) and `code` (validated Python source) fields instead of free-form text.",
-                        "default": false
-                    },
-                    "cacheScript": {
-                        "anyOf": [
-                            {
-                                "type": "boolean"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Cachescript",
-                        "description": "Controls deterministic script caching. `null` (default): auto-detected \u2014 enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: \"Get prices from @{{https://example.com}} for @{{electronics}}\"."
-                    },
-                    "useOwnKey": {
-                        "type": "boolean",
-                        "title": "Useownkey",
-                        "description": "If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2\u00d7 of provider list prices). If no key is configured for the model's provider, the request is rejected.",
-                        "default": false
-                    },
-                    "autoHeal": {
-                        "type": "boolean",
-                        "title": "Autoheal",
-                        "description": "When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.",
-                        "default": true
+                    "prompt": {
+                        "type": "string",
+                        "title": "Prompt"
                     }
                 },
                 "type": "object",
-                "title": "RunTaskRequest",
-                "description": "Create a new session, dispatch a task, or both.\n\n- **No `sessionId` + no `task`**: creates an idle session (useful for uploading files before running a task).\n- **No `sessionId` + `task`**: creates a new session and immediately runs the task.\n- **`sessionId` + `task`**: dispatches the task to an existing idle session.\n- **`sessionId` + no `task`**: returns 422 \u2014 a task is required when targeting an existing session."
+                "required": [
+                    "prompt"
+                ],
+                "title": "RunTaskRequest"
             },
             "SessionListResponse": {
                 "properties": {
@@ -4710,7 +4544,7 @@
                     },
                     "status": {
                         "$ref": "#/components/schemas/BuAgentSessionStatus",
-                        "description": "Current session lifecycle status. Progresses through: `created` (sandbox starting) \u2192 `idle` (ready, waiting for task) \u2192 `running` (task executing) \u2192 `stopped` / `timed_out` / `error`. Poll this field to track progress."
+                        "description": "Current session lifecycle status. Progresses through: `created` (sandbox starting) → `idle` (ready, waiting for task) → `running` (task executing) → `stopped` / `timed_out` / `error`. Poll this field to track progress."
                     },
                     "model": {
                         "$ref": "#/components/schemas/BuModel",
@@ -4791,7 +4625,7 @@
                             }
                         ],
                         "title": "Liveurl",
-                        "description": "URL to view the live browser session. Available immediately on session creation \u2014 can be embedded in an iframe to show the browser in real time."
+                        "description": "URL to view the live browser session. Available immediately on session creation — can be embedded in an iframe to show the browser in real time."
                     },
                     "recordingUrls": {
                         "items": {
@@ -4984,7 +4818,7 @@
                     "url"
                 ],
                 "title": "ShellResponse",
-                "description": "Terminal URL \u2014 user opens this in their browser, gets a live shell."
+                "description": "Terminal URL — user opens this in their browser, gets a live shell."
             },
             "StopSessionRequest": {
                 "properties": {
@@ -5156,7 +4990,7 @@
                     "updated_at"
                 ],
                 "title": "TgAutoSessionView",
-                "description": "Snapshot of a QR onboarding session. Returned by start, status, and\ncancel \u2014 same shape so the FE renders a single view component."
+                "description": "Snapshot of a QR onboarding session. Returned by start, status, and\ncancel — same shape so the FE renders a single view component."
             },
             "TgAutoStartResponse": {
                 "properties": {
@@ -5169,7 +5003,7 @@
                     "session"
                 ],
                 "title": "TgAutoStartResponse",
-                "description": "Returned by POST /me/tg/auto. The session is already running by the\ntime this returns \u2014 frontend opens the iframe and starts polling."
+                "description": "Returned by POST /me/tg/auto. The session is already running by the\ntime this returns — frontend opens the iframe and starts polling."
             },
             "TooManyConcurrentActiveSessionsError": {
                 "properties": {
@@ -5195,7 +5029,6 @@
                                 "type": "string",
                                 "enum": [
                                     "already_used",
-                                    "not_free_tier",
                                     "no_owner"
                                 ]
                             },
@@ -5222,7 +5055,7 @@
                     "eligible"
                 ],
                 "title": "TrialEligibilityView",
-                "description": "GET /me/trial-eligibility \u2014 is this user eligible for a free trial?\n\n`reason` is a stable machine-readable code the FE branches on:\n  - 'already_used' \u2014 user has already started a trial in their\n    lifetime. Render an \"upgrade to deploy\" CTA.\n  - 'not_free_tier' \u2014 paying customer; FE shows the normal flow.\n  - 'no_owner' \u2014 couldn't resolve the project's owner profile (rare,\n    older projects). FE falls back to generic \"add credits\" copy.\n  - None when eligible=True."
+                "description": "GET /me/trial-eligibility — is this user eligible for a free trial?\n\nAccount-scoped — paid users see this too (one free trial per user,\nregardless of payment tier).\n\n`reason` is a stable machine-readable code the FE branches on:\n  - 'already_used' — user has already started a trial in their\n    lifetime. Render an \"upgrade to deploy\" CTA.\n  - 'no_owner' — couldn't resolve the project's owner profile (rare,\n    older projects). FE falls back to generic \"add credits\" copy.\n  - None when eligible=True."
             },
             "UpdateBrowserSessionRequest": {
                 "properties": {
@@ -5463,20 +5296,186 @@
                     "updatedAt"
                 ],
                 "title": "WorkspaceView",
-                "description": "View model for a workspace \u2014 persistent shared storage across sessions."
+                "description": "View model for a workspace — persistent shared storage across sessions."
             },
-            "app__endpoints__api__v3__boxes__views__RunTaskRequest": {
+            "app__endpoints__api__v3__sessions__views__RunTaskRequest": {
                 "properties": {
-                    "prompt": {
-                        "type": "string",
-                        "title": "Prompt"
+                    "task": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Task",
+                        "description": "The natural-language instruction for the agent to execute (e.g. \"Go to amazon.com and find the best-rated wireless mouse under $50\"). Required when dispatching to an existing session."
+                    },
+                    "model": {
+                        "$ref": "#/components/schemas/BuModel",
+                        "description": "The model to use. \"gemini-3-flash\" is fast and cheap, \"claude-sonnet-4.6\" is balanced, \"claude-opus-4.7\" is most capable (default). See BuModel for details.",
+                        "default": "claude-opus-4.7"
+                    },
+                    "sessionId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sessionid",
+                        "description": "ID of an existing idle session to dispatch the task to. If omitted, a new session is created."
+                    },
+                    "keepAlive": {
+                        "type": "boolean",
+                        "title": "Keepalive",
+                        "description": "If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.",
+                        "default": false
+                    },
+                    "maxCostUsd": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "string",
+                                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Maxcostusd",
+                        "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default."
+                    },
+                    "profileId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profileid",
+                        "description": "ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API."
+                    },
+                    "workspaceId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Workspaceid",
+                        "description": "ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API."
+                    },
+                    "proxyCountryCode": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ProxyCountryCode"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Country code for the browser proxy (e.g. \"US\", \"DE\", \"JP\"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.",
+                        "default": "us"
+                    },
+                    "outputSchema": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Outputschema",
+                        "description": "A JSON Schema that the agent's final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {\"type\": \"object\", \"properties\": {\"price\": {\"type\": \"number\"}, \"title\": {\"type\": \"string\"}}}."
+                    },
+                    "enableScheduledTasks": {
+                        "type": "boolean",
+                        "title": "Enablescheduledtasks",
+                        "description": "If true, the agent can create scheduled tasks that run on a recurring basis (e.g. \"every Monday morning, check my inbox and summarize new emails\"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.",
+                        "default": false
+                    },
+                    "sensitiveData": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sensitivedata",
+                        "description": "Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values."
+                    },
+                    "enableRecording": {
+                        "type": "boolean",
+                        "title": "Enablerecording",
+                        "description": "If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.",
+                        "default": false
+                    },
+                    "skills": {
+                        "type": "boolean",
+                        "title": "Skills",
+                        "description": "If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.",
+                        "default": true
+                    },
+                    "agentmail": {
+                        "type": "boolean",
+                        "title": "Agentmail",
+                        "description": "If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.",
+                        "default": true
+                    },
+                    "codeMode": {
+                        "type": "boolean",
+                        "title": "Codemode",
+                        "description": "When true, the agent returns structured output with `text` (summary) and `code` (validated Python source) fields instead of free-form text.",
+                        "default": false
+                    },
+                    "cacheScript": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Cachescript",
+                        "description": "Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: \"Get prices from @{{https://example.com}} for @{{electronics}}\"."
+                    },
+                    "useOwnKey": {
+                        "type": "boolean",
+                        "title": "Useownkey",
+                        "description": "If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2× of provider list prices). If no key is configured for the model's provider, the request is rejected.",
+                        "default": false
+                    },
+                    "autoHeal": {
+                        "type": "boolean",
+                        "title": "Autoheal",
+                        "description": "When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.",
+                        "default": true
                     }
                 },
                 "type": "object",
-                "required": [
-                    "prompt"
-                ],
-                "title": "RunTaskRequest"
+                "title": "RunTaskRequest",
+                "description": "Create a new session, dispatch a task, or both.\n\n- **No `sessionId` + no `task`**: creates an idle session (useful for uploading files before running a task).\n- **No `sessionId` + `task`**: creates a new session and immediately runs the task.\n- **`sessionId` + `task`**: dispatches the task to an existing idle session.\n- **`sessionId` + no `task`**: returns 422 — a task is required when targeting an existing session."
             }
         },
         "securitySchemes": {
