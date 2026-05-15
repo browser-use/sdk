@@ -50,6 +50,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [FAQ](https://docs.browser-use.com/cloud/faq): Common questions and solutions.
 
 ## Integrations
+- [Browser Use Box](https://docs.browser-use.com/cloud/tutorials/integrations/browser-use-box): Run a self-hosted, always-on Browser Use Cloud agent from Telegram.
 - [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
 - [MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server): Run browser automation tasks from your AI coding assistant. Connect to Claude, Cursor, Windsurf, or any MCP client.
 - [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks): Receive real-time notifications when tasks complete. Configure webhook endpoints for async task monitoring.
@@ -71,4 +72,3 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## API v2
 - [API key](https://docs.browser-use.com/cloud/api-v2-overview): Set your API key to access the Browser Use v2 REST API.
-

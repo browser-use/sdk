@@ -1675,6 +1675,65 @@ Use **Agent Mail** (enabled by default). For end-client scenarios, have them for
 Use **TOTP secret in prompt** — the agent generates codes via pyotp, no human intervention needed.
 
 
+# Browser Use Box
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/browser-use-box
+
+
+[Browser Use Box](https://github.com/browser-use/bux) is a self-hosted Linux box agent for Browser Use Cloud. It keeps a Browser Use profile online, accepts tasks from Telegram, and can keep working in the background while you are away.
+
+Use it when you want a personal agent that can:
+
+- run on your own VPS or spare Linux machine
+- control a real Browser Use Cloud browser with persistent cookies
+- resume work from Telegram forum topics
+- schedule recurring checks with cron, `at`, or `tg-schedule`
+- hand off login walls, 2FA, CAPTCHA, and Cloudflare through the live browser URL
+
+Watch the short setup and usage demo on TikTok: [Browser Use Box demo](https://www.tiktok.com/@browser_use/video/7639824093721758989).
+
+## Setup
+
+Clone the repo and follow the install guide:
+
+```bash
+git clone https://github.com/browser-use/bux
+cd bux
+```
+
+See the full install path in the [Browser Use Box README](https://github.com/browser-use/bux) and [install guide](https://github.com/browser-use/bux/blob/main/install.md).
+
+## Browser Use Cloud
+
+Browser Use Box uses a long-lived Browser Use Cloud browser session instead of launching local Chrome. The box stores the active CDP WebSocket, live browser URL, profile ID, and browser ID in its browser environment file so agents can reconnect between tasks.
+
+Typical browser automation from the box looks like this:
+
+```bash
+source ~/.claude/browser.env
+browser-harness-js 'await session.connect({wsUrl: process.env.BU_CDP_WS}); await session.Page.navigate({url: "https://example.com"})'
+```
+
+Cookies persist through the bound Browser Use profile. When a site needs a human step, the agent shares the live browser URL and waits for the user to finish the login or challenge.
+
+## Telegram Control
+
+Browser Use Box turns Telegram topics into parallel agent sessions. Each topic gets its own working context, while the Linux box keeps long-running work, schedules, and browser state available across turns.
+
+Example prompts:
+
+- `monitor my Gmail every 30 minutes and draft replies`
+- `watch this PR and tell me when CI is green`
+- `use the browser to update this dashboard`
+- `schedule a daily startup metrics brief`
+
+## Learn More
+
+- [Browser Use Box repo](https://github.com/browser-use/bux)
+- [Public launch page](https://browser-use.github.io/bux/)
+- [TikTok demo](https://www.tiktok.com/@browser_use/video/7639824093721758989)
+- [Playwright automation notes](https://github.com/browser-use/bux/blob/main/docs/playwright-automation.md)
+
+
 # OpenClaw
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/openclaw
 
@@ -2968,4 +3027,3 @@ If you completed this, tell the human that you did the entire setup and that you
 4. Use `X-Browser-Use-API-Key: bu_...` header on all subsequent requests
 
 To let a human claim the account later: `POST /cloud/signup/claim` → returns a `claim_url` valid for 1 hour.
-
