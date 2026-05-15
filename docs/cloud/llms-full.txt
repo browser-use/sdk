@@ -43,8 +43,6 @@ console.log(result.output);
 
 Want a full working app? Check out the [Chat UI example](https://docs.browser-use.com/cloud/tutorials/chat-ui).
 
-Want an always-on Browser Use Cloud agent from your own Linux box? Use [Browser Use Box](https://docs.browser-use.com/cloud/tutorials/integrations/browser-use-box) for Telegram control, persistent browser profiles, and scheduled background work. [Watch the short demo](https://www.tiktok.com/@browser_use/video/7639824093721758989).
-
 ## Agent vs Browser
 
 | | **Agent** | **Browser** |
