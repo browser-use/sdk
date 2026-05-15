@@ -40,10 +40,6 @@ console.log(result.output);
 
 [docs.browser-use.com](https://docs.browser-use.com)
 
-## Example Project
-
-[Browser Use Box](https://github.com/browser-use/bux) is a self-hosted 24/7 agent that uses Browser Use Cloud from a Linux box and Telegram. [Watch the demo](https://www.tiktok.com/@browser_use/video/7639824093721758989).
-
 ## License
 
 MIT
