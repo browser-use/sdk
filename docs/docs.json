@@ -110,7 +110,6 @@
                     "icon": "plug",
                     "pages": [
                       "cloud/tutorials/integrations/claude-code",
-                      "cloud/tutorials/integrations/browser-use-box",
                       "cloud/tutorials/integrations/openclaw",
                       "cloud/tutorials/integrations/hermes-agent",
                       "cloud/guides/mcp-server",
