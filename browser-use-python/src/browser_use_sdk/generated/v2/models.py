@@ -1651,7 +1651,7 @@ class CreateTaskRequest(BaseModel):
         '',
         alias='systemPromptExtension',
         description='Optional extension to the agent system prompt.',
-        max_length=2000,
+        max_length=10000,
         title='System Prompt Extension',
     )
     judge: bool | None = Field(
