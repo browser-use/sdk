@@ -754,6 +754,8 @@ class SessionNotFoundError(BaseModel):
 
 
 class SessionSettings(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     profile_id: UUID | None = Field(
         None,
         alias='profileId',
