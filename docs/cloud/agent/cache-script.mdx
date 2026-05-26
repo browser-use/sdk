@@ -1,14 +1,16 @@
 ---
 title: Deterministic rerun
-description: "Run a task once, then re-execute it for $0 LLM cost."
+description: "Run a task once, then rerun it with new parameters from a cached script."
 icon: bolt
 ---
 
-Deterministic rerun lets you run a browser task once with a full agent, then **re-execute the same task instantly** using a cached script — no LLM, up to 99% cheaper.
+Deterministic rerun lets you run a task once with the full agent, save the learned workflow as a Python script, then **rerun that script with new parameters**. Cache hits skip the full agent and can drop LLM cost to zero when the script succeeds without auto-healing or explicit LLM calls.
+
+The cached script still fetches the website or API again. It does not replay the first run's output, so updated page/API content is reflected on reruns.
 
 ## Quick start
 
-Use `@{{double brackets}}` around values that can change between runs. The first call runs the full agent. Every subsequent call with the same template uses the cached script.
+Use `@{{double brackets}}` around values that can change between runs. The first call runs the full agent and creates a script in your workspace. Every subsequent call with the same template runs that script with the new parameter values.
 
 <CodeGroup>
 ```python Python
@@ -17,16 +19,17 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 workspace = await client.workspaces.create(name="my-scraper")
 
-# First call — agent explores, creates script (~$0.10, ~60s)
+# First call: agent explores, creates scripts/<hash>.py
 result = await client.run(
-    "Get the top @{{5}} stories from https://news.ycombinator.com as JSON",
+    "Fetch https://httpbin.org/anything?item=@{{alpha}} and return args.item, url, and response date as JSON",
     workspace_id=str(workspace.id),
 )
 
-# Second call — cached script, different param ($0 LLM, ~5s)
+# Second call: same template, new parameter, cached script path
 result2 = await client.run(
-    "Get the top @{{10}} stories from https://news.ycombinator.com as JSON",
+    "Fetch https://httpbin.org/anything?item=@{{beta}} and return args.item, url, and response date as JSON",
     workspace_id=str(workspace.id),
+    auto_heal=False,  # optional: disables validation/healing LLM calls
 )
 ```
 ```typescript TypeScript
@@ -35,19 +38,21 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const workspace = await client.workspaces.create({ name: "my-scraper" });
 
-// First call — agent explores, creates script (~$0.10, ~60s)
+// First call: agent explores, creates scripts/<hash>.py
 const result = await client.run(
-  "Get the top @{{5}} stories from https://news.ycombinator.com as JSON",
+  "Fetch https://httpbin.org/anything?item=@{{alpha}} and return args.item, url, and response date as JSON",
   { workspaceId: workspace.id },
 );
 
-// Second call — cached script, different param ($0 LLM, ~5s)
+// Second call: same template, new parameter, cached script path
 const result2 = await client.run(
-  "Get the top @{{10}} stories from https://news.ycombinator.com as JSON",
-  { workspaceId: workspace.id },
+  "Fetch https://httpbin.org/anything?item=@{{beta}} and return args.item, url, and response date as JSON",
+  { workspaceId: workspace.id, autoHeal: false },
 );
 ```
 </CodeGroup>
+
+On the cached run, `result2.output` comes from a new request to `httpbin.org` with `item=beta`. In live testing this path returned `0` input tokens, `0` output tokens, and `llmCostUsd: 0`.
 
 ## How it works
 
@@ -65,16 +70,21 @@ const result2 = await client.run(
     The system strips the values to create a **template**: `"Get prices from @{{}} for @{{}}"`.
   </Step>
   <Step title="System hashes the template">
-    Template `"Get prices from @{{}} for @{{}}"` is hashed to a unique ID like `a7f3b2c1`.
-    The system checks the workspace for `scripts/a7f3b2c1.py`.
+    Template `"Get prices from @{{}} for @{{}}"` is normalized, hashed, and stored as a 16-character script filename like `scripts/a7f3b2c19d4e8f01.py`.
+
+    The cache key ignores parameter values. It is based on the template after values are replaced with `@{{}}`, whitespace is collapsed, and the template is lowercased.
   </Step>
   <Step title="Cache miss → agent creates script">
-    If no script exists, the full agent runs your task. After completing it, the agent saves a standalone Python script that reproduces the result deterministically — no AI needed.
+    If no script exists, the full agent runs your task. After completing it, the agent saves a standalone Python script that can reproduce the workflow with new parameters.
   </Step>
   <Step title="Cache hit → script executes directly">
-    If the script exists, it runs directly with the new parameter values. No agent, no LLM. Just the script in a sandbox with browser and proxy.
+    If the script exists, it runs directly with the new parameter values. This skips the full browser agent. The script can use a browser, or it can use Browser Use's `fetch` helper for direct HTTP requests when a browser is unnecessary.
   </Step>
 </Steps>
+
+<Info>
+Keep each `@{{...}}` value on one line, and do not put `}}` inside a parameter value. Changing only parameter values reuses the script; changing the wording or the number/order of parameters creates a different script.
+</Info>
 
 ## Auto-detection
 
@@ -90,11 +100,15 @@ No extra flags needed. You can override with `cache_script`:
 | `True` | Force-enable, even without brackets |
 | `False` | Force-disable, even if brackets are present |
 
+<Info>
+`cacheScript` applies to create-and-run calls. Follow-up dispatches to an existing `sessionId` currently run as normal agent tasks, even if the task contains `@{{...}}`.
+</Info>
+
 ## Examples
 
 ### Parameterized scraping
 
-Run once, then loop over different keywords at $0 LLM each:
+Run once, then loop over different keywords. Cache hits skip the full agent:
 
 <CodeGroup>
 ```python Python
@@ -104,7 +118,7 @@ result = await client.run(
     workspace_id=str(workspace.id),
 )
 
-# Instant reruns with different keywords
+# Reruns with different keywords use the cached script
 for keyword in ["CEO", "marketing", "finance", "e-commerce"]:
     result = await client.run(
         f"Go to @{{{{https://intro.co/marketplace}}}} and get all @{{{{{keyword}}}}} experts as JSON",
@@ -129,6 +143,76 @@ for (const keyword of ["CEO", "marketing", "finance", "e-commerce"]) {
 }
 ```
 </CodeGroup>
+
+### Fresh content on rerun
+
+The cached script fetches the source again. It is useful for extraction jobs where the target page or API changes over time.
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Fetch https://httpbin.org/anything?mode=@{{first}}&value=@{{red}} "
+    "and return JSON with mode, value, url, and response date",
+    workspace_id=str(workspace.id),
+    auto_heal=False,
+)
+
+result2 = await client.run(
+    "Fetch https://httpbin.org/anything?mode=@{{second}}&value=@{{blue}} "
+    "and return JSON with mode, value, url, and response date",
+    workspace_id=str(workspace.id),
+    auto_heal=False,
+)
+
+print(result2.output["mode"])   # "second"
+print(result2.llm_cost_usd)     # "0" when the cached script succeeds
+```
+```typescript TypeScript
+const result = await client.run(
+  "Fetch https://httpbin.org/anything?mode=@{{first}}&value=@{{red}} " +
+    "and return JSON with mode, value, url, and response date",
+  { workspaceId: workspace.id, autoHeal: false },
+);
+
+const result2 = await client.run(
+  "Fetch https://httpbin.org/anything?mode=@{{second}}&value=@{{blue}} " +
+    "and return JSON with mode, value, url, and response date",
+  { workspaceId: workspace.id, autoHeal: false },
+);
+
+console.log(result2.output.mode);   // "second"
+console.log(result2.llmCostUsd);    // "0" when the cached script succeeds
+```
+</CodeGroup>
+
+For browser-required pages, parameterize the URL or search terms:
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Go to @{{https://example.com/}} in the browser. Return the final URL, title, H1, and first paragraph as JSON.",
+    workspace_id=str(workspace.id),
+)
+
+result2 = await client.run(
+    "Go to @{{https://www.iana.org/domains/reserved}} in the browser. Return the final URL, title, H1, and first paragraph as JSON.",
+    workspace_id=str(workspace.id),
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Go to @{{https://example.com/}} in the browser. Return the final URL, title, H1, and first paragraph as JSON.",
+  { workspaceId: workspace.id },
+);
+
+const result2 = await client.run(
+  "Go to @{{https://www.iana.org/domains/reserved}} in the browser. Return the final URL, title, H1, and first paragraph as JSON.",
+  { workspaceId: workspace.id },
+);
+```
+</CodeGroup>
+
+The second run returns content from the new URL, not a replay of the first page.
 
 ### No parameters — cache the exact task
 
@@ -234,7 +318,7 @@ for f in files.files:
     print(f"{f.path}  ({f.size} bytes)")
 
 # Download a script to inspect it
-await client.workspaces.download(workspace.id, "scripts/a7f3b2c1.py", to="./my_script.py")
+await client.workspaces.download(workspace.id, "scripts/a7f3b2c19d4e8f01.py", to="./my_script.py")
 ```
 ```typescript TypeScript
 const files = await client.workspaces.files(workspace.id, { prefix: "scripts/" });
@@ -258,23 +342,52 @@ When a cached script runs, the system validates its output:
 
 Auto-healing is **limited to 1 attempt per run** to prevent runaway costs. If the healed script also fails, the output is returned as-is.
 
+### Disable auto-healing
+
+If you want the cached path to return the raw script output and avoid validation/healing LLM calls, disable auto-healing:
+
+<CodeGroup>
+```python Python
+result = await client.run(
+    "Fetch https://httpbin.org/anything?item=@{{alpha}} and return JSON",
+    workspace_id=str(workspace.id),
+    auto_heal=False,
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Fetch https://httpbin.org/anything?item=@{{alpha}} and return JSON",
+  { workspaceId: workspace.id, autoHeal: false },
+);
+```
+</CodeGroup>
+
 ### Cost impact
 
-| Scenario | LLM cost |
-|----------|----------|
-| Cached script succeeds | **$0** |
-| Cached script fails, auto-heals | ~$0.05–1.00 (one full agent run) |
-| Healed script also fails | Same as above (returns best-effort output) |
+| Scenario | Full agent LLM | Other LLM |
+|----------|----------------|-----------|
+| Cache hit, `autoHeal: false`, script does not call LLM helpers | **$0** | **$0** |
+| Cache hit, default `autoHeal: true` | **$0** | Lightweight validation may run |
+| Cache hit, script calls an LLM helper | **$0** | Per-call LLM cost |
+| Cache hit fails and auto-heals | Full agent cost | Validation cost |
 
-Auto-healing is enabled by default for all cached scripts. No configuration needed.
+Auto-healing is enabled by default for all cached scripts.
+
+## Browser, fetch, and recordings
+
+Cached scripts do not always use a browser. During the first run, the agent may discover that the fastest reliable implementation is a direct HTTP request with Browser Use's `fetch` helper instead of browser navigation. That is expected for JSON APIs and many data-extraction tasks.
+
+If you pass `enableRecording: true`, `recordingUrls` are returned only when a browser session actually records and the MP4 is ready. Direct-HTTP cached runs may have no recording because there was no useful browser interaction to record.
+
+On cache hits, `isTaskSuccessful` can be `null` even when `status` is `stopped` and `output` is correct, because the full agent success judge was skipped. For deterministic reruns, treat the returned output and your own validation/schema checks as the source of truth.
 
 ## Cost comparison
 
-| | LLM cost | Browser + proxy | Time |
+| | Full agent LLM | Browser/proxy | Typical time |
 |---|---|---|---|
-| First call (agent) | ~$0.05–1.00 | Yes | ~30–120s |
-| Cached calls | **$0** | Yes | ~3–10s |
+| First call (agent) | ~$0.05–1.00 | If needed | ~30–120s |
+| Cached call | **$0** unless auto-heal regenerates | If needed | ~3–15s |
 
 <Info>
-The browser and proxy still run for cached calls (the script may need them), so there is a small infrastructure cost per execution. LLM cost drops to zero.
+Cached calls can still have small infrastructure cost. If the script uses direct HTTP only, there may be no browser recording even with recording enabled.
 </Info>

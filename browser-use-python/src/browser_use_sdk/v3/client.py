@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Awaitable
 from typing import Any, TypeVar, overload
 from uuid import UUID
 
@@ -63,6 +62,7 @@ class BrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        auto_heal: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -81,6 +81,7 @@ class BrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        auto_heal: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[T]: ...
 
@@ -98,6 +99,7 @@ class BrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        auto_heal: bool | None = ...,
         **extra: Any,
     ) -> SessionResult[str]: ...
 
@@ -116,6 +118,7 @@ class BrowserUse:
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        auto_heal: bool | None = None,
         **extra: Any,
     ) -> Any:
         """Run a task and block until complete. Returns a SessionResult.
@@ -127,7 +130,9 @@ class BrowserUse:
         - False: force-disable caching.
 
         When active, the first call runs the full agent and saves a reusable script.
-        Subsequent calls with the same task template execute the script with $0 LLM cost.
+        Subsequent calls with the same task template execute the script. By default,
+        auto_heal may use lightweight validation or regenerate the script if output
+        looks wrong; set auto_heal=False to return the raw script output.
         """
         if cache_script is True and not workspace_id:
             raise ValueError("workspace_id is required when cache_script=True")
@@ -158,6 +163,7 @@ class BrowserUse:
             workspace_id=workspace_id,
             enable_recording=enable_recording,
             cache_script=cache_script,
+            auto_heal=auto_heal,
             **extra,
         )
         return _poll_output(self.sessions, str(data.id), resolved_schema)
@@ -177,6 +183,7 @@ class BrowserUse:
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        auto_heal: bool | None = None,
         **extra: Any,
     ) -> SessionStream[Any]:
         """Run a task and yield messages as they happen.
@@ -224,9 +231,12 @@ class BrowserUse:
             workspace_id=workspace_id,
             enable_recording=enable_recording,
             cache_script=cache_script,
+            auto_heal=auto_heal,
             **extra,
         )
-        return SessionStream(data, self.sessions, resolved_schema, _start_cursor=start_cursor)
+        return SessionStream(
+            data, self.sessions, resolved_schema, _start_cursor=start_cursor
+        )
 
     def close(self) -> None:
         """Close the underlying HTTP client."""
@@ -280,6 +290,7 @@ class AsyncBrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        auto_heal: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -298,6 +309,7 @@ class AsyncBrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        auto_heal: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[T]: ...
 
@@ -315,6 +327,7 @@ class AsyncBrowserUse:
         workspace_id: str | None = ...,
         enable_recording: bool | None = ...,
         cache_script: bool | None = ...,
+        auto_heal: bool | None = ...,
         **extra: Any,
     ) -> AsyncSessionRun[str]: ...
 
@@ -333,6 +346,7 @@ class AsyncBrowserUse:
         workspace_id: str | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        auto_heal: bool | None = None,
         **extra: Any,
     ) -> AsyncSessionRun[Any]:
         """Run a task. Await the result for a SessionResult.
@@ -344,7 +358,9 @@ class AsyncBrowserUse:
         - False: force-disable caching.
 
         When active, the first call runs the full agent and saves a reusable script.
-        Subsequent calls with the same task template execute the script with $0 LLM cost.
+        Subsequent calls with the same task template execute the script. By default,
+        auto_heal may use lightweight validation or regenerate the script if output
+        looks wrong; set auto_heal=False to return the raw script output.
         """
         if cache_script is True and not workspace_id:
             raise ValueError("workspace_id is required when cache_script=True")
@@ -386,10 +402,16 @@ class AsyncBrowserUse:
                 workspace_id=workspace_id,
                 enable_recording=enable_recording,
                 cache_script=cache_script,
+                auto_heal=auto_heal,
                 **extra,
             )
 
-        return AsyncSessionRun(create_fn, self.sessions, resolved_schema, _start_cursor_ref=lambda: start_cursor)
+        return AsyncSessionRun(
+            create_fn,
+            self.sessions,
+            resolved_schema,
+            _start_cursor_ref=lambda: start_cursor,
+        )
 
     async def close(self) -> None:
         """Close the underlying HTTP client."""

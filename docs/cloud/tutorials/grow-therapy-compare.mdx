@@ -85,8 +85,8 @@ const workspace = await client.workspaces.create({ name: "grow-therapy-search" }
 <CodeGroup>
 ```python Python
 result = await client.run(
-    "Go to growtherapy.com and search for therapists in {{New York}} "
-    "who specialize in {{anxiety}} and accept insurance. "
+    "Go to growtherapy.com and search for therapists in @{{New York}} "
+    "who specialize in @{{anxiety}} and accept insurance. "
     "Return the first 5 provider profiles as JSON.",
     workspace_id=str(workspace.id),
     output_schema=ProviderSearch,
@@ -101,8 +101,8 @@ for p in result.output.providers:
 ```
 ```typescript TypeScript
 const result = await client.run(
-  "Go to growtherapy.com and search for therapists in {{New York}} " +
-  "who specialize in {{anxiety}} and accept insurance. " +
+  "Go to growtherapy.com and search for therapists in @{{New York}} " +
+  "who specialize in @{{anxiety}} and accept insurance. " +
   "Return the first 5 provider profiles as JSON.",
   { workspaceId: workspace.id, schema: ProviderSearch },
 );
@@ -120,6 +120,11 @@ for (const p of result.output.providers) {
 
 After the first run caches the search flow, sweep across different parameters at $0 LLM cost:
 
+<Info>
+Cache parameters must include the `@`: use `@{{value}}`, not `{{value}}`.
+Plain `{{value}}` is treated as normal task text and will not trigger deterministic rerun.
+</Info>
+
 <CodeGroup>
 ```python Python
 locations = ["Los Angeles", "Chicago", "Houston", "Miami"]
@@ -128,8 +133,8 @@ specialties = ["depression", "trauma", "ADHD"]
 for location in locations:
     for specialty in specialties:
         result = await client.run(
-            f"Go to growtherapy.com and search for therapists in {{{{{location}}}}} "
-            f"who specialize in {{{{{specialty}}}}} and accept insurance. "
+            f"Go to growtherapy.com and search for therapists in @{{{{{location}}}}} "
+            f"who specialize in @{{{{{specialty}}}}} and accept insurance. "
             f"Return the first 5 provider profiles as JSON.",
             workspace_id=str(workspace.id),
             output_schema=ProviderSearch,
@@ -144,8 +149,8 @@ const specialties = ["depression", "trauma", "ADHD"];
 for (const location of locations) {
   for (const specialty of specialties) {
     const result = await client.run(
-      `Go to growtherapy.com and search for therapists in {{${location}}} ` +
-      `who specialize in {{${specialty}}} and accept insurance. ` +
+      `Go to growtherapy.com and search for therapists in @{{${location}}} ` +
+      `who specialize in @{{${specialty}}} and accept insurance. ` +
       `Return the first 5 provider profiles as JSON.`,
       { workspaceId: workspace.id, schema: ProviderSearch },
     );

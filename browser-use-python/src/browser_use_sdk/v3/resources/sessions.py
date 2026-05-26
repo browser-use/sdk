@@ -35,6 +35,7 @@ class Sessions:
         enable_scheduled_tasks: bool | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        auto_heal: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -52,7 +53,11 @@ class Sessions:
         if profile_id is not None:
             body["profileId"] = profile_id
         if proxy_country_code is not _UNSET:
-            body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
+            body["proxyCountryCode"] = (
+                proxy_country_code.lower()
+                if isinstance(proxy_country_code, str)
+                else proxy_country_code
+            )
         if output_schema is not None:
             body["outputSchema"] = output_schema
         if workspace_id is not None:
@@ -63,6 +68,8 @@ class Sessions:
             body["enableRecording"] = enable_recording
         if cache_script is not None:
             body["cacheScript"] = cache_script
+        if auto_heal is not None:
+            body["autoHeal"] = auto_heal
         body.update(extra)
         return SessionResponse.model_validate(
             self._http.request("POST", "/sessions", json=body)
@@ -92,7 +99,9 @@ class Sessions:
             self._http.request("GET", f"/sessions/{session_id}")
         )
 
-    def stop(self, session_id: str | UUID, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
+    def stop(
+        self, session_id: str | UUID, *, strategy: str | None = None, **extra: Any
+    ) -> SessionResponse:
         """Stop a session or the running task."""
         body: dict[str, Any] | None = None
         if strategy is not None or extra:
@@ -172,6 +181,7 @@ class AsyncSessions:
         enable_scheduled_tasks: bool | None = None,
         enable_recording: bool | None = None,
         cache_script: bool | None = None,
+        auto_heal: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -189,7 +199,11 @@ class AsyncSessions:
         if profile_id is not None:
             body["profileId"] = profile_id
         if proxy_country_code is not _UNSET:
-            body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
+            body["proxyCountryCode"] = (
+                proxy_country_code.lower()
+                if isinstance(proxy_country_code, str)
+                else proxy_country_code
+            )
         if output_schema is not None:
             body["outputSchema"] = output_schema
         if workspace_id is not None:
@@ -200,6 +214,8 @@ class AsyncSessions:
             body["enableRecording"] = enable_recording
         if cache_script is not None:
             body["cacheScript"] = cache_script
+        if auto_heal is not None:
+            body["autoHeal"] = auto_heal
         body.update(extra)
         return SessionResponse.model_validate(
             await self._http.request("POST", "/sessions", json=body)
@@ -229,7 +245,9 @@ class AsyncSessions:
             await self._http.request("GET", f"/sessions/{session_id}")
         )
 
-    async def stop(self, session_id: str | UUID, *, strategy: str | None = None, **extra: Any) -> SessionResponse:
+    async def stop(
+        self, session_id: str | UUID, *, strategy: str | None = None, **extra: Any
+    ) -> SessionResponse:
         """Stop a session or the running task."""
         body: dict[str, Any] | None = None
         if strategy is not None or extra:

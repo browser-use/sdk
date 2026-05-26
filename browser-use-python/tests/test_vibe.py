@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import inspect
 import json
+import os
 import typing
 from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple
@@ -17,10 +18,15 @@ import pytest
 # ---------------------------------------------------------------------------
 # Locate spec files via CLOUD_REPO_PATH in .env
 # ---------------------------------------------------------------------------
-_SDK_REPO = Path(__file__).resolve().parents[2]  # browser-use-python/tests -> sdk repo root
+_SDK_REPO = (
+    Path(__file__).resolve().parents[2]
+)  # browser-use-python/tests -> sdk repo root
 
 
 def _get_cloud_repo_path() -> Path:
+    if env_path := os.environ.get("CLOUD_REPO_PATH"):
+        return Path(env_path)
+
     env_file = _SDK_REPO / ".env"
     for line in env_file.read_text().splitlines():
         line = line.strip()
@@ -89,7 +95,10 @@ _V2_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("post", "/skills/{skill_id}/refine"): ("skills", "refine"),
     ("post", "/skills/{skill_id}/rollback"): ("skills", "rollback"),
     ("get", "/skills/{skill_id}/executions"): ("skills", "executions"),
-    ("get", "/skills/{skill_id}/executions/{execution_id}/output"): ("skills", "execution_output"),
+    ("get", "/skills/{skill_id}/executions/{execution_id}/output"): (
+        "skills",
+        "execution_output",
+    ),
     # marketplace
     ("get", "/marketplace/skills"): ("marketplace", "list"),
     ("get", "/marketplace/skills/{skill_slug}"): ("marketplace", "get"),
@@ -158,10 +167,6 @@ class TestV2Coverage:
         assert not missing, f"Unmapped v2 endpoints: {missing}"
 
     def test_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v2.client import BrowserUse
-
-        client = BrowserUse.__new__(BrowserUse)
-        # Manually set up resource stubs so we can inspect
         from browser_use_sdk.v2 import resources
 
         for resource_attr, method_name in _V2_MAP.values():
@@ -181,9 +186,7 @@ class TestV2Coverage:
                 f"{cls.__name__} missing method '{method_name}'"
             )
             method = getattr(cls, method_name)
-            assert callable(method), (
-                f"{cls.__name__}.{method_name} is not callable"
-            )
+            assert callable(method), f"{cls.__name__}.{method_name} is not callable"
 
     def test_async_sdk_methods_exist(self) -> None:
         from browser_use_sdk.v2 import resources
@@ -221,7 +224,13 @@ class TestV3Coverage:
         assert not missing, f"Unmapped v3 endpoints: {missing}"
 
     def test_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v3.resources import billing, browsers, profiles, sessions, workspaces
+        from browser_use_sdk.v3.resources import (
+            billing,
+            browsers,
+            profiles,
+            sessions,
+            workspaces,
+        )
 
         resource_classes = {
             "billing": billing.Billing,
@@ -237,7 +246,13 @@ class TestV3Coverage:
             )
 
     def test_async_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v3.resources import billing, browsers, profiles, sessions, workspaces
+        from browser_use_sdk.v3.resources import (
+            billing,
+            browsers,
+            profiles,
+            sessions,
+            workspaces,
+        )
 
         async_classes = {
             "billing": billing.AsyncBilling,
@@ -302,11 +317,7 @@ class TestSpecDrift:
 
     def _get_query_params(self, method: str, path: str) -> Set[str]:
         op = self.spec["paths"].get(path, {}).get(method, {})
-        return {
-            p["name"]
-            for p in op.get("parameters", [])
-            if p.get("in") == "query"
-        }
+        return {p["name"] for p in op.get("parameters", []) if p.get("in") == "query"}
 
     def _resolve_ref(self, ref: str) -> Dict[str, Any]:
         parts = ref.lstrip("#/").split("/")
@@ -408,10 +419,15 @@ class TestSpecDrift:
             if not method_name:
                 missing.append(f"No SDK method mapping for action '{action}'")
                 continue
-            for label, classes_fn in [("sync", _get_resource_classes), ("async", _get_async_resource_classes)]:
+            for label, classes_fn in [
+                ("sync", _get_resource_classes),
+                ("async", _get_async_resource_classes),
+            ]:
                 cls = classes_fn()["tasks"]
                 if not hasattr(cls, method_name):
-                    missing.append(f"{cls.__name__} missing '{method_name}' for action '{action}'")
+                    missing.append(
+                        f"{cls.__name__} missing '{method_name}' for action '{action}'"
+                    )
 
         assert not missing, "Missing action variants:\n" + "\n".join(missing)
 
@@ -435,8 +451,14 @@ class TestClientInit:
 
         client = BrowserUse(api_key="test-key")
         expected = [
-            "billing", "tasks", "sessions", "files",
-            "profiles", "browsers", "skills", "marketplace",
+            "billing",
+            "tasks",
+            "sessions",
+            "files",
+            "profiles",
+            "browsers",
+            "skills",
+            "marketplace",
         ]
         for attr in expected:
             assert hasattr(client, attr), f"BrowserUse missing .{attr}"
@@ -449,3 +471,35 @@ class TestClientInit:
         assert hasattr(client, "sessions")
         assert hasattr(client, "workspaces")
         client.close()
+
+
+class TestV3SessionPayloads:
+    def test_sessions_create_serializes_auto_heal(self) -> None:
+        from browser_use_sdk.v3.resources.sessions import Sessions
+
+        class FakeHttp:
+            def __init__(self) -> None:
+                self.calls: list[dict[str, Any]] = []
+
+            def request(self, method: str, path: str, *, json=None, params=None):
+                self.calls.append(
+                    {"method": method, "path": path, "json": json, "params": params}
+                )
+                return {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "status": "created",
+                    "model": "gemini-3-flash",
+                    "createdAt": "2026-05-26T00:00:00Z",
+                    "updatedAt": "2026-05-26T00:00:00Z",
+                }
+
+        http = FakeHttp()
+        Sessions(http).create(
+            "Fetch https://httpbin.org/anything?item=@{{alpha}}",
+            workspace_id="00000000-0000-0000-0000-000000000002",
+            cache_script=True,
+            auto_heal=False,
+        )
+
+        assert http.calls[0]["json"]["cacheScript"] is True
+        assert http.calls[0]["json"]["autoHeal"] is False
