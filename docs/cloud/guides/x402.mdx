@@ -181,7 +181,9 @@ When the backend sees both a payment and a valid API key, the credit goes to the
 
 When you sign up the normal way, Browser Use creates an **account** for you (we call it a "project") that holds your credits and runs your tasks, and you log into it with an API key. When you pay with **only a wallet** (no API key), there's no signup step — so the very first time you pay, Browser Use automatically creates one of these same accounts for you and ties it to your wallet. From then on it behaves exactly like a normal account. The only difference is how you prove it's yours: instead of an API key, you sign with your wallet.
 
-To check your wallet's balance, just use the method below:
+This balance is your **Browser Use credit balance** — the prepaid USD you've added to that account through x402 payments, minus what your tasks have spent.
+
+To check how much credit that account has left, use the method below:
 
 <CodeGroup>
 ```python Python
@@ -204,8 +206,8 @@ The response contains:
 | --- | --- |
 | `wallet` | The wallet address (lowercased) |
 | `project_id` | The account (project) tied to your wallet that the credits live in |
-| `total_credits_usd` | Total credit balance, in USD |
-| `additional_credits_usd` | Credits added via x402 top-ups (excludes any plan allowance) |
+| `total_credits_usd` | Your remaining Browser Use credit balance, in USD |
+| `additional_credits_usd` | Of that total, the portion added via x402 top-ups (excludes any plan allowance) |
 
 <Note>
   This is for accounts created from a wallet (the default x402 mode). If you're [topping up an existing account](#topping-up-an-existing-account), check that account's balance the normal way with your API key via `client.billing.account()`. A wallet that has never paid yet has no account, so the call returns `404` until the first payment.
