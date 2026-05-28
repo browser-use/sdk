@@ -1,6 +1,7 @@
 from .client import AsyncBrowserUse, BrowserUse
 from .helpers import AsyncSessionRun, SessionResult
 from .._core.errors import BrowserUseError
+from .._core.x402 import get_wallet_balance
 
 from ..generated.v3.models import (
     AccountView,
@@ -43,6 +44,8 @@ __all__ = [
     "AsyncSessionRun",
     "SessionResult",
     "BrowserUseError",
+    # x402
+    "get_wallet_balance",
     # Billing models
     "AccountView",
     "PlanInfo",
