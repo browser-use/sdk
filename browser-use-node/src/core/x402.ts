@@ -46,7 +46,7 @@ function buildWalletAuthMessage(address: string, issuedAt: string, nonce: string
  */
 export async function getWalletBalance(
   privateKey: `0x${string}` | string,
-  opts: { baseUrl?: string } = {},
+  opts: { baseUrl?: string; extra?: Record<string, unknown> } = {},
 ): Promise<X402WalletBalance> {
   let viem;
   try {
@@ -67,7 +67,7 @@ export async function getWalletBalance(
   const resp = await fetch(`${baseUrl}/x402/balance`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address: account.address, issued_at: issuedAt, nonce, signature }),
+    body: JSON.stringify({ address: account.address, issued_at: issuedAt, nonce, signature, ...opts.extra }),
   });
   if (!resp.ok) {
     throw new Error(`x402 balance check failed: ${resp.status} ${await resp.text()}`);

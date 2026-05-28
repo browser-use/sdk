@@ -44,6 +44,7 @@ async def get_wallet_balance(
     *,
     base_url: str = X402_BALANCE_BASE_URL_DEFAULT,
     timeout: float = 30.0,
+    **extra: Any,
 ) -> dict[str, Any]:
     """Read a wallet-derived project's credit balance
 
@@ -81,6 +82,7 @@ async def get_wallet_balance(
                 "issued_at": issued_at,
                 "nonce": nonce,
                 "signature": signature,
+                **extra,
             },
         )
         resp.raise_for_status()
@@ -112,9 +114,7 @@ def x402_client_from_private_key(private_key: str) -> X402Client:
         eth_account = importlib.import_module("eth_account")
         x402_pkg = importlib.import_module("x402")
         evm_pkg = importlib.import_module("x402.mechanisms.evm")
-        register_pkg = importlib.import_module(
-            "x402.mechanisms.evm.exact.register"
-        )
+        register_pkg = importlib.import_module("x402.mechanisms.evm.exact.register")
     except ImportError as e:
         raise _missing_x402() from e
 
