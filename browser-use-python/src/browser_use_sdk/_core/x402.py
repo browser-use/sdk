@@ -24,6 +24,70 @@ X402Client = Any
 X402_BASE_URL_DEFAULT = "https://x402.api.browser-use.com/api/v3"
 X402_BASE_URL_DEFAULT_V2 = "https://x402.api.browser-use.com/api/v2"
 
+# Balance check is served on the regular (non-x402) host
+X402_BALANCE_BASE_URL_DEFAULT = "https://api.browser-use.com/api/v3"
+
+
+def _build_wallet_auth_message(address: str, issued_at: str, nonce: str) -> str:
+    # MUST match the backend's build_wallet_auth_message exactly.
+    return (
+        "Browser Use x402 wallet authentication\n"
+        "Action: read credit balance\n"
+        f"Wallet: {address}\n"
+        f"Issued At: {issued_at}\n"
+        f"Nonce: {nonce}"
+    )
+
+
+async def get_wallet_balance(
+    private_key: str,
+    *,
+    base_url: str = X402_BALANCE_BASE_URL_DEFAULT,
+    timeout: float = 30.0,
+    **extra: Any,
+) -> dict[str, Any]:
+    """Read a wallet-derived project's credit balance
+
+    Authenticates with an off-chain wallet signature (EIP-191): signs a
+    canonical message proving control of the address; the server resolves the
+    wallet to its project and returns the balance.
+
+    Returns the parsed JSON: ``wallet``, ``project_id``, ``total_credits_usd``,
+    ``additional_credits_usd``.
+    """
+    import secrets
+    from datetime import datetime, timezone
+
+    try:
+        import httpx
+        from eth_account import Account
+        from eth_account.messages import encode_defunct
+    except ImportError as e:
+        raise _missing_x402() from e
+
+    account = Account.from_key(private_key)
+    address = account.address
+    issued_at = datetime.now(timezone.utc).isoformat()
+    nonce = secrets.token_hex(16)
+    message = _build_wallet_auth_message(address, issued_at, nonce)
+    signature = account.sign_message(encode_defunct(text=message)).signature.hex()
+    if not signature.startswith("0x"):
+        signature = "0x" + signature
+
+    async with httpx.AsyncClient(timeout=timeout) as http:
+        resp = await http.post(
+            f"{base_url.rstrip('/')}/x402/balance",
+            json={
+                "address": address,
+                "issued_at": issued_at,
+                "nonce": nonce,
+                "signature": signature,
+                **extra,
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()
+
 
 def _missing_x402() -> ImportError:
     return ImportError(
@@ -50,9 +114,7 @@ def x402_client_from_private_key(private_key: str) -> X402Client:
         eth_account = importlib.import_module("eth_account")
         x402_pkg = importlib.import_module("x402")
         evm_pkg = importlib.import_module("x402.mechanisms.evm")
-        register_pkg = importlib.import_module(
-            "x402.mechanisms.evm.exact.register"
-        )
+        register_pkg = importlib.import_module("x402.mechanisms.evm.exact.register")
     except ImportError as e:
         raise _missing_x402() from e
 

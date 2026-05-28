@@ -177,6 +177,46 @@ When the backend sees both a payment and a valid API key, the credit goes to the
 - Adding credits via crypto when you already have a regular Browser Use account
 - Multi-wallet setups funding one shared account
 
+## Checking your credit balance
+
+When you sign up the normal way, Browser Use creates an **account** for you (we call it a "project") that holds your credits and runs your tasks, and you log into it with an API key. When you pay with **only a wallet** (no API key), there's no signup step — so the very first time you pay, Browser Use automatically creates one of these same accounts for you and ties it to your wallet. From then on it behaves exactly like a normal account. The only difference is how you prove it's yours: instead of an API key, you sign with your wallet.
+
+This balance is your **Browser Use credit balance** — the prepaid USD you've added to that account through x402 payments, minus what your tasks have spent.
+
+To check how much credit that account has left, use the method below:
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import get_wallet_balance
+
+balance = await get_wallet_balance("0x...")  # same wallet private key you pay with
+print(balance["total_credits_usd"])
+```
+```typescript TypeScript
+import { getWalletBalance } from "browser-use-sdk/v3";
+
+const balance = await getWalletBalance("0x...");  // same wallet private key you pay with
+console.log(balance.total_credits_usd);
+```
+</CodeGroup>
+
+The response contains:
+
+| Field | Description |
+| --- | --- |
+| `wallet` | The wallet address (lowercased) |
+| `project_id` | The account (project) tied to your wallet that the credits live in |
+| `total_credits_usd` | Your remaining Browser Use credit balance, in USD |
+| `additional_credits_usd` | Of that total, the portion added via x402 top-ups (excludes any plan allowance) |
+
+<Note>
+  This is for accounts created from a wallet (the default x402 mode). If you're [topping up an existing account](#topping-up-an-existing-account), check that account's balance the normal way with your API key via `client.billing.account()`. A wallet that has never paid yet has no account, so the call returns `404` until the first payment.
+</Note>
+
+<Accordion title="How the balance check works">
+  The SDK signs a fixed, server-defined message ([EIP-191](https://eips.ethereum.org/EIPS/eip-191), the same "Sign-In with Ethereum" mechanism) with your wallet's private key. The signature proves you control the address without moving any funds. The server recovers the signer, matches it to the wallet's project, and returns the balance.
+</Accordion>
+
 ## How it works
 
 Your code asks for something, we say "$5 please", your wallet pays automatically, we run your request.
@@ -254,12 +294,12 @@ const client = new BrowserUse({ x402 });
     You haven't installed the optional x402 deps. Run `pip install "browser-use-sdk[x402]"` (Python) or `npm install @x402/fetch @x402/evm viem` (TypeScript).
   </Accordion>
 
-  <Accordion title='HTTP 500 with "payment was settled but processing failed"'>
-    The on-chain payment may or may not have settled — contact support with your wallet address. This is very rare.
+  <Accordion title='HTTP 503 with "payment was not settled... you were not charged"'>
+    We verified your payment request but couldn't credit your project, so we deliberately **did not settle on-chain** — no USDC moved. Just retry; it's safe. This is rare.
   </Accordion>
 
   <Accordion title="Insufficient credits despite paying">
-    Wait a few seconds. Settlement and credit grant happen in the same request, but the response may be sent before the credit grant fully commits. If credits still show `$0` after a few minutes, contact support.
+    Wait a few seconds. Settlement and credit grant happen in the same request, but the response may be sent before the credit grant fully commits. If credits still show `$0` after a few minutes, contact support with your wallet address. (Conversely, if a payment settles but the request itself then fails, we automatically reclaim the credits so you aren't charged for nothing.)
   </Accordion>
 
   <Accordion title="Wallet on the wrong network">
