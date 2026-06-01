@@ -192,7 +192,7 @@
                     "Tasks"
                 ],
                 "summary": "Create Task",
-                "description": "Create and start a new task.\n\nYou can either:\n1. Start a new task without a sessionId (auto-creates a session with US proxy by default).\n   Note: Tasks without a sessionId are one-off tasks that automatically close the session\n   upon completion (keep_alive=false). Use sessionSettings to configure the auto-created\n   session (e.g. proxyCountryCode, profileId, screen dimensions).\n2. Start a new task in an existing session (reuse for follow-up tasks or custom configuration)\n\nNote: Without sessionSettings, a US proxy is enabled by default. Providing sessionSettings\noverrides defaults — proxy is only enabled if proxyCountryCode is set. For full control over\nsession configuration (e.g. keep_alive), create a session first via POST /sessions with your\ndesired settings, then pass that sessionId when creating tasks.",
+                "description": "Create and start a new task.\n\nYou can either:\n1. Start a new task without a sessionId (auto-creates a session with US proxy by default).\n   Note: Tasks without a sessionId are one-off tasks that automatically close the session\n   upon completion (keep_alive=false). Use sessionSettings to configure the auto-created\n   session (e.g. proxyCountryCode, profileId, screen dimensions).\n2. Start a new task in an existing session (reuse for follow-up tasks or custom configuration)\n\nNote: Without sessionSettings, a US proxy is enabled by default. Providing sessionSettings\noverrides defaults \u2014 proxy is only enabled if proxyCountryCode is set. For full control over\nsession configuration (e.g. keep_alive), create a session first via POST /sessions with your\ndesired settings, then pass that sessionId when creating tasks.",
                 "operationId": "create_task_tasks_post",
                 "security": [
                     {
@@ -1727,7 +1727,7 @@
                     "Browsers"
                 ],
                 "summary": "Create Browser Session",
-                "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged per hour with tiered pricing:\n- Pay As You Go users: $0.06/hour\n- Business/Scaleup subscribers: $0.03/hour (50% discount)\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
+                "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged at $0.02/hour for all users.\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
                 "operationId": "create_browser_session_browsers_post",
                 "security": [
                     {
@@ -3778,7 +3778,7 @@
                     "timeout": {
                         "type": "integer",
                         "title": "Timeout",
-                        "description": "The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.",
+                        "description": "The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.",
                         "default": 60,
                         "ge": 1,
                         "le": 240
@@ -4171,7 +4171,7 @@
                     },
                     "systemPromptExtension": {
                         "type": "string",
-                        "maxLength": 2000,
+                        "maxLength": 10000,
                         "title": "System Prompt Extension",
                         "description": "Optional extension to the agent system prompt.",
                         "default": ""
@@ -6182,6 +6182,7 @@
                     "gemini-2.5-flash",
                     "gemini-2.5-pro",
                     "gemini-3-pro-preview",
+                    "gemini-3.1-pro-preview",
                     "gemini-3-flash-preview",
                     "gemini-flash-latest",
                     "gemini-flash-lite-latest",
