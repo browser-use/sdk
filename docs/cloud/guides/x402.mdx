@@ -43,7 +43,7 @@ Then in Claude Code:
 > /x402
 ```
 
-Claude generates (or imports) a wallet, walks you through funding it via Coinbase, writes `BROWSER_USE_X402_PRIVATE_KEY` to your `.env`, installs the SDK, and runs a verification task. Total: ~2 minutes if you have a Coinbase account.
+Claude generates (or imports) a wallet, walks you through funding it via Coinbase, writes `BROWSER_USE_X402_PRIVATE_KEY` to your `.env`, installs the SDK, and runs a verification task. Total: ~2 minutes if you have a crypto wallet.
 
 <Tip>
   Already have a Browser Use Cloud account? The skill detects this and switches to **top-up mode**, adding credits to that existing account instead of creating a new, wallet-keyed one.
@@ -219,19 +219,18 @@ The response contains:
 
 ## How it works
 
-Your code asks for something, we say "$5 please", your wallet pays automatically, we run your request.
+Your code asks for something, we say "$5 please," your wallet pays automatically, we run your request.
 
 A bit more detail:
 
 1. Your code makes a request (e.g. "run this task").
-2. If your project has no credits, we respond with "Payment required: $5" (or `$1` as a fallback for smaller wallets).
-3. The SDK auto-signs the payment from your wallet and resends the request.
-4. Coinbase moves the USDC on-chain. We add the same amount to your project's credit balance.
-5. We run your task and send back the result.
+2. The SDK auto-signs the payment from your wallet and resends the request.
+3. Coinbase moves the USDC on-chain. We add the same amount to your project's credit balance.
+4. We run your task and send back the result.
 
 ## Wallet setup
 
-If you don't have a wallet ready, here's one easy path. We use **MetaMask** below. It's a popular crypto wallet (think of it as an in-browser app for holding crypto and signing payments). Any other EVM-compatible wallet works equally well: [Rabby](https://rabby.io), [Coinbase Wallet](https://www.coinbase.com/wallet), [Frame](https://frame.sh), [Trust Wallet](https://trustwallet.com), [Phantom](https://phantom.com), etc. Pick whichever you prefer.
+If you don't have a wallet ready, here's an easy way to set one up using **MetaMask**. It's a popular crypto wallet. Any other EVM-compatible wallet works equally well: [Rabby](https://rabby.io), [Coinbase Wallet](https://www.coinbase.com/wallet), [Frame](https://frame.sh), [Trust Wallet](https://trustwallet.com), [Phantom](https://phantom.com), etc. Pick whichever you prefer.
 
 <Steps>
   <Step title="Install MetaMask (or your wallet of choice)">
@@ -287,7 +286,7 @@ const client = new BrowserUse({ x402 });
     Two likely causes:
 
     - **Wallet has no USDC on Base.** Check your balance. If empty, top it up.
-    - **Your HTTP client isn't x402-aware.** Plain `requests` / `fetch` just sees a 402 and stops; it doesn't know how to read the payment instructions and sign a payment. Use the SDK (which handles this automatically) or wrap your HTTP client with one of the [x402 client libraries](https://github.com/coinbase/x402#all-available-reference-sdks).
+    - **Your HTTP client isn't x402-aware.** Plain `requests` / `fetch` just sees a 402 and stops; it doesn't know how to read the payment instructions and sign a payment. Use the SDK (which handles this automatically), or wrap your HTTP client with one of the [x402 client libraries](https://github.com/coinbase/x402#all-available-reference-sdks).
   </Accordion>
 
   <Accordion title="ImportError / Cannot find module '@x402/fetch'">
@@ -295,7 +294,7 @@ const client = new BrowserUse({ x402 });
   </Accordion>
 
   <Accordion title='HTTP 503 with "payment was not settled... you were not charged"'>
-    We verified your payment request but couldn't credit your project, so we deliberately **did not settle on-chain** — no USDC moved. Just retry; it's safe. This is rare.
+    We verified your payment request but couldn't credit your project, so we deliberately did not settle on-chain. No USDC was moved, so just retry. This is rare.
   </Accordion>
 
   <Accordion title="Insufficient credits despite paying">
