@@ -120,9 +120,7 @@ export interface paths {
          * Create Browser Session
          * @description Create a new browser session.
          *
-         *     **Pricing:** Browser sessions are charged per hour with tiered pricing:
-         *     - Pay As You Go users: $0.06/hour
-         *     - Business/Scaleup subscribers: $0.03/hour (50% discount)
+         *     **Pricing:** Browser sessions are charged at $0.02/hour for all users.
          *
          *     The full rate is charged upfront when the session starts.
          *     When you stop the session, any unused time is automatically refunded proportionally.
@@ -1384,7 +1382,7 @@ export interface components {
             proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
             /**
              * Timeout
-             * @description The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.
+             * @description The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.
              * @default 60
              */
             timeout: number;

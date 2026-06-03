@@ -351,8 +351,10 @@ describe("V3 SDK coverage", () => {
 
   const client = new BrowserUseV3({ apiKey: "test" });
 
-  // Endpoints intentionally not exposed in the SDK yet.
-  const v3SkippedPaths = (path: string) => path.startsWith("/boxes");
+  // Endpoints intentionally not exposed in the SDK yet (box management +
+  // the Slack OAuth redirect callback that belongs to it).
+  const v3SkippedPaths = (path: string) =>
+    path.startsWith("/boxes") || path.startsWith("/oauth");
 
   it("should map every v3 endpoint to a known SDK method", () => {
     const unmapped: string[] = [];

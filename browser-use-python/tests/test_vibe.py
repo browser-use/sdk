@@ -218,8 +218,9 @@ class TestV3Coverage:
 
     def test_all_spec_endpoints_mapped(self) -> None:
         spec_eps = _spec_endpoints(self.spec)
-        # /boxes/* endpoints are intentionally not exposed in the SDK yet.
-        spec_eps = {ep for ep in spec_eps if not ep[1].startswith("/boxes")}
+        # /boxes/* and the /oauth/* Slack redirect callback are intentionally
+        # not exposed in the SDK yet.
+        spec_eps = {ep for ep in spec_eps if not (ep[1].startswith("/boxes") or ep[1].startswith("/oauth"))}
         mapped = set(_V3_MAP.keys())
         missing = spec_eps - mapped
         assert not missing, f"Unmapped v3 endpoints: {missing}"
