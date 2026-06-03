@@ -3,6 +3,9 @@ export type { BrowserUseOptions, RunSessionOptions } from "./v3/client.js";
 
 export { BrowserUseError } from "./core/errors.js";
 
+export { getWalletBalance } from "./core/x402.js";
+export type { X402WalletBalance } from "./core/x402.js";
+
 export { SessionRun } from "./v3/helpers.js";
 export type { RunOptions, SessionResult } from "./v3/helpers.js";
 

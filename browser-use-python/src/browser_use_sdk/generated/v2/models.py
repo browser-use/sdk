@@ -754,6 +754,8 @@ class SessionNotFoundError(BaseModel):
 
 
 class SessionSettings(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     profile_id: UUID | None = Field(
         None,
         alias='profileId',
@@ -1651,7 +1653,7 @@ class CreateTaskRequest(BaseModel):
         '',
         alias='systemPromptExtension',
         description='Optional extension to the agent system prompt.',
-        max_length=2000,
+        max_length=10000,
         title='System Prompt Extension',
     )
     judge: bool | None = Field(

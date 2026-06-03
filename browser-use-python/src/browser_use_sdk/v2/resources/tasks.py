@@ -80,7 +80,7 @@ def _build_create_body(
     if op_vault_id is not None:
         body["opVaultId"] = op_vault_id
     if session_settings is not None:
-        body["sessionSettings"] = session_settings.model_dump(by_alias=True, exclude_none=True)
+        body["sessionSettings"] = session_settings.model_dump(by_alias=True, exclude_unset=True)
     body.update(extra)
     return body
 
