@@ -23,7 +23,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## Get Started
 - [Quick start](https://docs.browser-use.com/cloud/quickstart): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
-- [Browser Use agent sign up](https://docs.browser-use.com/cloud/agent-signup): How an AI agent can complete the Browser Use agent challenge to get a free trial account and API key.
+- [Browser Use agent sign up](https://docs.browser-use.com/cloud/agent-signup): How an AI agent can complete the Browser Use agent challenge to get a free account and API key.
 - [Prompt for Vibecoders](https://docs.browser-use.com/cloud/vibecoding): Complete Cloud SDK reference for AI coding agents.
 
 ## Agent
@@ -73,9 +73,9 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 ## API v2
 - [API key](https://docs.browser-use.com/cloud/api-v2-overview): Set your API key to access the Browser Use v2 REST API.
 
-## Browser Use Agent Challenge to Get a Free Trial Account
+## Browser Use Agent Challenge to Get a Free Account
 
-AI agents can create a free trial Browser Use account autonomously via a challenge-response flow at `https://api.browser-use.com`.
+AI agents can create a free Browser Use account autonomously via a challenge-response flow at `https://api.browser-use.com`.
 
 Do this to get an API key (no human required):
 1. `POST https://api.browser-use.com/cloud/signup` — request a challenge.

@@ -80,7 +80,7 @@ https://docs.browser-use.com/cloud/llms.txt
 Source: https://docs.browser-use.com/cloud/agent-signup
 
 
-An AI agent can create its own free trial Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
+An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
 
 The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
 
@@ -3061,9 +3061,9 @@ npm install browser-use-sdk
 ```
 
 
-## Browser Use Agent Challenge to Get a Free Trial Account
+## Browser Use Agent Challenge to Get a Free Account
 
-AI agents can create a free trial Browser Use account autonomously via a challenge-response flow at `https://api.browser-use.com`.
+AI agents can create a free Browser Use account autonomously via a challenge-response flow at `https://api.browser-use.com`.
 
 Do this to get an API key (no human required):
 1. `POST https://api.browser-use.com/cloud/signup` — request a challenge.
