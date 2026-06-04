@@ -96,7 +96,7 @@ Response:
 }
 ```
 
-2. Solve the math problem in `challenge_text` (not deterministically) — answer as a string with 2 decimal places, e.g. `"144.00"`
+2. Solve the math problem in `challenge_text` — answer as a string with 2 decimal places, e.g. `"144.00"`
 
 3. `POST https://api.browser-use.com/cloud/signup/verify` with `challenge_id` + `answer`.
 
