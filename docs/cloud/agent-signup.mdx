@@ -1,0 +1,110 @@
+---
+title: Browser Use agent sign up
+description: "How the Browser Use agent challenge lets an AI agent create a free account and API key."
+icon: key
+---
+
+An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
+
+The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
+
+## REST flow
+
+### 1. Request a challenge
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+Request body, optional (include a user email/name if available):
+
+```json
+{
+  "email": "user@example.com",
+  "name": "User Name"
+}
+```
+
+Response:
+
+```json
+{
+  "challenge_id": "uuid",
+  "challenge_text": "..."
+}
+```
+
+### 2. Solve the challenge
+
+Read `challenge_text` and solve the math problem. Return the answer as a string with two decimal places, for example `"144.00"`.
+
+### 3. Verify the answer
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup/verify \
+  -H "Content-Type: application/json" \
+  -d '{"challenge_id":"uuid","answer":"144.00"}'
+```
+
+Request body:
+
+```json
+{
+  "challenge_id": "uuid",
+  "answer": "144.00"
+}
+```
+
+Response:
+
+```json
+{
+  "api_key": "bu_..."
+}
+```
+
+Use the returned key for Browser Use Cloud API requests.
+
+For example, create a browser session:
+
+```bash
+curl -X POST https://api.browser-use.com/api/v3/browsers \
+  -H "X-Browser-Use-API-Key: bu_..." \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+See the [Create Browser Session API reference](/cloud/api-v3/browsers/create-browser-session).
+
+## Claim the account
+
+If a human wants to see the agent-created account in the dashboard later, the agent can create a claim link:
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup/claim \
+  -H "X-Browser-Use-API-Key: bu_..."
+```
+
+Response:
+
+```json
+{
+  "claim_url": "https://..."
+}
+```
+
+The claim URL is valid for 1 hour.
+
+## CLI flow
+
+Agents with shell access can use the Browser Use CLI instead of calling the REST endpoints directly:
+
+```bash
+browser-use cloud signup
+browser-use cloud signup --verify <challenge-id> <answer>
+browser-use cloud signup --claim
+```
+
+The CLI saves the API key to `~/.browser-use/config.json` after verification.

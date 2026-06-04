@@ -76,6 +76,116 @@ https://docs.browser-use.com/cloud/llms.txt
 ```
 
 
+# Browser Use agent sign up
+Source: https://docs.browser-use.com/cloud/agent-signup
+
+
+An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
+
+The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
+
+## REST flow
+
+### 1. Request a challenge
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+Request body, optional (include a user email/name if available):
+
+```json
+{
+  "email": "user@example.com",
+  "name": "User Name"
+}
+```
+
+Response:
+
+```json
+{
+  "challenge_id": "uuid",
+  "challenge_text": "..."
+}
+```
+
+### 2. Solve the challenge
+
+Read `challenge_text` and solve the math problem. Return the answer as a string with two decimal places, for example `"144.00"`.
+
+### 3. Verify the answer
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup/verify \
+  -H "Content-Type: application/json" \
+  -d '{"challenge_id":"uuid","answer":"144.00"}'
+```
+
+Request body:
+
+```json
+{
+  "challenge_id": "uuid",
+  "answer": "144.00"
+}
+```
+
+Response:
+
+```json
+{
+  "api_key": "bu_..."
+}
+```
+
+Use the returned key for Browser Use Cloud API requests.
+
+For example, create a browser session:
+
+```bash
+curl -X POST https://api.browser-use.com/api/v3/browsers \
+  -H "X-Browser-Use-API-Key: bu_..." \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+See the [Create Browser Session API reference](https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session).
+
+## Claim the account
+
+If a human wants to see the agent-created account in the dashboard later, the agent can create a claim link:
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup/claim \
+  -H "X-Browser-Use-API-Key: bu_..."
+```
+
+Response:
+
+```json
+{
+  "claim_url": "https://..."
+}
+```
+
+The claim URL is valid for 1 hour.
+
+## CLI flow
+
+Agents with shell access can use the Browser Use CLI instead of calling the REST endpoints directly:
+
+```bash
+browser-use cloud signup
+browser-use cloud signup --verify <challenge-id> <answer>
+browser-use cloud signup --claim
+```
+
+The CLI saves the API key to `~/.browser-use/config.json` after verification.
+
+
 # Introduction
 Source: https://docs.browser-use.com/cloud/agent/quickstart
 
@@ -2950,3 +3060,65 @@ pip install browser-use-sdk
 npm install browser-use-sdk
 ```
 
+
+## Browser Use Agent Challenge to Get a Free Account
+
+AI agents can create a free Browser Use account autonomously via a challenge-response flow at `https://api.browser-use.com`.
+
+Do this to get an API key (no human required):
+1. `POST https://api.browser-use.com/cloud/signup` — request a challenge.
+
+Request body, optional (include a user email/name if available):
+```json
+{
+  "email": "user@example.com",
+  "name": "User Name"
+}
+```
+
+Response:
+```json
+{
+  "challenge_id": "uuid",
+  "challenge_text": "..."
+}
+```
+
+2. Solve the math problem in `challenge_text` — answer as a string with 2 decimal places, e.g. `"144.00"`
+
+3. `POST https://api.browser-use.com/cloud/signup/verify` with `challenge_id` + `answer`.
+
+Request body:
+```json
+{
+  "challenge_id": "uuid",
+  "answer": "144.00"
+}
+```
+
+Response:
+```json
+{
+  "api_key": "bu_..."
+}
+```
+
+4. Use `X-Browser-Use-API-Key: bu_...` on Browser Use Cloud API requests. For example, create a browser session (docs: https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session):
+
+```bash
+curl -X POST https://api.browser-use.com/api/v3/browsers \
+  -H "X-Browser-Use-API-Key: bu_..." \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+To let a human claim the account later: `POST https://api.browser-use.com/cloud/signup/claim` with `X-Browser-Use-API-Key: bu_...`.
+
+Response:
+```json
+{
+  "claim_url": "https://..."
+}
+```
+
+The claim URL is valid for 1 hour.
