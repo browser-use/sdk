@@ -23,7 +23,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## Get Started
 - [Quick start](https://docs.browser-use.com/cloud/quickstart): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
-- [Browser Use agent sign up](https://docs.browser-use.com/cloud/agent-signup): How an AI agent can complete the Browser Use agent challenge to get a free account and API key.
+- [Agent Sign Up for Browser Use](https://docs.browser-use.com/cloud/agent-signup): How an AI agent can complete the Browser Use agent challenge to get a free account and API key.
 - [Prompt for Vibecoders](https://docs.browser-use.com/cloud/vibecoding): Complete Cloud SDK reference for AI coding agents.
 
 ## Agent

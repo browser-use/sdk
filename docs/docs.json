@@ -62,7 +62,6 @@
                 "group": "Get Started",
                 "pages": [
                   "cloud/quickstart",
-                  "cloud/agent-signup",
                   "cloud/vibecoding"
                 ]
               },
@@ -125,6 +124,7 @@
                     "icon": "graduation-cap",
                     "pages": [
                       "cloud/tutorials/chat-ui",
+                      "cloud/agent-signup",
                       "cloud/tutorials/grow-therapy-compare"
                     ]
                   },
