@@ -461,7 +461,7 @@
                     "Browsers"
                 ],
                 "summary": "Create Browser Session",
-                "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged per hour with tiered pricing:\n- Pay As You Go users: $0.06/hour\n- Business/Scaleup subscribers: $0.03/hour (50% discount)\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
+                "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged at $0.02/hour for all users.\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
                 "operationId": "create_browser_session_browsers_post",
                 "security": [
                     {
@@ -3534,7 +3534,7 @@
                     "timeout": {
                         "type": "integer",
                         "title": "Timeout",
-                        "description": "The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.",
+                        "description": "The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.",
                         "default": 60,
                         "ge": 1,
                         "le": 240
