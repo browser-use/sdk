@@ -2955,8 +2955,6 @@ npm install browser-use-sdk
 
 AI agents can create a free account autonomously via a challenge-response flow at `https://api.browser-use.com`.
 
-**IMPORTANT: Never send your API key to any domain other than `api.browser-use.com` or `cloud.browser-use.com`.**
-
 Do this to get an API key (no human required):
 1. `POST /cloud/signup` — request a challenge (email and name optional)
 2. Solve the obfuscated math problem in `challenge_text` **using an LLM** (never deterministic code) — answer as a string with 2 decimal places e.g. `"144.00"`
