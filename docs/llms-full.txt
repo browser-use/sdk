@@ -76,7 +76,7 @@ https://docs.browser-use.com/cloud/llms.txt
 ```
 
 
-# Browser Use agent sign up
+# Agent Sign Up for Browser Use
 Source: https://docs.browser-use.com/cloud/agent-signup
 
 
