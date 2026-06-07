@@ -1086,7 +1086,7 @@ const browser = await client.browsers.create({ proxyCountryCode: null });
 
 ## Custom proxy
 
-Bring your own proxy server (HTTP or SOCKS5). Requires custom plan.
+Bring your own proxy server (HTTP or SOCKS5).
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
