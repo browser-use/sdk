@@ -196,7 +196,8 @@
               "open-source/quickstart",
               "open-source/vibecoding",
               "open-source/supported-models",
-              "open-source/browser-use-cli"
+              "open-source/browser-use-cli",
+              "open-source/browser-use-terminal"
             ]
           },
           {
