@@ -14,6 +14,7 @@ Install: `pip install browser-use`
 - [Prompts for Vibecoders](https://docs.browser-use.com/open-source/vibecoding): Complete Python SDK reference for AI coding agents. Paste into Claude Code, Cursor, or Copilot for instant integration.
 - [Supported Models](https://docs.browser-use.com/open-source/supported-models): Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider.
 - [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli): Fast, persistent browser automation from the command line.
+- [Browser Use Terminal](https://docs.browser-use.com/open-source/browser-use-terminal): Use the terminal app for browser agents, or use the same runtime from Python.
 
 ## Agent
 - [Configuration](https://docs.browser-use.com/open-source/customize/agent/basics): Configure the agent — set your LLM, define tasks, add custom tools, and control behavior with Python.

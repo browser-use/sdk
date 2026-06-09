@@ -10,6 +10,8 @@ Coding assistants like Claude Code and Codex work well because they give the mod
 
 Browser Use Terminal brings that pattern to browser automation. It gives an AI agent its own browser environment: it can control Chrome, see screenshots, inspect pages, run page JavaScript, save files, use browser profiles, handle secrets, and keep a history of what happened.
 
+Learn more on the [Browser Use Terminal site](https://browser-use.com/terminal?utm_source=docs) or view the [Terminal GitHub repo](https://github.com/browser-use/terminal?utm_source=docs).
+
 In practice, this means you can ask for browser work from your terminal:
 
 ```text
@@ -26,8 +28,15 @@ Research the top Hacker News stories and summarize the points.
 
 <video
   controls
-  className="w-full aspect-video rounded-xl"
-  src="/open-source/images/terminal-demo.mp4">
+  className="w-full aspect-video rounded-xl">
+  <source
+    src="https://media.githubusercontent.com/media/browser-use/sdk/rust-terminal-docs/docs/static/terminal_demo.mp4"
+    type="video/mp4"
+  />
+  <source
+    src="https://media.githubusercontent.com/media/browser-use/sdk/main/docs/static/terminal_demo.mp4"
+    type="video/mp4"
+  />
 </video>
 
 You can use Browser Use Terminal in three ways:
@@ -37,6 +46,10 @@ You can use Browser Use Terminal in three ways:
 | **TUI** | The interactive terminal app you launch with `browser`. Best for normal, hands-on use. |
 | **CLI** | Scriptable commands such as `browser-use-terminal run-openai`. Best for automation and one-off tasks. |
 | **Python** | `browser_use.beta.Agent`, backed by the same Rust runtime. Best when you want browser-use code with terminal runtime behavior. |
+
+<Info>
+Browser Use Terminal is separate from the lower-level `browser-use` CLI. Use `browser` for the Terminal TUI, `browser-use-terminal` for Terminal task commands, and `browser-use` for direct browser-control commands.
+</Info>
 
 ## Terms
 
@@ -55,10 +68,28 @@ Install Browser Use Terminal:
 curl -fsSL https://browser-use.com/terminal/install.sh | sh
 ```
 
+Restart your shell or source your shell profile if the installer updates your `PATH`.
+
+Verify the two terminal executables:
+
+```bash
+which browser
+which browser-use-terminal
+browser-use-terminal --help
+```
+
 Open the TUI:
 
 ```bash
 browser
+```
+
+Set up Python usage in the same project where you will write your agent code:
+
+```bash
+uv venv --python 3.12
+source .venv/bin/activate
+uv pip install browser-use
 ```
 
 ## TUI Commands
@@ -110,6 +141,10 @@ Log in to the vendor portal and download the latest invoice.
 Use one-shot commands for scripts, automation, and quick tasks:
 
 ```bash
+browser-use-terminal --help
+```
+
+```bash
 browser-use-terminal run-openai --model gpt-5.5 \
   "Go to https://news.ycombinator.com and return the top stories with points"
 ```
@@ -125,6 +160,10 @@ browser-use-terminal run-deepseek --model deepseek-v4-pro "Research Browser Use"
 ### Python
 
 Use `browser_use.beta.Agent` to run Python code on top of the Rust terminal runtime:
+
+```bash
+uv pip install browser-use
+```
 
 ```python
 import asyncio
@@ -165,7 +204,7 @@ This is the recommended setup path for normal interactive use.
 
 ### CLI
 
-For one-shot commands and CI, set provider keys with environment variables:
+For one-shot commands and CI, set the provider key for the provider command you are using:
 
 ```bash
 export OPENAI_API_KEY=...
@@ -219,6 +258,8 @@ Use `/browser` to choose how the agent should run the browser:
 
 Common choices are your local Chrome, a headless browser, or Browser Use Cloud.
 
+Browser Use Cloud is the easiest option to get started: it gives you a free, one-click browser setup without managing a local Chrome profile.
+
 Use `/profile` to choose the default Chrome profile:
 
 ```text
@@ -265,6 +306,8 @@ agent = Agent(
 ```
 
 Browser Use Cloud:
+
+Browser Use Cloud is the simplest remote browser option for Python too. Set `BROWSER_USE_API_KEY`, pass `use_cloud=True`, and the terminal runtime handles the cloud browser session.
 
 ```python
 from browser_use.beta import Agent, BrowserSession, ChatOpenAI
@@ -491,6 +534,42 @@ Use a specific terminal binary:
 
 ```bash
 export BROWSER_USE_TERMINAL_BINARY=/path/to/browser-use-terminal
+```
+
+## Troubleshooting Setup
+
+### `browser` Or `browser-use-terminal` Not Found
+
+Restart your terminal, then check whether the install location is on your `PATH`:
+
+```bash
+which browser
+which browser-use-terminal
+echo "$PATH"
+```
+
+If the commands are still missing, rerun the installer and copy any `PATH` instructions it prints:
+
+```bash
+curl -fsSL https://browser-use.com/terminal/install.sh | sh
+```
+
+### Which Command Should I Use?
+
+| Goal | Command |
+| --- | --- |
+| Open the interactive Terminal app | `browser` |
+| Run a one-shot Terminal agent task | `browser-use-terminal run-openai "..."` |
+| Use Terminal runtime from Python | `browser_use.beta.Agent` |
+| Directly control a browser with low-level commands | `browser-use open https://example.com` |
+
+### Python Cannot Find `browser_use.beta`
+
+Install or upgrade the Python package in the same environment you are running:
+
+```bash
+uv pip install --upgrade browser-use
+python -c "from browser_use.beta import Agent; print('ok')"
 ```
 
 ## Forwarded Python Settings
