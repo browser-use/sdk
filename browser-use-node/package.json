@@ -2,6 +2,14 @@
   "name": "browser-use-sdk",
   "version": "3.8.2",
   "description": "Official TypeScript SDK for the Browser Use API",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/browser-use/sdk.git"
+  },
+  "homepage": "https://github.com/browser-use/sdk",
+  "bugs": {
+    "url": "https://github.com/browser-use/sdk/issues"
+  },
   "author": "Browser Use",
   "license": "MIT",
   "type": "module",
