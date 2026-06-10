@@ -131,19 +131,25 @@ jobs:
 
           echo "::notice::Both registries confirm ${VERSION} is unpublished. Proceeding."
 
-  approval:
-    name: Release approval gate
-    needs: preflight
-    runs-on: ubuntu-latest
+  publish-py:
+    name: Publish Python SDK to PyPI
+    needs: [preflight]
     environment: release
+    runs-on: ubuntu-latest
     permissions:
-      actions: read
+      id-token: write   # required for PyPI trusted publishing OIDC
+      contents: read
+      actions: read     # required for /actions/runs/{id}/approvals lookup
     steps:
-      - name: Record approver from deployment review log
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+
+      - name: Record approver
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
-          TARGET_VERSION: ${{ needs.preflight.outputs.version }}
+          TARGET_TAG: ${{ inputs.tag || github.event.release.tag_name }}
         run: |
           set -euo pipefail
           APPROVER="$(gh api \
@@ -153,25 +159,7 @@ jobs:
           if [ -z "$APPROVER" ] || [ "$APPROVER" = "null" ]; then
             APPROVER="(approver lookup failed; check Actions UI)"
           fi
-          echo "::notice::Release approved by @${APPROVER} for release ${RELEASE_TAG} (v${TARGET_VERSION}). Triggered by @${GITHUB_ACTOR}. Run ${GITHUB_RUN_ID}."
-          echo "Approver:     @${APPROVER}"
-          echo "Triggered by: @${GITHUB_ACTOR}"
-          echo "Release tag:  ${RELEASE_TAG}"
-          echo "Version:      ${TARGET_VERSION}"
-
-  publish-py:
-    name: Publish Python SDK to PyPI
-    needs: [preflight, approval]
-    environment: release
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write   # required for PyPI trusted publishing OIDC
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.tag || github.event.release.tag_name }}
+          echo "::notice::Release ${TARGET_TAG} approved by @${APPROVER}, triggered by @${GITHUB_ACTOR}, run ${GITHUB_RUN_ID}."
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -191,17 +179,33 @@ jobs:
 
   publish-ts:
     name: Publish TypeScript SDK to npm
-    needs: [preflight, approval]
+    needs: [preflight]
     environment: release
     runs-on: ubuntu-latest
     permissions:
       id-token: write   # required for npm OIDC trusted publishing
       contents: read
+      actions: read     # required for /actions/runs/{id}/approvals lookup
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag || github.event.release.tag_name }}
+
+      - name: Record approver
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          APPROVER="$(gh api \
+            "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/approvals" \
+            --jq '[.[] | select(.environments[]?.name=="release") | .user.login] | last' \
+            2>/dev/null || echo "")"
+          if [ -z "$APPROVER" ] || [ "$APPROVER" = "null" ]; then
+            APPROVER="(approver lookup failed; check Actions UI)"
+          fi
+          echo "::notice::Release ${TARGET_TAG} approved by @${APPROVER}, triggered by @${GITHUB_ACTOR}, run ${GITHUB_RUN_ID}."
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -222,6 +226,30 @@ jobs:
       - name: Build TypeScript SDK
         working-directory: browser-use-node
         run: pnpm build
+
+      - name: Diagnose OIDC token claims
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ env.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+          ACTIONS_ID_TOKEN_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}
+        run: |
+          set -euo pipefail
+          # Fetch an OIDC token with audience=npm:registry.npmjs.org (matches what npm uses).
+          TOKEN_JSON="$(curl -fsSL \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm:registry.npmjs.org")"
+          TOKEN="$(echo "$TOKEN_JSON" | python3 -c 'import sys,json; print(json.load(sys.stdin)["value"])')"
+          # Decode the payload (middle segment) — strip any URL-safe padding issues.
+          PAYLOAD="$(echo "$TOKEN" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null || echo "$TOKEN" | cut -d. -f2 | python3 -c 'import sys,base64,json; s=sys.stdin.read().strip(); s+="="*(-len(s)%4); print(base64.urlsafe_b64decode(s).decode())')"
+          echo "::group::OIDC token claims (audience=npm:registry.npmjs.org)"
+          echo "$PAYLOAD" | python3 -m json.tool 2>/dev/null || echo "$PAYLOAD"
+          echo "::endgroup::"
+          # Highlight the fields npm checks against the trusted-publisher config.
+          echo "Key fields:"
+          echo "  sub:               $(echo "$PAYLOAD" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("sub"))')"
+          echo "  repository:        $(echo "$PAYLOAD" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("repository"))')"
+          echo "  job_workflow_ref:  $(echo "$PAYLOAD" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("job_workflow_ref"))')"
+          echo "  environment:       $(echo "$PAYLOAD" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("environment"))')"
+          echo "  ref:               $(echo "$PAYLOAD" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("ref"))')"
 
       - name: Publish to npm (OIDC trusted publishing)
         working-directory: browser-use-node
