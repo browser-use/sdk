@@ -1,0 +1,195 @@
+name: publish
+
+# Cancel in-progress runs when a new commit is pushed to the same branch/PR.
+# Release runs are serialized via the concurrency group below so two simultaneous
+# release publishes can't race on registry uploads.
+concurrency:
+  group: publish-${{ github.event.release.tag_name || github.run_id }}
+  cancel-in-progress: false
+
+on:
+  release:
+    types: [published]
+
+# Default permissions: read-only. Individual jobs override what they need.
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Preflight (verify env protection, version sanity)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Verify release environment is protected (fail-closed)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ENV_NAME="release"
+          if ! RESP="$(gh api -H 'Accept: application/vnd.github+json' \
+              "/repos/${GITHUB_REPOSITORY}/environments/${ENV_NAME}" 2>/dev/null)"; then
+            echo "::error::Environment '${ENV_NAME}' does not exist (or is inaccessible). Create it at https://github.com/${GITHUB_REPOSITORY}/settings/environments/new with required reviewers and prevent_self_review, then re-run."
+            exit 1
+          fi
+          HAS_REVIEWERS="$(echo "$RESP" | jq -r '[.protection_rules[]? | select(.type == "required_reviewers")] | length')"
+          if [ "${HAS_REVIEWERS:-0}" -lt 1 ]; then
+            echo "::error::Environment '${ENV_NAME}' exists but has no required-reviewers protection rule."
+            exit 1
+          fi
+          SELF_REVIEW_BLOCKED="$(echo "$RESP" | jq -r '[.protection_rules[]? | select(.type=="required_reviewers") | .prevent_self_review] | any')"
+          if [ "$SELF_REVIEW_BLOCKED" != "true" ]; then
+            echo "::error::Environment '${ENV_NAME}' must have prevent_self_review enabled. Without it, the gate collapses to one identity when the dispatcher is also a reviewer."
+            exit 1
+          fi
+          echo "::notice::Environment '${ENV_NAME}' is protected with prevent_self_review. OK."
+
+      - name: Extract release tag and verify version coherence
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          # Strip optional leading 'v'.
+          VERSION="${RELEASE_TAG#v}"
+          echo "Release tag: $RELEASE_TAG -> version: $VERSION"
+
+          # Verify TS package.json version matches.
+          TS_VERSION="$(node -p "require('./browser-use-node/package.json').version")"
+          # Verify Python pyproject.toml version matches.
+          PY_VERSION="$(grep -E '^version = ' browser-use-python/pyproject.toml | head -1 | sed -E 's/version = "(.*)"/\1/')"
+
+          echo "  TS package.json:       $TS_VERSION"
+          echo "  Python pyproject.toml: $PY_VERSION"
+
+          if [ "$TS_VERSION" != "$VERSION" ]; then
+            echo "::error::Release tag version ($VERSION) does not match browser-use-node/package.json ($TS_VERSION). Run 'task version:bump' and commit before tagging."
+            exit 1
+          fi
+          if [ "$PY_VERSION" != "$VERSION" ]; then
+            echo "::error::Release tag version ($VERSION) does not match browser-use-python/pyproject.toml ($PY_VERSION). Run 'task version:bump' and commit before tagging."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verify version not already published (npm + PyPI)
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # npm: HTTP 200 means it exists.
+          if npm view "browser-use-sdk@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::browser-use-sdk@$VERSION is already published to npm. Bump the version before creating a new release."
+            exit 1
+          fi
+          # PyPI: 200 means it exists.
+          if curl -sf "https://pypi.org/pypi/browser-use-sdk/$VERSION/json" >/dev/null 2>&1; then
+            echo "::error::browser-use-sdk==$VERSION is already published to PyPI. Bump the version before creating a new release."
+            exit 1
+          fi
+          echo "::notice::Version $VERSION is not yet published to either registry. OK."
+
+  approval:
+    name: Release approval gate
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      actions: read
+    steps:
+      - name: Record approver from deployment review log
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          TARGET_VERSION: ${{ needs.preflight.outputs.version }}
+        run: |
+          set -euo pipefail
+          APPROVER="$(gh api \
+            "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/approvals" \
+            --jq '[.[] | select(.environments[]?.name=="release") | .user.login] | last' \
+            2>/dev/null || echo "")"
+          if [ -z "$APPROVER" ] || [ "$APPROVER" = "null" ]; then
+            APPROVER="(approver lookup failed; check Actions UI)"
+          fi
+          echo "::notice::Release approved by @${APPROVER} for release ${RELEASE_TAG} (v${TARGET_VERSION}). Triggered by @${GITHUB_ACTOR}. Run ${GITHUB_RUN_ID}."
+          echo "Approver:     @${APPROVER}"
+          echo "Triggered by: @${GITHUB_ACTOR}"
+          echo "Release tag:  ${RELEASE_TAG}"
+          echo "Version:      ${TARGET_VERSION}"
+
+  publish-py:
+    name: Publish Python SDK to PyPI
+    needs: [preflight, approval]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # required for PyPI trusted publishing OIDC
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: false  # no cache on release builds
+
+      - name: Build Python package
+        working-directory: browser-use-python
+        run: |
+          set -euo pipefail
+          rm -rf dist/
+          uv build
+
+      - name: Publish to PyPI (trusted publishing)
+        working-directory: browser-use-python
+        run: uv publish --trusted-publishing always
+
+  publish-ts:
+    name: Publish TypeScript SDK to npm
+    needs: [preflight, approval]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: pnpm
+          cache-dependency-path: browser-use-node/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: browser-use-node
+        run: pnpm install --frozen-lockfile
+
+      - name: Build TypeScript SDK
+        working-directory: browser-use-node
+        run: pnpm build
+
+      - name: Publish to npm
+        working-directory: browser-use-node
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public

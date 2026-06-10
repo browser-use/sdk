@@ -181,26 +181,50 @@ tasks:
       - task: version
 
   # ── Publish ───────────────────────────────────────────────────
+  # Releases now ship through GitHub Releases + gated CI (.github/workflows/publish.yml).
+  # The tasks below are intentionally non-functional. The old commands are kept
+  # commented inline so a maintainer can emergency-unblock by editing this file
+  # (intentional friction: editing Taskfile is the only path).
   publish:ts:
-    desc: Publish TypeScript SDK to npm
+    desc: "[DEPRECATED] Use GitHub Releases. See RUNBOOK.md."
     dir: '{{.TS_SDK}}'
-    deps: [build:ts]
     cmds:
-      - npm publish --access public
+      - |
+        echo "ERROR: 'task publish:ts' is deprecated."
+        echo "Releases now ship through GitHub Releases + gated CI."
+        echo "See RUNBOOK.md > 'Release authentication' for the new flow."
+        echo
+        echo "Emergency unblock (logged): uncomment the line below in Taskfile.yml"
+        echo "  # npm publish --access public"
+        exit 1
 
   publish:py:
-    desc: Publish Python SDK to PyPI
+    desc: "[DEPRECATED] Use GitHub Releases. See RUNBOOK.md."
     dir: '{{.PY_SDK}}'
     cmds:
-      - rm -rf dist/
-      - task: build:py
-      - uv publish --token {{.PYPI_TOKEN}}
+      - |
+        echo "ERROR: 'task publish:py' is deprecated."
+        echo "Releases now ship through GitHub Releases + gated CI."
+        echo "See RUNBOOK.md > 'Release authentication' for the new flow."
+        echo
+        echo "Emergency unblock (logged): uncomment the lines below in Taskfile.yml"
+        echo "  # rm -rf dist/"
+        echo "  # task: build:py"
+        echo "  # uv publish --token {{.PYPI_TOKEN}}"
+        exit 1
 
   publish:
-    desc: Publish both SDKs
+    desc: "[DEPRECATED] Use GitHub Releases. See RUNBOOK.md."
     cmds:
-      - task: publish:ts
-      - task: publish:py
+      - |
+        echo "ERROR: 'task publish' is deprecated."
+        echo "Releases now ship through GitHub Releases + gated CI."
+        echo "See RUNBOOK.md > 'Release authentication' for the new flow."
+        echo
+        echo "Emergency unblock (logged): uncomment the lines below in Taskfile.yml"
+        echo "  # task: publish:ts"
+        echo "  # task: publish:py"
+        exit 1
 
   # ── Snapshots ─────────────────────────────────────────────────
   snapshot:save:

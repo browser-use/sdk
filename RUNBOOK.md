@@ -2,6 +2,12 @@
 
 Decision guide for the `/sdk` pipeline. Read this, then go.
 
+## Release authentication
+
+- **PyPI**: trusted publishing via OIDC. No secret. Configured once at https://pypi.org/manage/project/browser-use-sdk/settings/publishing/ (workflow: `publish.yml`, environment: `release`, repo: browser-use/sdk).
+- **npm**: automation token in repo secret `NPM_TOKEN`. Rotate quarterly or on suspected compromise.
+- The `release` environment requires approval from a reviewer other than the release author (`prevent_self_review: true`).
+
 ## Phase 0: Discover
 
 Diff the fresh OpenAPI specs (`$CLOUD_REPO_PATH/backend/spec/api/v{2,3}/openapi.json`) against the snapshots (`snapshots/v{2,3}.json`). Classify each change:
@@ -39,7 +45,16 @@ Follow existing patterns in the codebase. Read before writing.
 1. Run `task test`. Fix failures (max 3 attempts, then escalate).
 2. Optionally run `task test:live` if backend is reachable.
 3. Confirm version bump with user → bump both packages → save snapshots → commit.
-4. Do NOT publish. Tell user to run `task publish`.
+4. **Release via GitHub Releases (NOT `task publish` — that bypasses the gate).**
+   - Go to https://github.com/browser-use/sdk/releases/new
+   - Tag = `v$NEW_VERSION` (matches both package.json and pyproject.toml)
+   - Release title = `v$NEW_VERSION`
+   - Auto-generate release notes
+   - Click **Publish release**
+   - The `publish.yml` workflow fires. Preflight verifies the env protection and version match, then pauses at the `release` environment for approval.
+   - Ping a release reviewer (gregpr07 or LarsenCundric, whoever is NOT you) to approve in the Actions tab.
+   - Once approved: npm + PyPI publish in parallel. ~3-5 minutes.
+   - If publish fails: the GitHub Release still exists (rollback handle). Investigate, fix, re-cut a new patch version.
 
 ---
 
