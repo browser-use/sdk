@@ -4,12 +4,18 @@ name: publish
 # Release runs are serialized via the concurrency group below so two simultaneous
 # release publishes can't race on registry uploads.
 concurrency:
-  group: publish-${{ github.event.release.tag_name || github.run_id }}
+  group: publish-${{ inputs.tag || github.event.release.tag_name || github.run_id }}
   cancel-in-progress: false
 
 on:
   release:
     types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Release tag to publish (e.g. v3.8.3)'
+        required: true
+        type: string
 
 # Default permissions: read-only. Individual jobs override what they need.
 permissions:
@@ -27,7 +33,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
           fetch-depth: 0
 
       - name: Verify release environment is protected (fail-closed)
@@ -56,7 +62,7 @@ jobs:
       - name: Extract release tag and verify version coherence
         id: version
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
         run: |
           set -euo pipefail
           # Strip optional leading 'v'.
@@ -136,7 +142,7 @@ jobs:
       - name: Record approver from deployment review log
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
           TARGET_VERSION: ${{ needs.preflight.outputs.version }}
         run: |
           set -euo pipefail
@@ -164,7 +170,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -193,7 +199,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

@@ -32,6 +32,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write   # required to create the Release/tag
+    outputs:
+      should_release: ${{ steps.detect.outputs.should_release }}
+      version: ${{ steps.detect.outputs.version }}
+      tag: v${{ steps.detect.outputs.version }}
 
     steps:
       - name: Checkout (full history for range-aware diff)
@@ -225,3 +229,15 @@ jobs:
             exit 0
           fi
           echo "Created Release v${VERSION}. publish.yml takes over from here."
+
+  publish:
+    name: Publish (via release env approval gate)
+    needs: detect-and-release
+    if: needs.detect-and-release.outputs.should_release == 'true'
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag: ${{ needs.detect-and-release.outputs.tag }}
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write   # required for OIDC publishing (cascades to the called workflow)
