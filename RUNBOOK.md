@@ -2,6 +2,16 @@
 
 Decision guide for the `/sdk` pipeline. Read this, then go.
 
+## Release authentication
+
+Both registries use OIDC trusted publishing. **No static tokens, no secrets to rotate.**
+
+- **PyPI**: trusted publishing configured at https://pypi.org/manage/project/browser-use-sdk/settings/publishing/ (Owner: browser-use, Repository: sdk, Workflow: publish.yml, Environment: release).
+- **npm**: trusted publishing configured at https://www.npmjs.com/package/browser-use-sdk/access (same four fields, Allowed action: npm publish).
+- The `release` environment requires approval from a reviewer other than the release author (`prevent_self_review: true`). Reviewers: gregpr07, LarsenCundric.
+
+If a trusted publisher binding is ever revoked or misconfigured, publishing will fail at the publish step with a clear OIDC error from the registry. The release tag stays cut (you can re-dispatch after re-binding).
+
 ## Phase 0: Discover
 
 Diff the fresh OpenAPI specs (`$CLOUD_REPO_PATH/backend/spec/api/v{2,3}/openapi.json`) against the snapshots (`snapshots/v{2,3}.json`). Classify each change:
@@ -39,7 +49,16 @@ Follow existing patterns in the codebase. Read before writing.
 1. Run `task test`. Fix failures (max 3 attempts, then escalate).
 2. Optionally run `task test:live` if backend is reachable.
 3. Confirm version bump with user → bump both packages → save snapshots → commit.
-4. Do NOT publish. Tell user to run `task publish`.
+4. **Release via GitHub Releases (NOT `task publish` — that bypasses the gate).**
+   - Go to https://github.com/browser-use/sdk/releases/new
+   - Tag = `v$NEW_VERSION` (matches both package.json and pyproject.toml)
+   - Release title = `v$NEW_VERSION`
+   - Auto-generate release notes
+   - Click **Publish release**
+   - The `publish.yml` workflow fires. Preflight verifies the env protection and version match, then pauses at the `release` environment for approval.
+   - Ping a release reviewer (gregpr07 or LarsenCundric, whoever is NOT you) to approve in the Actions tab.
+   - Once approved: npm + PyPI publish in parallel. ~3-5 minutes.
+   - If publish fails: the GitHub Release still exists (rollback handle). Investigate, fix, re-cut a new patch version.
 
 ---
 
