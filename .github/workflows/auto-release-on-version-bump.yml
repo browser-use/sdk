@@ -1,0 +1,227 @@
+name: auto-release-on-version-bump
+
+# Watches main for version bumps in BOTH SDK manifests. If both moved to a new
+# shared version and no Release for that version exists yet, creates a GitHub
+# Release at the bump commit. That Release event triggers publish.yml, which
+# runs preflight + the release env approval gate before actually publishing.
+#
+# Rerunning this workflow on the same commit is a no-op: if the Release or tag
+# already exists, we detect it and exit cleanly. Never fail loud just because
+# a previous run partially succeeded.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'browser-use-node/package.json'
+      - 'browser-use-python/pyproject.toml'
+
+permissions:
+  contents: read
+
+concurrency:
+  # Serialize bump-detection per branch so two simultaneous merges can't race
+  # to create duplicate Releases. cancel-in-progress is false so a long-running
+  # detector isn't killed by a follow-up push.
+  group: auto-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  detect-and-release:
+    name: Detect version bump and create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to create the Release/tag
+
+    steps:
+      - name: Checkout (full history for range-aware diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve push range
+        id: range
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          # github.event.before is the SHA at HEAD before this push.
+          # For a first push to a new branch it's "0000000000000000000000000000000000000000"
+          # (the all-zero ref); fall back to HEAD~1 in that edge case so the
+          # detector still works. On main with branch protection in place,
+          # before should always be a real commit.
+          ZERO="0000000000000000000000000000000000000000"
+          if [ -n "${BEFORE:-}" ] && [ "$BEFORE" != "$ZERO" ]; then
+            BASE="$BEFORE"
+            SOURCE="github.event.before"
+          else
+            BASE="HEAD~1"
+            SOURCE="HEAD~1 (fallback; github.event.before was empty or zero-sha)"
+          fi
+          # Resolve to a real SHA for downstream use; HEAD~1 isn't a SHA literal.
+          BASE_SHA="$(git rev-parse "$BASE")"
+          echo "Using base: ${BASE_SHA} (from ${SOURCE})"
+          echo "::notice::Comparing ${BASE_SHA}..HEAD (source: ${SOURCE})"
+          echo "base_sha=${BASE_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Detect version bump
+        id: detect
+        env:
+          BASE_SHA: ${{ steps.range.outputs.base_sha }}
+        run: |
+          set -euo pipefail
+
+          # Fast path: if neither manifest changed across the push range, skip.
+          # This catches every non-release push (most pushes) before any parsing.
+          CHANGED=$(git diff --name-only "${BASE_SHA}..HEAD" -- \
+            'browser-use-node/package.json' \
+            'browser-use-python/pyproject.toml' \
+            || true)
+          if [ -z "${CHANGED}" ]; then
+            echo "::notice::Neither manifest changed across ${BASE_SHA}..HEAD. Skipping."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Manifest paths touched in this push:"
+          echo "${CHANGED}"
+
+          # Read previous (at BASE_SHA) and current versions from both manifests.
+          # If a manifest didn't exist at BASE_SHA (brand-new file), the
+          # default "missing" lets the partial-bump branch catch it.
+          PREV_TS=$(git show "${BASE_SHA}:browser-use-node/package.json" 2>/dev/null | jq -r .version || echo "missing")
+          NEW_TS=$(jq -r .version browser-use-node/package.json)
+          PREV_PY=$(git show "${BASE_SHA}:browser-use-python/pyproject.toml" 2>/dev/null | grep -E '^version = ' | head -1 | sed -E 's/version = "(.*)"/\1/' || echo "missing")
+          NEW_PY=$(grep -E '^version = ' browser-use-python/pyproject.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
+
+          echo "TS:  $PREV_TS -> $NEW_TS"
+          echo "PY:  $PREV_PY -> $NEW_PY"
+
+          # Both manifests must report the same new version.
+          if [ "$NEW_TS" != "$NEW_PY" ]; then
+            echo "::error::TS package.json ($NEW_TS) and Python pyproject.toml ($NEW_PY) disagree. Run 'task version:bump' to sync both."
+            exit 1
+          fi
+
+          # If the version didn't change across the range, this wasn't a bump.
+          if [ "$NEW_TS" = "$PREV_TS" ] && [ "$NEW_PY" = "$PREV_PY" ]; then
+            echo "::notice::No version bump detected ($NEW_TS unchanged across ${BASE_SHA}..HEAD). Skipping."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Partial bump: one manifest moved, the other didn't. Bail loud.
+          if [ "$NEW_TS" != "$PREV_TS" ] && [ "$NEW_PY" = "$PREV_PY" ]; then
+            echo "::error::TS bumped ($PREV_TS -> $NEW_TS) but Python didn't ($PREV_PY). Run 'task version:bump' to keep them in sync."
+            exit 1
+          fi
+          if [ "$NEW_TS" = "$PREV_TS" ] && [ "$NEW_PY" != "$PREV_PY" ]; then
+            echo "::error::Python bumped ($PREV_PY -> $NEW_PY) but TS didn't ($PREV_TS). Run 'task version:bump' to keep them in sync."
+            exit 1
+          fi
+
+          echo "::notice::Version bump detected: $PREV_TS -> $NEW_TS"
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+          echo "version=$NEW_TS" >> "$GITHUB_OUTPUT"
+
+      - name: Check if Release already exists for this version
+        id: existence
+        if: steps.detect.outputs.should_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.detect.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Existence check is best-effort. We re-check at create time, so a
+          # race here is non-fatal.
+          if gh release view "v${VERSION}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "::notice::Release v${VERSION} already exists. Will skip creation."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check if tag already exists (separate from Release)
+        id: tag_existence
+        if: steps.detect.outputs.should_release == 'true' && steps.existence.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.detect.outputs.version }}
+        run: |
+          set -euo pipefail
+          # A tag may exist without a Release if someone pushed it manually
+          # (e.g., `git tag v3.8.2 && git push --tags`). gh release create
+          # against an existing tag attaches the Release to that tag rather
+          # than failing, so this is informational.
+          if gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/v${VERSION}" >/dev/null 2>&1; then
+            echo "::notice::Tag v${VERSION} already exists (no Release attached). Will create Release against existing tag."
+            echo "tag_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release (idempotent)
+        if: steps.detect.outputs.should_release == 'true' && steps.existence.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.detect.outputs.version }}
+          TAG_EXISTS: ${{ steps.tag_existence.outputs.tag_exists }}
+        run: |
+          set -euo pipefail
+
+          # If the tag already exists, --target is rejected ("can not be
+          # provided when tag already exists"). Use --target only on a fresh
+          # tag; attach to an existing tag without it.
+          if [ "${TAG_EXISTS}" = "true" ]; then
+            TARGET_ARG=""
+          else
+            TARGET_ARG="--target ${GITHUB_SHA}"
+          fi
+
+          # Idempotent create: tolerate "release already exists" / "tag already
+          # exists" errors that can happen if a concurrent run or manual action
+          # created the Release between our existence check and this step.
+          set +e
+          OUT="$(gh release create "v${VERSION}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "v${VERSION}" \
+              --generate-notes \
+              ${TARGET_ARG} 2>&1)"
+          STATUS=$?
+          set -e
+
+          if [ "${STATUS}" -eq 0 ]; then
+            echo "::notice::Created Release v${VERSION} at ${GITHUB_SHA}. publish.yml will fire on the 'release: published' event."
+            exit 0
+          fi
+
+          # Recognize the benign "already exists" outcomes and treat them as
+          # success. Anything else: bail loud with the original error.
+          if echo "${OUT}" | grep -qiE "release.*already.*exists|already_exists|HTTP 422.*Validation Failed"; then
+            # Re-confirm via the API rather than trusting the error string.
+            if gh release view "v${VERSION}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+              echo "::notice::Release v${VERSION} already exists (created concurrently or by a previous partial run). Treating as success."
+              exit 0
+            fi
+          fi
+
+          # Unrecognized failure mode. Surface the gh CLI output and fail.
+          echo "::error::gh release create failed for v${VERSION}:"
+          echo "${OUT}"
+          exit ${STATUS}
+
+      - name: Summarize
+        if: always()
+        env:
+          VERSION: ${{ steps.detect.outputs.version }}
+          SHOULD_RELEASE: ${{ steps.detect.outputs.should_release }}
+          ALREADY_EXISTS: ${{ steps.existence.outputs.exists }}
+        run: |
+          if [ "${SHOULD_RELEASE}" != "true" ]; then
+            echo "No version bump → nothing to do."
+            exit 0
+          fi
+          if [ "${ALREADY_EXISTS}" = "true" ]; then
+            echo "Release v${VERSION} already existed before this run → no-op."
+            exit 0
+          fi
+          echo "Created Release v${VERSION}. publish.yml takes over from here."
