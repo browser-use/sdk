@@ -220,6 +220,8 @@ tasks:
         vars: { CLI_ARGS: '{{.CLI_ARGS | default "patch"}}' }
       - cmd: |
           set -euo pipefail
+          BUMP="{{.CLI_ARGS}}"
+          if [ -z "$BUMP" ]; then BUMP="patch"; fi
           NEW_VERSION="$(node -p "require('./{{.TS_SDK}}/package.json').version")"
           echo
           echo "Releasing v${NEW_VERSION}."
