@@ -4,7 +4,18 @@ Decision guide for the `/sdk` pipeline. Read this, then go.
 
 ## Releasing
 
-1. **Bump versions.** Run `task version:bump -- patch` (or `minor` / `major`). Updates both `browser-use-node/package.json` and `browser-use-python/pyproject.toml` to the same new version.
+1. **From a fresh branch off main, run `task release -- patch`** (or `minor` / `major`). This bumps both `browser-use-node/package.json` and `browser-use-python/pyproject.toml` to the next version, commits as `release: v$NEW_VERSION`, pushes the branch, and opens a PR.
+
+   Manual alternative (if you don't want the helper):
+
+   ```bash
+   git checkout -b release/$(date +%Y%m%d) main
+   task version:bump -- patch
+   git add browser-use-node/package.json browser-use-python/pyproject.toml README.md
+   git commit -m "release: v$NEW_VERSION"
+   git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
+   gh pr create --base main --title "release: v$NEW_VERSION" --body "Release v$NEW_VERSION"
+   ```
 2. **Commit + PR + merge to main.**
 
 That's it. The `auto-release-on-version-bump` workflow detects the bump on main and creates a GitHub Release at the bump commit (tag `v$NEW_VERSION`). The Release event fires `publish.yml`, which runs preflight (env protection + version coherence + already-published guard), pauses at the `release` environment approval gate, and on approval publishes to both npm and PyPI via OIDC.
