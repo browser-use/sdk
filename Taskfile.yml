@@ -210,7 +210,7 @@ tasks:
         echo "Emergency unblock (logged): uncomment the lines below in Taskfile.yml"
         echo "  # rm -rf dist/"
         echo "  # task: build:py"
-        echo "  # uv publish --token {{.PYPI_TOKEN}}"
+        echo "  # uv publish --token <PYPI_TOKEN>"
         exit 1
 
   publish:

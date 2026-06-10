@@ -86,17 +86,44 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          # npm: HTTP 200 means it exists.
-          if npm view "browser-use-sdk@$VERSION" version >/dev/null 2>&1; then
-            echo "::error::browser-use-sdk@$VERSION is already published to npm. Bump the version before creating a new release."
-            exit 1
-          fi
-          # PyPI: 200 means it exists.
-          if curl -sf "https://pypi.org/pypi/browser-use-sdk/$VERSION/json" >/dev/null 2>&1; then
-            echo "::error::browser-use-sdk==$VERSION is already published to PyPI. Bump the version before creating a new release."
-            exit 1
-          fi
-          echo "::notice::Version $VERSION is not yet published to either registry. OK."
+
+          # === npm ===
+          # Use HTTP HEAD against the version-specific tarball URL for an unambiguous result.
+          # 200 = exists, 404 = doesn't exist, anything else = lookup failed (fail closed).
+          NPM_URL="https://registry.npmjs.org/browser-use-sdk/${VERSION}"
+          NPM_STATUS="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 --retry 3 --retry-delay 2 "$NPM_URL" || echo "000")"
+          case "$NPM_STATUS" in
+            200)
+              echo "::error::browser-use-sdk@${VERSION} is already published to npm. Bump the version before creating a new release."
+              exit 1
+              ;;
+            404)
+              echo "::notice::npm: ${VERSION} not yet published. OK."
+              ;;
+            *)
+              echo "::error::npm lookup for browser-use-sdk@${VERSION} returned unexpected HTTP ${NPM_STATUS} (expected 200 or 404). Failing closed; retry the release once npm is healthy."
+              exit 1
+              ;;
+          esac
+
+          # === PyPI ===
+          PYPI_URL="https://pypi.org/pypi/browser-use-sdk/${VERSION}/json"
+          PYPI_STATUS="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 --retry 3 --retry-delay 2 "$PYPI_URL" || echo "000")"
+          case "$PYPI_STATUS" in
+            200)
+              echo "::error::browser-use-sdk==${VERSION} is already published to PyPI. Bump the version before creating a new release."
+              exit 1
+              ;;
+            404)
+              echo "::notice::PyPI: ${VERSION} not yet published. OK."
+              ;;
+            *)
+              echo "::error::PyPI lookup for browser-use-sdk==${VERSION} returned unexpected HTTP ${PYPI_STATUS} (expected 200 or 404). Failing closed; retry the release once PyPI is healthy."
+              exit 1
+              ;;
+          esac
+
+          echo "::notice::Both registries confirm ${VERSION} is unpublished. Proceeding."
 
   approval:
     name: Release approval gate
