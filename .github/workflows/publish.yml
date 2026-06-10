@@ -160,6 +160,7 @@ jobs:
     needs: [preflight, approval]
     runs-on: ubuntu-latest
     permissions:
+      id-token: write   # required for npm OIDC trusted publishing
       contents: read
     steps:
       - name: Checkout
@@ -175,8 +176,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: '22'
           cache: pnpm
           cache-dependency-path: browser-use-node/pnpm-lock.yaml
 
@@ -188,8 +188,9 @@ jobs:
         working-directory: browser-use-node
         run: pnpm build
 
-      - name: Publish to npm
+      - name: Upgrade npm to OIDC-capable version
+        run: npm install -g npm@latest
+
+      - name: Publish to npm (OIDC trusted publishing)
         working-directory: browser-use-node
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public

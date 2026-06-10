@@ -4,9 +4,13 @@ Decision guide for the `/sdk` pipeline. Read this, then go.
 
 ## Release authentication
 
-- **PyPI**: trusted publishing via OIDC. No secret. Configured once at https://pypi.org/manage/project/browser-use-sdk/settings/publishing/ (workflow: `publish.yml`, environment: `release`, repo: browser-use/sdk).
-- **npm**: automation token in repo secret `NPM_TOKEN`. Rotate quarterly or on suspected compromise.
-- The `release` environment requires approval from a reviewer other than the release author (`prevent_self_review: true`).
+Both registries use OIDC trusted publishing. **No static tokens, no secrets to rotate.**
+
+- **PyPI**: trusted publishing configured at https://pypi.org/manage/project/browser-use-sdk/settings/publishing/ (Owner: browser-use, Repository: sdk, Workflow: publish.yml, Environment: release).
+- **npm**: trusted publishing configured at https://www.npmjs.com/package/browser-use-sdk/access (same four fields, Allowed action: npm publish).
+- The `release` environment requires approval from a reviewer other than the release author (`prevent_self_review: true`). Reviewers: gregpr07, LarsenCundric.
+
+If a trusted publisher binding is ever revoked or misconfigured, publishing will fail at the publish step with a clear OIDC error from the registry. The release tag stays cut (you can re-dispatch after re-binding).
 
 ## Phase 0: Discover
 
