@@ -2,6 +2,19 @@
 
 Decision guide for the `/sdk` pipeline. Read this, then go.
 
+## Releasing
+
+1. **Bump versions.** Run `task version:bump -- patch` (or `minor` / `major`). Updates both `browser-use-node/package.json` and `browser-use-python/pyproject.toml` to the same new version.
+2. **Commit + PR + merge to main.**
+
+That's it. The `auto-release-on-version-bump` workflow detects the bump on main and creates a GitHub Release at the bump commit (tag `v$NEW_VERSION`). The Release event fires `publish.yml`, which runs preflight (env protection + version coherence + already-published guard), pauses at the `release` environment approval gate, and on approval publishes to both npm and PyPI via OIDC.
+
+If a publish fails after the Release is created: the Release stays (it's the rollback handle). Investigate, fix on a new patch version, repeat. Re-running the auto-release workflow on the same commit is a no-op, it detects the existing Release and exits cleanly.
+
+Manual `gh release create v$VERSION --generate-notes --repo browser-use/sdk` from the CLI also works as an escape hatch if you want to ship without the bump-PR cycle.
+
+`task publish` is intentionally broken, see "Release authentication" below for the rationale.
+
 ## Release authentication
 
 Both registries use OIDC trusted publishing. **No static tokens, no secrets to rotate.**
@@ -49,16 +62,7 @@ Follow existing patterns in the codebase. Read before writing.
 1. Run `task test`. Fix failures (max 3 attempts, then escalate).
 2. Optionally run `task test:live` if backend is reachable.
 3. Confirm version bump with user → bump both packages → save snapshots → commit.
-4. **Release via GitHub Releases (NOT `task publish` — that bypasses the gate).**
-   - Go to https://github.com/browser-use/sdk/releases/new
-   - Tag = `v$NEW_VERSION` (matches both package.json and pyproject.toml)
-   - Release title = `v$NEW_VERSION`
-   - Auto-generate release notes
-   - Click **Publish release**
-   - The `publish.yml` workflow fires. Preflight verifies the env protection and version match, then pauses at the `release` environment for approval.
-   - Ping a release reviewer (gregpr07 or LarsenCundric, whoever is NOT you) to approve in the Actions tab.
-   - Once approved: npm + PyPI publish in parallel. ~3-5 minutes.
-   - If publish fails: the GitHub Release still exists (rollback handle). Investigate, fix, re-cut a new patch version.
+4. **Merge the bump PR to main.** The `auto-release-on-version-bump` workflow creates the GitHub Release for `v$NEW_VERSION` at the bump commit, which fires `publish.yml`. See the "Releasing" section above for the full flow. Ping a release reviewer (gregpr07 or LarsenCundric, whoever is NOT you) to approve at the `release` environment gate in the Actions tab. On approval: npm + PyPI publish in parallel, ~3-5 minutes. If publish fails: the GitHub Release stays as the rollback handle; investigate, fix, re-cut a new patch version.
 
 ---
 
