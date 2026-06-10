@@ -34,20 +34,63 @@ jobs:
       contents: write   # required to create the Release/tag
 
     steps:
-      - name: Checkout (with previous commit for diff)
+      - name: Checkout (full history for range-aware diff)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
+
+      - name: Resolve push range
+        id: range
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          # github.event.before is the SHA at HEAD before this push.
+          # For a first push to a new branch it's "0000000000000000000000000000000000000000"
+          # (the all-zero ref); fall back to HEAD~1 in that edge case so the
+          # detector still works. On main with branch protection in place,
+          # before should always be a real commit.
+          ZERO="0000000000000000000000000000000000000000"
+          if [ -n "${BEFORE:-}" ] && [ "$BEFORE" != "$ZERO" ]; then
+            BASE="$BEFORE"
+            SOURCE="github.event.before"
+          else
+            BASE="HEAD~1"
+            SOURCE="HEAD~1 (fallback; github.event.before was empty or zero-sha)"
+          fi
+          # Resolve to a real SHA for downstream use; HEAD~1 isn't a SHA literal.
+          BASE_SHA="$(git rev-parse "$BASE")"
+          echo "Using base: ${BASE_SHA} (from ${SOURCE})"
+          echo "::notice::Comparing ${BASE_SHA}..HEAD (source: ${SOURCE})"
+          echo "base_sha=${BASE_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Detect version bump
         id: detect
+        env:
+          BASE_SHA: ${{ steps.range.outputs.base_sha }}
         run: |
           set -euo pipefail
 
-          # Read previous (HEAD~1) and current versions from both manifests.
-          PREV_TS=$(git show HEAD~1:browser-use-node/package.json 2>/dev/null | jq -r .version || echo "missing")
+          # Fast path: if neither manifest changed across the push range, skip.
+          # This catches every non-release push (most pushes) before any parsing.
+          CHANGED=$(git diff --name-only "${BASE_SHA}..HEAD" -- \
+            'browser-use-node/package.json' \
+            'browser-use-python/pyproject.toml' \
+            || true)
+          if [ -z "${CHANGED}" ]; then
+            echo "::notice::Neither manifest changed across ${BASE_SHA}..HEAD. Skipping."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Manifest paths touched in this push:"
+          echo "${CHANGED}"
+
+          # Read previous (at BASE_SHA) and current versions from both manifests.
+          # If a manifest didn't exist at BASE_SHA (brand-new file), the
+          # default "missing" lets the partial-bump branch catch it.
+          PREV_TS=$(git show "${BASE_SHA}:browser-use-node/package.json" 2>/dev/null | jq -r .version || echo "missing")
           NEW_TS=$(jq -r .version browser-use-node/package.json)
-          PREV_PY=$(git show HEAD~1:browser-use-python/pyproject.toml 2>/dev/null | grep -E '^version = ' | head -1 | sed -E 's/version = "(.*)"/\1/' || echo "missing")
+          PREV_PY=$(git show "${BASE_SHA}:browser-use-python/pyproject.toml" 2>/dev/null | grep -E '^version = ' | head -1 | sed -E 's/version = "(.*)"/\1/' || echo "missing")
           NEW_PY=$(grep -E '^version = ' browser-use-python/pyproject.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
 
           echo "TS:  $PREV_TS -> $NEW_TS"
@@ -59,9 +102,9 @@ jobs:
             exit 1
           fi
 
-          # If the version didn't change in this push, this push wasn't a bump.
+          # If the version didn't change across the range, this wasn't a bump.
           if [ "$NEW_TS" = "$PREV_TS" ] && [ "$NEW_PY" = "$PREV_PY" ]; then
-            echo "::notice::No version bump detected ($NEW_TS unchanged). Skipping."
+            echo "::notice::No version bump detected ($NEW_TS unchanged across ${BASE_SHA}..HEAD). Skipping."
             echo "should_release=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
