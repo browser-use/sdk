@@ -56,7 +56,7 @@ await browser.close();
 
 ### Selenium
 
-Selenium requires a local WebSocket proxy to connect to Browser Use's remote CDP endpoint. Use [selenium-wire](https://github.com/wkeeling/selenium-wire) or connect through Playwright's CDP bridge instead:
+Selenium does not support remote CDP over WebSocket directly. Connect through Playwright's CDP bridge instead:
 
 ```python
 from playwright.sync_api import sync_playwright
