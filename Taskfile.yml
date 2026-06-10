@@ -185,7 +185,8 @@ tasks:
     cmds:
       - cmd: |
           set -euo pipefail
-          BUMP="{{.CLI_ARGS | default \"patch\"}}"
+          BUMP="{{.CLI_ARGS}}"
+          if [ -z "$BUMP" ]; then BUMP="patch"; fi
           if [ "$BUMP" != "patch" ] && [ "$BUMP" != "minor" ] && [ "$BUMP" != "major" ]; then
             echo "ERROR: invalid bump '$BUMP'. Use patch, minor, or major." >&2
             exit 1
@@ -216,7 +217,7 @@ tasks:
             exit 1
           fi
       - task: "version:bump"
-        vars: { CLI_ARGS: "{{.CLI_ARGS | default \"patch\"}}" }
+        vars: { CLI_ARGS: '{{.CLI_ARGS | default "patch"}}' }
       - cmd: |
           set -euo pipefail
           NEW_VERSION="$(node -p "require('./{{.TS_SDK}}/package.json').version")"
