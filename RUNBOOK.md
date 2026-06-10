@@ -4,12 +4,13 @@ Decision guide for the `/sdk` pipeline. Read this, then go.
 
 ## Releasing
 
-1. **From a fresh branch off main, run `task release -- patch`** (or `minor` / `major`). This bumps both `browser-use-node/package.json` and `browser-use-python/pyproject.toml` to the next version, commits as `release: v<NEW_VERSION>`, pushes the branch, and opens a PR.
+1. **From `main`, run `task release -- patch`** (or `minor` / `major`). This pulls latest main, creates a fresh `release/<timestamp>` branch off it, bumps both `browser-use-node/package.json` and `browser-use-python/pyproject.toml`, commits as `release: v<NEW_VERSION>`, pushes the branch, and opens a PR.
 
    Manual alternative (if you don't want the helper):
 
    ```bash
-   git checkout -b release/$(date +%Y%m%d) main
+   git checkout main && git pull --ff-only origin main
+   git checkout -b release/$(date +%Y%m%d-%H%M%S)
    task version:bump -- patch
 
    # Read the new version after the bump, then use it in commit + PR.
