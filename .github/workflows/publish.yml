@@ -162,6 +162,7 @@ jobs:
   publish-py:
     name: Publish Python SDK to PyPI
     needs: [preflight, approval]
+    environment: release
     runs-on: ubuntu-latest
     permissions:
       id-token: write   # required for PyPI trusted publishing OIDC
@@ -191,6 +192,7 @@ jobs:
   publish-ts:
     name: Publish TypeScript SDK to npm
     needs: [preflight, approval]
+    environment: release
     runs-on: ubuntu-latest
     permissions:
       id-token: write   # required for npm OIDC trusted publishing
