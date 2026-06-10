@@ -184,6 +184,10 @@ Source: https://docs.browser-use.com/open-source/vibecoding
 Source: https://docs.browser-use.com/open-source/supported-models
 
 
+Browser Use natively supports 15+ LLM providers. Most providers accept any model string. Check each provider's docs to see which models are available.
+
+> **Which model should I use?** See our [benchmark results and recommendations](https://browser-use.com/posts/what-model-to-use) for detailed comparisons across real-world browser tasks.
+
 ### Browser Use [example](https://github.com/browser-use/browser-use/blob/main/examples/models/browser_use_llm.py)
 
 `ChatBrowserUse()` is our optimized in-house model, matching the accuracy of top models while completing tasks **3-5x** faster. [See our blog post→](https://browser-use.com/posts/speed-matters)
@@ -191,11 +195,8 @@ Source: https://docs.browser-use.com/open-source/supported-models
 ```python
 from browser_use import Agent, ChatBrowserUse
 
-# Initialize the model (defaults to bu-latest)
+# Initialize the model - defaults to bu-latest (bu-2-0)
 llm = ChatBrowserUse()
-
-# Or use the premium model
-llm = ChatBrowserUse(model='bu-2-0')
 
 # Create agent with the model
 agent = Agent(
@@ -212,16 +213,19 @@ BROWSER_USE_API_KEY=
 
 Get your API key from the [Browser Use Cloud](https://cloud.browser-use.com/new-api-key). New users get 5 free tasks.
 
-#### Available Models
-
-- `bu-latest` or `bu-1-0`: Default model
-- `bu-2-0`: Latest premium model with improved capabilities
-
 #### Pricing
 
 ChatBrowserUse offers competitive pricing per 1 million tokens:
 
-**bu-1-0 / bu-latest (Default)**
+**bu-2-0 / bu-latest (Default)**
+
+| Token Type | Price per 1M tokens |
+|------------|---------------------|
+| Input tokens | $0.60 |
+| Cached tokens | $0.06 |
+| Output tokens | $3.50 |
+
+**bu-1-0**
 
 Since May 20, 2026, `bu-1-0` is priced the same as `bu-2-0`:
 
@@ -231,16 +235,10 @@ Since May 20, 2026, `bu-1-0` is priced the same as `bu-2-0`:
 | Cached tokens | $0.06 |
 | Output tokens | $3.50 |
 
-**bu-2-0 (Premium)**
 
-| Token Type | Price per 1M tokens |
-|------------|---------------------|
-| Input tokens | $0.60 |
-| Cached tokens | $0.06 |
-| Output tokens | $3.50 |
+### Google Gemini [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gemini.py) {#google-gemini}
 
-
-### Google Gemini [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gemini.py)
+[Available models](https://ai.google.dev/api/models). Also supports Gemma models and Vertex AI via `ChatGoogle(model="...", vertexai=True)`.
 
 `GEMINI_API_KEY` is deprecated and should be named `GOOGLE_API_KEY` as of 2025-05.
 
@@ -252,7 +250,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize the model
-llm = ChatGoogle(model='gemini-flash-latest')
+llm = ChatGoogle(model='gemini-2.5-flash')
 
 # Create agent with the model
 agent = Agent(
@@ -268,16 +266,16 @@ GOOGLE_API_KEY=
 ```
 
 
-### OpenAI [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gpt-4.1.py)
+### OpenAI [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gpt-5-mini.py)
 
-`O3` model is recommended for best accuracy.
+[Available models](https://platform.openai.com/docs/models)
 
 ```python
 from browser_use import Agent, ChatOpenAI
 
 # Initialize the model
 llm = ChatOpenAI(
-model="o3",
+model="gpt-5",
 )
 
 # Create agent with the model
@@ -299,12 +297,14 @@ OPENAI_API_KEY=
 
 ### Anthropic [example](https://github.com/browser-use/browser-use/blob/main/examples/models/claude-4-sonnet.py)
 
+[Available models](https://docs.anthropic.com/en/docs/about-claude/models). Coordinate clicking is automatically enabled for `claude-sonnet-4-*` and `claude-opus-4-*` models.
+
 ```python
 from browser_use import Agent, ChatAnthropic
 
 # Initialize the model
 llm = ChatAnthropic(
-model="claude-sonnet-4-0",
+model="claude-sonnet-4-6",
 )
 
 # Create agent with the model
@@ -320,7 +320,9 @@ And add the variable:
 ANTHROPIC_API_KEY=
 ```
 
-### Azure OpenAI [example](https://github.com/browser-use/browser-use/blob/main/examples/models/azure_openai.py)
+### Azure OpenAI [example](https://github.com/browser-use/browser-use/blob/main/examples/models/azure_openai.py) {#azure-openai}
+
+[Available models](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure)
 
 ```python
 from browser_use import Agent, ChatAzureOpenAI
@@ -383,9 +385,9 @@ The `use_responses_api` parameter accepts:
 - `True`: Force use of the Responses API
 - `False`: Force use of the Chat Completions API
 
-### AWS Bedrock [example](https://github.com/browser-use/browser-use/blob/main/examples/models/aws.py)
+### AWS Bedrock [example](https://github.com/browser-use/browser-use/blob/main/examples/models/aws.py) {#aws-bedrock}
 
-AWS Bedrock provides access to multiple model providers through a single API. We support both a general AWS Bedrock client and provider-specific convenience classes.
+[Available models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html). AWS Bedrock provides access to multiple model providers through a single API. We support both a general AWS Bedrock client and provider-specific convenience classes. Install with `pip install "browser-use[aws]"`.
 
 #### General AWS Bedrock (supports all providers)
 
@@ -443,7 +445,9 @@ You can also use AWS profiles or IAM roles instead of environment variables. The
 - Session tokens for temporary credentials
 - AWS SSO authentication (`aws_sso_auth=True`)
 
-## Groq [example](https://github.com/browser-use/browser-use/blob/main/examples/models/llama4-groq.py)
+## Groq [example](https://github.com/browser-use/browser-use/blob/main/examples/models/llama4-groq.py) {#groq}
+
+[Available models](https://console.groq.com/docs/models)
 
 ```python
 from browser_use import Agent, ChatGroq
@@ -462,9 +466,9 @@ Required environment variables:
 GROQ_API_KEY=
 ```
 
-## Oracle Cloud Infrastructure (OCI) [example](https://github.com/browser-use/browser-use/blob/main/examples/models/oci_models.py)
+## Oracle Cloud Infrastructure (OCI) [example](https://github.com/browser-use/browser-use/blob/main/examples/models/oci_models.py) {#oci}
 
-OCI provides access to various generative AI models including Meta Llama, Cohere, and other providers through their Generative AI service.
+[Available models](https://docs.oracle.com/en-us/iaas/Content/generative-ai/imported-models.htm). OCI provides access to various generative AI models including Meta Llama, Cohere, and other providers through their Generative AI service. Install with `pip install "browser-use[oci]"`.
 
 ```python
 from browser_use import Agent, ChatOCIRaw
@@ -500,6 +504,8 @@ Authentication methods supported:
 - `RESOURCE_PRINCIPAL`: Uses resource principal authentication
 
 ## Ollama
+
+[Available models](https://ollama.com/library).
 
 1. Install Ollama: https://github.com/ollama/ollama
 2. Run `ollama serve` to start the server
@@ -574,11 +580,9 @@ Required environment variables:
 MODELSCOPE_API_KEY=
 ```
 
-### Vercel AI Gateway [example](https://github.com/browser-use/browser-use/blob/main/examples/models/vercel_ai_gateway.py)
+### Vercel AI Gateway [example](https://github.com/browser-use/browser-use/blob/main/examples/models/vercel_ai_gateway.py) {#vercel}
 
-Vercel AI Gateway provides an OpenAI-compatible API endpoint that acts as a proxy to various AI providers, with features like rate limiting, caching, and monitoring.
-
-To see all available models, visit: https://ai-gateway.vercel.sh/v1/models
+[Available models](https://vercel.com/ai-gateway/models). Vercel AI Gateway provides an OpenAI-compatible API endpoint that acts as a proxy to various AI providers, with features like rate limiting, caching, and monitoring.
 
 ```python
 from browser_use import Agent, ChatVercel
@@ -622,14 +626,112 @@ Required environment variables:
 VERCEL_API_KEY=
 ```
 
-## Other models (DeepSeek, Novita, X...)
+## DeepSeek [example](https://github.com/browser-use/browser-use/blob/main/examples/models/deepseek-chat.py) {#deepseek}
 
-We support all other models that can be called via OpenAI compatible API. We are open to PRs for more providers.
+[Available models](https://api-docs.deepseek.com/quick_start/pricing)
+
+```python
+from browser_use import Agent, ChatDeepSeek
+
+llm = ChatDeepSeek(model="deepseek-chat")
+
+agent = Agent(
+task="Your task here",
+llm=llm
+)
+```
+
+Required environment variables:
+
+```bash .env
+DEEPSEEK_API_KEY=
+```
+
+## Mistral [example](https://github.com/browser-use/browser-use/blob/main/examples/models/mistral.py) {#mistral}
+
+[Available models](https://docs.mistral.ai/getting-started/models/models_overview/)
+
+```python
+from browser_use import Agent, ChatMistral
+
+llm = ChatMistral(model="mistral-large-latest")
+
+agent = Agent(
+task="Your task here",
+llm=llm
+)
+```
+
+Required environment variables:
+
+```bash .env
+MISTRAL_API_KEY=
+```
+
+## Cerebras [example](https://github.com/browser-use/browser-use/blob/main/examples/models/cerebras_example.py) {#cerebras}
+
+[Available models](https://inference-docs.cerebras.ai/models/overview)
+
+```python
+from browser_use import Agent, ChatCerebras
+
+llm = ChatCerebras(model="llama3.3-70b")
+
+agent = Agent(
+task="Your task here",
+llm=llm
+)
+```
+
+Required environment variables:
+
+```bash .env
+CEREBRAS_API_KEY=
+```
+
+## OpenRouter [example](https://github.com/browser-use/browser-use/blob/main/examples/models/openrouter.py) {#openrouter}
+
+[Available models](https://openrouter.ai/models). Access 300+ models from any provider through a single API.
+
+```python
+from browser_use import Agent, ChatOpenRouter
+
+llm = ChatOpenRouter(model="anthropic/claude-sonnet-4-6")
+
+agent = Agent(
+task="Your task here",
+llm=llm
+)
+```
+
+Required environment variables:
+
+```bash .env
+OPENROUTER_API_KEY=
+```
+
+## LiteLLM {#litellm}
+
+Requires separate install (`pip install litellm`). Supports any [LiteLLM model string](https://docs.litellm.ai/docs/providers) — useful when you need a provider not covered by the native integrations above.
+
+```python
+from browser_use import Agent
+from browser_use.llm.litellm import ChatLiteLLM
+
+llm = ChatLiteLLM(model="openai/gpt-5")
+
+agent = Agent(
+task="Your task here",
+llm=llm
+)
+```
+
+## Other OpenAI-Compatible Providers
+
+Any provider with an OpenAI-compatible endpoint works via `ChatOpenAI` with a custom `base_url`:
 
 **Examples available:**
-- [DeepSeek](https://github.com/browser-use/browser-use/blob/main/examples/models/deepseek-chat.py)
 - [Novita](https://github.com/browser-use/browser-use/blob/main/examples/models/novita.py)
-- [OpenRouter](https://github.com/browser-use/browser-use/blob/main/examples/models/openrouter.py)
 
 
 # Browser Use CLI
@@ -734,14 +836,14 @@ browser-use open https://example.com
 # Visible browser window
 browser-use --headed open https://example.com
 
-# Use your real Chrome with Default profile (with existing logins/cookies)
-browser-use --profile "Default" open https://gmail.com
+# Connect to user's Chrome (preserves logins/cookies)
+browser-use connect
 
 # Use a specific Chrome profile
-browser-use --profile "Profile 1" open https://gmail.com
+browser-use --profile "Default" open https://gmail.com
 
-# Auto-discover and connect to running Chrome
-browser-use --connect open https://example.com
+# Cloud browser (zero-config, requires API key)
+browser-use cloud connect
 
 # Connect to an existing browser via CDP URL
 browser-use --cdp-url http://localhost:9222 open https://example.com
@@ -749,6 +851,8 @@ browser-use --cdp-url http://localhost:9222 open https://example.com
 # WebSocket CDP URL also works
 browser-use --cdp-url ws://localhost:9222/devtools/browser/... state
 ```
+
+After `connect` or `cloud connect`, all subsequent commands go to that browser — no extra flags needed.
 
 ## All Commands
 
@@ -786,9 +890,10 @@ browser-use --cdp-url ws://localhost:9222/devtools/browser/... state
 ### Tabs
 | Command | Description |
 |---------|-------------|
-| `switch <tab>` | Switch to tab by index |
-| `close-tab` | Close current tab |
-| `close-tab <tab>` | Close specific tab |
+| `tab list` | List all tabs |
+| `tab new [url]` | Open new tab (blank or with URL) |
+| `tab switch <index>` | Switch to tab by index |
+| `tab close [index...]` | Close tab(s) (current if no index) |
 
 ### Cookies
 | Command | Description |
@@ -845,18 +950,18 @@ Generic REST passthrough to the Browser-Use Cloud API, plus cloud browser provis
 
 | Command | Description |
 |---------|-------------|
-| `cloud connect` | Provision cloud browser and connect |
-| `cloud connect --timeout 120` | Cloud browser with custom timeout |
-| `cloud connect --proxy-country US` | Cloud browser with proxy |
-| `cloud connect --profile-id <id>` | Cloud browser with profile |
+| `cloud connect` | Provision cloud browser and connect (zero-config, auto-manages profile) |
 | `cloud login <api-key>` | Save API key |
 | `cloud logout` | Remove API key |
+| `cloud close` | Disconnect and stop cloud browser |
 | `cloud v2 GET <path>` | GET request to API v2 |
 | `cloud v2 POST <path> '<json>'` | POST request to API v2 |
 | `cloud v3 POST <path> '<json>'` | POST request to API v3 |
 | `cloud v2 poll <task-id>` | Poll task until done |
 | `cloud v2 --help` | Show API v2 endpoints (from OpenAPI spec) |
 | `cloud v3 --help` | Show API v3 endpoints |
+
+`cloud connect` provisions a cloud browser with a persistent profile (auto-created on first use), connects via CDP, and prints a live URL. For custom browser settings (proxy, timeout, specific profile), use `cloud v2 POST /browsers` directly.
 
 ```bash
 # Save API key (or set BROWSER_USE_API_KEY env var)
@@ -955,11 +1060,24 @@ BROWSER_USE_SESSION=work browser-use state
 |--------|-------------|
 | `--headed` | Show browser window |
 | `--profile [NAME]` | Use real Chrome (bare `--profile` uses "Default") |
-| `--connect` | Auto-discover and connect to running Chrome via CDP |
+| `--connect` | Auto-discover and connect to running Chrome via CDP (prefer `connect` command instead) |
 | `--cdp-url <url>` | Connect to existing browser via CDP URL (`http://` or `ws://`) |
 | `--session NAME` | Target a named session (default: "default", env: `BROWSER_USE_SESSION`) |
 | `--json` | Output as JSON |
 | `--mcp` | Run as MCP server via stdin/stdout |
+
+## Configuration
+
+```bash
+browser-use config list                            # Show all config values
+browser-use config set cloud_connect_proxy jp      # Set a value
+browser-use config get cloud_connect_proxy         # Get a value
+browser-use config unset cloud_connect_timeout     # Remove a value
+browser-use doctor                                 # Shows config + diagnostics
+browser-use setup                                  # Interactive post-install setup
+```
+
+Config stored in `~/.browser-use/config.json`.
 
 ## Examples
 
@@ -1024,6 +1142,7 @@ All CLI-managed files live under `~/.browser-use/` (override with `BROWSER_USE_H
 ├── tunnels/
 │   ├── {port}.json      # Tunnel metadata
 │   └── {port}.log       # Tunnel logs
+├── default.state.json   # Daemon lifecycle state (phase, PID, config)
 ├── default.sock         # Daemon socket (ephemeral)
 ├── default.pid          # Daemon PID (ephemeral)
 └── cli.log              # Daemon log
@@ -1098,12 +1217,12 @@ Research the top Hacker News stories and summarize the points.
   controls
   className="w-full aspect-video rounded-xl">
   <source
-    src="https://media.githubusercontent.com/media/browser-use/sdk/rust-terminal-docs/docs/static/terminal_demo.mp4"
-    type="video/mp4"
+src="https://media.githubusercontent.com/media/browser-use/sdk/rust-terminal-docs/docs/static/terminal_demo.mp4"
+type="video/mp4"
   />
   <source
-    src="https://media.githubusercontent.com/media/browser-use/sdk/main/docs/static/terminal_demo.mp4"
-    type="video/mp4"
+src="https://media.githubusercontent.com/media/browser-use/sdk/main/docs/static/terminal_demo.mp4"
+type="video/mp4"
   />
 </video>
 
@@ -1115,9 +1234,7 @@ You can use Browser Use Terminal in three ways:
 | **CLI** | Scriptable commands such as `browser-use-terminal run-openai`. Best for automation and one-off tasks. |
 | **Python** | `browser_use.beta.Agent`, backed by the same Rust runtime. Best when you want browser-use code with terminal runtime behavior. |
 
-<Info>
 Browser Use Terminal is separate from the lower-level `browser-use` CLI. Use `browser` for the Terminal TUI, `browser-use-terminal` for Terminal task commands, and `browser-use` for direct browser-control commands.
-</Info>
 
 ## Terms
 
@@ -1240,18 +1357,18 @@ from browser_use.beta import Agent, BrowserProfile, ChatOpenAI
 
 
 async def main():
-    agent = Agent(
-        task="Go to https://news.ycombinator.com and return the top stories with points.",
-        llm=ChatOpenAI(model="gpt-5.5"),
-        browser_profile=BrowserProfile(
-            headless=True,
-            window_size={"width": 1440, "height": 900},
-            allowed_domains=["news.ycombinator.com"],
-        ),
-    )
+agent = Agent(
+    task="Go to https://news.ycombinator.com and return the top stories with points.",
+    llm=ChatOpenAI(model="gpt-5.5"),
+    browser_profile=BrowserProfile(
+        headless=True,
+        window_size={"width": 1440, "height": 900},
+        allowed_domains=["news.ycombinator.com"],
+    ),
+)
 
-    history = await agent.run(max_steps=12)
-    print(history.final_result())
+history = await agent.run(max_steps=12)
+print(history.final_result())
 
 
 asyncio.run(main())
@@ -1299,8 +1416,8 @@ Pass a supported browser-use model class to `Agent`:
 from browser_use.beta import Agent, ChatAnthropic
 
 agent = Agent(
-    task="Find the latest Browser Use docs update",
-    llm=ChatAnthropic(model="claude-sonnet-4-6"),
+task="Find the latest Browser Use docs update",
+llm=ChatAnthropic(model="claude-sonnet-4-6"),
 )
 ```
 
@@ -1353,13 +1470,13 @@ Managed local browser:
 from browser_use.beta import Agent, BrowserProfile, ChatOpenAI
 
 agent = Agent(
-    task="Open Hacker News",
-    llm=ChatOpenAI(model="gpt-5.5"),
-    browser_profile=BrowserProfile(
-        headless=True,
-        user_data_dir="./browser-profile",
-        window_size={"width": 1280, "height": 900},
-    ),
+task="Open Hacker News",
+llm=ChatOpenAI(model="gpt-5.5"),
+browser_profile=BrowserProfile(
+    headless=True,
+    user_data_dir="./browser-profile",
+    window_size={"width": 1280, "height": 900},
+),
 )
 ```
 
@@ -1367,9 +1484,9 @@ Headed browser:
 
 ```python
 agent = Agent(
-    task="Open Hacker News",
-    llm=ChatOpenAI(model="gpt-5.5"),
-    browser_profile=BrowserProfile(headless=False),
+task="Open Hacker News",
+llm=ChatOpenAI(model="gpt-5.5"),
+browser_profile=BrowserProfile(headless=False),
 )
 ```
 
@@ -1381,14 +1498,14 @@ Browser Use Cloud is the simplest remote browser option for Python too. Set `BRO
 from browser_use.beta import Agent, BrowserSession, ChatOpenAI
 
 agent = Agent(
-    task="Open Hacker News",
-    llm=ChatOpenAI(model="gpt-5.5"),
-    browser_session=BrowserSession(
-        use_cloud=True,
-        cloud_profile_id="profile-id",
-        cloud_proxy_country_code="US",
-        keep_alive=False,
-    ),
+task="Open Hacker News",
+llm=ChatOpenAI(model="gpt-5.5"),
+browser_session=BrowserSession(
+    use_cloud=True,
+    cloud_profile_id="profile-id",
+    cloud_proxy_country_code="US",
+    keep_alive=False,
+),
 )
 ```
 
@@ -1398,12 +1515,12 @@ Existing browser over CDP:
 from browser_use.beta import Agent, BrowserProfile, ChatOpenAI
 
 agent = Agent(
-    task="Open Hacker News",
-    llm=ChatOpenAI(model="gpt-5.5"),
-    browser_profile=BrowserProfile(
-        cdp_url="http://127.0.0.1:9333",
-        user_agent="BrowserUseRemoteCDP/1.0",
-    ),
+task="Open Hacker News",
+llm=ChatOpenAI(model="gpt-5.5"),
+browser_profile=BrowserProfile(
+    cdp_url="http://127.0.0.1:9333",
+    user_agent="BrowserUseRemoteCDP/1.0",
+),
 )
 ```
 
@@ -1471,9 +1588,9 @@ Python runs use the same terminal runtime and terminal state. Configure website 
 from browser_use.beta import Agent, BrowserProfile, ChatOpenAI
 
 agent = Agent(
-    task="Log in to example.com and summarize my dashboard.",
-    llm=ChatOpenAI(model="gpt-5.5"),
-    browser_profile=BrowserProfile(allowed_domains=["example.com"]),
+task="Log in to example.com and summarize my dashboard.",
+llm=ChatOpenAI(model="gpt-5.5"),
+browser_profile=BrowserProfile(allowed_domains=["example.com"]),
 )
 ```
 
@@ -1506,8 +1623,8 @@ Pass domain policy through `BrowserProfile`:
 from browser_use.beta import BrowserProfile
 
 profile = BrowserProfile(
-    allowed_domains=["news.ycombinator.com"],
-    prohibited_domains=["*.tracking.example"],
+allowed_domains=["news.ycombinator.com"],
+prohibited_domains=["*.tracking.example"],
 )
 ```
 
