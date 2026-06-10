@@ -4,13 +4,17 @@ Decision guide for the `/sdk` pipeline. Read this, then go.
 
 ## Releasing
 
-1. **From a fresh branch off main, run `task release -- patch`** (or `minor` / `major`). This bumps both `browser-use-node/package.json` and `browser-use-python/pyproject.toml` to the next version, commits as `release: v$NEW_VERSION`, pushes the branch, and opens a PR.
+1. **From a fresh branch off main, run `task release -- patch`** (or `minor` / `major`). This bumps both `browser-use-node/package.json` and `browser-use-python/pyproject.toml` to the next version, commits as `release: v<NEW_VERSION>`, pushes the branch, and opens a PR.
 
    Manual alternative (if you don't want the helper):
 
    ```bash
    git checkout -b release/$(date +%Y%m%d) main
    task version:bump -- patch
+
+   # Read the new version after the bump, then use it in commit + PR.
+   NEW_VERSION=$(node -p "require('./browser-use-node/package.json').version")
+
    git add browser-use-node/package.json browser-use-python/pyproject.toml README.md
    git commit -m "release: v$NEW_VERSION"
    git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
@@ -18,11 +22,11 @@ Decision guide for the `/sdk` pipeline. Read this, then go.
    ```
 2. **Commit + PR + merge to main.**
 
-That's it. The `auto-release-on-version-bump` workflow detects the bump on main and creates a GitHub Release at the bump commit (tag `v$NEW_VERSION`). The Release event fires `publish.yml`, which runs preflight (env protection + version coherence + already-published guard), pauses at the `release` environment approval gate, and on approval publishes to both npm and PyPI via OIDC.
+That's it. The `auto-release-on-version-bump` workflow detects the bump on main and creates a GitHub Release at the bump commit (tag `v<NEW_VERSION>`). The Release event fires `publish.yml`, which runs preflight (env protection + version coherence + already-published guard), pauses at the `release` environment approval gate, and on approval publishes to both npm and PyPI via OIDC.
 
 If a publish fails after the Release is created: the Release stays (it's the rollback handle). Investigate, fix on a new patch version, repeat. Re-running the auto-release workflow on the same commit is a no-op, it detects the existing Release and exits cleanly.
 
-Manual `gh release create v$VERSION --generate-notes --repo browser-use/sdk` from the CLI also works as an escape hatch if you want to ship without the bump-PR cycle.
+Manual `gh release create v<VERSION> --generate-notes --repo browser-use/sdk` from the CLI also works as an escape hatch if you want to ship without the bump-PR cycle.
 
 `task publish` is intentionally broken, see "Release authentication" below for the rationale.
 
