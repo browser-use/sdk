@@ -187,7 +187,29 @@ for product_nav in d['navigation']['products']:
     awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}' "$file" \
       | sed "s|](/cloud/|](${BASE_URL}/cloud/|g" \
       | sed -E '/<\/?(CodeGroup|Note|Tip|Warning|Info|Card|Tabs|Tab|Steps|Step|Accordion|AccordionGroup)[^>]*>/d' \
-      | sed -E 's/^[[:space:]]{4}//' >> "$out"
+      | python3 -c '
+# Dedent component-nested content without corrupting code indentation:
+# fenced code blocks are dedented by their common leading whitespace,
+# prose lines lose at most one 4-space nesting level.
+import sys, textwrap
+
+block = None
+out = []
+for line in sys.stdin.read().split("\n"):
+    if block is None:
+        if line.lstrip().startswith("```"):
+            block = [line]
+        else:
+            out.append(line[4:] if line.startswith("    ") else line)
+    else:
+        block.append(line)
+        if line.lstrip().startswith("```"):
+            out.append(textwrap.dedent("\n".join(block)))
+            block = None
+if block is not None:
+    out.append(textwrap.dedent("\n".join(block)))
+sys.stdout.write("\n".join(out))
+' >> "$out"
     echo "" >> "$out"
   done
 
