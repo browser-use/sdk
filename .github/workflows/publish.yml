@@ -223,9 +223,16 @@ jobs:
         working-directory: browser-use-node
         run: pnpm build
 
-      - name: Upgrade npm to OIDC-capable version
-        run: npm install -g npm@latest
-
       - name: Publish to npm (OIDC trusted publishing)
         working-directory: browser-use-node
-        run: npm publish --access public
+        run: |
+          set -euo pipefail
+          # Node 22 ships with npm 10.x; OIDC trusted publishing requires
+          # npm >= 11.5.1. `npm install -g npm@latest` on the GitHub runner
+          # puts the new binary on a PATH that doesn't shadow the bundled
+          # npm, so `npm publish` still picks up the old 10.x. Bypass by
+          # invoking the version explicitly via npx.
+          NPM_VERSION="11"
+          echo "Node:    $(node --version)"
+          echo "npm:     $(npx -y npm@${NPM_VERSION} --version)"
+          npx -y npm@${NPM_VERSION} publish --access public
