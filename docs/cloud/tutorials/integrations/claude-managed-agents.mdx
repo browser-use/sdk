@@ -1,0 +1,81 @@
+---
+title: Claude Managed Agents
+description: Give Anthropic's Claude Managed Agents a stealth cloud browser via the Browser Use CLI.
+---
+
+[Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents) run on Anthropic's hosted platform. Install the `browser-use` CLI in the agent's environment and it can drive a stealth cloud browser — with proxies, CAPTCHA solving, live view, and recording. Your API key stays in a credential vault; the model never sees it.
+
+The sandbox can't run a local browser, so the agent connects to **Browser Use Cloud** with `browser-use cloud connect`.
+
+## 1. Create an environment
+
+Pre-install the CLI so it's ready at session start (no runtime install).
+
+```yaml
+name: browser-env
+config:
+  type: cloud
+  packages:
+    pip:
+      - browser-use
+  networking:
+    type: limited
+    allowed_hosts: ["*.browser-use.com"]
+    allow_package_managers: true
+```
+
+## 2. Create a credential vault
+
+Store your key as an environment variable so the CLI reads it and the model never does. Get one at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+| Field | Value |
+|-------|-------|
+| Type | Environment variable |
+| Name | `BROWSER_USE_API_KEY` |
+| Value | `bu_...` |
+
+## 3. Create the agent
+
+Tell it to use the CLI in cloud mode.
+
+```yaml
+name: browser agent
+model:
+  id: claude-opus-4-8
+description: Drives a stealth cloud browser with the Browser Use CLI.
+system: |
+  You are a browser agent. Use the `browser-use` CLI to complete web tasks.
+  Always run `browser-use cloud connect` first to provision a remote browser —
+  never launch a local browser. Then: `browser-use open <url>`,
+  `browser-use state` (clickable elements), `browser-use click <i>`,
+  `browser-use type "<text>"`, `browser-use eval "<js>"`.
+  Your BROWSER_USE_API_KEY is in the environment; never print it.
+tools:
+  - type: agent_toolset_20260401   # shell access so the agent can run the CLI
+    default_config:
+      enabled: true
+      permission_policy:
+        type: always_allow
+```
+
+## 4. Start a session and send a task
+
+The Console only observes; kick the agent off with a `user.message` event.
+
+```bash
+curl -sS "https://api.anthropic.com/v1/sessions/$SESSION_ID/events?beta=true" \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "anthropic-beta: managed-agents-2026-04-01" \
+  -H "content-type: application/json" \
+  -d '{"events":[{"type":"user.message","content":[{"type":"text",
+       "text":"Get the top 5 Hacker News stories with their links."}]}]}'
+```
+
+## 5. Watch it run
+
+The agent runs `browser-use cloud connect` → `open` → `state` → `eval`, then returns the result. The session shows up in [cloud.browser-use.com](https://cloud.browser-use.com) → **Remote Browsers** with a **Live View** and an **mp4 recording**.
+
+<Tip>
+Always use `browser-use cloud connect` — the Managed Agents sandbox has no GUI, so a local browser won't start. Cloud mode also gives you stealth, residential proxies, live view, and recording.
+</Tip>
