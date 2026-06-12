@@ -39,13 +39,14 @@ Research the top Hacker News stories and summarize the points.
   />
 </video>
 
-You can use Browser Use Terminal in three ways:
+You can use Browser Use Terminal in four ways:
 
 | Surface | What it is for |
 | --- | --- |
 | **TUI** | The interactive terminal app you launch with `browser`. Best for normal, hands-on use. |
 | **CLI** | Scriptable commands such as `browser-use-terminal run-openai`. Best for automation and one-off tasks. |
 | **Python** | `browser_use.beta.Agent`, backed by the same Rust runtime. Best when you want browser-use code with terminal runtime behavior. |
+| **Coding assistants** | A skill plus the `browser-use-terminal browser` commands let Claude Code, Codex, OpenCode, and other agents drive the browser. See [Use From Coding Assistants](#use-from-coding-assistants). |
 
 <Info>
 Browser Use Terminal is separate from the lower-level `browser-use` CLI. Use `browser` for the Terminal TUI, `browser-use-terminal` for Terminal task commands, and `browser-use` for direct browser-control commands.
@@ -188,6 +189,44 @@ async def main():
 
 asyncio.run(main())
 ```
+
+## Use From Coding Assistants
+
+Browser Use Terminal plugs into any coding assistant that can run shell commands. A skill teaches the assistant the CLI, and the CLI gives it the full browser runtime: page interaction through Python helpers, screenshots saved as files, profiles, and more.
+
+The fastest setup is to paste this URL into your assistant and let it bootstrap everything (install, skill registration, browser setup, verification):
+
+```text
+https://browser-use.com/skill
+```
+
+To set it up manually instead:
+
+```bash
+curl -fsSL https://browser-use.com/terminal/install.sh | sh
+browser-use-terminal skill install
+```
+
+`skill install` writes the skill into every detected assistant home: `~/.claude/skills/` (Claude Code, also read by OpenCode), `~/.codex/skills/` (Codex), `~/.config/opencode/skills/`, and `~/.agents/skills/`. For other assistants, persist the output of `browser-use-terminal skill show` wherever that assistant reads instructions.
+
+The assistant then drives the browser with commands:
+
+```bash
+browser-use-terminal browser exec <<'PY'
+new_tab("https://example.com")
+wait_for_load()
+print(page_info()["title"])
+print(capture_screenshot())
+PY
+```
+
+How it works:
+
+- The browser auto-connects per the remembered preference (`browser-use-terminal browser preference use local|cloud|managed-headless`) and persists across invocations; Python variables do not.
+- Screenshots are saved as files and the absolute path is printed, so assistants view them with their native file tools: Claude Code `Read`, Codex `view_image`, OpenCode `read`, Gemini CLI `read_file`.
+- `--session <name>` gives parallel workstreams isolated artifact dirs, event logs, and managed browsers.
+- Stop persistent browsers with `browser-use-terminal browser recover stop-owned-browser` (managed) or `browser-use-terminal browser recover stop-owned-remote` (cloud).
+- Everything is recorded in the same event log as the TUI: `browser-use-terminal events browser-cli-<session>`.
 
 ## Configure Models
 
@@ -561,6 +600,8 @@ curl -fsSL https://browser-use.com/terminal/install.sh | sh
 | Open the interactive Terminal app | `browser` |
 | Run a one-shot Terminal agent task | `browser-use-terminal run-openai "..."` |
 | Use Terminal runtime from Python | `browser_use.beta.Agent` |
+| Drive the browser from a coding assistant | `browser-use-terminal browser exec` |
+| Register the skill with coding assistants | `browser-use-terminal skill install` |
 | Directly control a browser with low-level commands | `browser-use open https://example.com` |
 
 ### Python Cannot Find `browser_use.beta`
