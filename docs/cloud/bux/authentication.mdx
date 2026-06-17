@@ -1,0 +1,27 @@
+---
+title: "Authentication"
+icon: "lock"
+---
+
+A BUX is only as useful as the accounts it can reach. Authentication uses [Browser Use Profiles](https://cloud.browser-use.com/profiles): reusable bundles of cookies and storage attached to your account. You can sync them from your local Chrome ([here](/cloud/guides/profile-sync)) or build them by hand from the dashboard ([here](https://cloud.browser-use.com/profiles)).
+
+We highly encourage you to either sync your local cookies or create profiles manually from the dashboard ahead of time. If you have not done that, or the agent needs access to a site you have not authorised yet, the live login flow kicks in.
+
+## Live login
+
+When the agent hits a login wall, it sends you a live URL from the VM's remote browser. You sign in once and BUX saves the cookies for next time.
+
+<Steps>
+  <Step title="Agent hits a login wall">
+    Claude Code detects the credential prompt and pauses.
+  </Step>
+  <Step title="BUX sends you a live URL">
+    The URL streams the VM's actual Chrome to your laptop or phone. Open it in any browser.
+  </Step>
+  <Step title="You sign in">
+    Type your password, complete 2FA, do whatever the site asks. The site sees a real browser with a real user.
+  </Step>
+  <Step title="BUX captures the session">
+    Cookies and storage are saved into a profile attached to your account. The agent picks up where it left off, and every later run reuses the profile.
+  </Step>
+</Steps>
