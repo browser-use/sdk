@@ -306,6 +306,19 @@
                   "open-source/examples/apps/news-use",
                   "open-source/examples/apps/msg-use"
                 ]
+              },
+              {
+                "group": "Skills",
+                "icon": "wand-magic-sparkles",
+                "pages": [
+                  "open-source/examples/skills/overview",
+                  "open-source/examples/skills/browser-use",
+                  "open-source/examples/skills/cloud",
+                  "open-source/examples/skills/open-source",
+                  "open-source/examples/skills/qa",
+                  "open-source/examples/skills/remote-browser",
+                  "open-source/examples/skills/x402"
+                ]
               }
             ]
           },
