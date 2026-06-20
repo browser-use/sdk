@@ -1,0 +1,52 @@
+---
+title: "Overview"
+description: "Install Browser Use as an agent skill. Drop browser automation, cloud, QA, and payments into Claude Code, Cursor, and any agent that supports SKILL.md."
+icon: "wand-magic-sparkles"
+---
+
+Browser Use ships a set of [agent skills](https://www.skills.sh/browser-use/browser-use) — self-contained `SKILL.md` bundles that teach a coding agent (Claude Code, Cursor, OpenClaw, Hermes, and others) how to use Browser Use. Each skill is installable from [skills.sh](https://www.skills.sh/browser-use/browser-use) with one command.
+
+## Install
+
+Every skill installs through the [skills CLI](https://www.skills.sh) with the same pattern — swap in the skill name with `--skill`:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill <name>
+```
+
+For example, to install the QA skill:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill qa
+```
+
+<Tip>
+The skills CLI drops the skill into your agent's skills directory (e.g. `.claude/skills/` for Claude Code). Your agent picks it up automatically — no extra wiring.
+</Tip>
+
+## Available skills
+
+<CardGroup cols={2}>
+  <Card title="browser-use" icon="terminal" href="/open-source/examples/skills/browser-use">
+    Drive a browser directly from the CLI — navigate, click, fill forms, screenshot, and extract data.
+  </Card>
+  <Card title="cloud" icon="cloud" href="/open-source/examples/skills/cloud">
+    Reference for Browser Use Cloud — the hosted REST API (v2 & v3) and the Python/TypeScript SDKs.
+  </Card>
+  <Card title="open-source" icon="code" href="/open-source/examples/skills/open-source">
+    Reference for writing Python against the `browser-use` library — Agent, Browser, Tools, and more.
+  </Card>
+  <Card title="qa" icon="vial" href="/open-source/examples/skills/qa">
+    QA-test any site or local dev server and return a 1–5 quality score with evidence.
+  </Card>
+  <Card title="remote-browser" icon="server" href="/open-source/examples/skills/remote-browser">
+    Control a headless browser from a sandboxed remote machine (cloud VMs, CI, coding agents).
+  </Card>
+  <Card title="x402" icon="wallet" href="/open-source/examples/skills/x402">
+    Pay for Browser Use Cloud per request from a crypto wallet — no signup or API key.
+  </Card>
+</CardGroup>
+
+## Source
+
+All skills live in the [`skills/` directory](https://github.com/browser-use/browser-use/tree/main/skills) of the `browser-use` repo.
