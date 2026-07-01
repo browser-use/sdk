@@ -3,18 +3,21 @@ title: x402 (pay-per-request)
 description: "Pay for Browser Use Cloud with crypto (USDC on Base). ~30 seconds from wallet to first request."
 ---
 
+<!-- prettier-ignore-start -->
+
 [x402](https://www.x402.org) is a payment protocol [created by Coinbase](https://www.coinbase.com/developer-platform/discover/launches/x402) that lets APIs, or AI agents, charge for requests directly with crypto.
 
 x402 lets your code, or an autonomous AI agent, pay Browser Use Cloud directly with cryptocurrency. No account signup, no credit card, and no API key is needed. Your wallet is your identity.
 
 <Note>
-  **New to crypto?** Here's the gist: - **USDC** is a stablecoin pegged 1:1 to
-  the US dollar. 1 USDC = $1. - **Base** is a low-fee blockchain network
-  operated by Coinbase. Sending a payment costs fractions of a cent. -
-  **Wallet** = a public address (your "username") and a private key (your
-  "password"). The private key signs payments. - You'll need at least $5 of USDC
-  on Base in a wallet you control. The Claude Code quickstart below walks you
-  through everything from scratch.
+
+**New to crypto?** Here's the gist:
+
+- **USDC** is a stablecoin pegged 1:1 to the US dollar. 1 USDC = $1.
+- **Base** is a low-fee blockchain network operated by Coinbase. Sending a payment costs fractions of a cent.
+- **Wallet** = a public address (your "username") and a private key (your "password"). The private key signs payments.
+- You'll need at least $5 of USDC on Base in a wallet you control. The Claude Code quickstart below walks you through everything from scratch.
+
 </Note>
 
 **Three ways to start, ranked by laziness:**
@@ -59,8 +62,12 @@ Claude generates (or imports) a wallet, walks you through funding it via Coinbas
 The Browser Use SDK has built-in x402 support. Pass a wallet private key, and you're done.
 
 <CodeGroup>
-  ```bash Python pip install "browser-use-sdk[x402]" ``` ```bash TypeScript npm
-  install browser-use-sdk @x402/fetch @x402/evm viem ```
+```bash Python
+pip install "browser-use-sdk[x402]"
+```
+```bash TypeScript
+npm install browser-use-sdk @x402/fetch @x402/evm viem
+```
 </CodeGroup>
 
 <CodeGroup>
@@ -69,29 +76,31 @@ import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 async def main():
-client = AsyncBrowserUse(x402_private_key="0x...") # EVM wallet w/ USDC on Base
-result = await client.run("Go to example.com and tell me the heading.")
-print(result.output)
+    client = AsyncBrowserUse(x402_private_key="0x...")  # EVM wallet w/ USDC on Base
+    result = await client.run("Go to example.com and tell me the heading.")
+    print(result.output)
 
 asyncio.run(main())
+```
 
-````
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse({ x402PrivateKey: "0x..." });  // EVM wallet w/ USDC on Base
 const result = await client.run("Go to example.com and tell me the heading.");
 console.log(result.output);
-````
-
+```
 </CodeGroup>
 
 Or set `BROWSER_USE_X402_PRIVATE_KEY` in your env, and skip the constructor arg entirely:
 
 <CodeGroup>
-  ```python Python client = AsyncBrowserUse() # auto-detects from env ```
-  ```typescript TypeScript const client = new BrowserUse(); // auto-detects from
-  env ```
+```python Python
+client = AsyncBrowserUse()   # auto-detects from env
+```
+```typescript TypeScript
+const client = new BrowserUse(); // auto-detects from env
+```
 </CodeGroup>
 
 <Note>
@@ -156,13 +165,14 @@ If you already have a Browser Use API key (for example, one created via the dash
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse(
-api*key="bu*...", # existing API key getting topped up
-x402_private_key="0x...", # wallet that pays
-base_url="https://x402.api.browser-use.com/api/v3",
+    api_key="bu_...",                     # existing API key getting topped up
+    x402_private_key="0x...",             # wallet that pays
+    base_url="https://x402.api.browser-use.com/api/v3",
 )
-result = await client.run("...") # $5 USDC charged, credited to the API key's project
+result = await client.run("...")          # $5 USDC charged, credited to the API key's project
 
-````
+```
+
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
@@ -172,8 +182,7 @@ const client = new BrowserUse({
   baseUrl: "https://x402.api.browser-use.com/api/v3",
 });
 const result = await client.run("...");
-````
-
+```
 </CodeGroup>
 
 When the backend sees both a payment and a valid API key, the credit goes to the key's project rather than auto-creating a new wallet-keyed one. Useful for:
@@ -194,17 +203,17 @@ To check how much credit that account has left, use the method below:
 ```python Python
 from browser_use_sdk.v3 import get_wallet_balance
 
-balance = await get_wallet_balance("0x...") # same wallet private key you pay with
+balance = await get_wallet_balance("0x...")  # same wallet private key you pay with
 print(balance["total_credits_usd"])
 
-````
+```
+
 ```typescript TypeScript
 import { getWalletBalance } from "browser-use-sdk/v3";
 
 const balance = await getWalletBalance("0x...");  // same wallet private key you pay with
 console.log(balance.total_credits_usd);
-````
-
+```
 </CodeGroup>
 
 The response contains:
@@ -290,7 +299,8 @@ x402 = x402Client()
 register_exact_evm_client(x402, EthAccountSigner(Account.from_key("0x...")))
 client = AsyncBrowserUse(x402=x402)
 
-````
+```
+
 ```typescript TypeScript
 import { x402Client } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm";
@@ -300,8 +310,7 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const x402 = new x402Client();
 x402.register("eip155:*", new ExactEvmScheme(privateKeyToAccount("0x...")));
 const client = new BrowserUse({ x402 });
-````
-
+```
 </CodeGroup>
 
 ## Troubleshooting
@@ -345,3 +354,5 @@ const client = new BrowserUse({ x402 });
 - [x402 protocol spec](https://www.x402.org)
 - [Standard API key auth](/cloud/quickstart) — alternative if you don't want pay-per-use
 - [`x402` Claude Code skill source](https://github.com/browser-use/browser-use/tree/main/skills/x402)
+
+<!-- prettier-ignore-end -->

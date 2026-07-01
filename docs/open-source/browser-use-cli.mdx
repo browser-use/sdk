@@ -36,6 +36,15 @@ print(page_info())
 PY
 ```
 
+The `<<'PY'` form is for Unix-compatible shells such as bash, zsh, Git Bash, or WSL. In PowerShell, pipe a here-string instead:
+
+```powershell
+@'
+new_tab("https://example.com")
+print(page_info())
+'@ | uvx browser-use
+```
+
 ## Local Browser Setup
 
 The default local flow attaches to your running Chrome or Chromium through CDP. If the CLI cannot connect, run:

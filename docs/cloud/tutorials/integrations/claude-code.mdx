@@ -58,7 +58,11 @@ uv tool install browser-use
 browser-use skill install
 ```
 
-Claude Code can follow the [REST flow](/cloud/agent-signup#rest-flow) to request and verify a challenge, then use the returned API key with `browser-use auth login`.
+Claude Code can follow the [REST flow](/cloud/agent-signup#rest-flow) to request and verify a challenge, then save the returned API key:
+
+```bash
+printf '%s\n' 'bu_...' | browser-use auth login --api-key-stdin
+```
 
 ### Claim the account (optional)
 
