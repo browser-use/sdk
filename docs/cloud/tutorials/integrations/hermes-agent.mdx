@@ -52,14 +52,14 @@ Just chat with Hermes — any browsing tasks automatically route through Browser
 
 ## Option 2: Browser Use CLI
 
-The [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli) is a standalone tool that gives Hermes browser automation through terminal commands. Hermes drives the browser directly via its terminal tool — giving you shared browser sessions across agents, persistent logins and cookies, profile management, and access to Browser Use's full command surface.
+The [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli) is a standalone tool that gives Hermes browser automation through terminal commands. Hermes drives the browser directly via its terminal tool, using Browser Harness and Python helpers through the `browser-use` command.
 
 ### Setup
 
 **1. Install the CLI**
 
 ```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
+uv tool install browser-use
 ```
 
 **2. Verify the installation**
@@ -70,20 +70,20 @@ browser-use doctor
 
 **3. Install the skill**
 
-The Browser Use skill teaches Hermes the full CLI command set. Install it from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use):
+Install the Browser Use skill into Hermes:
 
 ```bash
-hermes skills install skills-sh/browser-use/browser-use/browser-use
+npx skills add https://github.com/browser-use/browser-use --skill browser-use
 ```
 
 Or ask Hermes directly in chat to install it.
 
-**4. Connect to cloud browsers**
+**4. Authenticate for cloud browsers**
 
-Log in with your API key:
+Authenticate with your API key:
 
 ```bash
-browser-use cloud login <your-api-key>
+browser-use auth login
 ```
 
 Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
@@ -96,54 +96,36 @@ Once the skill is loaded, Hermes can drive the browser through CLI commands via 
 > Use browser-use to open github.com/trending and summarize the top repos
 ```
 
-For the complete CLI reference and advanced features like cloud browsers, tunnels, sessions, and Python execution, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
+For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
 
 ## Agent Self-Registration
 
 Hermes can provision its own Browser Use API key autonomously — no human interaction needed. This works with both options above.
 
-Install the Browser Use CLI:
+Install the Browser Use CLI and skill:
 
 ```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
+uv tool install browser-use
+npx skills add https://github.com/browser-use/browser-use --skill browser-use
 ```
 
-The agent runs three CLI commands using its terminal tool:
+The agent can follow the [REST flow](/cloud/agent-signup#rest-flow) to request and verify a challenge, then use the returned API key.
 
-**1. Request a challenge**
-
-```bash
-browser-use cloud signup
-```
-
-Returns a `Challenge ID` and `Challenge` — an obfuscated math problem that requires LLM reasoning to solve.
-
-**2. Solve the challenge and verify**
-
-The agent solves the math problem, then verifies with the answer (a string with 2 decimal places, e.g. `"13.60"`):
-
-```bash
-browser-use cloud signup --verify <challenge-id> <answer>
-```
-
-The CLI saves the API key to `~/.browser-use/config.json` automatically.
-
-**3. Copy the key to Hermes config**
+**Copy the key to Hermes config**
 
 For the cloud browser backend (Option 1):
 
 ```bash
-hermes config set BROWSER_USE_API_KEY $(browser-use config get api_key)
+hermes config set BROWSER_USE_API_KEY <api-key>
 ```
 
-For CLI mode (Option 2), the key is already saved — no extra step needed.
+For CLI mode (Option 2), put the key in the agent's shell environment:
+
+```bash
+export BROWSER_USE_API_KEY=bu_...
+browser-use auth status
+```
 
 ### Claim the account (optional)
 
-If the human wants to see the account in the dashboard later:
-
-```bash
-browser-use cloud signup --claim
-```
-
-Returns a claim URL valid for 1 hour. The human can follow the link to sign up and claim the agent-created account.
+If the human wants to see the account in the dashboard later, use the [claim endpoint](/cloud/agent-signup#claim-the-account). The returned claim URL is valid for 1 hour.

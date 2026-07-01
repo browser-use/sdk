@@ -97,14 +97,14 @@ Response:
 
 The claim URL is valid for 1 hour.
 
-## CLI flow
+## CLI usage
 
-Agents with shell access can use the Browser Use CLI instead of calling the REST endpoints directly:
+Agents with shell access can use the Browser Use CLI after the REST flow returns an API key:
 
 ```bash
-browser-use cloud signup
-browser-use cloud signup --verify <challenge-id> <answer>
-browser-use cloud signup --claim
+uv tool install browser-use
+export BROWSER_USE_API_KEY=bu_...
+browser-use auth status
 ```
 
-The CLI saves the API key to `~/.browser-use/config.json` after verification.
+Replace `bu_...` with the key returned by the REST flow.
