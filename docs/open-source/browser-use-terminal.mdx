@@ -26,9 +26,7 @@ Give this employee admin permission in Azure.
 Research the top Hacker News stories and summarize the points.
 ```
 
-<video
-  controls
-  className="w-full aspect-video rounded-xl">
+<video controls className="w-full aspect-video rounded-xl">
   <source
     src="https://media.githubusercontent.com/media/browser-use/sdk/rust-terminal-docs/docs/static/terminal_demo.mp4"
     type="video/mp4"
@@ -41,15 +39,17 @@ Research the top Hacker News stories and summarize the points.
 
 You can use Browser Use Terminal in four ways:
 
-| Surface | What it is for |
-| --- | --- |
-| **TUI** | The interactive terminal app you launch with `browser`. Best for normal, hands-on use. |
-| **CLI** | Scriptable commands such as `browser-use-terminal run-openai`. Best for automation and one-off tasks. |
-| **Python** | `browser_use.beta.Agent`, backed by the same Rust runtime. Best when you want browser-use code with terminal runtime behavior. |
+| Surface               | What it is for                                                                                                                                                                                |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TUI**               | The interactive terminal app you launch with `browser`. Best for normal, hands-on use.                                                                                                        |
+| **CLI**               | Scriptable commands such as `browser-use-terminal run-openai`. Best for automation and one-off tasks.                                                                                         |
+| **Python**            | `browser_use.beta.Agent`, backed by the same Rust runtime. Best when you want browser-use code with terminal runtime behavior.                                                                |
 | **Coding assistants** | A skill plus the `browser-use-terminal browser` commands let Claude Code, Codex, OpenCode, and other agents drive the browser. See [Use From Coding Assistants](#use-from-coding-assistants). |
 
 <Info>
-Browser Use Terminal is separate from the lower-level `browser-use` CLI. Use `browser` for the Terminal TUI, `browser-use-terminal` for Terminal task commands, and `browser-use` for direct browser-control commands.
+  Browser Use Terminal is separate from the lower-level `browser-use` CLI. Use
+  `browser` for the Terminal TUI, `browser-use-terminal` for Terminal task
+  commands, and `browser-use` for direct browser-control commands.
 </Info>
 
 ## Terms
@@ -97,25 +97,25 @@ uv pip install browser-use
 
 In the TUI, type `/` to open the command palette. These are the main commands:
 
-| Command | What it does |
-| --- | --- |
-| `/task` | Start a new task. |
-| `/model` | Choose the model and provider. |
-| `/auth` | Sign in to a provider. |
-| `/browser` | Change the browser backend. |
-| `/profile` | Choose the default Chrome profile. |
-| `/history` | Browse previous tasks. |
-| `/context` | Inspect context window attribution. |
-| `/secrets` | Save passwords and 2FA setup keys for website logins. |
-| `/import-passwords` | Import saved logins from 1Password. |
-| `/domains` | Allow or block which sites the agent can visit. |
-| `/sync-cookies` | Sync local cookies. |
-| `/email` | Give the agent a disposable inbox for sign-ups, links, and codes. |
-| `/goal` | Set or view the goal for a long-running task. |
-| `/feedback` | Report a bug or share feedback. |
-| `/update` | Install the latest release. |
-| `/reload` | Restart the UI in this terminal. |
-| `/exit` | Quit Browser Use Terminal. |
+| Command             | What it does                                                      |
+| ------------------- | ----------------------------------------------------------------- |
+| `/task`             | Start a new task.                                                 |
+| `/model`            | Choose the model and provider.                                    |
+| `/auth`             | Sign in to a provider.                                            |
+| `/browser`          | Change the browser backend.                                       |
+| `/profile`          | Choose the default Chrome profile.                                |
+| `/history`          | Browse previous tasks.                                            |
+| `/context`          | Inspect context window attribution.                               |
+| `/secrets`          | Save passwords and 2FA setup keys for website logins.             |
+| `/import-passwords` | Import saved logins from 1Password.                               |
+| `/domains`          | Allow or block which sites the agent can visit.                   |
+| `/sync-cookies`     | Sync local cookies.                                               |
+| `/email`            | Give the agent a disposable inbox for sign-ups, links, and codes. |
+| `/goal`             | Set or view the goal for a long-running task.                     |
+| `/feedback`         | Report a bug or share feedback.                                   |
+| `/update`           | Install the latest release.                                       |
+| `/reload`           | Restart the UI in this terminal.                                  |
+| `/exit`             | Quit Browser Use Terminal.                                        |
 
 ## Run Browser Tasks
 
@@ -277,13 +277,13 @@ agent = Agent(
 
 Supported Python model classes:
 
-| Python model class | Example |
-| --- | --- |
-| `ChatOpenAI` | `ChatOpenAI(model="gpt-5.5")` |
-| `ChatAnthropic` | `ChatAnthropic(model="claude-sonnet-4-6")` |
-| `ChatLiteLLM` | `ChatLiteLLM(model="openai/gpt-5.5")` |
-| `ChatDeepSeek` | `ChatDeepSeek(model="deepseek-v4-pro")` |
-| `ChatOpenRouter` | `ChatOpenRouter(model="openai/gpt-5.5")` |
+| Python model class | Example                                    |
+| ------------------ | ------------------------------------------ |
+| `ChatOpenAI`       | `ChatOpenAI(model="gpt-5.5")`              |
+| `ChatAnthropic`    | `ChatAnthropic(model="claude-sonnet-4-6")` |
+| `ChatLiteLLM`      | `ChatLiteLLM(model="openai/gpt-5.5")`      |
+| `ChatDeepSeek`     | `ChatDeepSeek(model="deepseek-v4-pro")`    |
+| `ChatOpenRouter`   | `ChatOpenRouter(model="openai/gpt-5.5")`   |
 
 ## Choose A Browser
 
@@ -595,14 +595,14 @@ curl -fsSL https://browser-use.com/terminal/install.sh | sh
 
 ### Which Command Should I Use?
 
-| Goal | Command |
-| --- | --- |
-| Open the interactive Terminal app | `browser` |
-| Run a one-shot Terminal agent task | `browser-use-terminal run-openai "..."` |
-| Use Terminal runtime from Python | `browser_use.beta.Agent` |
-| Drive the browser from a coding assistant | `browser-use-terminal browser exec` |
-| Register the skill with coding assistants | `browser-use-terminal skill install` |
-| Directly control a browser with low-level commands | `browser-use open https://example.com` |
+| Goal                                      | Command                                 |
+| ----------------------------------------- | --------------------------------------- |
+| Open the interactive Terminal app         | `browser`                               |
+| Run a one-shot Terminal agent task        | `browser-use-terminal run-openai "..."` |
+| Use Terminal runtime from Python          | `browser_use.beta.Agent`                |
+| Drive the browser from a coding assistant | `browser-use-terminal browser exec`     |
+| Register the skill with coding assistants | `browser-use-terminal skill install`    |
+| Directly control a browser with Python    | `browser-use <<'PY' ... PY`             |
 
 ### Python Cannot Find `browser_use.beta`
 
@@ -617,30 +617,30 @@ python -c "from browser_use.beta import Agent; print('ok')"
 
 When you use `browser_use.beta.Agent`, these Python settings are forwarded to the Rust terminal SDK:
 
-| Python setting | Terminal SDK field |
-| --- | --- |
-| `llm.provider`, inferred from the chat model | `llm.provider` |
-| `llm.model` | `llm.model` |
-| `llm_timeout` | `llm.timeout` |
-| `headless` | `browser.headless` |
-| `keep_alive` | `browser.keep_alive` |
-| `cloud_profile_id`, `profile_id` | `browser.profile_id` |
+| Python setting                                   | Terminal SDK field           |
+| ------------------------------------------------ | ---------------------------- |
+| `llm.provider`, inferred from the chat model     | `llm.provider`               |
+| `llm.model`                                      | `llm.model`                  |
+| `llm_timeout`                                    | `llm.timeout`                |
+| `headless`                                       | `browser.headless`           |
+| `keep_alive`                                     | `browser.keep_alive`         |
+| `cloud_profile_id`, `profile_id`                 | `browser.profile_id`         |
 | `cloud_proxy_country_code`, `proxy_country_code` | `browser.proxy_country_code` |
-| `cdp_url` | `browser.cdp_url` |
-| `headers` / CDP headers | `browser.cdp_headers` |
-| `user_agent` | `browser.user_agent` |
-| `viewport` | `browser.viewport` |
-| `window_size` | `browser.window_size` |
-| `storage_state` | `browser.storage_state` |
-| `downloads_path` | `browser.downloads_path` |
-| `allowed_domains` | `browser.allowed_domains` |
-| `prohibited_domains` | `browser.blocked_domains` |
-| `state_dir` | `browser.state_dir` |
-| `no_viewport` | `browser.no_viewport` |
-| `accept_downloads` | `browser.accept_downloads` |
-| `output_model_schema` | `output_schema` |
-| `calculate_cost` | `calculate_cost` |
-| `max_actions_per_step` | `max_actions_per_step` |
+| `cdp_url`                                        | `browser.cdp_url`            |
+| `headers` / CDP headers                          | `browser.cdp_headers`        |
+| `user_agent`                                     | `browser.user_agent`         |
+| `viewport`                                       | `browser.viewport`           |
+| `window_size`                                    | `browser.window_size`        |
+| `storage_state`                                  | `browser.storage_state`      |
+| `downloads_path`                                 | `browser.downloads_path`     |
+| `allowed_domains`                                | `browser.allowed_domains`    |
+| `prohibited_domains`                             | `browser.blocked_domains`    |
+| `state_dir`                                      | `browser.state_dir`          |
+| `no_viewport`                                    | `browser.no_viewport`        |
+| `accept_downloads`                               | `browser.accept_downloads`   |
+| `output_model_schema`                            | `output_schema`              |
+| `calculate_cost`                                 | `calculate_cost`             |
+| `max_actions_per_step`                           | `max_actions_per_step`       |
 
 The same Python `Agent` instance can continue a terminal-backed session across follow-up runs.
 

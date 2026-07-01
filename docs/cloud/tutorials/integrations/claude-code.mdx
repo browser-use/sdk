@@ -10,7 +10,7 @@ description: Give Claude Code cloud browser automation with Browser Use.
 **1. Install the CLI**
 
 ```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
+uv tool install browser-use
 ```
 
 **2. Verify the installation**
@@ -21,19 +21,18 @@ browser-use doctor
 
 **3. Install the skill**
 
-The Browser Use skill teaches Claude Code the full CLI command set. Install it from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use):
+Install the Browser Use skill into Claude Code:
 
 ```bash
-npx skills add https://github.com/browser-use/browser-use --skill browser-use
+browser-use skill install
 ```
 
-**4. Connect to cloud browsers**
+**4. Authenticate for cloud browsers**
 
-Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and connect:
+Sign up at [cloud.browser-use.com](https://cloud.browser-use.com), then authenticate:
 
 ```bash
-browser-use cloud login <your-api-key>
-browser-use cloud connect
+browser-use auth login
 ```
 
 Or let Claude Code provision a free API key itself — see [Agent Self-Registration](#agent-self-registration) below.
@@ -46,47 +45,24 @@ Claude Code uses its bash tool to run CLI commands directly:
 > Use browser-use to open github.com/trending and summarize the top repos
 ```
 
-For the complete CLI reference and advanced features like sessions, tunnels, and Python execution, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
+For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
 
 ## Agent Self-Registration
 
 Claude Code can provision its own Browser Use API key autonomously — no human interaction needed. The free tier includes unlimited browser hours, free proxies in 195+ countries, persistent browser profiles, CAPTCHA solving, and stealth browsing at zero cost.
 
-Install the Browser Use CLI:
+Install the Browser Use CLI and skill:
 
 ```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
+uv tool install browser-use
+browser-use skill install
 ```
 
-Claude Code runs two CLI commands using its bash tool:
-
-**1. Request a challenge**
-
-```bash
-browser-use cloud signup
-```
-
-Returns a `Challenge ID` and `Challenge` — an obfuscated math problem that requires LLM reasoning to solve.
-
-**2. Solve the challenge and verify**
-
-Claude Code solves the math problem, then verifies with the answer (a string with 2 decimal places, e.g. `"13.60"`):
-
-```bash
-browser-use cloud signup --verify <challenge-id> <answer>
-```
-
-The CLI saves the API key to `~/.browser-use/config.json` automatically. No extra configuration needed — Claude Code can start using cloud browser commands immediately.
+Claude Code can follow the [REST flow](/cloud/agent-signup#rest-flow) to request and verify a challenge, then use the returned API key with `browser-use auth login`.
 
 ### Claim the account (optional)
 
-If the human wants to see the account in the dashboard later:
-
-```bash
-browser-use cloud signup --claim
-```
-
-Returns a claim URL valid for 1 hour. The human can follow the link to sign up and claim the agent-created account.
+If the human wants to see the account in the dashboard later, use the [claim endpoint](/cloud/agent-signup#claim-the-account). The returned claim URL is valid for 1 hour.
 
 ## Pay with USDC via x402
 

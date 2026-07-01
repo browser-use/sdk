@@ -73,7 +73,7 @@ The Browser Use CLI is a standalone tool that gives any OpenClaw agent browser a
 **1. Install the CLI**
 
 ```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
+uv tool install browser-use
 ```
 
 **2. Verify the installation**
@@ -84,12 +84,12 @@ browser-use doctor
 
 **3. Install the skill**
 
-Ask your OpenClaw agent to install it directly from [ClawHub](https://clawhub.ai/ShawnPana/browser-use), or install from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use):
+Install the Browser Use skill into your coding agent:
 
 ```bash
-npx skills add https://github.com/browser-use/browser-use --skill browser-use
+browser-use skill install
 ```
 
-Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to navigate pages, click elements, fill forms, take screenshots, extract data, and more. The skill file teaches the agent the full command set.
+Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to drive pages through Browser Harness and Python helpers.
 
-For the complete CLI reference and advanced features like cloud browsers, tunnels, sessions, and Python execution, see the [README](https://github.com/browser-use/browser-use/blob/main/browser_use/skill_cli/README.md) and the [Browser Use docs](https://docs.browser-use.com).
+For the complete CLI reference, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
