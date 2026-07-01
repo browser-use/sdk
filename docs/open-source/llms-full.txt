@@ -744,7 +744,7 @@ The Browser Use CLI (`browser-use`) is the command-line interface for the Browse
 
 2. **Cloud platform management** — a generic REST passthrough to the Browser Use API (v2 and v3) for managing agent tasks, cloud browser sessions, profiles, workspaces, files, skills, and billing. Anything available in the cloud dashboard is accessible from the terminal.
 
-The core browser workflow is: navigate to a page, run `state` to get numbered element indices, then interact using those indices. The cloud workflow is: `cloud login` to authenticate, then use `cloud v2`/`cloud v3` commands to hit any API endpoint, or `cloud connect` to provision and drive a cloud browser directly.
+The core browser workflow is: pass Python to `browser-use`, inspect the page, then interact using the Browser Harness helpers. Use `browser-use auth login` or `BROWSER_USE_API_KEY` for Browser Use Cloud auth.
 
 ## Installation
 
@@ -842,8 +842,8 @@ browser-use connect
 # Use a specific Chrome profile
 browser-use --profile "Default" open https://gmail.com
 
-# Cloud browser (zero-config, requires API key)
-browser-use cloud connect
+# Cloud browser auth
+browser-use auth login
 
 # Connect to an existing browser via CDP URL
 browser-use --cdp-url http://localhost:9222 open https://example.com
@@ -852,7 +852,7 @@ browser-use --cdp-url http://localhost:9222 open https://example.com
 browser-use --cdp-url ws://localhost:9222/devtools/browser/... state
 ```
 
-After `connect` or `cloud connect`, all subsequent commands go to that browser — no extra flags needed.
+After authenticating, use Browser Harness helpers from `browser-use` to start or connect to cloud browser sessions.
 
 ## All Commands
 
@@ -950,33 +950,17 @@ Generic REST passthrough to the Browser-Use Cloud API, plus cloud browser provis
 
 | Command | Description |
 |---------|-------------|
-| `cloud connect` | Provision cloud browser and connect (zero-config, auto-manages profile) |
-| `cloud login <api-key>` | Save API key |
-| `cloud logout` | Remove API key |
-| `cloud close` | Disconnect and stop cloud browser |
-| `cloud v2 GET <path>` | GET request to API v2 |
-| `cloud v2 POST <path> '<json>'` | POST request to API v2 |
-| `cloud v3 POST <path> '<json>'` | POST request to API v3 |
-| `cloud v2 poll <task-id>` | Poll task until done |
-| `cloud v2 --help` | Show API v2 endpoints (from OpenAPI spec) |
-| `cloud v3 --help` | Show API v3 endpoints |
+| `auth login` | Sign in to Browser Use Cloud |
+| `auth status` | Show Browser Use Cloud auth state |
+| `auth logout` | Remove stored Browser Use Cloud auth |
+| `--doctor` | Diagnose install, daemon, and browser state |
 
-`cloud connect` provisions a cloud browser with a persistent profile (auto-created on first use), connects via CDP, and prints a live URL. For custom browser settings (proxy, timeout, specific profile), use `cloud v2 POST /browsers` directly.
+Cloud browser sessions are managed through the Browser Harness helpers available inside `browser-use`.
 
 ```bash
-# Save API key (or set BROWSER_USE_API_KEY env var)
-browser-use cloud login sk-abc123...
-
-# Provision a cloud browser and connect
-browser-use cloud connect
-browser-use state                    # works normally
-browser-use close                    # disconnects AND stops cloud browser
-
-# List browsers
-browser-use cloud v2 GET /browsers
-
-# Create a task
-browser-use cloud v2 POST /tasks '{"task":"Search for AI news","url":"https://google.com"}'
+browser-use auth login
+browser-use auth status
+browser-use --doctor
 
 # Poll until done
 browser-use cloud v2 poll <task-id>
@@ -1002,7 +986,7 @@ Expose local dev servers to cloud browsers via Cloudflare tunnels.
 # Example: Test local dev server with cloud browser
 npm run dev &                              # localhost:3000
 browser-use tunnel 3000                    # → https://abc.trycloudflare.com
-browser-use cloud connect                  # Provision cloud browser
+browser-use auth login                     # Authenticate for cloud browsers
 browser-use open https://abc.trycloudflare.com
 ```
 
@@ -1018,7 +1002,7 @@ The binary is managed at `~/.browser-use/bin/profile-use` and auto-downloaded on
 | `profile list` | List detected browsers and profiles |
 | `profile sync --all` | Sync all profiles to cloud |
 | `profile sync --browser "Google Chrome" --profile "Default"` | Sync specific profile |
-| `profile auth --apikey <key>` | Set API key (shared with `cloud login`) |
+| `profile auth --apikey <key>` | Set API key |
 | `profile inspect --browser "Google Chrome" --profile "Default"` | Inspect cookies locally |
 | `profile update` | Download/update the profile-use binary |
 
@@ -1039,7 +1023,7 @@ browser-use state                              # talks to 'default' daemon
 # Named sessions
 browser-use --session work open https://example.com
 browser-use --session work state
-browser-use --session cloud cloud connect
+browser-use --session cloud auth status
 
 # List active sessions
 browser-use sessions
@@ -5393,4 +5377,3 @@ Source: https://docs.browser-use.com/open-source/development/get-help
 1. Check our [GitHub Issues](https://github.com/browser-use/browser-use/issues)
 2. Ask in our [Discord community](https://link.browser-use.com/discord)
 3. Get support for your enterprise with support@browser-use.com
-
