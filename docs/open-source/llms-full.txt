@@ -755,12 +755,12 @@ browser-use --help
 
 For one-off runs without a permanent tool install, use `uvx browser-use`.
 
-## Install the Agent Skill
+## Set Up Your Agent
 
-This adds Browser Use instructions to Claude Code, Codex, and other coding agents:
+Paste this setup prompt into Claude Code, Codex, or another coding agent:
 
-```bash
-npx skills add https://github.com/browser-use/browser-use --skill browser-use
+```text
+Install or upgrade browser-use with `uv tool install --python 3.12 --upgrade --force 'browser-use @ git+https://github.com/browser-use/browser-use.git'`, run `browser-use skill install`, and connect it to my browser. Follow https://github.com/browser-use/browser-use if setup or connection fails.
 ```
 
 The skill is discoverable from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use).
@@ -837,7 +837,6 @@ browser-use --help
 browser-use --doctor
 browser-use auth login
 browser-use auth status
-npx skills add https://github.com/browser-use/browser-use --skill browser-use
 browser-use skill show
 browser-use telemetry status
 ```
