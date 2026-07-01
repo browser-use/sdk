@@ -68,12 +68,12 @@ uv tool install browser-use
 browser-use doctor
 ```
 
-**3. Install the skill**
+**3. Register the skill**
 
-Install the Browser Use skill into Hermes:
+Register the Browser Use skill with the installed CLI:
 
 ```bash
-npx skills add https://github.com/browser-use/browser-use --skill browser-use
+browser-use skill install
 ```
 
 Or ask Hermes directly in chat to install it.
@@ -106,7 +106,7 @@ Install the Browser Use CLI and skill:
 
 ```bash
 uv tool install browser-use
-npx skills add https://github.com/browser-use/browser-use --skill browser-use
+browser-use skill install
 ```
 
 The agent can follow the [REST flow](/cloud/agent-signup#rest-flow) to request and verify a challenge, then use the returned API key.

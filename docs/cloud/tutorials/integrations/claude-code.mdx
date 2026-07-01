@@ -19,12 +19,12 @@ uv tool install browser-use
 browser-use doctor
 ```
 
-**3. Install the skill**
+**3. Register the skill**
 
-Install the Browser Use skill into Claude Code:
+Register the Browser Use skill with the installed CLI:
 
 ```bash
-npx skills add https://github.com/browser-use/browser-use --skill browser-use
+browser-use skill install
 ```
 
 **4. Authenticate for cloud browsers**
@@ -55,7 +55,7 @@ Install the Browser Use CLI and skill:
 
 ```bash
 uv tool install browser-use
-npx skills add https://github.com/browser-use/browser-use --skill browser-use
+browser-use skill install
 ```
 
 Claude Code can follow the [REST flow](/cloud/agent-signup#rest-flow) to request and verify a challenge, then put the returned key in its shell environment:
