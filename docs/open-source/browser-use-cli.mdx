@@ -26,7 +26,7 @@ For one-off runs without a permanent tool install, use `uvx browser-use`.
 Paste this setup prompt into Claude Code, Codex, or another coding agent:
 
 ```text
-Install or upgrade browser-use to the latest stable version with uv using Python 3.12, register the skill from `browser-use skill`, and connect it to my browser. Follow https://github.com/browser-use/browser-use if setup or connection fails.
+Install or upgrade browser-use with `uv tool install --python 3.12 --upgrade --force 'browser-use @ git+https://github.com/browser-use/browser-use.git'`, run `browser-use skill install`, and connect it to my browser. Follow https://github.com/browser-use/browser-use if setup or connection fails.
 ```
 
 The skill is discoverable from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use).

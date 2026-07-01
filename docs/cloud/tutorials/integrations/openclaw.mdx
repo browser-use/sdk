@@ -87,7 +87,7 @@ browser-use doctor
 Paste this setup prompt into your OpenClaw agent:
 
 ```text
-Install or upgrade browser-use to the latest stable version with uv using Python 3.12, register the skill from `browser-use skill`, and connect it to my browser. Follow https://github.com/browser-use/browser-use if setup or connection fails.
+Install or upgrade browser-use with `uv tool install --python 3.12 --upgrade --force 'browser-use @ git+https://github.com/browser-use/browser-use.git'`, run `browser-use skill install`, and connect it to my browser. Follow https://github.com/browser-use/browser-use if setup or connection fails.
 ```
 
 Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to drive pages through Browser Harness and Python helpers.
