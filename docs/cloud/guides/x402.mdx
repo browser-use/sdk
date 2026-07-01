@@ -112,21 +112,26 @@ const client = new BrowserUse(); // auto-detects from env
 Use this if you're in a language we don't ship an SDK for (Go, Rust, Ruby, etc.), or if you want to use other x402 APIs from the same client library. Hit `https://x402.api.browser-use.com` directly with any [x402 client library](https://github.com/coinbase/x402#all-available-reference-sdks):
 
 ```python
+import asyncio
+
 from x402 import x402Client
 from x402.http.clients import x402HttpxClient
 from x402.mechanisms.evm import EthAccountSigner
 from x402.mechanisms.evm.exact.register import register_exact_evm_client
 from eth_account import Account
 
-client = x402Client()
-register_exact_evm_client(client, EthAccountSigner(Account.from_key("0x...")))
+async def main():
+    client = x402Client()
+    register_exact_evm_client(client, EthAccountSigner(Account.from_key("0x...")))
 
-async with x402HttpxClient(client, timeout=120.0) as http:
-    response = await http.post(
-        "https://x402.api.browser-use.com/api/v3/sessions",
-        json={"task": "..."},
-    )
-    print(response.status_code, response.text[:500])
+    async with x402HttpxClient(client, timeout=120.0) as http:
+        response = await http.post(
+            "https://x402.api.browser-use.com/api/v3/sessions",
+            json={"task": "..."},
+        )
+        print(response.status_code, response.text[:500])
+
+asyncio.run(main())
 ```
 
 `https://x402.api.browser-use.com` exposes the same routes as `https://api.browser-use.com`. It supports every `/api/v2/*` and `/api/v3/*` route, gated by an x402 challenge instead of API key auth.
@@ -162,6 +167,8 @@ If you already have a Browser Use API key (for example, one created via the dash
 
 <CodeGroup>
 ```python Python
+import asyncio
+
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse(
@@ -169,7 +176,11 @@ client = AsyncBrowserUse(
     x402_private_key="0x...",             # wallet that pays
     base_url="https://x402.api.browser-use.com/api/v3",
 )
-result = await client.run("...")          # $5 USDC charged, credited to the API key's project
+async def main():
+    result = await client.run("...")      # $5 USDC charged, credited to the API key's project
+    print(result.output)
+
+asyncio.run(main())
 
 ```
 
@@ -201,10 +212,15 @@ To check how much credit that account has left, use the method below:
 
 <CodeGroup>
 ```python Python
+import asyncio
+
 from browser_use_sdk.v3 import get_wallet_balance
 
-balance = await get_wallet_balance("0x...")  # same wallet private key you pay with
-print(balance["total_credits_usd"])
+async def main():
+    balance = await get_wallet_balance("0x...")  # same wallet private key you pay with
+    print(balance["total_credits_usd"])
+
+asyncio.run(main())
 
 ```
 

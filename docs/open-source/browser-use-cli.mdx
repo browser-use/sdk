@@ -20,10 +20,10 @@ For one-off runs without a permanent tool install, use `uvx browser-use`.
 This adds Browser Use instructions to Claude Code, Codex, and other coding agents:
 
 ```bash
-browser-use skill install
+npx skills add https://github.com/browser-use/browser-use --skill browser-use
 ```
 
-The skill is also discoverable from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use).
+The skill is discoverable from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use).
 
 ## Use Python Directly
 
@@ -91,7 +91,7 @@ browser-use --help
 browser-use --doctor
 browser-use auth login
 browser-use auth status
-browser-use skill install
+npx skills add https://github.com/browser-use/browser-use --skill browser-use
 browser-use skill show
 browser-use telemetry status
 ```
