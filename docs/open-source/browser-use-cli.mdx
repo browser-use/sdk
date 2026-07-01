@@ -4,7 +4,13 @@ description: "Direct browser control for coding agents."
 icon: "terminal"
 ---
 
-The Browser Use CLI (`browser-use`) gives coding agents a direct browser-control surface backed by [Browser Harness](https://github.com/browser-use/browser-harness). Agents run small Python snippets with browser helpers already available, then inspect, click, type, screenshot, and recover using the same coding loop they use everywhere else.
+The Browser Use CLI (`browser-use`) gives coding agents a direct browser-control surface backed by [Browser Harness](https://github.com/browser-use/browser-harness):
+
+- **Direct browser control** — agents run Python to do actions in the browser.
+- **Three browser modes** — you can use with local Chrome or Chromium with your existing tabs, cookies, extensions, and logins; Browser Use cloud browsers; or any browser reachable through a CDP endpoint.
+- **Agent-ready setup** — install the skill into Claude Code, Codex, and other coding agents so they know when and how to call the CLI.
+
+To try the hosted agent directly, use [Browser Use Cloud](https://cloud.browser-use.com?utm_source=docs&utm_medium=browser-use-cli&utm_campaign=v4), or install the skill.
 
 ## Install the CLI
 
@@ -47,7 +53,11 @@ print(page_info())
 
 ## Local Browser Setup
 
-The default local flow attaches to your running Chrome or Chromium through CDP. If the CLI cannot connect, run:
+The default local flow attaches to your running Chrome or Chromium through CDP. This preserves the browser state the user already has locally: open tabs, cookies, extensions, and logged-in sessions. It is the right default for desktop work where the user can approve Chrome's remote-debugging prompt.
+
+You can also point the CLI at any existing CDP browser by setting `BU_CDP_URL` or `BU_CDP_WS` before running `browser-use`. Use that for managed Chrome instances, Playwright-launched browsers, or infrastructure that already exposes a DevTools endpoint.
+
+If the CLI cannot connect, run:
 
 ```bash
 browser-use --doctor
@@ -57,13 +67,13 @@ If Chrome asks whether to allow remote debugging, approve it and rerun the comma
 
 ## Cloud Browsers
 
-Authenticate once:
+Use Browser Use cloud browsers when the agent runs on a headless machine, needs an isolated browser, needs parallel browser sessions, or needs Browser Use Cloud features such as persistent cloud profiles, proxy routing, CAPTCHA handling, and live browser viewing.
+
+The Browser Harness-backed CLI keeps cloud sessions explicit. You authenticate once, start a named cloud browser, then use that name for later commands:
 
 ```bash
 browser-use auth login
 ```
-
-Then start a named cloud browser and use the same name for later commands:
 
 ```bash
 browser-use <<'PY'
@@ -75,6 +85,8 @@ new_tab("https://example.com")
 print(page_info())
 PY
 ```
+
+Use short, task-specific names when you have multiple agents or sub-agents running in parallel. Each name maps to its own remote browser daemon.
 
 Remote browsers bill until they stop or time out. When the task is done, ask whether to close the browser; if yes, run:
 
