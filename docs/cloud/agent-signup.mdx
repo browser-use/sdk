@@ -103,7 +103,8 @@ Agents with shell access can use the Browser Use CLI after the REST flow returns
 
 ```bash
 uv tool install browser-use
-printf '%s\n' 'bu_...' | browser-use auth login --api-key-stdin
+export BROWSER_USE_API_KEY=bu_...
+browser-use auth status
 ```
 
 Replace `bu_...` with the key returned by the REST flow.

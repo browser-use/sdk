@@ -119,10 +119,11 @@ For the cloud browser backend (Option 1):
 hermes config set BROWSER_USE_API_KEY <api-key>
 ```
 
-For CLI mode (Option 2), save the key for the CLI:
+For CLI mode (Option 2), put the key in the agent's shell environment:
 
 ```bash
-printf '%s\n' 'bu_...' | browser-use auth login --api-key-stdin
+export BROWSER_USE_API_KEY=bu_...
+browser-use auth status
 ```
 
 ### Claim the account (optional)
