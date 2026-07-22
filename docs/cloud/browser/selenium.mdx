@@ -1,0 +1,68 @@
+---
+title: Selenium
+description: "Run Selenium-style automation on Browser Use's stealth browsers — and why to bridge through CDP."
+icon: code
+---
+
+Browser Use's cloud browsers speak Chrome DevTools Protocol (CDP) over a remote WebSocket. Selenium can't consume that natively: its `debugger_address` option only supports local `host:port` connections, not remote `wss://` URLs.
+
+You have two practical paths.
+
+## Recommended: bridge through a CDP client
+
+If you're migrating Selenium scripts, connect through Playwright's sync API — the page-automation model (navigate, locate, click, read) maps one-to-one, and you get the [hardened stealth Chromium](/cloud/browser/stealth) and [residential proxies](/cloud/browser/proxies) with no configuration.
+
+```python
+from playwright.sync_api import sync_playwright
+
+WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(WSS_URL)
+    page = browser.contexts[0].pages[0]
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()
+# Browser is automatically stopped when the WebSocket disconnects
+```
+
+Common Selenium → Playwright equivalents:
+
+| Selenium | Playwright (sync) |
+|---|---|
+| `driver.get(url)` | `page.goto(url)` |
+| `driver.find_element(By.CSS_SELECTOR, s)` | `page.locator(s)` |
+| `element.click()` | `page.locator(s).click()` |
+| `element.send_keys(text)` | `page.locator(s).fill(text)` |
+| `driver.title` | `page.title()` |
+| `WebDriverWait(...).until(...)` | built-in auto-waiting |
+| `driver.quit()` | `browser.close()` |
+
+### Query parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `apiKey` | `string` | **Required.** Your Browser Use API key. |
+| `proxyCountryCode` | `string` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
+| `profileId` | `string` | Load a saved browser profile (cookies, localStorage). |
+| `timeout` | `int` | Session timeout in minutes. Default: 15. Max: 240 (4 hours). |
+| `browserScreenWidth` | `int` | Browser width in pixels. |
+| `browserScreenHeight` | `int` | Browser height in pixels. |
+
+## Alternative: keep Selenium with a local proxy
+
+If you must keep the Selenium API, run a local WebSocket-to-TCP proxy so Chrome's remote debugging endpoint appears as a local `host:port`, e.g. via [selenium-wire](https://github.com/wkeeling/selenium-wire). This adds a moving part we don't manage — for new code, prefer the CDP bridge above.
+
+<Note>
+  Selenium's `debugger_address` only supports local `host:port` connections. For remote CDP over WebSocket, use [Playwright](/cloud/browser/playwright) or [Puppeteer](/cloud/browser/puppeteer) instead.
+</Note>
+
+<Warning>
+  Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
+</Warning>
+
+## See also
+
+- [Playwright](/cloud/browser/playwright) and [Puppeteer](/cloud/browser/puppeteer) connections
+- [Live preview & recording](/cloud/browser/live-preview) — watch the session or embed it in your app
+- [Proxies](/cloud/browser/proxies) and [stealth](/cloud/browser/stealth) configuration

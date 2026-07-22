@@ -143,6 +143,11 @@ generate_full() {
   echo "# Browser Use ${product} — Full Documentation" > "$out"
   echo "" >> "$out"
 
+  if [[ "$product" == "Cloud" ]]; then
+    echo "> Machine-readable OpenAPI spec: https://docs.browser-use.com/openapi.json (v3, canonical — also at /cloud/openapi/v3.json; legacy v2: /cloud/openapi/v2.json). Dashboard: https://cloud.browser-use.com. Create an API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1" >> "$out"
+    echo "" >> "$out"
+  fi
+
   python3 -c "
 import json
 
@@ -229,7 +234,7 @@ cat > "$CLOUD_INDEX" << 'HEADER'
 - Dashboard: https://cloud.browser-use.com
 - Create API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Docs: https://docs.browser-use.com
-- OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
+- OpenAPI spec (v3): https://docs.browser-use.com/openapi.json (also at /cloud/openapi/v3.json; legacy v2: /cloud/openapi/v2.json)
 - Chat UI example: https://docs.browser-use.com/cloud/tutorials/chat-ui — Full end-to-end example with live browser, streaming, auth. Best starting point to build a prototype.
 - Open-source repo: https://github.com/browser-use/browser-use — The open-source Python library. Note: the open-source API is different from the Cloud SDK. If you want the easiest path to production with managed infrastructure, use the Cloud SDK below.
 
@@ -282,3 +287,7 @@ generate_full "open-source" "Open Source" "$OS_FULL"
 cp "$SCRIPT_DIR/llms.txt" "$SCRIPT_DIR/cloud/llms.txt"
 cp "$SCRIPT_DIR/llms-full.txt" "$SCRIPT_DIR/cloud/llms-full.txt"
 echo "Copied root llms files to cloud/"
+
+# Sync the canonical v3 spec to the docs root so it is served at /openapi.json
+cp "$SCRIPT_DIR/cloud/openapi/v3.json" "$SCRIPT_DIR/openapi.json"
+echo "Copied cloud/openapi/v3.json to openapi.json (root)"

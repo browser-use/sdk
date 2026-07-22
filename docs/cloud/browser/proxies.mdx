@@ -82,3 +82,39 @@ const browser = await client.browsers.create({
 });
 ```
 </CodeGroup>
+
+## Blocked? Get a fresh IP
+
+Browser Use does not rotate the IP within a running session. When a site starts blocking you, stop the session and create a new one — each session gets a fresh residential IP from the country pool automatically.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+async def with_fresh_ip(country="us", profile_id=None):
+    # Stop-and-recreate is how you get a new IP; reattach a profile to keep login state.
+    browser = await client.browsers.create(proxy_country_code=country, profile_id=profile_id)
+    return browser
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+
+async function withFreshIp(country = "us", profileId?: string) {
+  // Stop-and-recreate is how you get a new IP; reattach a profile to keep login state.
+  return client.browsers.create({ proxyCountryCode: country, profileId });
+}
+```
+</CodeGroup>
+
+- **New session = new IP.** Recreating the browser is the supported way to rotate.
+- **Keep your login across the rotation** by passing the same [`profile_id`](/cloud/guides/authentication) — the fresh IP loads the saved cookies and localStorage.
+- **Switch country** (`proxy_country_code`) to leave a blocked regional pool entirely.
+- **Custom proxies** can rotate per request on their side — use the `custom_proxy` config above with a rotating endpoint.
+
+## Further reading
+
+- [We stealth benchmarked every major cloud browser provider](https://browser-use.com/posts/stealth-benchmark) — how proxy quality affects bypass rates

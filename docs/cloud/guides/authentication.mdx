@@ -4,40 +4,117 @@ description: "Persistent browser state — cookies, localStorage, saved password
 icon: user
 ---
 
+Create a profile, then pass its `profile_id` to `run()` — the agent opens a browser seeded from that profile and runs your task on it. Cookies and login state saved during the run persist, so the next run with the same profile is already logged in.
+
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-profile = await client.profiles.create(name="user-id-1")
-# or search existing
-# profile = (await client.profiles.list(query="user-id-1")).items[0]
-session = await client.sessions.create(profile_id=profile.id)
-result = await client.run("Check browser-use github stars", session_id=session.id)
-print(result.output)
 
-# Always stop the session to persist profile state
-await client.sessions.stop(session.id)
+# 1. Create a profile (stores cookies + login state across runs)
+profile = await client.profiles.create(name="user-id-1")
+# or reuse an existing one:
+# profile = (await client.profiles.list(query="user-id-1")).items[0]
+
+# 2. Run the agent — profile_id attaches a browser seeded from the profile
+result = await client.run(
+    "Go to example.com and return the page title",
+    profile_id=profile.id,
+)
+print(result.output)  # -> "Example Domain"
+
+# 3. Reuse the same profile later — saved login/cookies carry over
+followup = await client.run("Check my GitHub notifications", profile_id=profile.id)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const profile = await client.profiles.create({ name: "user-id-1" });
-// or search existing
-// const profile = (await client.profiles.list({ query: "user-id-1" })).items[0];
-const session = await client.sessions.create({ profileId: profile.id });
-const result = await client.run("Check browser-use github stars", {
-  sessionId: session.id,
-});
-console.log(result.output);
 
-// Always stop the session to persist profile state
-await client.sessions.stop(session.id);
+// 1. Create a profile (stores cookies + login state across runs)
+const profile = await client.profiles.create({ name: "user-id-1" });
+// or reuse an existing one:
+// const profile = (await client.profiles.list({ query: "user-id-1" })).items[0];
+
+// 2. Run the agent — profileId attaches a browser seeded from the profile
+const result = await client.run("Go to example.com and return the page title", {
+  profileId: profile.id,
+});
+console.log(result.output); // -> "Example Domain"
+
+// 3. Reuse the same profile later — saved login/cookies carry over
+const followup = await client.run("Check my GitHub notifications", { profileId: profile.id });
 ```
 </CodeGroup>
 
+Passing `profile_id` to `run()` provisions the browser and runs the agent in one call — no separate session step. Profile state is saved automatically when the run ends.
+
 View your profile IDs at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=profiles).
+
+## Persist state on a browser you drive (CDP)
+
+Profiles work the same whether the agent drives or you do. Pass `profile_id` to `browsers.create()`, set state over CDP, then **stop the browser to flush cookies and localStorage into the profile**. Reconnect later with the same `profile_id` and the state is there.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+from playwright.async_api import async_playwright
+
+client = AsyncBrowserUse()
+profile = await client.profiles.create(name="persist-demo")
+
+# Session 1 — write state, then stop to persist
+b1 = await client.browsers.create(profile_id=profile.id)
+async with async_playwright() as p:
+    pw = await p.chromium.connect_over_cdp(b1.cdp_url)
+    page = pw.contexts[0].pages[0]
+    await page.goto("https://en.wikipedia.org")
+    await page.evaluate("localStorage.setItem('demo', 'hello')")
+    await pw.close()
+await client.browsers.stop(b1.id)   # flushes state into the profile
+
+# Session 2 — same profile, state is back
+b2 = await client.browsers.create(profile_id=profile.id)
+async with async_playwright() as p:
+    pw = await p.chromium.connect_over_cdp(b2.cdp_url)
+    page = pw.contexts[0].pages[0]
+    await page.goto("https://en.wikipedia.org")
+    value = await page.evaluate("localStorage.getItem('demo')")
+    print(value)  # -> hello
+    await pw.close()
+await client.browsers.stop(b2.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { chromium } from "playwright";
+
+const client = new BrowserUse();
+const profile = await client.profiles.create({ name: "persist-demo" });
+
+// Session 1 — write state, then stop to persist
+const b1 = await client.browsers.create({ profileId: profile.id });
+let pw = await chromium.connectOverCDP(b1.cdpUrl);
+let page = pw.contexts()[0].pages()[0];
+await page.goto("https://en.wikipedia.org");
+await page.evaluate(() => localStorage.setItem("demo", "hello"));
+await pw.close();
+await client.browsers.stop(b1.id); // flushes state into the profile
+
+// Session 2 — same profile, state is back
+const b2 = await client.browsers.create({ profileId: profile.id });
+pw = await chromium.connectOverCDP(b2.cdpUrl);
+page = pw.contexts()[0].pages()[0];
+await page.goto("https://en.wikipedia.org");
+console.log(await page.evaluate(() => localStorage.getItem("demo"))); // -> hello
+await pw.close();
+await client.browsers.stop(b2.id);
+```
+</CodeGroup>
+
+<Note>
+  Use a site that actually sets cookies/localStorage to verify persistence — `example.com` sets none, so it is a poor test target.
+</Note>
 
 ## Manage profiles
 
@@ -94,5 +171,9 @@ await client.profiles.delete(profileId);
 - **Per-user profiles:** Create one profile per end-user. Query by name to get the profile ID, or store a mapping between your users and their profile IDs in your database.
 
 <Warning>
-  Profile state is only saved when the session ends. Always call `sessions.stop()` when you are done — if a session is left open or times out, changes may not be persisted. Every code path that uses a profile must stop the session, including error handlers.
+  Profile state is saved when the run ends — call `sessions.stop()` (agent) or `browsers.stop()` (CDP) when you are done. Both paths persist; a session left open or timed out may not save. Stop in a `finally` so every code path, including error handlers, persists.
 </Warning>
+
+## Further reading
+
+- [How to authenticate AI web agents](https://browser-use.com/posts/web-agent-authentication)

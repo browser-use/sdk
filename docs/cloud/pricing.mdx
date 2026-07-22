@@ -1,0 +1,66 @@
+---
+title: Pricing & free tier
+description: "Browser Use Cloud plans, the free tier (no card required), and every usage-based rate."
+icon: credit-card
+---
+
+Browser Use Cloud has a free tier and four paid plans. Usage (browser time, proxy data, agent tokens) is billed on top of the plan. The [pricing page](https://browser-use.com/pricing) is the canonical source; the numbers here are kept in sync with it.
+
+## Free tier
+
+Free, no credit card required. It includes:
+
+- 3 concurrent browser sessions
+- 1 browser profile, 1 team member
+- Basic proxy pool
+- Advanced [stealth](/cloud/browser/stealth), [CAPTCHA solving](/cloud/browser/captcha), and [webhook events](/cloud/guides/webhooks)
+- Community support
+
+Stealth and CAPTCHA solving are on for every tier, including free. They are not paid add-ons.
+
+## Plans
+
+| Plan | Monthly | Included credits | Concurrent sessions | Team members |
+|------|---------|------------------|---------------------|--------------|
+| Free | $0 | — | 3 | 1 |
+| Dev | $29 | $29 | 25 | 5 |
+| Business | $299 | $299 | 200 | Unlimited |
+| Scaleup | $999 | $999 | 500 | Unlimited |
+| Enterprise | Custom | Negotiated | Negotiated | Negotiated |
+
+Annual billing is pay for 10 months, get 12 (Dev $290/yr, Business $2,990/yr, Scaleup $9,990/yr).
+
+The concurrent-session limit is what a `429 Too many concurrent active sessions` error refers to. Stop idle sessions or upgrade the plan to raise it.
+
+## Usage rates
+
+Billed against your plan credits, then charged if you exceed them.
+
+**Browser & proxies**
+- Browser session: $0.02/hour, active time only
+- Proxy bandwidth: $5/GB
+
+**Agent (v3, token-based at 1.2× provider rates)**
+
+| Model | Input / output per 1M tokens |
+|-------|------------------------------|
+| GPT-5.4 Mini | $0.90 / $5.40 |
+| Claude Sonnet 4.6 | $3.60 / $18.00 |
+| Claude Opus 4.6 / 4.7 | $6.00 / $30.00 |
+
+When you [bring your own LLM](/cloud/agent/models), those tokens go to your own provider instead.
+
+## Tracking spend
+
+Every browser session object reports its own running cost (`browserCost`, `proxyCost`, `proxyUsedMb`), so spend is inspectable per session. [Stop sessions](/cloud/browser/sessions#stopping-a-session) when done — an idle session bills until it stops or [times out](/cloud/browser/sessions#timeouts).
+
+## The open-source library is free
+
+The [library](/open-source/introduction) has no Browser Use charges — you pay only your own LLM provider. Cloud rates apply when you use cloud browsers or the hosted agent. See [Open source vs Cloud](/cloud/open-source-vs-cloud).
+
+## Further reading
+
+- [Remote browsers for agents: the Browser Use free tier](https://browser-use.com/posts/free-tier-announcement)
+- [How we made cloud browsers 3x cheaper and faster](https://browser-use.com/posts/firecracker-browser-infra)
+
+{/* TEAM REVIEW: keep this table in sync with browser-use.com/pricing. The v2 agent (per-step from $0.006, task init $0.01) is legacy — omitted here; add a legacy note if v2 users need it. */}

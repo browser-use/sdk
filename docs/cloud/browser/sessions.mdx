@@ -1,0 +1,82 @@
+---
+title: Manage browser sessions
+description: "Session lifecycle: states, timeouts, stopping, disconnect behavior, and what you're billed for."
+icon: list-check
+---
+
+A session has two states: `active` and `stopped`. It leaves `active` in exactly three ways: you stop it, its timeout expires, or (WebSocket connections only) the socket disconnects.
+
+## Stopping a session
+
+Stopping is an update, not a delete, and it cannot be undone.
+
+<CodeGroup>
+```python Python
+await client.browsers.stop(browser.id)
+```
+```typescript TypeScript
+await client.browsers.stop(browser.id);
+```
+```bash REST
+curl -X PATCH "https://api.browser-use.com/api/v3/browsers/$SESSION_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "stop"}'
+```
+</CodeGroup>
+
+There is no `POST /browsers/{id}/stop` endpoint. If you're getting a `404` on a stop call, this is why.
+
+Stop sessions as soon as you're done with them. Browser time is billed at $0.02/hour until the session stops or times out, whichever comes first.
+
+```python
+browser = await client.browsers.create()
+try:
+    ...  # your automation
+finally:
+    await client.browsers.stop(browser.id)
+```
+
+## Disconnecting vs stopping
+
+The two connection styles behave differently when your client goes away:
+
+| | Client disconnects | Session keeps running? |
+|---|---|---|
+| WebSocket URL (`wss://connect.browser-use.com`) | Socket closes | No — the session stops automatically |
+| SDK / REST (`browsers.create()` + CDP) | `pw_browser.close()` only detaches your client | Yes — until you call stop or the timeout expires |
+
+The SDK behavior is what lets you disconnect and reconnect to the same session, but it also means forgotten sessions keep billing. If you see `429 Too many concurrent active sessions`, list and stop the strays:
+
+```python
+sessions = await client.browsers.list(filter_by="active")
+for s in sessions.items:
+    await client.browsers.stop(s.id)
+```
+
+## Timeouts
+
+Every session has a lifetime set at creation: `timeout` in minutes, default `60`, maximum `240` (4 hours). The expiry moment comes back as `timeoutAt` in the session object. A timed-out session stops automatically and cannot be extended or reused, so if a workflow might outlive the default, set the timeout up front:
+
+```python
+browser = await client.browsers.create(timeout=240)
+```
+
+## Inspecting sessions
+
+```python
+browser = await client.browsers.get(session_id)     # one session
+sessions = await client.browsers.list(page_size=20) # paginated, filter_by="active" | "stopped"
+```
+
+The session object carries the operational fields: `status`, `timeoutAt`, `startedAt`, `finishedAt`, live and CDP URLs, plus cost tracking (`browserCost`, `proxyCost`, `proxyUsedMb`).
+
+## Recordings and downloads
+
+- Create the session with `enableRecording: true` and `recordingUrl` is populated after the session stops. It is `null` while the session runs and shortly after stopping while the video is processed.
+- Files downloaded by the browser during the session are listed at `GET /browsers/{session_id}/downloads`.
+
+## Related
+
+- [Create a browser session](/cloud/browser/create) — all creation parameters
+- [Live preview](/cloud/browser/live-preview) — watch or embed a running session

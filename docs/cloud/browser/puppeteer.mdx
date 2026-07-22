@@ -1,0 +1,117 @@
+---
+title: Puppeteer
+description: "Connect Puppeteer to a remote stealth browser with browserWSEndpoint."
+icon: code
+---
+
+Run your Puppeteer scripts on Browser Use's cloud browsers. Every session runs in a [hardened Chromium fork](/cloud/browser/stealth) with stealth, anti-fingerprinting, and [residential proxies](/cloud/browser/proxies) enabled by default — no configuration needed.
+
+When to use this:
+- You have existing Puppeteer scripts and want to run them on stealth infrastructure
+- You want low-level CDP control from Node.js without managing Chrome yourself
+- You want to combine agent tasks with manual browser automation
+
+## Option 1: WebSocket URL (no SDK)
+
+Connect with a single URL. All configuration is passed as query parameters.
+
+```typescript
+import puppeteer from "puppeteer-core";
+
+const WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us";
+
+const browser = await puppeteer.connect({ browserWSEndpoint: WSS_URL });
+const [page] = await browser.pages();
+await page.goto("https://example.com");
+console.log(await page.title());
+await browser.close();
+// Browser is automatically stopped when the WebSocket disconnects
+```
+
+### Query parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `apiKey` | `string` | **Required.** Your Browser Use API key. |
+| `proxyCountryCode` | `string` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
+| `profileId` | `string` | Load a saved browser profile (cookies, localStorage). |
+| `timeout` | `int` | Session timeout in minutes. Default: 15. Max: 240 (4 hours). |
+| `browserScreenWidth` | `int` | Browser width in pixels. |
+| `browserScreenHeight` | `int` | Browser height in pixels. |
+
+## Option 2: SDK
+
+Create a browser via the SDK, then resolve the WebSocket endpoint. Unlike Playwright, Puppeteer can't connect to an HTTP CDP URL directly — fetch `/json/version` to get the `webSocketDebuggerUrl` first.
+
+```typescript
+import { BrowserUse } from "browser-use-sdk/v3";
+import puppeteer from "puppeteer-core";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create();
+
+// Puppeteer needs the WebSocket URL from /json/version
+const resp = await fetch(`${browser.cdpUrl}/json/version`);
+const { webSocketDebuggerUrl } = await resp.json();
+
+const pptrBrowser = await puppeteer.connect({ browserWSEndpoint: webSocketDebuggerUrl });
+const [page] = await pptrBrowser.pages();
+await page.goto("https://example.com");
+console.log(await page.title());
+await pptrBrowser.close();
+
+await client.browsers.stop(browser.id);
+```
+
+The SDK also gives you a `liveUrl` to [watch or embed the session](/cloud/browser/live-preview).
+
+### Create response
+
+`browsers.create()` wraps `POST https://api.browser-use.com/api/v3/browsers`, which returns `201` with:
+
+```json
+{
+  "id": "0d5f16f3-96cc-4d5f-a5a4-4a4d3b5f9d2e",
+  "status": "active",
+  "liveUrl": "https://live.browser-use.com?wss=...",
+  "cdpUrl": "https://0d5f16f3.cdp1.browser-use.com",
+  "timeoutAt": "2026-07-14T20:15:00Z",
+  "startedAt": "2026-07-14T20:00:00Z",
+  "finishedAt": null,
+  "proxyUsedMb": "0.0",
+  "proxyCost": "0.0",
+  "browserCost": "0.0",
+  "agentSessionId": null,
+  "recordingUrl": null
+}
+```
+
+Field names are camelCase in the REST API and TypeScript SDK (`cdpUrl`, `liveUrl`). `cdpUrl` and `liveUrl` are nullable — check them before connecting.
+
+### Stopping a session over REST
+
+There is no `POST /browsers/{id}/stop` endpoint. Stopping is an update:
+
+```bash
+curl -X PATCH "https://api.browser-use.com/api/v3/browsers/$SESSION_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "stop"}'
+```
+
+## Gotchas
+
+- **Use `puppeteer-core`.** It's the connect-only package — installing full `puppeteer` downloads a local Chromium you'll never use.
+- **`browserWSEndpoint` must be a `ws://`/`wss://` URL.** Passing the SDK's HTTPS `cdpUrl` directly fails; resolve it via `/json/version` as shown above.
+- **Viewport.** Puppeteer applies its own 800×600 default viewport after connecting. Pass `defaultViewport: null` to `puppeteer.connect()` to keep the browser's real window size.
+- **Closing the connection vs stopping the session.** With the WebSocket URL, disconnecting stops the browser. With the SDK, `browser.close()` only disconnects your client — call `client.browsers.stop(browser.id)` to end the session.
+
+<Warning>
+  Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
+</Warning>
+
+## See also
+
+- [Playwright](/cloud/browser/playwright) and [Selenium](/cloud/browser/selenium) connections
+- [Live preview & recording](/cloud/browser/live-preview) — watch the session or embed it in your app
+- [Proxies](/cloud/browser/proxies) and [stealth](/cloud/browser/stealth) configuration

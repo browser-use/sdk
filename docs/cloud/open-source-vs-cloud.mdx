@@ -1,0 +1,34 @@
+---
+title: Open source vs Cloud
+description: "The library and the cloud are different products that combine. Here's which one you want."
+icon: code-compare
+---
+
+Browser Use is two things with one name. The confusion is common enough to deserve its own page.
+
+**The [open-source library](/open-source/introduction)** (`pip install browser-use`) is an agent framework that runs on your machine. You bring your own LLM key, it launches a local Chromium, and nothing leaves your infrastructure. Free, Apache-licensed, yours.
+
+**Browser Use Cloud** (this documentation) is a paid API with two services: [stealth cloud browsers](/cloud/browser/overview) you can drive with any framework, and a [hosted agent](/cloud/agent/overview) that runs tasks for you, no library install required.
+
+## Which do you want?
+
+| You want to... | Use |
+|---|---|
+| Run an agent locally, free, with your own LLM keys | Open source library |
+| Keep your local agent but stop getting blocked by websites | Library + [cloud browser](/cloud/browser/open-source-agent) |
+| Drive stealth browsers with existing Playwright/Puppeteer scripts | Cloud [Browser](/cloud/browser/overview) |
+| Send a task and get a result, zero infrastructure | Cloud [Agent](/cloud/agent/overview) |
+
+## Common questions
+
+**Do I need an API key to use the library?**
+No. The library needs an LLM provider key (OpenAI, Anthropic, Ollama for fully local). A Browser Use API key is only needed for cloud features.
+
+**Does the library have stealth or CAPTCHA solving?**
+No. Those are properties of the cloud browsers. The bridge is one parameter: point the library's `Browser` at a [cloud browser session](/cloud/browser/open-source-agent).
+
+**Is the cloud agent the same agent as the library?**
+The cloud agent is the hosted, managed version, with the same task-in, result-out model plus cloud-only features like [structured output](/cloud/agent/structured-output), [workspaces](/cloud/agent/workspaces), and [human-in-the-loop](/cloud/agent/human-in-the-loop).
+
+**Can I self-host the cloud?**
+The library is the self-hosted option: your machines, your browsers, your keys. The stealth browser fleet and hosted agent are not self-hostable.

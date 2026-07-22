@@ -1,0 +1,56 @@
+---
+title: Cloud browser + open source agent
+description: "Run the open-source Browser Use agent on a cloud stealth browser. Your code, our infrastructure."
+icon: plug
+---
+
+The [open-source library](/open-source/introduction) runs the agent on your machine. By default it also runs the *browser* on your machine, which means no stealth, no residential proxy, and no CAPTCHA solving. This page connects the two: keep your local agent code, point it at a cloud browser.
+
+## Connect by CDP URL
+
+Create a cloud browser, then pass its CDP URL to the library's `Browser`:
+
+```python
+import asyncio
+from browser_use import Agent, Browser, ChatOpenAI
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse()
+    cloud_browser = await client.browsers.create(proxy_country_code="us")
+
+    try:
+        agent = Agent(
+            task="Find the current price of iPhone 16 on amazon.de",
+            llm=ChatOpenAI(model="gpt-4o"),
+            browser=Browser(cdp_url=cloud_browser.cdp_url),
+        )
+        await agent.run()
+    finally:
+        await client.browsers.stop(cloud_browser.id)
+
+asyncio.run(main())
+```
+
+The agent behaves exactly as it does locally. The browser it drives is a [stealth Chromium](/cloud/browser/stealth) with [CAPTCHA solving](/cloud/browser/captcha) and a [residential proxy](/cloud/browser/proxies), and you can watch it work through the session's `live_url`.
+
+{/* TEAM REVIEW: confirm the `use_cloud=True` shorthand on Browser() — parameter name, minimum library version, and whether it should be the primary example instead of the cdp_url form. */}
+
+## What you get, what you keep
+
+| | Stays yours | Comes from Cloud |
+|---|---|---|
+| Agent loop, prompts, custom tools | ✓ | |
+| LLM choice and API keys | ✓ | |
+| Browser runtime | | ✓ stealth Chromium |
+| Proxy / IP | | ✓ residential, 195+ countries |
+| CAPTCHA handling | | ✓ automatic |
+| Live view and recording | | ✓ per session |
+
+Billing: only the browser session ($0.02/hour plus proxy data). Your LLM tokens go to your own provider.
+
+## Related
+
+- [Create a browser session](/cloud/browser/create) — all session parameters
+- [Open source vs Cloud](/cloud/open-source-vs-cloud) — the full decision guide
+- [Manage browser sessions](/cloud/browser/sessions) — always stop sessions when done

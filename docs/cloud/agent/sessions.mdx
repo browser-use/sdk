@@ -1,0 +1,140 @@
+---
+title: Sessions
+description: "One cloud browser plus the tasks an agent runs inside it."
+icon: layer-group
+---
+
+A session is the container the agent works in: **one cloud browser and one or more tasks**, sharing the same browser state. When you call `client.run()`, the SDK creates a session and runs your first task inside it — you don't have to manage sessions yourself unless you want to.
+
+```python
+from browser_use_sdk import BrowserUse
+
+client = BrowserUse()
+
+# client.run() creates a session and runs the task inside it
+result = client.run("List the top 5 posts on Hacker News with their points")
+print(result.output)
+```
+
+Create a session explicitly when you want to run several tasks in the same browser, embed a live view before the first task, or manage the session's lifecycle yourself.
+
+## Session vs. task vs. browser session
+
+These three are easy to confuse:
+
+| Concept | What it is |
+| --- | --- |
+| **Session** | The agent's workspace — one browser plus every task run in it. Context (page, cookies, tabs) carries across tasks. |
+| **Task** | A single agent run: one natural-language instruction, its steps, and its output. `client.run()` is one task. |
+| **[Browser session](/cloud/browser/overview)** | The raw Chrome instance itself, driven directly over CDP without an agent. |
+
+A session *holds* tasks and *wraps* a browser. If you want the agent to decide the clicks, you're in session/task territory. If you want to drive Chrome yourself, use a [browser session](/cloud/browser/overview) directly.
+
+## Create a session and run tasks in it
+
+Pass `session_id` to `client.run()` to run each task in the same session. The browser state carries over between tasks — see [Follow-up tasks](/cloud/agent/follow-up-tasks).
+
+<CodeGroup>
+```python Python
+from browser_use_sdk import BrowserUse
+
+client = BrowserUse()
+
+session = client.sessions.create()
+
+client.run(
+    "Go to amazon.com, search for laptops, and open the first result",
+    session_id=session.id,
+)
+client.run("Extract the customer reviews", session_id=session.id)
+
+client.sessions.stop(session.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+
+const session = await client.sessions.create();
+
+await client.run("Go to amazon.com, search for laptops, and open the first result", {
+  sessionId: session.id,
+});
+await client.run("Extract the customer reviews", { sessionId: session.id });
+
+await client.sessions.stop(session.id);
+```
+</CodeGroup>
+
+`sessions.create()` returns a `live_url` you can embed to watch tasks execute — see [Live preview](/cloud/browser/live-preview).
+
+<Note>
+  Sessions time out after 15 minutes of inactivity by default. The maximum session duration is 4 hours.
+</Note>
+
+## Lifecycle
+
+A session is `active` while its browser is running and `stopped` once it ends — whether you stop it, it times out, or it hits the 4-hour cap. Stopping a session stops every task still running inside it.
+
+## Manage sessions
+
+<CodeGroup>
+```python Python
+# List sessions for the project
+sessions = client.sessions.list()
+
+# Inspect one
+session = client.sessions.get(session_id)
+print(session.status)
+
+# Stop it (and any running tasks)
+client.sessions.stop(session_id)
+
+# Delete it and all its tasks
+client.sessions.delete(session_id)
+```
+```typescript TypeScript
+// List sessions for the project
+const sessions = await client.sessions.list();
+
+// Inspect one
+const session = await client.sessions.get(sessionId);
+console.log(session.status);
+
+// Stop it (and any running tasks)
+await client.sessions.stop(sessionId);
+
+// Delete it and all its tasks
+await client.sessions.delete(sessionId);
+```
+</CodeGroup>
+
+## Share a session
+
+Create a public share link to let anyone view a session's replay without an API key.
+
+<CodeGroup>
+```python Python
+share = client.sessions.create_share(session_id)
+print(share.share_url)
+
+# Later
+client.sessions.delete_share(session_id)
+```
+```typescript TypeScript
+const share = await client.sessions.createShare(sessionId);
+console.log(share.shareUrl);
+
+// Later
+await client.sessions.deleteShare(sessionId);
+```
+</CodeGroup>
+
+For projects on zero-data-retention, `client.sessions.purge(session_id)` immediately deletes all data for a session.
+
+## Next
+
+- [Follow-up tasks](/cloud/agent/follow-up-tasks) — run multiple tasks in one session
+- [Streaming](/cloud/agent/streaming) — watch steps as they happen
+- [Live preview](/cloud/browser/live-preview) — embed the browser in your UI
+- [Browser sessions](/cloud/browser/overview) — drive Chrome directly without an agent

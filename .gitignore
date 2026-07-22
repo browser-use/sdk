@@ -35,6 +35,12 @@ docs/.mintlify/
 # Claude Code
 .claude/skills/
 
+# OMC / harness state (any directory level)
+.omc/
+.harness/
+omc/
+harness/
+
 # Personal notes
 reagan_*
 .pnpm-store

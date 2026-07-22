@@ -1,0 +1,79 @@
+---
+title: CAPTCHA Solving
+description: "Browser Use remote browsers solve CAPTCHAs automatically, on by default, on every plan."
+icon: shield-check
+---
+
+Browser Use remote browsers have **automatic CAPTCHA solving** built in. There is nothing to configure — on the browser, the attached agent, or your automation library (Playwright, Puppeteer, Selenium). It is on by default on every plan, including the [free tier](/cloud/pricing).
+
+The best defense is not tripping a challenge in the first place — that is what [stealth](/cloud/browser/stealth) handles (anti-fingerprinting and bot-detection bypass). This page covers what happens when a CAPTCHA or anti-bot system appears anyway: we solve it, and we lead the field on success rate.
+
+## Success rate by vendor
+
+Across the anti-bot and CAPTCHA systems agents hit most, Browser Use Cloud has the **highest overall success rate at 81%** — and the best against **Cloudflare (93%)** and **PerimeterX (81%)**.
+
+| Protection | Browser Use Cloud |
+| --- | --- |
+| Overall | **81%** |
+| Cloudflare | **93%** |
+| PerimeterX | **81%** |
+| Akamai | 85% |
+| DataDome | 69% |
+| reCAPTCHA | 80% |
+
+<Frame caption="Success rate by vendor, Browser Use Cloud vs other cloud browser providers">
+  <img src="/cloud/images/captcha-success-by-vendor.png" style={{ borderRadius: '0.5rem' }} alt="Heatmap of success rate by vendor. Browser Use Cloud leads overall at 81%, with 93% on Cloudflare and 81% on PerimeterX, ahead of Anchor, Onkernel, Browserless, Steel, Browserbase, and Hyperbrowser." />
+</Frame>
+
+Full methodology in [We stealth benchmarked every major cloud browser provider](https://browser-use.com/posts/stealth-benchmark).
+
+## Supported CAPTCHA types
+
+These are the interactive CAPTCHA widgets solved automatically, distinct from the anti-bot systems above (Cloudflare, DataDome, PerimeterX, Akamai) that gate a site before a widget ever appears:
+
+| CAPTCHA type | Solved automatically |
+| --- | --- |
+| reCAPTCHA v2 (checkbox / image challenge) | Yes |
+| reCAPTCHA v3 (score-based) | Yes |
+| hCaptcha | Yes |
+| Cloudflare Turnstile | Yes |
+
+All are handled on by default — no `captcha_type` parameter or per-widget configuration.
+
+## Get started
+
+There is nothing to turn on. CAPTCHA solving comes with every session. Start one:
+
+<CardGroup cols={2}>
+  <Card title="Create a browser session" icon="plus" href="/cloud/browser/create">
+    SDK, REST, or a single WebSocket URL.
+  </Card>
+  <Card title="Connect your framework" icon="code" href="/cloud/browser/playwright">
+    Playwright, Puppeteer, or Selenium over CDP.
+  </Card>
+  <Card title="Stealth" icon="user-secret" href="/cloud/browser/stealth">
+    What the hardened Chromium fork does.
+  </Card>
+  <Card title="Proxies" icon="globe" href="/cloud/browser/proxies">
+    Residential IPs in 195+ countries, on by default.
+  </Card>
+</CardGroup>
+
+## FAQ
+
+**Does the open-source library solve CAPTCHAs?**
+
+Without remote browsers, [open-source](https://github.com/browser-use/browser-use) agents have no stealth or CAPTCHA solving. Giving your agent stealth is easy: run it on a remote browser with a single parameter. See [Cloud browser + open source agent](/cloud/browser/open-source-agent).
+
+**Can I use a third-party CAPTCHA solver?**
+
+No, we do not support third-party CAPTCHA solver plugins on the browser. If your CAPTCHAs are not being solved properly, reach out and we will look into it.
+
+**Do I need to enable anything for CAPTCHA solving?**
+
+No. Remote browsers solve CAPTCHAs for you automatically.
+
+## Further reading
+
+- [Prove you are a robot: CAPTCHAs for agents](https://browser-use.com/posts/prove-you-are-a-robot)
+- [Browser agent bot detection is about to change](https://browser-use.com/posts/bot-detection)

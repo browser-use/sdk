@@ -1,0 +1,43 @@
+---
+title: Introduction
+description: "AI browser agents that run on stealth cloud browsers — one API key, driven as much or as little as you want."
+icon: hand-wave
+---
+
+Browser Use Cloud runs AI browser agents on stealth cloud browsers. You describe a task in plain language and the agent drives the browser to completion. Because the agent runs on a real cloud browser, you can also connect to that same browser yourself over CDP whenever you want hands-on control — the agent and the browser are one system, not a choice between two.
+
+Every session — whether the agent is driving or you are — runs a [hardened Chromium fork](/cloud/browser/stealth) with anti-fingerprinting, [automatic CAPTCHA solving](/cloud/browser/captcha), and [residential proxies](/cloud/browser/proxies) enabled by default.
+
+## Run a task
+
+Describe the outcome and let the [agent](/cloud/agent/overview) handle the clicks — price monitoring, form filling, research, multi-step workflows:
+
+```python
+result = await client.run("Get the price of iPhone 16 on amazon.de", proxy_country_code="de")
+```
+
+## Drive the browser yourself
+
+The agent runs on a real cloud browser, and you can [connect to it over CDP](/cloud/browser/playwright) with Playwright, Puppeteer, or any framework — for exact selectors and timing, or to build your own agent on top:
+
+```python
+browser = await client.browsers.create()
+# connect with Playwright over CDP via browser.cdp_url
+```
+
+Mix the two in one session: let the agent handle the fuzzy steps and your code handle the deterministic ones.
+
+## Already using the open-source library?
+
+[API v2](/cloud/api-v2-overview) is the [open-source library](/open-source/introduction) running on our infrastructure instead of your own machine — the same agent code, now on managed stealth browsers with no local setup. It also gives you our **bu-1-0** and **bu-2-0** models, which are cheaper, faster, and more accurate than general-purpose models on browser tasks.
+
+## Start here
+
+- [Quickstart](/cloud/quickstart) — first task in five minutes
+- [Create a browser session](/cloud/browser/create) — every creation method and parameter
+- [Pricing](/cloud/pricing) — what costs what
+
+## Further reading
+
+- [Benchmarks](https://browser-use.com/benchmarks) — accuracy and stealth results vs other providers
+- [The ultimate guide to web scraping (2026)](https://browser-use.com/posts/web-scraping-guide-2026)

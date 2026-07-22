@@ -1,5 +1,84 @@
 # Browser Use Cloud — Full Documentation
 
+> Machine-readable OpenAPI spec: https://docs.browser-use.com/openapi.json (v3, canonical — also at /cloud/openapi/v3.json; legacy v2: /cloud/openapi/v2.json). Dashboard: https://cloud.browser-use.com. Create an API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
+
+
+# Introduction
+Source: https://docs.browser-use.com/cloud/introduction
+
+
+Browser Use Cloud runs AI browser agents on stealth cloud browsers. You describe a task in plain language and the agent drives the browser to completion. Because the agent runs on a real cloud browser, you can also connect to that same browser yourself over CDP whenever you want hands-on control — the agent and the browser are one system, not a choice between two.
+
+Every session — whether the agent is driving or you are — runs a [hardened Chromium fork](https://docs.browser-use.com/cloud/browser/stealth) with anti-fingerprinting, [automatic CAPTCHA solving](https://docs.browser-use.com/cloud/browser/captcha), and [residential proxies](https://docs.browser-use.com/cloud/browser/proxies) enabled by default.
+
+## Run a task
+
+Describe the outcome and let the [agent](https://docs.browser-use.com/cloud/agent/overview) handle the clicks — price monitoring, form filling, research, multi-step workflows:
+
+```python
+result = await client.run("Get the price of iPhone 16 on amazon.de", proxy_country_code="de")
+```
+
+## Drive the browser yourself
+
+The agent runs on a real cloud browser, and you can [connect to it over CDP](https://docs.browser-use.com/cloud/browser/playwright) with Playwright, Puppeteer, or any framework — for exact selectors and timing, or to build your own agent on top:
+
+```python
+browser = await client.browsers.create()
+# connect with Playwright over CDP via browser.cdp_url
+```
+
+Mix the two in one session: let the agent handle the fuzzy steps and your code handle the deterministic ones.
+
+## Already using the open-source library?
+
+[API v2](https://docs.browser-use.com/cloud/api-v2-overview) is the [open-source library](/open-source/introduction) running on our infrastructure instead of your own machine — the same agent code, now on managed stealth browsers with no local setup. It also gives you our **bu-1-0** and **bu-2-0** models, which are cheaper, faster, and more accurate than general-purpose models on browser tasks.
+
+## Start here
+
+- [Quickstart](https://docs.browser-use.com/cloud/quickstart) — first task in five minutes
+- [Create a browser session](https://docs.browser-use.com/cloud/browser/create) — every creation method and parameter
+- [Pricing](https://docs.browser-use.com/cloud/pricing) — what costs what
+
+## Further reading
+
+- [Benchmarks](https://browser-use.com/benchmarks) — accuracy and stealth results vs other providers
+- [The ultimate guide to web scraping (2026)](https://browser-use.com/posts/web-scraping-guide-2026)
+
+
+# Open source vs Cloud
+Source: https://docs.browser-use.com/cloud/open-source-vs-cloud
+
+
+Browser Use is two things with one name. The confusion is common enough to deserve its own page.
+
+**The [open-source library](/open-source/introduction)** (`pip install browser-use`) is an agent framework that runs on your machine. You bring your own LLM key, it launches a local Chromium, and nothing leaves your infrastructure. Free, Apache-licensed, yours.
+
+**Browser Use Cloud** (this documentation) is a paid API with two services: [stealth cloud browsers](https://docs.browser-use.com/cloud/browser/overview) you can drive with any framework, and a [hosted agent](https://docs.browser-use.com/cloud/agent/overview) that runs tasks for you, no library install required.
+
+## Which do you want?
+
+| You want to... | Use |
+|---|---|
+| Run an agent locally, free, with your own LLM keys | Open source library |
+| Keep your local agent but stop getting blocked by websites | Library + [cloud browser](https://docs.browser-use.com/cloud/browser/open-source-agent) |
+| Drive stealth browsers with existing Playwright/Puppeteer scripts | Cloud [Browser](https://docs.browser-use.com/cloud/browser/overview) |
+| Send a task and get a result, zero infrastructure | Cloud [Agent](https://docs.browser-use.com/cloud/agent/overview) |
+
+## Common questions
+
+**Do I need an API key to use the library?**
+No. The library needs an LLM provider key (OpenAI, Anthropic, Ollama for fully local). A Browser Use API key is only needed for cloud features.
+
+**Does the library have stealth or CAPTCHA solving?**
+No. Those are properties of the cloud browsers. The bridge is one parameter: point the library's `Browser` at a [cloud browser session](https://docs.browser-use.com/cloud/browser/open-source-agent).
+
+**Is the cloud agent the same agent as the library?**
+The cloud agent is the hosted, managed version, with the same task-in, result-out model plus cloud-only features like [structured output](https://docs.browser-use.com/cloud/agent/structured-output), [workspaces](https://docs.browser-use.com/cloud/agent/workspaces), and [human-in-the-loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop).
+
+**Can I self-host the cloud?**
+The library is the self-hosted option: your machines, your browsers, your keys. The stealth browser fleet and hosted agent are not self-hostable.
+
 
 # Quick start
 Source: https://docs.browser-use.com/cloud/quickstart
@@ -9,6 +88,9 @@ Source: https://docs.browser-use.com/cloud/quickstart
 
 ```bash Python
 pip install browser-use-sdk
+# In a managed environment (Debian/Docker "externally-managed-environment", PEP 668),
+# use a venv: python3 -m venv .venv && source .venv/bin/activate && pip install browser-use-sdk
+# or: uv pip install browser-use-sdk
 ```
 ```bash TypeScript
 npm install browser-use-sdk
@@ -27,9 +109,9 @@ import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 async def main():
-client = AsyncBrowserUse()
-result = await client.run("List the top 20 posts on Hacker News today with their points")
-print(result.output)
+    client = AsyncBrowserUse()
+    result = await client.run("List the top 20 posts on Hacker News today with their points")
+    print(result.output)
 
 asyncio.run(main())
 ```
@@ -42,6 +124,54 @@ console.log(result.output);
 ```
 
 Want a full working app? Check out the [Chat UI example](https://docs.browser-use.com/cloud/tutorials/chat-ui).
+
+## 3. Or drive a browser yourself
+
+Create a cloud browser, connect Playwright to it over CDP, and control it like a local browser, with stealth, CAPTCHA solving, and a residential proxy already on.
+
+```python Python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+from playwright.async_api import async_playwright
+
+async def main():
+    client = AsyncBrowserUse()
+    browser = await client.browsers.create()
+    print(browser.cdp_url)   # CDP endpoint for Playwright/Puppeteer/Selenium
+    print(browser.live_url)  # watch the session in a browser tab
+
+    async with async_playwright() as p:
+        pw = await p.chromium.connect_over_cdp(browser.cdp_url)
+        page = pw.contexts[0].pages[0]
+        await page.goto("https://news.ycombinator.com")
+        titles = await page.locator(".titleline > a").all_inner_texts()
+        print(titles[:5])
+        await pw.close()
+
+    await client.browsers.stop(browser.id)
+
+asyncio.run(main())
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { chromium } from "playwright";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create();
+console.log(browser.cdpUrl);  // CDP endpoint for Playwright/Puppeteer/Selenium
+console.log(browser.liveUrl); // watch the session in a browser tab
+
+const pw = await chromium.connectOverCDP(browser.cdpUrl);
+const page = pw.contexts()[0].pages()[0];
+await page.goto("https://news.ycombinator.com");
+const titles = await page.locator(".titleline > a").allInnerTexts();
+console.log(titles.slice(0, 5));
+await pw.close();
+
+await client.browsers.stop(browser.id);
+```
+
+Use `connect_over_cdp()` / `connectOverCDP()`, not `connect()`. See [Create a browser session](https://docs.browser-use.com/cloud/browser/create) for every parameter and the response schema, and the [Playwright](https://docs.browser-use.com/cloud/browser/playwright), [Puppeteer](https://docs.browser-use.com/cloud/browser/puppeteer), and [Selenium](https://docs.browser-use.com/cloud/browser/selenium) guides for framework specifics.
 
 ## Agent vs Browser
 
@@ -65,6 +195,72 @@ Want a full working app? Check out the [Chat UI example](https://docs.browser-us
 If you are an LLM, read/include [docs.browser-use.com/llms-full.txt](https://docs.browser-use.com/llms-full.txt) — it contains the complete SDK reference with all code examples in a single file optimized for LLMs. For a shorter index: [docs.browser-use.com/llms.txt](https://docs.browser-use.com/llms.txt).
 
 
+# Pricing & free tier
+Source: https://docs.browser-use.com/cloud/pricing
+
+
+Browser Use Cloud has a free tier and four paid plans. Usage (browser time, proxy data, agent tokens) is billed on top of the plan. The [pricing page](https://browser-use.com/pricing) is the canonical source; the numbers here are kept in sync with it.
+
+## Free tier
+
+Free, no credit card required. It includes:
+
+- 3 concurrent browser sessions
+- 1 browser profile, 1 team member
+- Basic proxy pool
+- Advanced [stealth](https://docs.browser-use.com/cloud/browser/stealth), [CAPTCHA solving](https://docs.browser-use.com/cloud/browser/captcha), and [webhook events](https://docs.browser-use.com/cloud/guides/webhooks)
+- Community support
+
+Stealth and CAPTCHA solving are on for every tier, including free. They are not paid add-ons.
+
+## Plans
+
+| Plan | Monthly | Included credits | Concurrent sessions | Team members |
+|------|---------|------------------|---------------------|--------------|
+| Free | $0 | — | 3 | 1 |
+| Dev | $29 | $29 | 25 | 5 |
+| Business | $299 | $299 | 200 | Unlimited |
+| Scaleup | $999 | $999 | 500 | Unlimited |
+| Enterprise | Custom | Negotiated | Negotiated | Negotiated |
+
+Annual billing is pay for 10 months, get 12 (Dev $290/yr, Business $2,990/yr, Scaleup $9,990/yr).
+
+The concurrent-session limit is what a `429 Too many concurrent active sessions` error refers to. Stop idle sessions or upgrade the plan to raise it.
+
+## Usage rates
+
+Billed against your plan credits, then charged if you exceed them.
+
+**Browser & proxies**
+- Browser session: $0.02/hour, active time only
+- Proxy bandwidth: $5/GB
+
+**Agent (v3, token-based at 1.2× provider rates)**
+
+| Model | Input / output per 1M tokens |
+|-------|------------------------------|
+| GPT-5.4 Mini | $0.90 / $5.40 |
+| Claude Sonnet 4.6 | $3.60 / $18.00 |
+| Claude Opus 4.6 / 4.7 | $6.00 / $30.00 |
+
+When you [bring your own LLM](https://docs.browser-use.com/cloud/agent/models), those tokens go to your own provider instead.
+
+## Tracking spend
+
+Every browser session object reports its own running cost (`browserCost`, `proxyCost`, `proxyUsedMb`), so spend is inspectable per session. [Stop sessions](https://docs.browser-use.com/cloud/browser/sessions#stopping-a-session) when done — an idle session bills until it stops or [times out](https://docs.browser-use.com/cloud/browser/sessions#timeouts).
+
+## The open-source library is free
+
+The [library](/open-source/introduction) has no Browser Use charges — you pay only your own LLM provider. Cloud rates apply when you use cloud browsers or the hosted agent. See [Open source vs Cloud](https://docs.browser-use.com/cloud/open-source-vs-cloud).
+
+## Further reading
+
+- [Remote browsers for agents: the Browser Use free tier](https://browser-use.com/posts/free-tier-announcement)
+- [How we made cloud browsers 3x cheaper and faster](https://browser-use.com/posts/firecracker-browser-infra)
+
+{/* TEAM REVIEW: keep this table in sync with browser-use.com/pricing. The v2 agent (per-step from $0.006, task init $0.01) is legacy — omitted here; add a legacy note if v2 users need it. */}
+
+
 # Prompt for Vibecoders
 Source: https://docs.browser-use.com/cloud/vibecoding
 
@@ -76,102 +272,40 @@ https://docs.browser-use.com/cloud/llms.txt
 ```
 
 
-# Agent Sign Up for Browser Use
-Source: https://docs.browser-use.com/cloud/agent-signup
+# Overview
+Source: https://docs.browser-use.com/cloud/agent/overview
 
 
-An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
+The agent is a hosted loop: it reads the page, decides an action, executes it, and repeats until the task is complete. You send a task, you get a result.
 
-The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
+```python
+from browser_use_sdk import BrowserUse
 
-## REST flow
-
-### 1. Request a challenge
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup \
-  -H "Content-Type: application/json" \
-  -d '{}'
+client = BrowserUse()
+result = client.run("List the top 5 posts on Hacker News with their points")
+print(result.output)
 ```
 
-Request body, optional (include a user email/name if available):
+Each run gets its own [stealth cloud browser](https://docs.browser-use.com/cloud/browser/stealth) with proxies and CAPTCHA handling already on. No browser management, no selectors, no waiting logic.
 
-```json
-{
-  "email": "user@example.com",
-  "name": "User Name"
-}
-```
+## When to use the agent
 
-Response:
+The agent fits tasks where you care about the outcome, not the exact clicks: data extraction from sites that change layout, workflows across several pages, form submission, or anything you'd rather describe than script. If you need pixel-exact control or deterministic repetition, drive a [browser session](https://docs.browser-use.com/cloud/browser/overview) directly instead, or record an agent run once and replay it with [cache scripts](https://docs.browser-use.com/cloud/agent/cache-script).
 
-```json
-{
-  "challenge_id": "uuid",
-  "challenge_text": "..."
-}
-```
+## What the agent can do
 
-### 2. Solve the challenge
+- [Structured output](https://docs.browser-use.com/cloud/agent/structured-output) — get results as typed JSON matching your schema
+- [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks) — continue in the same browser with context intact
+- [Streaming](https://docs.browser-use.com/cloud/agent/streaming) — watch steps as they happen
+- [Workspaces](https://docs.browser-use.com/cloud/agent/workspaces) — files the agent reads and writes during a run
+- [Human-in-the-loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop) — take over the browser mid-task, then hand back
+- [Models](https://docs.browser-use.com/cloud/agent/models) — pick the LLM that drives the loop
+- [Cache scripts](https://docs.browser-use.com/cloud/agent/cache-script) — record a run, replay it without LLM calls
 
-Read `challenge_text` and solve the math problem. Return the answer as a string with two decimal places, for example `"144.00"`.
+## Next
 
-### 3. Verify the answer
+Start with the [agent quickstart](https://docs.browser-use.com/cloud/agent/quickstart).
 
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup/verify \
-  -H "Content-Type: application/json" \
-  -d '{"challenge_id":"uuid","answer":"144.00"}'
-```
-
-Request body:
-
-```json
-{
-  "challenge_id": "uuid",
-  "answer": "144.00"
-}
-```
-
-Response:
-
-```json
-{
-  "api_key": "bu_..."
-}
-```
-
-Use the returned key for Browser Use Cloud API requests.
-
-For example, create a browser session:
-
-```bash
-curl -X POST https://api.browser-use.com/api/v3/browsers \
-  -H "X-Browser-Use-API-Key: bu_..." \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-See the [Create Browser Session API reference](https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session).
-
-## Claim the account
-
-If a human wants to see the agent-created account in the dashboard later, the agent can create a claim link:
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup/claim \
-  -H "X-Browser-Use-API-Key: bu_..."
-```
-
-Response:
-
-```json
-{
-  "claim_url": "https://..."
-}
-```
-
-The claim URL is valid for 1 hour.
 
 # Introduction
 Source: https://docs.browser-use.com/cloud/agent/quickstart
@@ -217,6 +351,138 @@ The best SOTA browser agent — see our [online Mind2Web benchmark](https://brow
 If you are an LLM, read/include [docs.browser-use.com/llms-full.txt](https://docs.browser-use.com/llms-full.txt) — it contains the complete SDK reference with all code examples in a single file optimized for LLMs.
 
 
+# Sessions
+Source: https://docs.browser-use.com/cloud/agent/sessions
+
+
+A session is the container the agent works in: **one cloud browser and one or more tasks**, sharing the same browser state. When you call `client.run()`, the SDK creates a session and runs your first task inside it — you don't have to manage sessions yourself unless you want to.
+
+```python
+from browser_use_sdk import BrowserUse
+
+client = BrowserUse()
+
+# client.run() creates a session and runs the task inside it
+result = client.run("List the top 5 posts on Hacker News with their points")
+print(result.output)
+```
+
+Create a session explicitly when you want to run several tasks in the same browser, embed a live view before the first task, or manage the session's lifecycle yourself.
+
+## Session vs. task vs. browser session
+
+These three are easy to confuse:
+
+| Concept | What it is |
+| --- | --- |
+| **Session** | The agent's workspace — one browser plus every task run in it. Context (page, cookies, tabs) carries across tasks. |
+| **Task** | A single agent run: one natural-language instruction, its steps, and its output. `client.run()` is one task. |
+| **[Browser session](https://docs.browser-use.com/cloud/browser/overview)** | The raw Chrome instance itself, driven directly over CDP without an agent. |
+
+A session *holds* tasks and *wraps* a browser. If you want the agent to decide the clicks, you're in session/task territory. If you want to drive Chrome yourself, use a [browser session](https://docs.browser-use.com/cloud/browser/overview) directly.
+
+## Create a session and run tasks in it
+
+Pass `session_id` to `client.run()` to run each task in the same session. The browser state carries over between tasks — see [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks).
+
+```python Python
+from browser_use_sdk import BrowserUse
+
+client = BrowserUse()
+
+session = client.sessions.create()
+
+client.run(
+    "Go to amazon.com, search for laptops, and open the first result",
+    session_id=session.id,
+)
+client.run("Extract the customer reviews", session_id=session.id)
+
+client.sessions.stop(session.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+
+const session = await client.sessions.create();
+
+await client.run("Go to amazon.com, search for laptops, and open the first result", {
+  sessionId: session.id,
+});
+await client.run("Extract the customer reviews", { sessionId: session.id });
+
+await client.sessions.stop(session.id);
+```
+
+`sessions.create()` returns a `live_url` you can embed to watch tasks execute — see [Live preview](https://docs.browser-use.com/cloud/browser/live-preview).
+
+  Sessions time out after 15 minutes of inactivity by default. The maximum session duration is 4 hours.
+
+## Lifecycle
+
+A session is `active` while its browser is running and `stopped` once it ends — whether you stop it, it times out, or it hits the 4-hour cap. Stopping a session stops every task still running inside it.
+
+## Manage sessions
+
+```python Python
+# List sessions for the project
+sessions = client.sessions.list()
+
+# Inspect one
+session = client.sessions.get(session_id)
+print(session.status)
+
+# Stop it (and any running tasks)
+client.sessions.stop(session_id)
+
+# Delete it and all its tasks
+client.sessions.delete(session_id)
+```
+```typescript TypeScript
+// List sessions for the project
+const sessions = await client.sessions.list();
+
+// Inspect one
+const session = await client.sessions.get(sessionId);
+console.log(session.status);
+
+// Stop it (and any running tasks)
+await client.sessions.stop(sessionId);
+
+// Delete it and all its tasks
+await client.sessions.delete(sessionId);
+```
+
+## Share a session
+
+Create a public share link to let anyone view a session's replay without an API key.
+
+```python Python
+share = client.sessions.create_share(session_id)
+print(share.share_url)
+
+# Later
+client.sessions.delete_share(session_id)
+```
+```typescript TypeScript
+const share = await client.sessions.createShare(sessionId);
+console.log(share.shareUrl);
+
+// Later
+await client.sessions.deleteShare(sessionId);
+```
+
+For projects on zero-data-retention, `client.sessions.purge(session_id)` immediately deletes all data for a session.
+
+## Next
+
+- [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks) — run multiple tasks in one session
+- [Streaming](https://docs.browser-use.com/cloud/agent/streaming) — watch steps as they happen
+- [Live preview](https://docs.browser-use.com/cloud/browser/live-preview) — embed the browser in your UI
+- [Browser sessions](https://docs.browser-use.com/cloud/browser/overview) — drive Chrome directly without an agent
+
+
 # Models
 Source: https://docs.browser-use.com/cloud/agent/models
 
@@ -236,8 +502,8 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"List the top 20 posts on Hacker News today with their points",
-model="claude-sonnet-4.6",
+    "List the top 20 posts on Hacker News today with their points",
+    model="claude-sonnet-4.6",
 )
 print(result.output)
 ```
@@ -258,6 +524,44 @@ curl -X POST https://api.browser-use.com/api/v3/sessions \
   -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4.6"}'
 ```
 
+## Bring your own key
+
+Connect your own Anthropic, OpenAI, or Google API key. You pay your provider directly + a 0.2× orchestration fee on provider list token prices.
+
+1. Add your provider key in the dashboard under **Settings → API Keys → Bring Your Own Key**.
+2. Pass `use_own_key=True` on the session:
+
+```python Python
+result = await client.run(
+    "List the top 20 posts on Hacker News today with their points",
+    model="claude-sonnet-4.6",
+    use_own_key=True,
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "List the top 20 posts on Hacker News today with their points",
+  { model: "claude-sonnet-4.6", useOwnKey: true },
+);
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v3/sessions \
+  -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4.6", "useOwnKey": true}'
+```
+
+To default every session on a client to BYOK, set it once on the constructor:
+
+```python Python
+client = AsyncBrowserUse(use_own_key=True)
+```
+```typescript TypeScript
+const client = new BrowserUse({ useOwnKey: true });
+```
+
+The provider key on your project must match the model you pick — Claude models use your Anthropic key, GPT models use your OpenAI key, Gemini models use your Google key.
+
 
 # Structured output
 Source: https://docs.browser-use.com/cloud/agent/structured-output
@@ -272,20 +576,20 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 from pydantic import BaseModel
 
 class Post(BaseModel):
-name: str
-points: int
-comments: int
+    name: str
+    points: int
+    comments: int
 
 class HNPosts(BaseModel):
-posts: list[Post]
+    posts: list[Post]
 
 client = AsyncBrowserUse()
 result = await client.run(
-"List the top 20 posts on Hacker News today with their points",
-output_schema=HNPosts,
+    "List the top 20 posts on Hacker News today with their points",
+    output_schema=HNPosts,
 )
 for post in result.output.posts:
-print(f"{post.name} ({post.points} pts, {post.comments} comments)")
+    print(f"{post.name} ({post.points} pts, {post.comments} comments)")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -327,12 +631,12 @@ client = AsyncBrowserUse()
 session = await client.sessions.create()
 
 result1 = await client.run(
-"Go to amazon.com, search for laptops, and open the first result",
-session_id=session.id,
+    "Go to amazon.com, search for laptops, and open the first result",
+    session_id=session.id,
 )
 result2 = await client.run(
-"Extract the customer reviews",
-session_id=session.id,
+    "Extract the customer reviews",
+    session_id=session.id,
 )
 
 await client.sessions.stop(session.id)
@@ -375,7 +679,7 @@ client = AsyncBrowserUse()
 
 run = client.run("Find the top story on Hacker News")
 async for msg in run:
-print(f"[{msg.role}] {msg.summary}")
+    print(f"[{msg.role}] {msg.summary}")
 
 print(run.result.output)
 ```
@@ -408,17 +712,17 @@ Use `stop(strategy="task")` to cancel the current task without destroying the se
 ```python Python
 run = client.run("Find the top story on Hacker News")
 async for msg in run:
-if should_cancel():
-    await client.sessions.stop(run.session_id, strategy="task")
-    break
+    if should_cancel():
+        await client.sessions.stop(run.session_id, strategy="task")
+        break
 # Session is now idle — send a different task or close it
 ```
 ```typescript TypeScript
 const run = client.run("Find the top story on Hacker News");
 for await (const msg of run) {
   if (shouldCancel()) {
-await client.sessions.stop(run.sessionId!, { strategy: "task" });
-break;
+    await client.sessions.stop(run.sessionId!, { strategy: "task" });
+    break;
   }
 }
 // Session is now idle — send a different task or close it
@@ -439,15 +743,15 @@ session = await client.sessions.create(task="Find the top story on Hacker News")
 
 cursor = None
 while True:
-msgs = await client.sessions.messages(session.id, after=cursor, limit=100)
-for m in msgs.messages:
-    print(f"[{m.role}] {m.summary}")
-    cursor = m.id
+    msgs = await client.sessions.messages(session.id, after=cursor, limit=100)
+    for m in msgs.messages:
+        print(f"[{m.role}] {m.summary}")
+        cursor = m.id
 
-s = await client.sessions.get(session.id)
-if s.status.value in ("idle", "stopped", "error", "timed_out"):
-    break
-await asyncio.sleep(2)
+    s = await client.sessions.get(session.id)
+    if s.status.value in ("idle", "stopped", "error", "timed_out"):
+        break
+    await asyncio.sleep(2)
 
 print(s.output)
 ```
@@ -463,14 +767,14 @@ let cursor: string | undefined;
 while (true) {
   const msgs = await client.sessions.messages(session.id, { after: cursor, limit: 100 });
   for (const m of msgs.messages) {
-console.log(`[${m.role}] ${m.summary}`);
-cursor = m.id;
+    console.log(`[${m.role}] ${m.summary}`);
+    cursor = m.id;
   }
 
   const s = await client.sessions.get(session.id);
   if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
-console.log(s.output);
-break;
+    console.log(s.output);
+    break;
   }
   await new Promise((r) => setTimeout(r, 2000));
 }
@@ -504,8 +808,8 @@ await client.workspaces.upload(workspace.id, "people.csv")
 
 # Agent can now read it
 result = await client.run(
-"Read people.csv and tell me who works at Google",
-workspace_id=workspace.id,
+    "Read people.csv and tell me who works at Google",
+    workspace_id=workspace.id,
 )
 print(result.output)
 ```
@@ -545,8 +849,8 @@ workspace = await client.workspaces.create(name="my-workspace")
 
 # Agent creates a file
 result = await client.run(
-"Go to Hacker News and save the top 3 posts as posts.json",
-workspace_id=workspace.id,
+    "Go to Hacker News and save the top 3 posts as posts.json",
+    workspace_id=workspace.id,
 )
 
 # Download a single file
@@ -555,7 +859,7 @@ await client.workspaces.download(workspace.id, "posts.json", to="./posts.json")
 # Or download everything
 paths = await client.workspaces.download_all(workspace.id, to="./output")
 for p in paths:
-print(f"Downloaded: {p}")
+    print(f"Downloaded: {p}")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -586,7 +890,7 @@ workspace = await client.workspaces.get(workspace_id)
 updated = await client.workspaces.update(workspace_id, name="renamed")
 response = await client.workspaces.list()
 for w in response.items:
-print(w.id, w.name)
+    print(w.id, w.name)
 await client.workspaces.delete(workspace_id)
 ```
 ```typescript TypeScript
@@ -610,7 +914,7 @@ await client.workspaces.upload(workspace.id, "report.pdf", prefix="reports/")
 # List files in a subdirectory
 files = await client.workspaces.files(workspace.id, prefix="reports/")
 for f in files.files:
-print(f.path, f.size)
+    print(f.path, f.size)
 
 # Download only files from a subdirectory
 await client.workspaces.download_all(workspace.id, to="./output", prefix="reports/")
@@ -635,7 +939,7 @@ await client.workspaces.downloadAll(workspace.id, { to: "./output", prefix: "rep
 # List all files
 files = await client.workspaces.files(workspace.id)
 for f in files.files:
-print(f.path, f.size)
+    print(f.path, f.size)
 
 # Delete a single file
 await client.workspaces.delete_file(workspace.id, path="old-report.pdf")
@@ -684,14 +988,14 @@ workspace = await client.workspaces.create(name="my-scraper")
 
 # First call — agent explores, creates script (~$0.10, ~60s)
 result = await client.run(
-"Get the top @{{5}} stories from https://news.ycombinator.com as JSON",
-workspace_id=str(workspace.id),
+    "Get the top @{{5}} stories from https://news.ycombinator.com as JSON",
+    workspace_id=str(workspace.id),
 )
 
 # Second call — cached script, different param ($0 LLM, ~5s)
 result2 = await client.run(
-"Get the top @{{10}} stories from https://news.ycombinator.com as JSON",
-workspace_id=str(workspace.id),
+    "Get the top @{{10}} stories from https://news.ycombinator.com as JSON",
+    workspace_id=str(workspace.id),
 )
 ```
 ```typescript TypeScript
@@ -753,17 +1057,17 @@ Run once, then loop over different keywords at $0 LLM each:
 ```python Python
 # Agent figures out how to scrape intro.co on first call
 result = await client.run(
-"Go to @{{https://intro.co/marketplace}} and get all @{{logistics}} experts as JSON",
-workspace_id=str(workspace.id),
+    "Go to @{{https://intro.co/marketplace}} and get all @{{logistics}} experts as JSON",
+    workspace_id=str(workspace.id),
 )
 
 # Instant reruns with different keywords
 for keyword in ["CEO", "marketing", "finance", "e-commerce"]:
-result = await client.run(
-    f"Go to @{{{{https://intro.co/marketplace}}}} and get all @{{{{{keyword}}}}} experts as JSON",
-    workspace_id=str(workspace.id),
-)
-print(f"{keyword}: {result.output}, LLM cost: ${result.llm_cost_usd}")
+    result = await client.run(
+        f"Go to @{{{{https://intro.co/marketplace}}}} and get all @{{{{{keyword}}}}} experts as JSON",
+        workspace_id=str(workspace.id),
+    )
+    print(f"{keyword}: {result.output}, LLM cost: ${result.llm_cost_usd}")
 ```
 ```typescript TypeScript
 // Agent figures out how to scrape intro.co on first call
@@ -775,8 +1079,8 @@ let result = await client.run(
 // Instant reruns with different keywords
 for (const keyword of ["CEO", "marketing", "finance", "e-commerce"]) {
   result = await client.run(
-`Go to @{{https://intro.co/marketplace}} and get all @{{${keyword}}} experts as JSON`,
-{ workspaceId: workspace.id },
+    `Go to @{{https://intro.co/marketplace}} and get all @{{${keyword}}} experts as JSON`,
+    { workspaceId: workspace.id },
   );
   console.log(`${keyword}: ${result.output}`);
 }
@@ -788,14 +1092,14 @@ Append empty brackets `@{{}}` to signal "cache this exact task":
 
 ```python Python
 result = await client.run(
-"Get the current Bitcoin price from coinmarketcap.com @{{}}",
-workspace_id=str(workspace.id),
+    "Get the current Bitcoin price from coinmarketcap.com @{{}}",
+    workspace_id=str(workspace.id),
 )
 
 # Same task again — cached
 result2 = await client.run(
-"Get the current Bitcoin price from coinmarketcap.com @{{}}",
-workspace_id=str(workspace.id),
+    "Get the current Bitcoin price from coinmarketcap.com @{{}}",
+    workspace_id=str(workspace.id),
 )
 ```
 ```typescript TypeScript
@@ -815,14 +1119,14 @@ result = await client.run(
 
 ```python Python
 result = await client.run(
-"Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{Germany,France,Japan}}",
-workspace_id=str(workspace.id),
+    "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{Germany,France,Japan}}",
+    workspace_id=str(workspace.id),
 )
 
 # Different countries — cached
 result2 = await client.run(
-"Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{US,UK,Brazil}}",
-workspace_id=str(workspace.id),
+    "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{US,UK,Brazil}}",
+    workspace_id=str(workspace.id),
 )
 ```
 ```typescript TypeScript
@@ -843,16 +1147,16 @@ result = await client.run(
 ```python Python
 # Force-enable without brackets
 result = await client.run(
-"Get the top stories from Hacker News",
-workspace_id=str(workspace.id),
-cache_script=True,
+    "Get the top stories from Hacker News",
+    workspace_id=str(workspace.id),
+    cache_script=True,
 )
 
 # Force-disable even with brackets
 result = await client.run(
-"Explain what @{{templates}} means in Jinja",
-workspace_id=str(workspace.id),
-cache_script=False,
+    "Explain what @{{templates}} means in Jinja",
+    workspace_id=str(workspace.id),
+    cache_script=False,
 )
 ```
 ```typescript TypeScript
@@ -876,7 +1180,7 @@ You can download and inspect the scripts the agent created:
 ```python Python
 files = await client.workspaces.files(workspace.id, prefix="scripts/")
 for f in files.files:
-print(f"{f.path}  ({f.size} bytes)")
+    print(f"{f.path}  ({f.size} bytes)")
 
 # Download a script to inspect it
 await client.workspaces.download(workspace.id, "scripts/a7f3b2c1.py", to="./my_script.py")
@@ -951,8 +1255,8 @@ print(f"Live view: {session.live_url}")
 
 # 2. Agent does the first part
 result = await client.run(
-"Go to amazon.com and search for noise cancelling headphones",
-session_id=session.id,
+    "Go to amazon.com and search for noise cancelling headphones",
+    session_id=session.id,
 )
 print(result.output)
 
@@ -961,8 +1265,8 @@ input("Press Enter after you've selected a product in the live view...")
 
 # 4. Agent continues where the human left off
 result = await client.run(
-"Get the details of the selected product — name, price, and rating",
-session_id=session.id,
+    "Get the details of the selected product — name, price, and rating",
+    session_id=session.id,
 )
 print(result.output)
 
@@ -1006,23 +1310,321 @@ await client.sessions.stop(session.id);
 
 
 
-# Introduction Stealth
+# Overview
+Source: https://docs.browser-use.com/cloud/browser/overview
+
+
+A Browser Use cloud browser is a real Chromium instance running on our infrastructure that your code controls remotely over the Chrome DevTools Protocol (CDP). Create one with an API call, get back a `cdpUrl`, and drive it with Playwright, Puppeteer, or any CDP client, the same way you'd drive a local browser.
+
+The difference from local Chromium is what's built in. Every session runs our [hardened Chromium fork](https://docs.browser-use.com/cloud/browser/stealth) with anti-fingerprinting patches, [automatic CAPTCHA solving](https://docs.browser-use.com/cloud/browser/captcha), and a [residential proxy](https://docs.browser-use.com/cloud/browser/proxies) in your choice of 195+ countries. None of it needs configuration.
+
+## When to use a cloud browser
+
+- **Your Playwright/Puppeteer scripts get blocked.** Same code, but running on infrastructure that sites treat as a normal user.
+- **You don't want to run browsers.** No Chrome processes, no headless servers, no scaling browser pools.
+- **You're building your own agent.** Full CDP access means any framework or custom tooling works. You can also run the [open-source Browser Use agent on a cloud browser](https://docs.browser-use.com/cloud/browser/open-source-agent).
+- **You need a watchable, recordable session.** Every session has a [live view](https://docs.browser-use.com/cloud/browser/live-preview) you can open or embed, and optional recording.
+
+If you'd rather describe the task and let AI do the driving, use the [Agent](https://docs.browser-use.com/cloud/agent/overview) instead. The two combine: agents run inside browser sessions, and you can connect your own code to the browser behind an agent run.
+
+## How it fits together
+
+1. [Create a browser session](https://docs.browser-use.com/cloud/browser/create) — SDK, REST, or a single WebSocket URL
+2. Connect your framework — [Playwright](https://docs.browser-use.com/cloud/browser/playwright), [Puppeteer](https://docs.browser-use.com/cloud/browser/puppeteer), or [Selenium](https://docs.browser-use.com/cloud/browser/selenium)
+3. Automate as usual — the session behaves like local Chromium with better manners from websites
+4. [Manage the session](https://docs.browser-use.com/cloud/browser/sessions) — timeouts, stopping, what you're billed for
+
+## Logging into websites
+
+Sessions start clean by default. To carry login state across sessions, use [profiles / cookie sync](https://docs.browser-use.com/cloud/guides/profile-sync), [authentication](https://docs.browser-use.com/cloud/guides/authentication), and [2FA support](https://docs.browser-use.com/cloud/guides/2fa).
+
+## Further reading
+
+- [Stealth Browser Infrastructure](https://browser-use.com/posts/browser-infra) — how the cloud browser is built
+- [Closer to the Metal: Leaving Playwright for CDP](https://browser-use.com/posts/playwright-to-cdp) — why the browser is driven over CDP
+- [We stealth benchmarked every major cloud browser provider](https://browser-use.com/posts/stealth-benchmark), and the [benchmark results](https://browser-use.com/benchmarks) (84.8% BrowserBench, 81% bypass on high-security sites)
+
+
+# Create a browser session
+Source: https://docs.browser-use.com/cloud/browser/create
+
+
+Three ways to create a session. All of them return a browser with stealth, CAPTCHA solving, and a residential proxy already on.
+
+## SDK
+
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+browser = await client.browsers.create(proxy_country_code="us")
+print(browser.cdp_url)   # connect any CDP client here
+print(browser.live_url)  # watch the session in a browser tab
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create({ proxyCountryCode: "us" });
+console.log(browser.cdpUrl);
+console.log(browser.liveUrl);
+```
+
+## REST
+
+```bash
+curl -X POST "https://api.browser-use.com/api/v3/browsers" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"proxyCountryCode": "us", "timeout": 60}'
+```
+
+## WebSocket URL (no SDK, no create call)
+
+Connect directly and the session is created for you. Configuration goes in query parameters, and the session stops when the socket disconnects.
+
+```text
+wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us
+```
+
+## Parameters
+
+All parameters are optional.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `profileId` | `string` (UUID) | — | Load a saved [profile](https://docs.browser-use.com/cloud/guides/profile-sync) (cookies, localStorage) into the session. |
+| `proxyCountryCode` | `string` | `us` | Residential proxy country. Set to `null` to disable the proxy. |
+| `timeout` | `int` | `60` | Session lifetime in minutes, 1–240. The session stops automatically when it expires. |
+| `browserScreenWidth` | `int` | — | Screen width in pixels, 320–6144. |
+| `browserScreenHeight` | `int` | — | Screen height in pixels, 320–3456. |
+| `allowResizing` | `bool` | `false` | Allow window resizing during the session. Not recommended: resizing reduces stealth. |
+| `customProxy` | `object` | — | Bring your own proxy instead of ours. |
+| `enableRecording` | `bool` | `false` | Record the session. The video is available as `recordingUrl` after the session stops. |
+
+{/* TEAM REVIEW: the WSS connection path previously documented timeout default as 15 minutes; the v3 API spec says 60. Confirm which is correct per method and align the framework pages. */}
+
+## Response
+
+`201` with a browser session object:
+
+```json
+{
+  "id": "0d5f16f3-96cc-4d5f-a5a4-4a4d3b5f9d2e",
+  "status": "active",
+  "liveUrl": "https://live.browser-use.com?wss=...",
+  "cdpUrl": "https://0d5f16f3.cdp1.browser-use.com",
+  "timeoutAt": "2026-07-15T21:00:00Z",
+  "startedAt": "2026-07-15T20:00:00Z",
+  "finishedAt": null,
+  "proxyUsedMb": "0.0",
+  "proxyCost": "0.0",
+  "browserCost": "0.0",
+  "agentSessionId": null,
+  "recordingUrl": null
+}
+```
+
+Field names are camelCase in REST and TypeScript (`cdpUrl`, `liveUrl`), snake_case in Python (`cdp_url`, `live_url`). `cdpUrl` and `liveUrl` are nullable, check them before connecting.
+
+## Errors
+
+| Status | Meaning |
+|--------|---------|
+| `403` | Session timeout limit exceeded for your plan. |
+| `404` | The `profileId` doesn't exist. |
+| `422` | Invalid parameter value. |
+| `429` | Too many concurrent active sessions. Stop unused sessions or raise your limit. |
+
+## Next
+
+- Connect with [Playwright](https://docs.browser-use.com/cloud/browser/playwright), [Puppeteer](https://docs.browser-use.com/cloud/browser/puppeteer), or [Selenium](https://docs.browser-use.com/cloud/browser/selenium)
+- [Manage the session](https://docs.browser-use.com/cloud/browser/sessions): lifecycle, stopping, billing
+
+
+# Manage browser sessions
+Source: https://docs.browser-use.com/cloud/browser/sessions
+
+
+A session has two states: `active` and `stopped`. It leaves `active` in exactly three ways: you stop it, its timeout expires, or (WebSocket connections only) the socket disconnects.
+
+## Stopping a session
+
+Stopping is an update, not a delete, and it cannot be undone.
+
+```python Python
+await client.browsers.stop(browser.id)
+```
+```typescript TypeScript
+await client.browsers.stop(browser.id);
+```
+```bash REST
+curl -X PATCH "https://api.browser-use.com/api/v3/browsers/$SESSION_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "stop"}'
+```
+
+There is no `POST /browsers/{id}/stop` endpoint. If you're getting a `404` on a stop call, this is why.
+
+Stop sessions as soon as you're done with them. Browser time is billed at $0.02/hour until the session stops or times out, whichever comes first.
+
+```python
+browser = await client.browsers.create()
+try:
+    ...  # your automation
+finally:
+    await client.browsers.stop(browser.id)
+```
+
+## Disconnecting vs stopping
+
+The two connection styles behave differently when your client goes away:
+
+| | Client disconnects | Session keeps running? |
+|---|---|---|
+| WebSocket URL (`wss://connect.browser-use.com`) | Socket closes | No — the session stops automatically |
+| SDK / REST (`browsers.create()` + CDP) | `pw_browser.close()` only detaches your client | Yes — until you call stop or the timeout expires |
+
+The SDK behavior is what lets you disconnect and reconnect to the same session, but it also means forgotten sessions keep billing. If you see `429 Too many concurrent active sessions`, list and stop the strays:
+
+```python
+sessions = await client.browsers.list(filter_by="active")
+for s in sessions.items:
+    await client.browsers.stop(s.id)
+```
+
+## Timeouts
+
+Every session has a lifetime set at creation: `timeout` in minutes, default `60`, maximum `240` (4 hours). The expiry moment comes back as `timeoutAt` in the session object. A timed-out session stops automatically and cannot be extended or reused, so if a workflow might outlive the default, set the timeout up front:
+
+```python
+browser = await client.browsers.create(timeout=240)
+```
+
+## Inspecting sessions
+
+```python
+browser = await client.browsers.get(session_id)     # one session
+sessions = await client.browsers.list(page_size=20) # paginated, filter_by="active" | "stopped"
+```
+
+The session object carries the operational fields: `status`, `timeoutAt`, `startedAt`, `finishedAt`, live and CDP URLs, plus cost tracking (`browserCost`, `proxyCost`, `proxyUsedMb`).
+
+## Recordings and downloads
+
+- Create the session with `enableRecording: true` and `recordingUrl` is populated after the session stops. It is `null` while the session runs and shortly after stopping while the video is processed.
+- Files downloaded by the browser during the session are listed at `GET /browsers/{session_id}/downloads`.
+
+## Related
+
+- [Create a browser session](https://docs.browser-use.com/cloud/browser/create) — all creation parameters
+- [Live preview](https://docs.browser-use.com/cloud/browser/live-preview) — watch or embed a running session
+
+
+# Stealth
 Source: https://docs.browser-use.com/cloud/browser/stealth
 
 
 See [how we perform in the hardest stealth benchmark](https://browser-use.com/posts/stealth-benchmark).
 
+<Frame caption="Stealth benchmark — success rate on high-security sites, Browser Use vs other cloud browsers">
+  <img src="/cloud/images/stealth-benchmark.png" style={{ borderRadius: '0.5rem' }} alt="Stealth benchmark bar chart: Browser Use 81%, Anchor 77%, Onkernel 67%, Browserless 54%, Headful 49%, Steel 47%, Browserbase 42%, Hyperbrowser 40%, Headless 2%" />
+</Frame>
+
+Browser Use Cloud lands **81%** — ahead of every other cloud browser, and far above a plain headless browser (2%).
+
+We get there by forking Chromium rather than patching detection signals with stealth plugins, so the signals never appear in the first place. [Here's why that approach holds up as anti-bot systems tighten](https://browser-use.com/posts/bot-detection).
+
 ## What's included
 
-Every cloud browser session runs in a hardened Chromium fork with stealth enabled by default — no configuration needed.
+Every cloud browser session runs in a hardened Chromium fork with stealth enabled by default — no configuration needed. [Create a browser session](https://docs.browser-use.com/cloud/browser/create) and it is already on.
 
 - **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and other browser fingerprints are randomized per session to appear as a real user. Passes CreepJS, BrowserLeaks, and other fingerprint detectors.
 - **Ad and cookie banner blocking** — Banners are dismissed automatically so the agent sees clean pages and executes faster.
 - **Cloudflare / anti-bot bypass** — Works on sites protected by Cloudflare, PerimeterX, and other bot detection services.
 
+Stealth keeps most challenges from ever appearing. When one does, it is solved automatically — see [CAPTCHA solving](https://docs.browser-use.com/cloud/browser/captcha) for per-vendor success rates.
+
 ## Residential proxies
 
 Residential proxies are enabled by default across 195+ countries. This makes browser sessions appear as real users from the target geography. See [Proxies](https://docs.browser-use.com/cloud/browser/proxies) for details on geo-targeting and custom proxy configuration.
+
+## Further reading
+
+- [Benchmarks](https://browser-use.com/benchmarks) — 84.8% on BrowserBench and 81% bypass on high-security sites, against other providers
+- [We stealth benchmarked every major cloud browser provider](https://browser-use.com/posts/stealth-benchmark)
+- [Browser agent bot detection is about to change](https://browser-use.com/posts/bot-detection)
+- [Stealth Browser Infrastructure](https://browser-use.com/posts/browser-infra)
+
+
+# CAPTCHA Solving
+Source: https://docs.browser-use.com/cloud/browser/captcha
+
+
+Browser Use remote browsers have **automatic CAPTCHA solving** built in. There is nothing to configure — on the browser, the attached agent, or your automation library (Playwright, Puppeteer, Selenium). It is on by default on every plan, including the [free tier](https://docs.browser-use.com/cloud/pricing).
+
+The best defense is not tripping a challenge in the first place — that is what [stealth](https://docs.browser-use.com/cloud/browser/stealth) handles (anti-fingerprinting and bot-detection bypass). This page covers what happens when a CAPTCHA or anti-bot system appears anyway: we solve it, and we lead the field on success rate.
+
+## Success rate by vendor
+
+Across the anti-bot and CAPTCHA systems agents hit most, Browser Use Cloud has the **highest overall success rate at 81%** — and the best against **Cloudflare (93%)** and **PerimeterX (81%)**.
+
+| Protection | Browser Use Cloud |
+| --- | --- |
+| Overall | **81%** |
+| Cloudflare | **93%** |
+| PerimeterX | **81%** |
+| Akamai | 85% |
+| DataDome | 69% |
+| reCAPTCHA | 80% |
+
+<Frame caption="Success rate by vendor, Browser Use Cloud vs other cloud browser providers">
+  <img src="/cloud/images/captcha-success-by-vendor.png" style={{ borderRadius: '0.5rem' }} alt="Heatmap of success rate by vendor. Browser Use Cloud leads overall at 81%, with 93% on Cloudflare and 81% on PerimeterX, ahead of Anchor, Onkernel, Browserless, Steel, Browserbase, and Hyperbrowser." />
+</Frame>
+
+Full methodology in [We stealth benchmarked every major cloud browser provider](https://browser-use.com/posts/stealth-benchmark).
+
+## Supported CAPTCHA types
+
+These are the interactive CAPTCHA widgets solved automatically, distinct from the anti-bot systems above (Cloudflare, DataDome, PerimeterX, Akamai) that gate a site before a widget ever appears:
+
+| CAPTCHA type | Solved automatically |
+| --- | --- |
+| reCAPTCHA v2 (checkbox / image challenge) | Yes |
+| reCAPTCHA v3 (score-based) | Yes |
+| hCaptcha | Yes |
+| Cloudflare Turnstile | Yes |
+
+All are handled on by default — no `captcha_type` parameter or per-widget configuration.
+
+## Get started
+
+There is nothing to turn on. CAPTCHA solving comes with every session. Start one:
+
+SDK, REST, or a single WebSocket URL.
+Playwright, Puppeteer, or Selenium over CDP.
+What the hardened Chromium fork does.
+Residential IPs in 195+ countries, on by default.
+
+## FAQ
+
+**Does the open-source library solve CAPTCHAs?**
+
+Without remote browsers, [open-source](https://github.com/browser-use/browser-use) agents have no stealth or CAPTCHA solving. Giving your agent stealth is easy: run it on a remote browser with a single parameter. See [Cloud browser + open source agent](https://docs.browser-use.com/cloud/browser/open-source-agent).
+
+**Can I use a third-party CAPTCHA solver?**
+
+No, we do not support third-party CAPTCHA solver plugins on the browser. If your CAPTCHAs are not being solved properly, reach out and we will look into it.
+
+**Do I need to enable anything for CAPTCHA solving?**
+
+No. Remote browsers solve CAPTCHAs for you automatically.
+
+## Further reading
+
+- [Prove you are a robot: CAPTCHAs for agents](https://browser-use.com/posts/prove-you-are-a-robot)
+- [Browser agent bot detection is about to change](https://browser-use.com/posts/bot-detection)
 
 
 # Proxies
@@ -1080,12 +1682,12 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 browser = await client.browsers.create(
-custom_proxy={
-    "host": "proxy.example.com",
-    "port": 8080,
-    "username": "user",
-    "password": "pass",
-},
+    custom_proxy={
+        "host": "proxy.example.com",
+        "port": 8080,
+        "username": "user",
+        "password": "pass",
+    },
 )
 ```
 ```typescript TypeScript
@@ -1094,13 +1696,118 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const browser = await client.browsers.create({
   customProxy: {
-host: "proxy.example.com",
-port: 8080,
-username: "user",
-password: "pass",
+    host: "proxy.example.com",
+    port: 8080,
+    username: "user",
+    password: "pass",
   },
 });
 ```
+
+## Blocked? Get a fresh IP
+
+Browser Use does not rotate the IP within a running session. When a site starts blocking you, stop the session and create a new one — each session gets a fresh residential IP from the country pool automatically.
+
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+
+async def with_fresh_ip(country="us", profile_id=None):
+    # Stop-and-recreate is how you get a new IP; reattach a profile to keep login state.
+    browser = await client.browsers.create(proxy_country_code=country, profile_id=profile_id)
+    return browser
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+
+async function withFreshIp(country = "us", profileId?: string) {
+  // Stop-and-recreate is how you get a new IP; reattach a profile to keep login state.
+  return client.browsers.create({ proxyCountryCode: country, profileId });
+}
+```
+
+- **New session = new IP.** Recreating the browser is the supported way to rotate.
+- **Keep your login across the rotation** by passing the same [`profile_id`](https://docs.browser-use.com/cloud/guides/authentication) — the fresh IP loads the saved cookies and localStorage.
+- **Switch country** (`proxy_country_code`) to leave a blocked regional pool entirely.
+- **Custom proxies** can rotate per request on their side — use the `custom_proxy` config above with a rotating endpoint.
+
+## Further reading
+
+- [We stealth benchmarked every major cloud browser provider](https://browser-use.com/posts/stealth-benchmark) — how proxy quality affects bypass rates
+
+
+# Screenshots
+Source: https://docs.browser-use.com/cloud/browser/screenshots
+
+
+A cloud browser session is a normal CDP endpoint, so screenshots work the way your framework takes them, and they save wherever your code runs.
+
+## Where screenshots are saved
+
+The most-asked question first: screenshots taken through Playwright or Puppeteer are written by *your* code, to a path *you* choose. Nothing is stored on the session unless you enable [recording](https://docs.browser-use.com/cloud/browser/sessions#recordings-and-downloads).
+
+```python Python
+from playwright.async_api import async_playwright
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+browser = await client.browsers.create()
+
+async with async_playwright() as p:
+    pw = await p.chromium.connect_over_cdp(browser.cdp_url)
+    page = pw.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    await page.screenshot(path="shots/example.png")  # your machine, your path
+
+await client.browsers.stop(browser.id)
+```
+```typescript TypeScript
+import { chromium } from "playwright";
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create();
+
+const pw = await chromium.connectOverCDP(browser.cdpUrl);
+const page = pw.contexts()[0].pages()[0];
+await page.goto("https://example.com");
+await page.screenshot({ path: "shots/example.png" });
+
+await client.browsers.stop(browser.id);
+```
+
+## Full page, not just the viewport
+
+By default a screenshot captures the visible viewport. For the whole page, top to bottom:
+
+```python
+await page.screenshot(path="full.png", full_page=True)
+```
+
+Playwright stitches the scroll automatically. The result contains page content only, no URL bar or browser chrome, because CDP screenshots capture the rendered page, not the window.
+
+## Resolution
+
+Screenshot dimensions follow the browser's screen size, set at [session creation](https://docs.browser-use.com/cloud/browser/create) with `browserScreenWidth` and `browserScreenHeight` (320–6144 × 320–3456). Set them explicitly if screenshots must match a target resolution:
+
+```python
+browser = await client.browsers.create(browser_screen_width=1920, browser_screen_height=1080)
+```
+
+{/* TEAM REVIEW: document the default screen size when width/height are omitted, and whether recording resolution (1920x1080 reported by users) can differ from screenshot resolution — a user reported 1512x770 screenshots vs 1920x1080 recordings. */}
+
+## Screenshots vs recording
+
+Screenshots are moments; [recording](https://docs.browser-use.com/cloud/browser/sessions#recordings-and-downloads) is the whole session as video (`enableRecording: true` at create, `recordingUrl` after stop). For debugging agent behavior, recording is usually what you want; for artifacts and QA evidence, screenshots.
+
+## From agent tasks
+
+Ask the agent to take screenshots as part of a task and collect them from the run's [workspace files](https://docs.browser-use.com/cloud/agent/workspaces).
+
+{/* TEAM REVIEW: add the exact API for retrieving agent step screenshots (the v1 /screenshots endpoint users reference) and note whether those images carry element highlight overlays — users ask for unmarked versions. */}
 
 
 # Live preview & recording
@@ -1194,14 +1901,14 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"Check how many GitHub stars browser-use has",
-enable_recording=True,
+    "Check how many GitHub stars browser-use has",
+    enable_recording=True,
 )
 
 # Waits up to 15s for recording to be ready. Returns [] if no browser was opened.
 urls = await client.sessions.wait_for_recording(result.id)
 for url in urls:
-print(url)  # presigned MP4 download URL
+    print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -1242,17 +1949,20 @@ console.log(stopped.recordingUrl); // presigned MP4 download URL
 
 
 
-# Playwright, Puppeteer, Selenium
-Source: https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium
+# Playwright
+Source: https://docs.browser-use.com/cloud/browser/playwright
 
 
-Every session runs in a [hardened Chromium fork](https://docs.browser-use.com/cloud/browser/stealth) with stealth, anti-fingerprinting, and [residential proxies](https://docs.browser-use.com/cloud/browser/proxies) enabled by default — no configuration needed.
+Run your Playwright scripts on Browser Use's cloud browsers. Every session runs in a [hardened Chromium fork](https://docs.browser-use.com/cloud/browser/stealth) with stealth, anti-fingerprinting, and [residential proxies](https://docs.browser-use.com/cloud/browser/proxies) enabled by default — no configuration needed.
+
+When to use this:
+- You have existing Playwright scripts and want to run them on stealth infrastructure
+- You need pixel-perfect control (screenshots, specific click coordinates, form filling)
+- You want to combine agent tasks with manual browser automation
 
 ## Option 1: WebSocket URL (no SDK)
 
 Connect with a single URL. All configuration is passed as query parameters.
-
-### Playwright
 
 ```python Python
 from playwright.async_api import async_playwright
@@ -1260,11 +1970,11 @@ from playwright.async_api import async_playwright
 WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
 
 async with async_playwright() as p:
-browser = await p.chromium.connect_over_cdp(WSS_URL)
-page = browser.contexts[0].pages[0]
-await page.goto("https://example.com")
-print(await page.title())
-await browser.close()
+    browser = await p.chromium.connect_over_cdp(WSS_URL)
+    page = browser.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    print(await page.title())
+    await browser.close()
 # Browser is automatically stopped when the WebSocket disconnects
 ```
 ```typescript TypeScript
@@ -1280,40 +1990,7 @@ await browser.close();
 // Browser is automatically stopped when the WebSocket disconnects
 ```
 
-### Puppeteer
-
-```typescript
-import puppeteer from "puppeteer-core";
-
-const WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us";
-
-const browser = await puppeteer.connect({ browserWSEndpoint: WSS_URL });
-const [page] = await browser.pages();
-await page.goto("https://example.com");
-console.log(await page.title());
-await browser.close();
-```
-
-### Selenium
-
-Selenium requires a local WebSocket proxy to connect to Browser Use's remote CDP endpoint. Use [selenium-wire](https://github.com/wkeeling/selenium-wire) or connect through Playwright's CDP bridge instead:
-
-```python
-from playwright.sync_api import sync_playwright
-
-WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
-
-with sync_playwright() as p:
-browser = p.chromium.connect_over_cdp(WSS_URL)
-page = browser.contexts[0].pages[0]
-page.goto("https://example.com")
-print(page.title())
-browser.close()
-```
-
-  Selenium's `debugger_address` only supports local `host:port` connections. For remote CDP over WebSocket, use Playwright or Puppeteer instead.
-
-## Query parameters
+### Query parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
@@ -1326,9 +2003,7 @@ browser.close()
 
 ## Option 2: SDK
 
-Create a browser via the SDK, get a `cdp_url`, and connect with Playwright or Puppeteer.
-
-### Playwright
+Create a browser via the SDK, get a `cdp_url`, and connect. The SDK also gives you a `live_url` to [watch or embed the session](https://docs.browser-use.com/cloud/browser/live-preview).
 
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
@@ -1340,11 +2015,11 @@ print(browser.cdp_url)   # https://uuid.cdpN.browser-use.com
 print(browser.live_url)  # https://live.browser-use.com?wss=...
 
 async with async_playwright() as p:
-pw_browser = await p.chromium.connect_over_cdp(browser.cdp_url)
-page = pw_browser.contexts[0].pages[0]
-await page.goto("https://example.com")
-print(await page.title())
-await pw_browser.close()
+    pw_browser = await p.chromium.connect_over_cdp(browser.cdp_url)
+    page = pw_browser.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    print(await page.title())
+    await pw_browser.close()
 
 await client.browsers.stop(browser.id)
 ```
@@ -1366,7 +2041,98 @@ await pwBrowser.close();
 await client.browsers.stop(browser.id);
 ```
 
-### Puppeteer
+### Create response
+
+`browsers.create()` wraps `POST https://api.browser-use.com/api/v3/browsers`, which returns `201` with:
+
+```json
+{
+  "id": "0d5f16f3-96cc-4d5f-a5a4-4a4d3b5f9d2e",
+  "status": "active",
+  "liveUrl": "https://live.browser-use.com?wss=...",
+  "cdpUrl": "https://0d5f16f3.cdp1.browser-use.com",
+  "timeoutAt": "2026-07-14T20:15:00Z",
+  "startedAt": "2026-07-14T20:00:00Z",
+  "finishedAt": null,
+  "proxyUsedMb": "0.0",
+  "proxyCost": "0.0",
+  "browserCost": "0.0",
+  "agentSessionId": null,
+  "recordingUrl": null
+}
+```
+
+Field names are camelCase in the REST API and TypeScript SDK (`cdpUrl`, `liveUrl`) and snake_case in the Python SDK (`cdp_url`, `live_url`). `cdpUrl` and `liveUrl` are nullable — check them before connecting.
+
+### Stopping a session over REST
+
+There is no `POST /browsers/{id}/stop` endpoint. Stopping is an update:
+
+```bash
+curl -X PATCH "https://api.browser-use.com/api/v3/browsers/$SESSION_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "stop"}'
+```
+
+## Gotchas
+
+  Use `connect_over_cdp()` / `connectOverCDP()`, **not** `connect()`. Playwright's `connect()` expects a Playwright-protocol server and fails against a CDP endpoint with an opaque `Protocol error (Browser.getVersion)`.
+
+- **Reuse the existing context.** The session already has a context and page open — use `browser.contexts[0].pages[0]` instead of `browser.new_context()`, so you keep the stealth fingerprint and any loaded [profile](https://docs.browser-use.com/cloud/browser/playwright#query-parameters).
+- **Closing the connection vs stopping the session.** With the WebSocket URL, disconnecting stops the browser. With the SDK, `pw_browser.close()` only disconnects your client — call `client.browsers.stop(browser.id)` to end the session.
+
+  Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
+
+## See also
+
+- [Puppeteer](https://docs.browser-use.com/cloud/browser/puppeteer) and [Selenium](https://docs.browser-use.com/cloud/browser/selenium) connections
+- [Live preview & recording](https://docs.browser-use.com/cloud/browser/live-preview) — watch the session or embed it in your app
+- [Proxies](https://docs.browser-use.com/cloud/browser/proxies) and [stealth](https://docs.browser-use.com/cloud/browser/stealth) configuration
+
+
+# Puppeteer
+Source: https://docs.browser-use.com/cloud/browser/puppeteer
+
+
+Run your Puppeteer scripts on Browser Use's cloud browsers. Every session runs in a [hardened Chromium fork](https://docs.browser-use.com/cloud/browser/stealth) with stealth, anti-fingerprinting, and [residential proxies](https://docs.browser-use.com/cloud/browser/proxies) enabled by default — no configuration needed.
+
+When to use this:
+- You have existing Puppeteer scripts and want to run them on stealth infrastructure
+- You want low-level CDP control from Node.js without managing Chrome yourself
+- You want to combine agent tasks with manual browser automation
+
+## Option 1: WebSocket URL (no SDK)
+
+Connect with a single URL. All configuration is passed as query parameters.
+
+```typescript
+import puppeteer from "puppeteer-core";
+
+const WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us";
+
+const browser = await puppeteer.connect({ browserWSEndpoint: WSS_URL });
+const [page] = await browser.pages();
+await page.goto("https://example.com");
+console.log(await page.title());
+await browser.close();
+// Browser is automatically stopped when the WebSocket disconnects
+```
+
+### Query parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `apiKey` | `string` | **Required.** Your Browser Use API key. |
+| `proxyCountryCode` | `string` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
+| `profileId` | `string` | Load a saved browser profile (cookies, localStorage). |
+| `timeout` | `int` | Session timeout in minutes. Default: 15. Max: 240 (4 hours). |
+| `browserScreenWidth` | `int` | Browser width in pixels. |
+| `browserScreenHeight` | `int` | Browser height in pixels. |
+
+## Option 2: SDK
+
+Create a browser via the SDK, then resolve the WebSocket endpoint. Unlike Playwright, Puppeteer can't connect to an HTTP CDP URL directly — fetch `/json/version` to get the `webSocketDebuggerUrl` first.
 
 ```typescript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -1379,54 +2145,296 @@ const browser = await client.browsers.create();
 const resp = await fetch(`${browser.cdpUrl}/json/version`);
 const { webSocketDebuggerUrl } = await resp.json();
 
-const pwBrowser = await puppeteer.connect({ browserWSEndpoint: webSocketDebuggerUrl });
-const [page] = await pwBrowser.pages();
+const pptrBrowser = await puppeteer.connect({ browserWSEndpoint: webSocketDebuggerUrl });
+const [page] = await pptrBrowser.pages();
 await page.goto("https://example.com");
 console.log(await page.title());
-await pwBrowser.close();
+await pptrBrowser.close();
 
 await client.browsers.stop(browser.id);
 ```
 
+The SDK also gives you a `liveUrl` to [watch or embed the session](https://docs.browser-use.com/cloud/browser/live-preview).
+
+### Create response
+
+`browsers.create()` wraps `POST https://api.browser-use.com/api/v3/browsers`, which returns `201` with:
+
+```json
+{
+  "id": "0d5f16f3-96cc-4d5f-a5a4-4a4d3b5f9d2e",
+  "status": "active",
+  "liveUrl": "https://live.browser-use.com?wss=...",
+  "cdpUrl": "https://0d5f16f3.cdp1.browser-use.com",
+  "timeoutAt": "2026-07-14T20:15:00Z",
+  "startedAt": "2026-07-14T20:00:00Z",
+  "finishedAt": null,
+  "proxyUsedMb": "0.0",
+  "proxyCost": "0.0",
+  "browserCost": "0.0",
+  "agentSessionId": null,
+  "recordingUrl": null
+}
+```
+
+Field names are camelCase in the REST API and TypeScript SDK (`cdpUrl`, `liveUrl`). `cdpUrl` and `liveUrl` are nullable — check them before connecting.
+
+### Stopping a session over REST
+
+There is no `POST /browsers/{id}/stop` endpoint. Stopping is an update:
+
+```bash
+curl -X PATCH "https://api.browser-use.com/api/v3/browsers/$SESSION_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "stop"}'
+```
+
+## Gotchas
+
+- **Use `puppeteer-core`.** It's the connect-only package — installing full `puppeteer` downloads a local Chromium you'll never use.
+- **`browserWSEndpoint` must be a `ws://`/`wss://` URL.** Passing the SDK's HTTPS `cdpUrl` directly fails; resolve it via `/json/version` as shown above.
+- **Viewport.** Puppeteer applies its own 800×600 default viewport after connecting. Pass `defaultViewport: null` to `puppeteer.connect()` to keep the browser's real window size.
+- **Closing the connection vs stopping the session.** With the WebSocket URL, disconnecting stops the browser. With the SDK, `browser.close()` only disconnects your client — call `client.browsers.stop(browser.id)` to end the session.
+
   Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
+
+## See also
+
+- [Playwright](https://docs.browser-use.com/cloud/browser/playwright) and [Selenium](https://docs.browser-use.com/cloud/browser/selenium) connections
+- [Live preview & recording](https://docs.browser-use.com/cloud/browser/live-preview) — watch the session or embed it in your app
+- [Proxies](https://docs.browser-use.com/cloud/browser/proxies) and [stealth](https://docs.browser-use.com/cloud/browser/stealth) configuration
+
+
+# Selenium
+Source: https://docs.browser-use.com/cloud/browser/selenium
+
+
+Browser Use's cloud browsers speak Chrome DevTools Protocol (CDP) over a remote WebSocket. Selenium can't consume that natively: its `debugger_address` option only supports local `host:port` connections, not remote `wss://` URLs.
+
+You have two practical paths.
+
+## Recommended: bridge through a CDP client
+
+If you're migrating Selenium scripts, connect through Playwright's sync API — the page-automation model (navigate, locate, click, read) maps one-to-one, and you get the [hardened stealth Chromium](https://docs.browser-use.com/cloud/browser/stealth) and [residential proxies](https://docs.browser-use.com/cloud/browser/proxies) with no configuration.
+
+```python
+from playwright.sync_api import sync_playwright
+
+WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(WSS_URL)
+    page = browser.contexts[0].pages[0]
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()
+# Browser is automatically stopped when the WebSocket disconnects
+```
+
+Common Selenium → Playwright equivalents:
+
+| Selenium | Playwright (sync) |
+|---|---|
+| `driver.get(url)` | `page.goto(url)` |
+| `driver.find_element(By.CSS_SELECTOR, s)` | `page.locator(s)` |
+| `element.click()` | `page.locator(s).click()` |
+| `element.send_keys(text)` | `page.locator(s).fill(text)` |
+| `driver.title` | `page.title()` |
+| `WebDriverWait(...).until(...)` | built-in auto-waiting |
+| `driver.quit()` | `browser.close()` |
+
+### Query parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `apiKey` | `string` | **Required.** Your Browser Use API key. |
+| `proxyCountryCode` | `string` | Proxy country code (e.g. `us`, `de`, `jp`). 195+ countries. |
+| `profileId` | `string` | Load a saved browser profile (cookies, localStorage). |
+| `timeout` | `int` | Session timeout in minutes. Default: 15. Max: 240 (4 hours). |
+| `browserScreenWidth` | `int` | Browser width in pixels. |
+| `browserScreenHeight` | `int` | Browser height in pixels. |
+
+## Alternative: keep Selenium with a local proxy
+
+If you must keep the Selenium API, run a local WebSocket-to-TCP proxy so Chrome's remote debugging endpoint appears as a local `host:port`, e.g. via [selenium-wire](https://github.com/wkeeling/selenium-wire). This adds a moving part we don't manage — for new code, prefer the CDP bridge above.
+
+  Selenium's `debugger_address` only supports local `host:port` connections. For remote CDP over WebSocket, use [Playwright](https://docs.browser-use.com/cloud/browser/playwright) or [Puppeteer](https://docs.browser-use.com/cloud/browser/puppeteer) instead.
+
+  Always stop browser sessions when done. Sessions left running will continue to incur charges until the timeout expires.
+
+## See also
+
+- [Playwright](https://docs.browser-use.com/cloud/browser/playwright) and [Puppeteer](https://docs.browser-use.com/cloud/browser/puppeteer) connections
+- [Live preview & recording](https://docs.browser-use.com/cloud/browser/live-preview) — watch the session or embed it in your app
+- [Proxies](https://docs.browser-use.com/cloud/browser/proxies) and [stealth](https://docs.browser-use.com/cloud/browser/stealth) configuration
+
+
+# Cloud browser + open source agent
+Source: https://docs.browser-use.com/cloud/browser/open-source-agent
+
+
+The [open-source library](/open-source/introduction) runs the agent on your machine. By default it also runs the *browser* on your machine, which means no stealth, no residential proxy, and no CAPTCHA solving. This page connects the two: keep your local agent code, point it at a cloud browser.
+
+## Connect by CDP URL
+
+Create a cloud browser, then pass its CDP URL to the library's `Browser`:
+
+```python
+import asyncio
+from browser_use import Agent, Browser, ChatOpenAI
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse()
+    cloud_browser = await client.browsers.create(proxy_country_code="us")
+
+    try:
+        agent = Agent(
+            task="Find the current price of iPhone 16 on amazon.de",
+            llm=ChatOpenAI(model="gpt-4o"),
+            browser=Browser(cdp_url=cloud_browser.cdp_url),
+        )
+        await agent.run()
+    finally:
+        await client.browsers.stop(cloud_browser.id)
+
+asyncio.run(main())
+```
+
+The agent behaves exactly as it does locally. The browser it drives is a [stealth Chromium](https://docs.browser-use.com/cloud/browser/stealth) with [CAPTCHA solving](https://docs.browser-use.com/cloud/browser/captcha) and a [residential proxy](https://docs.browser-use.com/cloud/browser/proxies), and you can watch it work through the session's `live_url`.
+
+{/* TEAM REVIEW: confirm the `use_cloud=True` shorthand on Browser() — parameter name, minimum library version, and whether it should be the primary example instead of the cdp_url form. */}
+
+## What you get, what you keep
+
+| | Stays yours | Comes from Cloud |
+|---|---|---|
+| Agent loop, prompts, custom tools | ✓ | |
+| LLM choice and API keys | ✓ | |
+| Browser runtime | | ✓ stealth Chromium |
+| Proxy / IP | | ✓ residential, 195+ countries |
+| CAPTCHA handling | | ✓ automatic |
+| Live view and recording | | ✓ per session |
+
+Billing: only the browser session ($0.02/hour plus proxy data). Your LLM tokens go to your own provider.
+
+## Related
+
+- [Create a browser session](https://docs.browser-use.com/cloud/browser/create) — all session parameters
+- [Open source vs Cloud](https://docs.browser-use.com/cloud/open-source-vs-cloud) — the full decision guide
+- [Manage browser sessions](https://docs.browser-use.com/cloud/browser/sessions) — always stop sessions when done
 
 
 # Profiles
 Source: https://docs.browser-use.com/cloud/guides/authentication
 
 
+Create a profile, then pass its `profile_id` to `run()` — the agent opens a browser seeded from that profile and runs your task on it. Cookies and login state saved during the run persist, so the next run with the same profile is already logged in.
+
 ```python Python
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-profile = await client.profiles.create(name="user-id-1")
-# or search existing
-# profile = (await client.profiles.list(query="user-id-1")).items[0]
-session = await client.sessions.create(profile_id=profile.id)
-result = await client.run("Check browser-use github stars", session_id=session.id)
-print(result.output)
 
-# Always stop the session to persist profile state
-await client.sessions.stop(session.id)
+# 1. Create a profile (stores cookies + login state across runs)
+profile = await client.profiles.create(name="user-id-1")
+# or reuse an existing one:
+# profile = (await client.profiles.list(query="user-id-1")).items[0]
+
+# 2. Run the agent — profile_id attaches a browser seeded from the profile
+result = await client.run(
+    "Go to example.com and return the page title",
+    profile_id=profile.id,
+)
+print(result.output)  # -> "Example Domain"
+
+# 3. Reuse the same profile later — saved login/cookies carry over
+followup = await client.run("Check my GitHub notifications", profile_id=profile.id)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse();
-const profile = await client.profiles.create({ name: "user-id-1" });
-// or search existing
-// const profile = (await client.profiles.list({ query: "user-id-1" })).items[0];
-const session = await client.sessions.create({ profileId: profile.id });
-const result = await client.run("Check browser-use github stars", {
-  sessionId: session.id,
-});
-console.log(result.output);
 
-// Always stop the session to persist profile state
-await client.sessions.stop(session.id);
+// 1. Create a profile (stores cookies + login state across runs)
+const profile = await client.profiles.create({ name: "user-id-1" });
+// or reuse an existing one:
+// const profile = (await client.profiles.list({ query: "user-id-1" })).items[0];
+
+// 2. Run the agent — profileId attaches a browser seeded from the profile
+const result = await client.run("Go to example.com and return the page title", {
+  profileId: profile.id,
+});
+console.log(result.output); // -> "Example Domain"
+
+// 3. Reuse the same profile later — saved login/cookies carry over
+const followup = await client.run("Check my GitHub notifications", { profileId: profile.id });
 ```
 
+Passing `profile_id` to `run()` provisions the browser and runs the agent in one call — no separate session step. Profile state is saved automatically when the run ends.
+
 View your profile IDs at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=profiles).
+
+## Persist state on a browser you drive (CDP)
+
+Profiles work the same whether the agent drives or you do. Pass `profile_id` to `browsers.create()`, set state over CDP, then **stop the browser to flush cookies and localStorage into the profile**. Reconnect later with the same `profile_id` and the state is there.
+
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+from playwright.async_api import async_playwright
+
+client = AsyncBrowserUse()
+profile = await client.profiles.create(name="persist-demo")
+
+# Session 1 — write state, then stop to persist
+b1 = await client.browsers.create(profile_id=profile.id)
+async with async_playwright() as p:
+    pw = await p.chromium.connect_over_cdp(b1.cdp_url)
+    page = pw.contexts[0].pages[0]
+    await page.goto("https://en.wikipedia.org")
+    await page.evaluate("localStorage.setItem('demo', 'hello')")
+    await pw.close()
+await client.browsers.stop(b1.id)   # flushes state into the profile
+
+# Session 2 — same profile, state is back
+b2 = await client.browsers.create(profile_id=profile.id)
+async with async_playwright() as p:
+    pw = await p.chromium.connect_over_cdp(b2.cdp_url)
+    page = pw.contexts[0].pages[0]
+    await page.goto("https://en.wikipedia.org")
+    value = await page.evaluate("localStorage.getItem('demo')")
+    print(value)  # -> hello
+    await pw.close()
+await client.browsers.stop(b2.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { chromium } from "playwright";
+
+const client = new BrowserUse();
+const profile = await client.profiles.create({ name: "persist-demo" });
+
+// Session 1 — write state, then stop to persist
+const b1 = await client.browsers.create({ profileId: profile.id });
+let pw = await chromium.connectOverCDP(b1.cdpUrl);
+let page = pw.contexts()[0].pages()[0];
+await page.goto("https://en.wikipedia.org");
+await page.evaluate(() => localStorage.setItem("demo", "hello"));
+await pw.close();
+await client.browsers.stop(b1.id); // flushes state into the profile
+
+// Session 2 — same profile, state is back
+const b2 = await client.browsers.create({ profileId: profile.id });
+pw = await chromium.connectOverCDP(b2.cdpUrl);
+page = pw.contexts()[0].pages()[0];
+await page.goto("https://en.wikipedia.org");
+console.log(await page.evaluate(() => localStorage.getItem("demo"))); // -> hello
+await pw.close();
+await client.browsers.stop(b2.id);
+```
+
+  Use a site that actually sets cookies/localStorage to verify persistence — `example.com` sets none, so it is a poor test target.
 
 ## Manage profiles
 
@@ -1437,7 +2445,7 @@ profile = await client.profiles.create(name="work-account")
 # List all
 response = await client.profiles.list()
 for p in response.items:
-print(p.id, p.name)
+    print(p.id, p.name)
 
 # Search by name
 response = await client.profiles.list(query="user-id-1")
@@ -1480,10 +2488,14 @@ await client.profiles.delete(profileId);
 
 - **Per-user profiles:** Create one profile per end-user. Query by name to get the profile ID, or store a mapping between your users and their profile IDs in your database.
 
-  Profile state is only saved when the session ends. Always call `sessions.stop()` when you are done — if a session is left open or times out, changes may not be persisted. Every code path that uses a profile must stop the session, including error handlers.
+  Profile state is saved when the run ends — call `sessions.stop()` (agent) or `browsers.stop()` (CDP) when you are done. Both paths persist; a session left open or timed out may not save. Stop in a `finally` so every code path, including error handlers, persists.
+
+## Further reading
+
+- [How to authenticate AI web agents](https://browser-use.com/posts/web-agent-authentication)
 
 
-# Sync local and cloud cookies
+# Profiles / Cookie sync
 Source: https://docs.browser-use.com/cloud/guides/profile-sync
 
 
@@ -1603,8 +2615,8 @@ print(f"Live view: {session.live_url}")
 
 # Agent navigates to login
 result = await client.run(
-"Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
-session_id=session.id,
+    "Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
+    session_id=session.id,
 )
 
 # Human completes 2FA in the live view
@@ -1612,8 +2624,8 @@ input("Complete 2FA in the live view, then press Enter...")
 
 # Agent continues
 result = await client.run(
-"You are now logged in. Go to the dashboard and export the monthly report",
-session_id=session.id,
+    "You are now logged in. Go to the dashboard and export the monthly report",
+    session_id=session.id,
 )
 print(result.output)
 await client.sessions.stop(session.id)
@@ -1662,14 +2674,14 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 
 result = await client.run(
-"""
-1. Go to example.com/signup
-2. Sign up with the agent's email address (use the email available to you)
-3. Check your email inbox for the verification code
-4. Enter the code on the website
-5. Complete the registration
-""",
-agentmail=True,  # default, shown for clarity
+    """
+    1. Go to example.com/signup
+    2. Sign up with the agent's email address (use the email available to you)
+    3. Check your email inbox for the verification code
+    4. Enter the code on the website
+    5. Complete the registration
+    """,
+    agentmail=True,  # default, shown for clarity
 )
 print(result.output)
 ```
@@ -1719,16 +2731,16 @@ client = AsyncBrowserUse()
 totp_secret = "JBSWY3DPEHPK3PXP"
 
 result = await client.run(
-f"""
-Log into example.com with username user@example.com and password mypassword.
-When prompted for a 2FA code, generate one using pyotp:
+    f"""
+    Log into example.com with username user@example.com and password mypassword.
+    When prompted for a 2FA code, generate one using pyotp:
 
-import pyotp
-totp = pyotp.TOTP("{totp_secret}")
-code = totp.now()
+    import pyotp
+    totp = pyotp.TOTP("{totp_secret}")
+    code = totp.now()
 
-Enter the generated code.
-""",
+    Enter the generated code.
+    """,
 )
 print(result.output)
 ```
@@ -1772,6 +2784,767 @@ Use **Agent Mail** (enabled by default). For end-client scenarios, have them for
 Use **TOTP secret in prompt** — the agent generates codes via pyotp, no human intervention needed.
 
 
+# Webhooks
+Source: https://docs.browser-use.com/cloud/guides/webhooks
+
+
+Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.browser-use.com/settings?tab=webhooks).
+
+## Events
+
+| Event | When |
+|-------|------|
+| `agent.task.status_update` | Task status changes (`running`, `idle`, or `stopped`) |
+| `test` | Webhook test ping |
+
+## Payload
+
+```json
+{
+  "type": "agent.task.status_update",
+  "timestamp": "2025-01-15T10:30:00Z",
+  "payload": {
+    "task_id": "task_abc123",
+    "session_id": "session_xyz",
+    "status": "idle",
+    "metadata": {}
+  }
+}
+```
+
+## Signature verification
+
+Every webhook request includes two headers:
+
+- `X-Browser-Use-Signature` — HMAC-SHA256 signature of the payload
+- `X-Browser-Use-Timestamp` — Unix timestamp (seconds) when the request was sent
+
+The signature is computed over `{timestamp}.{body}`, where `body` is the JSON-serialized payload with keys sorted alphabetically and no extra whitespace. Verify it to ensure the request is authentic and to prevent replay attacks.
+
+```python Python
+import hashlib
+import hmac
+import json
+import time
+
+def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
+    # Reject requests older than 5 minutes
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        return False
+    if abs(time.time() - ts) > 300:
+        return False
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
+```
+```typescript TypeScript
+import { createHmac, timingSafeEqual } from "crypto";
+
+function sortKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortKeys);
+  if (obj !== null && typeof obj === "object") {
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
+  }
+  return obj;
+}
+
+function verifyWebhook(body: string, signature: string, timestamp: string, secret: string): boolean {
+  // Reject requests older than 5 minutes
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) return false;
+  const payload = JSON.parse(body);
+  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
+  const expected = createHmac("sha256", secret).update(message).digest("hex");
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+}
+```
+
+## Example: Express webhook handler
+
+```typescript
+import express from "express";
+import { createHmac, timingSafeEqual } from "crypto";
+
+const app = express();
+app.use(express.raw({ type: "application/json" }));
+
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
+
+function sortKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortKeys);
+  if (obj !== null && typeof obj === "object") {
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
+  }
+  return obj;
+}
+
+app.post("/webhook", (req, res) => {
+  const signature = req.headers["x-browser-use-signature"] as string;
+  const timestamp = req.headers["x-browser-use-timestamp"] as string;
+
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
+    return res.status(401).send("Request too old");
+  }
+
+  const body = req.body.toString();
+  const payload = JSON.parse(body);
+  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
+  const expected = createHmac("sha256", WEBHOOK_SECRET).update(message).digest("hex");
+
+  if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
+    return res.status(401).send("Invalid signature");
+  }
+
+  if (payload.type === "agent.task.status_update") {
+    const { task_id, status, session_id } = payload.payload;
+    console.log(`Task ${task_id} is now ${status}`);
+  }
+
+  res.status(200).send("OK");
+});
+
+app.listen(3000);
+```
+
+## Example: FastAPI webhook handler
+
+```python
+from fastapi import FastAPI, Request, HTTPException
+import hashlib
+import hmac
+import json
+import os
+import time
+
+app = FastAPI()
+
+WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
+
+@app.post("/webhook")
+async def handle_webhook(request: Request):
+    body = await request.body()
+    signature = request.headers.get("x-browser-use-signature", "")
+    timestamp = request.headers.get("x-browser-use-timestamp", "")
+
+    # Reject requests older than 5 minutes
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid timestamp")
+    if abs(time.time() - ts) > 300:
+        raise HTTPException(status_code=401, detail="Request too old")
+
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
+
+    if not hmac.compare_digest(expected, signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
+    if payload["type"] == "agent.task.status_update":
+        task_id = payload["payload"]["task_id"]
+        status = payload["payload"]["status"]
+        print(f"Task {task_id} is now {status}")
+
+    return {"status": "ok"}
+```
+
+  For local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose your local server: `ngrok http 3000`. Then set the ngrok URL as your webhook endpoint in the dashboard.
+
+
+# x402 (pay-per-request)
+Source: https://docs.browser-use.com/cloud/guides/x402
+
+
+{/* prettier-ignore-start */}
+
+[x402](https://www.x402.org) is a payment protocol [created by Coinbase](https://www.coinbase.com/developer-platform/discover/launches/x402) that lets APIs, or AI agents, charge for requests directly with crypto.
+
+x402 lets your code, or an autonomous AI agent, pay Browser Use Cloud directly with cryptocurrency. No account signup, no credit card, and no API key is needed. Your wallet is your identity.
+
+
+**New to crypto?** Here's the gist:
+
+- **USDC** is a stablecoin pegged 1:1 to the US dollar. 1 USDC = $1.
+- **Base** is a low-fee blockchain network operated by Coinbase. Sending a payment costs fractions of a cent.
+- **Wallet** = a public address (your "username") and a private key (your "password"). The private key signs payments.
+- You'll need at least $5 of USDC on Base in a wallet you control. The Claude Code quickstart below walks you through everything from scratch.
+
+
+**Three ways to start, ranked by laziness:**
+
+One command. Claude does the wallet setup, funding walkthrough, and
+verification for you.
+One line in your Python or TypeScript app. Bring your own wallet.
+Skip the SDK. Sign EIP-3009, send `X-PAYMENT` header.
+
+## Claude Code quickstart
+
+The fastest path. Install the [x402 skill](https://github.com/browser-use/browser-use/tree/main/skills/x402), and Claude walks you through everything:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill x402
+```
+
+Then in Claude Code:
+
+```
+> /x402
+```
+
+Claude generates (or imports) a wallet, walks you through funding it via Coinbase, writes `BROWSER_USE_X402_PRIVATE_KEY` to your `.env`, installs the SDK, and runs a verification task. Total: ~2 minutes if you have a crypto wallet.
+
+  Already have a Browser Use Cloud account? The skill detects this and switches
+  to **top-up mode**, adding credits to that existing account instead of
+  creating a new, wallet-keyed one.
+
+## SDK quickstart
+
+The Browser Use SDK has built-in x402 support. Pass a wallet private key, and you're done.
+
+```bash Python
+pip install "browser-use-sdk[x402]"
+```
+```bash TypeScript
+npm install browser-use-sdk @x402/fetch @x402/evm viem
+```
+
+```python Python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse(x402_private_key="0x...")  # EVM wallet w/ USDC on Base
+    result = await client.run("Go to example.com and tell me the heading.")
+    print(result.output)
+
+asyncio.run(main())
+```
+
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({ x402PrivateKey: "0x..." });  // EVM wallet w/ USDC on Base
+const result = await client.run("Go to example.com and tell me the heading.");
+console.log(result.output);
+```
+
+Or set `BROWSER_USE_X402_PRIVATE_KEY` in your env, and skip the constructor arg entirely:
+
+```python Python
+client = AsyncBrowserUse()   # auto-detects from env
+```
+```typescript TypeScript
+const client = new BrowserUse(); // auto-detects from env
+```
+
+  Python: x402 is async-only. Use `AsyncBrowserUse`, not `BrowserUse`.
+
+## Raw HTTP quickstart
+
+Use this if you're in a language we don't ship an SDK for (Go, Rust, Ruby, etc.), or if you want to use other x402 APIs from the same client library. Hit `https://x402.api.browser-use.com` directly with any [x402 client library](https://github.com/coinbase/x402#all-available-reference-sdks):
+
+```python
+import asyncio
+
+from x402 import x402Client
+from x402.http.clients import x402HttpxClient
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+
+async def main():
+    client = x402Client()
+    register_exact_evm_client(client, EthAccountSigner(Account.from_key("0x...")))
+
+    async with x402HttpxClient(client, timeout=120.0) as http:
+        response = await http.post(
+            "https://x402.api.browser-use.com/api/v3/sessions",
+            json={"task": "..."},
+        )
+        print(response.status_code, response.text[:500])
+
+asyncio.run(main())
+```
+
+`https://x402.api.browser-use.com` exposes the same routes as `https://api.browser-use.com`. It supports every `/api/v2/*` and `/api/v3/*` route, gated by an x402 challenge instead of API key auth.
+
+## What you need
+
+- **EVM wallet** (MetaMask, Rabby, Coinbase Wallet, etc.) with its private key available to your app
+- **USD Coin (USDC) on Base mainnet**
+- **Default top-up:** `$5.00` USDC per request (`$1.00` minimum for budget-constrained wallets)
+
+You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIPS/eip-3009), so you sign offchain, and the facilitator pays gas.
+
+
+## Pricing and credits
+
+Each x402 payment adds `$5` of credits to your project by default (or `$1` if your wallet falls back to the smaller option). When credits hit zero, the next request returns `402`, and the SDK automatically signs another payment to keep going. **You don't manage top-ups manually; just make sure your wallet has enough USDC for your expected usage.**
+
+  **Mid-task drain still terminates the task.** Browser Use sessions run on a
+  worker that doesn't see x402, so once a long-running task starts and burns
+  through its credits, it stops with `INSUFFICIENT_CREDITS` — it does not pause
+  and wait for the next x402 payment. The `$5` default exists so most tasks
+  complete without hitting this; for expensive models (e.g. Opus) or long
+  sessions, pre-fund with multiple requests before kicking off the task.
+
+See the [pricing page](https://browser-use.com/pricing) for model and browser costs.
+
+## Topping up an existing account
+
+If you already have a Browser Use API key (for example, one created via the dashboard or the agent signup REST flow), you can use x402 to add credits to **that** account instead of creating a new project based on your crypto wallet. Send your existing API key alongside the payment:
+
+```python Python
+import asyncio
+
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse(
+    api_key="bu_...",                     # existing API key getting topped up
+    x402_private_key="0x...",             # wallet that pays
+    base_url="https://x402.api.browser-use.com/api/v3",
+)
+async def main():
+    result = await client.run("...")      # $5 USDC charged, credited to the API key's project
+    print(result.output)
+
+asyncio.run(main())
+
+```
+
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({
+  apiKey: "bu_...",
+  x402PrivateKey: "0x...",
+  baseUrl: "https://x402.api.browser-use.com/api/v3",
+});
+const result = await client.run("...");
+```
+
+When the backend sees both a payment and a valid API key, the credit goes to the key's project rather than auto-creating a new wallet-keyed one. Useful for:
+
+- Agents that ran out of free-tier credits and need to keep going
+- Adding credits via crypto when you already have a regular Browser Use account
+- Multi-wallet setups funding one shared account
+
+## Checking your credit balance
+
+When you sign up the normal way, Browser Use creates an **account** for you (we call it a "project") that holds your credits and runs your tasks, and you log into it with an API key. When you pay with **only a wallet** (no API key), there's no signup step — so the very first time you pay, Browser Use automatically creates one of these same accounts for you and ties it to your wallet. From then on it behaves exactly like a normal account. The only difference is how you prove it's yours: instead of an API key, you sign with your wallet.
+
+This balance is your **Browser Use credit balance** — the prepaid USD you've added to that account through x402 payments, minus what your tasks have spent.
+
+To check how much credit that account has left, use the method below:
+
+```python Python
+import asyncio
+
+from browser_use_sdk.v3 import get_wallet_balance
+
+async def main():
+    balance = await get_wallet_balance("0x...")  # same wallet private key you pay with
+    print(balance["total_credits_usd"])
+
+asyncio.run(main())
+
+```
+
+```typescript TypeScript
+import { getWalletBalance } from "browser-use-sdk/v3";
+
+const balance = await getWalletBalance("0x...");  // same wallet private key you pay with
+console.log(balance.total_credits_usd);
+```
+
+The response contains:
+
+| Field                    | Description                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| `wallet`                 | The wallet address (lowercased)                                                 |
+| `project_id`             | The account (project) tied to your wallet that the credits live in              |
+| `total_credits_usd`      | Your remaining Browser Use credit balance, in USD                               |
+| `additional_credits_usd` | Of that total, the portion added via x402 top-ups (excludes any plan allowance) |
+
+  This is for accounts created from a wallet (the default x402 mode). If you're
+  [topping up an existing account](#topping-up-an-existing-account), check that
+  account's balance the normal way with your API key via
+  `client.billing.account()`. A wallet that has never paid yet has no account,
+  so the call returns `404` until the first payment.
+
+  The SDK signs a fixed, server-defined message
+  ([EIP-191](https://eips.ethereum.org/EIPS/eip-191), the same "Sign-In with
+  Ethereum" mechanism) with your wallet's private key. The signature proves you
+  control the address without moving any funds. The server recovers the signer,
+  matches it to the wallet's project, and returns the balance.
+
+## How it works
+
+Your code asks for something, we say "$5 please," your wallet pays automatically, we run your request.
+
+A bit more detail:
+
+1. Your code makes a request (e.g. "run this task").
+2. The SDK auto-signs the payment from your wallet and resends the request.
+3. Coinbase moves the USDC on-chain. We add the same amount to your project's credit balance.
+4. We run your task and send back the result.
+
+## Wallet setup
+
+If you don't have a wallet ready, here's an easy way to set one up using **MetaMask**. It's a popular crypto wallet. Any other EVM-compatible wallet works equally well: [Rabby](https://rabby.io), [Coinbase Wallet](https://www.coinbase.com/wallet), [Frame](https://frame.sh), [Trust Wallet](https://trustwallet.com), [Phantom](https://phantom.com), etc. Pick whichever you prefer.
+
+Get the [MetaMask browser extension](https://metamask.io) via the official
+site only. Create a new wallet, save the seed phrase somewhere offline, set
+a password.
+By default, most wallets only show Ethereum. You need to add **Base** (the
+network we accept payments on) so your wallet can hold USDC there.
+Click **"Buy"** inside MetaMask. Pick **USDC**, set network to **Base**, and
+pay with credit card, bank, etc. The USDC lands directly in your wallet.
+In MetaMask: click the account menu → **Account details** → **Private keys**
+→ enter your password → copy. That string (starts with `0x`) is your
+`BROWSER_USE_X402_PRIVATE_KEY`. Other wallets have similar export options in
+their account settings.
+
+  Wallets hold real money, and anyone with the private key can drain it. Be
+  careful with your keys.
+
+## Advanced: bring your own x402 client
+
+For custom signers, multi-network setups, or non-EVM wallets, build the x402 client yourself, and pass it as `x402` instead of `x402_private_key`:
+
+```python Python
+from x402 import x402Client
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+x402 = x402Client()
+register_exact_evm_client(x402, EthAccountSigner(Account.from_key("0x...")))
+client = AsyncBrowserUse(x402=x402)
+
+```
+
+```typescript TypeScript
+import { x402Client } from "@x402/fetch";
+import { ExactEvmScheme } from "@x402/evm";
+import { privateKeyToAccount } from "viem/accounts";
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const x402 = new x402Client();
+x402.register("eip155:*", new ExactEvmScheme(privateKeyToAccount("0x...")));
+const client = new BrowserUse({ x402 });
+```
+
+## Troubleshooting
+
+Two likely causes:
+
+- **Wallet has no USDC on Base.** Check your balance. If empty, top it up.
+- **Your HTTP client isn't x402-aware.** Plain `requests` / `fetch` just sees a 402 and stops; it doesn't know how to read the payment instructions and sign a payment. Use the SDK (which handles this automatically), or wrap your HTTP client with one of the [x402 client libraries](https://github.com/coinbase/x402#all-available-reference-sdks).
+
+
+  You haven't installed the optional x402 deps. Run `pip install
+  "browser-use-sdk[x402]"` (Python) or `npm install @x402/fetch @x402/evm viem`
+  (TypeScript).
+
+  We verified your payment request but couldn't credit your project, so we
+  deliberately did not settle on-chain. No USDC was moved, so just retry. This
+  is rare.
+
+  Wait a few seconds. Settlement and credit grant happen in the same request,
+  but the response may be sent before the credit grant fully commits. If credits
+  still show `$0` after a few minutes, contact support with your wallet address.
+  (Conversely, if a payment settles but the request itself then fails, we
+  automatically reclaim the credits so you aren't charged for nothing.)
+
+`eip155:8453` is Base mainnet; `eip155:84532` is Base Sepolia testnet. Browser Use Cloud only accepts mainnet. Withdrawing USDC to Sepolia from Coinbase is **not** the same as Base mainnet, even though both use the same wallet address.
+
+## Related
+
+- [x402 protocol spec](https://www.x402.org)
+- [Standard API key auth](https://docs.browser-use.com/cloud/quickstart) — alternative if you don't want pay-per-use
+- [`x402` Claude Code skill source](https://github.com/browser-use/browser-use/tree/main/skills/x402)
+
+{/* prettier-ignore-end */}
+
+
+# MCP Server
+Source: https://docs.browser-use.com/cloud/guides/mcp-server
+
+
+```
+https://api.browser-use.com/v3/mcp
+```
+
+**The MCP server runs tasks on a cloud browser on Browser Use infrastructure — it does not control your local browser.** Each task spins up a hosted stealth browser with proxies and CAPTCHA solving on by default. Authentication is an HTTP header (`x-browser-use-api-key`), not an environment variable.
+
+Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+## Claude Code
+
+```bash
+claude mcp add --transport http browser-use https://api.browser-use.com/v3/mcp --header "x-browser-use-api-key: YOUR_API_KEY"
+```
+
+## Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Cursor
+
+Add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Windsurf
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "serverUrl": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `run_session` | Create a session and run a task. Supports `keep_alive`, `model` (`claude-sonnet-4.6`, `claude-opus-4.6`, `gpt-5.4-mini`), `output_schema`, and `profile_id`. |
+| `get_session` | Poll session status and output. Returns status, step count, cost breakdown, and live URL. |
+| `send_task` | Send a follow-up task to an idle keep-alive session. |
+| `stop_session` | Stop a session. `strategy: "task"` stops only the task, `"session"` destroys the sandbox. |
+| `get_session_messages` | Get the agent's messages — browser actions, reasoning, and results. |
+| `list_sessions` | List recent sessions with status and cost. |
+| `list_browser_profiles` | List browser profiles for authenticated tasks. |
+
+
+# Claude Code
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/claude-code
+
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) is Anthropic's agentic coding tool that runs in the terminal. Add Browser Use and it gets full cloud browser automation — anti-detect profiles, CAPTCHA solving, residential proxies in 195+ countries, persistent profiles, and stealth browsing.
+
+## Setup
+
+**1. Install the CLI**
+
+```bash
+uv tool install browser-use
+```
+
+**2. Verify the installation**
+
+```bash
+browser-use doctor
+```
+
+**3. Register the skill**
+
+Register the Browser Use skill with the installed CLI:
+
+```bash
+browser-use skill install
+```
+
+**4. Authenticate for cloud browsers**
+
+Sign up at [cloud.browser-use.com](https://cloud.browser-use.com), then authenticate:
+
+```bash
+browser-use auth login
+```
+
+Or let Claude Code provision a free API key itself — see [Agent Self-Registration](#agent-self-registration) below.
+
+**5. Use it**
+
+Claude Code uses its bash tool to run CLI commands directly:
+
+```
+> Use browser-use to open github.com/trending and summarize the top repos
+```
+
+For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
+
+## Agent Self-Registration
+
+Claude Code can provision its own Browser Use API key autonomously — no human interaction needed. The free tier includes unlimited browser hours, free proxies in 195+ countries, persistent browser profiles, CAPTCHA solving, and stealth browsing at zero cost.
+
+Install the Browser Use CLI and skill:
+
+```bash
+uv tool install browser-use
+browser-use skill install
+```
+
+Claude Code can follow the [REST flow](https://docs.browser-use.com/cloud/agent-signup#rest-flow) to request and verify a challenge, then put the returned key in its shell environment:
+
+```bash
+export BROWSER_USE_API_KEY=bu_...
+browser-use auth status
+```
+
+### Claim the account (optional)
+
+If the human wants to see the account in the dashboard later, use the [claim endpoint](https://docs.browser-use.com/cloud/agent-signup#claim-the-account). The returned claim URL is valid for 1 hour.
+
+## Pay with USDC via x402
+
+Two ways to use x402 with Browser Use Cloud:
+
+- **Top up an existing account** — add credits to your API key (e.g. one created via Agent Self-Registration above) using USDC. No credit card required. Use this when free credits run out.
+- **Accountless** — wallet IS the identity, no signup needed. Pure x402 / agent-economy native. Use this for autonomous agents that hold their own wallet.
+
+Install the skill:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill x402
+```
+
+Then in Claude Code:
+
+```
+> /x402
+```
+
+The skill asks whether you have an existing API key (top-up mode) or want accountless mode, then walks you through generating (or importing) an EVM wallet, funding it via Coinbase, and running a verification task. You'll need ~$5 of USDC on Base mainnet. Each top-up is $1.
+
+For the SDK API and protocol details, see the [x402 guide](https://docs.browser-use.com/cloud/guides/x402).
+
+
+# Claude Managed Agents
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/claude-managed-agents
+
+
+[Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents) run on Anthropic's hosted platform. Install the `browser-use` CLI in the agent's environment and it can drive a stealth cloud browser — with proxies, CAPTCHA solving, live view, and recording. Your API key stays in a credential vault; the model never sees it.
+
+The sandbox can't run a local browser, so the agent starts a named Browser Use Cloud browser and drives it with `browser-use <<'PY'` Python snippets.
+
+## 1. Create an environment
+
+Pre-install the CLI so it's ready at session start (no runtime install).
+
+```yaml
+name: browser-env
+config:
+  type: cloud
+  packages:
+    pip:
+      - browser-use
+  networking:
+    type: limited
+    allowed_hosts: ["*.browser-use.com"]
+    allow_package_managers: true
+```
+
+## 2. Create a credential vault
+
+Store your key as an environment variable so the CLI reads it and the model never does. Get one at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+| Field | Value                 |
+| ----- | --------------------- |
+| Type  | Environment variable  |
+| Name  | `BROWSER_USE_API_KEY` |
+| Value | `bu_...`              |
+
+## 3. Create the agent
+
+Tell it to use the CLI in cloud mode.
+
+```yaml
+name: browser agent
+model:
+  id: claude-opus-4-8
+description: Drives a stealth cloud browser with the Browser Use CLI.
+system: |
+  You are a browser agent. Use the `browser-use` CLI to complete web tasks.
+  Never launch a local browser in this sandbox. Start a named cloud browser:
+  browser-use <<'PY'
+  start_remote_daemon("managed")
+  PY
+  Then run browser work through the same name:
+  BU_NAME=managed browser-use <<'PY'
+  new_tab("https://example.com")
+  print(page_info())
+  PY
+  Your BROWSER_USE_API_KEY is in the environment; never print it.
+tools:
+  - type: agent_toolset_20260401 # shell access so the agent can run the CLI
+    default_config:
+      enabled: true
+      permission_policy:
+        type: always_allow
+```
+
+## 4. Start a session and send a task
+
+The Console only observes; kick the agent off with a `user.message` event.
+
+```bash
+curl -sS "https://api.anthropic.com/v1/sessions/$SESSION_ID/events?beta=true" \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "anthropic-beta: managed-agents-2026-04-01" \
+  -H "content-type: application/json" \
+  -d '{"events":[{"type":"user.message","content":[{"type":"text",
+       "text":"Get the top 5 Hacker News stories with their links."}]}]}'
+```
+
+## 5. Watch it run
+
+The agent starts a named cloud browser, runs Python helper snippets through `browser-use`, then returns the result. The session shows up in [cloud.browser-use.com](https://cloud.browser-use.com) → **Remote Browsers** with a **Live View** and an **mp4 recording**.
+
+  Always use a cloud browser — the Managed Agents sandbox has no GUI, so a local
+  browser won't start. Cloud mode also gives you stealth, residential proxies,
+  live view, and recording.
+
+
 # OpenClaw
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/openclaw
 
@@ -1799,16 +3572,16 @@ Open `~/.openclaw/openclaw.json` and add a `browser-use` profile:
 ```json5
 {
   browser: {
-enabled: true,
-defaultProfile: "browser-use",
-remoteCdpTimeoutMs: 3000,
-remoteCdpHandshakeTimeoutMs: 5000,
-profiles: {
-  "browser-use": {
-    cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
-    color: "#ff750e",
-  },
-},
+    enabled: true,
+    defaultProfile: "browser-use",
+    remoteCdpTimeoutMs: 3000,
+    remoteCdpHandshakeTimeoutMs: 5000,
+    profiles: {
+      "browser-use": {
+        cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
+        color: "#ff750e",
+      },
+    },
   },
 }
 ```
@@ -1846,7 +3619,7 @@ The Browser Use CLI is a standalone tool that gives any OpenClaw agent browser a
 **1. Install the CLI**
 
 ```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
+uv tool install browser-use
 ```
 
 **2. Verify the installation**
@@ -1863,269 +3636,141 @@ Paste this setup prompt into your OpenClaw agent:
 Install or upgrade browser-use with `uv tool install --python 3.12 --upgrade --force 'browser-use @ git+https://github.com/browser-use/browser-use.git'`, run `browser-use skill install`, and connect it to my browser. Follow https://github.com/browser-use/browser-use if setup or connection fails.
 ```
 
-Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to navigate pages, click elements, fill forms, take screenshots, extract data, and more. The skill file teaches the agent the full command set.
+Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to drive pages through Browser Harness and Python helpers.
 
-For the complete CLI reference and advanced features like cloud browsers, tunnels, sessions, and Python execution, see the [README](https://github.com/browser-use/browser-use/blob/main/browser_use/skill_cli/README.md) and the [Browser Use docs](https://docs.browser-use.com).
-
-
-# MCP Server
-Source: https://docs.browser-use.com/cloud/guides/mcp-server
+For the complete CLI reference, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
 
 
-```
-https://api.browser-use.com/v3/mcp
-```
+# Hermes Agent
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/hermes-agent
 
-Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
 
-## Claude Code
+[Hermes Agent](https://github.com/nousresearch/hermes-agent) is an open-source, self-improving AI agent by Nous Research. It has built-in browser automation tools that work with local Chromium out of the box. Add Browser Use and those tools run on cloud browsers with anti-detect profiles, residential proxies in 195+ countries, and stealth browsing.
+
+Two ways to set it up: configure Browser Use as Hermes's cloud browser backend, or install the Browser Use CLI and let Hermes drive it directly.
+
+## Option 1: Cloud Browser Backend
+
+Hermes has built-in browser tools (`browser_navigate`, `browser_click`, `browser_snapshot`, etc.) that default to local Chromium. Point them at Browser Use cloud browsers instead — no extra dependencies, same Hermes experience.
+
+### Setup
+
+**1. Get your API key**
+
+Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and copy your API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
+
+**2. Configure Hermes**
+
+Run the setup wizard:
 
 ```bash
-claude mcp add -t http -H "x-browser-use-api-key: YOUR_API_KEY" browser-use https://api.browser-use.com/v3/mcp
+hermes setup tools
 ```
 
-## Claude Desktop
+Select **Browser Automation**, then **Browser Use**, and paste your API key when prompted.
 
-Add to `claude_desktop_config.json`:
+Or configure manually — add your key to `~/.hermes/.env`:
 
-```json
-{
-  "mcpServers": {
-"browser-use": {
-  "url": "https://api.browser-use.com/v3/mcp",
-  "headers": {
-    "x-browser-use-api-key": "YOUR_API_KEY"
-  }
-}
-  }
-}
+```bash
+BROWSER_USE_API_KEY=your_key_here
 ```
 
-## Cursor
+And set the provider in `~/.hermes/config.yaml`:
 
-Add to `.cursor/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-"browser-use": {
-  "url": "https://api.browser-use.com/v3/mcp",
-  "headers": {
-    "x-browser-use-api-key": "YOUR_API_KEY"
-  }
-}
-  }
-}
+```yaml
+browser:
+  cloud_provider: browser-use
 ```
 
-## Windsurf
+**3. Use it**
 
-Add to `~/.codeium/windsurf/mcp_config.json`:
+Just chat with Hermes — any browsing tasks automatically route through Browser Use cloud browsers:
 
-```json
-{
-  "mcpServers": {
-"browser-use": {
-  "serverUrl": "https://api.browser-use.com/v3/mcp",
-  "headers": {
-    "x-browser-use-api-key": "YOUR_API_KEY"
-  }
-}
-  }
-}
+```
+> Find the top trending repositories on GitHub today and summarize them
 ```
 
-## Available Tools
+## Option 2: Browser Use CLI
 
-| Tool | Description |
-|------|-------------|
-| `run_session` | Create a session and run a task. Supports `keep_alive`, `model` (`claude-sonnet-4.6`, `claude-opus-4.6`, `gpt-5.4-mini`), `output_schema`, and `profile_id`. |
-| `get_session` | Poll session status and output. Returns status, step count, cost breakdown, and live URL. |
-| `send_task` | Send a follow-up task to an idle keep-alive session. |
-| `stop_session` | Stop a session. `strategy: "task"` stops only the task, `"session"` destroys the sandbox. |
-| `get_session_messages` | Get the agent's messages — browser actions, reasoning, and results. |
-| `list_sessions` | List recent sessions with status and cost. |
-| `list_browser_profiles` | List browser profiles for authenticated tasks. |
+The [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli) is a standalone tool that gives Hermes browser automation through terminal commands. Hermes drives the browser directly via its terminal tool, using Browser Harness and Python helpers through the `browser-use` command.
 
+### Setup
 
-# Webhooks
-Source: https://docs.browser-use.com/cloud/guides/webhooks
+**1. Install the CLI**
 
-
-Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.browser-use.com/settings?tab=webhooks).
-
-## Events
-
-| Event | When |
-|-------|------|
-| `agent.task.status_update` | Task status changes (`running`, `idle`, or `stopped`) |
-| `test` | Webhook test ping |
-
-## Payload
-
-```json
-{
-  "type": "agent.task.status_update",
-  "timestamp": "2025-01-15T10:30:00Z",
-  "payload": {
-"task_id": "task_abc123",
-"session_id": "session_xyz",
-"status": "idle",
-"metadata": {}
-  }
-}
+```bash
+uv tool install browser-use
 ```
 
-## Signature verification
+**2. Verify the installation**
 
-Every webhook request includes two headers:
-
-- `X-Browser-Use-Signature` — HMAC-SHA256 signature of the payload
-- `X-Browser-Use-Timestamp` — Unix timestamp (seconds) when the request was sent
-
-The signature is computed over `{timestamp}.{body}`, where `body` is the JSON-serialized payload with keys sorted alphabetically and no extra whitespace. Verify it to ensure the request is authentic and to prevent replay attacks.
-
-```python Python
-import hashlib
-import hmac
-import json
-import time
-
-def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
-# Reject requests older than 5 minutes
-try:
-    ts = int(timestamp)
-except (ValueError, TypeError):
-    return False
-if abs(time.time() - ts) > 300:
-    return False
-payload = json.loads(body)
-message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
-expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
-return hmac.compare_digest(expected, signature)
-```
-```typescript TypeScript
-import { createHmac, timingSafeEqual } from "crypto";
-
-function sortKeys(obj: unknown): unknown {
-  if (Array.isArray(obj)) return obj.map(sortKeys);
-  if (obj !== null && typeof obj === "object") {
-return Object.keys(obj as object)
-  .sort()
-  .reduce((acc, key) => {
-    (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
-    return acc;
-  }, {} as Record<string, unknown>);
-  }
-  return obj;
-}
-
-function verifyWebhook(body: string, signature: string, timestamp: string, secret: string): boolean {
-  // Reject requests older than 5 minutes
-  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) return false;
-  const payload = JSON.parse(body);
-  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
-  const expected = createHmac("sha256", secret).update(message).digest("hex");
-  return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
-}
+```bash
+browser-use doctor
 ```
 
-## Example: Express webhook handler
+**3. Register the skill**
 
-```typescript
-import express from "express";
-import { createHmac, timingSafeEqual } from "crypto";
+Register the Browser Use skill with the installed CLI:
 
-const app = express();
-app.use(express.raw({ type: "application/json" }));
-
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
-
-function sortKeys(obj: unknown): unknown {
-  if (Array.isArray(obj)) return obj.map(sortKeys);
-  if (obj !== null && typeof obj === "object") {
-return Object.keys(obj as object)
-  .sort()
-  .reduce((acc, key) => {
-    (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
-    return acc;
-  }, {} as Record<string, unknown>);
-  }
-  return obj;
-}
-
-app.post("/webhook", (req, res) => {
-  const signature = req.headers["x-browser-use-signature"] as string;
-  const timestamp = req.headers["x-browser-use-timestamp"] as string;
-
-  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
-return res.status(401).send("Request too old");
-  }
-
-  const body = req.body.toString();
-  const payload = JSON.parse(body);
-  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
-  const expected = createHmac("sha256", WEBHOOK_SECRET).update(message).digest("hex");
-
-  if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
-return res.status(401).send("Invalid signature");
-  }
-
-  if (payload.type === "agent.task.status_update") {
-const { task_id, status, session_id } = payload.payload;
-console.log(`Task ${task_id} is now ${status}`);
-  }
-
-  res.status(200).send("OK");
-});
-
-app.listen(3000);
+```bash
+browser-use skill install
 ```
 
-## Example: FastAPI webhook handler
+Or ask Hermes directly in chat to install it.
 
-```python
-from fastapi import FastAPI, Request, HTTPException
-import hashlib
-import hmac
-import json
-import os
-import time
+**4. Authenticate for cloud browsers**
 
-app = FastAPI()
+Authenticate with your API key:
 
-WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
-
-@app.post("/webhook")
-async def handle_webhook(request: Request):
-body = await request.body()
-signature = request.headers.get("x-browser-use-signature", "")
-timestamp = request.headers.get("x-browser-use-timestamp", "")
-
-# Reject requests older than 5 minutes
-try:
-    ts = int(timestamp)
-except (ValueError, TypeError):
-    raise HTTPException(status_code=401, detail="Invalid timestamp")
-if abs(time.time() - ts) > 300:
-    raise HTTPException(status_code=401, detail="Request too old")
-
-payload = json.loads(body)
-message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
-expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
-
-if not hmac.compare_digest(expected, signature):
-    raise HTTPException(status_code=401, detail="Invalid signature")
-
-if payload["type"] == "agent.task.status_update":
-    task_id = payload["payload"]["task_id"]
-    status = payload["payload"]["status"]
-    print(f"Task {task_id} is now {status}")
-
-return {"status": "ok"}
+```bash
+browser-use auth login
 ```
 
-  For local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose your local server: `ngrok http 3000`. Then set the ngrok URL as your webhook endpoint in the dashboard.
+Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
+
+**5. Use it**
+
+Once the skill is loaded, Hermes can drive the browser through CLI commands via its terminal tool:
+
+```
+> Use browser-use to open github.com/trending and summarize the top repos
+```
+
+For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
+
+## Agent Self-Registration
+
+Hermes can provision its own Browser Use API key autonomously — no human interaction needed. This works with both options above.
+
+Install the Browser Use CLI and skill:
+
+```bash
+uv tool install browser-use
+browser-use skill install
+```
+
+The agent can follow the [REST flow](https://docs.browser-use.com/cloud/agent-signup#rest-flow) to request and verify a challenge, then use the returned API key.
+
+**Copy the key to Hermes config**
+
+For the cloud browser backend (Option 1):
+
+```bash
+hermes config set BROWSER_USE_API_KEY <api-key>
+```
+
+For CLI mode (Option 2), put the key in the agent's shell environment:
+
+```bash
+export BROWSER_USE_API_KEY=bu_...
+browser-use auth status
+```
+
+### Claim the account (optional)
+
+If the human wants to see the account in the dashboard later, use the [claim endpoint](https://docs.browser-use.com/cloud/agent-signup#claim-the-account). The returned claim URL is valid for 1 hour.
 
 
 # n8n
@@ -2223,8 +3868,8 @@ import { client } from "./api";
 
 export async function createSession() {
   const session = await client.sessions.create({
-keepAlive: true,
-enableRecording: true,
+    keepAlive: true,
+    enableRecording: true,
   });
   return { id: session.id, liveUrl: session.liveUrl, status: session.status };
 }
@@ -2241,7 +3886,7 @@ async function handleSend(message: string) {
   const session = await createSession();
 
   router.push(
-`/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
+    `/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
   );
 }
 ```
@@ -2257,7 +3902,7 @@ const streamTask = useCallback(async (task: string) => {
   const run = client.run(task, { sessionId });
 
   for await (const msg of run) {
-setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => [...prev, msg]);
   }
 
   // Iterator done — task reached terminal state
@@ -2301,7 +3946,7 @@ useEffect(() => {
   if (!isTerminal) return;
 
   client.sessions.waitForRecording(sessionId).then((urls) => {
-if (urls.length) setRecordingUrls(urls);
+    if (urls.length) setRecordingUrls(urls);
   });
 }, [isTerminal, sessionId]);
 ```
@@ -2329,23 +3974,23 @@ The session page consumes everything through a context provider:
 ```typescript session/[id]/page.tsx
 function SessionPage() {
   const { session, turns, isBusy, isTerminal, recordingUrls, sendMessage, stopTask } =
-useSession();
+    useSession();
 
   return (
-<div className="flex h-screen w-full overflow-hidden">
-  {/* Chat column */}
-  <div className="flex-1 flex flex-col min-w-0">
-    <ChatMessages turns={turns} isBusy={isBusy} />
-    <ChatInput
-      onSend={sendMessage}
-      onStop={stopTask}
-      disabled={isTerminal}
-    />
-  </div>
+    <div className="flex h-screen w-full overflow-hidden">
+      {/* Chat column */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <ChatMessages turns={turns} isBusy={isBusy} />
+        <ChatInput
+          onSend={sendMessage}
+          onStop={stopTask}
+          disabled={isTerminal}
+        />
+      </div>
 
-  {/* Live browser view — liveUrl available from session creation */}
-  <BrowserPanel liveUrl={session?.liveUrl} />
-</div>
+      {/* Live browser view — liveUrl available from session creation */}
+      <BrowserPanel liveUrl={session?.liveUrl} />
+    </div>
   );
 }
 ```
@@ -2360,6 +4005,116 @@ useSession();
 | `client.run()` | Send a task and stream messages with `for await` |
 | `client.sessions.stop()` | Stop the current task |
 | `client.sessions.waitForRecording()` | Get MP4 recording URLs |
+
+
+# Agent Sign Up for Browser Use
+Source: https://docs.browser-use.com/cloud/agent-signup
+
+
+An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
+
+The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
+
+## REST flow
+
+### 1. Request a challenge
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+Request body, optional (include a user email/name if available):
+
+```json
+{
+  "email": "user@example.com",
+  "name": "User Name"
+}
+```
+
+Response:
+
+```json
+{
+  "challenge_id": "uuid",
+  "challenge_text": "..."
+}
+```
+
+### 2. Solve the challenge
+
+Read `challenge_text` and solve the math problem. Return the answer as a string with two decimal places, for example `"144.00"`.
+
+### 3. Verify the answer
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup/verify \
+  -H "Content-Type: application/json" \
+  -d '{"challenge_id":"uuid","answer":"144.00"}'
+```
+
+Request body:
+
+```json
+{
+  "challenge_id": "uuid",
+  "answer": "144.00"
+}
+```
+
+Response:
+
+```json
+{
+  "api_key": "bu_..."
+}
+```
+
+Use the returned key for Browser Use Cloud API requests.
+
+For example, create a browser session:
+
+```bash
+curl -X POST https://api.browser-use.com/api/v3/browsers \
+  -H "X-Browser-Use-API-Key: bu_..." \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+See the [Create Browser Session API reference](https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session).
+
+## Claim the account
+
+If a human wants to see the agent-created account in the dashboard later, the agent can create a claim link:
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup/claim \
+  -H "X-Browser-Use-API-Key: bu_..."
+```
+
+Response:
+
+```json
+{
+  "claim_url": "https://..."
+}
+```
+
+The claim URL is valid for 1 hour.
+
+## CLI usage
+
+Agents with shell access can use the Browser Use CLI after the REST flow returns an API key:
+
+```bash
+uv tool install browser-use
+export BROWSER_USE_API_KEY=bu_...
+browser-use auth status
+```
+
+Replace `bu_...` with the key returned by the REST flow.
 
 
 # Grow Therapy provider search
@@ -2398,28 +4153,28 @@ const client = new BrowserUse();
 
 ```python Python
 class Provider(BaseModel):
-name: str
-title: str
-specialties: list[str]
-insurance_plans: list[str]
-rating: float | None = None
-next_available: str | None = None
+    name: str
+    title: str
+    specialties: list[str]
+    insurance_plans: list[str]
+    rating: float | None = None
+    next_available: str | None = None
 
 class ProviderSearch(BaseModel):
-providers: list[Provider]
-total_found: int | None = None
-location: str
-specialty: str
+    providers: list[Provider]
+    total_found: int | None = None
+    location: str
+    specialty: str
 ```
 ```typescript TypeScript
 const ProviderSearch = z.object({
   providers: z.array(z.object({
-name: z.string(),
-title: z.string(),
-specialties: z.array(z.string()),
-insurancePlans: z.array(z.string()),
-rating: z.number().nullable(),
-nextAvailable: z.string().nullable(),
+    name: z.string(),
+    title: z.string(),
+    specialties: z.array(z.string()),
+    insurancePlans: z.array(z.string()),
+    rating: z.number().nullable(),
+    nextAvailable: z.string().nullable(),
   })),
   totalFound: z.number().nullable(),
   location: z.string(),
@@ -2440,19 +4195,19 @@ const workspace = await client.workspaces.create({ name: "grow-therapy-search" }
 
 ```python Python
 result = await client.run(
-"Go to growtherapy.com and search for therapists in {{New York}} "
-"who specialize in {{anxiety}} and accept insurance. "
-"Return the first 5 provider profiles as JSON.",
-workspace_id=str(workspace.id),
-output_schema=ProviderSearch,
+    "Go to growtherapy.com and search for therapists in {{New York}} "
+    "who specialize in {{anxiety}} and accept insurance. "
+    "Return the first 5 provider profiles as JSON.",
+    workspace_id=str(workspace.id),
+    output_schema=ProviderSearch,
 )
 
 for p in result.output.providers:
-print(f"{p.name} ({p.title})")
-print(f"  Specialties: {', '.join(p.specialties)}")
-print(f"  Rating: {p.rating}")
-print(f"  Next available: {p.next_available}")
-print()
+    print(f"{p.name} ({p.title})")
+    print(f"  Specialties: {', '.join(p.specialties)}")
+    print(f"  Rating: {p.rating}")
+    print(f"  Next available: {p.next_available}")
+    print()
 ```
 ```typescript TypeScript
 const result = await client.run(
@@ -2479,16 +4234,16 @@ locations = ["Los Angeles", "Chicago", "Houston", "Miami"]
 specialties = ["depression", "trauma", "ADHD"]
 
 for location in locations:
-for specialty in specialties:
-    result = await client.run(
-        f"Go to growtherapy.com and search for therapists in {{{{{location}}}}} "
-        f"who specialize in {{{{{specialty}}}}} and accept insurance. "
-        f"Return the first 5 provider profiles as JSON.",
-        workspace_id=str(workspace.id),
-        output_schema=ProviderSearch,
-    )
-    count = len(result.output.providers)
-    print(f"{location} / {specialty}: {count} providers found")
+    for specialty in specialties:
+        result = await client.run(
+            f"Go to growtherapy.com and search for therapists in {{{{{location}}}}} "
+            f"who specialize in {{{{{specialty}}}}} and accept insurance. "
+            f"Return the first 5 provider profiles as JSON.",
+            workspace_id=str(workspace.id),
+            output_schema=ProviderSearch,
+        )
+        count = len(result.output.providers)
+        print(f"{location} / {specialty}: {count} providers found")
 ```
 ```typescript TypeScript
 const locations = ["Los Angeles", "Chicago", "Houston", "Miami"];
@@ -2496,13 +4251,13 @@ const specialties = ["depression", "trauma", "ADHD"];
 
 for (const location of locations) {
   for (const specialty of specialties) {
-const result = await client.run(
-  `Go to growtherapy.com and search for therapists in {{${location}}} ` +
-  `who specialize in {{${specialty}}} and accept insurance. ` +
-  `Return the first 5 provider profiles as JSON.`,
-  { workspaceId: workspace.id, schema: ProviderSearch },
-);
-console.log(`${location} / ${specialty}: ${result.output.providers.length} providers`);
+    const result = await client.run(
+      `Go to growtherapy.com and search for therapists in {{${location}}} ` +
+      `who specialize in {{${specialty}}} and accept insurance. ` +
+      `Return the first 5 provider profiles as JSON.`,
+      { workspaceId: workspace.id, schema: ProviderSearch },
+    );
+    console.log(`${location} / ${specialty}: ${result.output.providers.length} providers`);
   }
 }
 ```
@@ -2587,7 +4342,6 @@ Source: https://docs.browser-use.com/cloud/legacy/agent
 | Model | API String | Cost per Step |
 | ----- | ---------- | ------------- |
 | Browser Use 2.0 (default) | `browser-use-2.0` | \$0.006 |
-| Browser Use LLM | `browser-use-llm` | \$0.002 |
 | O3 | `o3` | \$0.03 |
 | Gemini Flash Latest | `gemini-flash-latest` | \$0.0075 |
 | Gemini Flash Lite Latest | `gemini-flash-lite-latest` | \$0.005 |
@@ -2621,15 +4375,15 @@ client = AsyncBrowserUse()
 session = await client.sessions.create()
 
 upload = await client.files.session_url(
-session.id,
-file_name="input.pdf",
-content_type="application/pdf",
-size_bytes=1024,
+    session.id,
+    file_name="input.pdf",
+    content_type="application/pdf",
+    size_bytes=1024,
 )
 
 with open("input.pdf", "rb") as f:
-async with httpx.AsyncClient() as http:
-    await http.post(upload.url, content=f.read(), headers={"Content-Type": "application/pdf"})
+    async with httpx.AsyncClient() as http:
+        await http.post(upload.url, content=f.read(), headers={"Content-Type": "application/pdf"})
 
 result = await client.run("Summarize the uploaded PDF", session_id=session.id)
 ```
@@ -2662,8 +4416,8 @@ const result = await client.run("Summarize the uploaded PDF", { sessionId: sessi
 ```python Python
 result = await client.tasks.get(task_id)
 for file in result.output_files:
-output = await client.files.task_output(task_id, file.id)
-print(output.download_url)  # download URL
+    output = await client.files.task_output(task_id, file.id)
+    print(output.download_url)  # download URL
 ```
 ```typescript TypeScript
 const result = await client.tasks.get(taskId);
@@ -2685,8 +4439,8 @@ from browser_use_sdk import AsyncBrowserUse
 client = AsyncBrowserUse()
 run = client.run("Find the most upvoted post on Reddit r/technology today")
 async for step in run:
-print(f"Step {step.number}: {step.next_goal}")
-print(f"  URL: {step.url}")
+    print(f"Step {step.number}: {step.next_goal}")
+    print(f"  URL: {step.url}")
 
 print(run.result.output)  # final result after iteration
 ```
@@ -2767,8 +4521,8 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 skill = await client.skills.create(
-goal="Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
-agent_prompt="Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
+    goal="Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
+    agent_prompt="Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
 )
 print(skill.id)
 ```
@@ -2789,8 +4543,8 @@ Skill creation takes ~30 seconds. You can also create skills visually from the [
 
 ```python Python
 result = await client.skills.execute(
-skill.id,
-parameters={"X": 10},
+    skill.id,
+    parameters={"X": 10},
 )
 print(result)
 ```
@@ -2862,9 +4616,9 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"Log into my Jira account and create a new ticket",
-op_vault_id="your-vault-id",
-allowed_domains=["*.atlassian.net"],
+    "Log into my Jira account and create a new ticket",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net"],
 )
 print(result.output)
 ```
@@ -2875,8 +4629,8 @@ const client = new BrowserUse();
 const result = await client.run(
   "Log into my Jira account and create a new ticket",
   {
-opVaultId: "your-vault-id",
-allowedDomains: ["*.atlassian.net"],
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net"],
   },
 );
 console.log(result.output);
@@ -2886,17 +4640,17 @@ For SSO/OAuth redirects, include all required domains:
 
 ```python Python
 result = await client.run(
-"Log into Jira and create a ticket for the Q4 release",
-op_vault_id="your-vault-id",
-allowed_domains=["*.atlassian.net", "*.okta.com"],
+    "Log into Jira and create a ticket for the Q4 release",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net", "*.okta.com"],
 )
 ```
 ```typescript TypeScript
 const result = await client.run(
   "Log into Jira and create a ticket for the Q4 release",
   {
-opVaultId: "your-vault-id",
-allowedDomains: ["*.atlassian.net", "*.okta.com"],
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net", "*.okta.com"],
   },
 );
 ```
@@ -2924,9 +4678,9 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"Log into GitHub and star the browser-use/browser-use repo",
-secrets={"github.com": "username:password123"},
-allowed_domains=["github.com"],
+    "Log into GitHub and star the browser-use/browser-use repo",
+    secrets={"github.com": "username:password123"},
+    allowed_domains=["github.com"],
 )
 ```
 ```typescript TypeScript
@@ -2936,8 +4690,8 @@ const client = new BrowserUse();
 const result = await client.run(
   "Log into GitHub and star the browser-use/browser-use repo",
   {
-secrets: { "github.com": "username:password123" },
-allowedDomains: ["github.com"],
+    secrets: { "github.com": "username:password123" },
+    allowedDomains: ["github.com"],
   },
 );
 ```
@@ -2948,26 +4702,83 @@ For SSO/OAuth redirects, include all domains in the auth flow:
 
 ```python Python
 result = await client.run(
-"Log into the company portal and download the Q4 report",
-secrets={
-    "portal.example.com": "user@company.com:password123",
-    "okta.com": "user@company.com:password123",
-},
-allowed_domains=["portal.example.com", "*.okta.com"],
+    "Log into the company portal and download the Q4 report",
+    secrets={
+        "portal.example.com": "user@company.com:password123",
+        "okta.com": "user@company.com:password123",
+    },
+    allowed_domains=["portal.example.com", "*.okta.com"],
 )
 ```
 ```typescript TypeScript
 const result = await client.run(
   "Log into the company portal and download the Q4 report",
   {
-secrets: {
-  "portal.example.com": "user@company.com:password123",
-  "okta.com": "user@company.com:password123",
-},
-allowedDomains: ["portal.example.com", "*.okta.com"],
+    secrets: {
+      "portal.example.com": "user@company.com:password123",
+      "okta.com": "user@company.com:password123",
+    },
+    allowedDomains: ["portal.example.com", "*.okta.com"],
   },
 );
 ```
+
+
+# API Reference
+Source: https://docs.browser-use.com/cloud/api-v4-overview
+
+
+## Authentication
+
+All requests require an API key in the `X-Browser-Use-API-Key` header:
+
+```
+X-Browser-Use-API-Key: bu_your_key_here
+```
+
+Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1). Keys start with `bu_`.
+
+## Base URL
+
+```
+https://api.browser-use.com/api/v4
+```
+
+## The core loop
+
+Create a run, poll its status until terminal, then fetch the full result. `status` is a cheap indexed lookup — poll it, not the full run.
+
+```bash Create a run
+curl -X POST https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: bu_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Find the top 3 trending repos on GitHub today"}'
+```
+
+```bash Poll status until completed | failed | cancelled (replace RUN_ID)
+curl https://api.browser-use.com/api/v4/runs/RUN_ID/status \
+  -H "X-Browser-Use-API-Key: bu_your_key_here"
+```
+
+```bash Fetch the full run once it's terminal
+curl https://api.browser-use.com/api/v4/runs/RUN_ID \
+  -H "X-Browser-Use-API-Key: bu_your_key_here"
+```
+
+## Sessions and follow-ups
+
+A run belongs to a session (a conversation). Send a follow-up message to a session's queue — it runs as the next turn, or immediately with `interrupt: true`:
+
+```bash Queue a follow-up (replace SESSION_ID)
+curl -X POST https://api.browser-use.com/api/v4/sessions/SESSION_ID/queue \
+  -H "X-Browser-Use-API-Key: bu_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Now open the top result", "interrupt": false}'
+```
+
+## SDKs
+
+The [Cloud SDK](https://docs.browser-use.com/cloud/sdk) wraps this loop — `runs.create()` then `runs.waitForCompletion()` / `runs.wait_for_completion()` — for TypeScript and Python.
 
 
 # API Reference
@@ -2989,6 +4800,16 @@ Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/sett
 ```
 https://api.browser-use.com/api/v3
 ```
+
+## OpenAPI spec
+
+The full API surface is published as a machine-readable OpenAPI 3.1 spec — use it to generate typed clients or validate payloads:
+
+```
+https://docs.browser-use.com/openapi.json
+```
+
+Also at [/cloud/openapi/v3.json](https://docs.browser-use.com/cloud/openapi/v3.json). Legacy v2 spec: [/cloud/openapi/v2.json](https://docs.browser-use.com/cloud/openapi/v2.json).
 
 ## Quick example
 
@@ -3036,6 +4857,8 @@ export BROWSER_USE_API_KEY=your_key
 
 Base URL: `https://api.browser-use.com/api/v2`
 
+OpenAPI spec: [/cloud/openapi/v2.json](https://docs.browser-use.com/cloud/openapi/v2.json) — legacy; new projects should use [v3](https://docs.browser-use.com/openapi.json).
+
 ---
 
 Prefer the SDK? See the [Agent (v2) docs](https://docs.browser-use.com/cloud/legacy/agent).
@@ -3047,65 +4870,3 @@ pip install browser-use-sdk
 npm install browser-use-sdk
 ```
 
-
-## Browser Use Agent Challenge to Get a Free Account
-
-AI agents can create a free Browser Use account autonomously via a challenge-response flow at `https://api.browser-use.com`.
-
-Do this to get an API key (no human required):
-1. `POST https://api.browser-use.com/cloud/signup` — request a challenge.
-
-Request body, optional (include a user email/name if available):
-```json
-{
-  "email": "user@example.com",
-  "name": "User Name"
-}
-```
-
-Response:
-```json
-{
-  "challenge_id": "uuid",
-  "challenge_text": "..."
-}
-```
-
-2. Solve the math problem in `challenge_text` — answer as a string with 2 decimal places, e.g. `"144.00"`
-
-3. `POST https://api.browser-use.com/cloud/signup/verify` with `challenge_id` + `answer`.
-
-Request body:
-```json
-{
-  "challenge_id": "uuid",
-  "answer": "144.00"
-}
-```
-
-Response:
-```json
-{
-  "api_key": "bu_..."
-}
-```
-
-4. Use `X-Browser-Use-API-Key: bu_...` on Browser Use Cloud API requests. For example, create a browser session (docs: https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session):
-
-```bash
-curl -X POST https://api.browser-use.com/api/v3/browsers \
-  -H "X-Browser-Use-API-Key: bu_..." \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-To let a human claim the account later: `POST https://api.browser-use.com/cloud/signup/claim` with `X-Browser-Use-API-Key: bu_...`.
-
-Response:
-```json
-{
-  "claim_url": "https://..."
-}
-```
-
-The claim URL is valid for 1 hour.

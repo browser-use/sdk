@@ -90,6 +90,15 @@ th {
 
 
 
+/* Monochrome sidebar icons (rendered as <img>, so currentColor can't apply):
+   tint black source SVGs to match sidebar text in each theme */
+img[src^="/images/icons/mono/"] {
+  filter: invert(0.35);
+}
+.dark img[src^="/images/icons/mono/"] {
+  filter: invert(0.72);
+}
+
 /* Open Source pages: blue accent */
 html[data-product="open-source"] {
   --primary: 37 99 235 !important;

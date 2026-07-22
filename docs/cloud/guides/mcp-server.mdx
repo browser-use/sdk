@@ -1,18 +1,21 @@
 ---
 title: MCP Server
 description: "Run browser automation tasks from your AI coding assistant. Connect to Claude, Cursor, Windsurf, or any MCP client."
+icon: "/images/icons/mono/mcp.svg"
 ---
 
 ```
 https://api.browser-use.com/v3/mcp
 ```
 
+**The MCP server runs tasks on a cloud browser on Browser Use infrastructure — it does not control your local browser.** Each task spins up a hosted stealth browser with proxies and CAPTCHA solving on by default. Authentication is an HTTP header (`x-browser-use-api-key`), not an environment variable.
+
 Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
 
 ## Claude Code
 
 ```bash
-claude mcp add -t http -H "x-browser-use-api-key: YOUR_API_KEY" browser-use https://api.browser-use.com/v3/mcp
+claude mcp add --transport http browser-use https://api.browser-use.com/v3/mcp --header "x-browser-use-api-key: YOUR_API_KEY"
 ```
 
 ## Claude Desktop

@@ -9,6 +9,9 @@ icon: rocket
 <CodeGroup>
 ```bash Python
 pip install browser-use-sdk
+# In a managed environment (Debian/Docker "externally-managed-environment", PEP 668),
+# use a venv: python3 -m venv .venv && source .venv/bin/activate && pip install browser-use-sdk
+# or: uv pip install browser-use-sdk
 ```
 ```bash TypeScript
 npm install browser-use-sdk
@@ -45,6 +48,56 @@ console.log(result.output);
 </CodeGroup>
 
 Want a full working app? Check out the [Chat UI example](/cloud/tutorials/chat-ui).
+
+## 3. Or drive a browser yourself
+
+Create a cloud browser, connect Playwright to it over CDP, and control it like a local browser, with stealth, CAPTCHA solving, and a residential proxy already on.
+
+<CodeGroup>
+```python Python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+from playwright.async_api import async_playwright
+
+async def main():
+    client = AsyncBrowserUse()
+    browser = await client.browsers.create()
+    print(browser.cdp_url)   # CDP endpoint for Playwright/Puppeteer/Selenium
+    print(browser.live_url)  # watch the session in a browser tab
+
+    async with async_playwright() as p:
+        pw = await p.chromium.connect_over_cdp(browser.cdp_url)
+        page = pw.contexts[0].pages[0]
+        await page.goto("https://news.ycombinator.com")
+        titles = await page.locator(".titleline > a").all_inner_texts()
+        print(titles[:5])
+        await pw.close()
+
+    await client.browsers.stop(browser.id)
+
+asyncio.run(main())
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { chromium } from "playwright";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create();
+console.log(browser.cdpUrl);  // CDP endpoint for Playwright/Puppeteer/Selenium
+console.log(browser.liveUrl); // watch the session in a browser tab
+
+const pw = await chromium.connectOverCDP(browser.cdpUrl);
+const page = pw.contexts()[0].pages()[0];
+await page.goto("https://news.ycombinator.com");
+const titles = await page.locator(".titleline > a").allInnerTexts();
+console.log(titles.slice(0, 5));
+await pw.close();
+
+await client.browsers.stop(browser.id);
+```
+</CodeGroup>
+
+Use `connect_over_cdp()` / `connectOverCDP()`, not `connect()`. See [Create a browser session](/cloud/browser/create) for every parameter and the response schema, and the [Playwright](/cloud/browser/playwright), [Puppeteer](/cloud/browser/puppeteer), and [Selenium](/cloud/browser/selenium) guides for framework specifics.
 
 ## Agent vs Browser
 

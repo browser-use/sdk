@@ -1,0 +1,99 @@
+---
+title: Create a browser session
+description: "Every way to start a cloud browser: SDK, REST, or a single WebSocket URL, with all parameters and the response schema."
+icon: plus
+---
+
+Three ways to create a session. All of them return a browser with stealth, CAPTCHA solving, and a residential proxy already on.
+
+## SDK
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+browser = await client.browsers.create(proxy_country_code="us")
+print(browser.cdp_url)   # connect any CDP client here
+print(browser.live_url)  # watch the session in a browser tab
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create({ proxyCountryCode: "us" });
+console.log(browser.cdpUrl);
+console.log(browser.liveUrl);
+```
+</CodeGroup>
+
+## REST
+
+```bash
+curl -X POST "https://api.browser-use.com/api/v3/browsers" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"proxyCountryCode": "us", "timeout": 60}'
+```
+
+## WebSocket URL (no SDK, no create call)
+
+Connect directly and the session is created for you. Configuration goes in query parameters, and the session stops when the socket disconnects.
+
+```text
+wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us
+```
+
+## Parameters
+
+All parameters are optional.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `profileId` | `string` (UUID) | — | Load a saved [profile](/cloud/guides/profile-sync) (cookies, localStorage) into the session. |
+| `proxyCountryCode` | `string` | `us` | Residential proxy country. Set to `null` to disable the proxy. |
+| `timeout` | `int` | `60` | Session lifetime in minutes, 1–240. The session stops automatically when it expires. |
+| `browserScreenWidth` | `int` | — | Screen width in pixels, 320–6144. |
+| `browserScreenHeight` | `int` | — | Screen height in pixels, 320–3456. |
+| `allowResizing` | `bool` | `false` | Allow window resizing during the session. Not recommended: resizing reduces stealth. |
+| `customProxy` | `object` | — | Bring your own proxy instead of ours. |
+| `enableRecording` | `bool` | `false` | Record the session. The video is available as `recordingUrl` after the session stops. |
+
+{/* TEAM REVIEW: the WSS connection path previously documented timeout default as 15 minutes; the v3 API spec says 60. Confirm which is correct per method and align the framework pages. */}
+
+## Response
+
+`201` with a browser session object:
+
+```json
+{
+  "id": "0d5f16f3-96cc-4d5f-a5a4-4a4d3b5f9d2e",
+  "status": "active",
+  "liveUrl": "https://live.browser-use.com?wss=...",
+  "cdpUrl": "https://0d5f16f3.cdp1.browser-use.com",
+  "timeoutAt": "2026-07-15T21:00:00Z",
+  "startedAt": "2026-07-15T20:00:00Z",
+  "finishedAt": null,
+  "proxyUsedMb": "0.0",
+  "proxyCost": "0.0",
+  "browserCost": "0.0",
+  "agentSessionId": null,
+  "recordingUrl": null
+}
+```
+
+Field names are camelCase in REST and TypeScript (`cdpUrl`, `liveUrl`), snake_case in Python (`cdp_url`, `live_url`). `cdpUrl` and `liveUrl` are nullable, check them before connecting.
+
+## Errors
+
+| Status | Meaning |
+|--------|---------|
+| `403` | Session timeout limit exceeded for your plan. |
+| `404` | The `profileId` doesn't exist. |
+| `422` | Invalid parameter value. |
+| `429` | Too many concurrent active sessions. Stop unused sessions or raise your limit. |
+
+## Next
+
+- Connect with [Playwright](/cloud/browser/playwright), [Puppeteer](/cloud/browser/puppeteer), or [Selenium](/cloud/browser/selenium)
+- [Manage the session](/cloud/browser/sessions): lifecycle, stopping, billing

@@ -1,0 +1,35 @@
+---
+title: Overview
+description: "Remote stealth browsers you control over CDP. What they are and when to use one."
+icon: globe
+---
+
+A Browser Use cloud browser is a real Chromium instance running on our infrastructure that your code controls remotely over the Chrome DevTools Protocol (CDP). Create one with an API call, get back a `cdpUrl`, and drive it with Playwright, Puppeteer, or any CDP client, the same way you'd drive a local browser.
+
+The difference from local Chromium is what's built in. Every session runs our [hardened Chromium fork](/cloud/browser/stealth) with anti-fingerprinting patches, [automatic CAPTCHA solving](/cloud/browser/captcha), and a [residential proxy](/cloud/browser/proxies) in your choice of 195+ countries. None of it needs configuration.
+
+## When to use a cloud browser
+
+- **Your Playwright/Puppeteer scripts get blocked.** Same code, but running on infrastructure that sites treat as a normal user.
+- **You don't want to run browsers.** No Chrome processes, no headless servers, no scaling browser pools.
+- **You're building your own agent.** Full CDP access means any framework or custom tooling works. You can also run the [open-source Browser Use agent on a cloud browser](/cloud/browser/open-source-agent).
+- **You need a watchable, recordable session.** Every session has a [live view](/cloud/browser/live-preview) you can open or embed, and optional recording.
+
+If you'd rather describe the task and let AI do the driving, use the [Agent](/cloud/agent/overview) instead. The two combine: agents run inside browser sessions, and you can connect your own code to the browser behind an agent run.
+
+## How it fits together
+
+1. [Create a browser session](/cloud/browser/create) — SDK, REST, or a single WebSocket URL
+2. Connect your framework — [Playwright](/cloud/browser/playwright), [Puppeteer](/cloud/browser/puppeteer), or [Selenium](/cloud/browser/selenium)
+3. Automate as usual — the session behaves like local Chromium with better manners from websites
+4. [Manage the session](/cloud/browser/sessions) — timeouts, stopping, what you're billed for
+
+## Logging into websites
+
+Sessions start clean by default. To carry login state across sessions, use [profiles / cookie sync](/cloud/guides/profile-sync), [authentication](/cloud/guides/authentication), and [2FA support](/cloud/guides/2fa).
+
+## Further reading
+
+- [Stealth Browser Infrastructure](https://browser-use.com/posts/browser-infra) — how the cloud browser is built
+- [Closer to the Metal: Leaving Playwright for CDP](https://browser-use.com/posts/playwright-to-cdp) — why the browser is driven over CDP
+- [We stealth benchmarked every major cloud browser provider](https://browser-use.com/posts/stealth-benchmark), and the [benchmark results](https://browser-use.com/benchmarks) (84.8% BrowserBench, 81% bypass on high-security sites)

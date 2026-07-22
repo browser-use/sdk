@@ -1,0 +1,35 @@
+---
+title: Overview
+description: "The hosted agent takes a task in plain language and drives a stealth browser until it's done."
+icon: robot
+---
+
+The agent is a hosted loop: it reads the page, decides an action, executes it, and repeats until the task is complete. You send a task, you get a result.
+
+```python
+from browser_use_sdk import BrowserUse
+
+client = BrowserUse()
+result = client.run("List the top 5 posts on Hacker News with their points")
+print(result.output)
+```
+
+Each run gets its own [stealth cloud browser](/cloud/browser/stealth) with proxies and CAPTCHA handling already on. No browser management, no selectors, no waiting logic.
+
+## When to use the agent
+
+The agent fits tasks where you care about the outcome, not the exact clicks: data extraction from sites that change layout, workflows across several pages, form submission, or anything you'd rather describe than script. If you need pixel-exact control or deterministic repetition, drive a [browser session](/cloud/browser/overview) directly instead, or record an agent run once and replay it with [cache scripts](/cloud/agent/cache-script).
+
+## What the agent can do
+
+- [Structured output](/cloud/agent/structured-output) — get results as typed JSON matching your schema
+- [Follow-up tasks](/cloud/agent/follow-up-tasks) — continue in the same browser with context intact
+- [Streaming](/cloud/agent/streaming) — watch steps as they happen
+- [Workspaces](/cloud/agent/workspaces) — files the agent reads and writes during a run
+- [Human-in-the-loop](/cloud/agent/human-in-the-loop) — take over the browser mid-task, then hand back
+- [Models](/cloud/agent/models) — pick the LLM that drives the loop
+- [Cache scripts](/cloud/agent/cache-script) — record a run, replay it without LLM calls
+
+## Next
+
+Start with the [agent quickstart](/cloud/agent/quickstart).
