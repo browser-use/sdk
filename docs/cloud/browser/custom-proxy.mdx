@@ -1,0 +1,70 @@
+---
+title: Custom proxy
+description: "Bring your own HTTP or SOCKS5 proxy instead of the built-in residential proxies."
+icon: server
+---
+
+Prefer your own proxy provider or need a specific egress IP? Pass a `custom_proxy` on the browser. It replaces the built-in residential proxy for that run or browser.
+
+## Use your own proxy
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+
+# on an agent run
+run = client.agents.browser_use.run(
+    task="Check example.com loads",
+    browser={
+        "custom_proxy": {
+            "host": "proxy.example.com",
+            "port": 8080,
+            "username": "user",
+            "password": "pass",
+        }
+    },
+)
+
+# or a standalone browser
+browser = client.browsers.create(
+    custom_proxy={"host": "proxy.example.com", "port": 8080, "username": "user", "password": "pass"}
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use";
+
+const client = new BrowserUse();
+const run = await client.agents.browserUse.run({
+  task: "Check example.com loads",
+  browser: {
+    custom_proxy: { host: "proxy.example.com", port: 8080, username: "user", password: "pass" },
+  },
+});
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Check example.com loads",
+    "browser": {"custom_proxy": {"host": "proxy.example.com", "port": 8080, "username": "user", "password": "pass"}}
+  }'
+```
+</CodeGroup>
+
+## Fields
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `host` | yes | Proxy hostname or IP |
+| `port` | yes | Proxy port |
+| `username` | no | Basic auth username |
+| `password` | no | Basic auth password |
+
+Both HTTP and SOCKS5 proxies are supported. When `custom_proxy` is set, `proxy_country_code` is ignored — your proxy decides the egress.
+
+<Warning>
+Custom proxies require an active subscription. Credentials are used only to route this browser and are never stored in run history.
+</Warning>

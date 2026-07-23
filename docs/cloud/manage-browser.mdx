@@ -1,0 +1,72 @@
+---
+title: Manage a browser
+description: "List browsers, stop them, and fetch recordings and downloads. Works for standalone browsers and the browsers an agent used."
+icon: gear
+---
+
+## List browsers
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+browsers = client.browsers.list()                 # all
+idle = client.browsers.list(status="idle")         # reclaimable
+for_session = client.browsers.list(session_id="ses_xyz789")  # what a session used
+```
+```bash curl
+curl "https://api.browser-use.com/api/v1/browsers?status=idle" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+
+curl "https://api.browser-use.com/api/v1/browsers?agentSessionId=ses_xyz789" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+## Stop a browser
+
+Frees the concurrency slot and refunds unused proxy. For `browser-use`, stopping the browser also closes its session.
+
+<CodeGroup>
+```python Python
+client.browsers.stop("br_abc123")
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/browsers/br_abc123/stop \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+## Recording
+
+Every browser records. Fetch a fresh, expiring download URL on demand (not a stale stored field).
+
+<CodeGroup>
+```python Python
+rec = client.browsers.recording("br_abc123")
+print(rec.url)   # presigned mp4
+```
+```bash curl
+curl "https://api.browser-use.com/api/v1/browsers/br_abc123/recording" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+To fetch recordings for an agent run: get its `browserId` from `GET /runs/{id}`, then call `/browsers/{browser_id}/recording`.
+
+## Downloads
+
+**Files the browser itself downloaded off the web while navigating** — a PDF it clicked, a CSV export a site handed back. These are distinct from files the agent wrote to its workspace (those are [output files](/cloud/files), `GET /runs/{id}/files?kind=output`). Rule of thumb: if a website gave the browser a file, it's a **download**; if the agent produced a file, it's an **output**.
+
+```bash curl
+curl "https://api.browser-use.com/api/v1/browsers/br_abc123/downloads?includeUrls=true" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+# → { "items": [{ "id": "dl_...", "name": "report.pdf", "downloadUrl": "https://..." }] }
+```
+
+Each item's `downloadUrl` serves the bytes (same download mechanism as output files).
+
+## Browser lifecycle (no keep_alive)
+
+Browsers clean themselves up — there is no `keep_alive` flag to manage. A browser stays alive while a run is attached, goes idle when the run finishes, is reused by a quick follow-up, and is otherwise stopped by the reaper (freeing cost and the concurrency slot). Hard ceiling 4 hours. Tight on slots? List `status=idle` browsers and stop them.

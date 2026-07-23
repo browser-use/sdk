@@ -1,153 +1,78 @@
 ---
 title: Live preview & recording
-description: "Watch the agent's browser in real time. Embed it in your app."
+description: "Watch the agent's browser live, embed it in your app, and get an MP4 recording after the run."
 icon: eye
 ---
 
-<Note>
-  Want a ready-made UI? See the [Chat UI tutorial](/cloud/tutorials/chat-ui).
-</Note>
+Every run's browser can be watched live and is recorded. Both the live view and the recording live on the **browser** the run used — you get the `browserId` from the run, then read them off the browser.
 
-`liveUrl` is returned on session creation.
+## Watch a run live
 
-<CodeGroup>
-```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-session = await client.sessions.create(task="Check how many GitHub stars browser-use has")
-print(session.live_url)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-const session = await client.sessions.create({
-  task: "Check how many GitHub stars browser-use has",
-});
-console.log(session.liveUrl);
-```
-</CodeGroup>
-
-`liveUrl` is also returned when creating a standalone browser session:
+Start a run, get its `browserId` from `GET /runs/{id}` (it appears once the browser is provisioned), then read the browser's `liveViewUrl`.
 
 <CodeGroup>
 ```python Python
-browser = await client.browsers.create()
-print(browser.live_url)
+from browser_use import BrowserUse
+
+client = BrowserUse()
+run = client.agents.browser_use.runs.create(task="Check how many GitHub stars browser-use has")
+
+# browser_id appears on the run once provisioned
+run = client.agents.browser_use.runs.get(run.id)
+browser = client.browsers.get(run.browser_id)
+print(browser.live_view_url)   # open this to watch live
 ```
-```typescript TypeScript
-const browser = await client.browsers.create();
-console.log(browser.liveUrl);
+```bash curl
+# 1. get the run → browserId (null until provisioned)
+curl "https://api.browser-use.com/api/v1/agents/browser-use/runs/RUN_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+# → { "browserId": "br_123", ... }
+
+# 2. the browser carries the live view url
+curl "https://api.browser-use.com/api/v1/browsers/br_123" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+# → { "liveViewUrl": "https://live.browser-use.com?wss=...", ... }
 ```
 </CodeGroup>
 
-## Embed live browser into your app
+A [standalone browser](/cloud/create-browser) returns `liveViewUrl` immediately on `POST /browsers` (it's provisioned synchronously).
 
-Useful for human interaction or to see live what's happening.
-
-```html
-<iframe
-  src="{LIVE_URL}"
-  width="1280"
-  height="720"
-  allow="autoplay"
-  style="border: none; border-radius: 8px;"
-></iframe>
-```
-
-The live URL is hosted on `live.browser-use.com`. If your app sets a Content Security Policy, add it to your `frame-src` directive:
-
-```
-Content-Security-Policy: frame-src 'self' https://live.browser-use.com;
-```
-
-For responsive sizing, use CSS instead of fixed dimensions:
+## Embed it in your app
 
 ```html
 <iframe
-  src="{LIVE_URL}"
+  src="{LIVE_VIEW_URL}"
   style="width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px;"
   allow="autoplay"
 ></iframe>
 ```
 
-## Customize
-
-Append query parameters to the `liveUrl`:
-
-| Parameter | Values | Description |
-|-----------|--------|-------------|
-| `theme` | `light`, `dark` (default) | Light or dark mode |
-| `ui` | `false` | Hide the browser chrome (URL bar, tabs) |
+The live view is hosted on `live.browser-use.com`. If your app sets a Content Security Policy, allow it in `frame-src`:
 
 ```
-https://live.browser-use.com?wss=...&theme=light
-https://live.browser-use.com?wss=...&ui=false
+Content-Security-Policy: frame-src 'self' https://live.browser-use.com;
 ```
+
+Customize with query params on the URL: `?theme=light` (default `dark`), `?ui=false` (hide browser chrome).
 
 ## Recording
 
-<Note>
-  `waitForRecording` / `wait_for_recording` requires the **v3 SDK** (`from browser_use_sdk.v3 import AsyncBrowserUse` / `import { BrowserUse } from "browser-use-sdk/v3"`).
-</Note>
-
-Enable recording to get an MP4 video of the browser session. Only available when the agent actually opens a browser — tasks answered without browsing produce no recording. If you run multiple tasks in the same session (with `keep_alive`), you may get multiple recordings.
+Every browser records automatically. Fetch a fresh, expiring MP4 URL on demand from the browser — no flag to enable.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-result = await client.run(
-    "Check how many GitHub stars browser-use has",
-    enable_recording=True,
-)
-
-# Waits up to 15s for recording to be ready. Returns [] if no browser was opened.
-urls = await client.sessions.wait_for_recording(result.id)
-for url in urls:
-    print(url)  # presigned MP4 download URL
+rec = client.browsers.recording(run.browser_id)
+print(rec.url)   # presigned MP4
 ```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-const result = await client.run("Check how many GitHub stars browser-use has", {
-  enableRecording: true,
-});
-
-// Waits up to 15s for recording to be ready. Returns [] if no browser was opened.
-const urls = await client.sessions.waitForRecording(result.id);
-for (const url of urls) {
-  console.log(url); // presigned MP4 download URL
-}
+```bash curl
+curl "https://api.browser-use.com/api/v1/browsers/BROWSER_ID/recording" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+# → { "url": "https://.../recording.mp4?..." }
 ```
 </CodeGroup>
 
-For standalone browser sessions, pass `enable_recording` when creating the browser and retrieve the URL after stopping it:
-
-<CodeGroup>
-```python Python
-browser = await client.browsers.create(enable_recording=True)
-# ... use the browser via CDP ...
-stopped = await client.browsers.stop(browser.id)
-print(stopped.recording_url)  # presigned MP4 download URL
-```
-```typescript TypeScript
-const browser = await client.browsers.create({ enableRecording: true });
-// ... use the browser via CDP ...
-const stopped = await client.browsers.stop(browser.id);
-console.log(stopped.recordingUrl); // presigned MP4 download URL
-```
-</CodeGroup>
+To find the `BROWSER_ID` for a run, read `browserId` off `GET /runs/{id}` (as above). See [Manage a browser](/cloud/manage-browser) for the full browser API.
 
 <Warning>
-  Recording URLs are presigned and **expire after 1 hour**. Download or serve the recording promptly. If you need to access it later, save the MP4 to your own storage.
+Recording URLs are presigned and **expire after 1 hour**. Download or serve the MP4 promptly; save it to your own storage if you need it later. A run that never opened a browser has no recording.
 </Warning>
-
-## Related
-
-- [Live messages](/cloud/agent/streaming) — stream the agent's messages alongside the live browser view
-- [Follow-up tasks](/cloud/agent/follow-up-tasks) — chain tasks in one session while watching live
-

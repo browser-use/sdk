@@ -88,13 +88,13 @@ with sync_playwright() as p:
 
 ## Option 2: SDK
 
-Create a browser via the SDK, get a `cdp_url`, and connect with Playwright or Puppeteer.
+Create a browser via the SDK, get its CDP URL (`cdpUrl` on the wire, `cdp_url` in Python), and connect with Playwright or Puppeteer.
 
 ### Playwright
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use import BrowserUse
 from playwright.async_api import async_playwright
 
 client = AsyncBrowserUse()
@@ -112,7 +112,7 @@ async with async_playwright() as p:
 await client.browsers.stop(browser.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use";
 import { chromium } from "playwright";
 
 const client = new BrowserUse();
@@ -133,7 +133,7 @@ await client.browsers.stop(browser.id);
 ### Puppeteer
 
 ```typescript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use";
 import puppeteer from "puppeteer-core";
 
 const client = new BrowserUse();

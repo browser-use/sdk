@@ -1,0 +1,72 @@
+---
+title: Geo-scraping
+description: "Route the browser through a specific country to see region-locked prices, catalogs, and content."
+icon: earth-americas
+---
+
+Many sites show different prices, products, or content by country — and some block traffic from outside a region entirely. Route the browser through the country you need with `proxy_country_code`.
+
+## Scrape as if you're in another country
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+
+# See German pricing
+run = client.agents.browser_use.run(
+    task="Get the price of the Sony WH-1000XM5 on amazon.de",
+    browser={"proxy_country_code": "de"},
+)
+print(run.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use";
+
+const client = new BrowserUse();
+const run = await client.agents.browserUse.run({
+  task: "Get the price of the Sony WH-1000XM5 on amazon.de",
+  browser: { proxy_country_code: "de" },
+});
+console.log(run.output);
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Get the Sony WH-1000XM5 price on amazon.de", "browser": {"proxy_country_code": "de"}}'
+```
+</CodeGroup>
+
+## Common country codes
+
+| Code | Country | Code | Country |
+| --- | --- | --- | --- |
+| `us` | United States | `jp` | Japan |
+| `gb` | United Kingdom | `br` | Brazil |
+| `de` | Germany | `in` | India |
+| `fr` | France | `au` | Australia |
+| `es` | Spain | `ca` | Canada |
+
+195+ countries are available — pass any ISO 3166-1 alpha-2 code.
+
+## Compare prices across regions
+
+Run the same task through several countries and compare:
+
+```python Python
+countries = ["us", "de", "jp"]
+results = {}
+for c in countries:
+    run = client.agents.browser_use.run(
+        task="Get the price of the iPhone 16 Pro 256GB on the local Apple store",
+        browser={"proxy_country_code": c},
+    )
+    results[c] = run.output
+print(results)
+```
+
+<Note>
+Residential proxies come from real devices in the target country, so geo-locked sites treat the browser as a local visitor. Combined with [stealth](/cloud/browser/stealth), this reliably reaches region-gated content.
+</Note>

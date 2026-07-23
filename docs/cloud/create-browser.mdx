@@ -1,0 +1,65 @@
+---
+title: Create a browser
+description: "Provision a browser you drive yourself over CDP — no agent required. Agents provision their own; this is for direct control."
+icon: window
+---
+
+A browser is a first-class primitive. Provision one and drive it with your own code over CDP (Playwright, Puppeteer, Selenium). No agent involved.
+
+<Note>
+If you want an **agent** to do a task, don't create a browser — just [run a task](/cloud/run-a-task) and the run provisions its own browser. Create a standalone browser only when you want to drive it yourself.
+</Note>
+
+## Provision
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+browser = client.browsers.create(proxy_country_code="us")
+print(browser.cdp_url)        # connect Playwright/Puppeteer/Selenium here
+print(browser.live_view_url)  # watch it live in a browser tab
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create({ proxy_country_code: "us" });
+console.log(browser.cdpUrl);
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"proxy_country_code": "us"}'
+```
+</CodeGroup>
+
+## Connect over CDP
+
+The `cdpUrl` is a standard Chrome DevTools Protocol endpoint.
+
+```python Python
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    chromium = p.chromium.connect_over_cdp(browser.cdp_url)
+    page = chromium.contexts[0].pages[0]
+    page.goto("https://example.com")
+    print(page.title())
+```
+
+<Note>
+The REST API returns **`cdpUrl`** (camelCase, like every response field). The Python SDK exposes it as `cdp_url`, the TypeScript SDK as `cdpUrl` — same value, language-idiomatic casing.
+</Note>
+
+## Provision options
+
+| Field | Notes |
+| --- | --- |
+| `browser_profile_id` | start logged-in ([profiles](/cloud/use-a-profile)) |
+| `proxy_country_code` | residential proxy, e.g. `"us"`, `"de"` |
+| `screen_width` / `screen_height` | viewport |
+
+See [Manage a browser](/cloud/manage-browser) to list, stop, and fetch recordings/downloads.

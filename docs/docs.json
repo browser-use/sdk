@@ -60,55 +60,74 @@
         },
         "tabs": [
           {
-            "tab": "Cloud SDK",
+            "tab": "Documentation",
+            "icon": "book-open",
             "groups": [
               {
-                "group": "Get Started",
+                "group": "Get started",
+                "icon": "play",
                 "pages": [
+                  "cloud/model",
                   "cloud/quickstart",
                   "cloud/vibecoding"
                 ]
               },
               {
-                "group": "Pillars",
+                "group": "Agents",
+                "icon": "robot",
                 "pages": [
+                  "cloud/choose-an-agent",
+                  "cloud/run-a-task",
+                  "cloud/continue-a-task",
+                  "cloud/files",
+                  "cloud/watch-a-run",
+                  "cloud/stop-a-run",
+                  "cloud/open-source-agent"
+                ]
+              },
+              {
+                "group": "Browsers",
+                "icon": "window",
+                "pages": [
+                  "cloud/browsers",
+                  "cloud/create-browser",
+                  "cloud/manage-browser",
+                  "cloud/browser/live-preview",
                   {
-                    "group": "Agent",
-                    "icon": "robot",
+                    "group": "Profiles",
                     "pages": [
-                      "cloud/agent/quickstart",
-                      "cloud/agent/models",
-                      "cloud/agent/structured-output",
-                      "cloud/agent/follow-up-tasks",
-                      "cloud/agent/streaming",
-                      "cloud/agent/workspaces",
-                      "cloud/agent/cache-script",
-                      "cloud/agent/human-in-the-loop"
+                      "cloud/create-profile",
+                      "cloud/use-a-profile",
+                      "cloud/browser/authentication",
+                      "cloud/browser/sync-cookies"
                     ]
                   },
                   {
-                    "group": "Browser",
-                    "icon": "globe",
+                    "group": "Stealth & proxies",
                     "pages": [
+                      "cloud/browser/stealth-and-proxies",
                       "cloud/browser/stealth",
+                      "cloud/browser/captcha",
                       "cloud/browser/proxies",
-                      "cloud/browser/live-preview",
-                      "cloud/browser/playwright-puppeteer-selenium",
-                      {
-                        "group": "Authentication",
-                        "icon": "key",
-                        "pages": [
-                          "cloud/guides/authentication",
-                          "cloud/guides/profile-sync",
-                          "cloud/guides/2fa"
-                        ]
-                      }
+                      "cloud/browser/geo-scraping",
+                      "cloud/browser/custom-proxy"
                     ]
-                  }
+                  },
+                  "cloud/browser/screenshots"
+                ]
+              },
+              {
+                "group": "Account",
+                "icon": "gauge",
+                "pages": [
+                  "cloud/account",
+                  "cloud/billing",
+                  "cloud/limits"
                 ]
               },
               {
                 "group": "More",
+                "icon": "ellipsis",
                 "pages": [
                   {
                     "group": "Integrations",
@@ -125,30 +144,15 @@
                       "cloud/tutorials/integrations/hermes-agent",
                       "cloud/guides/mcp-server",
                       "cloud/guides/webhooks",
-                      "cloud/guides/x402",
-                      "cloud/tutorials/integrations/n8n"
+                      "cloud/tutorials/integrations/n8n",
+                      "cloud/browser/playwright-puppeteer-selenium"
                     ]
                   },
                   {
                     "group": "Tutorials",
                     "icon": "graduation-cap",
                     "pages": [
-                      "cloud/tutorials/chat-ui",
-                      "cloud/agent-signup",
-                      "cloud/tutorials/grow-therapy-compare"
-                    ]
-                  },
-                  "cloud/faq",
-                  {
-                    "group": "Legacy (v2)",
-                    "icon": "box-archive",
-                    "isDefaultOpen": false,
-                    "pages": [
-                      "cloud/legacy/agent",
-                      "cloud/legacy/public-share",
-                      "cloud/legacy/skills",
-                      "cloud/guides/1password",
-                      "cloud/guides/secrets"
+                      "cloud/agent-signup"
                     ]
                   }
                 ]
@@ -156,59 +160,165 @@
             ]
           },
           {
-            "tab": "API v4",
-            "href": "cloud/api-v4-overview",
+            "tab": "API Reference",
+            "icon": "square-terminal",
+            "openapi": {
+              "source": "cloud/openapi/v1.json",
+              "directory": "cloud/api-v1"
+            },
             "groups": [
               {
-                "group": "Get Started",
+                "group": "Overview",
                 "pages": [
-                  "cloud/api-v4-overview"
+                  "cloud/api-v1-reference"
                 ]
               },
               {
-                "group": "Endpoints",
-                "openapi": {
-                  "source": "cloud/openapi/v4.json",
-                  "directory": "cloud/api-v4"
-                }
+                "group": "Agents",
+                "icon": "robot",
+                "pages": [
+                  "GET /agents",
+                  {
+                    "group": "browser-use",
+                    "expanded": false,
+                    "pages": [
+                      "POST /agents/browser-use/runs",
+                      "GET /agents/browser-use/runs",
+                      "GET /agents/browser-use/runs/{run_id}",
+                      "GET /agents/browser-use/runs/{run_id}/files",
+                      "GET /agents/browser-use/runs/{run_id}/status",
+                      "GET /agents/browser-use/runs/{run_id}/steps",
+                      "POST /agents/browser-use/runs/{run_id}/stop",
+                      "GET /agents/browser-use/sessions",
+                      "GET /agents/browser-use/sessions/{session_id}",
+                      "POST /agents/browser-use/sessions/{session_id}/purge"
+                    ]
+                  },
+                  {
+                    "group": "browsercode",
+                    "expanded": false,
+                    "pages": [
+                      "POST /agents/browsercode/runs",
+                      "GET /agents/browsercode/runs",
+                      "GET /agents/browsercode/runs/{run_id}",
+                      "GET /agents/browsercode/runs/{run_id}/events",
+                      "GET /agents/browsercode/runs/{run_id}/files",
+                      "GET /agents/browsercode/runs/{run_id}/status",
+                      "POST /agents/browsercode/runs/{run_id}/stop",
+                      "GET /agents/browsercode/sessions",
+                      "GET /agents/browsercode/sessions/{session_id}",
+                      "POST /agents/browsercode/sessions/{session_id}/purge",
+                      "GET /agents/browsercode/sessions/{session_id}/queue",
+                      "DELETE /agents/browsercode/sessions/{session_id}/queue/{message_id}"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Browsers",
+                "icon": "window",
+                "pages": [
+                  "POST /browsers",
+                  "GET /browsers",
+                  "GET /browsers/{browser_id}",
+                  "GET /browsers/{browser_id}/recording",
+                  "GET /browsers/{browser_id}/downloads",
+                  "POST /browsers/{browser_id}/stop",
+                  {
+                    "group": "Browser profiles",
+                    "expanded": false,
+                    "pages": [
+                      "POST /browser-profiles",
+                      "GET /browser-profiles",
+                      "GET /browser-profiles/{profile_id}",
+                      "PATCH /browser-profiles/{profile_id}",
+                      "DELETE /browser-profiles/{profile_id}"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Agent Workspaces (Files)",
+                "icon": "folder",
+                "pages": [
+                  "POST /agent-workspaces",
+                  "GET /agent-workspaces",
+                  "GET /agent-workspaces/{workspace_id}",
+                  "DELETE /agent-workspaces/{workspace_id}"
+                ]
+              },
+              {
+                "group": "Account",
+                "icon": "gauge",
+                "pages": [
+                  "GET /project",
+                  "GET /project/billing",
+                  "GET /project/limits"
+                ]
               }
             ]
           },
           {
-            "tab": "API v3",
-            "href": "cloud/api-reference",
+            "tab": "Legacy",
+            "icon": "box-archive",
             "groups": [
               {
-                "group": "Get Started",
+                "group": "Overview",
                 "pages": [
-                  "cloud/api-reference"
+                  "cloud/legacy/overview"
                 ]
               },
               {
-                "group": "Endpoints",
-                "openapi": {
-                  "source": "cloud/openapi/v3.json",
-                  "directory": "cloud/api-v3"
-                }
-              }
-            ]
-          },
-          {
-            "tab": "API v2",
-            "href": "cloud/api-v2-overview",
-            "groups": [
-              {
-                "group": "Get Started",
+                "group": "Legacy guides & tutorials",
+                "expanded": false,
                 "pages": [
-                  "cloud/api-v2-overview"
+                  "cloud/faq",
+                  "cloud/guides/2fa",
+                  "cloud/guides/x402",
+                  "cloud/tutorials/chat-ui",
+                  "cloud/tutorials/grow-therapy-compare"
                 ]
               },
               {
-                "group": "Endpoints",
-                "openapi": {
-                  "source": "cloud/openapi/v2.json",
-                  "directory": "cloud/api-v2"
-                }
+                "group": "Legacy references",
+                "pages": [
+                  {
+                    "group": "Guides (v2)",
+                    "expanded": false,
+                    "pages": [
+                      "cloud/legacy/agent",
+                      "cloud/legacy/public-share",
+                      "cloud/legacy/skills",
+                      "cloud/guides/1password",
+                      "cloud/guides/secrets",
+                      "cloud/agent/cache-script"
+                    ]
+                  },
+                  {
+                    "group": "API v4",
+                    "expanded": false,
+                    "openapi": {
+                      "source": "cloud/openapi/v4.json",
+                      "directory": "cloud/api-v4"
+                    }
+                  },
+                  {
+                    "group": "API v3",
+                    "expanded": false,
+                    "openapi": {
+                      "source": "cloud/openapi/v3.json",
+                      "directory": "cloud/api-v3"
+                    }
+                  },
+                  {
+                    "group": "API v2",
+                    "expanded": false,
+                    "openapi": {
+                      "source": "cloud/openapi/v2.json",
+                      "directory": "cloud/api-v2"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -1103,6 +1213,78 @@
     {
       "source": "/cloud/v1/*",
       "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/proxies",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/cloud/geo-scraping",
+      "destination": "/cloud/browser/geo-scraping"
+    },
+    {
+      "source": "/cloud/custom-proxy",
+      "destination": "/cloud/browser/custom-proxy"
+    },
+    {
+      "source": "/cloud/browser/proxy",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/cloud/browser/geo",
+      "destination": "/cloud/browser/geo-scraping"
+    },
+    {
+      "source": "/cloud/authentication",
+      "destination": "/cloud/browser/authentication"
+    },
+    {
+      "source": "/cloud/profiles",
+      "destination": "/cloud/create-profile"
+    },
+    {
+      "source": "/cloud/browser/profiles",
+      "destination": "/cloud/create-profile"
+    },
+    {
+      "source": "/cloud/browser-profiles",
+      "destination": "/cloud/create-profile"
+    },
+    {
+      "source": "/cloud/use-profile",
+      "destination": "/cloud/use-a-profile"
+    },
+    {
+      "source": "/cloud/sync-cookies",
+      "destination": "/cloud/browser/sync-cookies"
+    },
+    {
+      "source": "/cloud/guides/profile-sync",
+      "destination": "/cloud/browser/sync-cookies"
+    },
+    {
+      "source": "/cloud/browser/2fa",
+      "destination": "/cloud/guides/2fa"
+    },
+    {
+      "source": "/cloud/login",
+      "destination": "/cloud/browser/authentication"
+    },
+    {
+      "source": "/cloud/guides/authentication",
+      "destination": "/cloud/browser/authentication"
+    },
+    {
+      "source": "/cloud/how-it-works",
+      "destination": "/cloud/model"
+    },
+    {
+      "source": "/cloud/concepts",
+      "destination": "/cloud/model"
+    },
+    {
+      "source": "/cloud/overview",
+      "destination": "/cloud/model"
     }
   ]
 }

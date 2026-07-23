@@ -1,0 +1,66 @@
+---
+title: Watch a run
+description: "Poll a run's status until it finishes. browser-use exposes steps; browsercode exposes events."
+icon: eye
+---
+
+The SDK `run()` waits for you. If you call the API directly (or want live progress), poll the run.
+
+## Poll status
+
+`status` is one of `queued`, `running`, `completed`, `stopped`, `failed`.
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+import time
+
+client = BrowserUse()
+run = client.agents.browser_use.runs.create(task="...")   # returns immediately
+while True:
+    status = client.agents.browser_use.runs.status(run.id)
+    if status.status in ("completed", "stopped", "failed"):
+        break
+    time.sleep(2)
+print(status.result)   # the answer string. `output` is only set for structured output.
+```
+```bash curl
+curl "https://api.browser-use.com/api/v1/agents/browser-use/runs/run_abc123/status" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+`/status` is the cheap poll target — status, `result`, `output`, cost. Use `GET /runs/{id}` for the full object.
+
+**`result` vs `output`:** `result` is the plain-language answer string, present on every completed run — read it on the golden path. `output` is reserved for structured output and is `null` today (no request parameter enables it yet — put the JSON shape you want in the `task` text and parse `result`). `browsercode`'s larger output comes back as [files](/cloud/files), not in either field.
+
+## See what the agent is doing
+
+Each agent has its own native progress surface — they are genuinely different, so they aren't forced into one shape:
+
+- **`browser-use` → `/steps`** — the browser step list (each navigation/click/extraction).
+- **`browsercode` → `/events`** — an incremental event stream (code, terminal output, browser actions).
+
+<CodeGroup>
+```bash browser-use
+curl "https://api.browser-use.com/api/v1/agents/browser-use/runs/run_abc123/steps" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+```bash browsercode
+# incremental — pass the last cursor you saw to get only newer events
+curl "https://api.browser-use.com/api/v1/agents/browsercode/runs/run_abc123/events?after=CURSOR" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+The [registry](/cloud/choose-an-agent) tells you which watch verb an agent uses. Live streaming (SSE) is coming; today watching is poll-based.
+
+## Find the browser a run used
+
+`browserId` appears on the run once its browser is provisioned (null while queued). Use it to fetch the [recording or downloads](/cloud/manage-browser).
+
+```bash curl
+curl "https://api.browser-use.com/api/v1/agents/browser-use/runs/run_abc123" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+# → { "id": "run_abc123", "browserId": "br_...", "status": "completed", ... }
+```

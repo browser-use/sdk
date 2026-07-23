@@ -1,0 +1,39 @@
+---
+title: Stop a run
+description: "End a run with POST /stop. One verb for ending things — runs and browsers both use /stop."
+icon: circle-stop
+---
+
+`/stop` is the single verb for ending anything on the platform — runs and browsers alike. There is no `/cancel`, and you never end something with a `PATCH`.
+
+## Stop a run
+
+Works whether the run is `queued` or `running`.
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+client.agents.browser_use.runs.stop("run_abc123")
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use";
+
+const client = new BrowserUse();
+await client.agents.browserUse.runs.stop("run_abc123");
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs/run_abc123/stop \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+## Stopping and sessions
+
+- **`browser-use`** — the browser and the session share a lifetime. Stopping the run ends the run; when its browser is reaped the session is closed. Stopping the [browser directly](/cloud/manage-browser) also closes the session — for this agent, browser-stop *is* session-close.
+- **`browsercode`** — stopping a run ends that turn only. The session stays open; the next run provisions a fresh browser.
+
+<Warning>
+Never end a run or browser by `PATCH`-ing a status field. Lifecycle transitions are always named actions (`/stop`). This is deliberate — an agent handles a named intent far more reliably than a partial state edit.
+</Warning>

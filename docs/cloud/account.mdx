@@ -1,0 +1,38 @@
+---
+title: Account
+sidebarTitle: "Overview"
+description: "Your project: one per account. Check identity with GET /project, then billing and limits."
+icon: user
+---
+
+Everything you create — runs, browsers, profiles, files — belongs to your **project**. There is one project per account, and your API key identifies it. Create and manage keys at [cloud.browser-use.com](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+## Check your project
+
+`GET /project` is the "who am I" call — a cheap way to validate an API key and see which project it belongs to.
+
+```bash curl
+curl https://api.browser-use.com/api/v1/project \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+```json
+{
+  "id": "prj_abc123",
+  "name": "my-project",
+  "createdAt": "2026-07-01T12:00:00Z"
+}
+```
+
+A `404` means the key doesn't map to a project — check the key.
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Billing" href="/cloud/billing" icon="credit-card">
+    Credits, plans, and what runs cost.
+  </Card>
+  <Card title="Limits" href="/cloud/limits" icon="gauge">
+    Concurrency and rate limits per plan.
+  </Card>
+</CardGroup>

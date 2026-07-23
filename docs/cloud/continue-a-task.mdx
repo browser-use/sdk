@@ -1,0 +1,71 @@
+---
+title: Continue a task
+description: "Follow up on a previous run by passing its session_id. No separate session to create — the first run made one for you."
+icon: arrow-right
+---
+
+Every run returns a `session_id`. Pass it into a new run to continue the same thread — the agent keeps the context of what came before.
+
+You do **not** create a session. The first run mints it; you just reference it.
+
+## Continue
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+
+first = client.agents.browser_use.run(task="Search Amazon for a mechanical keyboard")
+follow = client.agents.browser_use.run(
+    task="Add the top-rated one to the cart",
+    session_id=first.session_id,
+)
+print(follow.result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use";
+
+const client = new BrowserUse();
+const first = await client.agents.browserUse.run({ task: "Search Amazon for a mechanical keyboard" });
+const follow = await client.agents.browserUse.run({
+  task: "Add the top-rated one to the cart",
+  session_id: first.session_id,
+});
+console.log(follow.result);
+```
+```bash curl
+# first run returns { "sessionId": "ses_xyz789", ... }
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Add the top-rated one to the cart", "session_id": "ses_xyz789"}'
+```
+</CodeGroup>
+
+On a continuation you send only the new `task` (plus optional `attached_file_ids` to add more files). Everything else is inherited from the conversation and you do **not** re-pass it:
+
+- **Stay logged in** — the `browser_profile_id` carries over; a follow-up is already authenticated. Don't re-send it.
+- **Proxy, screen size, model** — inherited too. You can't change them mid-thread; start a new run for a different config.
+- **Files** — every file the thread added or produced is still on the conversation's disk. New files: add + attach them on the follow-up.
+
+<Note>
+Request bodies accept both `session_id` and `sessionId`; responses always return `sessionId`. The list filter query param is `?sessionId=` — sending `?session_id=` is silently ignored and returns *all* your runs.
+</Note>
+
+## Agent differences
+
+- **`browser-use`** — the session lives as long as its browser. Once the browser is gone (stopped, or idle-reaped), the session is done: continuing a closed session returns a clean `4xx` ("session ended, start a new run"). browser-use is task-scoped by nature.
+- **`browsercode`** — the session outlives its browsers and can run for hours. If a session is busy, a continuation is **queued** and runs automatically when the current turn finishes (same call, `status: "queued"`).
+
+## List the runs in a session
+
+<CodeGroup>
+```python Python
+runs = client.agents.browser_use.runs.list(session_id="ses_xyz789")
+```
+```bash curl
+curl "https://api.browser-use.com/api/v1/agents/browser-use/runs?sessionId=ses_xyz789" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>

@@ -1,0 +1,43 @@
+---
+title: Billing
+description: "Check your credit balance, plan, and estimated runway."
+icon: credit-card
+---
+
+Read your account's credits and plan. Read-only.
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+billing = client.project.billing()
+print(billing.credits.balance_usd, "left")
+print(billing.credits.runway_days, "days at current rate")
+```
+```bash curl
+curl "https://api.browser-use.com/api/v1/project/billing" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+```json
+{
+  "credits": {
+    "balanceUsd": "142.50",
+    "monthlyUsd": "100.00",
+    "additionalUsd": "42.50",
+    "runwayDays": 6.5
+  },
+  "plan": {
+    "id": "business",
+    "name": "Business",
+    "status": "active",
+    "periodEnd": "2026-08-01T00:00:00Z"
+  }
+}
+```
+
+- `monthlyUsd` — resets each billing period.
+- `additionalUsd` — top-ups, never reset.
+- `runwayDays` — estimated days of credit left at your recent spend rate (`null` if unknown).

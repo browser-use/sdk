@@ -1,0 +1,91 @@
+---
+title: Choose an agent
+sidebarTitle: "Overview"
+description: "Two agents: browser-use for browser tasks, browsercode for code + browser. Pick by capability, or let the registry route for you."
+icon: signpost
+---
+
+## One sentence
+
+**Clicking around a website and pulling data? Use `browser-use`. Also need to write code, run a terminal, or process files over many steps? Use `browsercode`.**
+
+If you omit the agent, requests route to `browser-use` (cheaper, covers the common case).
+
+## The two agents
+
+| | `browser-use` | `browsercode` |
+| --- | --- | --- |
+| **Best for** | One-off or short browser tasks: navigate, click, fill forms, extract data. Do it and done. | Anything needing code, a terminal, or long-horizon multi-step work — with or without a browser. |
+| **Capabilities** | `browser`, `files` | `browser`, `code`, `terminal`, `files` |
+| **Session** | disposable (task-scoped) | durable (extend over hours, return later) |
+| **Cost / speed** | fast, cheap, open-source | more powerful, slower, pricier |
+| **Run** | `POST /api/v1/agents/browser-use/runs` | `POST /api/v1/agents/browsercode/runs` |
+
+## Let the registry route for you
+
+`GET /api/v1/agents` returns a machine-readable description of every agent — the routing truth. An LLM (or your code) reads it and picks, no hardcoding.
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+agents = client.agents.list()
+for a in agents:
+    print(a.name, a.capabilities, "—", a.best_for)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use";
+
+const client = new BrowserUse();
+const agents = await client.agents.list();
+for (const a of agents) console.log(a.name, a.capabilities, "—", a.bestFor);
+```
+```bash curl
+curl https://api.browser-use.com/api/v1/agents \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+Response:
+
+```json
+{
+  "agents": [
+    {
+      "name": "browser-use",
+      "capabilities": ["browser", "files"],
+      "session": { "kind": "disposable" },
+      "bestFor": "One-off or short browser tasks: navigating sites, clicking, filling forms, extracting data. Do it and done.",
+      "notFor": "Writing or running code, using a terminal, or long-horizon multi-step engineering work.",
+      "exampleTasks": ["Book a flight on united.com", "Scrape all prices from this catalog"],
+      "run": "POST /api/v1/agents/browser-use/runs"
+    },
+    {
+      "name": "browsercode",
+      "capabilities": ["browser", "code", "terminal", "files"],
+      "session": { "kind": "durable" },
+      "bestFor": "Anything needing code, a terminal, or long-horizon multi-step work, with or without a browser. Extend over many steps or return to it later.",
+      "notFor": "Simple one-shot browser navigation (overkill; use browser-use).",
+      "exampleTasks": ["Scrape a site then clean the data into a CSV", "Build and run a page monitor"],
+      "run": "POST /api/v1/agents/browsercode/runs"
+    }
+  ]
+}
+```
+
+Filter by capability: `GET /api/v1/agents?capability=code` returns only agents that can run code.
+
+## Both agents share the same vocabulary
+
+Whichever agent you run, you pass shared resources the same way:
+
+- `browser` — the browser settings for the run, including `profile_id` to start logged-in ([profiles](/cloud/use-a-profile)).
+- `attached_file_ids` — files to give the run ([files](/cloud/files)); `workspace_id` exists only for `browsercode`'s advanced cross-conversation sharing.
+- `session_id` — continue a previous run's thread.
+
+An agent never invents its own version of these. Learn one, use both.
+
+<Warning>
+Capabilities are enforced — sending a field an agent doesn't support returns a `422` naming the problem (e.g. `workspace_id` on `browser-use`). Errors tell you the correct choice — read them.
+</Warning>

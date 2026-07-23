@@ -1,0 +1,5346 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Browser Use API v1",
+    "summary": "Unified /api/v1 preview spec, non-production only",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/project": {
+      "get": {
+        "tags": [
+          "Project"
+        ],
+        "summary": "Get Project",
+        "description": "Account identity. The '/me' / validate-my-key call (cheap DB read, no billing).",
+        "operationId": "get_project_project_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No project for this API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/project/billing": {
+      "get": {
+        "tags": [
+          "Project"
+        ],
+        "summary": "Get Project Billing",
+        "description": "Credit balance and plan.",
+        "operationId": "get_project_billing_project_billing_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Billing"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No project for this API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/project/limits": {
+      "get": {
+        "tags": [
+          "Project"
+        ],
+        "summary": "Get Project Limits",
+        "description": "Concurrency and team-member limits, with how much of each is in use.\n\nEach limit is `{limit, active}` (limit 0 = unlimited); the caller derives\nremaining as `limit - active` for a finite limit.",
+        "operationId": "get_project_limits_project_limits_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Limits"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No project for this API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/browsers": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "List Browsers",
+        "description": "List browsers, newest-first. Filters: status, agentSessionId, profileId,\ncreatedAfter/createdBefore (see BrowserListParams).",
+        "operationId": "list_browsers_browsers_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "active",
+                    "stopped"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "agentSessionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agentsessionid"
+            }
+          },
+          {
+            "name": "profileId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Profileid"
+            }
+          },
+          {
+            "name": "createdAfter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Createdafter"
+            }
+          },
+          {
+            "name": "createdBefore",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Createdbefore"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Create Browser",
+        "description": "Provision a standalone browser. Billed upfront for the timeout window;\nunused time refunded on stop. Faithful port of the v2 create orchestration.",
+        "operationId": "create_browser_browsers_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateBrowser"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Browser"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient credits."
+          },
+          "403": {
+            "description": "Timeout over cap, or custom proxy without a plan."
+          },
+          "404": {
+            "description": "Profile not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileNotFoundError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many concurrent browsers."
+          },
+          "503": {
+            "description": "Browser service unavailable."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browsers/{browser_id}": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Get Browser",
+        "description": "Get one browser: status, cdpUrl, liveViewUrl, and the agent session (if any).",
+        "operationId": "get_browser_browsers__browser_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "browser_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Browser Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Browser"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browsers/{browser_id}/recording": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Get Browser Recording",
+        "description": "Presigned, expiring mp4 URL for the browser's recording (if one exists).",
+        "operationId": "get_browser_recording_browsers__browser_id__recording_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "browser_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Browser Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recording"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browsers/{browser_id}/downloads": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "List Browser Downloads",
+        "description": "Files the browser downloaded off the web while navigating. S3-backed.",
+        "operationId": "list_browser_downloads_browsers__browser_id__downloads_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "browser_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Browser Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "S3 continuation cursor from a prior response.",
+              "title": "Cursor"
+            },
+            "description": "S3 continuation cursor from a prior response."
+          },
+          {
+            "name": "includeUrls",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Includeurls"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browsers/{browser_id}/stop": {
+      "post": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Stop Browser",
+        "description": "Stop a browser. Unused time is refunded proportionally (ceil-to-minute, min 1 min).",
+        "operationId": "stop_browser_browsers__browser_id__stop_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "browser_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Browser Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Browser"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browser-profiles": {
+      "post": {
+        "tags": [
+          "Browser profiles"
+        ],
+        "summary": "Create Browser Profile",
+        "description": "Create a browser profile. Pass its id into a browser or run to start logged-in.",
+        "operationId": "create_browser_profile_browser_profiles_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateBrowserProfile"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Browser profiles"
+        ],
+        "summary": "List Browser Profiles",
+        "description": "List profiles, newest-first. Filter by ?userId= (exact).",
+        "operationId": "list_browser_profiles_browser_profiles_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Userid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserProfileList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browser-profiles/{profile_id}": {
+      "get": {
+        "tags": [
+          "Browser profiles"
+        ],
+        "summary": "Get Browser Profile",
+        "description": "Get one browser profile by id.",
+        "operationId": "get_browser_profile_browser_profiles__profile_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserProfile"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser profile not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserProfileNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Browser profiles"
+        ],
+        "summary": "Update Browser Profile",
+        "description": "Rename a profile or change its userId. Send a field as null to clear it; omit to leave it.",
+        "operationId": "update_browser_profile_browser_profiles__profile_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrowserProfile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserProfile"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser profile not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserProfileNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Browser profiles"
+        ],
+        "summary": "Delete Browser Profile",
+        "description": "Delete a profile. Idempotent (204 even if already gone). S3 data is removed\nbefore the DB soft-delete so we never orphan storage behind a deleted row.",
+        "operationId": "delete_browser_profile_browser_profiles__profile_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-workspaces": {
+      "post": {
+        "tags": [
+          "Agent workspaces"
+        ],
+        "summary": "Create Agent Workspace",
+        "description": "Create an agent workspace. Pass its id into runs to share one disk across sessions.",
+        "operationId": "create_agent_workspace_agent_workspaces_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateAgentWorkspace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentWorkspace"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Agent workspaces"
+        ],
+        "summary": "List Agent Workspaces",
+        "description": "List agent workspaces, newest-first.",
+        "operationId": "list_agent_workspaces_agent_workspaces_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentWorkspaceList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent-workspaces/{workspace_id}": {
+      "get": {
+        "tags": [
+          "Agent workspaces"
+        ],
+        "summary": "Get Agent Workspace",
+        "description": "Get one agent workspace by id.",
+        "operationId": "get_agent_workspace_agent_workspaces__workspace_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentWorkspace"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent workspace not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentWorkspaceNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Agent workspaces"
+        ],
+        "summary": "Update Agent Workspace",
+        "description": "Rename a workspace. Send name as null to clear it; omit to leave it unchanged.",
+        "operationId": "update_agent_workspace_agent_workspaces__workspace_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAgentWorkspace"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentWorkspace"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent workspace not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentWorkspaceNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Agent workspaces"
+        ],
+        "summary": "Delete Agent Workspace",
+        "description": "Delete a workspace. Idempotent (204 even if already gone / other project).\n\nSoft-delete only (archived=True); S3 data cleanup is deferred to a follow-up.",
+        "operationId": "delete_agent_workspace_agent_workspaces__workspace_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents": {
+      "get": {
+        "tags": [
+          "Agents"
+        ],
+        "summary": "List Agents",
+        "description": "List the agents this platform exposes \u2014 the routing truth.\n\nEach entry carries `capabilities` + `session.kind` (structured routing signal)\nplus `best_for` / `not_for` / `example_tasks` hints and the `run` endpoint.\nThe run BODY schema lives in the OpenAPI spec, not here. Filter with\n`?capability=` (e.g. `code` \u2192 only agents that can run code).",
+        "operationId": "list_agents_agents_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "capability",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Capability"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter to agents that expose this capability, e.g. ?capability=code.",
+              "title": "Capability"
+            },
+            "description": "Filter to agents that expose this capability, e.g. ?capability=code."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/runs": {
+      "post": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "Create Browsercode Run",
+        "description": "Start a new browsercode conversation, or continue one (`session_id`).\n\nAsync: accepts the task and returns a slim `RunAccepted` handle (202). Poll\nGET /runs/{id}/status or GET /runs/{id} for progress + result.\n\nMOCKED dispatch; real v4 dispatch is a follow-up. The continuation-config 400\nrule below is REAL (validation).",
+        "operationId": "create_browsercode_run_agents_browsercode_runs_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowsercodeRunCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContinuationConfigError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "List Browsercode Runs",
+        "description": "List browsercode runs, newest-first. Scope to one conversation with\n`?sessionId=`. MOCKED items.",
+        "operationId": "list_browsercode_runs_agents_browsercode_runs_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessionid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeRunList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "Get Browsercode Run",
+        "description": "Get a browsercode run's full detail (status, result, error, cost, tokens,\nsession/workspace/browser ids). MOCKED.",
+        "operationId": "get_browsercode_run_agents_browsercode_runs__run_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeRun"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeRunNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/runs/{run_id}/status": {
+      "get": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "Get Browsercode Run Status",
+        "description": "Cheap status-only poll target for a browsercode run. MOCKED.",
+        "operationId": "get_browsercode_run_status_agents_browsercode_runs__run_id__status_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeRunStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeRunNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/runs/{run_id}/events": {
+      "get": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "Get Browsercode Run Events",
+        "description": "Incremental event feed for a browsercode run. Events carry monotonic ids;\npoll `?after=<id>` for only newer ones. MOCKED items.",
+        "operationId": "get_browsercode_run_events_agents_browsercode_runs__run_id__events_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only events with id > this. Pass the last id you saw.",
+              "title": "After"
+            },
+            "description": "Return only events with id > this. Pass the last id you saw."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunEventList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeRunNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/runs/{run_id}/files": {
+      "get": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "Get Browsercode Run Files",
+        "description": "List a browsercode run's files. `?kind=output` = what it produced (the\ngolden path); `?kind=input` = attached uploads. Each item's `downloadUrl` is\na presigned direct link. MOCKED items.",
+        "operationId": "get_browsercode_run_files_agents_browsercode_runs__run_id__files_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "input",
+                    "output"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunFileList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeRunNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/runs/{run_id}/stop": {
+      "post": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "Stop Browsercode Run",
+        "description": "End a browsercode run (queued OR running). Returns the run in `stopped`.\nMOCKED.",
+        "operationId": "stop_browsercode_run_agents_browsercode_runs__run_id__stop_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeRun"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeRunNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/sessions": {
+      "get": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "List Browsercode Sessions",
+        "description": "List browsercode conversations, newest-first. MOCKED items.",
+        "operationId": "list_browsercode_sessions_agents_browsercode_sessions_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeSessionList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/sessions/{session_id}": {
+      "get": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "Get Browsercode Session",
+        "description": "Get one browsercode conversation, including its `busy` flag (whether a new\nPOST /runs would queue). MOCKED.",
+        "operationId": "get_browsercode_session_agents_browsercode_sessions__session_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeSession"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeSessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/sessions/{session_id}/queue": {
+      "get": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "Get Browsercode Session Queue",
+        "description": "List a session's pending queued turns (read-only). You send by\nPOST /runs {sessionId}; cancel with DELETE .../queue/{messageId}. MOCKED.",
+        "operationId": "get_browsercode_session_queue_agents_browsercode_sessions__session_id__queue_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeQueueList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeSessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/sessions/{session_id}/queue/{message_id}": {
+      "delete": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "Cancel Browsercode Queued Turn",
+        "description": "Cancel one pending queued turn. Idempotent (204 even if already gone).\nMOCKED (no-op).",
+        "operationId": "cancel_browsercode_queued_turn_agents_browsercode_sessions__session_id__queue__message_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Message Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Session not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsercodeSessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browsercode/sessions/{session_id}/purge": {
+      "post": {
+        "tags": [
+          "Agent: browsercode"
+        ],
+        "summary": "Purge Browsercode Session",
+        "description": "Hard-scrub all data for a session. ZDR-ONLY: purge is the deletion path\nFOR Zero Data Retention projects, so a NON-ZDR project \u2192 403. Sync (204, no\nbody), matching v4's purge. The guard below is REAL; the scrub is MOCKED.",
+        "operationId": "purge_browsercode_session_agents_browsercode_sessions__session_id__purge_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotZdrProjectError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browser-use/runs": {
+      "post": {
+        "tags": [
+          "Agent: browser-use"
+        ],
+        "summary": "Create Browser Use Run",
+        "description": "Start a browser-use run, or continue a disposable session (`session_id`).\n\nAsync: accepts the task and returns a slim `RunAccepted` handle (202). Poll\nGET /runs/{id}/status or GET /runs/{id} for progress + result.\n\nMOCKED dispatch. A stray `workspaceId` is rejected by the request model's\nvalidator (shared agent-workspaces are browsercode-only); files still work via\n`attachedFileIds`.",
+        "operationId": "create_browser_use_run_agents_browser_use_runs_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowserUseRunCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunAccepted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Agent: browser-use"
+        ],
+        "summary": "List Browser Use Runs",
+        "description": "List browser-use runs, newest-first. Scope with `?sessionId=`. MOCKED.",
+        "operationId": "list_browser_use_runs_agents_browser_use_runs_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessionid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseRunList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browser-use/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "Agent: browser-use"
+        ],
+        "summary": "Get Browser Use Run",
+        "description": "Get a browser-use run's full detail (result, structured `output` when\nrequested, browserId after completion, error). MOCKED.",
+        "operationId": "get_browser_use_run_agents_browser_use_runs__run_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseRun"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseRunNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browser-use/runs/{run_id}/status": {
+      "get": {
+        "tags": [
+          "Agent: browser-use"
+        ],
+        "summary": "Get Browser Use Run Status",
+        "description": "Cheap status-only poll target for a browser-use run. MOCKED.",
+        "operationId": "get_browser_use_run_status_agents_browser_use_runs__run_id__status_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseRunStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseRunNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browser-use/runs/{run_id}/steps": {
+      "get": {
+        "tags": [
+          "Agent: browser-use"
+        ],
+        "summary": "Get Browser Use Run Steps",
+        "description": "Native step feed for a browser-use run (the OSS-known `steps` shape, NOT\nevents). Steps carry monotonic numbers; poll `?after=<number>` for only newer\nones. MOCKED items.",
+        "operationId": "get_browser_use_run_steps_agents_browser_use_runs__run_id__steps_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Return only steps with number > this. Pass the last step number you saw.",
+              "title": "After"
+            },
+            "description": "Return only steps with number > this. Pass the last step number you saw."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStepList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseRunNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browser-use/runs/{run_id}/files": {
+      "get": {
+        "tags": [
+          "Agent: browser-use"
+        ],
+        "summary": "Get Browser Use Run Files",
+        "description": "List a browser-use run's files. `?kind=output` = what it produced (the\ngolden path); `?kind=input` = attached uploads. Each item's `downloadUrl` is a\npresigned direct link. MOCKED items.",
+        "operationId": "get_browser_use_run_files_agents_browser_use_runs__run_id__files_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "input",
+                    "output"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunFileList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseRunNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browser-use/runs/{run_id}/stop": {
+      "post": {
+        "tags": [
+          "Agent: browser-use"
+        ],
+        "summary": "Stop Browser Use Run",
+        "description": "End a browser-use run (queued OR running). Returns it in `stopped`.\nStopping a browser-use browser also closes its disposable session. MOCKED.",
+        "operationId": "stop_browser_use_run_agents_browser_use_runs__run_id__stop_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseRun"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseRunNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browser-use/sessions": {
+      "get": {
+        "tags": [
+          "Agent: browser-use"
+        ],
+        "summary": "List Browser Use Sessions",
+        "description": "List browser-use conversations, newest-first. MOCKED items.",
+        "operationId": "list_browser_use_sessions_agents_browser_use_sessions_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseSessionList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browser-use/sessions/{session_id}": {
+      "get": {
+        "tags": [
+          "Agent: browser-use"
+        ],
+        "summary": "Get Browser Use Session",
+        "description": "Get one browser-use conversation, including its `busy` flag (whether a new\nPOST /runs would 409). MOCKED.",
+        "operationId": "get_browser_use_session_agents_browser_use_sessions__session_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseSession"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserUseSessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/browser-use/sessions/{session_id}/purge": {
+      "post": {
+        "tags": [
+          "Agent: browser-use"
+        ],
+        "summary": "Purge Browser Use Session",
+        "description": "Hard-scrub all data for a session. ZDR-ONLY: purge is the deletion path\nFOR Zero Data Retention projects, so a NON-ZDR project \u2192 403. Sync (204, no\nbody), matching v4's purge. The guard below is REAL; the scrub is MOCKED.",
+        "operationId": "purge_browser_use_session_agents_browser_use_sessions__session_id__purge_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotZdrProjectError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentInfo": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "browser-use",
+              "browsercode"
+            ],
+            "title": "Name",
+            "description": "The agent's stable name, used in its route path."
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/Capability"
+            },
+            "type": "array",
+            "title": "Capabilities",
+            "description": "Closed, platform-enforced capability set. Sending an input a capability gates (e.g. workspaceId without `files`) \u2192 400 naming the right agent."
+          },
+          "session": {
+            "$ref": "#/components/schemas/AgentSessionInfo",
+            "description": "How this agent handles conversations/sessions."
+          },
+          "bestFor": {
+            "type": "string",
+            "title": "Bestfor",
+            "description": "When to reach for this agent (natural-language hint)."
+          },
+          "notFor": {
+            "type": "string",
+            "title": "Notfor",
+            "description": "When NOT to use this agent; reach for the other one."
+          },
+          "exampleTasks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Exampletasks",
+            "description": "Representative tasks this agent handles well."
+          },
+          "run": {
+            "type": "string",
+            "title": "Run",
+            "description": "The endpoint to POST a run to."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "capabilities",
+          "session",
+          "bestFor",
+          "notFor",
+          "exampleTasks",
+          "run"
+        ],
+        "title": "AgentInfo",
+        "description": "One agent's self-describing registry entry.\n\n`capabilities` + `session.kind` are the structured routing TRUTH.\n`best_for` / `not_for` / `example_tasks` are natural-language hints that must\nstay in sync with them. `run` points at the create endpoint; the run BODY\nschema is NOT duplicated here \u2014 it lives in the OpenAPI spec."
+      },
+      "AgentList": {
+        "properties": {
+          "agents": {
+            "items": {
+              "$ref": "#/components/schemas/AgentInfo"
+            },
+            "type": "array",
+            "title": "Agents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "agents"
+        ],
+        "title": "AgentList",
+        "description": "The registry: every agent this platform exposes.\n\nNot paginated \u2014 the agent list is tiny and fully enumerable. A plain array so\nan LLM can read the whole routing table in one call."
+      },
+      "AgentSessionInfo": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SessionKind",
+            "description": "`disposable` (task-scoped, browser and session share a lifetime) vs `durable` (long-horizon, session outlives its browsers). The strongest routing signal for \"does this need to persist / extend\"."
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "AgentSessionInfo",
+        "description": "How an agent's sessions behave \u2014 part of the registry descriptor."
+      },
+      "AgentWorkspace": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Workspace id \u2014 pass this to share a disk across runs."
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Human-readable label, if set."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat",
+            "description": "When the workspace was created."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "createdAt"
+        ],
+        "title": "AgentWorkspace"
+      },
+      "AgentWorkspaceList": {
+        "properties": {
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor",
+            "description": "Cursor for the next page, or null"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "description": "Whether more pages exist",
+            "default": false
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AgentWorkspace"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "AgentWorkspaceList"
+      },
+      "AgentWorkspaceNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "Human-readable error message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "AgentWorkspaceNotFoundError",
+        "description": "No agent workspace with that id in this project."
+      },
+      "Billing": {
+        "properties": {
+          "credits": {
+            "$ref": "#/components/schemas/Credits"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/Plan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "credits",
+          "plan"
+        ],
+        "title": "Billing"
+      },
+      "Browser": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "stopped"
+            ],
+            "title": "Status",
+            "description": "'active' (running) or 'stopped'."
+          },
+          "cdpUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cdpurl",
+            "description": "Chrome DevTools Protocol endpoint. Null until the browser is booted."
+          },
+          "liveViewUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liveviewurl",
+            "description": "Watch the browser live in a tab. Null until booted."
+          },
+          "agentSessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agentsessionid",
+            "description": "The agent session that used this browser, if any."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "createdAt"
+        ],
+        "title": "Browser"
+      },
+      "BrowserList": {
+        "properties": {
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor",
+            "description": "Cursor for the next page, or null"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "description": "Whether more pages exist",
+            "default": false
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Browser"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BrowserList"
+      },
+      "BrowserNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "Human-readable error message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "BrowserNotFoundError",
+        "description": "No browser with that id in this project."
+      },
+      "BrowserProfile": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Userid",
+            "description": "Your internal user id for this profile."
+          },
+          "lastUsedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastusedat",
+            "description": "When a run last used this profile, if ever."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "createdAt"
+        ],
+        "title": "BrowserProfile"
+      },
+      "BrowserProfileList": {
+        "properties": {
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor",
+            "description": "Cursor for the next page, or null"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "description": "Whether more pages exist",
+            "default": false
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserProfile"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BrowserProfileList"
+      },
+      "BrowserProfileNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "Human-readable error message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "BrowserProfileNotFoundError",
+        "description": "No browser profile with that id in this project."
+      },
+      "BrowserUseRun": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Run id, e.g. \"run_...\"."
+          },
+          "agent": {
+            "type": "string",
+            "enum": [
+              "browser-use",
+              "browsercode"
+            ],
+            "title": "Agent",
+            "description": "Always 'browser-use'.",
+            "default": "browser-use"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "stopped"
+            ],
+            "title": "Status"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid",
+            "description": "The disposable session this run belongs to."
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid",
+            "description": "The browser this run used. Null until provisioned; persists after completion."
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result",
+            "description": "Answer string. Null until the run completes."
+          },
+          "output": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output",
+            "description": "Typed output \u2014 only when structuredOutput was requested; else null."
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Failure reason, if the run failed."
+          },
+          "totalCostUsd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Totalcostusd",
+            "description": "USD billed to the project.",
+            "default": "0"
+          },
+          "missingFileIds": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Missingfileids"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "sessionId",
+          "model",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "BrowserUseRun",
+        "description": "A browser-use run, as returned by POST /runs and GET /runs/{id}.\n\nOn completion: `result` is the answer string. `output` is a typed object set\nONLY when structuredOutput was requested (else null). `browser_id` populates\nonce provisioned and persists through completion."
+      },
+      "BrowserUseRunCreateRequest": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Task",
+            "description": "What you want the agent to do in the browser."
+          },
+          "browser": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunBrowserSettings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Browser/proxy/screen settings for this run."
+          },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessionid",
+            "description": "Continue a disposable session. 409 if that session is currently busy (browser-use does not queue). Omit to start fresh."
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "Model to run. Omit for the server default."
+          },
+          "attachedFileIds": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "maxItems": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachedfileids",
+            "description": "Upload ids from POST /agents/browser-use/files to give this run."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "title": "BrowserUseRunCreateRequest",
+        "description": "Start a new browser-use run OR continue a disposable session.\n\nSIMPLER than browsercode: NO workspace concept (shared agent-workspaces are\nbrowsercode-only) and NO code. Sending `workspaceId` is rejected (see the\nvalidator) \u2014 the capability model is enforced, not silently ignored.\n\nContinuation via `session_id` (v2 persist-memory). browser-use 409s on a busy\nsession (it does not queue \u2014 that's browsercode's behavior)."
+      },
+      "BrowserUseRunList": {
+        "properties": {
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor",
+            "description": "Cursor for the next page, or null"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "description": "Whether more pages exist",
+            "default": false
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserUseRun"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BrowserUseRunList"
+      },
+      "BrowserUseRunNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Run not found"
+          }
+        },
+        "type": "object",
+        "title": "BrowserUseRunNotFoundError"
+      },
+      "BrowserUseRunStatus": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "stopped"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "BrowserUseRunStatus",
+        "description": "Cheap poll target: just the status. Poll this until terminal, then fetch the\nfull run once via GET /runs/{id}."
+      },
+      "BrowserUseSession": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "LLM-generated label from the opening task; null until ready."
+          },
+          "busy": {
+            "type": "boolean",
+            "title": "Busy",
+            "description": "True if a run is currently active (a follow-up would 409)."
+          },
+          "latestRunId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latestrunid",
+            "description": "Most recent run in this thread."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "busy",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "BrowserUseSession",
+        "description": "One browser-use conversation. Emergent \u2014 minted by the first run, never\ncreated directly. `busy` tells you whether a new POST /runs would 409 (browser-use\ndoes not queue)."
+      },
+      "BrowserUseSessionList": {
+        "properties": {
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor",
+            "description": "Cursor for the next page, or null"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "description": "Whether more pages exist",
+            "default": false
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserUseSession"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BrowserUseSessionList"
+      },
+      "BrowserUseSessionNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Session not found"
+          }
+        },
+        "type": "object",
+        "title": "BrowserUseSessionNotFoundError"
+      },
+      "BrowsercodeJudgeSettings": {
+        "properties": {
+          "context": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context",
+            "description": "Extra context for the judge: ground truth, evaluation criteria, expected outcomes. Takes precedence over the judge's own criteria."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "BrowsercodeJudgeSettings",
+        "description": "Opt-in LLM judgement of the finished run. Presence turns the judge on\n(send {} for defaults); the judge's LLM call is billed to the run."
+      },
+      "BrowsercodeQueueList": {
+        "properties": {
+          "queue": {
+            "items": {
+              "$ref": "#/components/schemas/BrowsercodeQueuedTurn"
+            },
+            "type": "array",
+            "title": "Queue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "queue"
+        ],
+        "title": "BrowsercodeQueueList",
+        "description": "Pending queued turns for a session (read-only; send via POST /runs)."
+      },
+      "BrowsercodeQueuedTurn": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Queue message id. Pass to DELETE to cancel this turn."
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid"
+          },
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "attachedFileIds": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachedfileids"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sessionId",
+          "task",
+          "createdAt"
+        ],
+        "title": "BrowsercodeQueuedTurn",
+        "description": "One pending queued turn on a session. Cancel with DELETE .../queue/{id}."
+      },
+      "BrowsercodeRun": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Run id, e.g. \"run_...\"."
+          },
+          "agent": {
+            "type": "string",
+            "enum": [
+              "browser-use",
+              "browsercode"
+            ],
+            "title": "Agent",
+            "description": "Always 'browsercode'.",
+            "default": "browsercode"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "stopped"
+            ],
+            "title": "Status"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid",
+            "description": "The conversation this run belongs to."
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspaceid",
+            "description": "The run's workspace; its files live here."
+          },
+          "browserId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserid",
+            "description": "The browser this run used. Null until provisioned; persists after completion."
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result",
+            "description": "Short answer summary. Null until the run completes."
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Failure reason, if the run failed."
+          },
+          "totalInputTokens": {
+            "type": "integer",
+            "title": "Totalinputtokens",
+            "default": 0
+          },
+          "totalOutputTokens": {
+            "type": "integer",
+            "title": "Totaloutputtokens",
+            "default": 0
+          },
+          "totalCostUsd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Totalcostusd",
+            "description": "USD billed to the project.",
+            "default": "0"
+          },
+          "missingFileIds": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Missingfileids"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "sessionId",
+          "workspaceId",
+          "model",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "BrowsercodeRun",
+        "description": "A browsercode run, as returned by POST /runs and GET /runs/{id}.\n\nOn completion: `result` is the short answer string. Real/structured output is\na FILE \u2014 GET /runs/{id}/files?kind=output (browsercode has no structuredOutput\nparam; you put the shape in the task and fetch the file)."
+      },
+      "BrowsercodeRunCreateRequest": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Task",
+            "description": "What you want the agent to do."
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "Model to run. New-conversation only \u2014 inherited on a continuation. Omit for the server default."
+          },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessionid",
+            "description": "Continue this conversation. Files and config carry over; send a MINIMAL body (task + attachedFileIds). Omit to start a new conversation."
+          },
+          "workspaceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspaceid",
+            "description": "ADVANCED + new-conversation only. Run in an explicit workspace to share files across sessions. Omit on the normal path."
+          },
+          "browser": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunBrowserSettings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Browser/proxy/screen settings. New-conversation only (inherited on a follow-up)."
+          },
+          "attachedFileIds": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "maxItems": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachedfileids",
+            "description": "Upload ids (from POST /agents/browsercode/files) to give THIS run. Allowed on both new and continuation runs."
+          },
+          "maxCostUsd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxcostusd",
+            "description": "USD cap for this run. New-conversation only; null \u2192 server default."
+          },
+          "judge": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrowsercodeJudgeSettings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Opt-in post-run LLM judge. New-conversation only."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task"
+        ],
+        "title": "BrowsercodeRunCreateRequest",
+        "description": "Start a new browsercode conversation OR continue an existing one.\n\nONE door. Omit `session_id` to start a new conversation (full config body).\nPass `session_id` to continue a thread (MINIMAL body \u2014 config is inherited).\nContinuation never 409s on a busy session: the turn comes back `queued` and\nstarts automatically when the current run finishes.\n\nCONTINUATION RULE (enforced): passing `session_id` together with ANY config\nfield (model / workspaceId / browser / judge / maxCostUsd) \u2192 400. Config is\ninherited on a follow-up; start a new session to change it."
+      },
+      "BrowsercodeRunList": {
+        "properties": {
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor",
+            "description": "Cursor for the next page, or null"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "description": "Whether more pages exist",
+            "default": false
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BrowsercodeRun"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BrowsercodeRunList"
+      },
+      "BrowsercodeRunNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Run not found"
+          }
+        },
+        "type": "object",
+        "title": "BrowsercodeRunNotFoundError"
+      },
+      "BrowsercodeRunStatus": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "stopped"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "BrowsercodeRunStatus",
+        "description": "Cheap poll target: just the status. Poll this until terminal, then fetch the\nfull run once via GET /runs/{id} for result/browser/cost."
+      },
+      "BrowsercodeSession": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "LLM-generated label from the opening task; null until ready."
+          },
+          "busy": {
+            "type": "boolean",
+            "title": "Busy",
+            "description": "True if a run is currently active (a follow-up would queue)."
+          },
+          "latestRunId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latestrunid",
+            "description": "Most recent run in this thread."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "busy",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "BrowsercodeSession",
+        "description": "One browsercode conversation. Emergent \u2014 minted by the first run, never\ncreated directly. `busy` tells you whether a new POST /runs would queue."
+      },
+      "BrowsercodeSessionList": {
+        "properties": {
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor",
+            "description": "Cursor for the next page, or null"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "description": "Whether more pages exist",
+            "default": false
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BrowsercodeSession"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BrowsercodeSessionList"
+      },
+      "BrowsercodeSessionNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Session not found"
+          }
+        },
+        "type": "object",
+        "title": "BrowsercodeSessionNotFoundError"
+      },
+      "Capability": {
+        "type": "string",
+        "enum": [
+          "browser",
+          "code",
+          "terminal",
+          "files"
+        ],
+        "title": "Capability",
+        "description": "The closed set of agent capabilities \u2014 the registry's routing TRUTH.\n\n`capabilities` on an agent is platform-enforced: sending `workspace_id` to an\nagent that lacks `files` \u2192 400 naming the right agent. Both agents do\n`browser` + `files`; the only structural difference is `code` / `terminal`\n(browsercode)."
+      },
+      "ContinuationConfigError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Config is inherited on a continuation. Start a new session to change model/workspace/browser."
+          }
+        },
+        "type": "object",
+        "title": "ContinuationConfigError",
+        "description": "Config field sent on a continuation (session_id present)."
+      },
+      "CreateAgentWorkspace": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Human-readable label for the workspace."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CreateAgentWorkspace"
+      },
+      "CreateBrowser": {
+        "properties": {
+          "browserProfileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserprofileid",
+            "description": "Start logged-in with this saved profile."
+          },
+          "proxyCountryCode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProxyCountryCode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Residential proxy country, e.g. 'us', 'de'. Null disables the proxy."
+          },
+          "screenWidth": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenwidth",
+            "description": "Viewport width in px."
+          },
+          "screenHeight": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenheight",
+            "description": "Viewport height in px."
+          },
+          "customProxy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StrictCustomProxy"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Your own proxy; overrides proxyCountryCode."
+          },
+          "enableRecording": {
+            "type": "boolean",
+            "title": "Enablerecording",
+            "description": "Record the session as an mp4.",
+            "default": false
+          },
+          "timeout": {
+            "type": "integer",
+            "maximum": 240.0,
+            "minimum": 1.0,
+            "title": "Timeout",
+            "description": "Minutes before auto-stop (max 240). Billed upfront, unused time refunded on stop.",
+            "default": 60
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CreateBrowser",
+        "description": "Provision a browser. All fields optional; sensible defaults."
+      },
+      "CreateBrowserProfile": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Human-readable label for the profile."
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Userid",
+            "description": "Your internal user id, to map a profile to a user in your app."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CreateBrowserProfile"
+      },
+      "Credits": {
+        "properties": {
+          "balanceUsd": {
+            "type": "string",
+            "title": "Balanceusd",
+            "description": "Total spendable credit balance, in USD."
+          },
+          "monthlyUsd": {
+            "type": "string",
+            "title": "Monthlyusd",
+            "description": "Portion from your plan that resets each period."
+          },
+          "additionalUsd": {
+            "type": "string",
+            "title": "Additionalusd",
+            "description": "Top-up portion that never resets."
+          }
+        },
+        "type": "object",
+        "required": [
+          "balanceUsd",
+          "monthlyUsd",
+          "additionalUsd"
+        ],
+        "title": "Credits"
+      },
+      "CustomProxy": {
+        "properties": {
+          "host": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Host",
+            "description": "Host of the proxy."
+          },
+          "port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Port",
+            "description": "Port of the proxy."
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username",
+            "description": "Username for proxy authentication."
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password",
+            "description": "Password for proxy authentication."
+          },
+          "ignoreCertErrors": {
+            "type": "boolean",
+            "title": "Ignore Certificate Errors",
+            "description": "Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "host",
+          "port"
+        ],
+        "title": "CustomProxy",
+        "description": "Request model for creating a custom proxy."
+      },
+      "DownloadFile": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "File name (relative to the download folder)."
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "title": "Sizebytes"
+          },
+          "lastModified": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastmodified"
+          },
+          "downloadUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Downloadurl",
+            "description": "Presigned link; only set when includeUrls=true."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "sizeBytes"
+        ],
+        "title": "DownloadFile"
+      },
+      "DownloadList": {
+        "properties": {
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor",
+            "description": "Cursor for the next page, or null"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "description": "Whether more pages exist",
+            "default": false
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DownloadFile"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "DownloadList"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LimitUsage": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "The cap. 0 means unlimited."
+          },
+          "active": {
+            "type": "integer",
+            "title": "Active",
+            "description": "How many are in use right now (remaining = limit - active)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "limit",
+          "active"
+        ],
+        "title": "LimitUsage",
+        "description": "A quota and how much of it is currently in use. One shape for every limit."
+      },
+      "Limits": {
+        "properties": {
+          "concurrentSessions": {
+            "$ref": "#/components/schemas/LimitUsage",
+            "description": "Concurrent browser sessions."
+          },
+          "teamMembers": {
+            "$ref": "#/components/schemas/LimitUsage",
+            "description": "Team member seats."
+          }
+        },
+        "type": "object",
+        "required": [
+          "concurrentSessions",
+          "teamMembers"
+        ],
+        "title": "Limits"
+      },
+      "NotZdrProjectError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Session purge is only available for Zero Data Retention projects."
+          }
+        },
+        "type": "object",
+        "title": "NotZdrProjectError",
+        "description": "Purge attempted on a non-ZDR project."
+      },
+      "Plan": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Plan id, e.g. 'business'. Null on no active plan."
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Human-readable plan name."
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "e.g. 'active'. Null on no active plan."
+          },
+          "periodEnd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Periodend",
+            "description": "When the current billing period ends."
+          }
+        },
+        "type": "object",
+        "title": "Plan"
+      },
+      "ProfileNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "Human-readable error message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ProfileNotFoundError",
+        "description": "browser_profile_id does not resolve in this project."
+      },
+      "Project": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "createdAt"
+        ],
+        "title": "Project",
+        "description": "Account identity \u2014 the '/me' / validate-my-key response."
+      },
+      "ProjectNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "Human-readable error message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ProjectNotFoundError",
+        "description": "No project resolves for the given API key."
+      },
+      "ProxyCountryCode": {
+        "type": "string",
+        "enum": [
+          "ad",
+          "ae",
+          "af",
+          "ag",
+          "ai",
+          "al",
+          "am",
+          "an",
+          "ao",
+          "aq",
+          "ar",
+          "as",
+          "at",
+          "au",
+          "aw",
+          "az",
+          "ba",
+          "bb",
+          "bd",
+          "be",
+          "bf",
+          "bg",
+          "bh",
+          "bi",
+          "bj",
+          "bl",
+          "bm",
+          "bn",
+          "bo",
+          "bq",
+          "br",
+          "bs",
+          "bt",
+          "bv",
+          "bw",
+          "by",
+          "bz",
+          "ca",
+          "cc",
+          "cd",
+          "cf",
+          "cg",
+          "ch",
+          "ci",
+          "ck",
+          "cl",
+          "cm",
+          "co",
+          "cr",
+          "cs",
+          "cu",
+          "cv",
+          "cw",
+          "cx",
+          "cy",
+          "cz",
+          "de",
+          "dj",
+          "dk",
+          "dm",
+          "do",
+          "dz",
+          "ec",
+          "ee",
+          "eg",
+          "eh",
+          "er",
+          "es",
+          "et",
+          "fi",
+          "fj",
+          "fk",
+          "fm",
+          "fo",
+          "fr",
+          "ga",
+          "gd",
+          "ge",
+          "gf",
+          "gg",
+          "gh",
+          "gi",
+          "gl",
+          "gm",
+          "gn",
+          "gp",
+          "gq",
+          "gr",
+          "gs",
+          "gt",
+          "gu",
+          "gw",
+          "gy",
+          "hk",
+          "hm",
+          "hn",
+          "hr",
+          "ht",
+          "hu",
+          "id",
+          "ie",
+          "il",
+          "im",
+          "in",
+          "iq",
+          "ir",
+          "is",
+          "it",
+          "je",
+          "jm",
+          "jo",
+          "jp",
+          "ke",
+          "kg",
+          "kh",
+          "ki",
+          "km",
+          "kn",
+          "kp",
+          "kr",
+          "kw",
+          "ky",
+          "kz",
+          "la",
+          "lb",
+          "lc",
+          "li",
+          "lk",
+          "lr",
+          "ls",
+          "lt",
+          "lu",
+          "lv",
+          "ly",
+          "ma",
+          "mc",
+          "md",
+          "me",
+          "mf",
+          "mg",
+          "mh",
+          "mk",
+          "ml",
+          "mm",
+          "mn",
+          "mo",
+          "mp",
+          "mq",
+          "mr",
+          "ms",
+          "mt",
+          "mu",
+          "mv",
+          "mw",
+          "mx",
+          "my",
+          "mz",
+          "na",
+          "nc",
+          "ne",
+          "nf",
+          "ng",
+          "ni",
+          "nl",
+          "no",
+          "np",
+          "nr",
+          "nu",
+          "nz",
+          "om",
+          "pa",
+          "pe",
+          "pf",
+          "pg",
+          "ph",
+          "pk",
+          "pl",
+          "pm",
+          "pn",
+          "pr",
+          "ps",
+          "pt",
+          "pw",
+          "py",
+          "qa",
+          "re",
+          "ro",
+          "rs",
+          "ru",
+          "rw",
+          "sa",
+          "sb",
+          "sc",
+          "sd",
+          "se",
+          "sg",
+          "sh",
+          "si",
+          "sj",
+          "sk",
+          "sl",
+          "sm",
+          "sn",
+          "so",
+          "sr",
+          "ss",
+          "st",
+          "sv",
+          "sx",
+          "sy",
+          "sz",
+          "tc",
+          "td",
+          "tf",
+          "tg",
+          "th",
+          "tj",
+          "tk",
+          "tl",
+          "tm",
+          "tn",
+          "to",
+          "tr",
+          "tt",
+          "tv",
+          "tw",
+          "tz",
+          "ua",
+          "ug",
+          "uk",
+          "us",
+          "uy",
+          "uz",
+          "va",
+          "vc",
+          "ve",
+          "vg",
+          "vi",
+          "vn",
+          "vu",
+          "wf",
+          "ws",
+          "xk",
+          "ye",
+          "yt",
+          "za",
+          "zm",
+          "zw"
+        ],
+        "title": "ProxyCountryCode"
+      },
+      "Recording": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "Presigned, expiring mp4 URL."
+          }
+        },
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "Recording"
+      },
+      "RunAccepted": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Run id, e.g. \"run_...\"."
+          },
+          "agent": {
+            "type": "string",
+            "enum": [
+              "browser-use",
+              "browsercode"
+            ],
+            "title": "Agent",
+            "description": "Which agent is running it."
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid",
+            "description": "The conversation this run belongs to (new or continued)."
+          },
+          "workspaceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspaceid",
+            "description": "The run's workspace, if the agent has one (browsercode). Its files live here."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed",
+              "stopped"
+            ],
+            "title": "Status",
+            "description": "Initial state \u2014 'queued' or 'running'."
+          },
+          "missingFileIds": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Missingfileids",
+            "description": "Attached upload ids that could not be confirmed in storage at creation. The run still starts."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "agent",
+          "sessionId",
+          "status"
+        ],
+        "title": "RunAccepted",
+        "description": "Async run accepted. Poll GET /runs/{id}/status or GET /runs/{id} for progress + result."
+      },
+      "RunBrowserSettings": {
+        "properties": {
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileid",
+            "description": "Browser profile to load: persisted cookies, local storage, and other browser state, so the run starts logged in. New-conversation only."
+          },
+          "proxyCountryCode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProxyCountryCode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ISO country code to proxy the browser through. Defaults to US. Pass null to run without a proxy.",
+            "default": "us"
+          },
+          "customProxy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CustomProxy"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Custom proxy for the browser. Overrides proxyCountryCode. Requires an active subscription. Never stored or inherited by follow-up runs; pass it on each run that should use it."
+          },
+          "screenWidth": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 6144.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenwidth",
+            "description": "Custom screen width in pixels. Set together with screenHeight."
+          },
+          "screenHeight": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3456.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenheight",
+            "description": "Custom screen height in pixels. Set together with screenWidth."
+          },
+          "record": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record",
+            "description": "Record the browser session to an mp4, retrievable via GET /browsers/{id} once the browser stops. API runs default to off. Ignored (always off) for Zero Data Retention projects."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RunBrowserSettings",
+        "description": "Browser/proxy/screen config for a run. Shared by both agents.\n\nOwned by the browser, never the run: on a follow-up in the same session,\nomitted fields inherit the session's prior browser and explicit values apply\nonly when a NEW browser is provisioned (a live browser is reused as-is)."
+      },
+      "RunEvent": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Monotonic event id. Pass the last one you saw as ?after=."
+          },
+          "runId": {
+            "type": "string",
+            "title": "Runid"
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ts"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Event type, e.g. \"run.started\", \"tool.call\", \"run.completed\"."
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "runId",
+          "ts",
+          "type"
+        ],
+        "title": "RunEvent",
+        "description": "One browsercode run event. Events have monotonic ids; poll `?after=<id>` to\nfetch only newer ones (never the whole list each time)."
+      },
+      "RunEventList": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/RunEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "nextAfter": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextafter",
+            "description": "Highest event id in this page, or null."
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "events"
+        ],
+        "title": "RunEventList",
+        "description": "Incremental event page. `next_after` is the highest id here \u2014 pass it back\nas `?after=` to get the delta; `has_more` says whether more already exist."
+      },
+      "RunFile": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "File id (e.g. \"up_...\" for inputs)."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "input",
+              "output"
+            ],
+            "title": "Kind",
+            "description": "`input` (attached to the run) or `output` (produced by it)."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Filename, e.g. \"data.csv\"."
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "title": "Sizebytes"
+          },
+          "contentType": {
+            "type": "string",
+            "title": "Contenttype",
+            "default": "application/octet-stream"
+          },
+          "downloadUrl": {
+            "type": "string",
+            "title": "Downloadurl",
+            "description": "Presigned direct download link (expiring). GET it yourself; no API key needed."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "sizeBytes",
+          "downloadUrl",
+          "createdAt"
+        ],
+        "title": "RunFile",
+        "description": "One file attached to or produced by a run.\n\n`download_url` is a presigned link straight at storage \u2014 you GET it directly,\nno Browser Use API call, no key. There is deliberately no `GET /files/{id}`.\nRe-list to refresh an expired link."
+      },
+      "RunFileList": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/RunFile"
+            },
+            "type": "array",
+            "title": "Files"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "RunFileList",
+        "description": "A run's files. `GET /runs/{id}/files?kind=input|output` unions the two\nphysical stores (staged uploads + session workspace outputs) into one list."
+      },
+      "RunStep": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number",
+            "description": "1-based step index within the run."
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "description": "Page URL at this step, if any."
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "The action the agent took, e.g. 'click', 'input', 'done'."
+          },
+          "thought": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thought",
+            "description": "The agent's reasoning for this step."
+          },
+          "screenshotUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenshoturl",
+            "description": "Presigned screenshot URL for this step, if captured."
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "action",
+          "ts"
+        ],
+        "title": "RunStep",
+        "description": "One browser-use run step \u2014 the OSS-native watch shape (NOT events).\n\n`steps` is browser-use's public identity; the whole community knows the agent\nin terms of steps, so we keep it rather than wrapping it as generic events."
+      },
+      "RunStepList": {
+        "properties": {
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/RunStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "nextAfter": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextafter",
+            "description": "Highest step number in this page, or null."
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "steps"
+        ],
+        "title": "RunStepList",
+        "description": "Incremental step page \u2014 same poll shape as `/events`. Steps have monotonic\n`number`s; `next_after` is the highest in this page. Pass it back as `?after=`\non the next poll to fetch only newer steps; `has_more` says whether more\nalready exist."
+      },
+      "SessionKind": {
+        "type": "string",
+        "enum": [
+          "disposable",
+          "durable"
+        ],
+        "title": "SessionKind",
+        "description": "The strongest routing signal in the registry.\n\n`disposable` \u2014 task-scoped; the browser and the session share a lifetime\n(browser-use). `durable` \u2014 long-horizon; the session outlives its browsers\nand can be extended over many runs / returned to later (browsercode). An LLM\nbranching on \"does this need to persist / extend\" reads THIS, not prose."
+      },
+      "StrictCustomProxy": {
+        "properties": {
+          "host": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Host",
+            "description": "Host of the proxy."
+          },
+          "port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Port",
+            "description": "Port of the proxy."
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username",
+            "description": "Username for proxy authentication."
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password",
+            "description": "Password for proxy authentication."
+          },
+          "ignoreCertErrors": {
+            "type": "boolean",
+            "title": "Ignore Certificate Errors",
+            "description": "Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "host",
+          "port"
+        ],
+        "title": "StrictCustomProxy",
+        "description": "Shared CustomProxy made strict. forbid-extra doesn't cascade into nested\nmodels, so the nested proxy needs its own forbid to catch typo'd keys."
+      },
+      "UpdateAgentWorkspace": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "New name. Null clears it; omit to leave unchanged."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "UpdateAgentWorkspace"
+      },
+      "UpdateBrowserProfile": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "New name. Null clears it; omit to leave unchanged."
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Userid",
+            "description": "New user id. Null clears it; omit to leave unchanged."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "UpdateBrowserProfile"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Browser-Use-API-Key"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api-staging-ufcbwvyv9yifyyvc3.browser-use.com/api/v1",
+      "description": "Browser Use API v1 (staging)"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+---
+title: Limits
+description: "Check your concurrency and team-member limits, and how many browser slots are in use."
+icon: gauge
+---
+
+Read your account's limits and current usage of them. Read-only.
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+limits = client.project.limits()
+print(limits.concurrent_sessions.remaining, "browser slots free")
+```
+```bash curl
+curl "https://api.browser-use.com/api/v1/project/limits" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+```json
+{
+  "concurrentSessions": { "granted": 100, "active": 12, "remaining": 88 },
+  "teamMembers": { "limit": 100 }
+}
+```
+
+`concurrentSessions` counts every live browser (agent-driven or standalone). If `remaining` is 0, new runs queue or 429 until a browser frees up — [list idle browsers and stop them](/cloud/manage-browser) to free slots immediately.

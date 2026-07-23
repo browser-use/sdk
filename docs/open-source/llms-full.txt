@@ -192,6 +192,8 @@ Browser Use natively supports 15+ LLM providers. Most providers accept any model
 
 `ChatBrowserUse()` is our optimized in-house model, matching the accuracy of top models while completing tasks **3-5x** faster. [See our blog post→](https://browser-use.com/posts/speed-matters)
 
+  Read the [bu-2-0 model card](/open-source/bu-2-0-model-card) for details on intended use, inputs and outputs, tools, benchmarks, judge setup, and limitations.
+
 ```python
 from browser_use import Agent, ChatBrowserUse
 
@@ -738,13 +740,13 @@ Any provider with an OpenAI-compatible endpoint works via `ChatOpenAI` with a cu
 Source: https://docs.browser-use.com/open-source/browser-use-cli
 
 
-The Browser Use CLI (`browser-use`) is the command-line interface for the Browser Use platform. It uses [Browser Harness](https://github.com/browser-use/browser-harness) to allow for:
+The Browser Use CLI (`browser-use`) gives coding agents a direct browser-control surface backed by [Browser Harness](https://github.com/browser-use/browser-harness):
 
 - **Direct browser control** — agents run Python to do actions in the browser.
 - **Three browser modes** — you can use with local Chrome or Chromium with your existing tabs, cookies, extensions, and logins; Browser Use cloud browsers; or any browser reachable through a CDP endpoint.
 - **Agent-ready setup** — install the skill into Claude Code, Codex, and other coding agents so they know when and how to call the CLI.
 
-To try the hosted agent directly, use [Browser Use Cloud](https://cloud.browser-use.com?utm_source=docs&utm_medium=browser-use-cli&utm_campaign=v4), or install the skill.
+Try out Browser Use CLI with an agent in [Browser Use Cloud](https://cloud.browser-use.com?utm_source=docs&utm_medium=browser-use-cli&utm_campaign=v4), or install the skill to try it yourself locally.
 
 ## Install the CLI
 
@@ -868,9 +870,7 @@ Give this employee admin permission in Azure.
 Research the top Hacker News stories and summarize the points.
 ```
 
-<video
-  controls
-  className="w-full aspect-video rounded-xl">
+<video controls className="w-full aspect-video rounded-xl">
   <source
 src="https://media.githubusercontent.com/media/browser-use/sdk/rust-terminal-docs/docs/static/terminal_demo.mp4"
 type="video/mp4"
@@ -881,15 +881,18 @@ type="video/mp4"
   />
 </video>
 
-You can use Browser Use Terminal in three ways:
+You can use Browser Use Terminal in four ways:
 
-| Surface | What it is for |
-| --- | --- |
-| **TUI** | The interactive terminal app you launch with `browser`. Best for normal, hands-on use. |
-| **CLI** | Scriptable commands such as `browser-use-terminal run-openai`. Best for automation and one-off tasks. |
-| **Python** | `browser_use.beta.Agent`, backed by the same Rust runtime. Best when you want browser-use code with terminal runtime behavior. |
+| Surface               | What it is for                                                                                                                                                                                |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TUI**               | The interactive terminal app you launch with `browser`. Best for normal, hands-on use.                                                                                                        |
+| **CLI**               | Scriptable commands such as `browser-use-terminal run-openai`. Best for automation and one-off tasks.                                                                                         |
+| **Python**            | `browser_use.beta.Agent`, backed by the same Rust runtime. Best when you want browser-use code with terminal runtime behavior.                                                                |
+| **Coding assistants** | A skill plus the `browser-use-terminal browser` commands let Claude Code, Codex, OpenCode, and other agents drive the browser. See [Use From Coding Assistants](#use-from-coding-assistants). |
 
-Browser Use Terminal is separate from the lower-level `browser-use` CLI. Use `browser` for the Terminal TUI, `browser-use-terminal` for Terminal task commands, and `browser-use` for direct browser-control commands.
+  Browser Use Terminal is separate from the lower-level `browser-use` CLI. Use
+  `browser` for the Terminal TUI, `browser-use-terminal` for Terminal task
+  commands, and `browser-use` for direct browser-control commands.
 
 ## Terms
 
@@ -936,25 +939,25 @@ uv pip install browser-use
 
 In the TUI, type `/` to open the command palette. These are the main commands:
 
-| Command | What it does |
-| --- | --- |
-| `/task` | Start a new task. |
-| `/model` | Choose the model and provider. |
-| `/auth` | Sign in to a provider. |
-| `/browser` | Change the browser backend. |
-| `/profile` | Choose the default Chrome profile. |
-| `/history` | Browse previous tasks. |
-| `/context` | Inspect context window attribution. |
-| `/secrets` | Save passwords and 2FA setup keys for website logins. |
-| `/import-passwords` | Import saved logins from 1Password. |
-| `/domains` | Allow or block which sites the agent can visit. |
-| `/sync-cookies` | Sync local cookies. |
-| `/email` | Give the agent a disposable inbox for sign-ups, links, and codes. |
-| `/goal` | Set or view the goal for a long-running task. |
-| `/feedback` | Report a bug or share feedback. |
-| `/update` | Install the latest release. |
-| `/reload` | Restart the UI in this terminal. |
-| `/exit` | Quit Browser Use Terminal. |
+| Command             | What it does                                                      |
+| ------------------- | ----------------------------------------------------------------- |
+| `/task`             | Start a new task.                                                 |
+| `/model`            | Choose the model and provider.                                    |
+| `/auth`             | Sign in to a provider.                                            |
+| `/browser`          | Change the browser backend.                                       |
+| `/profile`          | Choose the default Chrome profile.                                |
+| `/history`          | Browse previous tasks.                                            |
+| `/context`          | Inspect context window attribution.                               |
+| `/secrets`          | Save passwords and 2FA setup keys for website logins.             |
+| `/import-passwords` | Import saved logins from 1Password.                               |
+| `/domains`          | Allow or block which sites the agent can visit.                   |
+| `/sync-cookies`     | Sync local cookies.                                               |
+| `/email`            | Give the agent a disposable inbox for sign-ups, links, and codes. |
+| `/goal`             | Set or view the goal for a long-running task.                     |
+| `/feedback`         | Report a bug or share feedback.                                   |
+| `/update`           | Install the latest release.                                       |
+| `/reload`           | Restart the UI in this terminal.                                  |
+| `/exit`             | Quit Browser Use Terminal.                                        |
 
 ## Run Browser Tasks
 
@@ -1029,6 +1032,44 @@ async def main():
 asyncio.run(main())
 ```
 
+## Use From Coding Assistants
+
+Browser Use Terminal plugs into any coding assistant that can run shell commands. A skill teaches the assistant the CLI, and the CLI gives it the full browser runtime: page interaction through Python helpers, screenshots saved as files, profiles, and more.
+
+The fastest setup is to paste this URL into your assistant and let it bootstrap everything (install, skill registration, browser setup, verification):
+
+```text
+https://browser-use.com/skill
+```
+
+To set it up manually instead:
+
+```bash
+curl -fsSL https://browser-use.com/terminal/install.sh | sh
+browser-use-terminal skill install
+```
+
+`skill install` writes the skill into every detected assistant home: `~/.claude/skills/` (Claude Code, also read by OpenCode), `~/.codex/skills/` (Codex), `~/.config/opencode/skills/`, and `~/.agents/skills/`. For other assistants, persist the output of `browser-use-terminal skill show` wherever that assistant reads instructions.
+
+The assistant then drives the browser with commands:
+
+```bash
+browser-use-terminal browser exec <<'PY'
+new_tab("https://example.com")
+wait_for_load()
+print(page_info()["title"])
+print(capture_screenshot())
+PY
+```
+
+How it works:
+
+- The browser auto-connects per the remembered preference (`browser-use-terminal browser preference use local|cloud|managed-headless`) and persists across invocations; Python variables do not.
+- Screenshots are saved as files and the absolute path is printed, so assistants view them with their native file tools: Claude Code `Read`, Codex `view_image`, OpenCode `read`, Gemini CLI `read_file`.
+- `--session <name>` gives parallel workstreams isolated artifact dirs, event logs, and managed browsers.
+- Stop persistent browsers with `browser-use-terminal browser recover stop-owned-browser` (managed) or `browser-use-terminal browser recover stop-owned-remote` (cloud).
+- Everything is recorded in the same event log as the TUI: `browser-use-terminal events browser-cli-<session>`.
+
 ## Configure Models
 
 ### TUI
@@ -1078,13 +1119,13 @@ agent = Agent(
 
 Supported Python model classes:
 
-| Python model class | Example |
-| --- | --- |
-| `ChatOpenAI` | `ChatOpenAI(model="gpt-5.5")` |
-| `ChatAnthropic` | `ChatAnthropic(model="claude-sonnet-4-6")` |
-| `ChatLiteLLM` | `ChatLiteLLM(model="openai/gpt-5.5")` |
-| `ChatDeepSeek` | `ChatDeepSeek(model="deepseek-v4-pro")` |
-| `ChatOpenRouter` | `ChatOpenRouter(model="openai/gpt-5.5")` |
+| Python model class | Example                                    |
+| ------------------ | ------------------------------------------ |
+| `ChatOpenAI`       | `ChatOpenAI(model="gpt-5.5")`              |
+| `ChatAnthropic`    | `ChatAnthropic(model="claude-sonnet-4-6")` |
+| `ChatLiteLLM`      | `ChatLiteLLM(model="openai/gpt-5.5")`      |
+| `ChatDeepSeek`     | `ChatDeepSeek(model="deepseek-v4-pro")`    |
+| `ChatOpenRouter`   | `ChatOpenRouter(model="openai/gpt-5.5")`   |
 
 ## Choose A Browser
 
@@ -1396,14 +1437,14 @@ curl -fsSL https://browser-use.com/terminal/install.sh | sh
 
 ### Which Command Should I Use?
 
-| Goal | Command |
-| --- | --- |
-| Open the interactive Terminal app | `browser` |
-| Run a one-shot Terminal agent task | `browser-use-terminal run-openai "..."` |
-| Use Terminal runtime from Python | `browser_use.beta.Agent` |
-| Drive the browser from a coding assistant | `browser-use-terminal browser exec` |
-| Register the skill with coding assistants | `browser-use-terminal skill install` |
-| Directly control a browser with Python | `browser-use <<'PY' ... PY` |
+| Goal                                      | Command                                 |
+| ----------------------------------------- | --------------------------------------- |
+| Open the interactive Terminal app         | `browser`                               |
+| Run a one-shot Terminal agent task        | `browser-use-terminal run-openai "..."` |
+| Use Terminal runtime from Python          | `browser_use.beta.Agent`                |
+| Drive the browser from a coding assistant | `browser-use-terminal browser exec`     |
+| Register the skill with coding assistants | `browser-use-terminal skill install`    |
+| Directly control a browser with Python    | `browser-use <<'PY' ... PY`             |
 
 ### Python Cannot Find `browser_use.beta`
 
@@ -1418,30 +1459,30 @@ python -c "from browser_use.beta import Agent; print('ok')"
 
 When you use `browser_use.beta.Agent`, these Python settings are forwarded to the Rust terminal SDK:
 
-| Python setting | Terminal SDK field |
-| --- | --- |
-| `llm.provider`, inferred from the chat model | `llm.provider` |
-| `llm.model` | `llm.model` |
-| `llm_timeout` | `llm.timeout` |
-| `headless` | `browser.headless` |
-| `keep_alive` | `browser.keep_alive` |
-| `cloud_profile_id`, `profile_id` | `browser.profile_id` |
+| Python setting                                   | Terminal SDK field           |
+| ------------------------------------------------ | ---------------------------- |
+| `llm.provider`, inferred from the chat model     | `llm.provider`               |
+| `llm.model`                                      | `llm.model`                  |
+| `llm_timeout`                                    | `llm.timeout`                |
+| `headless`                                       | `browser.headless`           |
+| `keep_alive`                                     | `browser.keep_alive`         |
+| `cloud_profile_id`, `profile_id`                 | `browser.profile_id`         |
 | `cloud_proxy_country_code`, `proxy_country_code` | `browser.proxy_country_code` |
-| `cdp_url` | `browser.cdp_url` |
-| `headers` / CDP headers | `browser.cdp_headers` |
-| `user_agent` | `browser.user_agent` |
-| `viewport` | `browser.viewport` |
-| `window_size` | `browser.window_size` |
-| `storage_state` | `browser.storage_state` |
-| `downloads_path` | `browser.downloads_path` |
-| `allowed_domains` | `browser.allowed_domains` |
-| `prohibited_domains` | `browser.blocked_domains` |
-| `state_dir` | `browser.state_dir` |
-| `no_viewport` | `browser.no_viewport` |
-| `accept_downloads` | `browser.accept_downloads` |
-| `output_model_schema` | `output_schema` |
-| `calculate_cost` | `calculate_cost` |
-| `max_actions_per_step` | `max_actions_per_step` |
+| `cdp_url`                                        | `browser.cdp_url`            |
+| `headers` / CDP headers                          | `browser.cdp_headers`        |
+| `user_agent`                                     | `browser.user_agent`         |
+| `viewport`                                       | `browser.viewport`           |
+| `window_size`                                    | `browser.window_size`        |
+| `storage_state`                                  | `browser.storage_state`      |
+| `downloads_path`                                 | `browser.downloads_path`     |
+| `allowed_domains`                                | `browser.allowed_domains`    |
+| `prohibited_domains`                             | `browser.blocked_domains`    |
+| `state_dir`                                      | `browser.state_dir`          |
+| `no_viewport`                                    | `browser.no_viewport`        |
+| `accept_downloads`                               | `browser.accept_downloads`   |
+| `output_model_schema`                            | `output_schema`              |
+| `calculate_cost`                                 | `calculate_cost`             |
+| `max_actions_per_step`                           | `max_actions_per_step`       |
 
 The same Python `Agent` instance can continue a terminal-backed session across follow-up runs.
 
@@ -4551,6 +4592,152 @@ The scheduler processes natural language and outputs structured results:
 Full implementation: [https://github.com/browser-use/browser-use/tree/main/examples/apps/msg-use](https://github.com/browser-use/browser-use/tree/main/examples/apps/msg-use)
 
 
+# Overview
+Source: https://docs.browser-use.com/open-source/examples/skills/overview
+
+
+Browser Use ships a set of [agent skills](https://www.skills.sh/browser-use/browser-use) — self-contained `SKILL.md` bundles that teach a coding agent (Claude Code, Cursor, OpenClaw, Hermes, and others) how to use Browser Use. Each skill is installable from [skills.sh](https://www.skills.sh/browser-use/browser-use) with one command.
+
+## Install
+
+Every skill installs through the [skills CLI](https://www.skills.sh) with the same pattern — swap in the skill name with `--skill`:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill <name>
+```
+
+For example, to install the QA skill:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill qa
+```
+
+The skills CLI drops the skill into your agent's skills directory (e.g. `.claude/skills/` for Claude Code). Your agent picks it up automatically — no extra wiring.
+
+## Available skills
+
+Drive a browser directly from the CLI — navigate, click, fill forms, screenshot, and extract data.
+Reference for Browser Use Cloud — the hosted REST API (v2 & v3) and the Python/TypeScript SDKs.
+Reference for writing Python against the `browser-use` library — Agent, Browser, Tools, and more.
+QA-test any site or local dev server and return a 1–5 quality score with evidence.
+Control a headless browser from a sandboxed remote machine (cloud VMs, CI, coding agents).
+Pay for Browser Use Cloud per request from a crypto wallet — no signup or API key.
+
+## Source
+
+All skills live in the [`skills/` directory](https://github.com/browser-use/browser-use/tree/main/skills) of the `browser-use` repo.
+
+
+# browser-use
+Source: https://docs.browser-use.com/open-source/examples/skills/browser-use
+
+
+The `browser-use` skill teaches your agent the [Browser Use CLI](/open-source/browser-use-cli). The CLI runs Python in the browser to do actions online. The agent can connect to your real Chrome, preserving logins, or to a Browser Use cloud browser.
+
+## Install
+
+```text
+Install or upgrade browser-use with `uv tool install --python 3.12 --upgrade --force 'browser-use @ git+https://github.com/browser-use/browser-use.git'`, run `browser-use skill install`, and connect it to my browser. Follow https://github.com/browser-use/browser-use if setup or connection fails.
+```
+
+## Links
+
+  <Card
+title="skills.sh"
+icon="up-right-from-square"
+href="https://www.skills.sh/browser-use/browser-use/browser-use"
+  />
+  <Card
+title="Source"
+icon="github"
+href="https://github.com/browser-use/browser-use/tree/main/skills/browser-use"
+  />
+
+
+# cloud
+Source: https://docs.browser-use.com/open-source/examples/skills/cloud
+
+
+The `cloud` skill gives your agent a reference for [Browser Use Cloud](https://docs.browser-use.com/cloud/quickstart): the REST API (v2 and v3), the `browser-use-sdk` (Python and TypeScript), `X-Browser-Use-API-Key` authentication, cloud sessions, browser profiles and profile sync, CDP WebSocket access, stealth browsers, residential proxies, CAPTCHA handling, webhooks, workspaces, the skills marketplace, `liveUrl` streaming, pricing, and integration patterns (chat UI, subagents, n8n/Make/Zapier, Playwright/Puppeteer/Selenium).
+
+For the open-source Python library (`Agent`, `Browser`, `Tools`), use the [`open-source`](/open-source/examples/skills/open-source) skill instead.
+
+## Install
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill cloud
+```
+
+## Links
+
+
+
+# open-source
+Source: https://docs.browser-use.com/open-source/examples/skills/open-source
+
+
+The `open-source` skill gives your agent a reference for writing Python against the [`browser-use` library](/open-source/quickstart): `Agent`, `Browser`, and `Tools` configuration, supported LLM models (15+ providers), the Actor API, custom tools, lifecycle hooks, MCP server setup, sensitive-data handling, prompting strategies, and monitoring/observability with Laminar or OpenLIT.
+
+For the Cloud API/SDK, use the [`cloud`](/open-source/examples/skills/cloud) skill. To drive a browser directly via CLI, use the [`browser-use`](/open-source/examples/skills/browser-use) skill.
+
+## Install
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill open-source
+```
+
+## Links
+
+
+
+# qa
+Source: https://docs.browser-use.com/open-source/examples/skills/qa
+
+
+The `qa` skill drives a website with a real browser, judges how well it does the thing you asked about, and returns a **score from 1 (broken) to 5 (excellent)** with evidence — the deliverable is a verdict, not a screenshot dump. Use it to test, QA, evaluate, or score a site, page, flow, or app, including a local dev server (e.g. `localhost:5173`) which it tunnels out automatically. It runs on a real Browser Use cloud browser.
+
+## Install
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill qa
+```
+
+## Links
+
+
+
+# remote-browser
+Source: https://docs.browser-use.com/open-source/examples/skills/remote-browser
+
+
+The `remote-browser` skill is for agents running on **sandboxed remote machines** (cloud VMs, CI, coding agents) that need to control a headless browser. It uses the same [Browser Use CLI](/open-source/browser-use-cli) workflow as the [`browser-use`](/open-source/examples/skills/browser-use) skill — `open`, `state`, `click`, `input`, `screenshot`, `close` — plus headless Chromium, cloud browsers, CDP connection, and tunnels to expose local dev servers.
+
+## Install
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill remote-browser
+```
+
+## Links
+
+
+
+# x402
+Source: https://docs.browser-use.com/open-source/examples/skills/x402
+
+
+The `x402` skill walks your agent through setting up [Browser Use Cloud payments with x402](https://docs.browser-use.com/cloud/guides/x402) — pay per request from a crypto wallet (USDC on Base mainnet), with no signup, API key, or credit card. It guides wallet setup, funding, writing the key to `.env`, and a ~$1 test run. The SDK is the easiest path, and non-SDK flows are available via x402-aware client libraries. Use it when you want pay-per-use access without an API key.
+
+## Install
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill x402
+```
+
+## Links
+
+
+
 # Local Development Setup
 Source: https://docs.browser-use.com/open-source/development/setup/local-setup
 
@@ -4987,7 +5174,7 @@ Source: https://docs.browser-use.com/open-source/development/monitoring/telemetr
 
 ## Overview
 
-Browser Use is free under the MIT license. To help us continue improving the library, we collect anonymous usage data with [PostHog](https://posthog.com) . This information helps us understand how the library is used, fix bugs more quickly, and prioritize new features.
+Browser Use is free under the MIT license. To help us continue improving the library, we collect usage telemetry with [PostHog](https://posthog.com). Telemetry may include usage metadata and task-level data such as task instructions, URLs visited, action traces, errors, and final results. We may use this information to operate, debug, secure, analyze, develop, and improve Browser Use and related offerings, including by creating aggregated, de-identified, or sanitized datasets and workflow patterns in accordance with our Terms of Service and Privacy Policy.
 
 
 ## Opting Out
@@ -5050,3 +5237,4 @@ Source: https://docs.browser-use.com/open-source/development/get-help
 1. Check our [GitHub Issues](https://github.com/browser-use/browser-use/issues)
 2. Ask in our [Discord community](https://link.browser-use.com/discord)
 3. Get support for your enterprise with support@browser-use.com
+

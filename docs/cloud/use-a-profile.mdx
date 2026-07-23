@@ -1,0 +1,83 @@
+---
+title: Use a profile
+description: "Pass a profile id into a run or browser to start logged-in, and stop cleanly so new state persists."
+icon: key
+---
+
+On an **agent run**, the profile id goes inside the `browser` object: `browser={"profile_id": ...}`. On a **standalone browser**, it is a top-level param: `browser_profile_id`. The browser starts with the profile's saved cookies and logins already in place. Don't have a profile yet? [Create one](/cloud/create-profile) first.
+
+## Attach it
+
+<CodeGroup>
+```python Python
+# in an agent run — profile rides inside the browser object
+run = client.agents.browser_use.run(
+    task="Check my inbox and summarize unread emails",
+    browser={"profile_id": profile.id},
+)
+
+# on a standalone browser — top-level param
+browser = client.browsers.create(browser_profile_id=profile.id)
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Check my inbox", "browser": {"profile_id": "bp_123"}}'
+```
+</CodeGroup>
+
+<Warning>
+Do NOT pass `browser_profile_id` as a top-level field on a run — the API rejects it with `422 "Extra inputs are not permitted"`. Top-level `browser_profile_id` is valid only on `POST /browsers`.
+</Warning>
+
+## Persist state on a browser you drive (CDP)
+
+Profiles work the same whether the agent drives or you do. Pass `browser_profile_id` to `browsers.create()`, set state over CDP, then **stop the browser to flush cookies and localStorage into the profile**. Reconnect later with the same `browser_profile_id` and the state is there.
+
+```python Python
+from browser_use import BrowserUse
+from playwright.sync_api import sync_playwright
+
+client = BrowserUse()
+profile = client.browser_profiles.create(name="persist-demo")
+
+# Browser 1 — write state, then stop to persist
+b1 = client.browsers.create(browser_profile_id=profile.id)
+with sync_playwright() as p:
+    pw = p.chromium.connect_over_cdp(b1.cdp_url)
+    page = pw.contexts[0].pages[0]
+    page.goto("https://en.wikipedia.org")
+    page.evaluate("localStorage.setItem('demo', 'hello')")
+    pw.close()
+client.browsers.stop(b1.id)   # flushes state into the profile
+
+# Browser 2 — same profile, state is back
+b2 = client.browsers.create(browser_profile_id=profile.id)
+with sync_playwright() as p:
+    pw = p.chromium.connect_over_cdp(b2.cdp_url)
+    page = pw.contexts[0].pages[0]
+    page.goto("https://en.wikipedia.org")
+    print(page.evaluate("localStorage.getItem('demo')"))  # -> hello
+    pw.close()
+client.browsers.stop(b2.id)
+```
+
+<Note>
+Use a site that actually sets cookies/localStorage to verify persistence — `example.com` sets none, so it is a poor test target.
+</Note>
+
+<Warning>
+Profile state is saved when the run or browser ends. An agent run persists automatically when it finishes; a browser you drive yourself should be stopped with `browsers.stop()` when you are done — a browser left to time out may not save. Stop in a `finally` so every code path, including error handlers, persists.
+</Warning>
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Create a profile" href="/cloud/create-profile" icon="id-card">
+    Create, list, rename, and delete profiles.
+  </Card>
+  <Card title="Log in with the agent" href="/cloud/browser/authentication" icon="lock">
+    Have the agent do the first login and save the session.
+  </Card>
+</CardGroup>

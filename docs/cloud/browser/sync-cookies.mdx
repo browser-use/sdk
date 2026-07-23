@@ -1,0 +1,58 @@
+---
+title: Sync cookies
+description: "Copy your existing local browser logins into a cloud profile. No passwords, no re-login."
+icon: arrows-rotate
+---
+
+Already logged into the sites you want to automate? Sync those logins from your own browser into a cloud **profile** — you get a `browser_profile_id` with all that state, and never send a password.
+
+## Sync in one command
+
+```bash
+export BROWSER_USE_API_KEY=$BROWSER_USE_API_KEY && curl -fsSL https://browser-use.com/profile.sh | sh
+```
+
+This opens a browser where you pick which accounts to sync. When it finishes you get a `browser_profile_id`.
+
+## Use the synced profile
+
+Pass the id into any run to start already logged in.
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+run = client.agents.browser_use.run(
+    task="Check my LinkedIn messages and summarize them",
+    browser_profile_id="bp_your_synced_id",
+)
+print(run.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use";
+
+const client = new BrowserUse();
+const run = await client.agents.browserUse.run({
+  task: "Check my LinkedIn messages and summarize them",
+  browser_profile_id: "bp_your_synced_id",
+});
+console.log(run.output);
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Check my LinkedIn messages", "browser_profile_id": "bp_your_synced_id"}'
+```
+</CodeGroup>
+
+## Sync vs. agent login
+
+| | Sync cookies | [Agent logs in](/cloud/browser/authentication) |
+| --- | --- | --- |
+| Credentials sent | none — reuses your local session | agent uses credentials you provide |
+| Best for | sites you're already logged into | fresh logins, headless setups |
+| Setup | run `profile.sh` once | one login run |
+
+Both produce a `browser_profile_id` you reuse on every run.

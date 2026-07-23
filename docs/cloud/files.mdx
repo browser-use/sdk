@@ -1,0 +1,208 @@
+---
+title: Files
+description: "Give an agent files and get its output files back. Files live on the conversation, not a workspace you manage."
+icon: folder
+---
+
+The model in one sentence: **each conversation has a disk. Add files and attach them to a run; the agent reads them and writes outputs to the disk; everything stays on the disk for the whole conversation.**
+
+You never create or name a "workspace" on the normal path. A run makes a disk for you, invisibly, and keeps it for the conversation. (The only time a workspace becomes visible is when you deliberately share files across *different* conversations — see the bottom.)
+
+## Where an agent's answer comes back
+
+| | Short answer | Structured / large output |
+| --- | --- | --- |
+| **`browser-use`** | `result` string on the run | describe the JSON shape in the task, parse `result` (typed `output` via a request schema: not available yet) |
+| **`browsercode`** | `result` string on the run | **a file** — ask for it in the task, then fetch it (below) |
+
+Every run has a short **`result`** string. For anything bigger, `browsercode` writes a **file**, and that's what you fetch.
+
+## Give an agent a file
+
+Two steps: add the file, then attach its id on the run. Adding is a presigned-URL flow — request a URL, `PUT` your bytes to it.
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+
+# 1. add — SDK handles the presigned PUT for you, returns file ids
+added = client.agents.browsercode.files(files=["./data.csv"])
+file_ids = [f.id for f in added]
+
+# 2. attach to a run — this is what pulls the file onto the run's disk
+run = client.agents.browsercode.run(
+    task="Clean data.csv: drop empty rows, save as clean.csv",
+    attached_file_ids=file_ids,
+)
+```
+```bash curl
+# 1a. add a file → get an id + presigned URL
+curl -s -X POST https://api.browser-use.com/api/v1/agents/browsercode/files \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"files": [{"name": "data.csv"}]}'
+# → { "items": [{ "id": "up_123", "name": "data.csv", "upload_url": "https://s3..." }] }
+
+# 1b. PUT the bytes to the returned upload_url
+curl -X PUT "https://s3.../up_123?..." --upload-file ./data.csv
+
+# 2. attach the id on the run
+curl -X POST https://api.browser-use.com/api/v1/agents/browsercode/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Clean data.csv, save as clean.csv", "attached_file_ids": ["up_123"]}'
+```
+</CodeGroup>
+
+No `workspace_id`. Adding a file gets you an id; **attaching** it on a run is what makes the agent get it. Add many at once (`{"files": [{"name":"a.csv"},{"name":"b.csv"}]}` → many ids) and attach them all.
+
+<Note>
+Attach a bad id and the run still starts (`202`) — the unknown ids come back in **`missingFileIds`** on the create response. Always check that array; a missing file is not an error status.
+</Note>
+
+## Get output files back
+
+Files the agent wrote come back from the run's **files** endpoint. Filter `kind=output` for what the agent produced (`kind=input` is what you attached).
+
+<CodeGroup>
+```python Python
+files = client.agents.browsercode.runs.files(run.id, kind="output")
+for f in files:
+    print(f.name, f.download_url)   # download_url is a direct link — GET it
+```
+```bash curl
+curl "https://api.browser-use.com/api/v1/agents/browsercode/runs/RUN_ID/files?kind=output" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+# → { "items": [{ "id": "out_1", "name": "clean.csv", "kind": "output", "downloadUrl": "https://..." }] }
+
+# downloadUrl is a presigned direct link — fetch it straight (no API endpoint, no key)
+curl -L "https://.../presigned-download-url" -o clean.csv
+```
+</CodeGroup>
+
+`downloadUrl` is a **presigned, expiring link** you GET directly (the Python SDK exposes it as `download_url`) — it points straight at storage, not at a Browser Use endpoint. If it expires, re-list to get a fresh one.
+
+## Structured output from `browsercode` — it's a file
+
+`browsercode` has no `structured_output` parameter. To get structured data, **put the shape in the task** and tell it where to write it, then fetch that file:
+
+<CodeGroup>
+```python Python
+run = client.agents.browsercode.run(
+    task=(
+        "Scrape the product catalog. Write output.json as a JSON array of "
+        '{"name": str, "price": number, "url": str}.'
+    ),
+)
+# ...poll until completed, then:
+files = client.agents.browsercode.runs.files(run.id, kind="output")
+out = next(f for f in files if f.name == "output.json")
+# GET out.download_url for the structured JSON
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/agents/browsercode/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Scrape the catalog. Write output.json as [{\"name\":str,\"price\":number,\"url\":str}]."}'
+
+# after it completes, fetch output.json
+curl "https://api.browser-use.com/api/v1/agents/browsercode/runs/RUN_ID/files?kind=output" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+<Note>
+`browsercode`'s output is **always files** — a CSV, a report, a chart PNG, a schema'd `output.json`. Name the file in the task, fetch it with `?kind=output`. `browser-use` answers inline via the `result` string — describe the exact JSON shape you want in the task text and parse `result` (a `structured_output` request parameter is not available yet).
+</Note>
+
+## Files carry across the conversation
+
+Attach files on the first run, then continue with `session_id` — later runs share the same disk, so they see everything earlier runs added or produced. To add more files mid-conversation, add them (`POST /agents/{agent}/files`) and attach them on your next run.
+
+```bash curl
+# run 1 adds + uses a file
+curl -X POST .../agents/browsercode/runs -d '{"task":"analyze data.csv", "attached_file_ids":["up_1"]}'
+# → { "sessionId": "ses_x", ... }
+
+# run 2 continues the thread and adds another file
+curl -X POST .../agents/browsercode/files -d '{"files":[{"name":"extra.csv"}]}'   # → up_2
+curl -X POST .../agents/browsercode/runs \
+  -d '{"task":"now merge extra.csv", "session_id":"ses_x", "attached_file_ids":["up_2"]}'
+```
+
+<Warning>
+Files share the conversation's disk, so writing the same path twice overwrites it. If two runs both write `output.json`, fetch the first run's output before the second run reuses that name.
+</Warning>
+
+## Output files vs. browser downloads — two different things
+
+| | Where | What it is |
+| --- | --- | --- |
+| **Output files** (agent wrote) | `GET /agents/{agent}/runs/{id}/files?kind=output` | Files the **agent produced** — a CSV it built, a report, `output.json`. |
+| **Browser-downloaded files** | `GET /browsers/{browser_id}/downloads` | Files the **browser itself downloaded off the web** while navigating — a PDF it clicked, an export a site handed back. |
+
+Rule of thumb: **the agent made it → output files** (`?kind=output`); **a website gave it to the browser → downloads** (see [Manage a browser](/cloud/manage-browser)).
+
+## Hand off from one agent to another
+
+A common workflow: `browser-use` scrapes data, then `browsercode` processes it. They're separate agents, so the handoff is explicit — pass the first agent's result into the second.
+
+The clean way: have `browser-use` return the data as JSON in its `result` (describe the shape in the task), then feed it into `browsercode`'s task or attach it as a file.
+
+<CodeGroup>
+```python Python
+import json
+
+# 1. browser-use scrapes → JSON in the result string
+scrape = client.agents.browser_use.run(
+    task=(
+        "Scrape all product names and prices from this catalog. "
+        'Return ONLY a JSON object: {"products": [{"name": str, "price": number}]}'
+    ),
+)
+data = json.loads(scrape.result)
+
+# 2. hand it to browsercode — attach as a file, or inline it in the task
+up = client.agents.browsercode.files(files=[("products.json", json.dumps(data))])
+report = client.agents.browsercode.run(
+    task="Read products.json, compute price stats, write report.md",
+    attached_file_ids=[up[0].id],
+)
+```
+```bash curl
+# browser-use returns typed `output`; write it to a file, add it to browsercode, attach it.
+# (or just paste the scraped data straight into browsercode's task text for small results)
+curl -X POST .../agents/browsercode/files -d '{"files":[{"name":"products.json"}]}'   # → up_1
+# PUT the scraped JSON to the upload_url, then:
+curl -X POST .../agents/browsercode/runs \
+  -d '{"task":"Read products.json, compute stats, write report.md", "attached_file_ids":["up_1"]}'
+```
+</CodeGroup>
+
+<Note>
+Two different agents don't automatically share a disk — each conversation's disk is its own. To move data between agents, carry the result across (inline for small data, a file for large). For a disk deliberately shared across agents/conversations, use an explicit workspace (below).
+</Note>
+
+## Sharing files across conversations (advanced)
+
+Everything above keeps files on one conversation. If you want a file **library reused across different conversations** — or to pre-load a large dataset before your first run — create an explicit **workspace**:
+
+```bash curl
+# create a named, reusable disk
+curl -X POST https://api.browser-use.com/api/v1/agent-workspaces \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" -d '{"name":"shared-data"}'
+# → { "id": "ws_1" }
+
+# add files straight into it
+curl -X POST https://api.browser-use.com/api/v1/agent-workspaces/ws_1/files \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" -d '{"files":[{"name":"dataset.parquet"}]}'
+
+# point any run at it
+curl -X POST .../agents/browsercode/runs -d '{"task":"analyze the dataset", "workspace_id":"ws_1"}'
+```
+
+<Note>
+This is the **only** time you handle a `workspace_id`. ~95% of usage never needs it — a conversation's disk is automatic. Create a workspace only for cross-conversation sharing.
+</Note>

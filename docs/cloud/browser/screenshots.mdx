@@ -1,0 +1,69 @@
+---
+title: Screenshots
+description: "Take viewport and full-page screenshots from a cloud browser, and control where they're saved."
+icon: camera
+---
+
+A cloud browser is a normal CDP endpoint, so screenshots work the way your framework takes them, and they save wherever your code runs.
+
+## Where screenshots are saved
+
+The most-asked question first: screenshots taken through Playwright or Puppeteer are written by *your* code, to a path *you* choose. Nothing is stored on the browser — the browser's automatic [recording](/cloud/manage-browser#recording) is separate.
+
+<CodeGroup>
+```python Python
+from playwright.async_api import async_playwright
+from browser_use import BrowserUse
+
+client = BrowserUse()
+browser = client.browsers.create()
+
+async with async_playwright() as p:
+    pw = await p.chromium.connect_over_cdp(browser.cdp_url)
+    page = pw.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    await page.screenshot(path="shots/example.png")  # your machine, your path
+
+client.browsers.stop(browser.id)
+```
+```typescript TypeScript
+import { chromium } from "playwright";
+import { BrowserUse } from "browser-use";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create();
+
+const pw = await chromium.connectOverCDP(browser.cdp_url);
+const page = pw.contexts()[0].pages()[0];
+await page.goto("https://example.com");
+await page.screenshot({ path: "shots/example.png" });
+
+await client.browsers.stop(browser.id);
+```
+</CodeGroup>
+
+## Full page, not just the viewport
+
+By default a screenshot captures the visible viewport. For the whole page, top to bottom:
+
+```python
+await page.screenshot(path="full.png", full_page=True)
+```
+
+Playwright stitches the scroll automatically. The result contains page content only, no URL bar or browser chrome, because CDP screenshots capture the rendered page, not the window.
+
+## Resolution
+
+Screenshot dimensions follow the browser's screen size, set at [browser creation](/cloud/create-browser) with `screen_width` and `screen_height`. Set them explicitly if screenshots must match a target resolution:
+
+```python
+browser = client.browsers.create(screen_width=1920, screen_height=1080)
+```
+
+## Screenshots vs recording
+
+Screenshots are moments; [recording](/cloud/manage-browser#recording) is the whole browser session as video — every browser records automatically, and you fetch a fresh MP4 URL on demand. For debugging agent behavior, recording is usually what you want; for artifacts and QA evidence, screenshots.
+
+## From agent tasks
+
+Ask the agent to take screenshots as part of a task and collect them from the run's [output files](/cloud/files) (`GET /runs/{id}/files?kind=output`).

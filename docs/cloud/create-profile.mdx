@@ -1,0 +1,67 @@
+---
+title: Create a profile
+description: "Saved login and cookie state. Create a profile once, reference it by id forever."
+icon: id-card
+---
+
+A **browser profile** is saved login/cookie state — the "stay logged in" of a real browser. It's a standalone, project-owned resource: you create it once, then reference it by id whenever you want a browser or an agent run to start already logged in.
+
+## Create
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+profile = client.browser_profiles.create(name="my-gmail")
+print(profile.id)   # bp_...
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use";
+
+const client = new BrowserUse();
+const profile = await client.browserProfiles.create({ name: "my-gmail" });
+console.log(profile.id); // bp_...
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/browser-profiles \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "my-gmail"}'
+```
+</CodeGroup>
+
+A new profile is empty. It gets its state the first time it's used: the agent (or you, over CDP) logs in once inside a browser started with this profile, and when that run or browser ends, the session is saved back into the profile for next time. See [Use a profile](/cloud/use-a-profile) for how to attach it and how persistence works.
+
+## Manage
+
+<CodeGroup>
+```python Python
+client.browser_profiles.list()
+client.browser_profiles.get("bp_123")
+client.browser_profiles.update("bp_123", name="renamed")   # edit fields
+client.browser_profiles.delete("bp_123")
+```
+```bash curl
+# rename — PATCH edits fields (not lifecycle)
+curl -X PATCH https://api.browser-use.com/api/v1/browser-profiles/bp_123 \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "renamed"}'
+```
+</CodeGroup>
+
+<Note>
+A profile is a creation input, passed by id — never nested under a browser. There is no `browsers/{id}/profile`.
+</Note>
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Use a profile" href="/cloud/use-a-profile" icon="key">
+    Attach the profile to an agent run or a browser you drive yourself.
+  </Card>
+  <Card title="Log in with the agent" href="/cloud/browser/authentication" icon="lock">
+    Have the agent do the first login and save the session.
+  </Card>
+</CardGroup>

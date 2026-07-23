@@ -1,84 +1,118 @@
 ---
 title: Proxies
-description: "Residential proxies in 195+ countries. On by default."
+description: "Residential proxies in 195+ countries, on by default. Set a country, disable, or bring your own."
 icon: globe
 ---
 
-A US residential proxy is active by default on every browser. To route through a different country, set `proxy_country_code`. See the [API reference](/cloud/api-v3/browsers/create-browser-session) for all supported country codes.
+Every browser routes through a **US residential proxy by default** — no setup. Change the country, turn it off, or supply your own proxy. Proxy settings go on the `browser` object of a run, or on a standalone browser.
+
+## Set the country
+
+Pass a two-letter country code as `proxy_country_code`.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use import BrowserUse
 
-client = AsyncBrowserUse()
-browser = await client.browsers.create(proxy_country_code="de")
-print(browser.cdp_url)   # ws://...
-print(browser.live_url)  # debug view
+client = BrowserUse()
 
-# With an agent:
-# result = await client.run("Get the price of iPhone 16 on amazon.de", proxy_country_code="de")
+# on an agent run
+run = client.agents.browser_use.run(
+    task="Get the price of the iPhone 16 on amazon.de",
+    browser={"proxy_country_code": "de"},
+)
+
+# or on a standalone browser
+browser = client.browsers.create(proxy_country_code="de")
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use";
 
 const client = new BrowserUse();
-const browser = await client.browsers.create({ proxyCountryCode: "de" });
-console.log(browser.cdpUrl);
-console.log(browser.liveUrl);
 
-// With an agent:
-// const result = await client.run("Get the price of iPhone 16 on amazon.de", { proxyCountryCode: "de" });
+const run = await client.agents.browserUse.run({
+  task: "Get the price of the iPhone 16 on amazon.de",
+  browser: { proxy_country_code: "de" },
+});
+
+const browser = await client.browsers.create({ proxy_country_code: "de" });
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Get the iPhone 16 price on amazon.de", "browser": {"proxy_country_code": "de"}}'
 ```
 </CodeGroup>
 
-## Disable proxies
+195+ countries are supported. Common codes: `us`, `gb`, `de`, `fr`, `jp`, `br`, `in`, `au`, `ca`. See [Geo-scraping](/cloud/browser/geo-scraping) for region-locked content.
 
-If your use case does not need proxies, for example QA testing.
+## Disable the proxy
 
-<CodeGroup>
-```python Python
-browser = await client.browsers.create(proxy_country_code=None)
-
-# With an agent:
-# result = await client.run("Go to http://localhost:3000", proxy_country_code=None)
-```
-```typescript TypeScript
-const browser = await client.browsers.create({ proxyCountryCode: null });
-
-// With an agent:
-// const result = await client.run("Go to http://localhost:3000", { proxyCountryCode: null });
-```
-</CodeGroup>
-
-## Custom proxy
-
-Bring your own proxy server (HTTP or SOCKS5).
+For local targets or QA where you don't need one, set it to `null`.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-browser = await client.browsers.create(
-    custom_proxy={
-        "host": "proxy.example.com",
-        "port": 8080,
-        "username": "user",
-        "password": "pass",
-    },
+run = client.agents.browser_use.run(
+    task="Go to http://localhost:3000 and check the page loads",
+    browser={"proxy_country_code": None},
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-const browser = await client.browsers.create({
-  customProxy: {
-    host: "proxy.example.com",
-    port: 8080,
-    username: "user",
-    password: "pass",
-  },
+const run = await client.agents.browserUse.run({
+  task: "Go to http://localhost:3000 and check the page loads",
+  browser: { proxy_country_code: null },
 });
 ```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Check http://localhost:3000 loads", "browser": {"proxy_country_code": null}}'
+```
 </CodeGroup>
+
+## Blocked? Get a fresh IP
+
+Browser Use does not rotate the IP within a running browser. When a site starts blocking you, stop the browser and create a new one — each browser gets a fresh residential IP from the country pool automatically.
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+
+# Stop-and-recreate is how you get a new IP; reattach a profile to keep login state.
+client.browsers.stop(old_browser.id)
+browser = client.browsers.create(proxy_country_code="us", browser_profile_id="bp_123")
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/browsers/br_old/stop \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+
+curl -X POST https://api.browser-use.com/api/v1/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"proxy_country_code": "us", "browser_profile_id": "bp_123"}'
+```
+</CodeGroup>
+
+- **New browser = new IP.** Recreating the browser is the supported way to rotate.
+- **Keep your login across the rotation** by passing the same [`browser_profile_id`](/cloud/use-a-profile) — the fresh IP loads the saved cookies and localStorage.
+- **Switch country** (`proxy_country_code`) to leave a blocked regional pool entirely.
+- **Custom proxies** can rotate per request on their side — use a [custom proxy](/cloud/browser/custom-proxy) with a rotating endpoint.
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Geo-scraping" href="/cloud/browser/geo-scraping" icon="earth-americas">
+    Route through a country to see region-locked prices, catalogs, and content.
+  </Card>
+  <Card title="Custom proxy" href="/cloud/browser/custom-proxy" icon="server">
+    Bring your own HTTP or SOCKS5 proxy.
+  </Card>
+</CardGroup>
+
+## Further reading
+
+- [We stealth benchmarked every major cloud browser provider](https://browser-use.com/posts/stealth-benchmark) — how proxy quality affects bypass rates

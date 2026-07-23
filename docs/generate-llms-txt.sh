@@ -222,18 +222,19 @@ CLOUD_FULL="$SCRIPT_DIR/llms-full.txt"
 
 # Header
 cat > "$CLOUD_INDEX" << 'HEADER'
-# Browser Use Cloud SDK
+# Browser Use Cloud
 
-> Browser Use Cloud is a managed API for AI browser automation. Send a natural-language task, get structured results back. SDKs for Python and TypeScript. Always use API v3 — v2 is legacy and uses different method names. Auth via `X-Browser-Use-API-Key` header (keys start with `bu_`).
+> Browser Use Cloud is a managed API for AI browser automation. You run **agents** that use a real browser. Send a task in plain language, get the result back. Two agents: `browser-use` (browser tasks — fast, OSS) and `browsercode` (code + browser — data processing, multi-step work). One base URL: `https://api.browser-use.com/api/v1`. Auth via `X-Browser-Use-API-Key` header (keys start with `bu_`).
 
 - Dashboard: https://cloud.browser-use.com
 - Create API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Docs: https://docs.browser-use.com
-- OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
-- Chat UI example: https://docs.browser-use.com/cloud/tutorials/chat-ui — Full end-to-end example with live browser, streaming, auth. Best starting point to build a prototype.
-- Open-source repo: https://github.com/browser-use/browser-use — The open-source Python library. Note: the open-source API is different from the Cloud SDK. If you want the easiest path to production with managed infrastructure, use the Cloud SDK below.
+- Agent registry (which agent to use, machine-readable): GET https://api.browser-use.com/api/v1/agents
+- Open-source repo: https://github.com/browser-use/browser-use — The open-source Python library. Note: the open-source API is different from the Cloud API. For the easiest path to production with managed infrastructure, use the Cloud API below.
 
-**Always use v3.** v2 is legacy with different method names and should not be used for new projects.
+**Use `/api/v1`.** The older `/api/v2`, `/api/v3`, `/api/v4` surfaces are legacy — they keep working for existing integrations but should not be used for new projects. See the "Legacy" section.
+
+**The model:** you only ever create **runs** (`POST /api/v1/agents/{agent}/runs`). A run provisions its own browser and returns a `session_id` (pass it back to continue) and a `workspace_id` (for files). You do not create sessions or workspaces yourself on the normal path.
 
 Before writing code, check if `browser-use-sdk` is already installed. If so, upgrade to the latest version. If not, install it:
 - Python: `pip install --upgrade browser-use-sdk`

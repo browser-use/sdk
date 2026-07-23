@@ -1,0 +1,30 @@
+---
+title: Legacy APIs (v2, v3, v4)
+description: "Older API versions, kept working for backwards compatibility. New projects should use the unified /api/v1."
+icon: box-archive
+---
+
+<Warning>
+**These APIs are legacy.** They keep working — existing integrations will not break — but new projects should build on the unified [`/api/v1`](/cloud/quickstart). The v2/v3/v4 surfaces are frozen and will be sunset over time.
+</Warning>
+
+## What changed
+
+The old API versioned the *whole* surface (v2 → v3 → v4), so every improvement forced a migration. `/api/v1` versions only the *agent* — platform resources (browsers, profiles, files, billing) are stable and shared, and each agent versions itself internally. See [Quickstart](/cloud/quickstart) and [Choose an agent](/cloud/choose-an-agent).
+
+## Where old things live now
+
+| Legacy | Unified `/api/v1` |
+| --- | --- |
+| `POST /api/v2/tasks`, `POST /api/v3/sessions` (the browser agent) | [`POST /api/v1/agents/browser-use/runs`](/cloud/run-a-task) |
+| `POST /api/v4/sessions` (the code + browser agent) | [`POST /api/v1/agents/browsercode/runs`](/cloud/run-a-task) |
+| v2/v3/v4 session file handling | [Files](/cloud/files) (one workspace model, all agents) |
+| v2 `keep_alive` / session-as-browser | automatic [browser lifecycle](/cloud/manage-browser) — no flag |
+| PATCH-to-stop a browser | [`POST /stop`](/cloud/stop-a-run) everywhere |
+
+## Reference
+
+The full endpoint reference for each legacy version is under the **Legacy API v4 / v3 / v2** tabs. Use them only to maintain an existing integration.
+
+- **Skills** stay on `/api/v2/skills` — still supported, unchanged.
+- **Backwards compatibility:** your existing `/api/v2`, `/api/v3`, `/api/v4` calls continue to work. Migrate to `/api/v1` when convenient, not urgently.

@@ -1,0 +1,27 @@
+---
+title: Open-source agent on the cloud
+description: "The cloud browser-use agent is the open-source agent, hosted — same agent, same models, running on stealth browsers."
+icon: github
+---
+
+The `browser-use` agent you run on the cloud **is the [open-source browser-use agent](https://github.com/browser-use/browser-use)** — the same agent, hosted for you. Same behavior, and you can run the exact same models. The difference is where it runs: on the cloud it drives our [stealth browsers](/cloud/browser/stealth) — hardened Chromium with randomized fingerprints, automatic [CAPTCHA solving](/cloud/browser/captcha), and residential proxies — so it gets past the bot detection that blocks a local Chromium.
+
+One call, no infrastructure:
+
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "List the top 5 posts on Hacker News with their points"}'
+```
+
+## Self-host or cloud?
+
+| | Self-hosted (open source) | Cloud |
+| --- | --- | --- |
+| **Agent** | browser-use | The same browser-use |
+| **Setup** | Your machines, your browser, your keys | None — one API call |
+| **Browser** | Whatever you run locally | Stealth browsers: anti-fingerprinting, CAPTCHA solving, residential proxies |
+| **Logins** | Manage your own browser state | [Profiles](/cloud/create-profile) — saved login state by id |
+
+Self-host when you want full control on your own infra. Use the cloud when you want the same agent with zero setup and browsers that don't get blocked — see [Stealth](/cloud/browser/stealth).

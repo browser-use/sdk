@@ -13,7 +13,7 @@ Install: `pip install browser-use`
 - [Human Quickstart](https://docs.browser-use.com/open-source/quickstart): Install and run your first AI browser agent in minutes. Python setup with pip, environment variables, and a working example.
 - [Prompts for Vibecoders](https://docs.browser-use.com/open-source/vibecoding): Complete Python SDK reference for AI coding agents. Paste into Claude Code, Cursor, or Copilot for instant integration.
 - [Supported Models](https://docs.browser-use.com/open-source/supported-models): Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider.
-- [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli): Fast, persistent browser automation from the command line.
+- [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli): Direct browser control for coding agents.
 - [Browser Use Terminal](https://docs.browser-use.com/open-source/browser-use-terminal): Use the terminal app for browser agents, or use the same runtime from Python.
 
 ## Agent
@@ -63,6 +63,15 @@ Install: `pip install browser-use`
 - [Vibetest-Use (Automated QA)](https://docs.browser-use.com/open-source/examples/apps/vibetest-use): Run multi-agent Browser-Use tests to catch UI bugs, broken links, and accessibility issues before they ship.
 - [News-Use (News Monitor)](https://docs.browser-use.com/open-source/examples/apps/news-use): Monitor news websites and extract articles with sentiment analysis using browser agents and Google Gemini.
 - [Msg-Use (WhatsApp Sender)](https://docs.browser-use.com/open-source/examples/apps/msg-use): AI-powered WhatsApp message scheduler using browser agents and Gemini. Schedule personalized messages in natural language.
+
+## Skills
+- [Overview](https://docs.browser-use.com/open-source/examples/skills/overview): Install Browser Use as an agent skill. Drop browser automation, cloud, QA, and payments into Claude Code, Cursor, and any agent that supports SKILL.md.
+- [browser-use](https://docs.browser-use.com/open-source/examples/skills/browser-use): Automates browser interactions for web testing, form filling, screenshots, and data extraction. Use when the agent needs to navigate websites, interact with web pages, fill forms, take screenshots, or extract information.
+- [cloud](https://docs.browser-use.com/open-source/examples/skills/cloud): Documentation reference for using Browser Use Cloud — the hosted API and SDK for browser automation.
+- [open-source](https://docs.browser-use.com/open-source/examples/skills/open-source): Documentation reference for writing Python code using the browser-use open-source library.
+- [qa](https://docs.browser-use.com/open-source/examples/skills/qa): QA-test a website or web app and return a 1–5 quality score (5 = flawless, 1 = broken) with evidence.
+- [remote-browser](https://docs.browser-use.com/open-source/examples/skills/remote-browser): Controls a local browser from a sandboxed remote machine. Use when the agent runs in a sandbox (no GUI) and needs to navigate, interact, screenshot, or expose local dev servers via tunnels.
+- [x402](https://docs.browser-use.com/open-source/examples/skills/x402): Set up Browser Use Cloud payments with x402 — pay per request from a crypto wallet (USDC on Base mainnet), no signup or API key.
 
 ## Development
 - [Get Help](https://docs.browser-use.com/open-source/development/get-help): Get help — join 20k+ developers on Discord, search GitHub issues, or ask the community.

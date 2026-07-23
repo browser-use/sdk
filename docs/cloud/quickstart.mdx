@@ -1,68 +1,127 @@
 ---
-title: Quick start
-description: "State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure."
+title: Quickstart
+description: "Run your first browser task in under a minute. Send a task, get the result back."
 icon: rocket
 ---
 
-## 1. Install
+Browser Use Cloud runs AI agents that use a real browser. You send a task in plain language; an agent does it and returns the result. Managed infrastructure — stealth browsers ([81% stealth benchmark](/cloud/browser/stealth), [93% Cloudflare CAPTCHA solve rate](/cloud/browser/captcha)), proxies — no setup.
 
-<CodeGroup>
-```bash Python
-pip install browser-use-sdk
-```
-```bash TypeScript
-npm install browser-use-sdk
-```
-</CodeGroup>
+<Note>
+**Cloud vs library:** this is the **hosted cloud platform** — everything here happens on our infrastructure via an API key, including the hosted [open-source agent](/cloud/open-source-agent). If you want the local Python library (`pip install browser-use`, runs a browser on your machine, needs your own LLM key), that's the [open-source docs](/open-source) — a different product surface.
+</Note>
 
-Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then:
+## 1. Get an API key
+
+Create one in one click at [cloud.browser-use.com](https://cloud.browser-use.com/settings?tab=api-keys&new=1). Keys start with `bu_`.
 
 ```bash
-export BROWSER_USE_API_KEY=your_key
+export BROWSER_USE_API_KEY=bu_your_key_here
 ```
 
-## 2. Run your first task
+## 2. Pick an agent, run a task
+
+There are **two agents**: `browser-use` (the default — fast, cheap, right for most browser tasks) and `browsercode` (code + terminal + browser, for long-horizon or data-processing work). If in doubt, use `browser-use`; see [Choose an agent](/cloud/choose-an-agent).
 
 <CodeGroup>
 ```python Python
-import asyncio
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use import BrowserUse
 
-async def main():
-    client = AsyncBrowserUse()
-    result = await client.run("List the top 20 posts on Hacker News today with their points")
-    print(result.output)
-
-asyncio.run(main())
+client = BrowserUse()  # reads BROWSER_USE_API_KEY
+run = client.agents.browser_use.run(
+    task="List the top 5 posts on Hacker News with their points",
+)
+print(run.result)   # the answer, as a string
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use";
 
-const client = new BrowserUse();
-const result = await client.run("List the top 20 posts on Hacker News today with their points");
-console.log(result.output);
+const client = new BrowserUse(); // reads BROWSER_USE_API_KEY
+const run = await client.agents.browserUse.run({
+  task: "List the top 5 posts on Hacker News with their points",
+});
+console.log(run.result); // the answer, as a string
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "List the top 5 posts on Hacker News with their points"}'
 ```
 </CodeGroup>
 
-Want a full working app? Check out the [Chat UI example](/cloud/tutorials/chat-ui).
+The SDK `run()` starts the run and waits for it to finish, then returns the result. The raw `curl` call returns immediately with a run `id` and `status: "running"` — poll [`GET /agents/browser-use/runs/{id}`](/cloud/watch-a-run) until `status` is `completed`, then read `result`.
 
-## Agent vs Browser
+<Note>
+**Where's the answer?** Every completed run has a **`result`** string — the plain-language answer. That's what you read on the golden path. The separate **`output`** field is reserved for structured output and is `null` today — to get typed data now, describe the exact JSON shape you want in the `task` text and parse `result`. Large or file-shaped output from `browsercode` comes back as [files](/cloud/files), not in either field.
+</Note>
 
-| | **Agent** | **Browser** |
-|---|---|---|
-| **Method** | `sessions.create()` / `run()` | `browsers.create()` |
-| **What it does** | AI agent runs your task | Raw browser via CDP |
-| task | ✓ | — |
-| model | ✓ | — |
-| proxy | ✓ | ✓ |
-| custom_proxy | ✓ | ✓ |
-| profile_id | ✓ | ✓ |
-| recording | ✓ | ✓ |
-| workspace_id | ✓ | — |
-| keep_alive | ✓ | — |
-| screen size | — | ✓ |
-| timeout | — | ✓ |
+## Or: spin up a browser instead
+
+Agents and browsers are independent entry points — you don't need an agent run to get a browser. Create one directly and drive it yourself over CDP:
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+browser = client.browsers.create()
+print(browser.cdp_url)   # connect Playwright/Puppeteer here
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use";
+
+const client = new BrowserUse();
+const browser = await client.browsers.create();
+console.log(browser.cdpUrl); // connect Playwright/Puppeteer here
+```
+```bash curl
+curl -X POST https://api.browser-use.com/api/v1/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+</CodeGroup>
+
+See [Create a browser](/cloud/create-browser) for options, or [connect your framework](/cloud/browser/playwright-puppeteer-selenium) (Playwright, Puppeteer, Selenium).
+
+## The whole platform in one picture
+
+You run **agents**. Agents use **browsers** (and their saved logins) and **files**. You only ever create runs — everything else is created for you and handed back as ids you can reuse.
+
+| You have | What it is |
+| --- | --- |
+| **Agents** | The things you run. Two of them: **`browser-use`** (browser tasks — fast, OSS) and **`browsercode`** (code + browser — data processing, multi-step work). See [Choose an agent](/cloud/choose-an-agent). |
+| **Browsers** | The browser an agent drives. A run provisions one automatically — or [create one yourself](/cloud/create-browser) and drive it directly over CDP. |
+| **Browser profiles** | Saved login / cookie state. [Create one](/cloud/create-profile), pass its id into a run to start logged-in. |
+| **Files** | Attach files to a run and get output files back. See [Files](/cloud/files). |
+
+<Note>
+There is no separate "create a session" or "create a workspace" step. A run mints a `sessionId` (for follow-ups) and returns it — pass it back to continue. Files live on the conversation automatically; you never handle a workspace id. (A named workspace exists only to share files across *different* conversations — advanced, see [Files](/cloud/files).)
+</Note>
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Choose an agent" href="/cloud/choose-an-agent" icon="signpost">
+    browser-use vs browsercode — or let your LLM route automatically.
+  </Card>
+  <Card title="Run a task" href="/cloud/run-a-task" icon="play">
+    The full run API: options, browser settings, structured output.
+  </Card>
+  <Card title="Continue a task" href="/cloud/continue-a-task" icon="arrow-right">
+    Follow-ups — pass a session id to keep going.
+  </Card>
+  <Card title="Files" href="/cloud/files" icon="folder">
+    Attach files to a run, get output files back.
+  </Card>
+  <Card title="Create a browser" href="/cloud/create-browser" icon="window">
+    A standalone cloud browser you drive yourself.
+  </Card>
+  <Card title="Connect Playwright" href="/cloud/browser/playwright-puppeteer-selenium" icon="code">
+    Point Playwright, Puppeteer, or Selenium at a cloud browser.
+  </Card>
+</CardGroup>
 
 ---
 
-If you are an LLM, read/include [docs.browser-use.com/llms-full.txt](https://docs.browser-use.com/llms-full.txt) — it contains the complete SDK reference with all code examples in a single file optimized for LLMs. For a shorter index: [docs.browser-use.com/llms.txt](https://docs.browser-use.com/llms.txt).
+If you are an LLM: start at [`/llms.txt`](https://docs.browser-use.com/llms.txt) for the page index. Every task below has a complete, copy-pasteable example.

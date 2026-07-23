@@ -1,19 +1,36 @@
 ---
-title: Introduction Stealth
+title: Stealth
 description: "Best stealth on the planet. We fork Chromium to give agents access to all websites."
 icon: mask
 ---
 
 See [how we perform in the hardest stealth benchmark](https://browser-use.com/posts/stealth-benchmark).
 
+<Frame caption="Stealth benchmark — success rate on high-security sites, Browser Use vs other cloud browsers">
+  <img src="/cloud/images/stealth-benchmark.png" style={{ borderRadius: '0.5rem' }} alt="Stealth benchmark bar chart: Browser Use 81%, Anchor 77%, Onkernel 67%, Browserless 54%, Headful 49%, Steel 47%, Browserbase 42%, Hyperbrowser 40%, Headless 2%" />
+</Frame>
+
+Browser Use lands **81%** — ahead of every other cloud browser, and far above a plain headless browser (2%).
+
+We get there by forking Chromium rather than patching detection signals with stealth plugins, so the signals never appear in the first place. [Here's why that approach holds up as anti-bot systems tighten](https://browser-use.com/posts/bot-detection).
+
 ## What's included
 
-Every cloud browser session runs in a hardened Chromium fork with stealth enabled by default — no configuration needed.
+Every cloud browser runs in a hardened Chromium fork with stealth enabled by default — no configuration needed. [Create a browser](/cloud/create-browser) and it is already on; agent runs get the same browser automatically.
 
-- **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and other browser fingerprints are randomized per session to appear as a real user. Passes CreepJS, BrowserLeaks, and other fingerprint detectors.
+- **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and other browser fingerprints are randomized per browser to appear as a real user. Passes CreepJS, BrowserLeaks, and other fingerprint detectors.
 - **Ad and cookie banner blocking** — Banners are dismissed automatically so the agent sees clean pages and executes faster.
 - **Cloudflare / anti-bot bypass** — Works on sites protected by Cloudflare, PerimeterX, and other bot detection services.
 
+Stealth keeps most challenges from ever appearing. When one does, it is solved automatically — see [CAPTCHA solving](/cloud/browser/captcha) for per-vendor success rates.
+
 ## Residential proxies
 
-Residential proxies are enabled by default across 195+ countries. This makes browser sessions appear as real users from the target geography. See [Proxies](/cloud/browser/proxies) for details on geo-targeting and custom proxy configuration.
+Residential proxies are enabled by default across 195+ countries. This makes browsers appear as real users from the target geography. See [Proxies](/cloud/browser/proxies) for details on geo-targeting and custom proxy configuration.
+
+## Further reading
+
+- [Benchmarks](https://browser-use.com/benchmarks) — 84.8% on BrowserBench and 81% bypass on high-security sites, against other providers
+- [We stealth benchmarked every major cloud browser provider](https://browser-use.com/posts/stealth-benchmark)
+- [Browser agent bot detection is about to change](https://browser-use.com/posts/bot-detection)
+- [Stealth Browser Infrastructure](https://browser-use.com/posts/browser-infra)

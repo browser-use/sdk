@@ -1,0 +1,62 @@
+---
+title: Authentication
+description: "Log into websites and stay logged in. Save login state once in a profile, reuse it on every run."
+icon: key
+---
+
+To do anything behind a login — check email, post to a dashboard, pull data from an account — the browser needs to be authenticated. A **browser profile** saves that login state (cookies, sessions) so you log in once and reuse it forever.
+
+There are two ways to get a logged-in profile: **let the agent log in**, or **sync your existing local logins**.
+
+## Option 1 — the agent logs in with your credentials
+
+Create a profile, then have the agent log in inside it. The session is saved back to the profile.
+
+<CodeGroup>
+```python Python
+from browser_use import BrowserUse
+
+client = BrowserUse()
+
+# 1. create a profile to hold the login
+profile = client.browser_profiles.create(name="my-gmail")
+
+# 2. log in once (the profile now remembers it)
+client.agents.browser_use.run(
+    task="Log into gmail.com with email me@example.com and password ...",
+    browser={"profile_id": profile.id},
+)
+
+# 3. reuse forever — already logged in
+run = client.agents.browser_use.run(
+    task="Summarize my unread emails",
+    browser={"profile_id": profile.id},
+)
+print(run.output)
+```
+```bash curl
+# reuse the profile on any run
+curl -X POST https://api.browser-use.com/api/v1/agents/browser-use/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Summarize my unread emails", "browser": {"profile_id": "bp_123"}}'
+```
+</CodeGroup>
+
+<Warning>
+Prefer not to send raw passwords in a task? [Sync your existing browser logins](/cloud/browser/sync-cookies) instead — no credentials in the request.
+</Warning>
+
+## Option 2 — sync your existing logins
+
+If you're already logged into these sites in your own browser, sync those cookies into a profile — no passwords, no re-login. See [Sync cookies](/cloud/browser/sync-cookies).
+
+## Two-factor authentication (2FA)
+
+For accounts with 2FA, the agent can pause and hand control to you to complete the challenge, then continue.
+
+## How it fits together
+
+- A **profile** is standalone, project-owned login state — [create and manage it](/cloud/create-profile).
+- Pass `browser_profile_id` into any **run** (or standalone [browser](/cloud/create-browser)) to start logged in.
+- One profile per identity you automate (my-gmail, my-linkedin, …); reuse across as many runs as you like.

@@ -38,3 +38,15 @@ docs/.mintlify/
 # Personal notes
 reagan_*
 .pnpm-store
+drafts/
+mock/app.py
+mock/models.py
+mock/test_contract.py
+mock/pressure_*.md
+mock/pressure_scenarios.md
+mock/sync.sh
+mock/README.md
+
+# agent harness state
+.harness/
+.omc/
