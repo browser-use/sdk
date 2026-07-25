@@ -57,6 +57,10 @@ class Sessions:
             self._http.request("GET", f"/sessions/{session_id}")
         )
 
+    def purge(self, session_id: str | UUID) -> None:
+        """Immediately purge all session data. Available to ZDR projects only."""
+        self._http.request("POST", f"/sessions/{session_id}/purge")
+
     def send_message(
         self,
         session_id: str | UUID,
@@ -119,6 +123,10 @@ class AsyncSessions:
         return SessionInfo.model_validate(
             await self._http.request("GET", f"/sessions/{session_id}")
         )
+
+    async def purge(self, session_id: str | UUID) -> None:
+        """Immediately purge all session data. Available to ZDR projects only."""
+        await self._http.request("POST", f"/sessions/{session_id}/purge")
 
     async def send_message(
         self,

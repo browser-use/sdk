@@ -1,15 +1,14 @@
 # Browser Use Cloud SDK
 
-> Browser Use Cloud is a managed API for AI browser automation. Send a natural-language task, get structured results back. SDKs for Python and TypeScript. Always use API v3 — v2 is legacy and uses different method names. Auth via `X-Browser-Use-API-Key` header (keys start with `bu_`).
+> Browser Use Cloud is a managed API for AI browser automation. Send a natural-language task and get a completed run back. SDKs for Python and TypeScript. Use API v4 for new agent integrations. Auth via `X-Browser-Use-API-Key` header (keys start with `bu_`).
 
 - Dashboard: https://cloud.browser-use.com
 - Create API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Docs: https://docs.browser-use.com
-- OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
-- Chat UI example: https://docs.browser-use.com/cloud/tutorials/chat-ui — Full end-to-end example with live browser, streaming, auth. Best starting point to build a prototype.
+- OpenAPI spec (v4): https://docs.browser-use.com/cloud/openapi/v4.json
 - Open-source repo: https://github.com/browser-use/browser-use — The open-source Python library. Note: the open-source API is different from the Cloud SDK. If you want the easiest path to production with managed infrastructure, use the Cloud SDK below.
 
-**Always use v3.** v2 is legacy with different method names and should not be used for new projects.
+**Use v4 for agent runs.** V2 is legacy. Standalone browser and profile SDK resources remain in their documented namespace.
 
 Before writing code, check if `browser-use-sdk` is already installed. If so, upgrade to the latest version. If not, install it:
 - Python: `pip install --upgrade browser-use-sdk`
@@ -23,18 +22,17 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## Get Started
 - [Quick start](https://docs.browser-use.com/cloud/quickstart): State-of-the-art AI browser automation with stealth browsers, CAPTCHA solving, residential proxies, and managed infrastructure.
-- [Agent Sign Up for Browser Use](https://docs.browser-use.com/cloud/agent-signup): How an AI agent can complete the Browser Use agent challenge to get a free account and API key.
 - [Prompt for Vibecoders](https://docs.browser-use.com/cloud/vibecoding): Complete Cloud SDK reference for AI coding agents.
 
 ## Agent
-- [Introduction](https://docs.browser-use.com/cloud/agent/quickstart): Easiest way to automate the web. Tell this agent in natural language what it should do, and it can interact with the web like a human.
-- [Models](https://docs.browser-use.com/cloud/agent/models): Choose the right model for your task.
-- [Structured output](https://docs.browser-use.com/cloud/agent/structured-output): Get validated, typed data back from agent tasks.
-- [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks): Run multiple tasks in the same browser session.
-- [Live messages](https://docs.browser-use.com/cloud/agent/streaming): Stream the agent's messages in real time to build custom UIs or monitor progress.
-- [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces): Upload files for the agent, download files the agent creates.
-- [Deterministic rerun](https://docs.browser-use.com/cloud/agent/cache-script): Run a task once, then re-execute it for $0 LLM cost.
-- [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop): Let a human interact with the live browser while the agent is running. Useful for approvals, payments, complex auth flows, or reviewing agent work before continuing.
+- [Introduction](https://docs.browser-use.com/cloud/agent/quickstart): Run a long-horizon browser agent with one task and a few lines of code.
+- [Models](https://docs.browser-use.com/cloud/agent/models): Choose a V4 model and understand its token pricing.
+- [Structured output](https://docs.browser-use.com/cloud/agent/structured-output): Ask for JSON, then validate the V4 run result in your application.
+- [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks): Continue the same V4 conversation, workspace, and browser.
+- [Live messages](https://docs.browser-use.com/cloud/agent/streaming): Poll V4 run events incrementally to monitor progress or build a custom UI.
+- [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces): Give a V4 run input files and retrieve files the agent creates.
+- [Deterministic rerun](https://docs.browser-use.com/cloud/agent/cache-script): Have the agent save and test a reusable script, then run it again from the same workspace.
+- [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop): Open the V4 live browser, let a person take over, then continue the same session.
 
 ## Browser
 - [Introduction Stealth](https://docs.browser-use.com/cloud/browser/stealth): Best stealth on the planet. We fork Chromium to give agents access to all websites.
@@ -52,12 +50,19 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## Integrations
 - [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
+- [Hermes Agent](https://docs.browser-use.com/cloud/tutorials/integrations/hermes-agent): Give Hermes Agent cloud browser automation with Browser Use.
 - [MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server): Run browser automation tasks from your AI coding assistant. Connect to Claude, Cursor, Windsurf, or any MCP client.
 - [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks): Receive real-time notifications when tasks complete. Configure webhook endpoints for async task monitoring.
+- [x402 (pay-per-request)](https://docs.browser-use.com/cloud/guides/x402): Pay for Browser Use Cloud with crypto (USDC on Base). ~30 seconds from wallet to first request.
 - [n8n](https://docs.browser-use.com/cloud/tutorials/integrations/n8n): Use Browser Use as an HTTP node in n8n workflows.
+
+## Anthropic
+- [Claude Code](https://docs.browser-use.com/cloud/tutorials/integrations/claude-code): Give Claude Code cloud browser automation with Browser Use.
+- [Claude Managed Agents](https://docs.browser-use.com/cloud/tutorials/integrations/claude-managed-agents): Give Anthropic's Claude Managed Agents a stealth cloud browser via the Browser Use CLI.
 
 ## Tutorials
 - [Chat UI](https://docs.browser-use.com/cloud/tutorials/chat-ui): Full end-to-end example. Build a chat UI with live browser preview, follow-up tasks, recording, and streaming messages.
+- [Agent Sign Up for Browser Use](https://docs.browser-use.com/cloud/agent-signup): How the Browser Use agent challenge lets an AI agent create a free account and API key.
 - [Grow Therapy provider search](https://docs.browser-use.com/cloud/tutorials/grow-therapy-compare): Search Grow Therapy for therapists by location, insurance, and specialty — with cached reruns.
 
 ## Legacy (v2)
@@ -67,70 +72,11 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password): Auto-fill passwords and TOTP codes from 1Password during agent tasks.
 - [Secrets](https://docs.browser-use.com/cloud/guides/secrets): Pass domain-scoped credentials to the agent securely.
 
+## API v4
+- [API Reference](https://docs.browser-use.com/cloud/api-v4-overview): Authenticate and start using the Browser Use API v4 — the current REST API for long-horizon agents.
+
 ## API v3
 - [API Reference](https://docs.browser-use.com/cloud/api-reference): Authenticate and start using the Browser Use REST API.
 
 ## API v2
 - [API key](https://docs.browser-use.com/cloud/api-v2-overview): Set your API key to access the Browser Use v2 REST API.
-
-## Browser Use Agent Challenge to Get a Free Account
-
-AI agents can create a free Browser Use account autonomously via a challenge-response flow at `https://api.browser-use.com`.
-
-Do this to get an API key (no human required):
-1. `POST https://api.browser-use.com/cloud/signup` — request a challenge.
-
-Request body, optional (include a user email/name if available):
-```json
-{
-  "email": "user@example.com",
-  "name": "User Name"
-}
-```
-
-Response:
-```json
-{
-  "challenge_id": "uuid",
-  "challenge_text": "..."
-}
-```
-
-2. Solve the math problem in `challenge_text` — answer as a string with 2 decimal places, e.g. `"144.00"`
-
-3. `POST https://api.browser-use.com/cloud/signup/verify` with `challenge_id` + `answer`.
-
-Request body:
-```json
-{
-  "challenge_id": "uuid",
-  "answer": "144.00"
-}
-```
-
-Response:
-```json
-{
-  "api_key": "bu_..."
-}
-```
-
-4. Use `X-Browser-Use-API-Key: bu_...` on Browser Use Cloud API requests. For example, create a browser session (docs: https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session):
-
-```bash
-curl -X POST https://api.browser-use.com/api/v3/browsers \
-  -H "X-Browser-Use-API-Key: bu_..." \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-To let a human claim the account later: `POST https://api.browser-use.com/cloud/signup/claim` with `X-Browser-Use-API-Key: bu_...`.
-
-Response:
-```json
-{
-  "claim_url": "https://..."
-}
-```
-
-The claim URL is valid for 1 hour.

@@ -1,18 +1,18 @@
 ---
 title: Structured output
-description: "Get validated, typed data back from agent tasks."
+description: "Ask for JSON, then validate the V4 run result in your application."
 icon: table
 ---
 
-Pass a Pydantic model (Python) or Zod schema (TypeScript) — `result.output` is automatically validated and converted to the typed object.
+V4 returns the agent's final answer as a string in `run.result`. Ask the agent for JSON only, then validate it with Pydantic or Zod in your application.
 
 <Note>
-  TypeScript requires **Zod v4** (`npm install zod@4`). Zod v3 is not compatible.
+  V4 does not currently accept an `output_schema` / `outputSchema` request field. Validation happens client-side.
 </Note>
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 from pydantic import BaseModel
 
 class Post(BaseModel):
@@ -24,34 +24,46 @@ class HNPosts(BaseModel):
     posts: list[Post]
 
 client = AsyncBrowserUse()
-result = await client.run(
-    "List the top 20 posts on Hacker News today with their points",
-    output_schema=HNPosts,
+created = await client.runs.create(
+    """
+    List the top 20 Hacker News posts.
+    Return JSON only in this shape:
+    {"posts": [{"name": "string", "points": 0, "comments": 0}]}
+    """
 )
-for post in result.output.posts:
-    print(f"{post.name} ({post.points} pts, {post.comments} comments)")
+run = await client.runs.wait_for_completion(created.id)
+posts = HNPosts.model_validate_json(run.result or "{}")
+
+for post in posts.posts:
+    print(f"{post.name} ({post.points} pts)")
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 import { z } from "zod";
 
-const Post = z.object({
-  name: z.string(),
-  points: z.number(),
-  comments: z.number(),
-});
-
 const HNPosts = z.object({
-  posts: z.array(Post),
+  posts: z.array(z.object({
+    name: z.string(),
+    points: z.number(),
+    comments: z.number(),
+  })),
 });
 
 const client = new BrowserUse();
-const result = await client.run(
-  "List the top 20 posts on Hacker News today with their points",
-  { schema: HNPosts },
-);
-for (const post of result.output.posts) {
-  console.log(`${post.name} (${post.points} pts, ${post.comments} comments)`);
+const created = await client.runs.create({
+  task: `
+    List the top 20 Hacker News posts.
+    Return JSON only in this shape:
+    {"posts": [{"name": "string", "points": 0, "comments": 0}]}
+  `,
+});
+const run = await client.runs.waitForCompletion(created.id);
+const posts = HNPosts.parse(JSON.parse(run.result ?? "{}"));
+
+for (const post of posts.posts) {
+  console.log(`${post.name} (${post.points} pts)`);
 }
 ```
 </CodeGroup>
+
+For strict production flows, handle JSON parse or validation failures and retry with a follow-up message that includes the validation error.

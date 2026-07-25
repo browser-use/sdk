@@ -1,52 +1,74 @@
 ---
 title: Follow-up tasks
-description: "Run multiple tasks in the same browser session."
+description: "Continue the same V4 conversation, workspace, and browser."
 icon: list-check
 ---
 
-When you pass a `session_id`, the session automatically stays alive between tasks. Each task runs a new agent that reuses the same browser — the agents don't share context, but the browser state (page, cookies, tabs) carries over.
+Every run automatically creates a session. Pass its `session_id` / `sessionId` to create an explicit follow-up turn:
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
-# Create a session, then run tasks inside it
-session = await client.sessions.create()
-
-result1 = await client.run(
-    "Go to amazon.com, search for laptops, and open the first result",
-    session_id=session.id,
+first = await client.runs.create(
+    "Go to amazon.com, search for laptops, and open the first result"
 )
-result2 = await client.run(
+first_result = await client.runs.wait_for_completion(first.id)
+
+follow_up = await client.runs.create(
     "Extract the customer reviews",
-    session_id=session.id,
+    session_id=first.session_id,
 )
-
-await client.sessions.stop(session.id)
+follow_up_result = await client.runs.wait_for_completion(follow_up.id)
+print(follow_up_result.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
 
-// Create a session, then run tasks inside it
-const session = await client.sessions.create();
-
-const result1 = await client.run("Go to amazon.com, search for laptops, and open the first result", {
-  sessionId: session.id,
+const first = await client.runs.create({
+  task: "Go to amazon.com, search for laptops, and open the first result",
 });
-const result2 = await client.run("Extract the customer reviews", {
-  sessionId: session.id,
-});
+await client.runs.waitForCompletion(first.id);
 
-await client.sessions.stop(session.id);
+const followUp = await client.runs.create({
+  task: "Extract the customer reviews",
+  sessionId: first.sessionId,
+});
+const result = await client.runs.waitForCompletion(followUp.id);
+console.log(result.result);
 ```
 </CodeGroup>
 
-`sessions.create()` returns a `live_url` you can embed to watch each task execute — see [Live preview](/cloud/browser/live-preview). To stream messages as each task runs, use `client.run()` with `for await` — see [Live messages](/cloud/agent/streaming).
+The follow-up restores the agent's conversation context and workspace. It also reuses the live browser when one is still available.
 
-<Note>
-  Sessions time out after 15 minutes of inactivity by default. The maximum session duration is 4 hours.
-</Note>
+There is no separate empty-session creation step in V4:
+
+- Omit `session_id` / `sessionId` to create a new session implicitly.
+- Pass a previous session ID to continue it explicitly.
+- Pass only `workspace_id` / `workspaceId` to start a new conversation that shares existing files.
+
+## Queue a follow-up
+
+Use `sessions.send_message()` / `sessions.sendMessage()` when a run may still be busy. The message runs immediately if the session is idle, or waits for the current run to finish.
+
+<CodeGroup>
+```python Python
+queued = await client.sessions.send_message(
+    first.session_id,
+    "Also compare the warranty options",
+)
+```
+```typescript TypeScript
+const queued = await client.sessions.sendMessage(first.sessionId, {
+  text: "Also compare the warranty options",
+});
+```
+</CodeGroup>
+
+Set `interrupt=True` / `interrupt: true` to cancel the active run and start the queued message as soon as possible. A queued response can initially have no run ID; use [Get session](/cloud/api-v4/sessions/get-session) or [List runs](/cloud/api-v4/runs/list-runs) to discover the new run once it starts.
+
+See [Queue session message](/cloud/api-v4/sessions/queue-session-message) for the full request shape.

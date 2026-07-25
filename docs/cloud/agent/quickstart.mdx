@@ -1,46 +1,46 @@
 ---
 title: Introduction
-description: "Easiest way to automate the web. Tell this agent in natural language what it should do, and it can interact with the web like a human."
+description: "Run a long-horizon browser agent with one task and a few lines of code."
 icon: rocket
 ---
 
-The SDK is a thin wrapper around the [API v3 Reference](/cloud/api-reference). Every endpoint in the API reference is available as an SDK method — `client.sessions`, `client.browsers`, `client.profiles`, `client.workspaces`, and `client.billing`.
-
-`client.run()` creates a session, polls every 2 seconds until completion (up to 4 hours), and returns the result. It accepts all parameters from the [Create Session](/cloud/api-v3/sessions/create-session) endpoint. The result is a [Session object](/cloud/api-v3/sessions/get-session) — use `result.output` for the agent's response.
+The SDK wraps the [API v4 Reference](/cloud/api-v4-overview). Create a run, wait for it to finish, then read `result`.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-result = await client.run("List the top 20 posts on Hacker News today with their points")
-print(result.output)
+created = await client.runs.create("List the top 20 Hacker News posts and their points")
+run = await client.runs.wait_for_completion(created.id)
+print(run.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const result = await client.run("List the top 20 posts on Hacker News today with their points");
-console.log(result.output);
+const created = await client.runs.create({
+  task: "List the top 20 Hacker News posts and their points",
+});
+const run = await client.runs.waitForCompletion(created.id);
+console.log(run.result);
 ```
 ```bash curl
-curl -X POST https://api.browser-use.com/api/v3/sessions \
+curl -X POST https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News today with their points"}'
+  -d '{"task": "List the top 20 Hacker News posts and their points"}'
 ```
 </CodeGroup>
 
-**What this agent can do:**
-- **Data extraction** — scrape websites with thousands of listings
-- **Form filling** — submit applications, fill out surveys, enter data
-- **Multi-step workflows** — log in, navigate, click through flows, download files
-- **Research** — search across multiple sites, compare results, summarize findings
-- **Monitoring** — monitor a website and get notified if something changes
-- **Testing** — test websites end-to-end with natural language instructions
-- **Scheduling** — schedule tasks to run on a recurring basis
-- **1,000+ integrations** — Gmail, Calendar, Notion, and more
+`runs.create()` automatically creates a session and workspace. `wait_for_completion()` / `waitForCompletion()` polls the lightweight [run status endpoint](/cloud/api-v4/runs/get-run-status), then fetches the full [run result](/cloud/api-v4/runs/get-run) once it reaches `completed`, `failed`, or `cancelled`.
 
-The best SOTA browser agent — see our [online Mind2Web benchmark](https://browser-use.com/posts/online-mind2web-benchmark).
+Use the agent for:
 
-If you are an LLM, read/include [docs.browser-use.com/llms-full.txt](https://docs.browser-use.com/llms-full.txt) — it contains the complete SDK reference with all code examples in a single file optimized for LLMs.
+- Data extraction and research across many pages
+- Form filling, downloads, and multi-step workflows
+- Authenticated work with browser profiles
+- Long-running tasks that create or consume files
+- Follow-up turns that preserve the same conversation, workspace, and live browser
+
+See [Follow-up tasks](/cloud/agent/follow-up-tasks), [Live messages](/cloud/agent/streaming), and [Workspaces & files](/cloud/agent/workspaces) for the main V4 patterns.

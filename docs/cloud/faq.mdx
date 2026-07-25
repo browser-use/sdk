@@ -6,18 +6,26 @@ icon: circle-question
 
 ## Which model should I use?
 
-- **Claude Opus 4.6** (`claude-opus-4.6`) — most capable. Use for the hardest tasks that need maximum accuracy.
-- **Claude Sonnet 4.6** (`claude-sonnet-4.6`, default) — best balance of capability and cost. Use for complex multi-step workflows.
-- **GPT-5.4 mini** (`gpt-5.4-mini`) — fast and efficient. Good for simple, well-defined tasks.
+- **Claude Opus 5** (`claude-opus-5`) — maximum intelligence for difficult, long-horizon work.
+- **GPT-5.6** (`gpt-5.6`) — fast on complex tasks.
+- **Gemini 3.5 Flash** (`gemini-3.5-flash`) — fast for simpler tasks.
+- **MiniMax M3** (`minimax-m3`, default) — cheapest for simple and high-volume tasks.
+
+See [Models](/cloud/agent/models) for the complete V4 picker and pricing.
 
 ## How do I get the live browser URL?
 
-`live_url` is returned on session creation. Embed it in an iframe or open it in a browser.
+The V4 run's `browser.ready` event contains `live_view_url`. Embed it in an iframe or open it in a browser.
 
 ```python
-session = await client.sessions.create(task="Go to example.com")
-print(session.live_url)
+created = await client.runs.create("Go to example.com")
+await client.runs.wait_for_completion(created.id)
+events = await client.runs.events(created.id, limit=100)
+ready = next(event for event in events.events if event.type == "browser.ready")
+print(ready.data["live_view_url"])
 ```
+
+Poll events until `browser.ready` appears if you need the URL while the run is still active. See [Human in the loop](/cloud/agent/human-in-the-loop) for a complete flow.
 
 ## Getting blocked by a website
 
@@ -32,21 +40,22 @@ If it still doesn't work, contact support inside the [Cloud Dashboard](https://c
 
 The SDK auto-retries 429 responses with exponential backoff. If persistent, you may need more concurrent sessions — contact support.
 
-## v2 vs v3 — which should I use?
+## v2 vs v3 vs v4 — which should I use?
 
-**v3 is the recommendation for everything.** It's a premium agent (not available in open source) that is significantly more capable than v2:
+**Use v4 for new agent integrations.** It is designed for long-horizon work:
 
-- **Much better at complex tasks** and multi-step workflows
-- **Much better at large data extraction**
-- **File system** with persistent memory across tasks
-- **Task scheduling** with 1,000+ integrations (Gmail, Slack, and more)
+- Run-focused API with a cheap status polling endpoint
+- Conversation sessions with queued and interrupting follow-ups
+- Persistent workspaces and turn-scoped file attachments
+- Incremental events for custom UIs and monitoring
+- Per-run cost totals, cost caps, and optional judgement
 
-v2 is the closest to the open-source experience — pure browser automation, nothing else. If the open source already works great for your use case, v2 is the natural fit. For everything else, use v3.
+V3 remains available for existing integrations and older features that have not moved to V4, including server-side structured-output schemas and automatic script caching. V2 is the legacy API closest to the open-source browser agent.
 
 ```python
-# v3 (recommended)
-from browser_use_sdk.v3 import AsyncBrowserUse
+# v4 (recommended for new agent runs)
+from browser_use_sdk.v4 import AsyncBrowserUse
 
-# v2 (simple browser-only tasks)
-from browser_use_sdk.v2 import AsyncBrowserUse
+# v3 (existing session-based integrations)
+from browser_use_sdk.v3 import AsyncBrowserUse as AsyncBrowserUseV3
 ```

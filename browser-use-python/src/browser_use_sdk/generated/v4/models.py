@@ -657,17 +657,15 @@ class RunBrowserSettings(BaseModel):
     )
 
 
-# POST-GEN PATCH: kimi-k3 and claude-fable-5 are omitted on purpose — they are
-# live in the API but not public yet. datamodel-codegen re-adds them from the
-# spec on every regen, so this must be re-applied after `task gen:types` until
-# the backend advertises a public model subset. (The API still accepts them;
-# this only hides them from the SDK enum.)
 class Model(Enum):
     glm_5_2 = 'glm-5.2'
     grok_4_5 = 'grok-4.5'
+    kimi_k3 = 'kimi-k3'
     minimax_m3 = 'minimax-m3'
     claude_opus_4_7 = 'claude-opus-4.7'
     claude_opus_4_8 = 'claude-opus-4.8'
+    claude_opus_5 = 'claude-opus-5'
+    claude_fable_5 = 'claude-fable-5'
     claude_sonnet_5 = 'claude-sonnet-5'
     gpt_5_5 = 'gpt-5.5'
     gpt_5_6 = 'gpt-5.6'
@@ -812,7 +810,7 @@ class ValidationError(BaseModel):
 
 
 class Name2(RootModel[str]):
-    root: str = Field(..., max_length=255, title='Name')
+    root: str = Field(..., max_length=100, title='Name')
 
 
 class WorkspaceCreateRequest(BaseModel):

@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Runs } from "../src/v4/resources/runs.js";
 import { Sessions } from "../src/v4/resources/sessions.js";
 import { Workspaces } from "../src/v4/resources/workspaces.js";
+import type { RunCreateRequest } from "../src/v4.js";
 
 const RUN_ID = "00000000-0000-0000-0000-000000000001";
 const SESSION_ID = "00000000-0000-0000-0000-000000000002";
@@ -32,6 +33,25 @@ function runSummary(status: string) {
 }
 
 describe("v4 runs.waitForCompletion", () => {
+  it("creates a run without requiring the API-defaulted model", async () => {
+    const http = {
+      post: vi.fn(async () => ({
+        id: RUN_ID,
+        sessionId: SESSION_ID,
+        workspaceId: WORKSPACE_ID,
+        status: "queued",
+      })),
+    };
+    const runs = new Runs(http as any);
+    const request: RunCreateRequest = { task: "Find the top HN post" };
+
+    await runs.create(request);
+
+    expect(http.post).toHaveBeenCalledWith("/runs", {
+      task: "Find the top HN post",
+    });
+  });
+
   it("polls status until terminal, then fetches the full run once", async () => {
     const statuses = ["queued", "running", "completed"];
     let statusCalls = 0;
@@ -161,6 +181,17 @@ describe("v4 sessions queue", () => {
       interrupt: true,
     });
     expect(msg.status).toBe("pending");
+  });
+
+  it("purges a session through the ZDR endpoint", async () => {
+    const http = {
+      post: vi.fn(async () => undefined),
+    };
+    const sessions = new Sessions(http as any);
+
+    await sessions.purge(SESSION_ID);
+
+    expect(http.post).toHaveBeenCalledWith(`/sessions/${SESSION_ID}/purge`);
   });
 
   it("lists pending queued messages", async () => {

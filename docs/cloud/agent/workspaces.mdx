@@ -1,198 +1,116 @@
 ---
 title: Workspaces & files
-description: "Upload files for the agent, download files the agent creates."
+description: "Give a V4 run input files and retrieve files the agent creates."
 icon: folder
 ---
 
-Workspaces give your agent persistent file storage. Two patterns cover almost every use case:
+Every V4 run has a workspace. You can let the API create one automatically, create one yourself, or reuse an existing workspace across otherwise independent sessions.
 
-1. **You upload a file** → agent reads it
-2. **Agent creates a file** → you download it
+## Upload and attach input files
 
-## Upload a file
+Uploading stores the file in the workspace and returns an upload ID. Pass that ID in `attached_file_ids` / `attachedFileIds` to make the file available to a specific run.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-workspace = await client.workspaces.create(name="my-workspace")
+workspace = await client.workspaces.create(name="company-research")
+uploaded = await client.workspaces.upload(workspace.id, "people.csv")
 
-# Upload
-await client.workspaces.upload(workspace.id, "people.csv")
-
-# Agent can now read it
-result = await client.run(
-    "Read people.csv and tell me who works at Google",
+created = await client.runs.create(
+    "Read the attached people.csv and tell me who works at Google",
     workspace_id=workspace.id,
+    attached_file_ids=[uploaded[0].id],
 )
-print(result.output)
+run = await client.runs.wait_for_completion(created.id)
+print(run.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const workspace = await client.workspaces.create({ name: "my-workspace" });
+const workspace = await client.workspaces.create({ name: "company-research" });
+const uploaded = await client.workspaces.upload(workspace.id, "people.csv");
 
-// Upload
-await client.workspaces.upload(workspace.id, "people.csv");
-
-// Agent can now read it
-const result = await client.run(
-  "Read people.csv and tell me who works at Google",
-  { workspaceId: workspace.id },
-);
-console.log(result.output);
+const created = await client.runs.create({
+  task: "Read the attached people.csv and tell me who works at Google",
+  workspaceId: workspace.id,
+  attachedFileIds: [uploaded[0].id],
+});
+const run = await client.runs.waitForCompletion(created.id);
+console.log(run.result);
 ```
 </CodeGroup>
 
-You can upload multiple files at once:
+You can upload up to 10 files in one helper call. A run can attach up to 20 upload IDs.
 
 <CodeGroup>
 ```python Python
-await client.workspaces.upload(workspace.id, "data.csv", "config.json", "image.png")
+uploaded = await client.workspaces.upload(
+    workspace.id,
+    "data.csv",
+    "config.json",
+    "image.png",
+)
 ```
 ```typescript TypeScript
-await client.workspaces.upload(workspace.id, "data.csv", "config.json", "image.png");
+const uploaded = await client.workspaces.upload(
+  workspace.id,
+  "data.csv",
+  "config.json",
+  "image.png",
+);
 ```
 </CodeGroup>
 
-## Download files
+<Note>
+  Attachments are turn-scoped. Reusing a workspace does not automatically attach every uploaded file to every later run.
+</Note>
+
+## Retrieve files the agent creates
+
+Ask the agent to save its output in the workspace, then list files with temporary download URLs:
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-workspace = await client.workspaces.create(name="my-workspace")
-
-# Agent creates a file
-result = await client.run(
-    "Go to Hacker News and save the top 3 posts as posts.json",
+created = await client.runs.create(
+    "Save the top three Hacker News posts as outputs/posts.json",
     workspace_id=workspace.id,
 )
+await client.runs.wait_for_completion(created.id)
 
-# Download a single file
-await client.workspaces.download(workspace.id, "posts.json", to="./posts.json")
-
-# Or download everything
-paths = await client.workspaces.download_all(workspace.id, to="./output")
-for p in paths:
-    print(f"Downloaded: {p}")
+files = await client.workspaces.files(
+    workspace.id,
+    prefix="outputs/",
+    include_urls=True,
+)
+for file in files.files:
+    print(file.path, file.url)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+const created = await client.runs.create({
+  task: "Save the top three Hacker News posts as outputs/posts.json",
+  workspaceId: workspace.id,
+});
+await client.runs.waitForCompletion(created.id);
 
-const client = new BrowserUse();
-const workspace = await client.workspaces.create({ name: "my-workspace" });
-
-// Agent creates a file
-const result = await client.run(
-  "Go to Hacker News and save the top 3 posts as posts.json",
-  { workspaceId: workspace.id },
-);
-
-// Download a single file
-await client.workspaces.download(workspace.id, "posts.json", { to: "./posts.json" });
-
-// Or download everything
-const paths = await client.workspaces.downloadAll(workspace.id, { to: "./output" });
-for (const p of paths) {
-  console.log(`Downloaded: ${p}`);
+const files = await client.workspaces.files(workspace.id, {
+  prefix: "outputs/",
+  includeUrls: true,
+});
+for (const file of files.files) {
+  console.log(file.path, file.url);
 }
 ```
 </CodeGroup>
 
-## Manage workspaces
+Download URLs expire after 60 seconds, so request them immediately before downloading. Use `cursor` / `next_cursor` (`nextCursor` in TypeScript) to paginate large workspaces.
 
-<CodeGroup>
-```python Python
-workspace = await client.workspaces.get(workspace_id)
-updated = await client.workspaces.update(workspace_id, name="renamed")
-response = await client.workspaces.list()
-for w in response.items:
-    print(w.id, w.name)
-await client.workspaces.delete(workspace_id)
-```
-```typescript TypeScript
-const workspace = await client.workspaces.get(workspaceId);
-const updated = await client.workspaces.update(workspaceId, { name: "renamed" });
-const response = await client.workspaces.list();
-for (const w of response.items) {
-  console.log(w.id, w.name);
-}
-await client.workspaces.delete(workspaceId);
-```
-</CodeGroup>
+## Reuse a workspace
 
-## Organize with prefixes
+- Pass neither ID to `runs.create()` to create a new session and workspace.
+- Pass `session_id` / `sessionId` to continue the same conversation and workspace.
+- Pass only `workspace_id` / `workspaceId` to start a fresh conversation with existing files.
 
-Use `prefix` to organize files into directories within a workspace:
-
-<CodeGroup>
-```python Python
-# Upload into a subdirectory
-await client.workspaces.upload(workspace.id, "report.pdf", prefix="reports/")
-
-# List files in a subdirectory
-files = await client.workspaces.files(workspace.id, prefix="reports/")
-for f in files.files:
-    print(f.path, f.size)
-
-# Download only files from a subdirectory
-await client.workspaces.download_all(workspace.id, to="./output", prefix="reports/")
-```
-```typescript TypeScript
-// Upload into a subdirectory
-await client.workspaces.upload(workspace.id, "report.pdf", { prefix: "reports/" });
-
-// List files in a subdirectory
-const files = await client.workspaces.files(workspace.id, { prefix: "reports/" });
-for (const f of files.files) {
-  console.log(f.path, f.size);
-}
-
-// Download only files from a subdirectory
-await client.workspaces.downloadAll(workspace.id, { to: "./output", prefix: "reports/" });
-```
-</CodeGroup>
-
-## List and delete files
-
-<CodeGroup>
-```python Python
-# List all files
-files = await client.workspaces.files(workspace.id)
-for f in files.files:
-    print(f.path, f.size)
-
-# Delete a single file
-await client.workspaces.delete_file(workspace.id, path="old-report.pdf")
-
-# Check workspace storage usage
-size = await client.workspaces.size(workspace.id)
-print(f"Used: {size.used_bytes} bytes")
-```
-```typescript TypeScript
-// List all files
-const files = await client.workspaces.files(workspace.id);
-for (const f of files.files) {
-  console.log(f.path, f.size);
-}
-
-// Delete a single file
-await client.workspaces.deleteFile(workspace.id, "old-report.pdf");
-
-// Check workspace storage usage
-const size = await client.workspaces.size(workspace.id);
-console.log(`Used: ${size.usedBytes} bytes`);
-```
-</CodeGroup>
-
-## Cloud dashboard
-
-You can also manage workspaces from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=workspaces).
-
-<Warning>
-  Deleting a workspace permanently removes all its files. This cannot be undone.
-</Warning>
+See [Upload workspace files](/cloud/api-v4/workspaces/upload-workspace-files) and [List workspace files](/cloud/api-v4/workspaces/list-workspace-files) for limits and response fields.

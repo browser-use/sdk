@@ -1110,12 +1110,7 @@ export interface components {
              * @default minimax-m3
              * @enum {string}
              */
-            // POST-GEN PATCH: "kimi-k3" and "claude-fable-5" omitted on purpose —
-            // live in the API but not public yet. openapi-typescript re-adds them
-            // from the spec on every regen, so re-apply this after `task gen:types`
-            // until the backend advertises a public model subset. (The API still
-            // accepts them; this only hides them from the SDK type.)
-            model: "glm-5.2" | "grok-4.5" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-sonnet-5" | "gpt-5.5" | "gpt-5.6" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash";
+            model: "glm-5.2" | "grok-4.5" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-fable-5" | "claude-sonnet-5" | "gpt-5.5" | "gpt-5.6" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash";
             /** Sessionid */
             sessionId?: string | null;
             /** Workspaceid */

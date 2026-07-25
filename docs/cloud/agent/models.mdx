@@ -1,88 +1,60 @@
 ---
 title: Models
-description: "Choose the right model for your task."
+description: "Choose a V4 model and understand its token pricing."
 icon: microchip
 ---
 
-Pass `model` to select a model:
+Pass `model` when you create a run. These are the models currently shown in the V4 agent UI:
 
-| Model | API String | Input (per 1M tokens) | Output (per 1M tokens) |
-| ----- | ---------- | --------------------- | ---------------------- |
-| Claude Sonnet 4.6 | `claude-sonnet-4.6` | \$3.60 | \$18.00 |
-| Claude Opus 4.6 | `claude-opus-4.6` | \$6.00 | \$30.00 |
-| GPT-5.4 mini | `gpt-5.4-mini` | \$0.90 | \$5.40 |
+| Model | API string | Input | Cache read | Output | Bring your own key |
+| ----- | ---------- | ----: | ---------: | -----: | ------------------ |
+| Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
+| Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
+| GPT-5.6 | `gpt-5.6` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
+| Gemini 3.5 Flash | `gemini-3.5-flash` | \$1.80 | \$0.18 | \$10.80 | Google |
+| MiniMax M3 | `minimax-m3` | \$0.36 | \$0.072 | \$1.44 | — |
+
+Prices are USD per 1 million tokens using Browser Use's provider keys and include the platform markup. Grok 4.5 requests with 200k or more context use its higher long-context rate. Cache prices are for cache reads; cache writes can cost more.
 
 <Tip>
-  We recommend **Claude Sonnet 4.6** (`claude-sonnet-4.6`). It's the model we optimize for the most right now.
+  **MiniMax M3** is the default and the cheapest choice for simple tasks. Use **Claude Opus 5** when maximum reasoning quality matters.
 </Tip>
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-result = await client.run(
-    "List the top 20 posts on Hacker News today with their points",
-    model="claude-sonnet-4.6",
+created = await client.runs.create(
+    "Compare the top three project-management tools for a 20-person startup",
+    model="claude-opus-5",
 )
-print(result.output)
+run = await client.runs.wait_for_completion(created.id)
+print(run.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const result = await client.run(
-  "List the top 20 posts on Hacker News today with their points",
-  { model: "claude-sonnet-4.6" },
-);
-console.log(result.output);
+const created = await client.runs.create({
+  task: "Compare the top three project-management tools for a 20-person startup",
+  model: "claude-opus-5",
+});
+const run = await client.runs.waitForCompletion(created.id);
+console.log(run.result);
 ```
 ```bash curl
-curl -X POST https://api.browser-use.com/api/v3/sessions \
+curl -X POST https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4.6"}'
+  -d '{"task": "Compare the top three project-management tools", "model": "claude-opus-5"}'
 ```
 </CodeGroup>
 
 ## Bring your own key
 
-Connect your own Anthropic, OpenAI, or Google API key. You pay your provider directly + a 0.2× orchestration fee on provider list token prices.
+Add an Anthropic, OpenAI, or Google key under **Settings → API Keys → Bring Your Own Key**. V4 automatically uses a matching project key for that provider; there is no `use_own_key` / `useOwnKey` request flag.
 
-1. Add your provider key in the dashboard under **Settings → API Keys → Bring Your Own Key**.
-2. Pass `use_own_key=True` on the session:
+With your own key, you pay the provider directly and Browser Use charges a 0.2× orchestration fee based on provider list token prices. If no matching key is configured, V4 uses Browser Use's provider key and the rates in the table above.
 
-<CodeGroup>
-```python Python
-result = await client.run(
-    "List the top 20 posts on Hacker News today with their points",
-    model="claude-sonnet-4.6",
-    use_own_key=True,
-)
-```
-```typescript TypeScript
-const result = await client.run(
-  "List the top 20 posts on Hacker News today with their points",
-  { model: "claude-sonnet-4.6", useOwnKey: true },
-);
-```
-```bash curl
-curl -X POST https://api.browser-use.com/api/v3/sessions \
-  -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4.6", "useOwnKey": true}'
-```
-</CodeGroup>
-
-To default every session on a client to BYOK, set it once on the constructor:
-
-<CodeGroup>
-```python Python
-client = AsyncBrowserUse(use_own_key=True)
-```
-```typescript TypeScript
-const client = new BrowserUse({ useOwnKey: true });
-```
-</CodeGroup>
-
-The provider key on your project must match the model you pick — Claude models use your Anthropic key, GPT models use your OpenAI key, Gemini models use your Google key.
+Grok 4.5 and MiniMax M3 currently use Browser Use-managed keys only.

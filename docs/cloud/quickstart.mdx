@@ -26,21 +26,25 @@ export BROWSER_USE_API_KEY=your_key
 <CodeGroup>
 ```python Python
 import asyncio
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 async def main():
     client = AsyncBrowserUse()
-    result = await client.run("List the top 20 posts on Hacker News today with their points")
-    print(result.output)
+    created = await client.runs.create("List the top 20 Hacker News posts and their points")
+    run = await client.runs.wait_for_completion(created.id)
+    print(run.result)
 
 asyncio.run(main())
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const result = await client.run("List the top 20 posts on Hacker News today with their points");
-console.log(result.output);
+const created = await client.runs.create({
+  task: "List the top 20 Hacker News posts and their points",
+});
+const run = await client.runs.waitForCompletion(created.id);
+console.log(run.result);
 ```
 </CodeGroup>
 
@@ -50,17 +54,17 @@ Want a full working app? Check out the [Chat UI example](/cloud/tutorials/chat-u
 
 | | **Agent** | **Browser** |
 |---|---|---|
-| **Method** | `sessions.create()` / `run()` | `browsers.create()` |
+| **Method** | `runs.create()` | `browsers.create()` |
 | **What it does** | AI agent runs your task | Raw browser via CDP |
 | task | ✓ | — |
 | model | ✓ | — |
-| proxy | ✓ | ✓ |
-| custom_proxy | ✓ | ✓ |
-| profile_id | ✓ | ✓ |
-| recording | ✓ | ✓ |
-| workspace_id | ✓ | — |
-| keep_alive | ✓ | — |
-| screen size | — | ✓ |
+| proxy | `browserSettings` | ✓ |
+| custom proxy | `browserSettings` | ✓ |
+| profile | `browserSettings` | ✓ |
+| recording | `browserSettings` | ✓ |
+| workspace & files | ✓ | — |
+| follow-up conversation | ✓ | — |
+| screen size | `browserSettings` | ✓ |
 | timeout | — | ✓ |
 
 ---

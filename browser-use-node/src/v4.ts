@@ -4,7 +4,12 @@ export type { BrowserUseOptions } from "./v4/client.js";
 export { BrowserUseError } from "./core/errors.js";
 
 export { Runs } from "./v4/resources/runs.js";
-export type { RunListParams, RunEventsParams, WaitOptions } from "./v4/resources/runs.js";
+export type {
+  RunCreateRequest,
+  RunListParams,
+  RunEventsParams,
+  WaitOptions,
+} from "./v4/resources/runs.js";
 
 export { Sessions } from "./v4/resources/sessions.js";
 export type { SessionListParams } from "./v4/resources/sessions.js";
@@ -19,7 +24,6 @@ import type { components } from "./generated/v4/types.js";
 type S = components["schemas"];
 
 // Run models
-export type RunCreateRequest = S["RunCreateRequest"];
 export type RunCreateResponse = S["RunCreateResponse"];
 export type RunSummary = S["RunSummary"];
 export type RunStatusResponse = S["RunStatusResponse"];

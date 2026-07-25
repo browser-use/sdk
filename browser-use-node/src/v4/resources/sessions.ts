@@ -25,6 +25,11 @@ export class Sessions {
     return this.http.get<SessionInfo>(`/sessions/${sessionId}`);
   }
 
+  /** Immediately purge all data for a session. Available to ZDR projects only. */
+  purge(sessionId: string): Promise<void> {
+    return this.http.post<void>(`/sessions/${sessionId}/purge`);
+  }
+
   /**
    * Send a message to the session. Runs as the next turn when the session is
    * busy; set `interrupt: true` to cancel the active run so the message runs

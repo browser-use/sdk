@@ -144,6 +144,7 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     # sessions + queue
     ("get", "/sessions"): ("sessions", "list"),
     ("get", "/sessions/{session_id}"): ("sessions", "get"),
+    ("post", "/sessions/{session_id}/purge"): ("sessions", "purge"),
     ("post", "/sessions/{session_id}/queue"): ("sessions", "send_message"),
     ("get", "/sessions/{session_id}/queue"): ("sessions", "queue"),
     ("delete", "/sessions/{session_id}/queue/{message_id}"): ("sessions", "remove_message"),

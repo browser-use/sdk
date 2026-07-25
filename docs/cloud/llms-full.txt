@@ -24,21 +24,25 @@ export BROWSER_USE_API_KEY=your_key
 
 ```python Python
 import asyncio
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 async def main():
-client = AsyncBrowserUse()
-result = await client.run("List the top 20 posts on Hacker News today with their points")
-print(result.output)
+    client = AsyncBrowserUse()
+    created = await client.runs.create("List the top 20 Hacker News posts and their points")
+    run = await client.runs.wait_for_completion(created.id)
+    print(run.result)
 
 asyncio.run(main())
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const result = await client.run("List the top 20 posts on Hacker News today with their points");
-console.log(result.output);
+const created = await client.runs.create({
+  task: "List the top 20 Hacker News posts and their points",
+});
+const run = await client.runs.waitForCompletion(created.id);
+console.log(run.result);
 ```
 
 Want a full working app? Check out the [Chat UI example](https://docs.browser-use.com/cloud/tutorials/chat-ui).
@@ -47,17 +51,17 @@ Want a full working app? Check out the [Chat UI example](https://docs.browser-us
 
 | | **Agent** | **Browser** |
 |---|---|---|
-| **Method** | `sessions.create()` / `run()` | `browsers.create()` |
+| **Method** | `runs.create()` | `browsers.create()` |
 | **What it does** | AI agent runs your task | Raw browser via CDP |
 | task | ✓ | — |
 | model | ✓ | — |
-| proxy | ✓ | ✓ |
-| custom_proxy | ✓ | ✓ |
-| profile_id | ✓ | ✓ |
-| recording | ✓ | ✓ |
-| workspace_id | ✓ | — |
-| keep_alive | ✓ | — |
-| screen size | — | ✓ |
+| proxy | `browserSettings` | ✓ |
+| custom proxy | `browserSettings` | ✓ |
+| profile | `browserSettings` | ✓ |
+| recording | `browserSettings` | ✓ |
+| workspace & files | ✓ | — |
+| follow-up conversation | ✓ | — |
+| screen size | `browserSettings` | ✓ |
 | timeout | — | ✓ |
 
 ---
@@ -76,934 +80,562 @@ https://docs.browser-use.com/cloud/llms.txt
 ```
 
 
-# Agent Sign Up for Browser Use
-Source: https://docs.browser-use.com/cloud/agent-signup
-
-
-An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
-
-The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
-
-## REST flow
-
-### 1. Request a challenge
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-Request body, optional (include a user email/name if available):
-
-```json
-{
-  "email": "user@example.com",
-  "name": "User Name"
-}
-```
-
-Response:
-
-```json
-{
-  "challenge_id": "uuid",
-  "challenge_text": "..."
-}
-```
-
-### 2. Solve the challenge
-
-Read `challenge_text` and solve the math problem. Return the answer as a string with two decimal places, for example `"144.00"`.
-
-### 3. Verify the answer
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup/verify \
-  -H "Content-Type: application/json" \
-  -d '{"challenge_id":"uuid","answer":"144.00"}'
-```
-
-Request body:
-
-```json
-{
-  "challenge_id": "uuid",
-  "answer": "144.00"
-}
-```
-
-Response:
-
-```json
-{
-  "api_key": "bu_..."
-}
-```
-
-Use the returned key for Browser Use Cloud API requests.
-
-For example, create a browser session:
-
-```bash
-curl -X POST https://api.browser-use.com/api/v3/browsers \
-  -H "X-Browser-Use-API-Key: bu_..." \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-See the [Create Browser Session API reference](https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session).
-
-## Claim the account
-
-If a human wants to see the agent-created account in the dashboard later, the agent can create a claim link:
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup/claim \
-  -H "X-Browser-Use-API-Key: bu_..."
-```
-
-Response:
-
-```json
-{
-  "claim_url": "https://..."
-}
-```
-
-The claim URL is valid for 1 hour.
-
 # Introduction
 Source: https://docs.browser-use.com/cloud/agent/quickstart
 
 
-The SDK is a thin wrapper around the [API v3 Reference](https://docs.browser-use.com/cloud/api-reference). Every endpoint in the API reference is available as an SDK method — `client.sessions`, `client.browsers`, `client.profiles`, `client.workspaces`, and `client.billing`.
-
-`client.run()` creates a session, polls every 2 seconds until completion (up to 4 hours), and returns the result. It accepts all parameters from the [Create Session](https://docs.browser-use.com/cloud/api-v3/sessions/create-session) endpoint. The result is a [Session object](https://docs.browser-use.com/cloud/api-v3/sessions/get-session) — use `result.output` for the agent's response.
+The SDK wraps the [API v4 Reference](https://docs.browser-use.com/cloud/api-v4-overview). Create a run, wait for it to finish, then read `result`.
 
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-result = await client.run("List the top 20 posts on Hacker News today with their points")
-print(result.output)
+created = await client.runs.create("List the top 20 Hacker News posts and their points")
+run = await client.runs.wait_for_completion(created.id)
+print(run.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const result = await client.run("List the top 20 posts on Hacker News today with their points");
-console.log(result.output);
+const created = await client.runs.create({
+  task: "List the top 20 Hacker News posts and their points",
+});
+const run = await client.runs.waitForCompletion(created.id);
+console.log(run.result);
 ```
 ```bash curl
-curl -X POST https://api.browser-use.com/api/v3/sessions \
+curl -X POST https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News today with their points"}'
+  -d '{"task": "List the top 20 Hacker News posts and their points"}'
 ```
 
-**What this agent can do:**
-- **Data extraction** — scrape websites with thousands of listings
-- **Form filling** — submit applications, fill out surveys, enter data
-- **Multi-step workflows** — log in, navigate, click through flows, download files
-- **Research** — search across multiple sites, compare results, summarize findings
-- **Monitoring** — monitor a website and get notified if something changes
-- **Testing** — test websites end-to-end with natural language instructions
-- **Scheduling** — schedule tasks to run on a recurring basis
-- **1,000+ integrations** — Gmail, Calendar, Notion, and more
+`runs.create()` automatically creates a session and workspace. `wait_for_completion()` / `waitForCompletion()` polls the lightweight [run status endpoint](https://docs.browser-use.com/cloud/api-v4/runs/get-run-status), then fetches the full [run result](https://docs.browser-use.com/cloud/api-v4/runs/get-run) once it reaches `completed`, `failed`, or `cancelled`.
 
-The best SOTA browser agent — see our [online Mind2Web benchmark](https://browser-use.com/posts/online-mind2web-benchmark).
+Use the agent for:
 
-If you are an LLM, read/include [docs.browser-use.com/llms-full.txt](https://docs.browser-use.com/llms-full.txt) — it contains the complete SDK reference with all code examples in a single file optimized for LLMs.
+- Data extraction and research across many pages
+- Form filling, downloads, and multi-step workflows
+- Authenticated work with browser profiles
+- Long-running tasks that create or consume files
+- Follow-up turns that preserve the same conversation, workspace, and live browser
+
+See [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks), [Live messages](https://docs.browser-use.com/cloud/agent/streaming), and [Workspaces & files](https://docs.browser-use.com/cloud/agent/workspaces) for the main V4 patterns.
 
 
 # Models
 Source: https://docs.browser-use.com/cloud/agent/models
 
 
-Pass `model` to select a model:
+Pass `model` when you create a run. These are the models currently shown in the V4 agent UI:
 
-| Model | API String | Input (per 1M tokens) | Output (per 1M tokens) |
-| ----- | ---------- | --------------------- | ---------------------- |
-| Claude Sonnet 4.6 | `claude-sonnet-4.6` | \$3.60 | \$18.00 |
-| Claude Opus 4.6 | `claude-opus-4.6` | \$6.00 | \$30.00 |
-| GPT-5.4 mini | `gpt-5.4-mini` | \$0.90 | \$5.40 |
+| Model | API string | Input | Cache read | Output | Bring your own key |
+| ----- | ---------- | ----: | ---------: | -----: | ------------------ |
+| Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
+| Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
+| GPT-5.6 | `gpt-5.6` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
+| Gemini 3.5 Flash | `gemini-3.5-flash` | \$1.80 | \$0.18 | \$10.80 | Google |
+| MiniMax M3 | `minimax-m3` | \$0.36 | \$0.072 | \$1.44 | — |
 
-  We recommend **Claude Sonnet 4.6** (`claude-sonnet-4.6`). It's the model we optimize for the most right now.
+Prices are USD per 1 million tokens using Browser Use's provider keys and include the platform markup. Grok 4.5 requests with 200k or more context use its higher long-context rate. Cache prices are for cache reads; cache writes can cost more.
+
+  **MiniMax M3** is the default and the cheapest choice for simple tasks. Use **Claude Opus 5** when maximum reasoning quality matters.
 
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-result = await client.run(
-"List the top 20 posts on Hacker News today with their points",
-model="claude-sonnet-4.6",
+created = await client.runs.create(
+    "Compare the top three project-management tools for a 20-person startup",
+    model="claude-opus-5",
 )
-print(result.output)
+run = await client.runs.wait_for_completion(created.id)
+print(run.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const result = await client.run(
-  "List the top 20 posts on Hacker News today with their points",
-  { model: "claude-sonnet-4.6" },
-);
-console.log(result.output);
+const created = await client.runs.create({
+  task: "Compare the top three project-management tools for a 20-person startup",
+  model: "claude-opus-5",
+});
+const run = await client.runs.waitForCompletion(created.id);
+console.log(run.result);
 ```
 ```bash curl
-curl -X POST https://api.browser-use.com/api/v3/sessions \
+curl -X POST https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4.6"}'
+  -d '{"task": "Compare the top three project-management tools", "model": "claude-opus-5"}'
 ```
+
+## Bring your own key
+
+Add an Anthropic, OpenAI, or Google key under **Settings → API Keys → Bring Your Own Key**. V4 automatically uses a matching project key for that provider; there is no `use_own_key` / `useOwnKey` request flag.
+
+With your own key, you pay the provider directly and Browser Use charges a 0.2× orchestration fee based on provider list token prices. If no matching key is configured, V4 uses Browser Use's provider key and the rates in the table above.
+
+Grok 4.5 and MiniMax M3 currently use Browser Use-managed keys only.
 
 
 # Structured output
 Source: https://docs.browser-use.com/cloud/agent/structured-output
 
 
-Pass a Pydantic model (Python) or Zod schema (TypeScript) — `result.output` is automatically validated and converted to the typed object.
+V4 returns the agent's final answer as a string in `run.result`. Ask the agent for JSON only, then validate it with Pydantic or Zod in your application.
 
-  TypeScript requires **Zod v4** (`npm install zod@4`). Zod v3 is not compatible.
+  V4 does not currently accept an `output_schema` / `outputSchema` request field. Validation happens client-side.
 
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 from pydantic import BaseModel
 
 class Post(BaseModel):
-name: str
-points: int
-comments: int
+    name: str
+    points: int
+    comments: int
 
 class HNPosts(BaseModel):
-posts: list[Post]
+    posts: list[Post]
 
 client = AsyncBrowserUse()
-result = await client.run(
-"List the top 20 posts on Hacker News today with their points",
-output_schema=HNPosts,
+created = await client.runs.create(
+    """
+    List the top 20 Hacker News posts.
+    Return JSON only in this shape:
+    {"posts": [{"name": "string", "points": 0, "comments": 0}]}
+    """
 )
-for post in result.output.posts:
-print(f"{post.name} ({post.points} pts, {post.comments} comments)")
+run = await client.runs.wait_for_completion(created.id)
+posts = HNPosts.model_validate_json(run.result or "{}")
+
+for post in posts.posts:
+    print(f"{post.name} ({post.points} pts)")
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 import { z } from "zod";
 
-const Post = z.object({
-  name: z.string(),
-  points: z.number(),
-  comments: z.number(),
-});
-
 const HNPosts = z.object({
-  posts: z.array(Post),
+  posts: z.array(z.object({
+    name: z.string(),
+    points: z.number(),
+    comments: z.number(),
+  })),
 });
 
 const client = new BrowserUse();
-const result = await client.run(
-  "List the top 20 posts on Hacker News today with their points",
-  { schema: HNPosts },
-);
-for (const post of result.output.posts) {
-  console.log(`${post.name} (${post.points} pts, ${post.comments} comments)`);
+const created = await client.runs.create({
+  task: `
+    List the top 20 Hacker News posts.
+    Return JSON only in this shape:
+    {"posts": [{"name": "string", "points": 0, "comments": 0}]}
+  `,
+});
+const run = await client.runs.waitForCompletion(created.id);
+const posts = HNPosts.parse(JSON.parse(run.result ?? "{}"));
+
+for (const post of posts.posts) {
+  console.log(`${post.name} (${post.points} pts)`);
 }
 ```
+
+For strict production flows, handle JSON parse or validation failures and retry with a follow-up message that includes the validation error.
 
 
 # Follow-up tasks
 Source: https://docs.browser-use.com/cloud/agent/follow-up-tasks
 
 
-When you pass a `session_id`, the session automatically stays alive between tasks. Each task runs a new agent that reuses the same browser — the agents don't share context, but the browser state (page, cookies, tabs) carries over.
+Every run automatically creates a session. Pass its `session_id` / `sessionId` to create an explicit follow-up turn:
 
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 
-# Create a session, then run tasks inside it
-session = await client.sessions.create()
-
-result1 = await client.run(
-"Go to amazon.com, search for laptops, and open the first result",
-session_id=session.id,
+first = await client.runs.create(
+    "Go to amazon.com, search for laptops, and open the first result"
 )
-result2 = await client.run(
-"Extract the customer reviews",
-session_id=session.id,
-)
+first_result = await client.runs.wait_for_completion(first.id)
 
-await client.sessions.stop(session.id)
+follow_up = await client.runs.create(
+    "Extract the customer reviews",
+    session_id=first.session_id,
+)
+follow_up_result = await client.runs.wait_for_completion(follow_up.id)
+print(follow_up_result.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
 
-// Create a session, then run tasks inside it
-const session = await client.sessions.create();
-
-const result1 = await client.run("Go to amazon.com, search for laptops, and open the first result", {
-  sessionId: session.id,
+const first = await client.runs.create({
+  task: "Go to amazon.com, search for laptops, and open the first result",
 });
-const result2 = await client.run("Extract the customer reviews", {
-  sessionId: session.id,
-});
+await client.runs.waitForCompletion(first.id);
 
-await client.sessions.stop(session.id);
+const followUp = await client.runs.create({
+  task: "Extract the customer reviews",
+  sessionId: first.sessionId,
+});
+const result = await client.runs.waitForCompletion(followUp.id);
+console.log(result.result);
 ```
 
-`sessions.create()` returns a `live_url` you can embed to watch each task execute — see [Live preview](https://docs.browser-use.com/cloud/browser/live-preview). To stream messages as each task runs, use `client.run()` with `for await` — see [Live messages](https://docs.browser-use.com/cloud/agent/streaming).
+The follow-up restores the agent's conversation context and workspace. It also reuses the live browser when one is still available.
 
-  Sessions time out after 15 minutes of inactivity by default. The maximum session duration is 4 hours.
+There is no separate empty-session creation step in V4:
+
+- Omit `session_id` / `sessionId` to create a new session implicitly.
+- Pass a previous session ID to continue it explicitly.
+- Pass only `workspace_id` / `workspaceId` to start a new conversation that shares existing files.
+
+## Queue a follow-up
+
+Use `sessions.send_message()` / `sessions.sendMessage()` when a run may still be busy. The message runs immediately if the session is idle, or waits for the current run to finish.
+
+```python Python
+queued = await client.sessions.send_message(
+    first.session_id,
+    "Also compare the warranty options",
+)
+```
+```typescript TypeScript
+const queued = await client.sessions.sendMessage(first.sessionId, {
+  text: "Also compare the warranty options",
+});
+```
+
+Set `interrupt=True` / `interrupt: true` to cancel the active run and start the queued message as soon as possible. A queued response can initially have no run ID; use [Get session](https://docs.browser-use.com/cloud/api-v4/sessions/get-session) or [List runs](https://docs.browser-use.com/cloud/api-v4/runs/list-runs) to discover the new run once it starts.
+
+See [Queue session message](https://docs.browser-use.com/cloud/api-v4/sessions/queue-session-message) for the full request shape.
 
 
 # Live messages
 Source: https://docs.browser-use.com/cloud/agent/streaming
 
 
-  Want a ready-made UI? See the [Chat UI tutorial](https://docs.browser-use.com/cloud/tutorials/chat-ui).
+V4 exposes an ordered event stream for each run. Poll with `after` set to the previous response's `next_after` / `nextAfter` so you only receive new events.
 
-Stream messages as the agent works — reasoning, tool calls, browser actions, and results. Each message has `role`, `type`, `summary`, `data`, and `screenshot_url`. See [List session messages](https://docs.browser-use.com/cloud/api-v3/sessions/list-session-messages) for all fields.
-
-```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-
-run = client.run("Find the top story on Hacker News")
-async for msg in run:
-print(f"[{msg.role}] {msg.summary}")
-
-print(run.result.output)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-
-const run = client.run("Find the top story on Hacker News");
-for await (const msg of run) {
-  console.log(`[${msg.role}] ${msg.summary}`);
-}
-
-console.log(run.result.output);
-```
-
-```
-[user] Find the top story on Hacker News
-[assistant] Navigating to https://news.ycombinator.com/
-[tool] Browser Navigate: Navigated
-[assistant] Analyzing browser state
-[tool] Browser Analyze State: The top story is "Coding Agents Could Make Free Software Matter Again"
-[tool] Done Autonomous: The top story on Hacker News is "Coding Agents Could Make Free Software Matter Again"
-```
-
-## Cancel a running task
-
-Use `stop(strategy="task")` to cancel the current task without destroying the session. The session goes back to `idle` and can accept a new task.
-
-```python Python
-run = client.run("Find the top story on Hacker News")
-async for msg in run:
-if should_cancel():
-    await client.sessions.stop(run.session_id, strategy="task")
-    break
-# Session is now idle — send a different task or close it
-```
-```typescript TypeScript
-const run = client.run("Find the top story on Hacker News");
-for await (const msg of run) {
-  if (shouldCancel()) {
-await client.sessions.stop(run.sessionId!, { strategy: "task" });
-break;
-  }
-}
-// Session is now idle — send a different task or close it
-```
-
-  `run.result` is only available **after** the iterator finishes (all messages consumed or task completes). If you break early from `async for` / `for await`, the task may still be running — call `stop(strategy="task")` to cancel it before sending a follow-up.
-
-## Manual polling
-
-If you need full control over the polling loop (e.g. custom interval, filtering):
+Each event has `id`, `ts`, `type`, and `data`. Event types include run lifecycle updates, model calls, browser readiness, tool activity, artifacts, and completion.
 
 ```python Python
 import asyncio
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
+
+TERMINAL = {"completed", "failed", "cancelled"}
 
 client = AsyncBrowserUse()
-session = await client.sessions.create(task="Find the top story on Hacker News")
+created = await client.runs.create("Find the top story on Hacker News")
 
-cursor = None
+after = None
 while True:
-msgs = await client.sessions.messages(session.id, after=cursor, limit=100)
-for m in msgs.messages:
-    print(f"[{m.role}] {m.summary}")
-    cursor = m.id
+    page = await client.runs.events(created.id, after=after, limit=100)
+    for event in page.events:
+        print(event.type, event.data)
+    if page.next_after is not None:
+        after = page.next_after
 
-s = await client.sessions.get(session.id)
-if s.status.value in ("idle", "stopped", "error", "timed_out"):
-    break
-await asyncio.sleep(2)
+    status = await client.runs.status(created.id)
+    if status.status.value in TERMINAL:
+        break
+    await asyncio.sleep(1)
 
-print(s.output)
+run = await client.runs.get(created.id)
+print(run.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
+const TERMINAL = new Set(["completed", "failed", "cancelled"]);
 const client = new BrowserUse();
-const session = await client.sessions.create({
+const created = await client.runs.create({
   task: "Find the top story on Hacker News",
 });
 
-let cursor: string | undefined;
+let after: number | undefined;
 while (true) {
-  const msgs = await client.sessions.messages(session.id, { after: cursor, limit: 100 });
-  for (const m of msgs.messages) {
-console.log(`[${m.role}] ${m.summary}`);
-cursor = m.id;
+  const page = await client.runs.events(created.id, { after, limit: 100 });
+  for (const event of page.events) {
+    console.log(event.type, event.data);
   }
+  if (page.nextAfter != null) after = page.nextAfter;
 
-  const s = await client.sessions.get(session.id);
-  if (["idle", "stopped", "error", "timed_out"].includes(s.status)) {
-console.log(s.output);
-break;
-  }
-  await new Promise((r) => setTimeout(r, 2000));
+  const { status } = await client.runs.status(created.id);
+  if (TERMINAL.has(status)) break;
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 }
+
+const run = await client.runs.get(created.id);
+console.log(run.result);
 ```
+
+The status endpoint is intentionally tiny and cheap to poll. Fetch the full run only after its status is terminal.
+
+## Cancel a run
+
+```python Python
+cancelled = await client.runs.cancel(created.id)
+print(cancelled.status)
+```
+```typescript TypeScript
+const cancelled = await client.runs.cancel(created.id);
+console.log(cancelled.status);
+```
+
+Cancelling a run does not delete its session. You can send another turn with the same session ID.
 
 ## Related
 
-- [Live preview & recording](https://docs.browser-use.com/cloud/browser/live-preview) — embed the browser alongside your message stream
-- [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks) — chain multiple tasks in one session while streaming each
+- [Get run events](https://docs.browser-use.com/cloud/api-v4/runs/get-run-events) — event response and cursor fields
+- [Get run status](https://docs.browser-use.com/cloud/api-v4/runs/get-run-status) — lightweight poll target
+- [Follow-up tasks](https://docs.browser-use.com/cloud/agent/follow-up-tasks) — continue or queue work in the same session
 
 
 # Workspaces & files
 Source: https://docs.browser-use.com/cloud/agent/workspaces
 
 
-Workspaces give your agent persistent file storage. Two patterns cover almost every use case:
+Every V4 run has a workspace. You can let the API create one automatically, create one yourself, or reuse an existing workspace across otherwise independent sessions.
 
-1. **You upload a file** → agent reads it
-2. **Agent creates a file** → you download it
+## Upload and attach input files
 
-## Upload a file
+Uploading stores the file in the workspace and returns an upload ID. Pass that ID in `attached_file_ids` / `attachedFileIds` to make the file available to a specific run.
 
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-workspace = await client.workspaces.create(name="my-workspace")
+workspace = await client.workspaces.create(name="company-research")
+uploaded = await client.workspaces.upload(workspace.id, "people.csv")
 
-# Upload
-await client.workspaces.upload(workspace.id, "people.csv")
-
-# Agent can now read it
-result = await client.run(
-"Read people.csv and tell me who works at Google",
-workspace_id=workspace.id,
+created = await client.runs.create(
+    "Read the attached people.csv and tell me who works at Google",
+    workspace_id=workspace.id,
+    attached_file_ids=[uploaded[0].id],
 )
-print(result.output)
+run = await client.runs.wait_for_completion(created.id)
+print(run.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const workspace = await client.workspaces.create({ name: "my-workspace" });
+const workspace = await client.workspaces.create({ name: "company-research" });
+const uploaded = await client.workspaces.upload(workspace.id, "people.csv");
 
-// Upload
-await client.workspaces.upload(workspace.id, "people.csv");
-
-// Agent can now read it
-const result = await client.run(
-  "Read people.csv and tell me who works at Google",
-  { workspaceId: workspace.id },
-);
-console.log(result.output);
+const created = await client.runs.create({
+  task: "Read the attached people.csv and tell me who works at Google",
+  workspaceId: workspace.id,
+  attachedFileIds: [uploaded[0].id],
+});
+const run = await client.runs.waitForCompletion(created.id);
+console.log(run.result);
 ```
 
-You can upload multiple files at once:
+You can upload up to 10 files in one helper call. A run can attach up to 20 upload IDs.
 
 ```python Python
-await client.workspaces.upload(workspace.id, "data.csv", "config.json", "image.png")
-```
-```typescript TypeScript
-await client.workspaces.upload(workspace.id, "data.csv", "config.json", "image.png");
-```
-
-## Download files
-
-```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-workspace = await client.workspaces.create(name="my-workspace")
-
-# Agent creates a file
-result = await client.run(
-"Go to Hacker News and save the top 3 posts as posts.json",
-workspace_id=workspace.id,
+uploaded = await client.workspaces.upload(
+    workspace.id,
+    "data.csv",
+    "config.json",
+    "image.png",
 )
-
-# Download a single file
-await client.workspaces.download(workspace.id, "posts.json", to="./posts.json")
-
-# Or download everything
-paths = await client.workspaces.download_all(workspace.id, to="./output")
-for p in paths:
-print(f"Downloaded: {p}")
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-const workspace = await client.workspaces.create({ name: "my-workspace" });
-
-// Agent creates a file
-const result = await client.run(
-  "Go to Hacker News and save the top 3 posts as posts.json",
-  { workspaceId: workspace.id },
+const uploaded = await client.workspaces.upload(
+  workspace.id,
+  "data.csv",
+  "config.json",
+  "image.png",
 );
-
-// Download a single file
-await client.workspaces.download(workspace.id, "posts.json", { to: "./posts.json" });
-
-// Or download everything
-const paths = await client.workspaces.downloadAll(workspace.id, { to: "./output" });
-for (const p of paths) {
-  console.log(`Downloaded: ${p}`);
-}
 ```
 
-## Manage workspaces
+  Attachments are turn-scoped. Reusing a workspace does not automatically attach every uploaded file to every later run.
+
+## Retrieve files the agent creates
+
+Ask the agent to save its output in the workspace, then list files with temporary download URLs:
 
 ```python Python
-workspace = await client.workspaces.get(workspace_id)
-updated = await client.workspaces.update(workspace_id, name="renamed")
-response = await client.workspaces.list()
-for w in response.items:
-print(w.id, w.name)
-await client.workspaces.delete(workspace_id)
+created = await client.runs.create(
+    "Save the top three Hacker News posts as outputs/posts.json",
+    workspace_id=workspace.id,
+)
+await client.runs.wait_for_completion(created.id)
+
+files = await client.workspaces.files(
+    workspace.id,
+    prefix="outputs/",
+    include_urls=True,
+)
+for file in files.files:
+    print(file.path, file.url)
 ```
 ```typescript TypeScript
-const workspace = await client.workspaces.get(workspaceId);
-const updated = await client.workspaces.update(workspaceId, { name: "renamed" });
-const response = await client.workspaces.list();
-for (const w of response.items) {
-  console.log(w.id, w.name);
+const created = await client.runs.create({
+  task: "Save the top three Hacker News posts as outputs/posts.json",
+  workspaceId: workspace.id,
+});
+await client.runs.waitForCompletion(created.id);
+
+const files = await client.workspaces.files(workspace.id, {
+  prefix: "outputs/",
+  includeUrls: true,
+});
+for (const file of files.files) {
+  console.log(file.path, file.url);
 }
-await client.workspaces.delete(workspaceId);
 ```
 
-## Organize with prefixes
+Download URLs expire after 60 seconds, so request them immediately before downloading. Use `cursor` / `next_cursor` (`nextCursor` in TypeScript) to paginate large workspaces.
 
-Use `prefix` to organize files into directories within a workspace:
+## Reuse a workspace
 
-```python Python
-# Upload into a subdirectory
-await client.workspaces.upload(workspace.id, "report.pdf", prefix="reports/")
+- Pass neither ID to `runs.create()` to create a new session and workspace.
+- Pass `session_id` / `sessionId` to continue the same conversation and workspace.
+- Pass only `workspace_id` / `workspaceId` to start a fresh conversation with existing files.
 
-# List files in a subdirectory
-files = await client.workspaces.files(workspace.id, prefix="reports/")
-for f in files.files:
-print(f.path, f.size)
-
-# Download only files from a subdirectory
-await client.workspaces.download_all(workspace.id, to="./output", prefix="reports/")
-```
-```typescript TypeScript
-// Upload into a subdirectory
-await client.workspaces.upload(workspace.id, "report.pdf", { prefix: "reports/" });
-
-// List files in a subdirectory
-const files = await client.workspaces.files(workspace.id, { prefix: "reports/" });
-for (const f of files.files) {
-  console.log(f.path, f.size);
-}
-
-// Download only files from a subdirectory
-await client.workspaces.downloadAll(workspace.id, { to: "./output", prefix: "reports/" });
-```
-
-## List and delete files
-
-```python Python
-# List all files
-files = await client.workspaces.files(workspace.id)
-for f in files.files:
-print(f.path, f.size)
-
-# Delete a single file
-await client.workspaces.delete_file(workspace.id, path="old-report.pdf")
-
-# Check workspace storage usage
-size = await client.workspaces.size(workspace.id)
-print(f"Used: {size.used_bytes} bytes")
-```
-```typescript TypeScript
-// List all files
-const files = await client.workspaces.files(workspace.id);
-for (const f of files.files) {
-  console.log(f.path, f.size);
-}
-
-// Delete a single file
-await client.workspaces.deleteFile(workspace.id, "old-report.pdf");
-
-// Check workspace storage usage
-const size = await client.workspaces.size(workspace.id);
-console.log(`Used: ${size.usedBytes} bytes`);
-```
-
-## Cloud dashboard
-
-You can also manage workspaces from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=workspaces).
-
-  Deleting a workspace permanently removes all its files. This cannot be undone.
+See [Upload workspace files](https://docs.browser-use.com/cloud/api-v4/workspaces/upload-workspace-files) and [List workspace files](https://docs.browser-use.com/cloud/api-v4/workspaces/list-workspace-files) for limits and response fields.
 
 
 # Deterministic rerun
 Source: https://docs.browser-use.com/cloud/agent/cache-script
 
 
-Deterministic rerun lets you run a browser task once with a full agent, then **re-execute the same task instantly** using a cached script — no LLM, up to 99% cheaper.
+For repeated workflows, create a dedicated workspace and ask the agent to turn its successful process into a script. The important part is explicit: tell it to reproduce what it just did, test the script, and save instructions for the next run.
 
-## Quick start
-
-Use `@{{double brackets}}` around values that can change between runs. The first call runs the full agent. Every subsequent call with the same template uses the cached script.
+You can create the workspace in the dashboard or through the API:
 
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-workspace = await client.workspaces.create(name="my-scraper")
+workspace = await client.workspaces.create(name="hn-scraper")
 
-# First call — agent explores, creates script (~$0.10, ~60s)
-result = await client.run(
-"Get the top @{{5}} stories from https://news.ycombinator.com as JSON",
-workspace_id=str(workspace.id),
+created = await client.runs.create(
+    """
+    Get the top five Hacker News stories as JSON.
+    Then create helper functions or a script that performs exactly what you did.
+    Test it, save it as scripts/hn_top.py, and save reuse instructions in
+    scripts/README.md.
+    """,
+    workspace_id=workspace.id,
 )
-
-# Second call — cached script, different param ($0 LLM, ~5s)
-result2 = await client.run(
-"Get the top @{{10}} stories from https://news.ycombinator.com as JSON",
-workspace_id=str(workspace.id),
-)
+first = await client.runs.wait_for_completion(created.id)
+print(first.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const workspace = await client.workspaces.create({ name: "my-scraper" });
+const workspace = await client.workspaces.create({ name: "hn-scraper" });
 
-// First call — agent explores, creates script (~$0.10, ~60s)
-const result = await client.run(
-  "Get the top @{{5}} stories from https://news.ycombinator.com as JSON",
-  { workspaceId: workspace.id },
-);
-
-// Second call — cached script, different param ($0 LLM, ~5s)
-const result2 = await client.run(
-  "Get the top @{{10}} stories from https://news.ycombinator.com as JSON",
-  { workspaceId: workspace.id },
-);
+const created = await client.runs.create({
+  task: `
+    Get the top five Hacker News stories as JSON.
+    Then create helper functions or a script that performs exactly what you did.
+    Test it, save it as scripts/hn_top.py, and save reuse instructions in
+    scripts/README.md.
+  `,
+  workspaceId: workspace.id,
+});
+const first = await client.runs.waitForCompletion(created.id);
+console.log(first.result);
 ```
 
-## How it works
-
-The brackets mark which parts are parameters:
-
-```
-"Get prices from @{{example.com}} for @{{electronics}}"
-```
-
-- `@{{example.com}}` → parameter 1
-- `@{{electronics}}` → parameter 2
-
-The system strips the values to create a **template**: `"Get prices from @{{}} for @{{}}"`.
-Template `"Get prices from @{{}} for @{{}}"` is hashed to a unique ID like `a7f3b2c1`.
-The system checks the workspace for `scripts/a7f3b2c1.py`.
-If no script exists, the full agent runs your task. After completing it, the agent saves a standalone Python script that reproduces the result deterministically — no AI needed.
-If the script exists, it runs directly with the new parameter values. No agent, no LLM. Just the script in a sandbox with browser and proxy.
-
-## Auto-detection
-
-Caching activates **automatically** when both conditions are met:
-- The task contains `@{{` and `}}`
-- A `workspace_id` is provided
-
-No extra flags needed. You can override with `cache_script`:
-
-| Value | Behavior |
-|-------|----------|
-| `None` (default) | Auto-detect from `@{{brackets}}` + workspace |
-| `True` | Force-enable, even without brackets |
-| `False` | Force-disable, even if brackets are present |
-
-## Examples
-
-### Parameterized scraping
-
-Run once, then loop over different keywords at $0 LLM each:
+Later, start a new run in the same workspace and tell the agent to use the saved script:
 
 ```python Python
-# Agent figures out how to scrape intro.co on first call
-result = await client.run(
-"Go to @{{https://intro.co/marketplace}} and get all @{{logistics}} experts as JSON",
-workspace_id=str(workspace.id),
+created = await client.runs.create(
+    "Run scripts/hn_top.py for the top 10 stories. Use the existing script; fix and retest it only if needed.",
+    workspace_id=workspace.id,
 )
-
-# Instant reruns with different keywords
-for keyword in ["CEO", "marketing", "finance", "e-commerce"]:
-result = await client.run(
-    f"Go to @{{{{https://intro.co/marketplace}}}} and get all @{{{{{keyword}}}}} experts as JSON",
-    workspace_id=str(workspace.id),
-)
-print(f"{keyword}: {result.output}, LLM cost: ${result.llm_cost_usd}")
+rerun = await client.runs.wait_for_completion(created.id)
+print(rerun.result)
 ```
 ```typescript TypeScript
-// Agent figures out how to scrape intro.co on first call
-let result = await client.run(
-  "Go to @{{https://intro.co/marketplace}} and get all @{{logistics}} experts as JSON",
-  { workspaceId: workspace.id },
-);
-
-// Instant reruns with different keywords
-for (const keyword of ["CEO", "marketing", "finance", "e-commerce"]) {
-  result = await client.run(
-`Go to @{{https://intro.co/marketplace}} and get all @{{${keyword}}} experts as JSON`,
-{ workspaceId: workspace.id },
-  );
-  console.log(`${keyword}: ${result.output}`);
-}
+const created = await client.runs.create({
+  task: "Run scripts/hn_top.py for the top 10 stories. Use the existing script; fix and retest it only if needed.",
+  workspaceId: workspace.id,
+});
+const rerun = await client.runs.waitForCompletion(created.id);
+console.log(rerun.result);
 ```
 
-### No parameters — cache the exact task
+This pattern gives the agent a fast, inspectable path and lets it repair the script when the website changes. Keep one workspace per workflow so scripts, fixtures, outputs, and instructions stay together.
 
-Append empty brackets `@{{}}` to signal "cache this exact task":
-
-```python Python
-result = await client.run(
-"Get the current Bitcoin price from coinmarketcap.com @{{}}",
-workspace_id=str(workspace.id),
-)
-
-# Same task again — cached
-result2 = await client.run(
-"Get the current Bitcoin price from coinmarketcap.com @{{}}",
-workspace_id=str(workspace.id),
-)
-```
-```typescript TypeScript
-let result = await client.run(
-  "Get the current Bitcoin price from coinmarketcap.com @{{}}",
-  { workspaceId: workspace.id },
-);
-
-// Same task again — cached
-result = await client.run(
-  "Get the current Bitcoin price from coinmarketcap.com @{{}}",
-  { workspaceId: workspace.id },
-);
-```
-
-### Multiple parameters
-
-```python Python
-result = await client.run(
-"Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{Germany,France,Japan}}",
-workspace_id=str(workspace.id),
-)
-
-# Different countries — cached
-result2 = await client.run(
-"Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{US,UK,Brazil}}",
-workspace_id=str(workspace.id),
-)
-```
-```typescript TypeScript
-let result = await client.run(
-  "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{Germany,France,Japan}}",
-  { workspaceId: workspace.id },
-);
-
-// Different countries — cached
-result = await client.run(
-  "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{US,UK,Brazil}}",
-  { workspaceId: workspace.id },
-);
-```
-
-### Force enable / disable
-
-```python Python
-# Force-enable without brackets
-result = await client.run(
-"Get the top stories from Hacker News",
-workspace_id=str(workspace.id),
-cache_script=True,
-)
-
-# Force-disable even with brackets
-result = await client.run(
-"Explain what @{{templates}} means in Jinja",
-workspace_id=str(workspace.id),
-cache_script=False,
-)
-```
-```typescript TypeScript
-// Force-enable without brackets
-let result = await client.run(
-  "Get the top stories from Hacker News",
-  { workspaceId: workspace.id, cacheScript: true },
-);
-
-// Force-disable even with brackets
-result = await client.run(
-  "Explain what @{{templates}} means in Jinja",
-  { workspaceId: workspace.id, cacheScript: false },
-);
-```
-
-## Inspecting cached scripts
-
-You can download and inspect the scripts the agent created:
-
-```python Python
-files = await client.workspaces.files(workspace.id, prefix="scripts/")
-for f in files.files:
-print(f"{f.path}  ({f.size} bytes)")
-
-# Download a script to inspect it
-await client.workspaces.download(workspace.id, "scripts/a7f3b2c1.py", to="./my_script.py")
-```
-```typescript TypeScript
-const files = await client.workspaces.files(workspace.id, { prefix: "scripts/" });
-for (const f of files.files) {
-  console.log(`${f.path}  (${f.size} bytes)`);
-}
-```
-
-## Auto-healing
-
-Cached scripts can break when a website changes its layout, adds new elements, or alters its structure. Auto-healing detects these failures and automatically regenerates the script.
-
-### How it works
-
-When a cached script runs, the system validates its output:
-
-1. **Fast checks** (no LLM) — detects empty results, error fields in JSON, or exception keywords in output.
-2. **LLM judge** — if fast checks pass, a lightweight model validates whether the output looks correct for the original task.
-3. **Heal** — if validation fails, the full agent re-runs the task and saves an updated script.
-
-Auto-healing is **limited to 1 attempt per run** to prevent runaway costs. If the healed script also fails, the output is returned as-is.
-
-### Cost impact
-
-| Scenario | LLM cost |
-|----------|----------|
-| Cached script succeeds | **$0** |
-| Cached script fails, auto-heals | ~$0.05–1.00 (one full agent run) |
-| Healed script also fails | Same as above (returns best-effort output) |
-
-Auto-healing is enabled by default for all cached scripts. No configuration needed.
-
-## Cost comparison
-
-| | LLM cost | Browser + proxy | Time |
-|---|---|---|---|
-| First call (agent) | ~$0.05–1.00 | Yes | ~30–120s |
-| Cached calls | **$0** | Yes | ~3–10s |
-
-The browser and proxy still run for cached calls (the script may need them), so there is a small infrastructure cost per execution. LLM cost drops to zero.
+  V4 does not automatically turn a task into a cached $0-LLM execution. Each rerun starts an agent, so it still has token cost. The saved script usually makes the run faster and cheaper, but you should measure it for your workflow.
 
 
 # Human in the loop
 Source: https://docs.browser-use.com/cloud/agent/human-in-the-loop
 
 
-## Use cases
-- Human enters payment info or approves a transaction, agent handles the rest
-- Human navigates a complex auth flow, then hands back to agent
-- Human reviews what the agent did before the agent continues
+Use a human checkpoint for approvals, payments, complex authentication, or reviewing work before the agent continues.
 
-  Sessions time out after 15 minutes of inactivity. The maximum session duration is 4 hours. If the human needs more time, send a lightweight follow-up task (e.g. "wait") to reset the inactivity timer.
-
-## Flow
-
-1. Create a session — it stays alive automatically when you pass `session_id` to `run()`
-2. Run an agent task
-3. Human interacts with the live browser
-4. Send a new follow-up task
+The run's `browser.ready` event contains a `live_view_url`. After the first turn stops at a safe checkpoint, open that URL, let the human interact, then send a follow-up with the same session ID.
 
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-
-# 1. Create a session
-session = await client.sessions.create()
-print(f"Live view: {session.live_url}")
-
-# 2. Agent does the first part
-result = await client.run(
-"Go to amazon.com and search for noise cancelling headphones",
-session_id=session.id,
+created = await client.runs.create(
+    "Find noise-cancelling headphones on Amazon and stop before selecting a product"
 )
-print(result.output)
+await client.runs.wait_for_completion(created.id)
 
-# 3. Human opens live_url and picks a product
-input("Press Enter after you've selected a product in the live view...")
+events = await client.runs.events(created.id, limit=100)
+ready = next(event for event in events.events if event.type == "browser.ready")
+live_url = ready.data["live_view_url"]
+print(f"Open this live browser: {live_url}")
 
-# 4. Agent continues where the human left off
-result = await client.run(
-"Get the details of the selected product — name, price, and rating",
-session_id=session.id,
+input("Press Enter after selecting a product...")
+
+follow_up = await client.runs.create(
+    "Get the selected product's name, price, and rating",
+    session_id=created.session_id,
 )
-print(result.output)
-
-# Clean up
-await client.sessions.stop(session.id)
+result = await client.runs.wait_for_completion(follow_up.id)
+print(result.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-import * as readline from "readline";
+import { BrowserUse } from "browser-use-sdk/v4";
+import * as readline from "node:readline/promises";
 
 const client = new BrowserUse();
+const created = await client.runs.create({
+  task: "Find noise-cancelling headphones on Amazon and stop before selecting a product",
+});
+await client.runs.waitForCompletion(created.id);
 
-// 1. Create a session
-const session = await client.sessions.create();
-console.log(`Live view: ${session.liveUrl}`);
+const events = await client.runs.events(created.id, { limit: 100 });
+const ready = events.events.find((event) => event.type === "browser.ready");
+const liveUrl = ready?.data.live_view_url;
+console.log(`Open this live browser: ${liveUrl}`);
 
-// 2. Agent does the first part
-const searchResult = await client.run(
-  "Go to amazon.com and search for noise cancelling headphones",
-  { sessionId: session.id },
-);
-console.log(searchResult.output);
-
-// 3. Human opens liveUrl and picks a product
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-await new Promise((resolve) =>
-  rl.question("Press Enter after you've selected a product in the live view...", resolve),
-);
+await rl.question("Press Enter after selecting a product...");
 rl.close();
 
-// 4. Agent continues where the human left off
-const result = await client.run(
-  "Get the details of the selected product — name, price, and rating",
-  { sessionId: session.id },
-);
-console.log(result.output);
-
-// Clean up
-await client.sessions.stop(session.id);
+const followUp = await client.runs.create({
+  task: "Get the selected product's name, price, and rating",
+  sessionId: created.sessionId,
+});
+const result = await client.runs.waitForCompletion(followUp.id);
+console.log(result.result);
 ```
 
+The browser is kept alive for follow-ups when possible. If it has expired, V4 restores the conversation and workspace but provisions a new browser, so complete the human step before the live browser's timeout.
+
+  Treat live-view URLs as credentials. Anyone with the URL can interact with the browser while it is active.
+
+See [Get run events](https://docs.browser-use.com/cloud/api-v4/runs/get-run-events) for the event response.
 
 
 # Introduction Stealth
@@ -1080,12 +712,12 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 browser = await client.browsers.create(
-custom_proxy={
-    "host": "proxy.example.com",
-    "port": 8080,
-    "username": "user",
-    "password": "pass",
-},
+    custom_proxy={
+        "host": "proxy.example.com",
+        "port": 8080,
+        "username": "user",
+        "password": "pass",
+    },
 )
 ```
 ```typescript TypeScript
@@ -1094,10 +726,10 @@ import { BrowserUse } from "browser-use-sdk/v3";
 const client = new BrowserUse();
 const browser = await client.browsers.create({
   customProxy: {
-host: "proxy.example.com",
-port: 8080,
-username: "user",
-password: "pass",
+    host: "proxy.example.com",
+    port: 8080,
+    username: "user",
+    password: "pass",
   },
 });
 ```
@@ -1194,14 +826,14 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"Check how many GitHub stars browser-use has",
-enable_recording=True,
+    "Check how many GitHub stars browser-use has",
+    enable_recording=True,
 )
 
 # Waits up to 15s for recording to be ready. Returns [] if no browser was opened.
 urls = await client.sessions.wait_for_recording(result.id)
 for url in urls:
-print(url)  # presigned MP4 download URL
+    print(url)  # presigned MP4 download URL
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
@@ -1260,11 +892,11 @@ from playwright.async_api import async_playwright
 WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
 
 async with async_playwright() as p:
-browser = await p.chromium.connect_over_cdp(WSS_URL)
-page = browser.contexts[0].pages[0]
-await page.goto("https://example.com")
-print(await page.title())
-await browser.close()
+    browser = await p.chromium.connect_over_cdp(WSS_URL)
+    page = browser.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    print(await page.title())
+    await browser.close()
 # Browser is automatically stopped when the WebSocket disconnects
 ```
 ```typescript TypeScript
@@ -1304,11 +936,11 @@ from playwright.sync_api import sync_playwright
 WSS_URL = "wss://connect.browser-use.com?apiKey=YOUR_API_KEY&proxyCountryCode=us"
 
 with sync_playwright() as p:
-browser = p.chromium.connect_over_cdp(WSS_URL)
-page = browser.contexts[0].pages[0]
-page.goto("https://example.com")
-print(page.title())
-browser.close()
+    browser = p.chromium.connect_over_cdp(WSS_URL)
+    page = browser.contexts[0].pages[0]
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()
 ```
 
   Selenium's `debugger_address` only supports local `host:port` connections. For remote CDP over WebSocket, use Playwright or Puppeteer instead.
@@ -1340,11 +972,11 @@ print(browser.cdp_url)   # https://uuid.cdpN.browser-use.com
 print(browser.live_url)  # https://live.browser-use.com?wss=...
 
 async with async_playwright() as p:
-pw_browser = await p.chromium.connect_over_cdp(browser.cdp_url)
-page = pw_browser.contexts[0].pages[0]
-await page.goto("https://example.com")
-print(await page.title())
-await pw_browser.close()
+    pw_browser = await p.chromium.connect_over_cdp(browser.cdp_url)
+    page = pw_browser.contexts[0].pages[0]
+    await page.goto("https://example.com")
+    print(await page.title())
+    await pw_browser.close()
 
 await client.browsers.stop(browser.id)
 ```
@@ -1437,7 +1069,7 @@ profile = await client.profiles.create(name="work-account")
 # List all
 response = await client.profiles.list()
 for p in response.items:
-print(p.id, p.name)
+    print(p.id, p.name)
 
 # Search by name
 response = await client.profiles.list(query="user-id-1")
@@ -1603,8 +1235,8 @@ print(f"Live view: {session.live_url}")
 
 # Agent navigates to login
 result = await client.run(
-"Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
-session_id=session.id,
+    "Go to example.com/login and enter username user@example.com and password mypassword, then stop before 2FA",
+    session_id=session.id,
 )
 
 # Human completes 2FA in the live view
@@ -1612,8 +1244,8 @@ input("Complete 2FA in the live view, then press Enter...")
 
 # Agent continues
 result = await client.run(
-"You are now logged in. Go to the dashboard and export the monthly report",
-session_id=session.id,
+    "You are now logged in. Go to the dashboard and export the monthly report",
+    session_id=session.id,
 )
 print(result.output)
 await client.sessions.stop(session.id)
@@ -1662,14 +1294,14 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 client = AsyncBrowserUse()
 
 result = await client.run(
-"""
-1. Go to example.com/signup
-2. Sign up with the agent's email address (use the email available to you)
-3. Check your email inbox for the verification code
-4. Enter the code on the website
-5. Complete the registration
-""",
-agentmail=True,  # default, shown for clarity
+    """
+    1. Go to example.com/signup
+    2. Sign up with the agent's email address (use the email available to you)
+    3. Check your email inbox for the verification code
+    4. Enter the code on the website
+    5. Complete the registration
+    """,
+    agentmail=True,  # default, shown for clarity
 )
 print(result.output)
 ```
@@ -1719,16 +1351,16 @@ client = AsyncBrowserUse()
 totp_secret = "JBSWY3DPEHPK3PXP"
 
 result = await client.run(
-f"""
-Log into example.com with username user@example.com and password mypassword.
-When prompted for a 2FA code, generate one using pyotp:
+    f"""
+    Log into example.com with username user@example.com and password mypassword.
+    When prompted for a 2FA code, generate one using pyotp:
 
-import pyotp
-totp = pyotp.TOTP("{totp_secret}")
-code = totp.now()
+    import pyotp
+    totp = pyotp.TOTP("{totp_secret}")
+    code = totp.now()
 
-Enter the generated code.
-""",
+    Enter the generated code.
+    """,
 )
 print(result.output)
 ```
@@ -1772,6 +1404,187 @@ Use **Agent Mail** (enabled by default). For end-client scenarios, have them for
 Use **TOTP secret in prompt** — the agent generates codes via pyotp, no human intervention needed.
 
 
+# Claude Code
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/claude-code
+
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) is Anthropic's agentic coding tool that runs in the terminal. Add Browser Use and it gets full cloud browser automation — anti-detect profiles, CAPTCHA solving, residential proxies in 195+ countries, persistent profiles, and stealth browsing.
+
+## Setup
+
+**1. Install the CLI**
+
+```bash
+uv tool install browser-use
+```
+
+**2. Verify the installation**
+
+```bash
+browser-use doctor
+```
+
+**3. Register the skill**
+
+Register the Browser Use skill with the installed CLI:
+
+```bash
+browser-use skill install
+```
+
+**4. Authenticate for cloud browsers**
+
+Sign up at [cloud.browser-use.com](https://cloud.browser-use.com), then authenticate:
+
+```bash
+browser-use auth login
+```
+
+Or let Claude Code provision a free API key itself — see [Agent Self-Registration](#agent-self-registration) below.
+
+**5. Use it**
+
+Claude Code uses its bash tool to run CLI commands directly:
+
+```
+> Use browser-use to open github.com/trending and summarize the top repos
+```
+
+For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
+
+## Agent Self-Registration
+
+Claude Code can provision its own Browser Use API key autonomously — no human interaction needed. The free tier includes unlimited browser hours, free proxies in 195+ countries, persistent browser profiles, CAPTCHA solving, and stealth browsing at zero cost.
+
+Install the Browser Use CLI and skill:
+
+```bash
+uv tool install browser-use
+browser-use skill install
+```
+
+Claude Code can follow the [REST flow](https://docs.browser-use.com/cloud/agent-signup#rest-flow) to request and verify a challenge, then put the returned key in its shell environment:
+
+```bash
+export BROWSER_USE_API_KEY=bu_...
+browser-use auth status
+```
+
+### Claim the account (optional)
+
+If the human wants to see the account in the dashboard later, use the [claim endpoint](https://docs.browser-use.com/cloud/agent-signup#claim-the-account). The returned claim URL is valid for 1 hour.
+
+## Pay with USDC via x402
+
+Two ways to use x402 with Browser Use Cloud:
+
+- **Top up an existing account** — add credits to your API key (e.g. one created via Agent Self-Registration above) using USDC. No credit card required. Use this when free credits run out.
+- **Accountless** — wallet IS the identity, no signup needed. Pure x402 / agent-economy native. Use this for autonomous agents that hold their own wallet.
+
+Install the skill:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill x402
+```
+
+Then in Claude Code:
+
+```
+> /x402
+```
+
+The skill asks whether you have an existing API key (top-up mode) or want accountless mode, then walks you through generating (or importing) an EVM wallet, funding it via Coinbase, and running a verification task. You'll need ~$5 of USDC on Base mainnet. Each top-up is $1.
+
+For the SDK API and protocol details, see the [x402 guide](https://docs.browser-use.com/cloud/guides/x402).
+
+
+# Claude Managed Agents
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/claude-managed-agents
+
+
+[Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents) run on Anthropic's hosted platform. Install the `browser-use` CLI in the agent's environment and it can drive a stealth cloud browser — with proxies, CAPTCHA solving, live view, and recording. Your API key stays in a credential vault; the model never sees it.
+
+The sandbox can't run a local browser, so the agent starts a named Browser Use Cloud browser and drives it with `browser-use <<'PY'` Python snippets.
+
+## 1. Create an environment
+
+Pre-install the CLI so it's ready at session start (no runtime install).
+
+```yaml
+name: browser-env
+config:
+  type: cloud
+  packages:
+    pip:
+      - browser-use
+  networking:
+    type: limited
+    allowed_hosts: ["*.browser-use.com"]
+    allow_package_managers: true
+```
+
+## 2. Create a credential vault
+
+Store your key as an environment variable so the CLI reads it and the model never does. Get one at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+| Field | Value                 |
+| ----- | --------------------- |
+| Type  | Environment variable  |
+| Name  | `BROWSER_USE_API_KEY` |
+| Value | `bu_...`              |
+
+## 3. Create the agent
+
+Tell it to use the CLI in cloud mode.
+
+```yaml
+name: browser agent
+model:
+  id: claude-opus-4-8
+description: Drives a stealth cloud browser with the Browser Use CLI.
+system: |
+  You are a browser agent. Use the `browser-use` CLI to complete web tasks.
+  Never launch a local browser in this sandbox. Start a named cloud browser:
+  browser-use <<'PY'
+  start_remote_daemon("managed")
+  PY
+  Then run browser work through the same name:
+  BU_NAME=managed browser-use <<'PY'
+  new_tab("https://example.com")
+  print(page_info())
+  PY
+  Your BROWSER_USE_API_KEY is in the environment; never print it.
+tools:
+  - type: agent_toolset_20260401 # shell access so the agent can run the CLI
+    default_config:
+      enabled: true
+      permission_policy:
+        type: always_allow
+```
+
+## 4. Start a session and send a task
+
+The Console only observes; kick the agent off with a `user.message` event.
+
+```bash
+curl -sS "https://api.anthropic.com/v1/sessions/$SESSION_ID/events?beta=true" \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "anthropic-beta: managed-agents-2026-04-01" \
+  -H "content-type: application/json" \
+  -d '{"events":[{"type":"user.message","content":[{"type":"text",
+       "text":"Get the top 5 Hacker News stories with their links."}]}]}'
+```
+
+## 5. Watch it run
+
+The agent starts a named cloud browser, runs Python helper snippets through `browser-use`, then returns the result. The session shows up in [cloud.browser-use.com](https://cloud.browser-use.com) → **Remote Browsers** with a **Live View** and an **mp4 recording**.
+
+  Always use a cloud browser — the Managed Agents sandbox has no GUI, so a local
+  browser won't start. Cloud mode also gives you stealth, residential proxies,
+  live view, and recording.
+
+
 # OpenClaw
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/openclaw
 
@@ -1799,16 +1612,16 @@ Open `~/.openclaw/openclaw.json` and add a `browser-use` profile:
 ```json5
 {
   browser: {
-enabled: true,
-defaultProfile: "browser-use",
-remoteCdpTimeoutMs: 3000,
-remoteCdpHandshakeTimeoutMs: 5000,
-profiles: {
-  "browser-use": {
-    cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
-    color: "#ff750e",
-  },
-},
+    enabled: true,
+    defaultProfile: "browser-use",
+    remoteCdpTimeoutMs: 3000,
+    remoteCdpHandshakeTimeoutMs: 5000,
+    profiles: {
+      "browser-use": {
+        cdpUrl: "wss://connect.browser-use.com?apiKey=<BROWSER_USE_API_KEY>&proxyCountryCode=us",
+        color: "#ff750e",
+      },
+    },
   },
 }
 ```
@@ -1846,7 +1659,7 @@ The Browser Use CLI is a standalone tool that gives any OpenClaw agent browser a
 **1. Install the CLI**
 
 ```bash
-curl -fsSL https://browser-use.com/cli/install.sh | bash
+uv tool install browser-use
 ```
 
 **2. Verify the installation**
@@ -1863,9 +1676,141 @@ Paste this setup prompt into your OpenClaw agent:
 Install or upgrade browser-use with `uv tool install --python 3.12 --upgrade --force 'browser-use @ git+https://github.com/browser-use/browser-use.git'`, run `browser-use skill install`, and connect it to my browser. Follow https://github.com/browser-use/browser-use if setup or connection fails.
 ```
 
-Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to navigate pages, click elements, fill forms, take screenshots, extract data, and more. The skill file teaches the agent the full command set.
+Once the skill is loaded, OpenClaw agents can use the `browser-use` CLI to drive pages through Browser Harness and Python helpers.
 
-For the complete CLI reference and advanced features like cloud browsers, tunnels, sessions, and Python execution, see the [README](https://github.com/browser-use/browser-use/blob/main/browser_use/skill_cli/README.md) and the [Browser Use docs](https://docs.browser-use.com).
+For the complete CLI reference, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
+
+
+# Hermes Agent
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/hermes-agent
+
+
+[Hermes Agent](https://github.com/nousresearch/hermes-agent) is an open-source, self-improving AI agent by Nous Research. It has built-in browser automation tools that work with local Chromium out of the box. Add Browser Use and those tools run on cloud browsers with anti-detect profiles, residential proxies in 195+ countries, and stealth browsing.
+
+Two ways to set it up: configure Browser Use as Hermes's cloud browser backend, or install the Browser Use CLI and let Hermes drive it directly.
+
+## Option 1: Cloud Browser Backend
+
+Hermes has built-in browser tools (`browser_navigate`, `browser_click`, `browser_snapshot`, etc.) that default to local Chromium. Point them at Browser Use cloud browsers instead — no extra dependencies, same Hermes experience.
+
+### Setup
+
+**1. Get your API key**
+
+Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and copy your API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
+
+**2. Configure Hermes**
+
+Run the setup wizard:
+
+```bash
+hermes setup tools
+```
+
+Select **Browser Automation**, then **Browser Use**, and paste your API key when prompted.
+
+Or configure manually — add your key to `~/.hermes/.env`:
+
+```bash
+BROWSER_USE_API_KEY=your_key_here
+```
+
+And set the provider in `~/.hermes/config.yaml`:
+
+```yaml
+browser:
+  cloud_provider: browser-use
+```
+
+**3. Use it**
+
+Just chat with Hermes — any browsing tasks automatically route through Browser Use cloud browsers:
+
+```
+> Find the top trending repositories on GitHub today and summarize them
+```
+
+## Option 2: Browser Use CLI
+
+The [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli) is a standalone tool that gives Hermes browser automation through terminal commands. Hermes drives the browser directly via its terminal tool, using Browser Harness and Python helpers through the `browser-use` command.
+
+### Setup
+
+**1. Install the CLI**
+
+```bash
+uv tool install browser-use
+```
+
+**2. Verify the installation**
+
+```bash
+browser-use doctor
+```
+
+**3. Register the skill**
+
+Register the Browser Use skill with the installed CLI:
+
+```bash
+browser-use skill install
+```
+
+Or ask Hermes directly in chat to install it.
+
+**4. Authenticate for cloud browsers**
+
+Authenticate with your API key:
+
+```bash
+browser-use auth login
+```
+
+Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
+
+**5. Use it**
+
+Once the skill is loaded, Hermes can drive the browser through CLI commands via its terminal tool:
+
+```
+> Use browser-use to open github.com/trending and summarize the top repos
+```
+
+For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
+
+## Agent Self-Registration
+
+Hermes can provision its own Browser Use API key autonomously — no human interaction needed. This works with both options above.
+
+Install the Browser Use CLI and skill:
+
+```bash
+uv tool install browser-use
+browser-use skill install
+```
+
+The agent can follow the [REST flow](https://docs.browser-use.com/cloud/agent-signup#rest-flow) to request and verify a challenge, then use the returned API key.
+
+**Copy the key to Hermes config**
+
+For the cloud browser backend (Option 1):
+
+```bash
+hermes config set BROWSER_USE_API_KEY <api-key>
+```
+
+For CLI mode (Option 2), put the key in the agent's shell environment:
+
+```bash
+export BROWSER_USE_API_KEY=bu_...
+browser-use auth status
+```
+
+### Claim the account (optional)
+
+If the human wants to see the account in the dashboard later, use the [claim endpoint](https://docs.browser-use.com/cloud/agent-signup#claim-the-account). The returned claim URL is valid for 1 hour.
 
 
 # MCP Server
@@ -1891,12 +1836,12 @@ Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-"browser-use": {
-  "url": "https://api.browser-use.com/v3/mcp",
-  "headers": {
-    "x-browser-use-api-key": "YOUR_API_KEY"
-  }
-}
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
   }
 }
 ```
@@ -1908,12 +1853,12 @@ Add to `.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-"browser-use": {
-  "url": "https://api.browser-use.com/v3/mcp",
-  "headers": {
-    "x-browser-use-api-key": "YOUR_API_KEY"
-  }
-}
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
   }
 }
 ```
@@ -1925,12 +1870,12 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 ```json
 {
   "mcpServers": {
-"browser-use": {
-  "serverUrl": "https://api.browser-use.com/v3/mcp",
-  "headers": {
-    "x-browser-use-api-key": "YOUR_API_KEY"
-  }
-}
+    "browser-use": {
+      "serverUrl": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
   }
 }
 ```
@@ -1968,10 +1913,10 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
   "type": "agent.task.status_update",
   "timestamp": "2025-01-15T10:30:00Z",
   "payload": {
-"task_id": "task_abc123",
-"session_id": "session_xyz",
-"status": "idle",
-"metadata": {}
+    "task_id": "task_abc123",
+    "session_id": "session_xyz",
+    "status": "idle",
+    "metadata": {}
   }
 }
 ```
@@ -1992,17 +1937,17 @@ import json
 import time
 
 def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
-# Reject requests older than 5 minutes
-try:
-    ts = int(timestamp)
-except (ValueError, TypeError):
-    return False
-if abs(time.time() - ts) > 300:
-    return False
-payload = json.loads(body)
-message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
-expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
-return hmac.compare_digest(expected, signature)
+    # Reject requests older than 5 minutes
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        return False
+    if abs(time.time() - ts) > 300:
+        return False
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
 ```
 ```typescript TypeScript
 import { createHmac, timingSafeEqual } from "crypto";
@@ -2010,12 +1955,12 @@ import { createHmac, timingSafeEqual } from "crypto";
 function sortKeys(obj: unknown): unknown {
   if (Array.isArray(obj)) return obj.map(sortKeys);
   if (obj !== null && typeof obj === "object") {
-return Object.keys(obj as object)
-  .sort()
-  .reduce((acc, key) => {
-    (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
-    return acc;
-  }, {} as Record<string, unknown>);
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
   }
   return obj;
 }
@@ -2044,12 +1989,12 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
 function sortKeys(obj: unknown): unknown {
   if (Array.isArray(obj)) return obj.map(sortKeys);
   if (obj !== null && typeof obj === "object") {
-return Object.keys(obj as object)
-  .sort()
-  .reduce((acc, key) => {
-    (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
-    return acc;
-  }, {} as Record<string, unknown>);
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
   }
   return obj;
 }
@@ -2059,7 +2004,7 @@ app.post("/webhook", (req, res) => {
   const timestamp = req.headers["x-browser-use-timestamp"] as string;
 
   if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
-return res.status(401).send("Request too old");
+    return res.status(401).send("Request too old");
   }
 
   const body = req.body.toString();
@@ -2068,12 +2013,12 @@ return res.status(401).send("Request too old");
   const expected = createHmac("sha256", WEBHOOK_SECRET).update(message).digest("hex");
 
   if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
-return res.status(401).send("Invalid signature");
+    return res.status(401).send("Invalid signature");
   }
 
   if (payload.type === "agent.task.status_update") {
-const { task_id, status, session_id } = payload.payload;
-console.log(`Task ${task_id} is now ${status}`);
+    const { task_id, status, session_id } = payload.payload;
+    console.log(`Task ${task_id} is now ${status}`);
   }
 
   res.status(200).send("OK");
@@ -2098,34 +2043,352 @@ WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
 
 @app.post("/webhook")
 async def handle_webhook(request: Request):
-body = await request.body()
-signature = request.headers.get("x-browser-use-signature", "")
-timestamp = request.headers.get("x-browser-use-timestamp", "")
+    body = await request.body()
+    signature = request.headers.get("x-browser-use-signature", "")
+    timestamp = request.headers.get("x-browser-use-timestamp", "")
 
-# Reject requests older than 5 minutes
-try:
-    ts = int(timestamp)
-except (ValueError, TypeError):
-    raise HTTPException(status_code=401, detail="Invalid timestamp")
-if abs(time.time() - ts) > 300:
-    raise HTTPException(status_code=401, detail="Request too old")
+    # Reject requests older than 5 minutes
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid timestamp")
+    if abs(time.time() - ts) > 300:
+        raise HTTPException(status_code=401, detail="Request too old")
 
-payload = json.loads(body)
-message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
-expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
 
-if not hmac.compare_digest(expected, signature):
-    raise HTTPException(status_code=401, detail="Invalid signature")
+    if not hmac.compare_digest(expected, signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
 
-if payload["type"] == "agent.task.status_update":
-    task_id = payload["payload"]["task_id"]
-    status = payload["payload"]["status"]
-    print(f"Task {task_id} is now {status}")
+    if payload["type"] == "agent.task.status_update":
+        task_id = payload["payload"]["task_id"]
+        status = payload["payload"]["status"]
+        print(f"Task {task_id} is now {status}")
 
-return {"status": "ok"}
+    return {"status": "ok"}
 ```
 
   For local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose your local server: `ngrok http 3000`. Then set the ngrok URL as your webhook endpoint in the dashboard.
+
+
+# x402 (pay-per-request)
+Source: https://docs.browser-use.com/cloud/guides/x402
+
+
+<!-- prettier-ignore-start -->
+
+[x402](https://www.x402.org) is a payment protocol [created by Coinbase](https://www.coinbase.com/developer-platform/discover/launches/x402) that lets APIs, or AI agents, charge for requests directly with crypto.
+
+x402 lets your code, or an autonomous AI agent, pay Browser Use Cloud directly with cryptocurrency. No account signup, no credit card, and no API key is needed. Your wallet is your identity.
+
+
+**New to crypto?** Here's the gist:
+
+- **USDC** is a stablecoin pegged 1:1 to the US dollar. 1 USDC = $1.
+- **Base** is a low-fee blockchain network operated by Coinbase. Sending a payment costs fractions of a cent.
+- **Wallet** = a public address (your "username") and a private key (your "password"). The private key signs payments.
+- You'll need at least $5 of USDC on Base in a wallet you control. The Claude Code quickstart below walks you through everything from scratch.
+
+
+**Three ways to start, ranked by laziness:**
+
+One command. Claude does the wallet setup, funding walkthrough, and
+verification for you.
+One line in your Python or TypeScript app. Bring your own wallet.
+Skip the SDK. Sign EIP-3009, send `X-PAYMENT` header.
+
+## Claude Code quickstart
+
+The fastest path. Install the [x402 skill](https://github.com/browser-use/browser-use/tree/main/skills/x402), and Claude walks you through everything:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill x402
+```
+
+Then in Claude Code:
+
+```
+> /x402
+```
+
+Claude generates (or imports) a wallet, walks you through funding it via Coinbase, writes `BROWSER_USE_X402_PRIVATE_KEY` to your `.env`, installs the SDK, and runs a verification task. Total: ~2 minutes if you have a crypto wallet.
+
+  Already have a Browser Use Cloud account? The skill detects this and switches
+  to **top-up mode**, adding credits to that existing account instead of
+  creating a new, wallet-keyed one.
+
+## SDK quickstart
+
+The Browser Use SDK has built-in x402 support. Pass a wallet private key, and you're done.
+
+```bash Python
+pip install "browser-use-sdk[x402]"
+```
+```bash TypeScript
+npm install browser-use-sdk @x402/fetch @x402/evm viem
+```
+
+```python Python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse(x402_private_key="0x...")  # EVM wallet w/ USDC on Base
+    result = await client.run("Go to example.com and tell me the heading.")
+    print(result.output)
+
+asyncio.run(main())
+```
+
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({ x402PrivateKey: "0x..." });  // EVM wallet w/ USDC on Base
+const result = await client.run("Go to example.com and tell me the heading.");
+console.log(result.output);
+```
+
+Or set `BROWSER_USE_X402_PRIVATE_KEY` in your env, and skip the constructor arg entirely:
+
+```python Python
+client = AsyncBrowserUse()   # auto-detects from env
+```
+```typescript TypeScript
+const client = new BrowserUse(); // auto-detects from env
+```
+
+  Python: x402 is async-only. Use `AsyncBrowserUse`, not `BrowserUse`.
+
+## Raw HTTP quickstart
+
+Use this if you're in a language we don't ship an SDK for (Go, Rust, Ruby, etc.), or if you want to use other x402 APIs from the same client library. Hit `https://x402.api.browser-use.com` directly with any [x402 client library](https://github.com/coinbase/x402#all-available-reference-sdks):
+
+```python
+import asyncio
+
+from x402 import x402Client
+from x402.http.clients import x402HttpxClient
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+
+async def main():
+    client = x402Client()
+    register_exact_evm_client(client, EthAccountSigner(Account.from_key("0x...")))
+
+    async with x402HttpxClient(client, timeout=120.0) as http:
+        response = await http.post(
+            "https://x402.api.browser-use.com/api/v3/sessions",
+            json={"task": "..."},
+        )
+        print(response.status_code, response.text[:500])
+
+asyncio.run(main())
+```
+
+`https://x402.api.browser-use.com` exposes the same routes as `https://api.browser-use.com`. It supports every `/api/v2/*` and `/api/v3/*` route, gated by an x402 challenge instead of API key auth.
+
+## What you need
+
+- **EVM wallet** (MetaMask, Rabby, Coinbase Wallet, etc.) with its private key available to your app
+- **USD Coin (USDC) on Base mainnet**
+- **Default top-up:** `$5.00` USDC per request (`$1.00` minimum for budget-constrained wallets)
+
+You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIPS/eip-3009), so you sign offchain, and the facilitator pays gas.
+
+
+## Pricing and credits
+
+Each x402 payment adds `$5` of credits to your project by default (or `$1` if your wallet falls back to the smaller option). When credits hit zero, the next request returns `402`, and the SDK automatically signs another payment to keep going. **You don't manage top-ups manually; just make sure your wallet has enough USDC for your expected usage.**
+
+  **Mid-task drain still terminates the task.** Browser Use sessions run on a
+  worker that doesn't see x402, so once a long-running task starts and burns
+  through its credits, it stops with `INSUFFICIENT_CREDITS` — it does not pause
+  and wait for the next x402 payment. The `$5` default exists so most tasks
+  complete without hitting this; for expensive models (e.g. Opus) or long
+  sessions, pre-fund with multiple requests before kicking off the task.
+
+See the [pricing page](https://browser-use.com/pricing) for model and browser costs.
+
+## Topping up an existing account
+
+If you already have a Browser Use API key (for example, one created via the dashboard or the agent signup REST flow), you can use x402 to add credits to **that** account instead of creating a new project based on your crypto wallet. Send your existing API key alongside the payment:
+
+```python Python
+import asyncio
+
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse(
+    api_key="bu_...",                     # existing API key getting topped up
+    x402_private_key="0x...",             # wallet that pays
+    base_url="https://x402.api.browser-use.com/api/v3",
+)
+async def main():
+    result = await client.run("...")      # $5 USDC charged, credited to the API key's project
+    print(result.output)
+
+asyncio.run(main())
+
+```
+
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({
+  apiKey: "bu_...",
+  x402PrivateKey: "0x...",
+  baseUrl: "https://x402.api.browser-use.com/api/v3",
+});
+const result = await client.run("...");
+```
+
+When the backend sees both a payment and a valid API key, the credit goes to the key's project rather than auto-creating a new wallet-keyed one. Useful for:
+
+- Agents that ran out of free-tier credits and need to keep going
+- Adding credits via crypto when you already have a regular Browser Use account
+- Multi-wallet setups funding one shared account
+
+## Checking your credit balance
+
+When you sign up the normal way, Browser Use creates an **account** for you (we call it a "project") that holds your credits and runs your tasks, and you log into it with an API key. When you pay with **only a wallet** (no API key), there's no signup step — so the very first time you pay, Browser Use automatically creates one of these same accounts for you and ties it to your wallet. From then on it behaves exactly like a normal account. The only difference is how you prove it's yours: instead of an API key, you sign with your wallet.
+
+This balance is your **Browser Use credit balance** — the prepaid USD you've added to that account through x402 payments, minus what your tasks have spent.
+
+To check how much credit that account has left, use the method below:
+
+```python Python
+import asyncio
+
+from browser_use_sdk.v3 import get_wallet_balance
+
+async def main():
+    balance = await get_wallet_balance("0x...")  # same wallet private key you pay with
+    print(balance["total_credits_usd"])
+
+asyncio.run(main())
+
+```
+
+```typescript TypeScript
+import { getWalletBalance } from "browser-use-sdk/v3";
+
+const balance = await getWalletBalance("0x...");  // same wallet private key you pay with
+console.log(balance.total_credits_usd);
+```
+
+The response contains:
+
+| Field                    | Description                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| `wallet`                 | The wallet address (lowercased)                                                 |
+| `project_id`             | The account (project) tied to your wallet that the credits live in              |
+| `total_credits_usd`      | Your remaining Browser Use credit balance, in USD                               |
+| `additional_credits_usd` | Of that total, the portion added via x402 top-ups (excludes any plan allowance) |
+
+  This is for accounts created from a wallet (the default x402 mode). If you're
+  [topping up an existing account](#topping-up-an-existing-account), check that
+  account's balance the normal way with your API key via
+  `client.billing.account()`. A wallet that has never paid yet has no account,
+  so the call returns `404` until the first payment.
+
+  The SDK signs a fixed, server-defined message
+  ([EIP-191](https://eips.ethereum.org/EIPS/eip-191), the same "Sign-In with
+  Ethereum" mechanism) with your wallet's private key. The signature proves you
+  control the address without moving any funds. The server recovers the signer,
+  matches it to the wallet's project, and returns the balance.
+
+## How it works
+
+Your code asks for something, we say "$5 please," your wallet pays automatically, we run your request.
+
+A bit more detail:
+
+1. Your code makes a request (e.g. "run this task").
+2. The SDK auto-signs the payment from your wallet and resends the request.
+3. Coinbase moves the USDC on-chain. We add the same amount to your project's credit balance.
+4. We run your task and send back the result.
+
+## Wallet setup
+
+If you don't have a wallet ready, here's an easy way to set one up using **MetaMask**. It's a popular crypto wallet. Any other EVM-compatible wallet works equally well: [Rabby](https://rabby.io), [Coinbase Wallet](https://www.coinbase.com/wallet), [Frame](https://frame.sh), [Trust Wallet](https://trustwallet.com), [Phantom](https://phantom.com), etc. Pick whichever you prefer.
+
+Get the [MetaMask browser extension](https://metamask.io) via the official
+site only. Create a new wallet, save the seed phrase somewhere offline, set
+a password.
+By default, most wallets only show Ethereum. You need to add **Base** (the
+network we accept payments on) so your wallet can hold USDC there.
+Click **"Buy"** inside MetaMask. Pick **USDC**, set network to **Base**, and
+pay with credit card, bank, etc. The USDC lands directly in your wallet.
+In MetaMask: click the account menu → **Account details** → **Private keys**
+→ enter your password → copy. That string (starts with `0x`) is your
+`BROWSER_USE_X402_PRIVATE_KEY`. Other wallets have similar export options in
+their account settings.
+
+  Wallets hold real money, and anyone with the private key can drain it. Be
+  careful with your keys.
+
+## Advanced: bring your own x402 client
+
+For custom signers, multi-network setups, or non-EVM wallets, build the x402 client yourself, and pass it as `x402` instead of `x402_private_key`:
+
+```python Python
+from x402 import x402Client
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+x402 = x402Client()
+register_exact_evm_client(x402, EthAccountSigner(Account.from_key("0x...")))
+client = AsyncBrowserUse(x402=x402)
+
+```
+
+```typescript TypeScript
+import { x402Client } from "@x402/fetch";
+import { ExactEvmScheme } from "@x402/evm";
+import { privateKeyToAccount } from "viem/accounts";
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const x402 = new x402Client();
+x402.register("eip155:*", new ExactEvmScheme(privateKeyToAccount("0x...")));
+const client = new BrowserUse({ x402 });
+```
+
+## Troubleshooting
+
+Two likely causes:
+
+- **Wallet has no USDC on Base.** Check your balance. If empty, top it up.
+- **Your HTTP client isn't x402-aware.** Plain `requests` / `fetch` just sees a 402 and stops; it doesn't know how to read the payment instructions and sign a payment. Use the SDK (which handles this automatically), or wrap your HTTP client with one of the [x402 client libraries](https://github.com/coinbase/x402#all-available-reference-sdks).
+
+
+  You haven't installed the optional x402 deps. Run `pip install
+  "browser-use-sdk[x402]"` (Python) or `npm install @x402/fetch @x402/evm viem`
+  (TypeScript).
+
+  We verified your payment request but couldn't credit your project, so we
+  deliberately did not settle on-chain. No USDC was moved, so just retry. This
+  is rare.
+
+  Wait a few seconds. Settlement and credit grant happen in the same request,
+  but the response may be sent before the credit grant fully commits. If credits
+  still show `$0` after a few minutes, contact support with your wallet address.
+  (Conversely, if a payment settles but the request itself then fails, we
+  automatically reclaim the credits so you aren't charged for nothing.)
+
+`eip155:8453` is Base mainnet; `eip155:84532` is Base Sepolia testnet. Browser Use Cloud only accepts mainnet. Withdrawing USDC to Sepolia from Coinbase is **not** the same as Base mainnet, even though both use the same wallet address.
+
+## Related
+
+- [x402 protocol spec](https://www.x402.org)
+- [Standard API key auth](https://docs.browser-use.com/cloud/quickstart) — alternative if you don't want pay-per-use
+- [`x402` Claude Code skill source](https://github.com/browser-use/browser-use/tree/main/skills/x402)
+
+<!-- prettier-ignore-end -->
 
 
 # n8n
@@ -2223,8 +2486,8 @@ import { client } from "./api";
 
 export async function createSession() {
   const session = await client.sessions.create({
-keepAlive: true,
-enableRecording: true,
+    keepAlive: true,
+    enableRecording: true,
   });
   return { id: session.id, liveUrl: session.liveUrl, status: session.status };
 }
@@ -2241,7 +2504,7 @@ async function handleSend(message: string) {
   const session = await createSession();
 
   router.push(
-`/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
+    `/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
   );
 }
 ```
@@ -2257,7 +2520,7 @@ const streamTask = useCallback(async (task: string) => {
   const run = client.run(task, { sessionId });
 
   for await (const msg of run) {
-setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => [...prev, msg]);
   }
 
   // Iterator done — task reached terminal state
@@ -2301,7 +2564,7 @@ useEffect(() => {
   if (!isTerminal) return;
 
   client.sessions.waitForRecording(sessionId).then((urls) => {
-if (urls.length) setRecordingUrls(urls);
+    if (urls.length) setRecordingUrls(urls);
   });
 }, [isTerminal, sessionId]);
 ```
@@ -2329,23 +2592,23 @@ The session page consumes everything through a context provider:
 ```typescript session/[id]/page.tsx
 function SessionPage() {
   const { session, turns, isBusy, isTerminal, recordingUrls, sendMessage, stopTask } =
-useSession();
+    useSession();
 
   return (
-<div className="flex h-screen w-full overflow-hidden">
-  {/* Chat column */}
-  <div className="flex-1 flex flex-col min-w-0">
-    <ChatMessages turns={turns} isBusy={isBusy} />
-    <ChatInput
-      onSend={sendMessage}
-      onStop={stopTask}
-      disabled={isTerminal}
-    />
-  </div>
+    <div className="flex h-screen w-full overflow-hidden">
+      {/* Chat column */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <ChatMessages turns={turns} isBusy={isBusy} />
+        <ChatInput
+          onSend={sendMessage}
+          onStop={stopTask}
+          disabled={isTerminal}
+        />
+      </div>
 
-  {/* Live browser view — liveUrl available from session creation */}
-  <BrowserPanel liveUrl={session?.liveUrl} />
-</div>
+      {/* Live browser view — liveUrl available from session creation */}
+      <BrowserPanel liveUrl={session?.liveUrl} />
+    </div>
   );
 }
 ```
@@ -2360,6 +2623,116 @@ useSession();
 | `client.run()` | Send a task and stream messages with `for await` |
 | `client.sessions.stop()` | Stop the current task |
 | `client.sessions.waitForRecording()` | Get MP4 recording URLs |
+
+
+# Agent Sign Up for Browser Use
+Source: https://docs.browser-use.com/cloud/agent-signup
+
+
+An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
+
+The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
+
+## REST flow
+
+### 1. Request a challenge
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+Request body, optional (include a user email/name if available):
+
+```json
+{
+  "email": "user@example.com",
+  "name": "User Name"
+}
+```
+
+Response:
+
+```json
+{
+  "challenge_id": "uuid",
+  "challenge_text": "..."
+}
+```
+
+### 2. Solve the challenge
+
+Read `challenge_text` and solve the math problem. Return the answer as a string with two decimal places, for example `"144.00"`.
+
+### 3. Verify the answer
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup/verify \
+  -H "Content-Type: application/json" \
+  -d '{"challenge_id":"uuid","answer":"144.00"}'
+```
+
+Request body:
+
+```json
+{
+  "challenge_id": "uuid",
+  "answer": "144.00"
+}
+```
+
+Response:
+
+```json
+{
+  "api_key": "bu_..."
+}
+```
+
+Use the returned key for Browser Use Cloud API requests.
+
+For example, create a browser session:
+
+```bash
+curl -X POST https://api.browser-use.com/api/v3/browsers \
+  -H "X-Browser-Use-API-Key: bu_..." \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+See the [Create Browser Session API reference](https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session).
+
+## Claim the account
+
+If a human wants to see the agent-created account in the dashboard later, the agent can create a claim link:
+
+```bash
+curl -X POST https://api.browser-use.com/cloud/signup/claim \
+  -H "X-Browser-Use-API-Key: bu_..."
+```
+
+Response:
+
+```json
+{
+  "claim_url": "https://..."
+}
+```
+
+The claim URL is valid for 1 hour.
+
+## CLI usage
+
+Agents with shell access can use the Browser Use CLI after the REST flow returns an API key:
+
+```bash
+uv tool install browser-use
+export BROWSER_USE_API_KEY=bu_...
+browser-use auth status
+```
+
+Replace `bu_...` with the key returned by the REST flow.
 
 
 # Grow Therapy provider search
@@ -2398,28 +2771,28 @@ const client = new BrowserUse();
 
 ```python Python
 class Provider(BaseModel):
-name: str
-title: str
-specialties: list[str]
-insurance_plans: list[str]
-rating: float | None = None
-next_available: str | None = None
+    name: str
+    title: str
+    specialties: list[str]
+    insurance_plans: list[str]
+    rating: float | None = None
+    next_available: str | None = None
 
 class ProviderSearch(BaseModel):
-providers: list[Provider]
-total_found: int | None = None
-location: str
-specialty: str
+    providers: list[Provider]
+    total_found: int | None = None
+    location: str
+    specialty: str
 ```
 ```typescript TypeScript
 const ProviderSearch = z.object({
   providers: z.array(z.object({
-name: z.string(),
-title: z.string(),
-specialties: z.array(z.string()),
-insurancePlans: z.array(z.string()),
-rating: z.number().nullable(),
-nextAvailable: z.string().nullable(),
+    name: z.string(),
+    title: z.string(),
+    specialties: z.array(z.string()),
+    insurancePlans: z.array(z.string()),
+    rating: z.number().nullable(),
+    nextAvailable: z.string().nullable(),
   })),
   totalFound: z.number().nullable(),
   location: z.string(),
@@ -2440,19 +2813,19 @@ const workspace = await client.workspaces.create({ name: "grow-therapy-search" }
 
 ```python Python
 result = await client.run(
-"Go to growtherapy.com and search for therapists in {{New York}} "
-"who specialize in {{anxiety}} and accept insurance. "
-"Return the first 5 provider profiles as JSON.",
-workspace_id=str(workspace.id),
-output_schema=ProviderSearch,
+    "Go to growtherapy.com and search for therapists in {{New York}} "
+    "who specialize in {{anxiety}} and accept insurance. "
+    "Return the first 5 provider profiles as JSON.",
+    workspace_id=str(workspace.id),
+    output_schema=ProviderSearch,
 )
 
 for p in result.output.providers:
-print(f"{p.name} ({p.title})")
-print(f"  Specialties: {', '.join(p.specialties)}")
-print(f"  Rating: {p.rating}")
-print(f"  Next available: {p.next_available}")
-print()
+    print(f"{p.name} ({p.title})")
+    print(f"  Specialties: {', '.join(p.specialties)}")
+    print(f"  Rating: {p.rating}")
+    print(f"  Next available: {p.next_available}")
+    print()
 ```
 ```typescript TypeScript
 const result = await client.run(
@@ -2479,16 +2852,16 @@ locations = ["Los Angeles", "Chicago", "Houston", "Miami"]
 specialties = ["depression", "trauma", "ADHD"]
 
 for location in locations:
-for specialty in specialties:
-    result = await client.run(
-        f"Go to growtherapy.com and search for therapists in {{{{{location}}}}} "
-        f"who specialize in {{{{{specialty}}}}} and accept insurance. "
-        f"Return the first 5 provider profiles as JSON.",
-        workspace_id=str(workspace.id),
-        output_schema=ProviderSearch,
-    )
-    count = len(result.output.providers)
-    print(f"{location} / {specialty}: {count} providers found")
+    for specialty in specialties:
+        result = await client.run(
+            f"Go to growtherapy.com and search for therapists in {{{{{location}}}}} "
+            f"who specialize in {{{{{specialty}}}}} and accept insurance. "
+            f"Return the first 5 provider profiles as JSON.",
+            workspace_id=str(workspace.id),
+            output_schema=ProviderSearch,
+        )
+        count = len(result.output.providers)
+        print(f"{location} / {specialty}: {count} providers found")
 ```
 ```typescript TypeScript
 const locations = ["Los Angeles", "Chicago", "Houston", "Miami"];
@@ -2496,13 +2869,13 @@ const specialties = ["depression", "trauma", "ADHD"];
 
 for (const location of locations) {
   for (const specialty of specialties) {
-const result = await client.run(
-  `Go to growtherapy.com and search for therapists in {{${location}}} ` +
-  `who specialize in {{${specialty}}} and accept insurance. ` +
-  `Return the first 5 provider profiles as JSON.`,
-  { workspaceId: workspace.id, schema: ProviderSearch },
-);
-console.log(`${location} / ${specialty}: ${result.output.providers.length} providers`);
+    const result = await client.run(
+      `Go to growtherapy.com and search for therapists in {{${location}}} ` +
+      `who specialize in {{${specialty}}} and accept insurance. ` +
+      `Return the first 5 provider profiles as JSON.`,
+      { workspaceId: workspace.id, schema: ProviderSearch },
+    );
+    console.log(`${location} / ${specialty}: ${result.output.providers.length} providers`);
   }
 }
 ```
@@ -2532,18 +2905,26 @@ Source: https://docs.browser-use.com/cloud/faq
 
 ## Which model should I use?
 
-- **Claude Opus 4.6** (`claude-opus-4.6`) — most capable. Use for the hardest tasks that need maximum accuracy.
-- **Claude Sonnet 4.6** (`claude-sonnet-4.6`, default) — best balance of capability and cost. Use for complex multi-step workflows.
-- **GPT-5.4 mini** (`gpt-5.4-mini`) — fast and efficient. Good for simple, well-defined tasks.
+- **Claude Opus 5** (`claude-opus-5`) — maximum intelligence for difficult, long-horizon work.
+- **GPT-5.6** (`gpt-5.6`) — fast on complex tasks.
+- **Gemini 3.5 Flash** (`gemini-3.5-flash`) — fast for simpler tasks.
+- **MiniMax M3** (`minimax-m3`, default) — cheapest for simple and high-volume tasks.
+
+See [Models](https://docs.browser-use.com/cloud/agent/models) for the complete V4 picker and pricing.
 
 ## How do I get the live browser URL?
 
-`live_url` is returned on session creation. Embed it in an iframe or open it in a browser.
+The V4 run's `browser.ready` event contains `live_view_url`. Embed it in an iframe or open it in a browser.
 
 ```python
-session = await client.sessions.create(task="Go to example.com")
-print(session.live_url)
+created = await client.runs.create("Go to example.com")
+await client.runs.wait_for_completion(created.id)
+events = await client.runs.events(created.id, limit=100)
+ready = next(event for event in events.events if event.type == "browser.ready")
+print(ready.data["live_view_url"])
 ```
+
+Poll events until `browser.ready` appears if you need the URL while the run is still active. See [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop) for a complete flow.
 
 ## Getting blocked by a website
 
@@ -2558,23 +2939,24 @@ If it still doesn't work, contact support inside the [Cloud Dashboard](https://c
 
 The SDK auto-retries 429 responses with exponential backoff. If persistent, you may need more concurrent sessions — contact support.
 
-## v2 vs v3 — which should I use?
+## v2 vs v3 vs v4 — which should I use?
 
-**v3 is the recommendation for everything.** It's a premium agent (not available in open source) that is significantly more capable than v2:
+**Use v4 for new agent integrations.** It is designed for long-horizon work:
 
-- **Much better at complex tasks** and multi-step workflows
-- **Much better at large data extraction**
-- **File system** with persistent memory across tasks
-- **Task scheduling** with 1,000+ integrations (Gmail, Slack, and more)
+- Run-focused API with a cheap status polling endpoint
+- Conversation sessions with queued and interrupting follow-ups
+- Persistent workspaces and turn-scoped file attachments
+- Incremental events for custom UIs and monitoring
+- Per-run cost totals, cost caps, and optional judgement
 
-v2 is the closest to the open-source experience — pure browser automation, nothing else. If the open source already works great for your use case, v2 is the natural fit. For everything else, use v3.
+V3 remains available for existing integrations and older features that have not moved to V4, including server-side structured-output schemas and automatic script caching. V2 is the legacy API closest to the open-source browser agent.
 
 ```python
-# v3 (recommended)
-from browser_use_sdk.v3 import AsyncBrowserUse
+# v4 (recommended for new agent runs)
+from browser_use_sdk.v4 import AsyncBrowserUse
 
-# v2 (simple browser-only tasks)
-from browser_use_sdk.v2 import AsyncBrowserUse
+# v3 (existing session-based integrations)
+from browser_use_sdk.v3 import AsyncBrowserUse as AsyncBrowserUseV3
 ```
 
 
@@ -2587,7 +2969,6 @@ Source: https://docs.browser-use.com/cloud/legacy/agent
 | Model | API String | Cost per Step |
 | ----- | ---------- | ------------- |
 | Browser Use 2.0 (default) | `browser-use-2.0` | \$0.006 |
-| Browser Use LLM | `browser-use-llm` | \$0.002 |
 | O3 | `o3` | \$0.03 |
 | Gemini Flash Latest | `gemini-flash-latest` | \$0.0075 |
 | Gemini Flash Lite Latest | `gemini-flash-lite-latest` | \$0.005 |
@@ -2621,15 +3002,15 @@ client = AsyncBrowserUse()
 session = await client.sessions.create()
 
 upload = await client.files.session_url(
-session.id,
-file_name="input.pdf",
-content_type="application/pdf",
-size_bytes=1024,
+    session.id,
+    file_name="input.pdf",
+    content_type="application/pdf",
+    size_bytes=1024,
 )
 
 with open("input.pdf", "rb") as f:
-async with httpx.AsyncClient() as http:
-    await http.post(upload.url, content=f.read(), headers={"Content-Type": "application/pdf"})
+    async with httpx.AsyncClient() as http:
+        await http.post(upload.url, content=f.read(), headers={"Content-Type": "application/pdf"})
 
 result = await client.run("Summarize the uploaded PDF", session_id=session.id)
 ```
@@ -2662,8 +3043,8 @@ const result = await client.run("Summarize the uploaded PDF", { sessionId: sessi
 ```python Python
 result = await client.tasks.get(task_id)
 for file in result.output_files:
-output = await client.files.task_output(task_id, file.id)
-print(output.download_url)  # download URL
+    output = await client.files.task_output(task_id, file.id)
+    print(output.download_url)  # download URL
 ```
 ```typescript TypeScript
 const result = await client.tasks.get(taskId);
@@ -2685,8 +3066,8 @@ from browser_use_sdk import AsyncBrowserUse
 client = AsyncBrowserUse()
 run = client.run("Find the most upvoted post on Reddit r/technology today")
 async for step in run:
-print(f"Step {step.number}: {step.next_goal}")
-print(f"  URL: {step.url}")
+    print(f"Step {step.number}: {step.next_goal}")
+    print(f"  URL: {step.url}")
 
 print(run.result.output)  # final result after iteration
 ```
@@ -2767,8 +3148,8 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 skill = await client.skills.create(
-goal="Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
-agent_prompt="Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
+    goal="Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
+    agent_prompt="Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
 )
 print(skill.id)
 ```
@@ -2789,8 +3170,8 @@ Skill creation takes ~30 seconds. You can also create skills visually from the [
 
 ```python Python
 result = await client.skills.execute(
-skill.id,
-parameters={"X": 10},
+    skill.id,
+    parameters={"X": 10},
 )
 print(result)
 ```
@@ -2862,9 +3243,9 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"Log into my Jira account and create a new ticket",
-op_vault_id="your-vault-id",
-allowed_domains=["*.atlassian.net"],
+    "Log into my Jira account and create a new ticket",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net"],
 )
 print(result.output)
 ```
@@ -2875,8 +3256,8 @@ const client = new BrowserUse();
 const result = await client.run(
   "Log into my Jira account and create a new ticket",
   {
-opVaultId: "your-vault-id",
-allowedDomains: ["*.atlassian.net"],
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net"],
   },
 );
 console.log(result.output);
@@ -2886,17 +3267,17 @@ For SSO/OAuth redirects, include all required domains:
 
 ```python Python
 result = await client.run(
-"Log into Jira and create a ticket for the Q4 release",
-op_vault_id="your-vault-id",
-allowed_domains=["*.atlassian.net", "*.okta.com"],
+    "Log into Jira and create a ticket for the Q4 release",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net", "*.okta.com"],
 )
 ```
 ```typescript TypeScript
 const result = await client.run(
   "Log into Jira and create a ticket for the Q4 release",
   {
-opVaultId: "your-vault-id",
-allowedDomains: ["*.atlassian.net", "*.okta.com"],
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net", "*.okta.com"],
   },
 );
 ```
@@ -2924,9 +3305,9 @@ from browser_use_sdk import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 result = await client.run(
-"Log into GitHub and star the browser-use/browser-use repo",
-secrets={"github.com": "username:password123"},
-allowed_domains=["github.com"],
+    "Log into GitHub and star the browser-use/browser-use repo",
+    secrets={"github.com": "username:password123"},
+    allowed_domains=["github.com"],
 )
 ```
 ```typescript TypeScript
@@ -2936,8 +3317,8 @@ const client = new BrowserUse();
 const result = await client.run(
   "Log into GitHub and star the browser-use/browser-use repo",
   {
-secrets: { "github.com": "username:password123" },
-allowedDomains: ["github.com"],
+    secrets: { "github.com": "username:password123" },
+    allowedDomains: ["github.com"],
   },
 );
 ```
@@ -2948,26 +3329,83 @@ For SSO/OAuth redirects, include all domains in the auth flow:
 
 ```python Python
 result = await client.run(
-"Log into the company portal and download the Q4 report",
-secrets={
-    "portal.example.com": "user@company.com:password123",
-    "okta.com": "user@company.com:password123",
-},
-allowed_domains=["portal.example.com", "*.okta.com"],
+    "Log into the company portal and download the Q4 report",
+    secrets={
+        "portal.example.com": "user@company.com:password123",
+        "okta.com": "user@company.com:password123",
+    },
+    allowed_domains=["portal.example.com", "*.okta.com"],
 )
 ```
 ```typescript TypeScript
 const result = await client.run(
   "Log into the company portal and download the Q4 report",
   {
-secrets: {
-  "portal.example.com": "user@company.com:password123",
-  "okta.com": "user@company.com:password123",
-},
-allowedDomains: ["portal.example.com", "*.okta.com"],
+    secrets: {
+      "portal.example.com": "user@company.com:password123",
+      "okta.com": "user@company.com:password123",
+    },
+    allowedDomains: ["portal.example.com", "*.okta.com"],
   },
 );
 ```
+
+
+# API Reference
+Source: https://docs.browser-use.com/cloud/api-v4-overview
+
+
+## Authentication
+
+All requests require an API key in the `X-Browser-Use-API-Key` header:
+
+```
+X-Browser-Use-API-Key: bu_your_key_here
+```
+
+Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1). Keys start with `bu_`.
+
+## Base URL
+
+```
+https://api.browser-use.com/api/v4
+```
+
+## The core loop
+
+Create a run, poll its status until terminal, then fetch the full result. `status` is a cheap indexed lookup — poll it, not the full run.
+
+```bash Create a run
+curl -X POST https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: bu_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Find the top 3 trending repos on GitHub today"}'
+```
+
+```bash Poll status until completed | failed | cancelled (replace RUN_ID)
+curl https://api.browser-use.com/api/v4/runs/RUN_ID/status \
+  -H "X-Browser-Use-API-Key: bu_your_key_here"
+```
+
+```bash Fetch the full run once it's terminal
+curl https://api.browser-use.com/api/v4/runs/RUN_ID \
+  -H "X-Browser-Use-API-Key: bu_your_key_here"
+```
+
+## Sessions and follow-ups
+
+A run belongs to a session (a conversation). Send a follow-up message to a session's queue — it runs as the next turn, or immediately with `interrupt: true`:
+
+```bash Queue a follow-up (replace SESSION_ID)
+curl -X POST https://api.browser-use.com/api/v4/sessions/SESSION_ID/queue \
+  -H "X-Browser-Use-API-Key: bu_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Now open the top result", "interrupt": false}'
+```
+
+## SDKs
+
+The [Cloud SDK quick start](https://docs.browser-use.com/cloud/agent/quickstart) wraps this loop — `runs.create()` then `runs.waitForCompletion()` / `runs.wait_for_completion()` — for TypeScript and Python.
 
 
 # API Reference
@@ -3046,66 +3484,3 @@ pip install browser-use-sdk
 ```bash TypeScript
 npm install browser-use-sdk
 ```
-
-
-## Browser Use Agent Challenge to Get a Free Account
-
-AI agents can create a free Browser Use account autonomously via a challenge-response flow at `https://api.browser-use.com`.
-
-Do this to get an API key (no human required):
-1. `POST https://api.browser-use.com/cloud/signup` — request a challenge.
-
-Request body, optional (include a user email/name if available):
-```json
-{
-  "email": "user@example.com",
-  "name": "User Name"
-}
-```
-
-Response:
-```json
-{
-  "challenge_id": "uuid",
-  "challenge_text": "..."
-}
-```
-
-2. Solve the math problem in `challenge_text` — answer as a string with 2 decimal places, e.g. `"144.00"`
-
-3. `POST https://api.browser-use.com/cloud/signup/verify` with `challenge_id` + `answer`.
-
-Request body:
-```json
-{
-  "challenge_id": "uuid",
-  "answer": "144.00"
-}
-```
-
-Response:
-```json
-{
-  "api_key": "bu_..."
-}
-```
-
-4. Use `X-Browser-Use-API-Key: bu_...` on Browser Use Cloud API requests. For example, create a browser session (docs: https://docs.browser-use.com/cloud/api-v3/browsers/create-browser-session):
-
-```bash
-curl -X POST https://api.browser-use.com/api/v3/browsers \
-  -H "X-Browser-Use-API-Key: bu_..." \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-To let a human claim the account later: `POST https://api.browser-use.com/cloud/signup/claim` with `X-Browser-Use-API-Key: bu_...`.
-
-Response:
-```json
-{
-  "claim_url": "https://..."
-}
-```
-
-The claim URL is valid for 1 hour.

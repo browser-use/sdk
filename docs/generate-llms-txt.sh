@@ -224,16 +224,15 @@ CLOUD_FULL="$SCRIPT_DIR/llms-full.txt"
 cat > "$CLOUD_INDEX" << 'HEADER'
 # Browser Use Cloud SDK
 
-> Browser Use Cloud is a managed API for AI browser automation. Send a natural-language task, get structured results back. SDKs for Python and TypeScript. Always use API v3 — v2 is legacy and uses different method names. Auth via `X-Browser-Use-API-Key` header (keys start with `bu_`).
+> Browser Use Cloud is a managed API for AI browser automation. Send a natural-language task and get a completed run back. SDKs for Python and TypeScript. Use API v4 for new agent integrations. Auth via `X-Browser-Use-API-Key` header (keys start with `bu_`).
 
 - Dashboard: https://cloud.browser-use.com
 - Create API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Docs: https://docs.browser-use.com
-- OpenAPI spec (v3): https://docs.browser-use.com/cloud/openapi/v3.json
-- Chat UI example: https://docs.browser-use.com/cloud/tutorials/chat-ui — Full end-to-end example with live browser, streaming, auth. Best starting point to build a prototype.
+- OpenAPI spec (v4): https://docs.browser-use.com/cloud/openapi/v4.json
 - Open-source repo: https://github.com/browser-use/browser-use — The open-source Python library. Note: the open-source API is different from the Cloud SDK. If you want the easiest path to production with managed infrastructure, use the Cloud SDK below.
 
-**Always use v3.** v2 is legacy with different method names and should not be used for new projects.
+**Use v4 for agent runs.** V2 is legacy. Standalone browser and profile SDK resources remain in their documented namespace.
 
 Before writing code, check if `browser-use-sdk` is already installed. If so, upgrade to the latest version. If not, install it:
 - Python: `pip install --upgrade browser-use-sdk`

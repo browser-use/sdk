@@ -1,280 +1,75 @@
 ---
 title: Deterministic rerun
-description: "Run a task once, then re-execute it for $0 LLM cost."
+description: "Have the agent save and test a reusable script, then run it again from the same workspace."
 icon: bolt
 ---
 
-Deterministic rerun lets you run a browser task once with a full agent, then **re-execute the same task instantly** using a cached script — no LLM, up to 99% cheaper.
+For repeated workflows, create a dedicated workspace and ask the agent to turn its successful process into a script. The important part is explicit: tell it to reproduce what it just did, test the script, and save instructions for the next run.
 
-## Quick start
-
-Use `@{{double brackets}}` around values that can change between runs. The first call runs the full agent. Every subsequent call with the same template uses the cached script.
+You can create the workspace in the dashboard or through the API:
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-workspace = await client.workspaces.create(name="my-scraper")
+workspace = await client.workspaces.create(name="hn-scraper")
 
-# First call — agent explores, creates script (~$0.10, ~60s)
-result = await client.run(
-    "Get the top @{{5}} stories from https://news.ycombinator.com as JSON",
-    workspace_id=str(workspace.id),
+created = await client.runs.create(
+    """
+    Get the top five Hacker News stories as JSON.
+    Then create helper functions or a script that performs exactly what you did.
+    Test it, save it as scripts/hn_top.py, and save reuse instructions in
+    scripts/README.md.
+    """,
+    workspace_id=workspace.id,
 )
-
-# Second call — cached script, different param ($0 LLM, ~5s)
-result2 = await client.run(
-    "Get the top @{{10}} stories from https://news.ycombinator.com as JSON",
-    workspace_id=str(workspace.id),
-)
+first = await client.runs.wait_for_completion(created.id)
+print(first.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const workspace = await client.workspaces.create({ name: "my-scraper" });
+const workspace = await client.workspaces.create({ name: "hn-scraper" });
 
-// First call — agent explores, creates script (~$0.10, ~60s)
-const result = await client.run(
-  "Get the top @{{5}} stories from https://news.ycombinator.com as JSON",
-  { workspaceId: workspace.id },
-);
-
-// Second call — cached script, different param ($0 LLM, ~5s)
-const result2 = await client.run(
-  "Get the top @{{10}} stories from https://news.ycombinator.com as JSON",
-  { workspaceId: workspace.id },
-);
+const created = await client.runs.create({
+  task: `
+    Get the top five Hacker News stories as JSON.
+    Then create helper functions or a script that performs exactly what you did.
+    Test it, save it as scripts/hn_top.py, and save reuse instructions in
+    scripts/README.md.
+  `,
+  workspaceId: workspace.id,
+});
+const first = await client.runs.waitForCompletion(created.id);
+console.log(first.result);
 ```
 </CodeGroup>
 
-## How it works
-
-<Steps>
-  <Step title="You send a task with @{{brackets}}">
-    The brackets mark which parts are parameters:
-
-    ```
-    "Get prices from @{{example.com}} for @{{electronics}}"
-    ```
-
-    - `@{{example.com}}` → parameter 1
-    - `@{{electronics}}` → parameter 2
-
-    The system strips the values to create a **template**: `"Get prices from @{{}} for @{{}}"`.
-  </Step>
-  <Step title="System hashes the template">
-    Template `"Get prices from @{{}} for @{{}}"` is hashed to a unique ID like `a7f3b2c1`.
-    The system checks the workspace for `scripts/a7f3b2c1.py`.
-  </Step>
-  <Step title="Cache miss → agent creates script">
-    If no script exists, the full agent runs your task. After completing it, the agent saves a standalone Python script that reproduces the result deterministically — no AI needed.
-  </Step>
-  <Step title="Cache hit → script executes directly">
-    If the script exists, it runs directly with the new parameter values. No agent, no LLM. Just the script in a sandbox with browser and proxy.
-  </Step>
-</Steps>
-
-## Auto-detection
-
-Caching activates **automatically** when both conditions are met:
-- The task contains `@{{` and `}}`
-- A `workspace_id` is provided
-
-No extra flags needed. You can override with `cache_script`:
-
-| Value | Behavior |
-|-------|----------|
-| `None` (default) | Auto-detect from `@{{brackets}}` + workspace |
-| `True` | Force-enable, even without brackets |
-| `False` | Force-disable, even if brackets are present |
-
-## Examples
-
-### Parameterized scraping
-
-Run once, then loop over different keywords at $0 LLM each:
+Later, start a new run in the same workspace and tell the agent to use the saved script:
 
 <CodeGroup>
 ```python Python
-# Agent figures out how to scrape intro.co on first call
-result = await client.run(
-    "Go to @{{https://intro.co/marketplace}} and get all @{{logistics}} experts as JSON",
-    workspace_id=str(workspace.id),
+created = await client.runs.create(
+    "Run scripts/hn_top.py for the top 10 stories. Use the existing script; fix and retest it only if needed.",
+    workspace_id=workspace.id,
 )
-
-# Instant reruns with different keywords
-for keyword in ["CEO", "marketing", "finance", "e-commerce"]:
-    result = await client.run(
-        f"Go to @{{{{https://intro.co/marketplace}}}} and get all @{{{{{keyword}}}}} experts as JSON",
-        workspace_id=str(workspace.id),
-    )
-    print(f"{keyword}: {result.output}, LLM cost: ${result.llm_cost_usd}")
+rerun = await client.runs.wait_for_completion(created.id)
+print(rerun.result)
 ```
 ```typescript TypeScript
-// Agent figures out how to scrape intro.co on first call
-let result = await client.run(
-  "Go to @{{https://intro.co/marketplace}} and get all @{{logistics}} experts as JSON",
-  { workspaceId: workspace.id },
-);
-
-// Instant reruns with different keywords
-for (const keyword of ["CEO", "marketing", "finance", "e-commerce"]) {
-  result = await client.run(
-    `Go to @{{https://intro.co/marketplace}} and get all @{{${keyword}}} experts as JSON`,
-    { workspaceId: workspace.id },
-  );
-  console.log(`${keyword}: ${result.output}`);
-}
+const created = await client.runs.create({
+  task: "Run scripts/hn_top.py for the top 10 stories. Use the existing script; fix and retest it only if needed.",
+  workspaceId: workspace.id,
+});
+const rerun = await client.runs.waitForCompletion(created.id);
+console.log(rerun.result);
 ```
 </CodeGroup>
 
-### No parameters — cache the exact task
+This pattern gives the agent a fast, inspectable path and lets it repair the script when the website changes. Keep one workspace per workflow so scripts, fixtures, outputs, and instructions stay together.
 
-Append empty brackets `@{{}}` to signal "cache this exact task":
-
-<CodeGroup>
-```python Python
-result = await client.run(
-    "Get the current Bitcoin price from coinmarketcap.com @{{}}",
-    workspace_id=str(workspace.id),
-)
-
-# Same task again — cached
-result2 = await client.run(
-    "Get the current Bitcoin price from coinmarketcap.com @{{}}",
-    workspace_id=str(workspace.id),
-)
-```
-```typescript TypeScript
-let result = await client.run(
-  "Get the current Bitcoin price from coinmarketcap.com @{{}}",
-  { workspaceId: workspace.id },
-);
-
-// Same task again — cached
-result = await client.run(
-  "Get the current Bitcoin price from coinmarketcap.com @{{}}",
-  { workspaceId: workspace.id },
-);
-```
-</CodeGroup>
-
-### Multiple parameters
-
-<CodeGroup>
-```python Python
-result = await client.run(
-    "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{Germany,France,Japan}}",
-    workspace_id=str(workspace.id),
-)
-
-# Different countries — cached
-result2 = await client.run(
-    "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{US,UK,Brazil}}",
-    workspace_id=str(workspace.id),
-)
-```
-```typescript TypeScript
-let result = await client.run(
-  "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{Germany,France,Japan}}",
-  { workspaceId: workspace.id },
-);
-
-// Different countries — cached
-result = await client.run(
-  "Go to https://help.netflix.com/en/node/24926/ax and get subscription prices for @{{US,UK,Brazil}}",
-  { workspaceId: workspace.id },
-);
-```
-</CodeGroup>
-
-### Force enable / disable
-
-<CodeGroup>
-```python Python
-# Force-enable without brackets
-result = await client.run(
-    "Get the top stories from Hacker News",
-    workspace_id=str(workspace.id),
-    cache_script=True,
-)
-
-# Force-disable even with brackets
-result = await client.run(
-    "Explain what @{{templates}} means in Jinja",
-    workspace_id=str(workspace.id),
-    cache_script=False,
-)
-```
-```typescript TypeScript
-// Force-enable without brackets
-let result = await client.run(
-  "Get the top stories from Hacker News",
-  { workspaceId: workspace.id, cacheScript: true },
-);
-
-// Force-disable even with brackets
-result = await client.run(
-  "Explain what @{{templates}} means in Jinja",
-  { workspaceId: workspace.id, cacheScript: false },
-);
-```
-</CodeGroup>
-
-## Inspecting cached scripts
-
-You can download and inspect the scripts the agent created:
-
-<CodeGroup>
-```python Python
-files = await client.workspaces.files(workspace.id, prefix="scripts/")
-for f in files.files:
-    print(f"{f.path}  ({f.size} bytes)")
-
-# Download a script to inspect it
-await client.workspaces.download(workspace.id, "scripts/a7f3b2c1.py", to="./my_script.py")
-```
-```typescript TypeScript
-const files = await client.workspaces.files(workspace.id, { prefix: "scripts/" });
-for (const f of files.files) {
-  console.log(`${f.path}  (${f.size} bytes)`);
-}
-```
-</CodeGroup>
-
-## Auto-healing
-
-Cached scripts can break when a website changes its layout, adds new elements, or alters its structure. Auto-healing detects these failures and automatically regenerates the script.
-
-### How it works
-
-When a cached script runs, the system validates its output:
-
-1. **Fast checks** (no LLM) — detects empty results, error fields in JSON, or exception keywords in output.
-2. **LLM judge** — if fast checks pass, a lightweight model validates whether the output looks correct for the original task.
-3. **Heal** — if validation fails, the full agent re-runs the task and saves an updated script.
-
-Auto-healing is **limited to 1 attempt per run** to prevent runaway costs. If the healed script also fails, the output is returned as-is.
-
-### Cost impact
-
-| Scenario | LLM cost |
-|----------|----------|
-| Cached script succeeds | **$0** |
-| Cached script fails, auto-heals | ~$0.05–1.00 (one full agent run) |
-| Healed script also fails | Same as above (returns best-effort output) |
-
-Auto-healing is enabled by default for all cached scripts. No configuration needed.
-
-## Cost comparison
-
-| | LLM cost | Browser + proxy | Time |
-|---|---|---|---|
-| First call (agent) | ~$0.05–1.00 | Yes | ~30–120s |
-| Cached calls | **$0** | Yes | ~3–10s |
-
-<Info>
-The browser and proxy still run for cached calls (the script may need them), so there is a small infrastructure cost per execution. LLM cost drops to zero.
-</Info>
+<Warning>
+  V4 does not automatically turn a task into a cached $0-LLM execution. Each rerun starts an agent, so it still has token cost. The saved script usually makes the run faster and cheaper, but you should measure it for your workflow.
+</Warning>

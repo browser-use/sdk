@@ -1009,6 +1009,10 @@
       "destination": "/cloud/api-v3"
     },
     {
+      "source": "/api-v4/*",
+      "destination": "/cloud/api-v4"
+    },
+    {
       "source": "/get-started/human-quickstart",
       "destination": "/cloud/quickstart"
     },

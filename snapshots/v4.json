@@ -3109,6 +3109,7 @@
                             "minimax-m3",
                             "claude-opus-4.7",
                             "claude-opus-4.8",
+                            "claude-opus-5",
                             "claude-fable-5",
                             "claude-sonnet-5",
                             "gpt-5.5",
@@ -3753,7 +3754,7 @@
                         "anyOf": [
                             {
                                 "type": "string",
-                                "maxLength": 255
+                                "maxLength": 100
                             },
                             {
                                 "type": "null"

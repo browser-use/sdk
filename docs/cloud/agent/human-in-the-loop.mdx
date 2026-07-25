@@ -1,88 +1,69 @@
 ---
 title: Human in the loop
-description: "Let a human interact with the live browser while the agent is running. Useful for approvals, payments, complex auth flows, or reviewing agent work before continuing."
+description: "Open the V4 live browser, let a person take over, then continue the same session."
 icon: hand
 ---
 
-## Use cases
-- Human enters payment info or approves a transaction, agent handles the rest
-- Human navigates a complex auth flow, then hands back to agent
-- Human reviews what the agent did before the agent continues
+Use a human checkpoint for approvals, payments, complex authentication, or reviewing work before the agent continues.
 
-<Warning>
-  Sessions time out after 15 minutes of inactivity. The maximum session duration is 4 hours. If the human needs more time, send a lightweight follow-up task (e.g. "wait") to reset the inactivity timer.
-</Warning>
-
-## Flow
-
-1. Create a session — it stays alive automatically when you pass `session_id` to `run()`
-2. Run an agent task
-3. Human interacts with the live browser
-4. Send a new follow-up task
+The run's `browser.ready` event contains a `live_view_url`. After the first turn stops at a safe checkpoint, open that URL, let the human interact, then send a follow-up with the same session ID.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
-
-# 1. Create a session
-session = await client.sessions.create()
-print(f"Live view: {session.live_url}")
-
-# 2. Agent does the first part
-result = await client.run(
-    "Go to amazon.com and search for noise cancelling headphones",
-    session_id=session.id,
+created = await client.runs.create(
+    "Find noise-cancelling headphones on Amazon and stop before selecting a product"
 )
-print(result.output)
+await client.runs.wait_for_completion(created.id)
 
-# 3. Human opens live_url and picks a product
-input("Press Enter after you've selected a product in the live view...")
+events = await client.runs.events(created.id, limit=100)
+ready = next(event for event in events.events if event.type == "browser.ready")
+live_url = ready.data["live_view_url"]
+print(f"Open this live browser: {live_url}")
 
-# 4. Agent continues where the human left off
-result = await client.run(
-    "Get the details of the selected product — name, price, and rating",
-    session_id=session.id,
+input("Press Enter after selecting a product...")
+
+follow_up = await client.runs.create(
+    "Get the selected product's name, price, and rating",
+    session_id=created.session_id,
 )
-print(result.output)
-
-# Clean up
-await client.sessions.stop(session.id)
+result = await client.runs.wait_for_completion(follow_up.id)
+print(result.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-import * as readline from "readline";
+import { BrowserUse } from "browser-use-sdk/v4";
+import * as readline from "node:readline/promises";
 
 const client = new BrowserUse();
+const created = await client.runs.create({
+  task: "Find noise-cancelling headphones on Amazon and stop before selecting a product",
+});
+await client.runs.waitForCompletion(created.id);
 
-// 1. Create a session
-const session = await client.sessions.create();
-console.log(`Live view: ${session.liveUrl}`);
+const events = await client.runs.events(created.id, { limit: 100 });
+const ready = events.events.find((event) => event.type === "browser.ready");
+const liveUrl = ready?.data.live_view_url;
+console.log(`Open this live browser: ${liveUrl}`);
 
-// 2. Agent does the first part
-const searchResult = await client.run(
-  "Go to amazon.com and search for noise cancelling headphones",
-  { sessionId: session.id },
-);
-console.log(searchResult.output);
-
-// 3. Human opens liveUrl and picks a product
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-await new Promise((resolve) =>
-  rl.question("Press Enter after you've selected a product in the live view...", resolve),
-);
+await rl.question("Press Enter after selecting a product...");
 rl.close();
 
-// 4. Agent continues where the human left off
-const result = await client.run(
-  "Get the details of the selected product — name, price, and rating",
-  { sessionId: session.id },
-);
-console.log(result.output);
-
-// Clean up
-await client.sessions.stop(session.id);
+const followUp = await client.runs.create({
+  task: "Get the selected product's name, price, and rating",
+  sessionId: created.sessionId,
+});
+const result = await client.runs.waitForCompletion(followUp.id);
+console.log(result.result);
 ```
 </CodeGroup>
 
+The browser is kept alive for follow-ups when possible. If it has expired, V4 restores the conversation and workspace but provisions a new browser, so complete the human step before the live browser's timeout.
+
+<Warning>
+  Treat live-view URLs as credentials. Anyone with the URL can interact with the browser while it is active.
+</Warning>
+
+See [Get run events](/cloud/api-v4/runs/get-run-events) for the event response.

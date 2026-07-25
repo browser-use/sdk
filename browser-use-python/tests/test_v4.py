@@ -264,6 +264,15 @@ def test_sessions_send_message() -> None:
     assert msg.status.value == "pending"
 
 
+def test_sessions_purge() -> None:
+    http = FakeSyncHttp([{}])
+    sessions = Sessions(http)  # type: ignore[arg-type]
+
+    sessions.purge(SESSION_ID)
+
+    assert http.calls[0][:2] == ("POST", f"/sessions/{SESSION_ID}/purge")
+
+
 def test_sessions_queue_list() -> None:
     http = FakeSyncHttp([{"queue": [_queued_message()]}])
     sessions = Sessions(http)  # type: ignore[arg-type]

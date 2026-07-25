@@ -179,6 +179,7 @@ function v4EndpointToSdkMethod(
   // Sessions + queue
   if (method === "get" && path === "/sessions") return { resource: "sessions", method: "list" };
   if (method === "get" && path === "/sessions/{session_id}") return { resource: "sessions", method: "get" };
+  if (method === "post" && path === "/sessions/{session_id}/purge") return { resource: "sessions", method: "purge" };
   if (method === "post" && path === "/sessions/{session_id}/queue") return { resource: "sessions", method: "sendMessage" };
   if (method === "get" && path === "/sessions/{session_id}/queue") return { resource: "sessions", method: "queue" };
   if (method === "delete" && path === "/sessions/{session_id}/queue/{message_id}") return { resource: "sessions", method: "removeMessage" };

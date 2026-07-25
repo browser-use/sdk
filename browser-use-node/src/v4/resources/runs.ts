@@ -1,7 +1,11 @@
 import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v4/types.js";
 
-type RunCreateRequest = components["schemas"]["RunCreateRequest"];
+type GeneratedRunCreateRequest = components["schemas"]["RunCreateRequest"];
+export type RunCreateRequest = Omit<GeneratedRunCreateRequest, "model"> & {
+  /** Defaults to minimax-m3 when omitted. */
+  model?: GeneratedRunCreateRequest["model"];
+};
 type RunCreateResponse = components["schemas"]["RunCreateResponse"];
 type RunSummary = components["schemas"]["RunSummary"];
 type RunStatusResponse = components["schemas"]["RunStatusResponse"];
