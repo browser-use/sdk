@@ -66,6 +66,7 @@
                 "group": "Get Started",
                 "pages": [
                   "cloud/quickstart",
+                  "cloud/choosing-an-agent",
                   "cloud/vibecoding"
                 ]
               },
