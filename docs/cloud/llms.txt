@@ -45,6 +45,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## Get Started
 - [Quick start](https://docs.browser-use.com/cloud/quickstart): Run a hosted agent or launch a cloud browser.
+- [Choosing an Agent](https://docs.browser-use.com/cloud/choosing-an-agent): Compare Browser Use Cloud agents on accuracy, speed and price, and pick the right one for your task.
 - [Prompt for Vibecoders](https://docs.browser-use.com/cloud/vibecoding): Complete Cloud SDK reference for AI coding agents.
 
 ## Agent

@@ -104,6 +104,87 @@ curl -X PATCH \
 
   Give your coding agent the compact API V4 context.
 
+# Choosing an Agent
+Source: https://docs.browser-use.com/cloud/choosing-an-agent
+
+
+Browser Use Cloud offers three agents that can complete your tasks. Use V4 when accuracy matters most, V3 when speed and cost matter most, and V2 only for older integrations.
+
+## At a glance
+
+|                        | V4 Agent                 | V3 Agent                             | V2 Agent                          |
+| ---------------------- | ------------------------ | ------------------------------------ | --------------------------------- |
+|                        | Most accurate            | Fastest                              | Legacy                            |
+| Verdict                | Choose for complex tasks | Choose for quick, cost-optimized work | Keep only for existing integrations |
+| Accuracy on hard tasks | **76%**                  | 67%                                  | 54%                               |
+| Speed                  | slower, more thorough    | **fastest on identical tasks**       | quick on small tasks              |
+| Cost level             | \$\$\$                      | \$\$                                   | \$                                 |
+
+### V4 Agent — most accurate
+
+V4 writes and runs code to complete long, multi-step browser tasks. It can research across many pages, compare options, follow detailed instructions, collect records, and save the results as a spreadsheet or in any format.
+
+**Best for:**
+
+- Bulk data collection
+- Complex tasks that span many pages and sites
+- Long, difficult instructions
+
+**Example tasks:**
+
+- "Collect every document with its title, reference, and deadline."
+- "Create a spreadsheet of all the pricing plans across these five competitors."
+
+The most thorough option, but it takes its time.
+
+### V3 Agent — fastest
+
+V3 looks at the page and acts step-by-step like a human would. Use only when cost and speed matter more than accuracy.
+
+**Best for:**
+
+- Simple tasks, such as finding publicly available information
+- Workloads where cost and speed are essential
+- Open-ended research
+
+**Example tasks:**
+
+- "Get a shipping quote for a 3 lb package between two zip codes."
+- "Check whether this product is in stock and what it costs right now."
+
+Faster but less reliable.
+
+### V2 Agent — legacy
+
+Our first-generation agent remains available for compatibility. It is based on our open-source repository, but it is not actively maintained and is less accurate.
+
+Starting something new? Use V4 instead; it's far more accurate.
+
+## V4 completes the hardest tasks
+
+V4 completed 76% of difficult, real-world browser tasks — nine points ahead of V3 and twenty-two ahead of V2.
+
+![Browser Use Cloud success rate on hard web tasks: V2 Agent 54.25%, V3 Agent 67.25%, V4 Agent 76.47%](https://docs.browser-use.com/cloud/images/agent-accuracy.png)
+
+## Typical tasks cost \$0.70–\$1.64
+
+Measured with the same model — Claude Opus 4.7 — across the last 30 days of production usage, the typical customer's successful task costs \$0.70 on V2, \$0.87 on V3, and \$1.64 on V4, taking about 1, 2, and 5 minutes respectively. V4 costs more per task because customers use it for more complex work, and V2's tasks run shortest only because it gets the simplest ones. On identical hard tasks, V3 is the fastest agent (about 6 minutes, versus about 10 for V2 and V4).
+
+|               | V2 Agent | V3 Agent | V4 Agent |
+| ------------- | -------- | -------- | -------- |
+| Cost per task | \$0.70    | \$0.87    | \$1.64    |
+| Time per task | ~1 min   | ~2 min   | ~5 min   |
+
+![What a task costs with Claude Opus 4.7 from real usage: V2 \$0.70, V3 \$0.87, V4 \$1.64 per successful task](https://docs.browser-use.com/cloud/images/agent-real-cost.png)
+
+## Comparing accuracy, speed, and cost
+
+![Comparing agent accuracy, speed, and cost: V4 is most accurate at \$1.64 per task, V3 is fastest at \$0.87, V2 is cheapest at \$0.70 but least accurate](https://docs.browser-use.com/cloud/images/agent-comparison.png)
+
+## How we measured this
+
+In July 2026, we ran each agent four times on Internal Bench Hard: 106 difficult tasks on real websites. Every run used Claude Opus 4.8, and the same independent judge scored each result. We left out tasks blocked by websites' anti-bot measures. The speed and cost figures are averages; simpler tasks usually run faster and cost less. Real-world cost and speed figures are the median customer's successful task with Claude Opus 4.7 over the last 30 days of production, our own testing excluded.
+
 # Prompt for Vibecoders
 Source: https://docs.browser-use.com/cloud/vibecoding
 
