@@ -187,6 +187,7 @@
                   "cloud/guides/mcp-server",
                   "cloud/guides/webhooks",
                   "cloud/guides/x402",
+                  "cloud/guides/x402-agent-wallets",
                   "cloud/tutorials/integrations/n8n",
                   "cloud/tutorials/chat-ui",
                   "cloud/tutorials/grow-therapy-compare"

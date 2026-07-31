@@ -16,16 +16,24 @@ x402 lets your code, or an autonomous AI agent, pay Browser Use Cloud directly w
 - **USDC** is a stablecoin pegged 1:1 to the US dollar. 1 USDC = $1.
 - **Base** is a low-fee blockchain network operated by Coinbase. Sending a payment costs fractions of a cent.
 - **Wallet** = a public address (your "username") and a private key (your "password"). The private key signs payments.
-- You'll need at least $5 of USDC on Base in a wallet you control. The Claude Code quickstart below walks you through everything from scratch.
+- You'll need at least $1 of USDC on Base in a wallet you control. The Claude Code quickstart below walks you through everything from scratch.
 
 </Note>
 
-**Three ways to start, ranked by laziness:**
+**Four ways to start, ranked by laziness:**
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card title="Claude Code" icon="terminal" href="#claude-code-quickstart">
     One command. Claude does the wallet setup, funding walkthrough, and
     verification for you.
+  </Card>
+  <Card
+    title="Agent wallets"
+    icon="wallet"
+    href="/cloud/guides/x402-agent-wallets"
+  >
+    AgentCash or Coinbase's Agentic Wallet. Your coding agent gets a wallet directly and
+    pays as it goes.
   </Card>
   <Card title="SDK" icon="code" href="#sdk-quickstart">
     One line in your Python or TypeScript app. Bring your own wallet.
@@ -49,7 +57,7 @@ Then in Claude Code:
 > /x402
 ```
 
-Claude generates (or imports) a wallet, walks you through funding it via Coinbase, writes `BROWSER_USE_X402_PRIVATE_KEY` to your `.env`, installs the SDK, and runs a verification task. Total: ~2 minutes if you have a crypto wallet.
+Claude walks you through creating or importing a wallet outside the chat, loading `BROWSER_USE_X402_PRIVATE_KEY` before Claude starts, installing the SDK, and running a verification task.
 
 <Tip>
   Already have a Browser Use Cloud account? The skill detects this and switches
@@ -76,8 +84,11 @@ import asyncio
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 async def main():
-    client = AsyncBrowserUse(x402_private_key="0x...")  # EVM wallet w/ USDC on Base
-    result = await client.run("Go to example.com and tell me the heading.")
+    client = AsyncBrowserUse(x402_max_payment_usd=1.0)
+    result = await client.run(
+        "Go to example.com and tell me the heading.",
+        max_cost_usd=0.75,
+    )
     print(result.output)
 
 asyncio.run(main())
@@ -86,8 +97,10 @@ asyncio.run(main())
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
-const client = new BrowserUse({ x402PrivateKey: "0x..." });  // EVM wallet w/ USDC on Base
-const result = await client.run("Go to example.com and tell me the heading.");
+const client = new BrowserUse({ x402MaxPaymentUsd: 1 });
+const result = await client.run("Go to example.com and tell me the heading.", {
+  maxCostUsd: 0.75,
+});
 console.log(result.output);
 ```
 </CodeGroup>
@@ -104,7 +117,7 @@ const client = new BrowserUse(); // auto-detects from env
 </CodeGroup>
 
 <Note>
-  Python: x402 is async-only. Use `AsyncBrowserUse`, not `BrowserUse`.
+  Python x402 is async-only: use `AsyncBrowserUse`, not `BrowserUse`.
 </Note>
 
 ## Raw HTTP quickstart
@@ -113,8 +126,9 @@ Use this if you're in a language we don't ship an SDK for (Go, Rust, Ruby, etc.)
 
 ```python
 import asyncio
+import os
 
-from x402 import x402Client
+from x402 import max_amount, x402Client
 from x402.http.clients import x402HttpxClient
 from x402.mechanisms.evm import EthAccountSigner
 from x402.mechanisms.evm.exact.register import register_exact_evm_client
@@ -122,7 +136,11 @@ from eth_account import Account
 
 async def main():
     client = x402Client()
-    register_exact_evm_client(client, EthAccountSigner(Account.from_key("0x...")))
+    register_exact_evm_client(
+        client,
+        EthAccountSigner(Account.from_key(os.environ["BROWSER_USE_X402_PRIVATE_KEY"])),
+        policies=[max_amount(1_000_000)],
+    )
 
     async with x402HttpxClient(client, timeout=120.0) as http:
         response = await http.post(
@@ -140,7 +158,7 @@ asyncio.run(main())
 
 - **EVM wallet** (MetaMask, Rabby, Coinbase Wallet, etc.) with its private key available to your app
 - **USD Coin (USDC) on Base mainnet**
-- **Default top-up:** `$5.00` USDC per request (`$1.00` minimum for budget-constrained wallets)
+- **SDK top-up:** `$1.00` USDC by default, with a configurable hard per-payment cap
 
 You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIPS/eip-3009), so you sign offchain, and the facilitator pays gas.
 
@@ -148,15 +166,16 @@ You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIP
 
 ## Pricing and credits
 
-Each x402 payment adds `$5` of credits to your project by default (or `$1` if your wallet falls back to the smaller option). When credits hit zero, the next request returns `402`, and the SDK automatically signs another payment to keep going. **You don't manage top-ups manually; just make sure your wallet has enough USDC for your expected usage.**
+The SDK first authenticates requests with a free, single-use wallet signature. If
+the wallet project does not exist yet or has insufficient credits, the backend
+marks the response as requiring a top-up, and the SDK makes one x402 payment. The
+default SDK cap is `$1.00` USDC per payment.
 
 <Warning>
   **Mid-task drain still terminates the task.** Browser Use sessions run on a
   worker that doesn't see x402, so once a long-running task starts and burns
   through its credits, it stops with `INSUFFICIENT_CREDITS` — it does not pause
-  and wait for the next x402 payment. The `$5` default exists so most tasks
-  complete without hitting this; for expensive models (e.g. Opus) or long
-  sessions, pre-fund with multiple requests before kicking off the task.
+  and wait for the next x402 payment.
 </Warning>
 
 See the [pricing page](https://browser-use.com/pricing) for model and browser costs.
@@ -168,16 +187,17 @@ If you already have a Browser Use API key (for example, one created via the dash
 <CodeGroup>
 ```python Python
 import asyncio
+import os
 
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse(
-    api_key="bu_...",                     # existing API key getting topped up
-    x402_private_key="0x...",             # wallet that pays
+    api_key=os.environ["BROWSER_USE_API_KEY"],
+    x402_max_payment_usd=1.0,              # hard cap for each top-up
     base_url="https://x402.api.browser-use.com/api/v3",
 )
 async def main():
-    result = await client.run("...")      # $5 USDC charged, credited to the API key's project
+    result = await client.run("...", max_cost_usd=0.75)
     print(result.output)
 
 asyncio.run(main())
@@ -188,11 +208,11 @@ asyncio.run(main())
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse({
-  apiKey: "bu_...",
-  x402PrivateKey: "0x...",
+  apiKey: process.env.BROWSER_USE_API_KEY,
+  x402MaxPaymentUsd: 1,
   baseUrl: "https://x402.api.browser-use.com/api/v3",
 });
-const result = await client.run("...");
+const result = await client.run("...", { maxCostUsd: 0.75 });
 ```
 </CodeGroup>
 
@@ -213,11 +233,12 @@ To check how much credit that account has left, use the method below:
 <CodeGroup>
 ```python Python
 import asyncio
+import os
 
 from browser_use_sdk.v3 import get_wallet_balance
 
 async def main():
-    balance = await get_wallet_balance("0x...")  # same wallet private key you pay with
+    balance = await get_wallet_balance(os.environ["BROWSER_USE_X402_PRIVATE_KEY"])
     print(balance["total_credits_usd"])
 
 asyncio.run(main())
@@ -227,7 +248,7 @@ asyncio.run(main())
 ```typescript TypeScript
 import { getWalletBalance } from "browser-use-sdk/v3";
 
-const balance = await getWalletBalance("0x...");  // same wallet private key you pay with
+const balance = await getWalletBalance(process.env.BROWSER_USE_X402_PRIVATE_KEY!);
 console.log(balance.total_credits_usd);
 ```
 </CodeGroup>
@@ -259,14 +280,17 @@ The response contains:
 
 ## How it works
 
-Your code asks for something, we say "$5 please," your wallet pays automatically, we run your request.
+Your code asks for something. If your Browser Use credit balance needs a top-up,
+the SDK authorizes up to your configured payment cap; otherwise it proceeds
+without moving wallet funds.
 
 A bit more detail:
 
 1. Your code makes a request (e.g. "run this task").
-2. The SDK auto-signs the payment from your wallet and resends the request.
-3. Coinbase moves the USDC on-chain. We add the same amount to your project's credit balance.
-4. We run your task and send back the result.
+2. The SDK signs a free, request-bound wallet authentication message.
+3. If the server explicitly requests a top-up, the SDK signs one capped payment and retries.
+4. Coinbase moves the USDC on-chain, and we add the same amount to your project's credit balance.
+5. Status polls use free wallet authentication while the task runs.
 
 ## Wallet setup
 
@@ -305,15 +329,22 @@ For custom signers, multi-network setups, or non-EVM wallets, build the x402 cli
 
 <CodeGroup>
 ```python Python
-from x402 import x402Client
+import os
+
+from x402 import max_amount, x402Client
 from x402.mechanisms.evm import EthAccountSigner
 from x402.mechanisms.evm.exact.register import register_exact_evm_client
 from eth_account import Account
 from browser_use_sdk.v3 import AsyncBrowserUse
 
+key = os.environ["BROWSER_USE_X402_PRIVATE_KEY"]
 x402 = x402Client()
-register_exact_evm_client(x402, EthAccountSigner(Account.from_key("0x...")))
-client = AsyncBrowserUse(x402=x402)
+register_exact_evm_client(
+    x402,
+    EthAccountSigner(Account.from_key(key)),
+    policies=[max_amount(1_000_000)],
+)
+client = AsyncBrowserUse(x402=x402, x402_private_key=key)
 
 ```
 
@@ -323,9 +354,13 @@ import { ExactEvmScheme } from "@x402/evm";
 import { privateKeyToAccount } from "viem/accounts";
 import { BrowserUse } from "browser-use-sdk/v3";
 
+const key = process.env.BROWSER_USE_X402_PRIVATE_KEY! as `0x${string}`;
 const x402 = new x402Client();
-x402.register("eip155:*", new ExactEvmScheme(privateKeyToAccount("0x...")));
-const client = new BrowserUse({ x402 });
+x402.register("eip155:*", new ExactEvmScheme(privateKeyToAccount(key)));
+x402.registerPolicy((_version, requirements) =>
+  requirements.filter(({ amount }) => BigInt(amount) <= 1_000_000n),
+);
+const client = new BrowserUse({ x402, x402PrivateKey: key });
 ```
 </CodeGroup>
 
@@ -368,6 +403,7 @@ const client = new BrowserUse({ x402 });
 ## Related
 
 - [x402 protocol spec](https://www.x402.org)
+- [Agent wallets quickstart](/cloud/guides/x402-agent-wallets) — pay from AgentCash or a Coinbase Agentic Wallet
 - [Standard API key auth](/cloud/quickstart) — alternative if you don't want pay-per-use
 - [`x402` Claude Code skill source](https://github.com/browser-use/browser-use/tree/main/skills/x402)
 

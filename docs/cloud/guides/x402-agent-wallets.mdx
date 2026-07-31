@@ -1,0 +1,146 @@
+---
+title: "x402 agent wallets"
+description: "Pay for Browser Use Cloud from an agent-native wallet: AgentCash (local wallet, MCP) or Coinbase's Agentic Wallet (hosted wallet, CLI)."
+---
+
+{/* prettier-ignore-start */}
+
+Give your agent a wallet with a few dollars of USDC in it, and it can run Browser Use tasks and pay as it goes. Pick a wallet:
+
+<CardGroup cols={2}>
+  <Card title="AgentCash" icon="robot" href="#agentcash-quickstart">
+    A wallet that lives on your machine, built for coding agents: Claude Code,
+    Cursor, Codex.
+  </Card>
+  <Card title="Coinbase Agentic Wallet" icon="wallet" href="#coinbase-agentic-wallet-quickstart">
+    A wallet Coinbase hosts for you. Sign in with email, fund with Apple Pay or
+    card, pay from the terminal.
+  </Card>
+</CardGroup>
+
+<Note>
+  Payments to Browser Use are **credit top-ups, not per-call fees**: each x402
+  payment (\$5 default, \$1 minimum) buys prepaid credit for a project tied to
+  your wallet, and unused credit carries over. See [pricing and
+  credits](/cloud/guides/x402#pricing-and-credits).
+</Note>
+
+## AgentCash quickstart
+
+[AgentCash](https://agentcash.dev) gives your coding agent a wallet and the tools to spend from it: check prices, pay for API calls, watch the balance. The wallet is a file on your machine.
+
+<Steps>
+  <Step title="Install the MCP server">
+    ```bash
+    npx agentcash install
+    ```
+
+    The interactive installer detects your agent client. Or add it directly:
+
+    ```bash
+    claude mcp add agentcash --scope user -- npx -y agentcash@latest   # Claude Code
+    codex mcp add agentcash -- npx -y agentcash@latest                 # Codex
+    npx agentcash install --client cursor                              # Cursor
+    ```
+
+  </Step>
+  <Step title="Fund the wallet">
+    The first run creates a wallet at `~/.agentcash/wallet.json`. Get its
+    deposit address and send it USDC on **Base mainnet** (\$5 covers the default
+    top-up; \$1 is the minimum):
+
+    ```bash
+    npx agentcash@latest accounts
+    ```
+
+    Or just ask your agent — the `list_accounts` and `get_balance` tools do the
+    same thing.
+
+  </Step>
+  <Step title="Run a browser task">
+    Prompt your agent:
+
+    ```text
+    Use AgentCash to POST to https://x402.api.browser-use.com/api/v3/sessions
+    with body {"task": "Go to example.com and tell me the page title"}.
+    Pay the $1 minimum option. Then wait 60 seconds and GET
+    /api/v3/sessions/{id} once to read the output — each request pays, so
+    don't poll in a tight loop.
+    ```
+
+    The `fetch` tool handles the whole 402 → sign → retry loop. Use
+    `check_endpoint_schema` first if you want to see the price and input schema
+    without paying.
+
+  </Step>
+</Steps>
+
+## Coinbase Agentic Wallet quickstart
+
+[Agentic Wallet](https://docs.cdp.coinbase.com/agentic-wallet/welcome) is a wallet Coinbase hosts for you, driven from the terminal with the [`awal`](https://www.npmjs.com/package/awal) CLI. Sign in with your email — no keys to manage — fund it with Apple Pay or a card, and pay for API calls with one command. The [agentic-wallet-skills](https://github.com/coinbase/agentic-wallet-skills) package teaches your coding agent the same commands.
+
+<Steps>
+  <Step title="Install and sign in">
+    ```bash
+    npx skills add coinbase/agentic-wallet-skills   # optional: teach your agent
+    npx awal auth login you@example.com             # sends an OTP to your email
+    npx awal auth verify 123456                     # paste the code
+    npx awal status
+    ```
+
+  </Step>
+  <Step title="Fund with USDC on Base">
+    ```bash
+    npx awal show      # opens the wallet UI → Fund → Apple Pay / card / Coinbase
+    npx awal balance
+    ```
+
+    Or send USDC on Base directly to the address from `npx awal address`.
+
+  </Step>
+  <Step title="Check the price, then pay">
+    ```bash
+    npx awal x402 details https://x402.api.browser-use.com/api/v3/sessions
+    ```
+
+    shows our payment options (\$5 default / \$1 minimum, USDC on Base) and the
+    task input schema, without paying. Then:
+
+    ```bash
+    npx awal x402 pay https://x402.api.browser-use.com/api/v3/sessions \
+      -X POST -d '{"task": "Go to example.com and tell me the page title"}' \
+      --max-amount 5000000 --json
+    ```
+
+    `--max-amount` is in atomic USDC units: `1000000` = \$1.00.
+
+  </Step>
+  <Step title="Poll the session">
+    The response contains the session `id`. Poll
+    `https://x402.api.browser-use.com/api/v3/sessions/{id}` until `status` is
+    `"stopped"`, then read `output`.
+
+  </Step>
+</Steps>
+
+## Which one?
+
+| | AgentCash | Coinbase Agentic Wallet |
+| --- | --- | --- |
+| Wallet | Local file, self-custody | Coinbase-hosted, email OTP |
+| Funding | Send USDC on Base to your address | Onramp (Apple Pay / card / bank) or direct USDC |
+| Interface | MCP tools + CLI | CLI (+ skill for agents, [MCP variant](https://docs.cdp.coinbase.com/agentic-wallet/mcp/welcome)) |
+| Best for | Autonomous coding agents | Humans who want fiat funding; CDP-ecosystem apps |
+
+Building a production app instead of driving a CLI? Use
+[`CdpX402Client`](https://docs.cdp.coinbase.com/x402/quickstart-for-buyers) from
+the CDP SDK (a CDP-managed server wallet) or [bring your own x402
+client](/cloud/guides/x402#advanced-bring-your-own-x402-client).
+
+## Related
+
+- [x402 overview](/cloud/guides/x402) — SDK, Claude Code skill, raw HTTP, pricing, troubleshooting
+- [AgentCash docs](https://agentcash.dev) · [agentcash-skills](https://github.com/Merit-Systems/agentcash-skills)
+- [Agentic Wallet CLI quickstart](https://docs.cdp.coinbase.com/agentic-wallet/cli/quickstart) (Coinbase)
+
+{/* prettier-ignore-end */}
