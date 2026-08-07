@@ -5,7 +5,9 @@
 Source: https://docs.browser-use.com/cloud/quickstart
 
 
+  [Hosted Agents](https://docs.browser-use.com/cloud/agent/quickstart)
 Give an agent a task and get the result.
+  [Browsers](https://docs.browser-use.com/cloud/browser/quickstart)
 Launch a cloud browser and connect to it from your code.
 
 Get an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) and
@@ -102,6 +104,7 @@ curl -X PATCH \
   `client.browsers.stop(browser.id)` or call `PATCH /api/v4/browsers/{id}` with
   `{"action":"stop"}`.
 
+[Copy for an LLM](https://docs.browser-use.com/cloud/llms.txt)
   Give your coding agent the compact API V4 context.
 
 # Choosing an Agent
@@ -254,33 +257,60 @@ persistent files.
   className="hidden dark:block"
 />
 
+  [Copy API V4 docs](https://docs.browser-use.com/cloud/llms.txt)
 Give the compact context file to your coding agent.
 
 # Models
 Source: https://docs.browser-use.com/cloud/agent/models
 
 
-Pass one of these API strings as `model` when creating a run:
+Omit `model` to use **GPT-5.6 Luna**, or pass a model ID when creating a run.
+These are the recommended Browser Use-hosted models with published token
+pricing:
 
 | Model | API string | Input | Cache read | Output | BYOK |
 | ----- | ---------- | ----: | ---------: | -----: | ---- |
+| GPT-5.6 Luna (recommended) | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
 | Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
 | Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
-| GPT-5.6 | `gpt-5.6` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
-| Gemini 3.5 Flash | `gemini-3.5-flash` | \$1.80 | \$0.18 | \$10.80 | Google |
+| GPT-5.6 Sol | `gpt-5.6-sol` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
 | MiniMax M3 | `minimax-m3` | \$0.36 | \$0.072 | \$1.44 | — |
 
 Token prices are USD per 1 million tokens. Browser sessions
 (\$0.02/hour) and network traffic (\$5/GB managed proxy or \$0.20/GB
 proxyless/BYOP) are charged separately. See [full pricing](https://browser-use.com/pricing).
 
-  **Grok 4.5** gives the best balance of price and accuracy. **MiniMax M3** is
-  the default and cheapest option; use **Claude Opus 5** when accuracy matters
-  most.
+See [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels) for V4 `modelParams` and
+the normalized `thinkingLevel` values available in V2 and V3.
 
-  New model strings can reach the API before the TypeScript SDK's generated
-  union. If TypeScript rejects a model listed above, call `POST /api/v4/runs`
-  directly for that model.
+  We recommend **GPT-5.6 Luna** for most tasks. It combines near-Opus benchmark
+  performance with the lowest token price and fastest median response time in
+  current V4 production traffic.
+
+## All supported V4 model IDs
+
+The V4 request schema accepts the following model IDs. The Cloud dashboard may
+show a smaller curated set; availability can also depend on your account's
+rollout and configured provider key.
+
+| Provider | Model IDs | BYOK provider |
+| --- | --- | --- |
+| Anthropic | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-fable-5`, `claude-sonnet-5` | Anthropic |
+| OpenAI | `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | OpenAI |
+| Google | `gemini-3-flash`, `gemini-3.1-pro`, `gemini-3.5-flash`, `gemini-3.6-flash` | Google |
+| xAI | `grok-4.5` | — |
+| Z.ai | `glm-5.2` | — |
+| Moonshot AI | `kimi-k3` | — |
+| MiniMax | `minimax-m3` | — |
+
+See [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels) for the reasoning controls
+accepted by each model. Not every model accepts `modelParams`.
+
+  The current generated SDK request types predate this contract. The
+  TypeScript model union does not yet include GPT-5.6 Luna or every model on
+  this page, and neither generated V4 request model exposes `modelParams`.
+  Use `POST /api/v4/runs` directly for those fields until the follow-up SDK
+  regeneration is released.
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -288,7 +318,7 @@ from browser_use_sdk.v4 import BrowserUse
 client = BrowserUse()
 run = client.runs.create(
     "Compare three project-management tools",
-    model="grok-4.5",
+    model="gpt-5.6-luna",
 )
 ```
 ```typescript TypeScript
@@ -297,6 +327,7 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Compare three project-management tools",
+  // Use REST for GPT-5.6 Luna until the generated union is updated.
   model: "grok-4.5",
 });
 ```
@@ -304,15 +335,218 @@ const run = await client.runs.create({
 curl https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task":"Compare three PM tools","model":"grok-4.5"}'
+  -d '{"task":"Compare three PM tools","model":"gpt-5.6-luna"}'
 ```
 
 ## Bring your own key
 
-Add an Anthropic, OpenAI, or Google key under **Settings → API Keys → Bring
-Your Own Key**. V4 uses it automatically for matching models; no request flag
-is needed. You pay the provider directly, plus a 0.2× Browser Use orchestration
-fee. Grok and MiniMax currently use Browser Use-managed keys.
+On plans with BYOK, add an Anthropic, OpenAI, or Google key under **Settings →
+API Keys → Bring Your Own Key**. V4 uses it automatically for matching models;
+no request flag is needed. You pay the provider directly, plus a 0.2× Browser
+Use orchestration fee. Models from other providers use Browser Use-managed
+keys.
+
+# Thinking levels
+Source: https://docs.browser-use.com/cloud/agent/thinking-levels
+
+
+Browser Use exposes reasoning controls in two forms:
+
+- **API V4** uses provider-native values inside `modelParams`.
+- **API V3 and V2** use the provider-neutral `thinkingLevel` field with
+  `disabled`, `low`, `medium`, or `high`.
+
+See [Models](https://docs.browser-use.com/cloud/agent/models) for the complete V4 model list, recommended
+model, token pricing, and BYOK routes.
+
+## API V4 model parameters
+
+V4 forwards an allow-listed `modelParams` object to the selected provider. The
+field names and accepted values therefore differ by model family.
+
+| Model strings | Path | Accepted values |
+| --- | --- | --- |
+| `gpt-5.5` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh` |
+| `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
+| `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-sonnet-5` | `output_config.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
+| Same Claude models | `thinking.type` | `adaptive`, `disabled` |
+| Same Claude models | `thinking.display` | `omitted`, `summarized` |
+| `gemini-3-flash`, `gemini-3.5-flash`, `gemini-3.6-flash` | `thinkingConfig.thinkingLevel` | `minimal`, `low`, `medium`, `high` |
+| `gemini-3.1-pro` | `thinkingConfig.thinkingLevel` | `low`, `medium`, `high` |
+
+`glm-5.2`, `grok-4.5`, `kimi-k3`, `minimax-m3`, and `claude-fable-5`
+do not currently accept V4 `modelParams`.
+
+  Omitting `modelParams` applies Browser Use's defaults for that V4 model. For
+  example, `gpt-5.6-luna` defaults to `reasoning.effort: xhigh`. Send an empty
+  object (`"modelParams": {}`) to opt out and use the provider's defaults.
+
+### V4 examples
+
+```bash OpenAI
+curl -X POST https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "model": "gpt-5.6-luna",
+    "modelParams": {"reasoning": {"effort": "high"}}
+  }'
+```
+
+```bash Anthropic
+curl -X POST https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "model": "claude-opus-5",
+    "modelParams": {"output_config": {"effort": "high"}}
+  }'
+```
+
+```bash Google
+curl -X POST https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "model": "gemini-3.6-flash",
+    "modelParams": {"thinkingConfig": {"thinkingLevel": "high"}}
+  }'
+```
+
+## API V3 support
+
+V3 accepts the normalized REST field `thinkingLevel`. Legacy aliases are
+normalized before validation: `bu-mini` maps to `gemini-3-flash`, `bu-max`
+maps to `claude-sonnet-5`, and `bu-ultra` maps to `claude-opus-4.6`.
+
+| Model strings | `disabled` | `low` | `medium` | `high` |
+| --- | :---: | :---: | :---: | :---: |
+| `bu-mini`, `gemini-3-flash`, `gemini-3.5-flash` | Yes | Yes | Yes | Yes |
+| `bu-max`, `bu-ultra`, `claude-sonnet-4.6`, `claude-opus-4.6`, `claude-opus-4.7`, `claude-sonnet-5`, `claude-opus-4.8`, `claude-haiku-4.5` | Yes | Yes | Yes | Yes |
+| `gpt-5.2`, `gpt-5.4-mini`, `gpt-5.5`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | Yes | Yes | Yes | Yes |
+| `gpt-5-mini` | — | Yes | Yes | Yes |
+| `gemini-3-pro`, `gemini-3.1-pro` | — | Yes | — | Yes |
+| `glm-5.2` | Yes | — | — | Yes |
+| `minimax-m3` | — | — | — | — |
+
+For a follow-up task sent to an existing V3 session:
+
+- Omit `thinkingLevel` to retain the session's current setting.
+- Send a supported value to update the setting for the next task and later
+  follow-ups.
+- Send `"thinkingLevel": null` to clear it and return to provider defaults.
+
+The requested value is validated against the existing session's model, not
+the request model default.
+
+## API V2 support
+
+V2 also accepts the normalized REST field `thinkingLevel`, but it has two
+additional limitations. It cannot configure GLM thinking, and it cannot enable
+fixed-budget thinking on older Claude 4/4.5 models because the legacy worker
+cannot safely replay their thinking blocks. Those Claude models still accept
+`disabled`.
+
+| Model strings | `disabled` | `low` | `medium` | `high` |
+| --- | :---: | :---: | :---: | :---: |
+| `browser-use-llm`, `browser-use-2.0`, `gemini-2.5-flash`, `gemini-3-flash-preview`, `gemini-3.5-flash`, `gemini-flash-latest`, `gemini-flash-lite-latest` | Yes | Yes | Yes | Yes |
+| `gemini-2.5-pro` | — | Yes | Yes | Yes |
+| `gemini-3-pro-preview`, `gemini-3.1-pro-preview` | — | Yes | — | Yes |
+| `o3`, `o4-mini` | — | Yes | Yes | Yes |
+| `gpt-5.5`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | Yes | Yes | Yes | Yes |
+| `claude-sonnet-5`, `claude-opus-4-7`, `claude-opus-4-8`, `claude-opus-5` | Yes | Yes | Yes | Yes |
+| `claude-sonnet-4-20250514`, `claude-sonnet-4-5-20250929`, `claude-opus-4-5-20251101` | Yes | — | — | — |
+| `gpt-4.1`, `gpt-4.1-mini`, `glm-5.2`, `minimax-m3`, `llama-4-maverick-17b-128e-instruct`, `claude-3-7-sonnet-20250219` | — | — | — | — |
+
+V2's existing `thinking` boolean controls legacy agent behavior. It does not
+select a provider reasoning depth and does not replace `thinkingLevel`.
+
+## Provider mappings for V2 and V3
+
+Browser Use validates the normalized V2/V3 value before dispatch, then maps it
+to the provider's native control.
+
+| Provider/model family | Mapping |
+| --- | --- |
+| Gemini 3 Flash | `disabled` becomes provider level `minimal`; `low`, `medium`, and `high` map directly. |
+| Gemini 3.1 Pro | Supports only provider levels `low` and `high`. Legacy Gemini 3 Pro names route here. |
+| Gemini 2.5 | Uses thinking budgets of 0, 1,024, 4,096, and 8,192 tokens. Gemini 2.5 Pro cannot use the zero-token budget. |
+| Claude 4.6+ and Claude 5 | V3 uses adaptive thinking with the requested effort. V2 sends the effort without replaying thinking blocks. `disabled` turns thinking off where supported. |
+| Earlier supported Claude 4/4.5 | Uses fixed budgets of 1,024, 4,096, and 8,192 tokens. V2 cannot enable these fixed-budget modes. |
+| GPT-5.1+ | `disabled` becomes OpenAI reasoning effort `none`; the other levels map directly. |
+| Earlier GPT-5, o3, and o4 | Supports `low`, `medium`, and `high`, but not `disabled`. |
+| GLM | Exposes only a switch: `disabled` turns thinking off and `high` turns it on. V2 does not support the switch. |
+
+## BYOK behavior
+
+- **V2:** `thinkingLevel` uses the existing model route. It does not add a
+  per-request BYOK switch.
+- **V3:** set `useOwnKey: true` for models that require a provider key. Native
+  and BYOK routes use the same support matrix.
+- **V4:** add an Anthropic, OpenAI, or Google key under **Settings → API Keys →
+  Bring Your Own Key**. V4 automatically uses a matching key; there is no
+  request flag. `modelParams` works the same with Browser Use-managed and
+  customer-managed keys.
+
+## V2 and V3 examples
+
+REST JSON uses the camelCase wire field `thinkingLevel` in both API versions.
+
+```bash API V3
+curl -X POST https://api.browser-use.com/api/v3/sessions \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "model": "claude-opus-4.7",
+    "thinkingLevel": "high"
+  }'
+```
+
+```bash API V2
+curl -X POST https://api.browser-use.com/api/v2/tasks \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "llm": "browser-use-2.0",
+    "thinkingLevel": "high"
+  }'
+```
+
+## Validation errors
+
+Unsupported V2/V3 model-level pairs return HTTP 422. The request field is
+camelCase, while the validation detail currently names the backend field in
+snake_case:
+
+```text
+Model "gemini-3.1-pro" (provider "google") does not support thinking_level="medium". Supported values: low, high
+```
+
+V4 validates the provider-native path and uses its wire name in the error:
+
+```text
+Model "gemini-3.1-pro" does not support modelParams.thinkingConfig.thinkingLevel='minimal'. Supported values: high, low, medium
+```
+
+## Compatibility and API references
+
+The normalized V2/V3 field is optional and nullable. Existing sessions keep
+using provider defaults until a level is supplied. The checked-in generated
+SDK clients do not expose this field yet, so use the REST examples above until
+the follow-up SDK regeneration is released. V4 SDK clients can send
+`modelParams` once their generated V4 type includes the current contract.
+
+  [V4 create run](https://docs.browser-use.com/cloud/api-v4/runs/create-run)
+Generated V4 `modelParams` schema.
+  [V3 create session](https://docs.browser-use.com/cloud/api-v3/sessions/create-session)
+Generated V3 `thinkingLevel` schema.
+  [V2 create task](https://docs.browser-use.com/cloud/api-v2/tasks/create-task)
+Generated V2 `thinkingLevel` schema.
 
 # Structured output
 Source: https://docs.browser-use.com/cloud/agent/structured-output
@@ -721,12 +955,9 @@ curl -X PATCH \
   managed browser. Use `client.browsers.stop(browser.id)` or call
   `PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`.
 
-  <Card
-title="Connect over CDP"
-icon="code"
-href="/cloud/browser/playwright-puppeteer-selenium"
-  >
+  [Connect over CDP](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium)
 Use the CDP URL with Playwright or Puppeteer.
+  [Browser settings](https://docs.browser-use.com/cloud/api-v4/browsers/create-browser-session)
 Configure proxies, screen size, recording, and timeout.
 
 # Stealth
@@ -1689,10 +1920,11 @@ Source: https://docs.browser-use.com/cloud/faq
 
 ## Which model should I use?
 
+- **GPT-5.6 Luna** (`gpt-5.6-luna`, recommended) — the best balance of accuracy, speed, and price for most tasks.
 - **Claude Opus 5** (`claude-opus-5`) — maximum intelligence for difficult, long-horizon work.
-- **GPT-5.6** (`gpt-5.6`) — fast on complex tasks.
-- **Gemini 3.5 Flash** (`gemini-3.5-flash`) — fast for simpler tasks.
-- **MiniMax M3** (`minimax-m3`, default) — cheapest for simple and high-volume tasks.
+- **Grok 4.5** (`grok-4.5`) — a strong general-purpose alternative.
+- **GPT-5.6 Sol** (`gpt-5.6-sol`) — a higher-cost OpenAI option for complex tasks.
+- **MiniMax M3** (`minimax-m3`) — inexpensive for simple and high-volume tasks.
 
 See [Models](https://docs.browser-use.com/cloud/agent/models) for the complete V4 picker and pricing.
 
@@ -1881,7 +2113,8 @@ console.log(run.result?.output);  // final result after iteration
 | `allowed_domains` | `list[str]` | Restrict agent to these domains only. |
 | `session_settings` | `SessionSettings` | Proxy, profile, browser config. See [Profiles](https://docs.browser-use.com/cloud/guides/authentication). |
 | `flash_mode` | `bool` | Faster but less careful navigation. |
-| `thinking` | `bool` | Enable extended reasoning. |
+| `thinking` | `bool` | Enable legacy agent thinking behavior. This does not set model reasoning depth. |
+| `thinkingLevel` (REST) | `str` | Provider reasoning depth. The generated SDK parameter is pending; see [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels). |
 | `vision` | `bool \| str` | Enable screenshots for the agent. |
 | `highlight_elements` | `bool` | Highlight interactive elements on the page. |
 | `system_prompt_extension` | `str` | Append custom instructions to the system prompt. |
@@ -2148,6 +2381,9 @@ Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/sett
 https://api.browser-use.com/api/v4
 ```
 
+See [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels) for V4 `modelParams`,
+provider-native reasoning values, and BYOK behavior.
+
 ## The core loop
 
 Create a run, poll its status until terminal, then fetch the full result. `status` is a cheap indexed lookup — poll it, not the full run.
@@ -2195,6 +2431,9 @@ export BROWSER_USE_API_KEY=your_key
 ```
 
 Base URL: `https://api.browser-use.com/api/v2`
+
+See [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels) for V2 model support,
+provider mappings, and a `thinkingLevel` request example.
 
 ---
 

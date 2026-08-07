@@ -3114,12 +3114,29 @@
               "claude-sonnet-5",
               "gpt-5.5",
               "gpt-5.6",
+              "gpt-5.6-sol",
+              "gpt-5.6-terra",
+              "gpt-5.6-luna",
+              "gemini-3.6-flash",
               "gemini-3.5-flash",
               "gemini-3.1-pro",
               "gemini-3-flash"
             ],
             "title": "Model",
-            "default": "minimax-m3"
+            "default": "gpt-5.6-luna"
+          },
+          "modelParams": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelparams",
+            "description": "Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {\"reasoning\": {\"effort\": \"high\"}} for OpenAI, {\"thinking\": {\"type\": \"adaptive\"}} for Anthropic, {\"thinkingConfig\": {\"thinkingLevel\": \"high\"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the selected model's configured default parameters; passing {} opts out of that default and leaves the provider's own defaults in place."
           },
           "sessionId": {
             "anyOf": [

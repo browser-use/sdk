@@ -8,7 +8,9 @@ Source: https://docs.browser-use.com/open-source/introduction
 <img src="/images/intro-oss-light.svg" alt="Browser Use Open Source" noZoom className="block dark:hidden" />
 <img src="/images/intro-oss-dark.svg" alt="Browser Use Open Source" noZoom className="hidden dark:block" />
 
+  [Human Quickstart](https://docs.browser-use.com/open-source/quickstart)
 Install and run your first agent.
+  [Prompts for Vibecoders](https://docs.browser-use.com/open-source/vibecoding)
 Full SDK reference in a single page.
 
   Try [Browser Use Cloud](https://docs.browser-use.com/cloud/introduction) for our SOTA model, stealth browsers, CAPTCHA solving, and managed infrastructure.
@@ -4578,11 +4580,17 @@ The skills CLI drops the skill into your agent's skills directory (e.g. `.claude
 
 ## Available skills
 
+  [browser-use](https://docs.browser-use.com/open-source/examples/skills/browser-use)
 Drive a browser directly from the CLI — navigate, click, fill forms, screenshot, and extract data.
+  [cloud](https://docs.browser-use.com/open-source/examples/skills/cloud)
 Reference for Browser Use Cloud — the hosted REST API (v2 & v3) and the Python/TypeScript SDKs.
+  [open-source](https://docs.browser-use.com/open-source/examples/skills/open-source)
 Reference for writing Python against the `browser-use` library — Agent, Browser, Tools, and more.
+  [qa](https://docs.browser-use.com/open-source/examples/skills/qa)
 QA-test any site or local dev server and return a 1–5 quality score with evidence.
+  [remote-browser](https://docs.browser-use.com/open-source/examples/skills/remote-browser)
 Control a headless browser from a sandboxed remote machine (cloud VMs, CI, coding agents).
+  [x402](https://docs.browser-use.com/open-source/examples/skills/x402)
 Pay for Browser Use Cloud per request from a crypto wallet — no signup or API key.
 
 ## Source
@@ -4603,16 +4611,8 @@ Install or upgrade browser-use with `uv tool install --python 3.12 --upgrade --f
 
 ## Links
 
-  <Card
-title="skills.sh"
-icon="up-right-from-square"
-href="https://www.skills.sh/browser-use/browser-use/browser-use"
-  />
-  <Card
-title="Source"
-icon="github"
-href="https://github.com/browser-use/browser-use/tree/main/skills/browser-use"
-  />
+  [skills.sh](https://www.skills.sh/browser-use/browser-use/browser-use)
+  [Source](https://github.com/browser-use/browser-use/tree/main/skills/browser-use)
 
 # cloud
 Source: https://docs.browser-use.com/open-source/examples/skills/cloud
@@ -4630,6 +4630,8 @@ npx skills add https://github.com/browser-use/browser-use --skill cloud
 
 ## Links
 
+  [skills.sh](https://www.skills.sh/browser-use/browser-use/cloud)
+  [Source](https://github.com/browser-use/browser-use/tree/main/skills/cloud)
 
 # open-source
 Source: https://docs.browser-use.com/open-source/examples/skills/open-source
@@ -4647,6 +4649,8 @@ npx skills add https://github.com/browser-use/browser-use --skill open-source
 
 ## Links
 
+  [skills.sh](https://www.skills.sh/browser-use/browser-use/open-source)
+  [Source](https://github.com/browser-use/browser-use/tree/main/skills/open-source)
 
 # qa
 Source: https://docs.browser-use.com/open-source/examples/skills/qa
@@ -4662,6 +4666,8 @@ npx skills add https://github.com/browser-use/browser-use --skill qa
 
 ## Links
 
+  [skills.sh](https://www.skills.sh/browser-use/browser-use/qa)
+  [Source](https://github.com/browser-use/browser-use/tree/main/skills/qa)
 
 # remote-browser
 Source: https://docs.browser-use.com/open-source/examples/skills/remote-browser
@@ -4677,6 +4683,8 @@ npx skills add https://github.com/browser-use/browser-use --skill remote-browser
 
 ## Links
 
+  [skills.sh](https://www.skills.sh/browser-use/browser-use/remote-browser)
+  [Source](https://github.com/browser-use/browser-use/tree/main/skills/remote-browser)
 
 # x402
 Source: https://docs.browser-use.com/open-source/examples/skills/x402
@@ -4692,6 +4700,8 @@ npx skills add https://github.com/browser-use/browser-use --skill x402
 
 ## Links
 
+  [skills.sh](https://www.skills.sh/browser-use/browser-use/x402)
+  [Source](https://github.com/browser-use/browser-use/tree/main/skills/x402)
 
 # Local Development Setup
 Source: https://docs.browser-use.com/open-source/development/setup/local-setup

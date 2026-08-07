@@ -4,7 +4,9 @@ description: "Choose a V4 model and understand its token pricing."
 icon: microchip
 ---
 
-Pass one of these API strings as `model` when creating a run:
+Omit `model` to use **GPT-5.6 Luna**, or pass a model ID when creating a run.
+These are the recommended Browser Use-hosted models with published token
+pricing:
 
 | Model | API string | Input | Cache read | Output | BYOK |
 | ----- | ---------- | ----: | ---------: | -----: | ---- |
@@ -18,16 +20,40 @@ Token prices are USD per 1 million tokens. Browser sessions
 (\$0.02/hour) and network traffic (\$5/GB managed proxy or \$0.20/GB
 proxyless/BYOP) are charged separately. See [full pricing](https://browser-use.com/pricing).
 
+See [Thinking levels](/cloud/agent/thinking-levels) for V4 `modelParams` and
+the normalized `thinkingLevel` values available in V2 and V3.
+
 <Tip>
   We recommend **GPT-5.6 Luna** for most tasks. It combines near-Opus benchmark
   performance with the lowest token price and fastest median response time in
   current V4 production traffic.
 </Tip>
 
+## All supported V4 model IDs
+
+The V4 request schema accepts the following model IDs. The Cloud dashboard may
+show a smaller curated set; availability can also depend on your account's
+rollout and configured provider key.
+
+| Provider | Model IDs | BYOK provider |
+| --- | --- | --- |
+| Anthropic | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-fable-5`, `claude-sonnet-5` | Anthropic |
+| OpenAI | `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | OpenAI |
+| Google | `gemini-3-flash`, `gemini-3.1-pro`, `gemini-3.5-flash`, `gemini-3.6-flash` | Google |
+| xAI | `grok-4.5` | — |
+| Z.ai | `glm-5.2` | — |
+| Moonshot AI | `kimi-k3` | — |
+| MiniMax | `minimax-m3` | — |
+
+See [Thinking levels](/cloud/agent/thinking-levels) for the reasoning controls
+accepted by each model. Not every model accepts `modelParams`.
+
 <Note>
-  New model strings can reach the API before the TypeScript SDK's generated
-  union. If TypeScript rejects a model listed above, call `POST /api/v4/runs`
-  directly for that model.
+  The current generated SDK request types predate this contract. The
+  TypeScript model union does not yet include GPT-5.6 Luna or every model on
+  this page, and neither generated V4 request model exposes `modelParams`.
+  Use `POST /api/v4/runs` directly for those fields until the follow-up SDK
+  regeneration is released.
 </Note>
 
 <CodeGroup>
@@ -46,7 +72,8 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Compare three project-management tools",
-  model: "gpt-5.6-luna",
+  // Use REST for GPT-5.6 Luna until the generated union is updated.
+  model: "grok-4.5",
 });
 ```
 ```bash curl
@@ -59,7 +86,8 @@ curl https://api.browser-use.com/api/v4/runs \
 
 ## Bring your own key
 
-Add an Anthropic, OpenAI, or Google key under **Settings → API Keys → Bring
-Your Own Key**. V4 uses it automatically for matching models; no request flag
-is needed. You pay the provider directly, plus a 0.2× Browser Use orchestration
-fee. Grok and MiniMax currently use Browser Use-managed keys.
+On plans with BYOK, add an Anthropic, OpenAI, or Google key under **Settings →
+API Keys → Bring Your Own Key**. V4 uses it automatically for matching models;
+no request flag is needed. You pay the provider directly, plus a 0.2× Browser
+Use orchestration fee. Models from other providers use Browser Use-managed
+keys.

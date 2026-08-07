@@ -3485,10 +3485,24 @@
                     "claude-sonnet-4.6",
                     "claude-opus-4.6",
                     "claude-opus-4.7",
-                    "gpt-5.4-mini"
+                    "claude-sonnet-5",
+                    "claude-opus-4.8",
+                    "gpt-5.4-mini",
+                    "glm-5.2",
+                    "minimax-m3",
+                    "claude-haiku-4.5",
+                    "gpt-5.2",
+                    "gpt-5-mini",
+                    "gpt-5.5",
+                    "gpt-5.6-sol",
+                    "gpt-5.6-terra",
+                    "gpt-5.6-luna",
+                    "gemini-3-pro",
+                    "gemini-3.1-pro",
+                    "gemini-3.5-flash"
                 ],
                 "title": "BuModel",
-                "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash — fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 — balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 — capable general-purpose Opus tier.\n- `claude-opus-4.7`: Claude Opus 4.7 — most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.\n- `gpt-5.4-mini`: GPT-5.4 mini — OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities."
+                "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash — fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6` (legacy aliases) / `claude-sonnet-5`: Claude Sonnet 5 — balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 — capable general-purpose Opus tier.\n- `claude-opus-4.7`: Claude Opus 4.7 — most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.\n- `claude-opus-4.8`: Claude Opus 4.8 — most capable Opus-tier model, state-of-the-art on long-horizon agentic work.\n- `gpt-5.4-mini`: GPT-5.4 mini — OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities.\n- `glm-5.2`: Z.ai GLM 5.2 — capable, low-cost open model. Best for cost-sensitive agentic tasks.\n- `minimax-m3`: MiniMax M3 — fast, very low-cost model. Best for simple, high-volume tasks.\n\nAdditional provider models (e.g. `gemini-3.5-flash`, `gpt-5.2`, and `gpt-5-mini`)\nare selectable only with `use_own_key=true`, where your own provider key serves\nthem. The GPT-5.6 family is native when either Browser Use's direct OpenAI key\nor Amazon Bedrock route is configured. GPT-5.5 becomes native only through the\nBedrock rollout."
             },
             "ClaudeLoginCodeRequest": {
                 "properties": {
@@ -4550,6 +4564,17 @@
                         "$ref": "#/components/schemas/BuModel",
                         "description": "The model tier used for this session."
                     },
+                    "thinkingLevel": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ThinkingLevel"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Configured model reasoning depth for this session, or null when provider defaults are used."
+                    },
                     "title": {
                         "anyOf": [
                             {
@@ -5005,6 +5030,17 @@
                 "title": "TgAutoStartResponse",
                 "description": "Returned by POST /me/tg/auto. The session is already running by the\ntime this returns — frontend opens the iframe and starts polling."
             },
+            "ThinkingLevel": {
+                "type": "string",
+                "enum": [
+                    "disabled",
+                    "low",
+                    "medium",
+                    "high"
+                ],
+                "title": "ThinkingLevel",
+                "description": "Provider-neutral model reasoning depth."
+            },
             "TooManyConcurrentActiveSessionsError": {
                 "properties": {
                     "detail": {
@@ -5316,6 +5352,17 @@
                         "$ref": "#/components/schemas/BuModel",
                         "description": "The model to use. \"gemini-3-flash\" is fast and cheap, \"claude-sonnet-4.6\" is balanced, \"claude-opus-4.7\" is most capable (default). See BuModel for details.",
                         "default": "claude-opus-4.7"
+                    },
+                    "thinkingLevel": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ThinkingLevel"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Optional model reasoning depth. Omit this field to preserve the provider default. V3 accepts disabled/low/medium/high for bu-mini, bu-max, bu-ultra, gemini-3-flash, gemini-3.5-flash, claude-sonnet-4.6, claude-opus-4.6, claude-opus-4.7, claude-sonnet-5, claude-opus-4.8, claude-haiku-4.5, gpt-5.2, gpt-5.4-mini, gpt-5.5, gpt-5.6-sol, gpt-5.6-terra, and gpt-5.6-luna; low/medium/high for gpt-5-mini; low/high for gemini-3-pro and gemini-3.1-pro; and disabled/high for glm-5.2. MiniMax M3 rejects an explicit level."
                     },
                     "sessionId": {
                         "anyOf": [

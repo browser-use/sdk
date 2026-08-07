@@ -202,6 +202,25 @@ for product_nav in d['navigation']['products']:
     echo "" >> "$out"
     awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}' "$file" \
       | sed "s|](/cloud/|](${BASE_URL}/cloud/|g" \
+      | python3 -c '
+import re, sys
+
+base_url = sys.argv[1]
+content = sys.stdin.read()
+
+def render_card(match):
+    attributes = match.group(1)
+    title = re.search(r"\btitle=\"([^\"]+)\"", attributes)
+    href = re.search(r"\bhref=\"([^\"]+)\"", attributes)
+    if not title or not href:
+        return ""
+    url = href.group(1)
+    if url.startswith("/"):
+        url = base_url + url
+    return f"[{title.group(1)}]({url})"
+
+sys.stdout.write(re.sub(r"<Card\b([^>]*)>", render_card, content, flags=re.DOTALL))
+' "$BASE_URL" \
       | sed -E '/<\/?(CodeGroup|Note|Tip|Warning|Info|Card|Tabs|Tab|Steps|Step|Accordion|AccordionGroup)[^>]*>/d' \
       | python3 -c '
 # Dedent component-nested content without corrupting code indentation:
@@ -266,11 +285,14 @@ Keep the browser session ID returned by `POST /api/v4/browsers`, then call
 `PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`. This stops billing and
 refunds unused browser time.
 
-**Current TypeScript SDK typing:** Pass `model` explicitly (use `grok-4.5` for
-the best price/accuracy balance). Whenever `browserSettings` is present, also
-pass `proxyCountryCode`: use `"us"` to keep the default or `null` to disable
-the managed proxy. New model strings can reach REST before the generated
-TypeScript union; use `POST /api/v4/runs` directly if a listed model is rejected.
+**Current TypeScript SDK typing:** Pass `model` explicitly. Prefer
+`gpt-5.6-luna`, the recommended V4 model; if the generated union does not yet
+include it, use `grok-4.5` or call `POST /api/v4/runs` directly. Whenever
+`browserSettings` is present, also pass `proxyCountryCode`: use `"us"` to keep
+the default or `null` to disable the managed proxy. New model strings can reach
+REST before the generated TypeScript union. The generated SDK request types do
+not yet expose V4 `modelParams`; use REST for that field until the follow-up SDK
+release.
 
 Before writing code, check if `browser-use-sdk` is already installed. If so, upgrade to the latest version. If not, install it:
 - Python: `pip install --upgrade browser-use-sdk`

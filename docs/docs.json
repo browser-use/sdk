@@ -80,6 +80,7 @@
                     "pages": [
                       "cloud/agent/quickstart",
                       "cloud/agent/models",
+                      "cloud/agent/thinking-levels",
                       "cloud/agent/structured-output",
                       "cloud/agent/sessions",
                       "cloud/agent/workspaces",

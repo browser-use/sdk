@@ -1,0 +1,214 @@
+---
+title: Thinking levels
+description: "Configure model reasoning depth across API V2, V3, and V4."
+icon: brain
+---
+
+Browser Use exposes reasoning controls in two forms:
+
+- **API V4** uses provider-native values inside `modelParams`.
+- **API V3 and V2** use the provider-neutral `thinkingLevel` field with
+  `disabled`, `low`, `medium`, or `high`.
+
+See [Models](/cloud/agent/models) for the complete V4 model list, recommended
+model, token pricing, and BYOK routes.
+
+## API V4 model parameters
+
+V4 forwards an allow-listed `modelParams` object to the selected provider. The
+field names and accepted values therefore differ by model family.
+
+| Model strings | Path | Accepted values |
+| --- | --- | --- |
+| `gpt-5.5` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh` |
+| `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
+| `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-sonnet-5` | `output_config.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
+| Same Claude models | `thinking.type` | `adaptive`, `disabled` |
+| Same Claude models | `thinking.display` | `omitted`, `summarized` |
+| `gemini-3-flash`, `gemini-3.5-flash`, `gemini-3.6-flash` | `thinkingConfig.thinkingLevel` | `minimal`, `low`, `medium`, `high` |
+| `gemini-3.1-pro` | `thinkingConfig.thinkingLevel` | `low`, `medium`, `high` |
+
+`glm-5.2`, `grok-4.5`, `kimi-k3`, `minimax-m3`, and `claude-fable-5`
+do not currently accept V4 `modelParams`.
+
+<Note>
+  Omitting `modelParams` applies Browser Use's defaults for that V4 model. For
+  example, `gpt-5.6-luna` defaults to `reasoning.effort: xhigh`. Send an empty
+  object (`"modelParams": {}`) to opt out and use the provider's defaults.
+</Note>
+
+### V4 examples
+
+<CodeGroup>
+```bash OpenAI
+curl -X POST https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "model": "gpt-5.6-luna",
+    "modelParams": {"reasoning": {"effort": "high"}}
+  }'
+```
+
+```bash Anthropic
+curl -X POST https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "model": "claude-opus-5",
+    "modelParams": {"output_config": {"effort": "high"}}
+  }'
+```
+
+```bash Google
+curl -X POST https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "model": "gemini-3.6-flash",
+    "modelParams": {"thinkingConfig": {"thinkingLevel": "high"}}
+  }'
+```
+</CodeGroup>
+
+## API V3 support
+
+V3 accepts the normalized REST field `thinkingLevel`. Legacy aliases are
+normalized before validation: `bu-mini` maps to `gemini-3-flash`, `bu-max`
+maps to `claude-sonnet-5`, and `bu-ultra` maps to `claude-opus-4.6`.
+
+| Model strings | `disabled` | `low` | `medium` | `high` |
+| --- | :---: | :---: | :---: | :---: |
+| `bu-mini`, `gemini-3-flash`, `gemini-3.5-flash` | Yes | Yes | Yes | Yes |
+| `bu-max`, `bu-ultra`, `claude-sonnet-4.6`, `claude-opus-4.6`, `claude-opus-4.7`, `claude-sonnet-5`, `claude-opus-4.8`, `claude-haiku-4.5` | Yes | Yes | Yes | Yes |
+| `gpt-5.2`, `gpt-5.4-mini`, `gpt-5.5`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | Yes | Yes | Yes | Yes |
+| `gpt-5-mini` | — | Yes | Yes | Yes |
+| `gemini-3-pro`, `gemini-3.1-pro` | — | Yes | — | Yes |
+| `glm-5.2` | Yes | — | — | Yes |
+| `minimax-m3` | — | — | — | — |
+
+For a follow-up task sent to an existing V3 session:
+
+- Omit `thinkingLevel` to retain the session's current setting.
+- Send a supported value to update the setting for the next task and later
+  follow-ups.
+- Send `"thinkingLevel": null` to clear it and return to provider defaults.
+
+The requested value is validated against the existing session's model, not
+the request model default.
+
+## API V2 support
+
+V2 also accepts the normalized REST field `thinkingLevel`, but it has two
+additional limitations. It cannot configure GLM thinking, and it cannot enable
+fixed-budget thinking on older Claude 4/4.5 models because the legacy worker
+cannot safely replay their thinking blocks. Those Claude models still accept
+`disabled`.
+
+| Model strings | `disabled` | `low` | `medium` | `high` |
+| --- | :---: | :---: | :---: | :---: |
+| `browser-use-llm`, `browser-use-2.0`, `gemini-2.5-flash`, `gemini-3-flash-preview`, `gemini-3.5-flash`, `gemini-flash-latest`, `gemini-flash-lite-latest` | Yes | Yes | Yes | Yes |
+| `gemini-2.5-pro` | — | Yes | Yes | Yes |
+| `gemini-3-pro-preview`, `gemini-3.1-pro-preview` | — | Yes | — | Yes |
+| `o3`, `o4-mini` | — | Yes | Yes | Yes |
+| `gpt-5.5`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | Yes | Yes | Yes | Yes |
+| `claude-sonnet-5`, `claude-opus-4-7`, `claude-opus-4-8`, `claude-opus-5` | Yes | Yes | Yes | Yes |
+| `claude-sonnet-4-20250514`, `claude-sonnet-4-5-20250929`, `claude-opus-4-5-20251101` | Yes | — | — | — |
+| `gpt-4.1`, `gpt-4.1-mini`, `glm-5.2`, `minimax-m3`, `llama-4-maverick-17b-128e-instruct`, `claude-3-7-sonnet-20250219` | — | — | — | — |
+
+V2's existing `thinking` boolean controls legacy agent behavior. It does not
+select a provider reasoning depth and does not replace `thinkingLevel`.
+
+## Provider mappings for V2 and V3
+
+Browser Use validates the normalized V2/V3 value before dispatch, then maps it
+to the provider's native control.
+
+| Provider/model family | Mapping |
+| --- | --- |
+| Gemini 3 Flash | `disabled` becomes provider level `minimal`; `low`, `medium`, and `high` map directly. |
+| Gemini 3.1 Pro | Supports only provider levels `low` and `high`. Legacy Gemini 3 Pro names route here. |
+| Gemini 2.5 | Uses thinking budgets of 0, 1,024, 4,096, and 8,192 tokens. Gemini 2.5 Pro cannot use the zero-token budget. |
+| Claude 4.6+ and Claude 5 | V3 uses adaptive thinking with the requested effort. V2 sends the effort without replaying thinking blocks. `disabled` turns thinking off where supported. |
+| Earlier supported Claude 4/4.5 | Uses fixed budgets of 1,024, 4,096, and 8,192 tokens. V2 cannot enable these fixed-budget modes. |
+| GPT-5.1+ | `disabled` becomes OpenAI reasoning effort `none`; the other levels map directly. |
+| Earlier GPT-5, o3, and o4 | Supports `low`, `medium`, and `high`, but not `disabled`. |
+| GLM | Exposes only a switch: `disabled` turns thinking off and `high` turns it on. V2 does not support the switch. |
+
+## BYOK behavior
+
+- **V2:** `thinkingLevel` uses the existing model route. It does not add a
+  per-request BYOK switch.
+- **V3:** set `useOwnKey: true` for models that require a provider key. Native
+  and BYOK routes use the same support matrix.
+- **V4:** add an Anthropic, OpenAI, or Google key under **Settings → API Keys →
+  Bring Your Own Key**. V4 automatically uses a matching key; there is no
+  request flag. `modelParams` works the same with Browser Use-managed and
+  customer-managed keys.
+
+## V2 and V3 examples
+
+REST JSON uses the camelCase wire field `thinkingLevel` in both API versions.
+
+<CodeGroup>
+```bash API V3
+curl -X POST https://api.browser-use.com/api/v3/sessions \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "model": "claude-opus-4.7",
+    "thinkingLevel": "high"
+  }'
+```
+
+```bash API V2
+curl -X POST https://api.browser-use.com/api/v2/tasks \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "llm": "browser-use-2.0",
+    "thinkingLevel": "high"
+  }'
+```
+</CodeGroup>
+
+## Validation errors
+
+Unsupported V2/V3 model-level pairs return HTTP 422. The request field is
+camelCase, while the validation detail currently names the backend field in
+snake_case:
+
+```text
+Model "gemini-3.1-pro" (provider "google") does not support thinking_level="medium". Supported values: low, high
+```
+
+V4 validates the provider-native path and uses its wire name in the error:
+
+```text
+Model "gemini-3.1-pro" does not support modelParams.thinkingConfig.thinkingLevel='minimal'. Supported values: high, low, medium
+```
+
+## Compatibility and API references
+
+The normalized V2/V3 field is optional and nullable. Existing sessions keep
+using provider defaults until a level is supplied. The checked-in generated
+SDK clients do not expose this field yet, so use the REST examples above until
+the follow-up SDK regeneration is released. V4 SDK clients can send
+`modelParams` once their generated V4 type includes the current contract.
+
+<CardGroup cols={3}>
+  <Card title="V4 create run" icon="code" href="/cloud/api-v4/runs/create-run">
+    Generated V4 `modelParams` schema.
+  </Card>
+  <Card title="V3 create session" icon="code" href="/cloud/api-v3/sessions/create-session">
+    Generated V3 `thinkingLevel` schema.
+  </Card>
+  <Card title="V2 create task" icon="code" href="/cloud/api-v2/tasks/create-task">
+    Generated V2 `thinkingLevel` schema.
+  </Card>
+</CardGroup>
