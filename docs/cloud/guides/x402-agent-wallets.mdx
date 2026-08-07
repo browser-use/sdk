@@ -63,9 +63,8 @@ Give your agent a wallet with a few dollars of USDC in it, and it can run Browse
     ```text
     Use AgentCash to POST to https://x402.api.browser-use.com/api/v3/sessions
     with body {"task": "Go to example.com and tell me the page title"}.
-    Pay the $1 minimum option. Then wait 60 seconds and GET
-    /api/v3/sessions/{id} once to read the output — each request pays, so
-    don't poll in a tight loop.
+    Pay the $1 minimum option, then poll the returned session id at
+    GET /api/v3/sessions/{id} until status is "stopped" and show me the output.
     ```
 
     The `fetch` tool handles the whole 402 → sign → retry loop. Use
