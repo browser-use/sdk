@@ -5,10 +5,10 @@ icon: rocket
 ---
 
 <CardGroup cols={2}>
-  <Card title="Hosted Agents" icon="robot" href="/cloud/agent/quickstart">
+  <Card title="Browser Use Agents" icon="robot" href="/cloud/agent/quickstart">
     Give an agent a task and get the result.
   </Card>
-  <Card title="Browsers" icon="globe" href="/cloud/browser/quickstart">
+  <Card title="Browser Infrastructure" icon="globe" href="/cloud/browser/quickstart">
     Launch a cloud browser and connect to it from your code.
   </Card>
 </CardGroup>
@@ -33,19 +33,16 @@ npm install browser-use-sdk
 ```
 </CodeGroup>
 
-## Run a hosted agent
+## Run Browser Use Agents
 
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
 
-client = BrowserUse()
-run = client.runs.create(
-    "Find the top Hacker News story",
-    model="grok-4.5",
-)
-run = client.runs.wait_for_completion(run.id)
-print(run.result)
+with BrowserUse() as client:
+    run = client.runs.create("Find the top Hacker News story")
+    result = client.runs.wait_for_completion(run.id)
+    print(result.result)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v4";
@@ -53,7 +50,6 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Find the top Hacker News story",
-  model: "grok-4.5",
 });
 const result = await client.runs.waitForCompletion(run.id);
 console.log(result.result);
@@ -62,13 +58,16 @@ console.log(result.result);
 curl https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task":"Find the top Hacker News story","model":"grok-4.5"}'
+  -d '{"task":"Find the top Hacker News story"}'
 ```
 </CodeGroup>
 
-## Control a browser
+## Use Browser Infrastructure
 
 Launch a browser, connect to its CDP URL, then stop it:
+
+The browser-management resource currently uses the explicit V3 SDK namespace.
+The equivalent REST endpoint is API V4.
 
 <CodeGroup>
 ```python Python

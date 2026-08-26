@@ -1,22 +1,11 @@
-"""
-Basic task -- run a task and get the result.
-"""
-import asyncio
-
 from dotenv import load_dotenv
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v4 import BrowserUse
 
 load_dotenv()
 
-
-async def main():
-    client = AsyncBrowserUse()
-
-    result = await client.run(
-        "Search for the top 10 Hacker News posts and return the title and url."
+with BrowserUse() as client:
+    run = client.runs.create(
+        "Search for the top 10 Hacker News posts and return the title and URL."
     )
-    print(result.output)
-    print(result.id, result.status, len(result.steps))
-
-
-asyncio.run(main())
+    result = client.runs.wait_for_completion(run.id)
+    print(result.result)

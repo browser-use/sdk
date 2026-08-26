@@ -5,9 +5,9 @@
 Source: https://docs.browser-use.com/cloud/quickstart
 
 
-  [Hosted Agents](https://docs.browser-use.com/cloud/agent/quickstart)
+  [Browser Use Agents](https://docs.browser-use.com/cloud/agent/quickstart)
 Give an agent a task and get the result.
-  [Browsers](https://docs.browser-use.com/cloud/browser/quickstart)
+  [Browser Infrastructure](https://docs.browser-use.com/cloud/browser/quickstart)
 Launch a cloud browser and connect to it from your code.
 
 Get an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) and
@@ -28,18 +28,15 @@ pip install browser-use-sdk
 npm install browser-use-sdk
 ```
 
-## Run a hosted agent
+## Run Browser Use Agents
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
 
-client = BrowserUse()
-run = client.runs.create(
-    "Find the top Hacker News story",
-    model="grok-4.5",
-)
-run = client.runs.wait_for_completion(run.id)
-print(run.result)
+with BrowserUse() as client:
+    run = client.runs.create("Find the top Hacker News story")
+    result = client.runs.wait_for_completion(run.id)
+    print(result.result)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v4";
@@ -47,7 +44,6 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Find the top Hacker News story",
-  model: "grok-4.5",
 });
 const result = await client.runs.waitForCompletion(run.id);
 console.log(result.result);
@@ -56,12 +52,15 @@ console.log(result.result);
 curl https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task":"Find the top Hacker News story","model":"grok-4.5"}'
+  -d '{"task":"Find the top Hacker News story"}'
 ```
 
-## Control a browser
+## Use Browser Infrastructure
 
 Launch a browser, connect to its CDP URL, then stop it:
+
+The browser-management resource currently uses the explicit V3 SDK namespace.
+The equivalent REST endpoint is API V4.
 
 ```python Python
 from browser_use_sdk.v3 import BrowserUse
@@ -211,13 +210,10 @@ export BROWSER_USE_API_KEY=your_key
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
 
-client = BrowserUse()
-run = client.runs.create(
-    "Find the top Hacker News story",
-    model="grok-4.5",
-)
-run = client.runs.wait_for_completion(run.id)
-print(run.result)
+with BrowserUse() as client:
+    run = client.runs.create("Find the top Hacker News story")
+    result = client.runs.wait_for_completion(run.id)
+    print(result.result)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v4";
@@ -225,7 +221,6 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Find the top Hacker News story",
-  model: "grok-4.5",
 });
 const result = await client.runs.waitForCompletion(run.id);
 console.log(result.result);
@@ -234,7 +229,7 @@ console.log(result.result);
 curl https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task":"Find the top Hacker News story","model":"grok-4.5"}'
+  -d '{"task":"Find the top Hacker News story"}'
 ```
 
 Install the SDK with `pip install browser-use-sdk` or
@@ -998,7 +993,7 @@ Events cover run lifecycle, model calls, browser readiness, tool activity,
 artifacts, and completion. See [Get run events](https://docs.browser-use.com/cloud/api-v4/runs/get-run-events)
 for the complete response shape.
 
-# Browser quickstart
+# Browser Infrastructure quickstart
 Source: https://docs.browser-use.com/cloud/browser/quickstart
 
 
@@ -1037,6 +1032,9 @@ npm install browser-use-sdk
 ```
 
 ## Launch a browser
+
+The browser-management resource currently uses the explicit V3 SDK namespace.
+The equivalent REST endpoint is API V4.
 
 ```python Python
 from browser_use_sdk.v3 import BrowserUse

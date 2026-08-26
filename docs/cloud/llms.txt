@@ -63,7 +63,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Observability](https://docs.browser-use.com/cloud/agent/observability): Poll ordered V4 events to monitor a run or build a custom UI.
 
 ## Browser
-- [Browser quickstart](https://docs.browser-use.com/cloud/browser/quickstart): Launch a cloud browser and connect to it from your code.
+- [Browser Infrastructure quickstart](https://docs.browser-use.com/cloud/browser/quickstart): Launch a cloud browser and connect to it from your code.
 - [Stealth](https://docs.browser-use.com/cloud/browser/stealth): Best stealth on the planet. We fork Chromium to give agents access to all websites.
 - [Proxies](https://docs.browser-use.com/cloud/browser/proxies): Route API V4 agent runs through residential or custom proxies.
 - [Live preview & recording](https://docs.browser-use.com/cloud/browser/live-preview): Watch an API V4 run in real time or record its browser.
