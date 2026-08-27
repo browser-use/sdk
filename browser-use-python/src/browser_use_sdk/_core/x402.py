@@ -14,6 +14,7 @@ nothing in this file is imported.
 from __future__ import annotations
 
 import importlib
+from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 from typing import Any
 
 # Public alias for optional x402.x402Client type
@@ -26,6 +27,8 @@ X402_BASE_URL_DEFAULT_V2 = "https://x402.api.browser-use.com/api/v2"
 
 # Balance check is served on the regular (non-x402) host
 X402_BALANCE_BASE_URL_DEFAULT = "https://api.browser-use.com/api/v3"
+
+_USDC_ATOMIC_UNITS_PER_DOLLAR = Decimal("1000000")
 
 
 def _build_wallet_auth_message(address: str, issued_at: str, nonce: str) -> str:
@@ -97,7 +100,43 @@ def _missing_x402() -> ImportError:
     )
 
 
-def x402_client_from_private_key(private_key: str) -> X402Client:
+def _max_payment_atomic_units(max_payment_usd: float | str) -> int:
+    try:
+        amount = Decimal(str(max_payment_usd))
+    except (InvalidOperation, ValueError) as e:
+        raise ValueError("x402_max_payment_usd must be a positive finite number") from e
+    if not amount.is_finite() or amount <= 0:
+        raise ValueError("x402_max_payment_usd must be a positive finite number")
+    atomic_units = int(
+        (amount * _USDC_ATOMIC_UNITS_PER_DOLLAR).to_integral_value(
+            rounding=ROUND_FLOOR
+        )
+    )
+    if atomic_units < 1:
+        raise ValueError(
+            "x402_max_payment_usd must resolve to at least one USDC atomic unit"
+        )
+    return atomic_units
+
+
+def apply_x402_max_payment_usd(
+    client: X402Client, max_payment_usd: float | str
+) -> X402Client:
+    """Add a hard USD ceiling to an x402 client."""
+    try:
+        x402_pkg = importlib.import_module("x402")
+    except ImportError as e:
+        raise _missing_x402() from e
+    register_policy = getattr(client, "register_policy", None)
+    if not callable(register_policy):
+        raise TypeError("The supplied x402 client does not support payment policies")
+    register_policy(x402_pkg.max_amount(_max_payment_atomic_units(max_payment_usd)))
+    return client
+
+
+def x402_client_from_private_key(
+    private_key: str, *, max_payment_usd: float | str = 1.0
+) -> X402Client:
     """Build a ready-to-use ``x402Client`` from an EVM private key.
 
     Equivalent to::
@@ -121,7 +160,7 @@ def x402_client_from_private_key(private_key: str) -> X402Client:
     account = eth_account.Account.from_key(private_key)
     client = x402_pkg.x402Client()
     register_pkg.register_exact_evm_client(client, evm_pkg.EthAccountSigner(account))
-    return client
+    return apply_x402_max_payment_usd(client, max_payment_usd)
 
 
 def x402_async_httpx_client(
