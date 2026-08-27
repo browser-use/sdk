@@ -95,6 +95,7 @@
                     "pages": [
                       "cloud/browser/quickstart",
                       "cloud/browser/stealth",
+                      "cloud/browser/captcha-handling",
                       "cloud/browser/proxies",
                       "cloud/browser/live-preview",
                       "cloud/browser/playwright-puppeteer-selenium",

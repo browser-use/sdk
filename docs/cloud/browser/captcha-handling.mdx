@@ -1,0 +1,28 @@
+---
+title: CAPTCHA handling
+description: "Cloud browsers solve reCAPTCHA and hCaptcha automatically."
+icon: shield-check
+---
+
+Every Browser Use Cloud browser enables automatic CAPTCHA solving. This applies
+to API V4 Agent runs and standalone Cloud Browser sessions. There is no request
+field to turn on.
+
+## Supported challenges
+
+- reCAPTCHA
+- hCaptcha
+
+Other anti-bot pages may still be passed by the browser's stealth protections
+or residential proxy. That is separate from automatic CAPTCHA solver coverage.
+
+## When a CAPTCHA appears
+
+Stop driving the page, wait about 10 seconds, then inspect it again. Do not
+refresh, click the challenge, or replace the browser while the solver is
+working.
+
+CAPTCHA solving is not guaranteed. If the challenge remains, open the
+[live preview](/cloud/browser/live-preview) for human control. If the whole
+site is blocking the browser rather than showing a challenge, try a different
+[proxy country](/cloud/browser/proxies).
