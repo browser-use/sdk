@@ -28,7 +28,8 @@ Keep the browser session ID returned by `POST /api/v4/browsers`, then call
 refunds unused browser time.
 
 **Create and reuse a login profile:** Create one profile per end user, then pass
-its ID in `browserSettings.profileId` on later browsers or agent runs:
+its ID as top-level `profileId` when creating browsers, or as
+`browserSettings.profileId` on agent runs:
 ```bash
 profile=$(curl -sS https://api.browser-use.com/api/v4/profiles \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
