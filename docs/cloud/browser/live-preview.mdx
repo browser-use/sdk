@@ -26,7 +26,7 @@ for _ in range(300):
     if ready:
         print(ready.data["live_view_url"])
         break
-    after = page.next_after or after
+    after = page.next_after if page.next_after is not None else after
     time.sleep(1)
 else:
     raise TimeoutError("Browser did not become ready within 5 minutes")
