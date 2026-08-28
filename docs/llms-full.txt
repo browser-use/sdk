@@ -1247,21 +1247,31 @@ reference](https://docs.browser-use.com/cloud/api-v4/runs/create-run) for the co
 Source: https://docs.browser-use.com/cloud/browser/live-preview
 
 
-The `browser.ready` event contains the live browser URL:
+Poll for `browser.ready` as soon as you create the run so the URL is available
+while the browser is live:
 
 ```python Python
+import time
+
 from browser_use_sdk.v4 import BrowserUse
 
 client = BrowserUse()
 run = client.runs.create("Find the top Hacker News story")
-run = client.runs.wait_for_completion(run.id)
+after = None
 
-events = client.runs.events(run.id, limit=100)
-ready = next(
-    event for event in events.events
-    if event.type == "browser.ready"
-)
-print(ready.data["live_view_url"])
+for _ in range(300):
+    page = client.runs.events(run.id, after=after, limit=100)
+    ready = next(
+        (event for event in page.events if event.type == "browser.ready"),
+        None,
+    )
+    if ready:
+        print(ready.data["live_view_url"])
+        break
+    after = page.next_after or after
+    time.sleep(1)
+else:
+    raise TimeoutError("Browser did not become ready within 5 minutes")
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v4";
@@ -1271,19 +1281,27 @@ const run = await client.runs.create({
   task: "Find the top Hacker News story",
   model: "grok-4.5",
 });
-await client.runs.waitForCompletion(run.id);
+let after: number | null = null;
 
-const events = await client.runs.events(run.id, {
-  limit: 100,
-});
-const ready = events.events.find(
-  (event) => event.type === "browser.ready",
-);
-console.log(ready?.data.live_view_url);
+for (let attempt = 0; attempt < 300; attempt++) {
+  const page = await client.runs.events(run.id, { after, limit: 100 });
+  const ready = page.events.find(
+    (event) => event.type === "browser.ready",
+  );
+  if (ready) {
+    console.log(ready.data.live_view_url);
+    break;
+  }
+  after = page.nextAfter ?? after;
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  if (attempt === 299) {
+    throw new Error("Browser did not become ready within 5 minutes");
+  }
+}
 ```
 
-Poll [run events](https://docs.browser-use.com/cloud/agent/observability) if you need the URL as soon as
-the browser starts.
+Use the `after` cursor to avoid fetching the same events again. See [run
+events](https://docs.browser-use.com/cloud/agent/observability) for the full event stream.
 
 ## Embed the live browser
 
