@@ -65,7 +65,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 ## Browser
 - [Browser Infrastructure quickstart](https://docs.browser-use.com/cloud/browser/quickstart): Launch a cloud browser and connect to it from your code.
 - [Stealth](https://docs.browser-use.com/cloud/browser/stealth): Best stealth on the planet. We fork Chromium to give agents access to all websites.
-- [CAPTCHA handling](https://docs.browser-use.com/cloud/browser/captcha-handling): Cloud browsers solve reCAPTCHA and hCaptcha automatically.
+- [CAPTCHA handling](https://docs.browser-use.com/cloud/browser/captcha-handling): Cloud browsers solve supported CAPTCHA challenges automatically.
 - [Proxies](https://docs.browser-use.com/cloud/browser/proxies): Route API V4 agent runs through residential or custom proxies.
 - [Live preview & recording](https://docs.browser-use.com/cloud/browser/live-preview): Watch an API V4 run in real time or record its browser.
 - [Playwright, Puppeteer, Selenium](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium): Control a Browser Use cloud browser directly over CDP.

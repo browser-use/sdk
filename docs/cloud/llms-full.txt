@@ -1097,9 +1097,9 @@ Every cloud browser session runs in a hardened Chromium fork with stealth enable
 - **Ad and cookie banner blocking** — Banners are dismissed automatically so the agent sees clean pages and executes faster.
 - **Cloudflare / anti-bot bypass** — Works on sites protected by Cloudflare, PerimeterX, and other bot detection services.
 
-Cloud browsers also solve reCAPTCHA and hCaptcha automatically. See
-[CAPTCHA handling](https://docs.browser-use.com/cloud/browser/captcha-handling) for the supported challenges
-and what to do when a solver is still working.
+Cloud browsers also solve reCAPTCHA and other supported challenges automatically.
+See [CAPTCHA handling](https://docs.browser-use.com/cloud/browser/captcha-handling) for what to do when a
+solver is still working or a site has a specific anti-bot issue.
 
 ## Residential proxies
 
@@ -1113,10 +1113,7 @@ Every Browser Use Cloud browser enables automatic CAPTCHA solving. This applies
 to API V4 Agent runs and standalone Cloud Browser sessions. There is no request
 field to turn on.
 
-## Supported challenges
-
-- reCAPTCHA
-- hCaptcha
+The automatic solver handles reCAPTCHA and other supported challenges.
 
 Other anti-bot pages may still be passed by the browser's stealth protections
 or residential proxy. That is separate from automatic CAPTCHA solver coverage.
@@ -1131,6 +1128,8 @@ CAPTCHA solving is not guaranteed. If the challenge remains, open the
 [live preview](https://docs.browser-use.com/cloud/browser/live-preview) for human control. If the whole
 site is blocking the browser rather than showing a challenge, try a different
 [proxy country](https://docs.browser-use.com/cloud/browser/proxies).
+
+For a specific CAPTCHA or anti-bot issue, email [contact@browser-use.com](mailto:contact@browser-use.com).
 
 # Proxies
 Source: https://docs.browser-use.com/cloud/browser/proxies

@@ -1,6 +1,6 @@
 ---
 title: CAPTCHA handling
-description: "Cloud browsers solve reCAPTCHA and hCaptcha automatically."
+description: "Cloud browsers solve supported CAPTCHA challenges automatically."
 icon: shield-check
 ---
 
@@ -8,10 +8,7 @@ Every Browser Use Cloud browser enables automatic CAPTCHA solving. This applies
 to API V4 Agent runs and standalone Cloud Browser sessions. There is no request
 field to turn on.
 
-## Supported challenges
-
-- reCAPTCHA
-- hCaptcha
+The automatic solver handles reCAPTCHA and other supported challenges.
 
 Other anti-bot pages may still be passed by the browser's stealth protections
 or residential proxy. That is separate from automatic CAPTCHA solver coverage.
@@ -26,3 +23,5 @@ CAPTCHA solving is not guaranteed. If the challenge remains, open the
 [live preview](/cloud/browser/live-preview) for human control. If the whole
 site is blocking the browser rather than showing a challenge, try a different
 [proxy country](/cloud/browser/proxies).
+
+For a specific CAPTCHA or anti-bot issue, email [contact@browser-use.com](mailto:contact@browser-use.com).
