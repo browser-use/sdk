@@ -57,7 +57,9 @@ class FakeSyncHttp:
 
     def __init__(self, responses: list[dict[str, Any]]) -> None:
         self.responses = list(responses)
-        self.calls: list[tuple[str, str, dict[str, Any] | None, dict[str, Any] | None]] = []
+        self.calls: list[
+            tuple[str, str, dict[str, Any] | None, dict[str, Any] | None]
+        ] = []
 
     def request(
         self,
@@ -74,7 +76,9 @@ class FakeSyncHttp:
 class FakeAsyncHttp:
     def __init__(self, responses: list[dict[str, Any]]) -> None:
         self.responses = list(responses)
-        self.calls: list[tuple[str, str, dict[str, Any] | None, dict[str, Any] | None]] = []
+        self.calls: list[
+            tuple[str, str, dict[str, Any] | None, dict[str, Any] | None]
+        ] = []
 
     async def request(
         self,
@@ -157,6 +161,42 @@ def test_async_wait_for_completion() -> None:
     asyncio.run(run())
 
 
+def test_wait_for_event_returns_browser_ready_before_terminal_wait() -> None:
+    http = FakeSyncHttp(
+        [
+            {
+                "events": [
+                    {
+                        "runId": RUN_ID,
+                        "id": 1,
+                        "ts": "2026-01-01T00:00:00Z",
+                        "type": "run.created",
+                        "data": {},
+                    }
+                ],
+                "nextAfter": 1,
+                "hasMore": True,
+            },
+            {
+                "events": [
+                    {
+                        "runId": RUN_ID,
+                        "id": 2,
+                        "ts": "2026-01-01T00:00:01Z",
+                        "type": "browser.ready",
+                        "data": {"live_view_url": "https://live"},
+                    }
+                ],
+                "nextAfter": 2,
+                "hasMore": False,
+            },
+        ]
+    )
+    event = Runs(http).wait_for_event(RUN_ID, "browser.ready", interval=0)  # type: ignore[arg-type]
+    assert event.data["live_view_url"] == "https://live"
+    assert http.calls[-1][3] == {"after": 1, "limit": 100}
+
+
 # ---------------------------------------------------------------------------
 # runs create / list / events
 # ---------------------------------------------------------------------------
@@ -220,7 +260,11 @@ def test_runs_create_sends_camel_case_body() -> None:
 def test_runs_list_cursor_pagination() -> None:
     http = FakeSyncHttp(
         [
-            {"runs": [_run_summary("completed")], "nextCursor": "cur-2", "hasMore": True},
+            {
+                "runs": [_run_summary("completed")],
+                "nextCursor": "cur-2",
+                "hasMore": True,
+            },
             {"runs": [_run_summary("completed")], "nextCursor": None, "hasMore": False},
         ]
     )
@@ -242,15 +286,33 @@ def test_runs_events_delta() -> None:
         [
             {
                 "events": [
-                    {"runId": RUN_ID, "id": 1, "ts": "2026-01-01T00:00:00Z", "type": "step", "data": {}},
-                    {"runId": RUN_ID, "id": 2, "ts": "2026-01-01T00:00:01Z", "type": "step", "data": {}},
+                    {
+                        "runId": RUN_ID,
+                        "id": 1,
+                        "ts": "2026-01-01T00:00:00Z",
+                        "type": "step",
+                        "data": {},
+                    },
+                    {
+                        "runId": RUN_ID,
+                        "id": 2,
+                        "ts": "2026-01-01T00:00:01Z",
+                        "type": "step",
+                        "data": {},
+                    },
                 ],
                 "nextAfter": 2,
                 "hasMore": True,
             },
             {
                 "events": [
-                    {"runId": RUN_ID, "id": 3, "ts": "2026-01-01T00:00:02Z", "type": "done", "data": {}},
+                    {
+                        "runId": RUN_ID,
+                        "id": 3,
+                        "ts": "2026-01-01T00:00:02Z",
+                        "type": "done",
+                        "data": {},
+                    },
                 ],
                 "nextAfter": 3,
                 "hasMore": False,
@@ -278,7 +340,9 @@ def test_sessions_send_message() -> None:
     http = FakeSyncHttp([_queued_message()])
     sessions = Sessions(http)  # type: ignore[arg-type]
 
-    msg = sessions.send_message(SESSION_ID, "also check the careers page", interrupt=True)
+    msg = sessions.send_message(
+        SESSION_ID, "also check the careers page", interrupt=True
+    )
 
     method, path, body, _ = http.calls[0]
     assert (method, path) == ("POST", f"/sessions/{SESSION_ID}/queue")
@@ -390,7 +454,12 @@ def test_workspaces_files_cursor_pagination() -> None:
 
 def test_workspaces_update_size_delete_and_delete_file() -> None:
     http = FakeSyncHttp(
-        [{**_workspace_info(), "name": None}, {"usedBytes": 10, "maxBytes": 100}, {}, {}]
+        [
+            {**_workspace_info(), "name": None},
+            {"usedBytes": 10, "maxBytes": 100},
+            {},
+            {},
+        ]
     )
     workspaces = Workspaces(http)  # type: ignore[arg-type]
 
@@ -433,7 +502,9 @@ class _FakePutResponse:
     def raise_for_status(self) -> None:
         if self.status_code >= 400:
             raise httpx.HTTPStatusError(
-                f"{self.status_code}", request=None, response=None  # type: ignore[arg-type]
+                f"{self.status_code}",
+                request=None,
+                response=None,  # type: ignore[arg-type]
             )
 
 
@@ -452,12 +523,16 @@ class _FakeSyncPutClient:
     def __exit__(self, *_args: Any) -> None:
         pass
 
-    def put(self, url: str, *, content: bytes, headers: dict[str, str]) -> _FakePutResponse:
+    def put(
+        self, url: str, *, content: bytes, headers: dict[str, str]
+    ) -> _FakePutResponse:
         type(self).calls.append((url, content, headers))
         return _FakePutResponse(type(self).status_code)
 
 
-def test_workspaces_upload_reads_once_and_puts(tmp_path: Path, monkeypatch: Any) -> None:
+def test_workspaces_upload_reads_once_and_puts(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
     f = tmp_path / "data.csv"
     f.write_bytes(b"id,name\n1,a\n")
 
@@ -533,7 +608,9 @@ class _FakeAsyncPutClient:
     async def __aexit__(self, *_args: Any) -> None:
         pass
 
-    async def put(self, url: str, *, content: bytes, headers: dict[str, str]) -> _FakePutResponse:
+    async def put(
+        self, url: str, *, content: bytes, headers: dict[str, str]
+    ) -> _FakePutResponse:
         type(self).calls.append((url, content, headers))
         return _FakePutResponse(type(self).status_code)
 

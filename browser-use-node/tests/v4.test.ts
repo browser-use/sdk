@@ -83,6 +83,19 @@ describe("v4 runs.waitForCompletion", () => {
   });
 });
 
+describe("v4 runs.waitForEvent", () => {
+  it("returns browser.ready before any terminal-status wait", async () => {
+    const http = { get: vi.fn(async (_path: string, query?: Record<string, unknown>) =>
+      query?.after === 1
+        ? { events: [{ runId: RUN_ID, id: 2, ts: "2026-01-01T00:00:01Z", type: "browser.ready", data: { live_view_url: "https://live" } }], nextAfter: 2, hasMore: false }
+        : { events: [{ runId: RUN_ID, id: 1, ts: "2026-01-01T00:00:00Z", type: "run.created", data: {} }], nextAfter: 1, hasMore: true }) };
+    const runs = new Runs(http as any);
+    const event = await runs.waitForEvent(RUN_ID, "browser.ready", { interval: 0 });
+    expect(event.data.live_view_url).toBe("https://live");
+    expect(http.get).toHaveBeenLastCalledWith(`/runs/${RUN_ID}/events`, { after: 1, limit: 100 });
+  });
+});
+
 describe("v4 runs pagination + events", () => {
   it("passes agentmail and secret bindings through on create", async () => {
     const http = {

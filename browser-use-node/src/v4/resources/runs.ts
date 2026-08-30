@@ -7,6 +7,7 @@ type RunSummary = components["schemas"]["RunSummary"];
 type RunStatusResponse = components["schemas"]["RunStatusResponse"];
 type RunListResponse = components["schemas"]["RunListResponse"];
 type RunEventsResponse = components["schemas"]["RunEventsResponse"];
+type RunEvent = components["schemas"]["RunEvent"];
 type RunAttachmentsResponse = components["schemas"]["RunAttachmentsResponse"];
 
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
@@ -31,6 +32,13 @@ export interface WaitOptions {
   timeout?: number;
   /** Polling interval in milliseconds. Default: 2_000. */
   interval?: number;
+}
+
+export interface WaitForEventOptions extends WaitOptions {
+  /** Event cursor to start after. */
+  after?: number | null;
+  /** Events fetched per request. Default: 100. */
+  limit?: number;
 }
 
 export class Runs {
@@ -62,6 +70,24 @@ export class Runs {
       `/runs/${runId}/events`,
       params as Record<string, unknown>,
     );
+  }
+
+  /** Poll events until the requested type appears. */
+  async waitForEvent(runId: string, type: string, options?: WaitForEventOptions): Promise<RunEvent> {
+    const timeout = options?.timeout ?? 300_000;
+    const interval = options?.interval ?? 1_000;
+    const deadline = Date.now() + timeout;
+    let after = options?.after ?? null;
+
+    for (;;) {
+      const page = await this.events(runId, { after, limit: options?.limit ?? 100 });
+      const event = page.events.find((candidate) => candidate.type === type);
+      if (event) return event;
+      after = page.nextAfter ?? after;
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) throw new Error(`Run ${runId} did not emit ${type} within ${timeout}ms`);
+      await new Promise((resolve) => setTimeout(resolve, Math.min(interval, remaining)));
+    }
   }
 
   /** Cancel a run. Returns the updated run summary. */

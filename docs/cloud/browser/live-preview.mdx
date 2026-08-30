@@ -4,32 +4,17 @@ description: "Watch an API V4 run in real time or record its browser."
 icon: eye
 ---
 
-Poll for `browser.ready` as soon as you create the run so the URL is available
+Wait for `browser.ready` as soon as you create the run so the URL is available
 while the browser is live:
 
 <CodeGroup>
 ```python Python
-import time
-
 from browser_use_sdk.v4 import BrowserUse
 
 client = BrowserUse()
 run = client.runs.create("Find the top Hacker News story")
-after = None
-
-for _ in range(300):
-    page = client.runs.events(run.id, after=after, limit=100)
-    ready = next(
-        (event for event in page.events if event.type == "browser.ready"),
-        None,
-    )
-    if ready:
-        print(ready.data["live_view_url"])
-        break
-    after = page.next_after if page.next_after is not None else after
-    time.sleep(1)
-else:
-    raise TimeoutError("Browser did not become ready within 5 minutes")
+ready = client.runs.wait_for_event(run.id, "browser.ready")
+print(ready.data["live_view_url"])
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v4";
@@ -39,28 +24,13 @@ const run = await client.runs.create({
   task: "Find the top Hacker News story",
   model: "grok-4.5",
 });
-let after: number | null = null;
-
-for (let attempt = 0; attempt < 300; attempt++) {
-  const page = await client.runs.events(run.id, { after, limit: 100 });
-  const ready = page.events.find(
-    (event) => event.type === "browser.ready",
-  );
-  if (ready) {
-    console.log(ready.data.live_view_url);
-    break;
-  }
-  after = page.nextAfter ?? after;
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  if (attempt === 299) {
-    throw new Error("Browser did not become ready within 5 minutes");
-  }
-}
+const ready = await client.runs.waitForEvent(run.id, "browser.ready");
+console.log(ready.data.live_view_url);
 ```
 </CodeGroup>
 
-Use the `after` cursor to avoid fetching the same events again. See [run
-events](/cloud/agent/observability) for the full event stream.
+The helper advances the event cursor and times out after five minutes. See [run
+events](/cloud/agent/observability) for the full event stream and custom polling.
 
 ## Embed the live browser
 
