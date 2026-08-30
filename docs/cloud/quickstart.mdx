@@ -13,9 +13,9 @@ icon: rocket
   </Card>
 </CardGroup>
 
-Use `browser_use_sdk.v4` when Browser Use should do the browsing for you. Use
-`browser_use_sdk.v3` when your code needs a raw cloud browser over CDP. For a
-local agent, use the [open-source library](/open-source/quickstart).
+Both Cloud paths use API V4. Choose whether Browser Use drives the browser or
+your Playwright/Puppeteer code connects directly over CDP. For a local agent,
+use the [open-source library](/open-source/quickstart).
 
 Get an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) and
 export it:
@@ -70,12 +70,9 @@ curl https://api.browser-use.com/api/v4/runs \
 
 Launch a browser, connect to its CDP URL, then stop it:
 
-The browser-management resource currently uses the explicit V3 SDK namespace.
-The equivalent REST endpoint is API V4.
-
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import BrowserUse
+from browser_use_sdk.v4 import BrowserUse
 from playwright.sync_api import sync_playwright
 
 client = BrowserUse()
@@ -92,7 +89,7 @@ with sync_playwright() as p:
 client.browsers.stop(browser.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 import puppeteer from "puppeteer-core";
 
 const client = new BrowserUse();

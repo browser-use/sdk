@@ -66,6 +66,14 @@ def _stopped_browser() -> dict[str, Any]:
     }
 
 
+def _active_browser() -> dict[str, Any]:
+    return {
+        **_stopped_browser(),
+        "status": "active",
+        "cdpUrl": "wss://connect.browser-use.com/devtools/browser/test",
+    }
+
+
 class FakeSyncHttp:
     """Fake SyncHttpClient — returns queued responses, records every call."""
 
@@ -116,6 +124,20 @@ def test_browsers_stop() -> None:
     assert browser.status.value == "stopped"
 
 
+def test_browsers_create() -> None:
+    http = FakeSyncHttp([_active_browser()])
+    browsers = Browsers(http)  # type: ignore[arg-type]
+
+    browser = browsers.create(proxy_country_code="DE", metadata={"flow": "quickstart"})
+
+    assert http.calls[0][:3] == (
+        "POST",
+        "/browsers",
+        {"proxyCountryCode": "de", "metadata": {"flow": "quickstart"}},
+    )
+    assert browser.cdp_url == "wss://connect.browser-use.com/devtools/browser/test"
+
+
 def test_async_browsers_stop() -> None:
     async def run() -> None:
         http = FakeAsyncHttp([_stopped_browser()])
@@ -129,6 +151,19 @@ def test_async_browsers_stop() -> None:
             {"action": "stop"},
         )
         assert browser.status.value == "stopped"
+
+    asyncio.run(run())
+
+
+def test_async_browsers_create() -> None:
+    async def run() -> None:
+        http = FakeAsyncHttp([_active_browser()])
+        browsers = AsyncBrowsers(http)  # type: ignore[arg-type]
+
+        browser = await browsers.create(proxy_country_code="us")
+
+        assert http.calls[0][:3] == ("POST", "/browsers", {"proxyCountryCode": "us"})
+        assert browser.status.value == "active"
 
     asyncio.run(run())
 

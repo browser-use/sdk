@@ -33,6 +33,29 @@ function runSummary(status: string) {
 }
 
 describe("v4 browsers", () => {
+  it("creates a browser session", async () => {
+    const active = {
+      id: SESSION_ID,
+      status: "active",
+      cdpUrl: "wss://connect.browser-use.com/devtools/browser/test",
+      timeoutAt: "2026-01-01T01:00:00Z",
+      startedAt: "2026-01-01T00:00:00Z",
+      proxyUsedMb: "0",
+      proxyCost: "0",
+      browserCost: "0.01",
+      metadata: {},
+    };
+    const http = { post: vi.fn(async () => active) };
+    const browsers = new Browsers(http as any);
+
+    const browser = await browsers.create({ proxyCountryCode: "us" });
+
+    expect(http.post).toHaveBeenCalledWith("/browsers", {
+      proxyCountryCode: "us",
+    });
+    expect(browser.cdpUrl).toContain("devtools/browser/test");
+  });
+
   it("stops a browser session", async () => {
     const stopped = {
       id: SESSION_ID,

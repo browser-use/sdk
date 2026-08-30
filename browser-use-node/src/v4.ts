@@ -1,6 +1,9 @@
 export { BrowserUse } from "./v4/client.js";
 export type { BrowserUseOptions } from "./v4/client.js";
 
+export { Browsers } from "./v4/resources/browsers.js";
+export type { CreateBrowserBody } from "./v4/resources/browsers.js";
+
 export { BrowserUseError } from "./core/errors.js";
 
 export { Runs } from "./v4/resources/runs.js";
@@ -39,6 +42,8 @@ export type InlineSecretSource = S["InlineSecretSource"];
 export type SecretBinding = S["SecretBinding"];
 
 // Session models
+export type BrowserSessionItemView = S["BrowserSessionItemView"];
+export type BrowserSessionView = S["BrowserSessionView"];
 export type SessionInfo = S["SessionInfo"];
 export type SessionListResponse = S["SessionListResponse"];
 export type QueueMessageRequest = S["QueueMessageRequest"];
