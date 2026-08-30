@@ -30,10 +30,10 @@ Skip this step if you use curl.
 
 <CodeGroup>
 ```bash Python
-pip install --upgrade browser-use-sdk
+pip install --upgrade browser-use-sdk playwright
 ```
 ```bash TypeScript
-npm install browser-use-sdk@latest
+npm install browser-use-sdk@latest puppeteer-core
 ```
 </CodeGroup>
 
@@ -84,7 +84,7 @@ print(browser.cdp_url)
 
 with sync_playwright() as p:
     chrome = p.chromium.connect_over_cdp(browser.cdp_url)
-    page = chrome.contexts[0].pages[0]
+    page = chrome.new_page()
     page.goto("https://example.com")
     print(page.title())
 
@@ -102,7 +102,7 @@ console.log(browser.cdpUrl);
 const chrome = await puppeteer.connect({
   browserWSEndpoint: browser.cdpUrl,
 });
-const [page] = await chrome.pages();
+const page = await chrome.newPage();
 await page.goto("https://example.com");
 console.log(await page.title());
 
