@@ -1,6 +1,6 @@
 ---
 title: Quick start
-description: "Run a hosted agent or launch a cloud browser."
+description: "Choose Browser Use Agents or hosted cloud browser infrastructure for AI agents."
 icon: rocket
 ---
 
@@ -9,7 +9,7 @@ icon: rocket
     Give an agent a task and get the result.
   </Card>
   <Card title="Browser Infrastructure" icon="globe" href="/cloud/browser/quickstart">
-    Launch a cloud browser and connect to it from your code.
+    Control a hosted cloud browser through the SDK, REST, or CDP.
   </Card>
 </CardGroup>
 
@@ -66,8 +66,9 @@ curl https://api.browser-use.com/api/v4/runs \
 
 Launch a browser, connect to its CDP URL, then stop it:
 
-The browser-management resource currently uses the explicit V3 SDK namespace.
-The equivalent REST endpoint is API V4.
+The examples use the V3 SDK browser resource and the V4 REST browser endpoint.
+See the [developer overview](https://browser-use.com/developers) when choosing
+an interface for a new integration.
 
 <CodeGroup>
 ```python Python
@@ -115,5 +116,5 @@ curl -X PATCH \
 </Warning>
 
 <Card title="Copy for an LLM" icon="sparkles" href="/cloud/llms.txt">
-  Give your coding agent the compact API V4 context.
+  Give your coding agent the compact Cloud documentation index.
 </Card>

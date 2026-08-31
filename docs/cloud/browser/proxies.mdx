@@ -30,6 +30,10 @@ another country:
   disable the managed proxy.
 </Note>
 
+The API accepts the lowercase two-letter country codes enumerated by
+`ProxyCountryCode` in the current [V4 OpenAPI schema](/cloud/openapi/v4.json).
+Unsupported values are rejected when the run is created.
+
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -46,7 +50,7 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Get the iPhone 16 price on amazon.de",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: { proxyCountryCode: "de" },
 });
 ```
@@ -73,7 +77,7 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Test my staging site",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: { proxyCountryCode: null },
 });
 ```
@@ -81,7 +85,8 @@ const run = await client.runs.create({
 
 ## Custom proxy
 
-Custom HTTP and SOCKS5 proxies are available on paid plans:
+Custom HTTP and SOCKS5 proxies require an active subscription. See the
+[pricing page](https://browser-use.com/pricing) for current commercial terms.
 
 <CodeGroup>
 ```python Python
@@ -101,7 +106,7 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Check the account dashboard",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: {
     proxyCountryCode: "us",
     customProxy: {

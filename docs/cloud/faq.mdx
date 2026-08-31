@@ -6,13 +6,14 @@ icon: circle-question
 
 ## Which model should I use?
 
-- **GPT-5.6 Luna** (`gpt-5.6-luna`, recommended) — the best balance of accuracy, speed, and price for most tasks.
-- **Claude Opus 5** (`claude-opus-5`) — maximum intelligence for difficult, long-horizon work.
-- **Grok 4.5** (`grok-4.5`) — a strong general-purpose alternative.
-- **GPT-5.6 Sol** (`gpt-5.6-sol`) — a higher-cost OpenAI option for complex tasks.
-- **MiniMax M3** (`minimax-m3`) — inexpensive for simple and high-volume tasks.
+- **GPT-5.6 Luna** (`gpt-5.6-luna`) — the default starting point.
+- **Claude Opus 5** (`claude-opus-5`) — an option for difficult, long-horizon work.
+- **Grok 4.5** (`grok-4.5`) — a general-purpose alternative.
+- **GPT-5.6 Sol** (`gpt-5.6-sol`) — an OpenAI option for complex tasks.
+- **MiniMax M3** (`minimax-m3`) — another option for simple and high-volume tasks.
 
-See [Models](/cloud/agent/models) for the complete V4 picker and pricing.
+See [Models](/cloud/agent/models) for the V4 picker and
+[pricing](https://browser-use.com/pricing) for current rates.
 
 ## How do I get the live browser URL?
 
@@ -44,18 +45,16 @@ If it still doesn't work, contact support inside the [Cloud Dashboard](https://c
 
 The SDK auto-retries 429 responses with exponential backoff. If persistent, you may need more concurrent sessions — contact support.
 
-## V2 or V4 — which should I use?
+<a id="v2-or-v4-—-which-should-i-use" />
 
-Use **V4** for difficult tasks where accuracy matters. It supports:
+## Which API interface should I use?
 
-- Run-focused API with a cheap status polling endpoint
-- Conversation sessions with follow-ups
-- Persistent workspaces and turn-scoped file attachments
-- Incremental events for custom UIs and monitoring
-- Per-run cost totals, cost caps, and optional judgement
+The V2, V3, and V4 references are all retained in these docs. See the
+[developer overview](https://browser-use.com/developers) for the maintained
+product map and guidance for new integrations.
 
-Use **V2** when tasks are simple and your priority is very low cost and
-predictable speed. Its accuracy is substantially lower.
-
-See Browser Use at #1 on the
-[Odysseys benchmark](https://odysseysbench.com/leaderboard).
+V4 provides a run-focused API, conversation follow-ups, persistent workspaces,
+turn-scoped file attachments, incremental events, per-run cost totals and cost
+caps, and optional judgement. Compare those capabilities with the retained
+[V3](/cloud/api-reference) and [V2](/cloud/api-v2-overview) references before
+changing an existing integration.

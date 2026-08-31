@@ -4,10 +4,12 @@ description: "Run browser automation in the cloud"
 icon: "rocket"
 ---
 
-Sandboxes are the **easiest way to run Browser-Use in production**. We handle agents, browsers, persistence, auth, cookies, and LLMs. It is also the **fastest way to deploy** - the agent runs right next to the browser, so latency is minimal.
+Sandboxes package agents, browsers, persistence, authentication, cookies, and
+LLMs into a managed runtime.
 
 <Note>
-Get your API key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key) — eligible new accounts receive $15 in one-time credits.
+Get your API key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key).
+See [pricing](https://browser-use.com/pricing) for current plans and credits.
 </Note>
 
 ## Basic Example
@@ -31,7 +33,7 @@ await my_task()
 ```python
 @sandbox(
     cloud_profile_id='your-profile-id',      # Use saved cookies/auth
-    cloud_proxy_country_code='us',           # Bypass captchas, cloudflare, geo-restrictions
+    cloud_proxy_country_code='us',           # Route traffic through a supported location
     cloud_timeout=60,                        # Max session time (minutes)
 )
 async def task(browser: Browser, url: str):
@@ -43,7 +45,7 @@ await task(url="https://example.com")
 
 **What each does:**
 - `cloud_profile_id` - Use saved cookies/authentication from your cloud profile
-- `cloud_proxy_country_code` - Route through country-specific proxy for stealth (bypass captchas, Cloudflare, geo-blocks)
+- `cloud_proxy_country_code` - Route traffic through a supported proxy location
 - `cloud_timeout` - Maximum time browser stays open in minutes
 
 ---

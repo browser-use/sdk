@@ -1,35 +1,29 @@
 ---
 title: Models
-description: "Choose a V4 model and understand its token pricing."
+description: "Choose a V4 model and configure its reasoning behavior."
 icon: microchip
 ---
 
-Omit `model` to use **GPT-5.6 Luna**, or pass a model ID when creating a run.
-These are the recommended Browser Use-hosted models with published token
-pricing:
+Omit `model` to use the default, `gpt-5.6-luna`, or pass a model ID when creating a run.
+These common choices appear in the V4 request schema:
 
-| Model | API string | Input | Cache read | Output | BYOK |
-| ----- | ---------- | ----: | ---------: | -----: | ---- |
-| GPT-5.6 Luna (recommended) | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
-| Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
-| Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
-| GPT-5.6 Sol | `gpt-5.6-sol` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
-| MiniMax M3 | `minimax-m3` | \$0.36 | \$0.072 | \$1.44 | — |
+| Model | API string | BYOK provider |
+| ----- | ---------- | ------------- |
+| GPT-5.6 Luna | `gpt-5.6-luna` | OpenAI |
+| Claude Opus 5 | `claude-opus-5` | Anthropic |
+| Grok 4.5 | `grok-4.5` | — |
+| GPT-5.6 Sol | `gpt-5.6-sol` | OpenAI |
+| MiniMax M3 | `minimax-m3` | — |
 
-Token prices are USD per 1 million tokens. Browser sessions
-(\$0.02/hour) and network traffic (\$5/GB managed proxy or \$0.20/GB
-proxyless/BYOP) are charged separately. See [full pricing](https://browser-use.com/pricing).
+See [current pricing](https://browser-use.com/pricing) for model, browser, and
+network rates.
 
 See [Thinking levels](/cloud/agent/thinking-levels) for V4 `modelParams` and
 the normalized `thinkingLevel` values available in V2 and V3.
 
-<Tip>
-  We recommend **GPT-5.6 Luna** for most tasks. It combines near-Opus benchmark
-  performance with the lowest token price and fastest median response time in
-  current V4 production traffic.
-</Tip>
+<a id="all-supported-v4-model-ids" />
 
-## All supported V4 model IDs
+## V4 model IDs in the API schema
 
 The V4 request schema accepts the following model IDs. The Cloud dashboard may
 show a smaller curated set; availability can also depend on your account's
@@ -48,14 +42,6 @@ rollout and configured provider key.
 See [Thinking levels](/cloud/agent/thinking-levels) for the reasoning controls
 accepted by each model. Not every model accepts `modelParams`.
 
-<Note>
-  The current generated SDK request types predate this contract. The
-  TypeScript model union does not yet include GPT-5.6 Luna or every model on
-  this page, and neither generated V4 request model exposes `modelParams`.
-  Use `POST /api/v4/runs` directly for those fields until the follow-up SDK
-  regeneration is released.
-</Note>
-
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -72,8 +58,7 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Compare three project-management tools",
-  // Use REST for GPT-5.6 Luna until the generated union is updated.
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
 });
 ```
 ```bash curl
@@ -86,8 +71,8 @@ curl https://api.browser-use.com/api/v4/runs \
 
 ## Bring your own key
 
-On plans with BYOK, add an Anthropic, OpenAI, or Google key under **Settings →
-API Keys → Bring Your Own Key**. V4 uses it automatically for matching models;
-no request flag is needed. You pay the provider directly, plus a 0.2× Browser
-Use orchestration fee. Models from other providers use Browser Use-managed
-keys.
+If BYOK is enabled for your project, add an Anthropic, OpenAI, or Google key
+under **Settings → API Keys → Bring Your Own Key**. V4 uses it automatically
+for matching models; no request flag is needed. Models from other providers use
+Browser Use-managed keys. See [pricing](https://browser-use.com/pricing) for
+current BYOK billing.

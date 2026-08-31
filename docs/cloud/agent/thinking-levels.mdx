@@ -10,8 +10,8 @@ Browser Use exposes reasoning controls in two forms:
 - **API V3 and V2** use the provider-neutral `thinkingLevel` field with
   `disabled`, `low`, `medium`, or `high`.
 
-See [Models](/cloud/agent/models) for the complete V4 model list, recommended
-model, token pricing, and BYOK routes.
+See [Models](/cloud/agent/models) for the V4 model list and BYOK routes. See
+[pricing](https://browser-use.com/pricing) for current token rates.
 
 ## API V4 model parameters
 
@@ -117,7 +117,7 @@ cannot safely replay their thinking blocks. Those Claude models still accept
 | `gpt-5.5`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | Yes | Yes | Yes | Yes |
 | `claude-sonnet-5`, `claude-opus-4-7`, `claude-opus-4-8`, `claude-opus-5` | Yes | Yes | Yes | Yes |
 | `claude-sonnet-4-20250514`, `claude-sonnet-4-5-20250929`, `claude-opus-4-5-20251101` | Yes | — | — | — |
-| `gpt-4.1`, `gpt-4.1-mini`, `glm-5.2`, `minimax-m3`, `llama-4-maverick-17b-128e-instruct`, `claude-3-7-sonnet-20250219` | — | — | — | — |
+| `bu-2-0-mini-preview`, `gpt-4.1`, `gpt-4.1-mini`, `glm-5.2`, `minimax-m3`, `llama-4-maverick-17b-128e-instruct`, `claude-3-7-sonnet-20250219` | — | — | — | — |
 
 V2's existing `thinking` boolean controls legacy agent behavior. It does not
 select a provider reasoning depth and does not replace `thinkingLevel`.
@@ -197,10 +197,10 @@ Model "gemini-3.1-pro" does not support modelParams.thinkingConfig.thinkingLevel
 
 The normalized V2/V3 field is optional and nullable. New sessions use provider
 defaults until a level is supplied. Existing V3 sessions retain their current
-setting when the field is omitted; send `null` to clear it. The checked-in
-generated SDK clients do not expose this field yet, so use the REST examples
-above until the follow-up SDK regeneration is released. V4 SDK clients can
-send `modelParams` once their generated V4 type includes the current contract.
+setting when the field is omitted; send `null` to clear it. Generated V2 and V3
+SDK clients expose the field as `thinking_level` in Python and `thinkingLevel`
+in TypeScript. Generated V4 SDK clients expose `model_params` in Python and
+`modelParams` in TypeScript.
 
 <CardGroup cols={3}>
   <Card title="V4 create run" icon="code" href="/cloud/api-v4/runs/create-run">

@@ -107,4 +107,4 @@ Follow existing patterns in the codebase. Read before writing.
 - **Python SDK type safety**: All resource methods return Pydantic model instances (via `model_validate()`), NOT dicts.
 - **Structured output**: V2 only. Python auto-converts Pydantic models via `output_schema`. TS uses Zod schemas via `{ schema }` option.
 - **Polling**: `await client.run()` polls `tasks.status()` (lightweight). `for await`/`for step in client.stream()` polls full `tasks.get()` and yields new `TaskStepView` steps.
-- **Docs OpenAPI dirs**: `task snapshot:save` calls `task docs:sync`, which updates both `docs/openapi/` and the `docs/cloud/openapi/` files consumed by Mintlify. Both directories must exist on a fresh clone.
+- **Docs OpenAPI dirs**: `task snapshot:save` calls `task docs:sync`, which updates both `docs/openapi/` and the `docs/cloud/openapi/` files consumed by Mintlify, then regenerates all six tracked `llms.txt` / `llms-full.txt` artifacts. Both directories must exist on a fresh clone.

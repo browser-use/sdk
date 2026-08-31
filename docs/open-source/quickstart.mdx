@@ -7,7 +7,10 @@ icon: "rocket"
 To get started with Browser Use you need to install the package and create an `.env` file with your API key.
 
 <Note icon="key" color="#FFC107" iconType="regular">
-`ChatBrowserUse` offers the [fastest and most cost-effective models](https://browser-use.com/posts/speed-matters/), completing tasks 3-5x faster. Eligible new accounts receive $15 in one-time credits. Get your API key [here](https://cloud.browser-use.com/new-api-key).
+`ChatBrowserUse` is optimized for browser automation. See the
+[model benchmarks](https://browser-use.com/posts/speed-matters/) and
+[current pricing](https://browser-use.com/pricing), then get your API key
+[here](https://cloud.browser-use.com/new-api-key).
 </Note>
 
 ## 1. Installing Browser-Use
@@ -31,7 +34,10 @@ uvx browser-use install
 Create a `.env` file and add your API key. 
 
 <Callout icon="key" iconType="regular">
-We recommend using ChatBrowserUse which is optimized for browser automation tasks (highest accuracy + fastest speed + lowest token cost). Get your API key [here](https://cloud.browser-use.com/new-api-key) — eligible new accounts receive $15 in one-time credits.
+We recommend starting with `ChatBrowserUse`, which is optimized for browser
+automation tasks. See the [model benchmarks](https://browser-use.com/posts/speed-matters/)
+and [current pricing](https://browser-use.com/pricing). Get your API key
+[here](https://cloud.browser-use.com/new-api-key).
 </Callout>
 
 ```bash .env
@@ -46,7 +52,7 @@ Then add your API key to the file.
 ```bash Browser Use
 # add your key to .env file
 BROWSER_USE_API_KEY=
-# Get your API key at https://cloud.browser-use.com/new-api-key - eligible new accounts receive $15 in one-time credits
+# Get your API key at https://cloud.browser-use.com/new-api-key
 ```
 ```bash Google
 # add your key to .env file
@@ -138,7 +144,8 @@ if __name__ == "__main__":
 
 ## 4. Going to Production
 
-Sandboxes are the **easiest way to run Browser-Use in production**. We handle agents, browsers, persistence, auth, cookies, and LLMs. It is also the **fastest way to deploy** - the agent runs right next to the browser, so latency is minimal.
+Sandboxes package agents, browsers, persistence, authentication, cookies, and
+LLMs into a managed runtime.
 
 To run in production with authentication, add `@sandbox` to your function:
 

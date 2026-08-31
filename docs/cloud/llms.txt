@@ -1,31 +1,31 @@
 # Browser Use Cloud
 
-> Browser Use Cloud has two products on the same managed browser
-> infrastructure. **Agent** accepts a natural-language goal and completes the
-> web task. **Browser** gives Playwright, Puppeteer, and other remote CDP
-> clients direct control of a cloud browser. Both include stealth, residential
-> proxies, profiles, and live observability. Auth uses
+> Browser Use Cloud has two products. **Browser Use Agents** accept a
+> natural-language goal and complete the web task. **Browser Infrastructure**
+> is hosted cloud browser infrastructure for AI agents, controlled through the
+> SDK, REST, or CDP. Auth uses
 > `X-Browser-Use-API-Key` (keys start with `bu_`).
 
 - Dashboard: https://cloud.browser-use.com
 - Create API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Docs: https://docs.browser-use.com
-- Product map: https://browser-use.com/llms.txt — Choose between Hosted Agents, Browser Infrastructure, and the Open Source Library.
-- Pricing: https://browser-use.com/pricing.md — Current plans, credits, browser and proxy rates, model token prices, and billing behavior.
-- OpenAPI spec (v4): https://docs.browser-use.com/cloud/openapi/v4.json
-- Open-source repo: https://github.com/browser-use/browser-use — The open-source Python library. Note: the open-source API is different from the Cloud SDK. If you want the easiest path to production with managed infrastructure, use the Cloud SDK below.
+- Developer overview: https://browser-use.com/developers.md — Choose between Browser Use Agents, Browser Infrastructure, and the Open Source Library, and select an interface for a new integration.
+- Pricing: https://browser-use.com/pricing.md — Current plans, credits, and usage rates.
+- Product map: https://browser-use.com/llms.txt — Canonical machine-readable routes for Browser Use products and documentation.
+- Open-source repo: https://github.com/browser-use/browser-use — The self-hosted Python library; its API differs from the Cloud SDK.
 
-**Choose API V4 for hard, high-accuracy tasks.** It is the recommended Agent API for new integrations and works especially well for long, complex workflows.
+The V2, V3, and V4 references remain available below. Use the developer
+overview to choose an interface for a new integration.
 
-**Choose API V2 for simple tasks when extremely low cost or predictable speed matters more than accuracy.** V2 accuracy is substantially lower than V4.
-
-Browser Use ranks #1 on the [Odysseys benchmark](https://odysseysbench.com/leaderboard). Use the benchmark when accuracy is the deciding factor.
+**TypeScript V4 browser settings:** The generated `RunBrowserSettings` type
+currently requires `proxyCountryCode`; pass `"us"` to retain the default
+managed residential proxy, or `null` to disable the proxy.
 
 **Stopping standalone browsers:** Do not use `client.close()`,
 `browser.close()`, or a dropped CDP connection as the API V4 stop operation.
 Keep the browser session ID returned by `POST /api/v4/browsers`, then call
-`PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`. This stops billing and
-refunds unused browser time.
+`PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`. See the pricing page
+for billing behavior.
 
 **Create and reuse a login profile:** Create one profile per end user, then pass
 its ID as top-level `profileId` when creating browsers, or as
@@ -46,14 +46,8 @@ Log in once in that browser, stop it, then use the same profile ID to start the
 next browser already logged in. Full guide:
 https://docs.browser-use.com/cloud/guides/authentication
 
-**Current TypeScript SDK typing:** Pass `model` explicitly. Prefer
-`gpt-5.6-luna`, the recommended V4 model; if the generated union does not yet
-include it, use `grok-4.5` or call `POST /api/v4/runs` directly. Whenever
-`browserSettings` is present, also pass `proxyCountryCode`: use `"us"` to keep
-the default or `null` to disable the managed proxy. New model strings can reach
-REST before the generated TypeScript union. The generated SDK request types do
-not yet expose V4 `modelParams`; use REST for that field until the follow-up SDK
-release.
+**SDK typing:** Check the installed SDK types against the API reference. New
+schema fields and model IDs can reach REST before a generated SDK release.
 
 Before writing code, check if `browser-use-sdk` is already installed. If so, upgrade to the latest version. If not, install it:
 - Python: `pip install --upgrade browser-use-sdk`
@@ -66,13 +60,13 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 
 ## Get Started
-- [Quick start](https://docs.browser-use.com/cloud/quickstart): Run a hosted agent or launch a cloud browser.
-- [Choosing an Agent](https://docs.browser-use.com/cloud/choosing-an-agent): Compare Browser Use Cloud agents on accuracy, speed and price, and pick the right one for your task.
+- [Quick start](https://docs.browser-use.com/cloud/quickstart): Choose Browser Use Agents or hosted cloud browser infrastructure for AI agents.
+- [Choosing an Agent](https://docs.browser-use.com/cloud/choosing-an-agent): Compare measured Browser Use Cloud agent accuracy and speed.
 - [Prompt for Vibecoders](https://docs.browser-use.com/cloud/vibecoding): Complete Cloud SDK reference for AI coding agents.
 
-## Agent
+## Browser Use Agents
 - [Run a task](https://docs.browser-use.com/cloud/agent/quickstart): Give a high-accuracy browser agent a goal and get the result.
-- [Models](https://docs.browser-use.com/cloud/agent/models): Choose a V4 model and understand its token pricing.
+- [Models](https://docs.browser-use.com/cloud/agent/models): Choose a V4 model and configure its reasoning behavior.
 - [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels): Configure model reasoning depth across API V2, V3, and V4.
 - [Structured output](https://docs.browser-use.com/cloud/agent/structured-output): Ask for JSON and validate the V4 result in your application.
 - [Sessions](https://docs.browser-use.com/cloud/agent/sessions): Continue one conversation across multiple V4 runs.
@@ -81,9 +75,9 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop): Open the live browser, take over, then continue the same session.
 - [Observability](https://docs.browser-use.com/cloud/agent/observability): Poll ordered V4 events to monitor a run or build a custom UI.
 
-## Browser
-- [Browser Infrastructure quickstart](https://docs.browser-use.com/cloud/browser/quickstart): Launch a cloud browser and connect to it from your code.
-- [Stealth](https://docs.browser-use.com/cloud/browser/stealth): Best stealth on the planet. We fork Chromium to give agents access to all websites.
+## Browser Infrastructure
+- [Browser Infrastructure quickstart](https://docs.browser-use.com/cloud/browser/quickstart): Control hosted cloud browser infrastructure for AI agents through the SDK, REST, or CDP.
+- [Stealth](https://docs.browser-use.com/cloud/browser/stealth): Hardened Chromium and configurable proxy routing for cloud browser sessions.
 - [CAPTCHA handling](https://docs.browser-use.com/cloud/browser/captcha-handling): Cloud browsers solve supported CAPTCHA challenges automatically.
 - [Proxies](https://docs.browser-use.com/cloud/browser/proxies): Route API V4 agent runs through residential or custom proxies.
 - [Live preview & recording](https://docs.browser-use.com/cloud/browser/live-preview): Watch an API V4 run in real time or record its browser.
@@ -103,12 +97,12 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 
 ## Anthropic
 - [Claude Code](https://docs.browser-use.com/cloud/tutorials/integrations/claude-code): Give Claude Code cloud browser automation with Browser Use.
-- [Claude Managed Agents](https://docs.browser-use.com/cloud/tutorials/integrations/claude-managed-agents): Give Anthropic's Claude Managed Agents a stealth cloud browser via the Browser Use CLI.
+- [Claude Managed Agents](https://docs.browser-use.com/cloud/tutorials/integrations/claude-managed-agents): Give Anthropic's Claude Managed Agents Browser Infrastructure through the Browser Use CLI.
 
 ## Tutorials
-- [Agent Sign Up for Browser Use](https://docs.browser-use.com/cloud/agent-signup): How the Browser Use agent challenge lets an AI agent create a free account and API key.
+- [Agent Sign Up for Browser Use](https://docs.browser-use.com/cloud/agent-signup): How the Browser Use agent challenge lets an AI agent create an account and API key.
 
-## Legacy (v2)
+## API v2 guides
 - [Agent (v2)](https://docs.browser-use.com/cloud/legacy/agent): V2 agent models and file handling.
 - [Public share links (v2)](https://docs.browser-use.com/cloud/legacy/public-share): Generate shareable URLs for agent sessions using the v2 API.
 - [Skills](https://docs.browser-use.com/cloud/legacy/skills): Turn any website into a deterministic API endpoint. Create once, call repeatedly.
@@ -116,7 +110,22 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Secrets](https://docs.browser-use.com/cloud/guides/secrets): Pass domain-scoped credentials to the agent securely.
 
 ## API v4
-- [API Reference](https://docs.browser-use.com/cloud/api-v4-overview): Authenticate and start using the Browser Use API v4 — the current REST API for long-horizon agents.
+- [API Reference](https://docs.browser-use.com/cloud/api-v4-overview): Authenticate and start using the Browser Use API v4 for agents and direct browser control.
+- [API v4 OpenAPI specification](https://docs.browser-use.com/cloud/openapi/v4.json)
+
+## API v3
+- [API Reference](https://docs.browser-use.com/cloud/api-reference): Authenticate and start using the Browser Use REST API.
+- [API v3 OpenAPI specification](https://docs.browser-use.com/cloud/openapi/v3.json)
+
+## V3 guides and tutorials
+- [MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server): Run browser automation tasks from your AI coding assistant. Connect to Claude, Cursor, Windsurf, or any MCP client.
+- [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks): Receive real-time notifications when tasks complete. Configure webhook endpoints for async task monitoring.
+- [x402 wallet payments](https://docs.browser-use.com/cloud/guides/x402): Pay for Browser Use Cloud with crypto (USDC on Base), without an API key.
+- [x402 agent wallets](https://docs.browser-use.com/cloud/guides/x402-agent-wallets): Pay for Browser Use Cloud from an agent-native wallet: AgentCash (local wallet, MCP) or Coinbase's Agentic Wallet (hosted wallet, CLI).
+- [n8n](https://docs.browser-use.com/cloud/tutorials/integrations/n8n): Use Browser Use as an HTTP node in n8n workflows.
+- [Chat UI](https://docs.browser-use.com/cloud/tutorials/chat-ui): Build a chat UI with live browser preview, follow-up tasks, recording, and task messages.
+- [Grow Therapy provider search](https://docs.browser-use.com/cloud/tutorials/grow-therapy-compare): Search Grow Therapy for therapists by location, insurance, and specialty — with cached reruns.
 
 ## API v2
 - [API key](https://docs.browser-use.com/cloud/api-v2-overview): Set your API key to access the Browser Use v2 REST API.
+- [API v2 OpenAPI specification](https://docs.browser-use.com/cloud/openapi/v2.json)

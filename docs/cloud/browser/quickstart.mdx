@@ -1,12 +1,13 @@
 ---
 title: Browser Infrastructure quickstart
 sidebarTitle: Quick start
-description: "Launch a cloud browser and connect to it from your code."
+description: "Control hosted cloud browser infrastructure for AI agents through the SDK, REST, or CDP."
 icon: rocket
 ---
 
-Every browser includes stealth, proxies, live preview, and recording. Its
-**CDP URL** is a WebSocket endpoint for remotely controlling Chrome.
+Browser Infrastructure is hosted cloud browser infrastructure for AI agents,
+controlled through the SDK, REST, or CDP. A browser's **CDP URL** is a WebSocket
+endpoint for remotely controlling Chrome.
 
 <img
   src="/cloud/images/browser-cdp-light.svg"
@@ -43,8 +44,9 @@ npm install browser-use-sdk@latest
 
 ## Launch a browser
 
-The browser-management resource currently uses the explicit V3 SDK namespace.
-The equivalent REST endpoint is API V4.
+The examples use the V3 SDK browser resource and the V4 REST browser endpoint.
+See the [developer overview](https://browser-use.com/developers) when choosing
+an interface for a new integration.
 
 <CodeGroup>
 ```python Python

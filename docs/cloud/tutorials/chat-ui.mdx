@@ -1,21 +1,25 @@
 ---
 title: Chat UI
-description: "Full end-to-end example. Build a chat UI with live browser preview, follow-up tasks, recording, and streaming messages."
+description: "Build a chat UI with live browser preview, follow-up tasks, recording, and task messages."
 icon: messages
 ---
 
-<Card title="Full source code" icon="github" href="https://github.com/browser-use/chat-ui-example">
-  Clone and run in minutes. Next.js + Browser Use SDK v3.
+<Card title="Related UI example" icon="github" href="https://github.com/browser-use/chat-ui-example">
+  Use the Next.js UI as a reference. Its current URL-parameter transport differs
+  from the safer session-state pattern below.
 </Card>
 
-This tutorial walks through the [chat-ui-example](https://github.com/browser-use/chat-ui-example) — a Next.js app that lets users chat with a Browser Use agent in real time. We focus on the SDK integration, not the UI components.
+This tutorial adapts the [chat-ui-example](https://github.com/browser-use/chat-ui-example) architecture for a Next.js app that lets users chat with a Browser Use agent. Follow the integration on this page rather than copying the example repository's query-parameter transport.
 
 The app has two pages:
 
 1. **Home** — the user types a task, the app creates a session and sends the task.
-2. **Session** — live browser preview, streaming messages, follow-ups, and recording download.
+2. **Session** — live browser preview, task messages, follow-ups, and recording download.
 
-All SDK calls live in a single file: `src/lib/api.ts`.
+In this pattern, the SDK client lives in one server-only file,
+`src/lib/api.ts`. Short calls use Server Actions. The long-running task and its
+stop control use separate Route Handlers so the stop request can run while the
+task request is still pending.
 
 ## Setup
 
@@ -24,12 +28,29 @@ import { BrowserUse } from "browser-use-sdk/v3";
 
 // Server-only — no NEXT_PUBLIC_ prefix, never exposed to the browser
 const apiKey = process.env.BROWSER_USE_API_KEY ?? "";
+const sessionMaxCostUsd = Number(process.env.BROWSER_USE_SESSION_MAX_COST_USD);
+if (!Number.isFinite(sessionMaxCostUsd) || sessionMaxCostUsd <= 0) {
+  throw new Error("Set BROWSER_USE_SESSION_MAX_COST_USD to a positive number");
+}
+
 export const client = new BrowserUse({ apiKey });
+export { sessionMaxCostUsd };
 ```
 
 <Note>
-  The API key uses `BROWSER_USE_API_KEY` (no `NEXT_PUBLIC_` prefix) so it stays server-side. All SDK calls go through [server actions](https://nextjs.org/docs/app/guides/forms) — never call the SDK directly from client components.
+  The API key uses `BROWSER_USE_API_KEY` (no `NEXT_PUBLIC_` prefix) so it stays
+  server-side. All SDK calls go through server-only
+  [Server Actions](https://nextjs.org/docs/app/guides/forms) or Route Handlers —
+  never call the SDK directly from client components.
 </Note>
+
+<Warning>
+  This is a trusted-user prototype. Before exposing it publicly, authenticate
+  every server entry point, verify that each session ID belongs to the caller, and
+  enforce rate limits and spend quotas. A server-only API key prevents key
+  disclosure; it does not prevent an unauthenticated visitor from spending
+  against that key.
+</Warning>
 
 ---
 
@@ -37,106 +58,237 @@ export const client = new BrowserUse({ apiKey });
 
 ```typescript actions.ts
 "use server";
-import { client } from "./api";
+import { client, sessionMaxCostUsd } from "./api";
 
 export async function createSession() {
   const session = await client.sessions.create({
     keepAlive: true,
     enableRecording: true,
+    maxCostUsd: sessionMaxCostUsd,
   });
-  return { id: session.id, liveUrl: session.liveUrl, status: session.status };
+  if (!session.liveUrl) {
+    throw new Error("The session did not return a live browser URL");
+  }
+  return { ...session, liveUrl: session.liveUrl };
 }
 ```
 
 - **`keepAlive: true`** keeps the session open after each task so the user can send follow-ups (default is `false`).
 - **`enableRecording: true`** produces an MP4 video of the browser session.
-- **`liveUrl`** is returned immediately — no waiting or extra call needed.
+- **`maxCostUsd`** bounds total spend across the keep-alive session, including
+  follow-up turns. Set the environment value to the session cap your
+  application accepts.
+- **`liveUrl`** is checked before the server action returns, so the client receives a string rather than the SDK's nullable response field.
 
-The home page creates the session, navigates to the session page (passing `liveUrl` and the initial task via URL params), and the session page takes over from there:
+The home page creates the session and navigates with only the opaque session ID.
+Keep the signed `liveUrl` and task out of query parameters, which can be copied
+into browser history, analytics, and request logs. This prototype uses
+`sessionStorage`; a production app should keep this state server-side under the
+authenticated user's ownership:
 
 ```typescript page.tsx
 async function handleSend(message: string) {
   const session = await createSession();
-
-  router.push(
-    `/session/${session.id}?liveUrl=${encodeURIComponent(session.liveUrl)}&task=${encodeURIComponent(message)}`
+  sessionStorage.setItem(
+    `browser-use:session:${session.id}`,
+    JSON.stringify({ session, initialTask: message }),
   );
+  router.push(`/session/${session.id}`);
 }
 ```
 
 ---
 
-## 2. Stream messages with `for await`
+<a id="2-stream-messages-with-for-await" />
 
-Instead of polling `sessions.get()` and `sessions.messages()` separately, use `client.run()` — it streams messages and resolves when the task completes:
+## 2. Run a task through a Route Handler
 
-```typescript session-context.tsx
-const streamTask = useCallback(async (task: string) => {
-  const run = client.run(task, { sessionId });
+Consume `client.run()` inside a Route Handler so the API key and SDK client
+never enter the browser bundle. A long-running Server Action would block a
+second Server Action from the same client, preventing the Stop button from
+interrupting the task. The handler collects task messages and returns them with
+the final session state:
 
-  for await (const msg of run) {
-    setMessages((prev) => [...prev, msg]);
+```typescript app/api/browser-use/run/route.ts
+import { client, sessionMaxCostUsd } from "@/lib/api";
+
+// Keep the SDK wait below the deployment function limit so cleanup can run.
+export const maxDuration = 300;
+const taskWaitTimeoutMs = 240_000;
+
+export async function POST(request: Request) {
+  const { sessionId, task } = await request.json();
+  if (typeof sessionId !== "string" || typeof task !== "string") {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  // Iterator done — task reached terminal state
-  setSession(run.result);
+  // Authenticate the caller and verify ownership of sessionId here.
+  const run = client.run(task, {
+    sessionId,
+    // Re-send the same absolute cumulative cap. Omitting it on an existing
+    // session refreshes the API budget from the current spend.
+    maxCostUsd: sessionMaxCostUsd,
+    timeout: taskWaitTimeoutMs,
+  });
+  const messages = [];
+
+  try {
+    for await (const msg of run) {
+      messages.push(msg);
+    }
+  } catch (error) {
+    // The SDK timeout only stops polling. Explicitly stop the task before the
+    // Route Handler exits so it cannot continue unattended.
+    await client.sessions.stop(sessionId, { strategy: "task" }).catch(() => {});
+    throw error;
+  }
+
+  if (!run.result) throw new Error("Task ended without a session result");
+  return Response.json({ messages, session: run.result });
+}
+```
+
+Call the handler from the client component and update local UI state after it
+returns:
+
+```typescript session-context.tsx
+const submitTask = useCallback(async (task: string) => {
+  const response = await fetch("/api/browser-use/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId, task }),
+  });
+  if (!response.ok) throw new Error("Task request failed");
+
+  const result = await response.json();
+  setMessages((prev) => [...prev, ...result.messages]);
+  setSession(result.session);
 }, [sessionId]);
 ```
 
-The `for await` loop yields each message as it arrives. When the loop ends, `run.result` contains the final session state (status, output, etc.). No separate status polling needed.
+When the `for await` loop ends on the server, `run.result` contains the final session state. This pattern returns the collected messages after completion. For token-by-token or message-by-message browser updates, expose a server Route Handler that encodes the iterator as a `ReadableStream`; do not import the SDK client into a client component.
 
-Wire it up in a `useEffect` to auto-run the initial task from URL params:
+`client.run()` otherwise waits for up to four hours. This example gives the
+Route Handler five minutes and the SDK four, leaving time to stop the task on a
+timeout. Set both values to limits supported by your deployment platform. For
+tasks longer than one request, persist messages and task state server-side and
+resume polling from a queue or worker rather than depending on one HTTP request.
+
+Read and delete the prototype's initial task from `sessionStorage`, then run it:
 
 ```typescript session-context.tsx
 useEffect(() => {
-  if (!initialTask) return;
-  sendMessage(initialTask);
-}, []);
+  const key = `browser-use:session:${sessionId}`;
+  const saved = sessionStorage.getItem(key);
+  if (!saved) return;
+  sessionStorage.removeItem(key);
+  const { session, initialTask } = JSON.parse(saved);
+  setLiveUrl(session.liveUrl);
+  setSession(session);
+  if (initialTask) submitTask(initialTask);
+}, [sessionId, submitTask]);
 ```
 
 ---
 
 ## 3. Follow-up tasks
 
-Follow-ups call the same `streamTask` function — the stream already includes the user message, so no optimistic insert is needed:
+Follow-ups call the same Route Handler with the existing session ID:
 
 ```typescript session-context.tsx
 const sendMessage = useCallback(async (task: string) => {
-  await streamTask(task);
-}, [streamTask]);
+  await submitTask(task);
+}, [submitTask]);
 ```
 
 The SDK auto-sets `keepAlive: true` when targeting an existing session, so follow-up tasks work without extra config.
 
 ---
 
-## 4. Recording
+<a id="4-recording" />
 
-Fetch the MP4 URL after the session ends (recording was enabled in step 1):
+## 4. Finish the session and get the recording
 
-```typescript session-context.tsx
-useEffect(() => {
-  if (!isTerminal) return;
+After a task completes, its recording URLs become available on the session.
+When the conversation is finished, wait for the recording and then stop the
+keep-alive session so its sandbox is released:
 
-  client.sessions.waitForRecording(sessionId).then((urls) => {
-    if (urls.length) setRecordingUrls(urls);
-  });
-}, [isTerminal, sessionId]);
+```typescript app/api/browser-use/finish/route.ts
+import { client } from "@/lib/api";
+
+export async function POST(request: Request) {
+  const { sessionId } = await request.json();
+  if (typeof sessionId !== "string") {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Authenticate the caller and verify ownership of sessionId here.
+  let recordingUrls: Awaited<ReturnType<typeof client.sessions.waitForRecording>>;
+  let session: Awaited<ReturnType<typeof client.sessions.stop>>;
+  try {
+    recordingUrls = await client.sessions.waitForRecording(sessionId);
+  } finally {
+    // Release the keep-alive sandbox even if recording polling fails.
+    session = await client.sessions.stop(sessionId, { strategy: "session" });
+  }
+  return Response.json({ session, recordingUrls });
+}
 ```
 
-`waitForRecording` polls for up to 15 seconds and returns presigned MP4 download URLs. Returns an empty array if the agent answered without opening a browser.
+```typescript session-context.tsx
+const finishSession = useCallback(async () => {
+  const response = await fetch("/api/browser-use/finish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId }),
+  });
+  if (!response.ok) throw new Error("Finish request failed");
+
+  const result = await response.json();
+  setSession(result.session);
+  setRecordingUrls(result.recordingUrls);
+}, [sessionId]);
+```
+
+`waitForRecording` polls for up to 15 seconds and returns presigned MP4
+download URLs. It returns an empty array if the agent never opened a browser.
+Stopping the session after the poll destroys its sandbox, so call this route
+only when the user is finished with follow-ups.
 
 ---
 
 ## 5. Stop a task
 
-```typescript actions.ts
-export async function stopTask(id: string) {
-  await client.sessions.stop(id, { strategy: "task" });
+```typescript app/api/browser-use/stop/route.ts
+import { client } from "@/lib/api";
+
+export async function POST(request: Request) {
+  const { sessionId } = await request.json();
+  if (typeof sessionId !== "string") {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Authenticate the caller and verify ownership of sessionId here.
+  await client.sessions.stop(sessionId, { strategy: "task" });
+  return new Response(null, { status: 204 });
 }
 ```
 
-Using `strategy: "task"` stops only the current task, keeping the session alive for follow-ups.
+```typescript session-context.tsx
+const stopTask = useCallback(async () => {
+  const response = await fetch("/api/browser-use/stop", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId }),
+  });
+  if (!response.ok) throw new Error("Stop request failed");
+}, [sessionId]);
+```
+
+Because the task and stop controls are independent Route Handler requests, the
+stop request can reach the server while the task request is still pending.
+Using `strategy: "task"` stops only the current task, keeping the session alive
+for follow-ups.
 
 ---
 
@@ -146,8 +298,18 @@ The session page consumes everything through a context provider:
 
 ```typescript session/[id]/page.tsx
 function SessionPage() {
-  const { session, turns, isBusy, isTerminal, recordingUrls, sendMessage, stopTask } =
-    useSession();
+  const {
+    session,
+    liveUrl,
+    turns,
+    isBusy,
+    recordingUrls,
+    sendMessage,
+    stopTask,
+    finishSession,
+  } = useSession();
+  const sessionEnded =
+    session != null && ["stopped", "timed_out", "error"].includes(session.status);
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -157,12 +319,15 @@ function SessionPage() {
         <ChatInput
           onSend={sendMessage}
           onStop={stopTask}
-          disabled={isTerminal}
+          disabled={sessionEnded}
         />
+        <button type="button" onClick={finishSession} disabled={!session || isBusy || sessionEnded}>
+          End session and get recording
+        </button>
       </div>
 
-      {/* Live browser view — liveUrl available from session creation */}
-      <BrowserPanel liveUrl={session?.liveUrl} />
+      {/* Live browser view — liveUrl came from session creation */}
+      <BrowserPanel liveUrl={liveUrl} />
     </div>
   );
 }
@@ -172,9 +337,10 @@ function SessionPage() {
 
 ## Summary
 
-| Method | Purpose |
-|--------|---------|
-| `client.sessions.create()` | Create a session (returns `liveUrl` immediately) |
-| `client.run()` | Send a task and stream messages with `for await` |
-| `client.sessions.stop()` | Stop the current task |
-| `client.sessions.waitForRecording()` | Get MP4 recording URLs |
+| Server-side SDK method | Entry point and purpose |
+|---|---|
+| `client.sessions.create()` | Server Action: create a session and validate its `liveUrl` |
+| `client.run()` | Route Handler: send a task and collect messages with `for await` |
+| `client.sessions.stop(..., { strategy: "task" })` | Separate Route Handler: stop the current task concurrently |
+| `client.sessions.stop(..., { strategy: "session" })` | Finish Route Handler: end the browser session after follow-ups |
+| `client.sessions.waitForRecording()` | Finish Route Handler: get MP4 URLs after task completion, before ending the session |

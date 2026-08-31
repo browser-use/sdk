@@ -1,14 +1,16 @@
 ---
 title: "Remote Browser"
-description: "Connect to remote browsers via CDP — use with the Cloud, Browserbase, or any remote Chrome instance."
+description: "Connect to Browser Infrastructure or another remote Chrome instance via CDP."
 icon: "cloud"
 mode: "wide"
 ---
 
+<a id="browser-use-cloud-browser-or-cdp-url" />
 
-### Browser-Use Cloud Browser or CDP URL
+### Browser Infrastructure or a CDP URL
 
-The easiest way to use a cloud browser is with the built-in Browser-Use cloud service:
+Browser Infrastructure provides hosted cloud browsers for AI agents. Use
+the built-in Cloud connection or provide a CDP URL from any compatible browser:
 
 ```python
 from browser_use import Agent, Browser, ChatBrowserUse
@@ -19,11 +21,10 @@ browser = Browser(
 )
 
 # Advanced: Configure cloud browser parameters
-# Using this settings can bypass any captcha protection on any website
 browser = Browser(
     cloud_profile_id='your-profile-id',  # Optional: specific browser profile
-    cloud_proxy_country_code='us',  # Optional: proxy location (us, uk, fr, it, jp, au, de, fi, ca, in)
-    cloud_timeout=30,  # Optional: session timeout in minutes (MAX free: 15min, paid: 240min)
+    cloud_proxy_country_code='us',  # Optional: supported proxy location
+    cloud_timeout=30,  # Optional: 1–240 minutes; defaults to 60 when omitted
 )
 
 # Or use a CDP URL from any cloud browser provider
@@ -44,16 +45,20 @@ agent = Agent(
 
 **Cloud Browser Parameters:**
 - `cloud_profile_id`: UUID of a browser profile (optional, uses default if not specified)
-- `cloud_proxy_country_code`: Country code for proxy location - supports: us, uk, fr, it, jp, au, de, fi, ca, in
-- `cloud_timeout`: Session timeout in minutes (free users: max 15 min, paid users: max 240 min)
+- `cloud_proxy_country_code`: Country code for a supported proxy location
+- `cloud_timeout`: Requested session timeout in minutes (1–240; defaults to 60 when omitted)
+
+See the [Browser Infrastructure quickstart](/cloud/browser/quickstart),
+[CAPTCHA handling](/cloud/browser/captcha-handling), and
+[pricing](https://browser-use.com/pricing) for the maintained product details.
 
 **Benefits:**
 - ✅ No local browser setup required
-- ✅ Scalable and fast cloud infrastructure
-- ✅ Automatic provisioning and teardown
-- ✅ Built-in authentication handling
-- ✅ Optimized for browser automation
-- ✅ Global proxy support for geo-restricted content
+- ✅ Managed cloud infrastructure
+- ✅ Session lifecycle APIs and timeouts
+- ✅ Profile-based authentication state
+- ✅ Browser automation over CDP
+- ✅ Configurable proxy routing
 
 ### Third-Party Cloud Browsers
 You can pass in a CDP URL from any remote browser
