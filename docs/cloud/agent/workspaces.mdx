@@ -61,28 +61,37 @@ Attachments are run-scoped. Reusing a workspace does not reattach every upload.
 
 ## Retrieve created files
 
-Ask the agent to save its output, then list the workspace:
+Ask the agent to save its output, then download one file or a whole prefix:
 
 <CodeGroup>
 ```python Python
-files = client.workspaces.files(
+report = client.workspaces.download(
     workspace.id,
-    include_urls=True,
+    "reports/result.csv",
+    to="./result.csv",
 )
-for file in files.files:
-    print(file.path, file.url)
+all_reports = client.workspaces.download_all(
+    workspace.id,
+    to="./exports",
+    prefix="reports/",
+)
 ```
 ```typescript TypeScript
-const files = await client.workspaces.files(
+const report = await client.workspaces.download(
   workspace.id,
-  { includeUrls: true },
+  "reports/result.csv",
+  { to: "./result.csv" },
 );
-for (const file of files.files) {
-  console.log(file.path, file.url);
-}
+const allReports = await client.workspaces.downloadAll(
+  workspace.id,
+  { to: "./exports", prefix: "reports/" },
+);
 ```
 </CodeGroup>
 
-Download URLs expire after 60 seconds. See the [workspace API
-reference](/cloud/api-v4/workspaces/list-workspace-files) for pagination and
-limits.
+The helpers stream each file to a temporary sibling and replace the destination
+only after the download completes. Bulk downloads request a fresh URL for each
+file immediately before transfer; workspace download URLs expire after 60
+seconds. Use `files(..., include_urls=True)` / `files(..., { includeUrls: true })`
+only when you need to manage the presigned URLs directly. See the [workspace API
+reference](/cloud/api-v4/workspaces/list-workspace-files) for pagination and limits.

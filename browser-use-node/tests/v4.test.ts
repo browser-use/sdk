@@ -1,4 +1,5 @@
-import { mkdtempSync, writeFileSync } from "fs";
+import { mkdtempSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from "fs";
+import { open as openFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -505,6 +506,383 @@ describe("v4 workspaces", () => {
       await expect(workspaces.upload(WORKSPACE_ID)).rejects.toThrow(
         /At least one file path is required/,
       );
+    });
+  });
+
+  describe("download helpers", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("paginates to an exact file and streams it to disk", async () => {
+      const destination = join(mkdtempSync(join(tmpdir(), "bu-v4-download-")), "result.csv");
+      const url = "https://s3.example/get/reports/result.csv";
+      const http = {
+        get: vi.fn(async (_path: string, params?: Record<string, unknown>) =>
+          params?.cursor === "page-2"
+            ? {
+                files: [
+                  {
+                    path: "reports/result.csv",
+                    size: 6,
+                    lastModified: "2026-01-01T00:00:00Z",
+                    url,
+                  },
+                ],
+                nextCursor: null,
+                hasMore: false,
+              }
+            : {
+                files: [
+                  {
+                    path: "reports/result.csv.bak",
+                    size: 6,
+                    lastModified: "2026-01-01T00:00:00Z",
+                    url: null,
+                  },
+                ],
+                nextCursor: "page-2",
+                hasMore: true,
+              },
+        ),
+      };
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode("result"));
+              controller.close();
+            },
+          }),
+        ),
+      );
+      const workspaces = new Workspaces(http as any);
+
+      const result = await workspaces.download(WORKSPACE_ID, "reports/result.csv", {
+        to: destination,
+      });
+
+      expect(result).toBe(destination);
+      expect(readFileSync(destination, "utf8")).toBe("result");
+      expect(http.get).toHaveBeenNthCalledWith(1, `/workspaces/${WORKSPACE_ID}/files`, {
+        prefix: "reports/result.csv",
+        includeUrls: true,
+        cursor: undefined,
+      });
+      expect(http.get).toHaveBeenNthCalledWith(2, `/workspaces/${WORKSPACE_ID}/files`, {
+        prefix: "reports/result.csv",
+        includeUrls: true,
+        cursor: "page-2",
+      });
+    });
+
+    it("bounds downloads and cancels non-success response bodies", async () => {
+      const directory = mkdtempSync(join(tmpdir(), "bu-v4-download-status-"));
+      const destination = join(directory, "result.csv");
+      writeFileSync(destination, "previous");
+      const url = "https://s3.example/get/reports/result.csv";
+      const signal = new AbortController().signal;
+      const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(signal);
+      let cancelled = false;
+      const response = new Response(
+        new ReadableStream({
+          cancel() {
+            cancelled = true;
+          },
+        }),
+        { status: 503, statusText: "Service Unavailable" },
+      );
+      const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(response);
+      const http = {
+        get: vi.fn(async () => ({
+          files: [
+            {
+              path: "reports/result.csv",
+              size: 6,
+              lastModified: "2026-01-01T00:00:00Z",
+              url,
+            },
+          ],
+          nextCursor: null,
+          hasMore: false,
+        })),
+      };
+      const workspaces = new Workspaces(http as any);
+
+      await expect(
+        workspaces.download(WORKSPACE_ID, "reports/result.csv", { to: destination }),
+      ).rejects.toThrow(/Download failed: 503 Service Unavailable/);
+
+      expect(timeout).toHaveBeenCalledWith(60_000);
+      expect(fetchMock).toHaveBeenCalledWith(url, { signal });
+      expect(cancelled).toBe(true);
+      expect(readFileSync(destination, "utf8")).toBe("previous");
+      expect(readdirSync(directory).filter((name) => name.endsWith(".tmp"))).toEqual([]);
+    });
+
+    it("retries partial file writes until the whole response chunk is saved", async () => {
+      const directory = mkdtempSync(join(tmpdir(), "bu-v4-short-write-"));
+      const destination = join(directory, "result.csv");
+      const probe = await openFile(join(directory, "probe"), "w");
+      const fileHandlePrototype = Object.getPrototypeOf(probe) as typeof probe;
+      const originalWrite = fileHandlePrototype.write;
+      await probe.close();
+      let writeCalls = 0;
+      vi.spyOn(fileHandlePrototype, "write").mockImplementation(async function (
+        buffer: Uint8Array,
+        offset = 0,
+        length = buffer.byteLength - offset,
+        position?: number | null,
+      ) {
+        writeCalls += 1;
+        return originalWrite.call(
+          this,
+          buffer,
+          offset,
+          Math.min(length, 2),
+          position,
+        );
+      });
+      const url = "https://s3.example/get/reports/result.csv";
+      const http = {
+        get: vi.fn(async () => ({
+          files: [
+            {
+              path: "reports/result.csv",
+              size: 6,
+              lastModified: "2026-01-01T00:00:00Z",
+              url,
+            },
+          ],
+          nextCursor: null,
+          hasMore: false,
+        })),
+      };
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode("result"));
+              controller.close();
+            },
+          }),
+        ),
+      );
+      const workspaces = new Workspaces(http as any);
+
+      await workspaces.download(WORKSPACE_ID, "reports/result.csv", {
+        to: destination,
+      });
+
+      expect(readFileSync(destination, "utf8")).toBe("result");
+      expect(writeCalls).toBe(3);
+    });
+
+    it("preserves the destination and removes the temp file when a write makes no progress", async () => {
+      const directory = mkdtempSync(join(tmpdir(), "bu-v4-zero-write-"));
+      const destination = join(directory, "result.csv");
+      writeFileSync(destination, "previous");
+      const probe = await openFile(join(directory, "probe"), "w");
+      const fileHandlePrototype = Object.getPrototypeOf(probe) as typeof probe;
+      await probe.close();
+      vi.spyOn(fileHandlePrototype, "write").mockImplementation(async function (
+        buffer: Uint8Array,
+      ) {
+        return { bytesWritten: 0, buffer };
+      });
+      const url = "https://s3.example/get/reports/result.csv";
+      const http = {
+        get: vi.fn(async () => ({
+          files: [
+            {
+              path: "reports/result.csv",
+              size: 6,
+              lastModified: "2026-01-01T00:00:00Z",
+              url,
+            },
+          ],
+          nextCursor: null,
+          hasMore: false,
+        })),
+      };
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode("result"));
+              controller.close();
+            },
+          }),
+        ),
+      );
+      const workspaces = new Workspaces(http as any);
+
+      await expect(
+        workspaces.download(WORKSPACE_ID, "reports/result.csv", { to: destination }),
+      ).rejects.toThrow(/file write made no progress/);
+
+      expect(readFileSync(destination, "utf8")).toBe("previous");
+      expect(readdirSync(directory).filter((name) => name.endsWith(".tmp"))).toEqual([]);
+    });
+
+    it("refreshes each URL only after the previous file finished", async () => {
+      const destination = mkdtempSync(join(tmpdir(), "bu-v4-download-all-"));
+      const firstUrl = "https://s3.example/get/reports/first.csv";
+      const secondUrl = "https://s3.example/get/reports/second.csv";
+      const events: string[] = [];
+      const http = {
+        get: vi.fn(async (_path: string, params?: Record<string, unknown>) => {
+          if (!params?.includeUrls) {
+            events.push("list");
+            return {
+              files: [
+                { path: "reports/first.csv", size: 5, lastModified: "2026-01-01T00:00:00Z" },
+                { path: "reports/second.csv", size: 6, lastModified: "2026-01-01T00:00:00Z" },
+              ],
+              nextCursor: null,
+              hasMore: false,
+            };
+          }
+          const path = String(params.prefix);
+          events.push(`refresh:${path}`);
+          return {
+            files: [
+              {
+                path,
+                size: path.endsWith("first.csv") ? 5 : 6,
+                lastModified: "2026-01-01T00:00:00Z",
+                url: path.endsWith("first.csv") ? firstUrl : secondUrl,
+              },
+            ],
+            nextCursor: null,
+            hasMore: false,
+          };
+        }),
+      };
+      vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+        const url = String(input);
+        const name = url === firstUrl ? "first" : "second";
+        events.push(`fetch:${name}`);
+        return new Response(
+          new ReadableStream({
+            pull(controller) {
+              events.push(`stream:${name}`);
+              controller.enqueue(new TextEncoder().encode(name));
+              controller.close();
+            },
+          }),
+        );
+      });
+      const workspaces = new Workspaces(http as any);
+
+      const result = await workspaces.downloadAll(WORKSPACE_ID, {
+        to: destination,
+        prefix: "reports/",
+      });
+
+      expect(result).toEqual([
+        join(destination, "reports/first.csv"),
+        join(destination, "reports/second.csv"),
+      ]);
+      expect(events).toEqual([
+        "list",
+        "refresh:reports/first.csv",
+        "fetch:first",
+        "stream:first",
+        "refresh:reports/second.csv",
+        "fetch:second",
+        "stream:second",
+      ]);
+    });
+
+    it("rejects traversal before requesting a URL", async () => {
+      const destination = mkdtempSync(join(tmpdir(), "bu-v4-traversal-"));
+      const http = {
+        get: vi.fn(async () => ({
+          files: [
+            { path: "../escape.txt", size: 6, lastModified: "2026-01-01T00:00:00Z" },
+          ],
+          nextCursor: null,
+          hasMore: false,
+        })),
+      };
+      const fetchMock = vi.spyOn(globalThis, "fetch");
+      const workspaces = new Workspaces(http as any);
+
+      await expect(
+        workspaces.downloadAll(WORKSPACE_ID, { to: destination }),
+      ).rejects.toThrow(/Path traversal detected/);
+
+      expect(http.get).toHaveBeenCalledTimes(1);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("rejects a symlinked parent before requesting a URL", async () => {
+      const destination = mkdtempSync(join(tmpdir(), "bu-v4-symlink-root-"));
+      const outside = mkdtempSync(join(tmpdir(), "bu-v4-symlink-outside-"));
+      symlinkSync(
+        outside,
+        join(destination, "linked"),
+        process.platform === "win32" ? "junction" : "dir",
+      );
+      const http = {
+        get: vi.fn(async () => ({
+          files: [
+            { path: "linked/escape.txt", size: 6, lastModified: "2026-01-01T00:00:00Z" },
+          ],
+          nextCursor: null,
+          hasMore: false,
+        })),
+      };
+      const fetchMock = vi.spyOn(globalThis, "fetch");
+      const workspaces = new Workspaces(http as any);
+
+      await expect(
+        workspaces.downloadAll(WORKSPACE_ID, { to: destination }),
+      ).rejects.toThrow(/Path traversal detected/);
+
+      expect(http.get).toHaveBeenCalledTimes(1);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(readdirSync(outside)).toEqual([]);
+    });
+
+    it("keeps the old destination and removes temp files after a stream error", async () => {
+      const directory = mkdtempSync(join(tmpdir(), "bu-v4-download-error-"));
+      const destination = join(directory, "result.csv");
+      writeFileSync(destination, "previous");
+      const url = "https://s3.example/get/reports/result.csv";
+      const http = {
+        get: vi.fn(async () => ({
+          files: [
+            {
+              path: "reports/result.csv",
+              size: 7,
+              lastModified: "2026-01-01T00:00:00Z",
+              url,
+            },
+          ],
+          nextCursor: null,
+          hasMore: false,
+        })),
+      };
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode("partial"));
+              controller.error(new Error("connection dropped"));
+            },
+          }),
+        ),
+      );
+      const workspaces = new Workspaces(http as any);
+
+      await expect(
+        workspaces.download(WORKSPACE_ID, "reports/result.csv", { to: destination }),
+      ).rejects.toThrow(/connection dropped/);
+
+      expect(readFileSync(destination, "utf8")).toBe("previous");
+      expect(readdirSync(directory).filter((name) => name.endsWith(".tmp"))).toEqual([]);
     });
   });
 });

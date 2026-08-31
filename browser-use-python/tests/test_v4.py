@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import httpx
 import pytest
 
+import browser_use_sdk.v4.resources.workspaces as workspaces_module
 from browser_use_sdk.v4 import InlineSecretSource, SecretBinding
 from browser_use_sdk.v4.resources.browsers import AsyncBrowsers, Browsers
 from browser_use_sdk.v4.resources.runs import AsyncRuns, Runs
@@ -497,6 +499,15 @@ def _upload_item() -> dict[str, Any]:
     }
 
 
+def _workspace_file(path: str, url: str | None) -> dict[str, Any]:
+    return {
+        "path": path,
+        "size": 7,
+        "lastModified": "2026-01-01T00:00:00Z",
+        "url": url,
+    }
+
+
 def test_workspaces_create() -> None:
     http = FakeSyncHttp([_workspace_info()])
     workspaces = Workspaces(http)  # type: ignore[arg-type]
@@ -664,6 +675,300 @@ def test_workspaces_upload_no_paths_raises() -> None:
     assert http.calls == []
 
 
+class _FakeDownloadResponse:
+    def __init__(
+        self,
+        *chunks: bytes | BaseException,
+        status_code: int = 200,
+        on_enter: Callable[[], None] | None = None,
+    ) -> None:
+        self.chunks = chunks
+        self.status_code = status_code
+        self.on_enter = on_enter
+
+    def raise_for_status(self) -> None:
+        if self.status_code >= 400:
+            request = httpx.Request("GET", "https://s3.example/test")
+            raise httpx.HTTPStatusError(
+                f"{self.status_code}",
+                request=request,
+                response=httpx.Response(self.status_code, request=request),
+            )
+
+    def iter_bytes(self):
+        for chunk in self.chunks:
+            if isinstance(chunk, BaseException):
+                raise chunk
+            yield chunk
+
+    async def aiter_bytes(self):
+        for chunk in self.chunks:
+            if isinstance(chunk, BaseException):
+                raise chunk
+            yield chunk
+
+
+class _FakeSyncStreamContext:
+    def __init__(self, response: _FakeDownloadResponse) -> None:
+        self.response = response
+
+    def __enter__(self) -> _FakeDownloadResponse:
+        if self.response.on_enter is not None:
+            self.response.on_enter()
+        return self.response
+
+    def __exit__(self, *_args: Any) -> None:
+        pass
+
+
+class _FakeSyncDownloadClient:
+    responses: dict[str, _FakeDownloadResponse] = {}
+    calls: list[str] = []
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        pass
+
+    def __enter__(self) -> _FakeSyncDownloadClient:
+        return self
+
+    def __exit__(self, *_args: Any) -> None:
+        pass
+
+    def stream(self, method: str, url: str) -> _FakeSyncStreamContext:
+        assert method == "GET"
+        type(self).calls.append(url)
+        response = type(self).responses.get(
+            url, _FakeDownloadResponse(status_code=404)
+        )
+        return _FakeSyncStreamContext(response)
+
+
+def test_workspaces_download_paginates_for_exact_path(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    url = "https://s3.example/get/reports/result.csv"
+    _FakeSyncDownloadClient.responses = {
+        url: _FakeDownloadResponse(b"id,", b"name\n1,a\n")
+    }
+    _FakeSyncDownloadClient.calls = []
+    monkeypatch.setattr(httpx, "Client", _FakeSyncDownloadClient)
+
+    http = FakeSyncHttp(
+        [
+            {
+                "files": [_workspace_file("reports/result.csv.bak", None)],
+                "nextCursor": "page-2",
+                "hasMore": True,
+            },
+            {
+                "files": [_workspace_file("reports/result.csv", url)],
+                "nextCursor": None,
+                "hasMore": False,
+            },
+        ]
+    )
+    workspaces = Workspaces(http)  # type: ignore[arg-type]
+    destination = tmp_path / "exports" / "result.csv"
+
+    result = workspaces.download(WORKSPACE_ID, "reports/result.csv", to=destination)
+
+    assert result == destination
+    assert destination.read_bytes() == b"id,name\n1,a\n"
+    assert _FakeSyncDownloadClient.calls == [url]
+    assert [call[3] for call in http.calls] == [
+        {
+            "prefix": "reports/result.csv",
+            "limit": None,
+            "cursor": None,
+            "includeUrls": True,
+            "contentDisposition": None,
+        },
+        {
+            "prefix": "reports/result.csv",
+            "limit": None,
+            "cursor": "page-2",
+            "includeUrls": True,
+            "contentDisposition": None,
+        },
+    ]
+
+
+def test_workspaces_download_missing_file_raises() -> None:
+    http = FakeSyncHttp([{"files": [], "nextCursor": None, "hasMore": False}])
+    workspaces = Workspaces(http)  # type: ignore[arg-type]
+
+    with pytest.raises(FileNotFoundError, match="reports/missing.csv"):
+        workspaces.download(WORKSPACE_ID, "reports/missing.csv")
+
+
+def test_workspaces_download_all_preserves_paths_across_pages(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    first_url = "https://s3.example/get/reports/first.csv"
+    second_url = "https://s3.example/get/reports/nested/second.csv"
+    events: list[str] = []
+    _FakeSyncDownloadClient.responses = {
+        first_url: _FakeDownloadResponse(
+            b"first", on_enter=lambda: events.append("stream:first")
+        ),
+        second_url: _FakeDownloadResponse(
+            b"second", on_enter=lambda: events.append("stream:second")
+        ),
+    }
+    _FakeSyncDownloadClient.calls = []
+    monkeypatch.setattr(httpx, "Client", _FakeSyncDownloadClient)
+
+    class OrderedFakeSyncHttp(FakeSyncHttp):
+        def request(
+            self,
+            method: str,
+            path: str,
+            *,
+            json: dict[str, Any] | None = None,
+            params: dict[str, Any] | None = None,
+        ) -> dict[str, Any]:
+            if params is not None:
+                if params["includeUrls"]:
+                    events.append(f"refresh:{params['prefix']}")
+                else:
+                    events.append(f"list:{params['cursor']}")
+            return super().request(method, path, json=json, params=params)
+
+    http = OrderedFakeSyncHttp(
+        [
+            {
+                "files": [_workspace_file("reports/first.csv", None)],
+                "nextCursor": "page-2",
+                "hasMore": True,
+            },
+            {
+                "files": [_workspace_file("reports/first.csv", first_url)],
+                "nextCursor": None,
+                "hasMore": False,
+            },
+            {
+                "files": [_workspace_file("reports/nested/second.csv", None)],
+                "nextCursor": None,
+                "hasMore": False,
+            },
+            {
+                "files": [_workspace_file("reports/nested/second.csv", second_url)],
+                "nextCursor": None,
+                "hasMore": False,
+            },
+        ]
+    )
+    workspaces = Workspaces(http)  # type: ignore[arg-type]
+    destination = tmp_path / "exports"
+
+    result = workspaces.download_all(WORKSPACE_ID, to=destination, prefix="reports/")
+
+    assert result == [
+        (destination / "reports/first.csv").resolve(),
+        (destination / "reports/nested/second.csv").resolve(),
+    ]
+    assert result[0].read_bytes() == b"first"
+    assert result[1].read_bytes() == b"second"
+    assert _FakeSyncDownloadClient.calls == [first_url, second_url]
+    assert events == [
+        "list:None",
+        "refresh:reports/first.csv",
+        "stream:first",
+        "list:page-2",
+        "refresh:reports/nested/second.csv",
+        "stream:second",
+    ]
+    assert [call[3] for call in http.calls] == [
+        {
+            "prefix": "reports/",
+            "limit": None,
+            "cursor": None,
+            "includeUrls": None,
+            "contentDisposition": None,
+        },
+        {
+            "prefix": "reports/first.csv",
+            "limit": None,
+            "cursor": None,
+            "includeUrls": True,
+            "contentDisposition": None,
+        },
+        {
+            "prefix": "reports/",
+            "limit": None,
+            "cursor": "page-2",
+            "includeUrls": None,
+            "contentDisposition": None,
+        },
+        {
+            "prefix": "reports/nested/second.csv",
+            "limit": None,
+            "cursor": None,
+            "includeUrls": True,
+            "contentDisposition": None,
+        },
+    ]
+
+
+def test_workspaces_download_all_rejects_path_traversal(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _FakeSyncDownloadClient.responses = {
+        "https://s3.example/get/escape": _FakeDownloadResponse(b"escape")
+    }
+    _FakeSyncDownloadClient.calls = []
+    monkeypatch.setattr(httpx, "Client", _FakeSyncDownloadClient)
+
+    http = FakeSyncHttp(
+        [
+            {
+                "files": [_workspace_file("../escape.txt", None)],
+                "nextCursor": None,
+                "hasMore": False,
+            }
+        ]
+    )
+    workspaces = Workspaces(http)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError, match="Path traversal detected"):
+        workspaces.download_all(WORKSPACE_ID, to=tmp_path / "exports")
+    assert _FakeSyncDownloadClient.calls == []
+
+
+def test_workspaces_download_failure_keeps_destination_and_removes_temp(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    url = "https://s3.example/get/reports/result.csv"
+    _FakeSyncDownloadClient.responses = {
+        url: _FakeDownloadResponse(
+            b"partial", RuntimeError("connection dropped")
+        )
+    }
+    _FakeSyncDownloadClient.calls = []
+    monkeypatch.setattr(httpx, "Client", _FakeSyncDownloadClient)
+    http = FakeSyncHttp(
+        [
+            {
+                "files": [_workspace_file("reports/result.csv", url)],
+                "nextCursor": None,
+                "hasMore": False,
+            }
+        ]
+    )
+    workspaces = Workspaces(http)  # type: ignore[arg-type]
+    destination = tmp_path / "exports" / "result.csv"
+    destination.parent.mkdir(parents=True)
+    destination.write_bytes(b"previous")
+
+    with pytest.raises(RuntimeError, match="connection dropped"):
+        workspaces.download(
+            WORKSPACE_ID, "reports/result.csv", to=destination
+        )
+
+    assert destination.read_bytes() == b"previous"
+    assert list(destination.parent.glob(".result.csv.*.tmp")) == []
+
+
 class _FakeAsyncPutClient:
     calls: list[tuple[str, bytes, dict[str, str]]] = []
     status_code = 200
@@ -680,6 +985,41 @@ class _FakeAsyncPutClient:
     async def put(self, url: str, *, content: bytes, headers: dict[str, str]) -> _FakePutResponse:
         type(self).calls.append((url, content, headers))
         return _FakePutResponse(type(self).status_code)
+
+
+class _FakeAsyncStreamContext:
+    def __init__(self, response: _FakeDownloadResponse) -> None:
+        self.response = response
+
+    async def __aenter__(self) -> _FakeDownloadResponse:
+        if self.response.on_enter is not None:
+            self.response.on_enter()
+        return self.response
+
+    async def __aexit__(self, *_args: Any) -> None:
+        pass
+
+
+class _FakeAsyncDownloadClient:
+    responses: dict[str, _FakeDownloadResponse] = {}
+    calls: list[str] = []
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        pass
+
+    async def __aenter__(self) -> _FakeAsyncDownloadClient:
+        return self
+
+    async def __aexit__(self, *_args: Any) -> None:
+        pass
+
+    def stream(self, method: str, url: str) -> _FakeAsyncStreamContext:
+        assert method == "GET"
+        type(self).calls.append(url)
+        response = type(self).responses.get(
+            url, _FakeDownloadResponse(status_code=404)
+        )
+        return _FakeAsyncStreamContext(response)
 
 
 def test_async_workspaces_upload(tmp_path: Path, monkeypatch: Any) -> None:
@@ -715,5 +1055,225 @@ def test_async_workspaces_upload_short_presign_raises(tmp_path: Path) -> None:
 
         with pytest.raises(ValueError, match=r"data\.csv \(position 0\)"):
             await workspaces.upload(WORKSPACE_ID, f)
+
+    asyncio.run(run())
+
+
+def test_async_workspaces_download_all(tmp_path: Path, monkeypatch: Any) -> None:
+    first_url = "https://s3.example/get/reports/first.csv"
+    second_url = "https://s3.example/get/reports/nested/second.csv"
+    _FakeAsyncDownloadClient.responses = {
+        first_url: _FakeDownloadResponse(b"first"),
+        second_url: _FakeDownloadResponse(b"second"),
+    }
+    _FakeAsyncDownloadClient.calls = []
+    monkeypatch.setattr(httpx, "AsyncClient", _FakeAsyncDownloadClient)
+    event_loop_thread = threading.get_ident()
+    path_resolution_threads: list[int] = []
+    original_safe_join = workspaces_module._safe_join
+
+    def recording_safe_join(base: Path, untrusted: str) -> Path:
+        path_resolution_threads.append(threading.get_ident())
+        return original_safe_join(base, untrusted)
+
+    monkeypatch.setattr(workspaces_module, "_safe_join", recording_safe_join)
+
+    async def run() -> None:
+        http = FakeAsyncHttp(
+            [
+                {
+                    "files": [_workspace_file("reports/first.csv", None)],
+                    "nextCursor": "page-2",
+                    "hasMore": True,
+                },
+                {
+                    "files": [_workspace_file("reports/first.csv", first_url)],
+                    "nextCursor": None,
+                    "hasMore": False,
+                },
+                {
+                    "files": [
+                        _workspace_file("reports/nested/second.csv", None)
+                    ],
+                    "nextCursor": None,
+                    "hasMore": False,
+                },
+                {
+                    "files": [
+                        _workspace_file(
+                            "reports/nested/second.csv", second_url
+                        )
+                    ],
+                    "nextCursor": None,
+                    "hasMore": False,
+                },
+            ]
+        )
+        workspaces = AsyncWorkspaces(http)  # type: ignore[arg-type]
+        destination = tmp_path / "exports"
+
+        result = await workspaces.download_all(
+            WORKSPACE_ID, to=destination, prefix="reports/"
+        )
+
+        assert result == [
+            (destination / "reports/first.csv").resolve(),
+            (destination / "reports/nested/second.csv").resolve(),
+        ]
+        assert result[0].read_bytes() == b"first"
+        assert result[1].read_bytes() == b"second"
+        assert _FakeAsyncDownloadClient.calls == [first_url, second_url]
+        assert path_resolution_threads
+        assert event_loop_thread not in path_resolution_threads
+        assert [call[3] for call in http.calls] == [
+            {
+                "prefix": "reports/",
+                "limit": None,
+                "cursor": None,
+                "includeUrls": None,
+                "contentDisposition": None,
+            },
+            {
+                "prefix": "reports/first.csv",
+                "limit": None,
+                "cursor": None,
+                "includeUrls": True,
+                "contentDisposition": None,
+            },
+            {
+                "prefix": "reports/",
+                "limit": None,
+                "cursor": "page-2",
+                "includeUrls": None,
+                "contentDisposition": None,
+            },
+            {
+                "prefix": "reports/nested/second.csv",
+                "limit": None,
+                "cursor": None,
+                "includeUrls": True,
+                "contentDisposition": None,
+            },
+        ]
+
+    asyncio.run(run())
+
+
+def test_async_workspaces_download_paginates_for_exact_path(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    url = "https://s3.example/get/reports/result.csv"
+    _FakeAsyncDownloadClient.responses = {
+        url: _FakeDownloadResponse(b"result")
+    }
+    _FakeAsyncDownloadClient.calls = []
+    monkeypatch.setattr(httpx, "AsyncClient", _FakeAsyncDownloadClient)
+
+    async def run() -> None:
+        http = FakeAsyncHttp(
+            [
+                {
+                    "files": [_workspace_file("reports/result.csv.bak", None)],
+                    "nextCursor": "page-2",
+                    "hasMore": True,
+                },
+                {
+                    "files": [_workspace_file("reports/result.csv", url)],
+                    "nextCursor": None,
+                    "hasMore": False,
+                },
+            ]
+        )
+        workspaces = AsyncWorkspaces(http)  # type: ignore[arg-type]
+        destination = tmp_path / "result.csv"
+
+        result = await workspaces.download(
+            WORKSPACE_ID, "reports/result.csv", to=destination
+        )
+
+        assert result == destination
+        assert destination.read_bytes() == b"result"
+        assert [call[3] for call in http.calls] == [
+            {
+                "prefix": "reports/result.csv",
+                "limit": None,
+                "cursor": None,
+                "includeUrls": True,
+                "contentDisposition": None,
+            },
+            {
+                "prefix": "reports/result.csv",
+                "limit": None,
+                "cursor": "page-2",
+                "includeUrls": True,
+                "contentDisposition": None,
+            },
+        ]
+
+    asyncio.run(run())
+
+
+def test_async_workspaces_download_all_rejects_path_traversal(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    _FakeAsyncDownloadClient.responses = {}
+    _FakeAsyncDownloadClient.calls = []
+    monkeypatch.setattr(httpx, "AsyncClient", _FakeAsyncDownloadClient)
+
+    async def run() -> None:
+        http = FakeAsyncHttp(
+            [
+                {
+                    "files": [_workspace_file("../escape.txt", None)],
+                    "nextCursor": None,
+                    "hasMore": False,
+                }
+            ]
+        )
+        workspaces = AsyncWorkspaces(http)  # type: ignore[arg-type]
+
+        with pytest.raises(ValueError, match="Path traversal detected"):
+            await workspaces.download_all(
+                WORKSPACE_ID, to=tmp_path / "exports"
+            )
+        assert _FakeAsyncDownloadClient.calls == []
+
+    asyncio.run(run())
+
+
+def test_async_workspaces_download_failure_cleans_temp(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    url = "https://s3.example/get/reports/result.csv"
+    _FakeAsyncDownloadClient.responses = {
+        url: _FakeDownloadResponse(
+            b"partial", RuntimeError("connection dropped")
+        )
+    }
+    _FakeAsyncDownloadClient.calls = []
+    monkeypatch.setattr(httpx, "AsyncClient", _FakeAsyncDownloadClient)
+
+    async def run() -> None:
+        http = FakeAsyncHttp(
+            [
+                {
+                    "files": [_workspace_file("reports/result.csv", url)],
+                    "nextCursor": None,
+                    "hasMore": False,
+                }
+            ]
+        )
+        workspaces = AsyncWorkspaces(http)  # type: ignore[arg-type]
+        destination = tmp_path / "exports" / "result.csv"
+        destination.parent.mkdir(parents=True)
+        destination.write_bytes(b"previous")
+
+        with pytest.raises(RuntimeError, match="connection dropped"):
+            await workspaces.download(
+                WORKSPACE_ID, "reports/result.csv", to=destination
+            )
+
+        assert destination.read_bytes() == b"previous"
+        assert list(destination.parent.glob(".result.csv.*.tmp")) == []
 
     asyncio.run(run())

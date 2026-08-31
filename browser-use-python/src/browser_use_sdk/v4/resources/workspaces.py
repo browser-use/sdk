@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import mimetypes
+import os
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -25,6 +27,60 @@ if TYPE_CHECKING:
 def _guess_content_type(path: str) -> str:
     ct, _ = mimetypes.guess_type(path)
     return ct or "application/octet-stream"
+
+
+def _safe_join(base: Path, untrusted: str) -> Path:
+    """Join a workspace path below ``base`` without allowing traversal."""
+    base_resolved = base.resolve()
+    resolved = (base / untrusted).resolve()
+    if base_resolved != resolved and base_resolved not in resolved.parents:
+        raise ValueError(f"Path traversal detected: {untrusted}")
+    return resolved
+
+
+def _new_temp_file(destination: Path):
+    """Open a sibling temp file so the final replace stays on one filesystem."""
+    return tempfile.NamedTemporaryFile(
+        mode="wb",
+        delete=False,
+        dir=destination.parent,
+        prefix=f".{destination.name}.",
+        suffix=".tmp",
+    )
+
+
+def _stream_to_path(response: httpx.Response, destination: Path) -> None:
+    """Stream a response to a temp file, then atomically replace destination."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temp_file = _new_temp_file(destination)
+    temp_path = Path(temp_file.name)
+    try:
+        with temp_file:
+            for chunk in response.iter_bytes():
+                temp_file.write(chunk)
+        os.replace(temp_path, destination)
+    except BaseException:
+        temp_file.close()
+        temp_path.unlink(missing_ok=True)
+        raise
+
+
+async def _stream_to_path_async(
+    response: httpx.Response, destination: Path
+) -> None:
+    """Async response streaming with blocking file writes moved off-loop."""
+    await asyncio.to_thread(destination.parent.mkdir, parents=True, exist_ok=True)
+    temp_file = await asyncio.to_thread(_new_temp_file, destination)
+    temp_path = Path(temp_file.name)
+    try:
+        async for chunk in response.aiter_bytes():
+            await asyncio.to_thread(temp_file.write, chunk)
+        await asyncio.to_thread(temp_file.close)
+        await asyncio.to_thread(os.replace, temp_path, destination)
+    except BaseException:
+        await asyncio.to_thread(temp_file.close)
+        await asyncio.to_thread(temp_path.unlink, missing_ok=True)
+        raise
 
 
 def _presign_items(resolved: list[Path]) -> list[WorkspaceFileUploadItem]:
@@ -192,7 +248,7 @@ class Workspaces:
 
             uploaded = client.workspaces.upload(ws_id, "data.csv")
             client.runs.create("...", workspace_id=ws_id, attached_file_ids=[f.id for f in uploaded])
-        
+
 
         Each file is read at PUT time and its byte length checked against the
         presigned size; a size change raises. Don't modify a file while it is
@@ -214,6 +270,86 @@ class Workspaces:
                     headers={"Content-Type": item.content_type or "application/octet-stream"},
                 ).raise_for_status()
         return list(resp.files)
+
+    def download(
+        self,
+        workspace_id: str | UUID,
+        path: str,
+        *,
+        to: str | Path | None = None,
+    ) -> Path:
+        """Download one exact workspace file and return its local path.
+
+        Usage::
+
+            local = client.workspaces.download(ws_id, "reports/result.csv", to="./result.csv")
+        """
+        cursor: str | None = None
+        while True:
+            file_list = self.files(
+                workspace_id,
+                prefix=path,
+                include_urls=True,
+                cursor=cursor,
+            )
+            match = next((f for f in file_list.files if f.path == path), None)
+            if match is not None:
+                break
+            if not file_list.has_more:
+                raise FileNotFoundError(f"File not found in workspace: {path}")
+            if file_list.next_cursor is None:
+                raise RuntimeError(
+                    "Workspace file response has_more=True but no next_cursor"
+                )
+            cursor = file_list.next_cursor
+
+        if match.url is None:
+            raise ValueError(f"No download URL for {path!r}; ensure include_urls=True")
+
+        dest = Path(to) if to is not None else Path(os.path.basename(match.path))
+        with httpx.Client(timeout=60) as http:
+            with http.stream("GET", match.url) as response:
+                response.raise_for_status()
+                _stream_to_path(response, dest)
+        return dest
+
+    def download_all(
+        self,
+        workspace_id: str | UUID,
+        *,
+        to: str | Path = ".",
+        prefix: str | None = None,
+    ) -> list[Path]:
+        """Download matching workspace files below ``to`` and return their paths.
+
+        Usage::
+
+            paths = client.workspaces.download_all(ws_id, to="./output", prefix="reports/")
+        """
+        dest_dir = Path(to)
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        results: list[Path] = []
+        cursor: str | None = None
+
+        while True:
+            # List metadata without URLs. Each file is re-read with include_urls
+            # immediately before its GET so a 60-second URL cannot expire while
+            # earlier files are still downloading.
+            file_list = self.files(
+                workspace_id,
+                prefix=prefix,
+                cursor=cursor,
+            )
+            for file in file_list.files:
+                local = _safe_join(dest_dir, file.path)
+                results.append(self.download(workspace_id, file.path, to=local))
+            if not file_list.has_more:
+                return results
+            if file_list.next_cursor is None:
+                raise RuntimeError(
+                    "Workspace file response has_more=True but no next_cursor"
+                )
+            cursor = file_list.next_cursor
 
 
 class AsyncWorkspaces:
@@ -337,7 +473,7 @@ class AsyncWorkspaces:
         Usage::
 
             uploaded = await client.workspaces.upload(ws_id, "data.csv")
-        
+
 
         Each file is read at PUT time and its byte length checked against the
         presigned size; a size change raises. Don't modify a file while it is
@@ -363,3 +499,88 @@ class AsyncWorkspaces:
                 )
                 r.raise_for_status()
         return list(resp.files)
+
+    async def download(
+        self,
+        workspace_id: str | UUID,
+        path: str,
+        *,
+        to: str | Path | None = None,
+    ) -> Path:
+        """Download one exact workspace file and return its local path.
+
+        Usage::
+
+            local = await client.workspaces.download(
+                ws_id, "reports/result.csv", to="./result.csv"
+            )
+        """
+        cursor: str | None = None
+        while True:
+            file_list = await self.files(
+                workspace_id,
+                prefix=path,
+                include_urls=True,
+                cursor=cursor,
+            )
+            match = next((f for f in file_list.files if f.path == path), None)
+            if match is not None:
+                break
+            if not file_list.has_more:
+                raise FileNotFoundError(f"File not found in workspace: {path}")
+            if file_list.next_cursor is None:
+                raise RuntimeError(
+                    "Workspace file response has_more=True but no next_cursor"
+                )
+            cursor = file_list.next_cursor
+
+        if match.url is None:
+            raise ValueError(f"No download URL for {path!r}; ensure include_urls=True")
+
+        dest = Path(to) if to is not None else Path(os.path.basename(match.path))
+        async with httpx.AsyncClient(timeout=60) as http:
+            async with http.stream("GET", match.url) as response:
+                response.raise_for_status()
+                await _stream_to_path_async(response, dest)
+        return dest
+
+    async def download_all(
+        self,
+        workspace_id: str | UUID,
+        *,
+        to: str | Path = ".",
+        prefix: str | None = None,
+    ) -> list[Path]:
+        """Download matching workspace files below ``to`` and return their paths.
+
+        Usage::
+
+            paths = await client.workspaces.download_all(
+                ws_id, to="./output", prefix="reports/"
+            )
+        """
+        dest_dir = Path(to)
+        await asyncio.to_thread(dest_dir.mkdir, parents=True, exist_ok=True)
+        results: list[Path] = []
+        cursor: str | None = None
+
+        while True:
+            # Do not request a page of short-lived URLs. Refresh one exact file
+            # immediately before streaming it, after the previous file finished.
+            file_list = await self.files(
+                workspace_id,
+                prefix=prefix,
+                cursor=cursor,
+            )
+            for file in file_list.files:
+                local = await asyncio.to_thread(_safe_join, dest_dir, file.path)
+                results.append(
+                    await self.download(workspace_id, file.path, to=local)
+                )
+            if not file_list.has_more:
+                return results
+            if file_list.next_cursor is None:
+                raise RuntimeError(
+                    "Workspace file response has_more=True but no next_cursor"
+                )
+            cursor = file_list.next_cursor
