@@ -92,6 +92,10 @@ curl -X PATCH \
   `PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`.
 </Warning>
 
+To keep cookies and local storage between browsers, [sync a browser
+profile](/cloud/guides/profile-sync) and pass its ID as `profileId` when you
+launch the next browser.
+
 <CardGroup cols={2}>
   <Card
     title="Connect over CDP"

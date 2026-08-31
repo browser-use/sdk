@@ -40,6 +40,10 @@ curl https://api.browser-use.com/api/v4/runs \
 Install the latest SDK with `pip install --upgrade browser-use-sdk` or
 `npm install browser-use-sdk@latest`. Curl needs no installation.
 
+To keep cookies and local storage between runs, [sync a browser
+profile](/cloud/guides/profile-sync) and pass its ID as
+`browserSettings.profileId`.
+
 Every new run implicitly creates a [session](/cloud/agent/sessions) for its
 conversation and live browser, plus a [workspace](/cloud/agent/workspaces) for
 persistent files.

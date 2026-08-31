@@ -235,6 +235,10 @@ curl https://api.browser-use.com/api/v4/runs \
 Install the latest SDK with `pip install --upgrade browser-use-sdk` or
 `npm install browser-use-sdk@latest`. Curl needs no installation.
 
+To keep cookies and local storage between runs, [sync a browser
+profile](https://docs.browser-use.com/cloud/guides/profile-sync) and pass its ID as
+`browserSettings.profileId`.
+
 Every new run implicitly creates a [session](https://docs.browser-use.com/cloud/agent/sessions) for its
 conversation and live browser, plus a [workspace](https://docs.browser-use.com/cloud/agent/workspaces) for
 persistent files.
@@ -1077,6 +1081,10 @@ curl -X PATCH \
   `browser.close()`, disconnecting CDP, or `client.close()` does not stop the
   managed browser. Use `client.browsers.stop(browser.id)` or call
   `PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`.
+
+To keep cookies and local storage between browsers, [sync a browser
+profile](https://docs.browser-use.com/cloud/guides/profile-sync) and pass its ID as `profileId` when you
+launch the next browser.
 
   [Connect over CDP](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium)
 Use the CDP URL with Playwright or Puppeteer.
