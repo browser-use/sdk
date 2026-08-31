@@ -1,0 +1,103 @@
+name: docs-generated
+
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "Taskfile.yml"
+      - ".github/workflows/docs-generated.yml"
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "Taskfile.yml"
+      - ".github/workflows/docs-generated.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-generated-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  llms-artifacts:
+    name: Verify generated machine docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify nav covers every page
+        run: |
+          python3 - <<'PY'
+          import json
+          import sys
+          from collections import Counter
+          from pathlib import Path
+
+          docs_root = Path("docs")
+          docs = json.loads((docs_root / "docs.json").read_text())
+          nav = []
+
+          def extract_pages(value):
+              if isinstance(value, str):
+                  return [value]
+              elif isinstance(value, dict):
+                  pages = []
+                  for item in value.get("pages", []):
+                      pages.extend(extract_pages(item))
+                  return pages
+              elif isinstance(value, list):
+                  pages = []
+                  for item in value:
+                      pages.extend(extract_pages(item))
+                  return pages
+              return []
+
+          for product in docs["navigation"]["products"]:
+              for tab in product.get("tabs", []):
+                  if isinstance(tab, dict):
+                      for group in tab.get("groups", []):
+                          nav.extend(extract_pages(group))
+              for group in product.get("groups", []):
+                  nav.extend(extract_pages(group))
+
+          counts = Counter(nav)
+          duplicates = sorted(slug for slug, count in counts.items() if count > 1)
+          nav_set = set(nav)
+          disk = {
+              path.relative_to(docs_root).with_suffix("").as_posix()
+              for path in docs_root.rglob("*.mdx")
+              if path.relative_to(docs_root).parts[:1] != ("snippets",)
+          }
+          missing = sorted(nav_set - disk)
+          orphaned = sorted(disk - nav_set)
+          if missing or orphaned or duplicates:
+              print("Navigation/source mismatch:", file=sys.stderr)
+              for slug in missing:
+                  print(f"  missing source: {slug}.mdx", file=sys.stderr)
+              for slug in orphaned:
+                  print(f"  missing from nav: {slug}", file=sys.stderr)
+              for slug in duplicates:
+                  print(f"  duplicate page: {slug}", file=sys.stderr)
+              sys.exit(1)
+          print(f"Navigation covers all {len(disk)} MDX pages exactly once.")
+          PY
+
+      - name: Regenerate llms artifacts
+        run: bash docs/generate-llms-txt.sh
+
+      - name: Fail on generated drift
+        run: |
+          drift="$(git status --porcelain --untracked-files=all -- \
+            docs/llms.txt \
+            docs/llms-full.txt \
+            docs/cloud/llms.txt \
+            docs/cloud/llms-full.txt \
+            docs/open-source/llms.txt \
+            docs/open-source/llms-full.txt)"
+          if [[ -n "$drift" ]]; then
+            printf '%s\n' "$drift"
+            exit 1
+          fi

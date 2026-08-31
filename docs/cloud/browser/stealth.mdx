@@ -1,6 +1,6 @@
 ---
 title: Stealth
-description: "Best stealth on the planet. We fork Chromium to give agents access to all websites."
+description: "Hardened Chromium and configurable proxy routing for cloud browser sessions."
 icon: mask
 ---
 
@@ -10,9 +10,13 @@ See [how we perform in the hardest stealth benchmark](https://browser-use.com/po
 
 Every cloud browser session runs in a hardened Chromium fork with stealth enabled by default — no configuration needed.
 
-- **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and other browser fingerprints are randomized per session to appear as a real user. Passes CreepJS, BrowserLeaks, and other fingerprint detectors.
+- **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and
+  other browser fingerprints are varied per session to reduce detectable
+  automation signatures.
 - **Ad and cookie banner blocking** — Banners are dismissed automatically so the agent sees clean pages and executes faster.
-- **Cloudflare / anti-bot bypass** — Works on sites protected by Cloudflare, PerimeterX, and other bot detection services.
+- **Anti-bot resilience** — Hardened browser fingerprints and proxy routing can
+  reduce automated traffic blocks. Site behavior varies, so access is not
+  guaranteed.
 
 Cloud browsers also solve reCAPTCHA and other supported challenges automatically.
 See [CAPTCHA handling](/cloud/browser/captcha-handling) for what to do when a
@@ -20,4 +24,6 @@ solver is still working or a site has a specific anti-bot issue.
 
 ## Residential proxies
 
-Residential proxies are enabled by default across 195+ countries. This makes browser sessions appear as real users from the target geography. See [Proxies](/cloud/browser/proxies) for details on geo-targeting and custom proxy configuration.
+Residential proxy routing is enabled by default. See
+[Proxies](/cloud/browser/proxies) for geo-targeting and custom proxy
+configuration.

@@ -7,6 +7,144 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BASE_URL="https://docs.browser-use.com"
+GENERATION_DIR=""
+RECOVERY_DIR="$SCRIPT_DIR/.llms-generation-recovery"
+RECOVERY_STAGING_DIR=""
+PUBLISHING=false
+PUBLISH_COMPLETE=false
+PUBLISH_DESTINATIONS=(
+  "$SCRIPT_DIR/llms.txt"
+  "$SCRIPT_DIR/llms-full.txt"
+  "$SCRIPT_DIR/open-source/llms.txt"
+  "$SCRIPT_DIR/open-source/llms-full.txt"
+  "$SCRIPT_DIR/cloud/llms.txt"
+  "$SCRIPT_DIR/cloud/llms-full.txt"
+)
+
+# Hold a kernel lock for the whole generation. The wrapper serializes duplicate
+# invocations in this worktree without relying on a PID-file cleanup race; the
+# OS releases the lock even after an uncatchable process exit. Separate
+# worktrees have separate outputs and therefore separate lock files.
+if [[ "${BROWSER_USE_LLMS_GENERATION_LOCKED:-}" != "1" ]]; then
+  exec python3 - "$SCRIPT_DIR/.llms-generation.lock" "$SCRIPT_DIR/generate-llms-txt.sh" "$@" <<'PY'
+import fcntl
+import os
+import signal
+import subprocess
+import sys
+import time
+
+lock_path, script, *args = sys.argv[1:]
+deadline = time.monotonic() + 60
+
+with open(lock_path, "a+") as lock_file:
+    while True:
+        try:
+            fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            break
+        except BlockingIOError:
+            if time.monotonic() >= deadline:
+                print(f"Timed out waiting for {lock_path}", file=sys.stderr)
+                raise SystemExit(1)
+            time.sleep(0.1)
+
+    env = os.environ.copy()
+    env["BROWSER_USE_LLMS_GENERATION_LOCKED"] = "1"
+    lock_fd = lock_file.fileno()
+    os.set_inheritable(lock_fd, True)
+    child = subprocess.Popen(["bash", script, *args], env=env, pass_fds=(lock_fd,))
+
+    def forward(signum, _frame):
+        if child.poll() is None:
+            child.send_signal(signum)
+
+    for signum in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
+        signal.signal(signum, forward)
+
+    return_code = child.wait()
+    raise SystemExit(return_code if return_code >= 0 else 128 - return_code)
+PY
+fi
+
+restore_interrupted_publish() {
+  [[ -d "$RECOVERY_DIR" ]] || return 0
+  if [[ ! -f "$RECOVERY_DIR/ready" ]]; then
+    echo "Incomplete llms recovery journal: $RECOVERY_DIR" >&2
+    return 1
+  fi
+
+  local i
+  for i in "${!PUBLISH_DESTINATIONS[@]}"; do
+    if [[ -f "$RECOVERY_DIR/existed-$i" && -f "$RECOVERY_DIR/backup-$i" ]]; then
+      continue
+    fi
+    if [[ -f "$RECOVERY_DIR/absent-$i" ]]; then
+      continue
+    fi
+    echo "Invalid llms recovery journal entry $i: $RECOVERY_DIR" >&2
+    return 1
+  done
+
+  for i in "${!PUBLISH_DESTINATIONS[@]}"; do
+    if [[ -f "$RECOVERY_DIR/existed-$i" ]]; then
+      if ! cp -p -- "$RECOVERY_DIR/backup-$i" "${PUBLISH_DESTINATIONS[$i]}"; then
+        echo "Could not restore llms artifact ${PUBLISH_DESTINATIONS[$i]}" >&2
+        return 1
+      fi
+    else
+      if ! rm -f -- "${PUBLISH_DESTINATIONS[$i]}"; then
+        echo "Could not remove newly created llms artifact ${PUBLISH_DESTINATIONS[$i]}" >&2
+        return 1
+      fi
+    fi
+  done
+  if ! rm -rf -- "$RECOVERY_DIR"; then
+    echo "Could not remove completed llms recovery journal: $RECOVERY_DIR" >&2
+    return 1
+  fi
+  echo "Recovered an interrupted llms artifact publication"
+}
+
+cleanup() {
+  local exit_code=$?
+  trap - EXIT
+  trap '' HUP INT TERM
+  set +e
+  if $PUBLISHING && ! $PUBLISH_COMPLETE; then
+    restore_interrupted_publish
+  fi
+  if [[ -n "$RECOVERY_STAGING_DIR" ]]; then
+    rm -rf -- "$RECOVERY_STAGING_DIR"
+  fi
+  if [[ -n "$GENERATION_DIR" ]]; then
+    rm -rf -- "$GENERATION_DIR"
+  fi
+  exit "$exit_code"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+# A SIGKILL can land between destination renames. The journal lives outside the
+# per-run temp directory so the next lock owner can restore the previous set
+# before generating again. A staging journal is safe to discard because no
+# destination moves begin until its atomic rename to RECOVERY_DIR.
+for stale_recovery_staging in "$SCRIPT_DIR"/.llms-generation-recovery.staging.??????; do
+  [[ -d "$stale_recovery_staging" ]] || continue
+  rm -rf -- "$stale_recovery_staging"
+done
+restore_interrupted_publish
+
+# The kernel lock guarantees no live generator owns one of these directories.
+# Remove residue from an uncatchable prior exit before creating this run's temp.
+for stale_generation_dir in "$SCRIPT_DIR"/.llms-generation.??????; do
+  [[ -d "$stale_generation_dir" ]] || continue
+  [[ "$(basename "$stale_generation_dir")" =~ ^\.llms-generation\.[[:alnum:]]{6}$ ]] || continue
+  rm -rf -- "$stale_generation_dir"
+done
+
+GENERATION_DIR="$(mktemp -d "$SCRIPT_DIR/.llms-generation.XXXXXX")"
 
 # Extract frontmatter fields from an .mdx file
 extract_frontmatter() {
@@ -46,11 +184,6 @@ with open('$SCRIPT_DIR/docs.json') as f:
 
 BASE_URL = '$BASE_URL'
 SCRIPT_DIR = '$SCRIPT_DIR'
-CLOUD_V3_ONLY = {
-    'cloud/tutorials/chat-ui',
-    'cloud/tutorials/grow-therapy-compare',
-}
-
 def get_frontmatter(slug):
     import os
     filepath = os.path.join(SCRIPT_DIR, slug + '.mdx')
@@ -72,8 +205,6 @@ def get_frontmatter(slug):
     return title, desc
 
 def format_entry(slug):
-    if '$product'.lower() == 'cloud' and slug in CLOUD_V3_ONLY:
-        return None
     title, desc = get_frontmatter(slug)
     if not title:
         return None
@@ -90,7 +221,7 @@ def has_direct_pages(group):
             return True
     return False
 
-def process_group(group, indent=0):
+def process_group(group, indent=0, section_name=''):
     lines = []
     if isinstance(group, str):
         entry = format_entry(group)
@@ -107,13 +238,17 @@ def process_group(group, indent=0):
             elif not any(isinstance(p, dict) and 'openapi' in p for p in group.get('pages', [])):
                 # Sub-group container (like Pillars) — skip header but process children
                 pass
+        openapi = group.get('openapi')
+        if isinstance(openapi, dict) and openapi.get('source'):
+            label = f'{section_name} OpenAPI specification' if section_name else (f'{name} OpenAPI specification' if name else 'OpenAPI specification')
+            lines.append(f'- [{label}]({BASE_URL}/{openapi[\"source\"]})')
         # Process direct page slugs first, then sub-groups
         direct = [p for p in group.get('pages', []) if isinstance(p, str)]
         subgroups = [p for p in group.get('pages', []) if isinstance(p, dict)]
         for page in direct:
-            lines.extend(process_group(page, indent+1))
+            lines.extend(process_group(page, indent+1, section_name))
         for page in subgroups:
-            lines.extend(process_group(page, indent+1))
+            lines.extend(process_group(page, indent+1, section_name))
     return lines
 
 lines = []
@@ -123,14 +258,18 @@ for product_nav in d['navigation']['products']:
             for tab in product_nav['tabs']:
                 if isinstance(tab, dict):
                     tab_name = tab.get('tab', '')
-                    if '$product'.lower() == 'cloud' and tab_name == 'API v3':
-                        continue
                     # Emit tab header for non-primary tabs to separate API sections
                     if tab_name and tab_name != product_nav['tabs'][0].get('tab', ''):
                         lines.append(f'')
                         lines.append(f'## {tab_name}')
-                    for g in tab.get('groups', []):
-                        lines.extend(process_group(g))
+                    groups = tab.get('groups', [])
+                    if any(isinstance(g, dict) and 'openapi' in g for g in groups):
+                        start = [g for g in groups if isinstance(g, dict) and g.get('group') == 'Get Started']
+                        specs = [g for g in groups if isinstance(g, dict) and 'openapi' in g]
+                        rest = [g for g in groups if g not in start and g not in specs]
+                        groups = start + specs + rest
+                    for g in groups:
+                        lines.extend(process_group(g, section_name=tab_name))
         if 'groups' in product_nav:
             for g in product_nav['groups']:
                 lines.extend(process_group(g))
@@ -157,6 +296,26 @@ import json
 with open('$SCRIPT_DIR/docs.json') as f:
     d = json.load(f)
 
+for product_nav in d['navigation']['products']:
+    if product_nav['product'].lower() != '$product'.lower():
+        continue
+    for tab in product_nav.get('tabs', []):
+        if not isinstance(tab, dict):
+            continue
+        tab_name = tab.get('tab', '')
+        for group in tab.get('groups', []):
+            openapi = group.get('openapi') if isinstance(group, dict) else None
+            if isinstance(openapi, dict) and openapi.get('source'):
+                print(f'- {tab_name} OpenAPI specification: $BASE_URL/{openapi[\"source\"]}')
+" >> "$out"
+  echo "" >> "$out"
+
+  python3 -c "
+import json
+
+with open('$SCRIPT_DIR/docs.json') as f:
+    d = json.load(f)
+
 def extract_pages(obj):
     pages = []
     if isinstance(obj, str):
@@ -169,22 +328,14 @@ def extract_pages(obj):
             pages.extend(extract_pages(item))
     return pages
 
-CLOUD_V3_ONLY = {
-    'cloud/tutorials/chat-ui',
-    'cloud/tutorials/grow-therapy-compare',
-}
-
 for product_nav in d['navigation']['products']:
     if product_nav['product'].lower() == '$product'.lower():
         if 'tabs' in product_nav:
             for tab in product_nav['tabs']:
                 if isinstance(tab, dict):
-                    if '$product'.lower() == 'cloud' and tab.get('tab') == 'API v3':
-                        continue
                     for g in tab.get('groups', []):
                         for p in extract_pages(g):
-                            if '$product'.lower() != 'cloud' or p not in CLOUD_V3_ONLY:
-                                print(p)
+                            print(p)
         if 'groups' in product_nav:
             for g in product_nav['groups']:
                 for p in extract_pages(g):
@@ -201,12 +352,20 @@ for product_nav in d['navigation']['products']:
     echo "Source: ${BASE_URL}/${slug}" >> "$out"
     echo "" >> "$out"
     awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}' "$file" \
-      | sed "s|](/cloud/|](${BASE_URL}/cloud/|g" \
       | python3 -c '
 import re, sys
 
 base_url = sys.argv[1]
+source_url = sys.argv[2]
 content = sys.stdin.read()
+content = re.sub(r"\{/\*\s*prettier-ignore-(?:start|end)\s*\*/\}\s*", "", content)
+
+def normalize_url(url):
+    if url.startswith("#"):
+        return source_url + url
+    if url.startswith("/"):
+        return base_url + url
+    return url
 
 def render_card(match):
     attributes = match.group(1)
@@ -214,14 +373,30 @@ def render_card(match):
     href = re.search(r"\bhref=\"([^\"]+)\"", attributes)
     if not title or not href:
         return ""
-    url = href.group(1)
-    if url.startswith("/"):
-        url = base_url + url
+    url = normalize_url(href.group(1))
     return f"[{title.group(1)}]({url})"
 
-sys.stdout.write(re.sub(r"<Card\b([^>]*)>", render_card, content, flags=re.DOTALL))
-' "$BASE_URL" \
-      | sed -E '/<\/?(CodeGroup|Note|Tip|Warning|Info|Card|Tabs|Tab|Steps|Step|Accordion|AccordionGroup)[^>]*>/d' \
+def render_link(match):
+    url = normalize_url(match.group(1))
+    return f"[{match.group(2)}]({url})"
+
+def render_titled_component(match):
+    attributes = match.group(2)
+    title = re.search(r"\btitle=(\"|\x27)(.*?)\1", attributes, flags=re.DOTALL)
+    if not title:
+        return ""
+    return f"\n**{title.group(2)}**\n"
+
+content = re.sub(r"<Card\b([^>]*)>", render_card, content, flags=re.DOTALL)
+content = re.sub(r"<a\s+href=\"([^\"]+)\"[^>]*>(.*?)</a>", render_link, content, flags=re.DOTALL)
+content = re.sub(r"<a\s+id=(?:\"[^\"]*\"|\x27[^\x27]*\x27)\s*/>\s*", "", content)
+content = re.sub(r"<(Step|Tab|Accordion)\b([^>]*)>", render_titled_component, content, flags=re.DOTALL)
+content = re.sub(r"(<img\b[^>]*\bsrc=(?:\"|\x27))/(?!/)", rf"\1{base_url}/", content, flags=re.DOTALL)
+content = re.sub(r"(\]\()/(?!/)", rf"\1{base_url}/", content)
+content = re.sub(r"(\]\()#(?=[^)]+)", rf"\1{source_url}#", content)
+sys.stdout.write(content)
+' "$BASE_URL" "$BASE_URL/$slug" \
+      | sed -E 's#<\/?(CodeGroup|Note|Tip|Warning|Info|Callout|Card|Tabs|Tab|Steps|Step|Accordion|AccordionGroup)[^>]*>##g' \
       | python3 -c '
 # Dedent component-nested content without corrupting code indentation:
 # fenced code blocks are dedented by their common leading whitespace,
@@ -243,7 +418,8 @@ for line in sys.stdin.read().split("\n"):
             block = None
 if block is not None:
     out.append(textwrap.dedent("\n".join(block)))
-sys.stdout.write("\n".join(out))
+rendered = "\n".join(line.rstrip() for line in "\n".join(out).splitlines()).rstrip()
+sys.stdout.write(rendered + "\n" if rendered else "")
 ' >> "$out"
   done
 
@@ -251,39 +427,41 @@ sys.stdout.write("\n".join(out))
 }
 
 # --- Cloud ---
-CLOUD_INDEX="$SCRIPT_DIR/llms.txt"
-CLOUD_FULL="$SCRIPT_DIR/llms-full.txt"
+CLOUD_INDEX="$GENERATION_DIR/llms.txt"
+CLOUD_FULL="$GENERATION_DIR/llms-full.txt"
+CLOUD_INDEX_DEST="$SCRIPT_DIR/llms.txt"
+CLOUD_FULL_DEST="$SCRIPT_DIR/llms-full.txt"
 
 # Header
 cat > "$CLOUD_INDEX" << 'HEADER'
 # Browser Use Cloud
 
-> Browser Use Cloud has two products on the same managed browser
-> infrastructure. **Agent** accepts a natural-language goal and completes the
-> web task. **Browser** gives Playwright, Puppeteer, and other remote CDP
-> clients direct control of a cloud browser. Both include stealth, residential
-> proxies, profiles, and live observability. Auth uses
+> Browser Use Cloud has two products. **Browser Use Agents** accept a
+> natural-language goal and complete the web task. **Browser Infrastructure**
+> is hosted cloud browser infrastructure for AI agents, controlled through the
+> SDK, REST, or CDP. Auth uses
 > `X-Browser-Use-API-Key` (keys start with `bu_`).
 
 - Dashboard: https://cloud.browser-use.com
 - Create API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Docs: https://docs.browser-use.com
-- Product map: https://browser-use.com/llms.txt — Choose between Hosted Agents, Browser Infrastructure, and the Open Source Library.
-- Pricing: https://browser-use.com/pricing.md — Current plans, credits, browser and proxy rates, model token prices, and billing behavior.
-- OpenAPI spec (v4): https://docs.browser-use.com/cloud/openapi/v4.json
-- Open-source repo: https://github.com/browser-use/browser-use — The open-source Python library. Note: the open-source API is different from the Cloud SDK. If you want the easiest path to production with managed infrastructure, use the Cloud SDK below.
+- Developer overview: https://browser-use.com/developers.md — Choose between Browser Use Agents, Browser Infrastructure, and the Open Source Library, and select an interface for a new integration.
+- Pricing: https://browser-use.com/pricing.md — Current plans, credits, and usage rates.
+- Product map: https://browser-use.com/llms.txt — Canonical machine-readable routes for Browser Use products and documentation.
+- Open-source repo: https://github.com/browser-use/browser-use — The self-hosted Python library; its API differs from the Cloud SDK.
 
-**Choose API V4 for hard, high-accuracy tasks.** It is the recommended Agent API for new integrations and works especially well for long, complex workflows.
+The V2, V3, and V4 references remain available below. Use the developer
+overview to choose an interface for a new integration.
 
-**Choose API V2 for simple tasks when extremely low cost or predictable speed matters more than accuracy.** V2 accuracy is substantially lower than V4.
-
-Browser Use ranks #1 on the [Odysseys benchmark](https://odysseysbench.com/leaderboard). Use the benchmark when accuracy is the deciding factor.
+**TypeScript V4 browser settings:** The generated `RunBrowserSettings` type
+currently requires `proxyCountryCode`; pass `"us"` to retain the default
+managed residential proxy, or `null` to disable the proxy.
 
 **Stopping standalone browsers:** Do not use `client.close()`,
 `browser.close()`, or a dropped CDP connection as the API V4 stop operation.
 Keep the browser session ID returned by `POST /api/v4/browsers`, then call
-`PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`. This stops billing and
-refunds unused browser time.
+`PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`. See the pricing page
+for billing behavior.
 
 **Create and reuse a login profile:** Create one profile per end user, then pass
 its ID as top-level `profileId` when creating browsers, or as
@@ -304,14 +482,8 @@ Log in once in that browser, stop it, then use the same profile ID to start the
 next browser already logged in. Full guide:
 https://docs.browser-use.com/cloud/guides/authentication
 
-**Current TypeScript SDK typing:** Pass `model` explicitly. Prefer
-`gpt-5.6-luna`, the recommended V4 model; if the generated union does not yet
-include it, use `grok-4.5` or call `POST /api/v4/runs` directly. Whenever
-`browserSettings` is present, also pass `proxyCountryCode`: use `"us"` to keep
-the default or `null` to disable the managed proxy. New model strings can reach
-REST before the generated TypeScript union. The generated SDK request types do
-not yet expose V4 `modelParams`; use REST for that field until the follow-up SDK
-release.
+**SDK typing:** Check the installed SDK types against the API reference. New
+schema fields and model IDs can reach REST before a generated SDK release.
 
 Before writing code, check if `browser-use-sdk` is already installed. If so, upgrade to the latest version. If not, install it:
 - Python: `pip install --upgrade browser-use-sdk`
@@ -325,16 +497,18 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 HEADER
 
 # Append grouped nav entries
-generate_index "cloud" "Cloud" "/tmp/cloud_index_body.txt"
-cat /tmp/cloud_index_body.txt >> "$CLOUD_INDEX"
+generate_index "cloud" "Cloud" "$GENERATION_DIR/cloud-index-body.txt"
+cat "$GENERATION_DIR/cloud-index-body.txt" >> "$CLOUD_INDEX"
 echo "Generated $CLOUD_INDEX ($(wc -l < "$CLOUD_INDEX") lines)"
 
 # Full content
 generate_full "cloud" "Cloud" "$CLOUD_FULL"
 
 # --- Open Source ---
-OS_INDEX="$SCRIPT_DIR/open-source/llms.txt"
-OS_FULL="$SCRIPT_DIR/open-source/llms-full.txt"
+OS_INDEX="$GENERATION_DIR/open-source-llms.txt"
+OS_FULL="$GENERATION_DIR/open-source-llms-full.txt"
+OS_INDEX_DEST="$SCRIPT_DIR/open-source/llms.txt"
+OS_FULL_DEST="$SCRIPT_DIR/open-source/llms-full.txt"
 
 cat > "$OS_INDEX" << 'HEADER'
 # Browser Use Open Source
@@ -343,19 +517,46 @@ cat > "$OS_INDEX" << 'HEADER'
 
 - GitHub: https://github.com/browser-use/browser-use
 - Docs: https://docs.browser-use.com/open-source/introduction
-- Product map: https://browser-use.com/llms.txt — Compare the Open Source Library with Hosted Agents and Browser Infrastructure.
+- Product map: https://browser-use.com/llms.txt — Compare the Open Source Library with Browser Use Agents and Browser Infrastructure.
 
 Install: `pip install browser-use`
 
 HEADER
 
-generate_index "open-source" "Open Source" "/tmp/os_index_body.txt"
-cat /tmp/os_index_body.txt >> "$OS_INDEX"
+generate_index "open-source" "Open Source" "$GENERATION_DIR/open-source-index-body.txt"
+cat "$GENERATION_DIR/open-source-index-body.txt" >> "$OS_INDEX"
 echo "Generated $OS_INDEX ($(wc -l < "$OS_INDEX") lines)"
 
 generate_full "open-source" "Open Source" "$OS_FULL"
 
-# Copy cloud files to cloud/ directory (symlinks don't work on Mintlify)
-cp "$SCRIPT_DIR/llms.txt" "$SCRIPT_DIR/cloud/llms.txt"
-cp "$SCRIPT_DIR/llms-full.txt" "$SCRIPT_DIR/cloud/llms-full.txt"
-echo "Copied root llms files to cloud/"
+# Stage the duplicate Cloud copies before publishing. Per-invocation paths keep
+# worktrees isolated and the worktree lock prevents generators from
+# interleaving. Each destination rename is atomic; if publication is interrupted
+# between renames, the EXIT trap restores every previous destination.
+cp "$CLOUD_INDEX" "$GENERATION_DIR/cloud-llms.txt"
+cp "$CLOUD_FULL" "$GENERATION_DIR/cloud-llms-full.txt"
+
+RECOVERY_STAGING_DIR="$(mktemp -d "$SCRIPT_DIR/.llms-generation-recovery.staging.XXXXXX")"
+for i in "${!PUBLISH_DESTINATIONS[@]}"; do
+  if [[ -f "${PUBLISH_DESTINATIONS[$i]}" ]]; then
+    cp -p -- "${PUBLISH_DESTINATIONS[$i]}" "$RECOVERY_STAGING_DIR/backup-$i"
+    touch "$RECOVERY_STAGING_DIR/existed-$i"
+  else
+    touch "$RECOVERY_STAGING_DIR/absent-$i"
+  fi
+done
+touch "$RECOVERY_STAGING_DIR/ready"
+command mv -- "$RECOVERY_STAGING_DIR" "$RECOVERY_DIR"
+RECOVERY_STAGING_DIR=""
+PUBLISHING=true
+
+command mv -- "$CLOUD_INDEX" "$CLOUD_INDEX_DEST"
+command mv -- "$CLOUD_FULL" "$CLOUD_FULL_DEST"
+command mv -- "$OS_INDEX" "$OS_INDEX_DEST"
+command mv -- "$OS_FULL" "$OS_FULL_DEST"
+command mv -- "$GENERATION_DIR/cloud-llms.txt" "$SCRIPT_DIR/cloud/llms.txt"
+command mv -- "$GENERATION_DIR/cloud-llms-full.txt" "$SCRIPT_DIR/cloud/llms-full.txt"
+PUBLISH_COMPLETE=true
+rm -rf -- "$RECOVERY_DIR"
+
+echo "Published complete llms artifacts"

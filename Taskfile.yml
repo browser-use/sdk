@@ -352,8 +352,13 @@ tasks:
       - diff snapshots/v4.json {{.OPENAPI_V4}} || true
 
   # ── Docs ─────────────────────────────────────────────────────
+  docs:llms:
+    desc: Regenerate the tracked llms.txt and llms-full.txt artifacts
+    cmds:
+      - bash docs/generate-llms-txt.sh
+
   docs:sync:
-    desc: Copy OpenAPI specs into docs for Mintlify
+    desc: Copy OpenAPI specs into docs and refresh machine-readable artifacts
     cmds:
       - cp snapshots/v2.json docs/openapi/v2.json
       - cp snapshots/v3.json docs/openapi/v3.json
@@ -361,6 +366,7 @@ tasks:
       - python3 -m json.tool --indent 4 snapshots/v2.json docs/cloud/openapi/v2.json
       - python3 -m json.tool --indent 4 snapshots/v3.json docs/cloud/openapi/v3.json
       - python3 -m json.tool --indent 4 snapshots/v4.json docs/cloud/openapi/v4.json
+      - task: docs:llms
 
   docs:dev:
     desc: Start Mintlify docs dev server

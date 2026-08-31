@@ -21,7 +21,7 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Download my latest invoice",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: {
     profileId: "YOUR_PROFILE_ID",
     proxyCountryCode: "us",
@@ -53,13 +53,13 @@ next_run = client.runs.create(
 ```typescript TypeScript
 const first = await client.runs.create({
   task: "Open the login page and stop at the 2FA prompt",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
 });
 await client.runs.waitForCompletion(first.id);
 
 const nextRun = await client.runs.create({
   task: "Continue after login and download the invoice",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   sessionId: first.sessionId,
 });
 ```

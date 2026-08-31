@@ -22,7 +22,7 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Find the top Hacker News story",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
 });
 const ready = await client.runs.waitForEvent(run.id, "browser.ready");
 console.log(ready.data.live_view_url);
@@ -60,7 +60,7 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Test the checkout flow",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: { proxyCountryCode: "us", record: true },
 });
 ```

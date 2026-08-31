@@ -1,9 +1,9 @@
 ---
 title: Claude Managed Agents
-description: Give Anthropic's Claude Managed Agents a stealth cloud browser via the Browser Use CLI.
+description: Give Anthropic's Claude Managed Agents Browser Infrastructure through the Browser Use CLI.
 ---
 
-[Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents) run on Anthropic's hosted platform. Install the `browser-use` CLI in the agent's environment and it can drive a stealth cloud browser — with proxies, CAPTCHA solving, live view, and recording. Your API key stays in a credential vault; the model never sees it.
+[Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents) run on Anthropic's hosted platform. Install the `browser-use` CLI in the agent's environment and it can drive Browser Infrastructure — hosted cloud browsers for AI agents with managed proxy routing, supported CAPTCHA handling, live view, and recording. Your API key stays in a credential vault; the model never sees it.
 
 The sandbox can't run a local browser, so the agent starts a named Browser Use Cloud browser and drives it with `browser-use <<'PY'` Python snippets.
 
@@ -42,7 +42,7 @@ Tell it to use the CLI in cloud mode.
 name: browser agent
 model:
   id: claude-opus-4-8
-description: Drives a stealth cloud browser with the Browser Use CLI.
+description: Drives Browser Infrastructure with the Browser Use CLI.
 system: |
   You are a browser agent. Use the `browser-use` CLI to complete web tasks.
   Never launch a local browser in this sandbox. Start a named cloud browser:

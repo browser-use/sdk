@@ -1,19 +1,28 @@
 # Browser Use Open Source — Full Documentation
 
 
+
 # Browser Use Open Source
 Source: https://docs.browser-use.com/open-source/introduction
 
 
-<img src="/images/intro-oss-light.svg" alt="Browser Use Open Source" noZoom className="block dark:hidden" />
-<img src="/images/intro-oss-dark.svg" alt="Browser Use Open Source" noZoom className="hidden dark:block" />
+<img src="https://docs.browser-use.com/images/intro-oss-light.svg" alt="Browser Use Open Source" noZoom className="block dark:hidden" />
+<img src="https://docs.browser-use.com/images/intro-oss-dark.svg" alt="Browser Use Open Source" noZoom className="hidden dark:block" />
+
 
   [Human Quickstart](https://docs.browser-use.com/open-source/quickstart)
 Install and run your first agent.
+
   [Prompts for Vibecoders](https://docs.browser-use.com/open-source/vibecoding)
 Full SDK reference in a single page.
 
-  Try [Browser Use Cloud](https://docs.browser-use.com/cloud/introduction) for our SOTA model, stealth browsers, CAPTCHA solving, and managed infrastructure.
+
+
+
+  Need hosted browsers? [Browser Infrastructure](https://docs.browser-use.com/cloud/browser/quickstart) is
+  hosted cloud browser infrastructure for AI agents, controlled through the
+  SDK, REST, or CDP. [Browser Use Agents](https://docs.browser-use.com/cloud/agent/quickstart) complete
+  natural-language web tasks for you.
 
 # Human Quickstart
 Source: https://docs.browser-use.com/open-source/quickstart
@@ -21,7 +30,12 @@ Source: https://docs.browser-use.com/open-source/quickstart
 
 To get started with Browser Use you need to install the package and create an `.env` file with your API key.
 
-`ChatBrowserUse` offers the [fastest and most cost-effective models](https://browser-use.com/posts/speed-matters/), completing tasks 3-5x faster. Eligible new accounts receive $15 in one-time credits. Get your API key [here](https://cloud.browser-use.com/new-api-key).
+
+`ChatBrowserUse` is optimized for browser automation. See the
+[model benchmarks](https://browser-use.com/posts/speed-matters/) and
+[current pricing](https://browser-use.com/pricing), then get your API key
+[here](https://cloud.browser-use.com/new-api-key).
+
 
 ## 1. Installing Browser-Use
 
@@ -41,23 +55,28 @@ uvx browser-use install
 
 
 ## 2. Choose your favorite LLM
-Create a `.env` file and add your API key. 
+Create a `.env` file and add your API key.
 
-<Callout icon="key" iconType="regular">
-We recommend using ChatBrowserUse which is optimized for browser automation tasks (highest accuracy + fastest speed + lowest token cost). Get your API key [here](https://cloud.browser-use.com/new-api-key) — eligible new accounts receive $15 in one-time credits.
-</Callout>
+
+We recommend starting with `ChatBrowserUse`, which is optimized for browser
+automation tasks. See the [model benchmarks](https://browser-use.com/posts/speed-matters/)
+and [current pricing](https://browser-use.com/pricing). Get your API key
+[here](https://cloud.browser-use.com/new-api-key).
+
 
 ```bash .env
 touch .env
 ```
 
+On Windows, use `echo. > .env`
 
 Then add your API key to the file.
+
 
 ```bash Browser Use
 # add your key to .env file
 BROWSER_USE_API_KEY=
-# Get your API key at https://cloud.browser-use.com/new-api-key - eligible new accounts receive $15 in one-time credits
+# Get your API key at https://cloud.browser-use.com/new-api-key
 ```
 ```bash Google
 # add your key to .env file
@@ -73,9 +92,11 @@ OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 ```
 
-See [Supported Models](/open-source/supported-models) for more.
+
+See [Supported Models](https://docs.browser-use.com/open-source/supported-models) for more.
 
 ## 3. Run your first agent
+
 
 ```python Browser Use
 from browser_use import Agent, ChatBrowserUse
@@ -143,9 +164,12 @@ if __name__ == "__main__":
 ```
 
 
+ Custom browsers can be configured in one line. Check out [browsers](https://docs.browser-use.com/open-source/customize/browser/basics) for more.
+
 ## 4. Going to Production
 
-Sandboxes are the **easiest way to run Browser-Use in production**. We handle agents, browsers, persistence, auth, cookies, and LLMs. It is also the **fastest way to deploy** - the agent runs right next to the browser, so latency is minimal.
+Sandboxes package agents, browsers, persistence, authentication, cookies, and
+LLMs into a managed runtime.
 
 To run in production with authentication, add `@sandbox` to your function:
 
@@ -183,15 +207,20 @@ Source: https://docs.browser-use.com/open-source/vibecoding
 Source: https://docs.browser-use.com/open-source/supported-models
 
 
-Browser Use natively supports 15\+ LLM providers. Most providers accept any model string. Check each provider's docs to see which models are available.
+Browser Use supports multiple LLM providers. Check each provider's docs to see
+which models are available.
 
 > **Which model should I use?** See our [benchmark results and recommendations](https://browser-use.com/posts/what-model-to-use) for detailed comparisons across real-world browser tasks.
 
 ### Browser Use [example](https://github.com/browser-use/browser-use/blob/main/examples/models/browser_use_llm.py)
 
-`ChatBrowserUse()` is our optimized in-house model, matching the accuracy of top models while completing tasks **3-5x** faster. [See our blog post→](https://browser-use.com/posts/speed-matters)
+`ChatBrowserUse()` is optimized for browser automation. See the
+[model benchmarks](https://browser-use.com/posts/speed-matters) for measured
+comparisons.
 
-  Read the [bu-2-0 model card](/open-source/bu-2-0-model-card) for details on intended use, inputs and outputs, tools, benchmarks, judge setup, and limitations.
+
+  Read the [bu-2-0 model card](https://docs.browser-use.com/open-source/bu-2-0-model-card) for details on intended use, inputs and outputs, tools, benchmarks, judge setup, and limitations.
+
 
 ```python
 from browser_use import Agent, ChatBrowserUse
@@ -212,35 +241,20 @@ Required environment variables:
 BROWSER_USE_API_KEY=
 ```
 
-Get your API key from the [Browser Use Cloud](https://cloud.browser-use.com/new-api-key). Eligible new accounts receive $15 in one-time credits.
+Get your API key from [Browser Use Cloud](https://cloud.browser-use.com/new-api-key).
 
 #### Pricing
 
-ChatBrowserUse offers competitive pricing per 1 million tokens:
+See [current pricing](https://browser-use.com/pricing) for model token rates,
+plans, and credits.
 
-**bu-2-0 / bu-latest (Default)**
-
-| Token Type | Price per 1M tokens |
-| --- | --- |
-| Input tokens | \$0.60 |
-| Cached tokens | \$0.06 |
-| Output tokens | \$3.50 |
-
-**bu-1-0**
-
-Since May 20, 2026, `bu-1-0` is priced the same as `bu-2-0`:
-
-| Token Type | Price per 1M tokens |
-| --- | --- |
-| Input tokens | \$0.60 |
-| Cached tokens | \$0.06 |
-| Output tokens | \$3.50 |
-
-### Google Gemini [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gemini.py) {#google-gemini}
+### Google Gemini [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gemini.py)
 
 [Available models](https://ai.google.dev/api/models). Also supports Gemma models and Vertex AI via `ChatGoogle(model="...", vertexai=True)`.
 
+
   `GEMINI_API_KEY` is deprecated and should be named `GOOGLE_API_KEY` as of 2025-05.
+
 
 ```python
 from browser_use import Agent, ChatGoogle
@@ -290,7 +304,9 @@ Required environment variables:
 OPENAI_API_KEY=
 ```
 
+
   You can use any OpenAI compatible model by passing the model name to the `ChatOpenAI` class using a custom URL (or any other parameter that would go into the normal OpenAI API call).
+
 
 ### Anthropic [example](https://github.com/browser-use/browser-use/blob/main/examples/models/claude-4-sonnet.py)
 
@@ -317,7 +333,7 @@ And add the variable:
 ANTHROPIC_API_KEY=
 ```
 
-### Azure OpenAI [example](https://github.com/browser-use/browser-use/blob/main/examples/models/azure_openai.py) {#azure-openai}
+### Azure OpenAI [example](https://github.com/browser-use/browser-use/blob/main/examples/models/azure_openai.py)
 
 [Available models](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure)
 
@@ -347,7 +363,9 @@ AZURE_OPENAI_API_KEY=
 
 #### Using the Responses API (for GPT-5.1 Codex models)
 
+
   Azure OpenAI now requires `api_version >= 2025-03-01-preview` for certain models like `gpt-5.1-codex-mini`. These models only support the [Responses API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses) instead of the Chat Completions API.
+
 
 Browser Use automatically detects and uses the Responses API for these models:
 
@@ -383,7 +401,7 @@ The `use_responses_api` parameter accepts:
 - `True`: Force use of the Responses API
 - `False`: Force use of the Chat Completions API
 
-### AWS Bedrock [example](https://github.com/browser-use/browser-use/blob/main/examples/models/aws.py) {#aws-bedrock}
+### AWS Bedrock [example](https://github.com/browser-use/browser-use/blob/main/examples/models/aws.py)
 
 [Available models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html). AWS Bedrock provides access to multiple model providers through a single API. We support both a general AWS Bedrock client and provider-specific convenience classes. Install with `pip install "browser-use[aws]"`.
 
@@ -443,7 +461,7 @@ You can also use AWS profiles or IAM roles instead of environment variables. The
 - Session tokens for temporary credentials
 - AWS SSO authentication (`aws_sso_auth=True`)
 
-## Vercel AI Gateway [example](https://github.com/browser-use/browser-use/blob/main/examples/models/vercel_ai_gateway.py) {#vercel}
+## Vercel AI Gateway [example](https://github.com/browser-use/browser-use/blob/main/examples/models/vercel_ai_gateway.py)
 
 [Available models](https://vercel.com/ai-gateway/models). Vercel AI Gateway provides an OpenAI-compatible API endpoint that acts as a proxy to various AI providers, with features like rate limiting, caching, and monitoring.
 
@@ -489,7 +507,7 @@ Required environment variables:
 VERCEL_API_KEY=
 ```
 
-## Groq [example](https://github.com/browser-use/browser-use/blob/main/examples/models/llama4-groq.py) {#groq}
+## Groq [example](https://github.com/browser-use/browser-use/blob/main/examples/models/llama4-groq.py)
 
 [Available models](https://console.groq.com/docs/models)
 
@@ -510,7 +528,7 @@ Required environment variables:
 GROQ_API_KEY=
 ```
 
-## Oracle Cloud Infrastructure (OCI) [example](https://github.com/browser-use/browser-use/blob/main/examples/models/oci_models.py) {#oci}
+## Oracle Cloud Infrastructure (OCI) [example](https://github.com/browser-use/browser-use/blob/main/examples/models/oci_models.py)
 
 [Available models](https://docs.oracle.com/en-us/iaas/Content/generative-ai/imported-models.htm). OCI provides access to various generative AI models including Meta Llama, Cohere, and other providers through their Generative AI service. Install with `pip install "browser-use[oci]"`.
 
@@ -625,7 +643,7 @@ Required environment variables:
 MODELSCOPE_API_KEY=
 ```
 
-## DeepSeek [example](https://github.com/browser-use/browser-use/blob/main/examples/models/deepseek-chat.py) {#deepseek}
+## DeepSeek [example](https://github.com/browser-use/browser-use/blob/main/examples/models/deepseek-chat.py)
 
 [Available models](https://api-docs.deepseek.com/quick_start/pricing)
 
@@ -646,7 +664,7 @@ Required environment variables:
 DEEPSEEK_API_KEY=
 ```
 
-## Mistral [example](https://github.com/browser-use/browser-use/blob/main/examples/models/mistral.py) {#mistral}
+## Mistral [example](https://github.com/browser-use/browser-use/blob/main/examples/models/mistral.py)
 
 [Available models](https://docs.mistral.ai/getting-started/models/models_overview/)
 
@@ -667,7 +685,7 @@ Required environment variables:
 MISTRAL_API_KEY=
 ```
 
-## Cerebras [example](https://github.com/browser-use/browser-use/blob/main/examples/models/cerebras_example.py) {#cerebras}
+## Cerebras [example](https://github.com/browser-use/browser-use/blob/main/examples/models/cerebras_example.py)
 
 [Available models](https://inference-docs.cerebras.ai/models/overview)
 
@@ -688,7 +706,7 @@ Required environment variables:
 CEREBRAS_API_KEY=
 ```
 
-## OpenRouter [example](https://github.com/browser-use/browser-use/blob/main/examples/models/openrouter.py) {#openrouter}
+## OpenRouter [example](https://github.com/browser-use/browser-use/blob/main/examples/models/openrouter.py)
 
 [Available models](https://openrouter.ai/models). Access 300\+ models from any provider through a single API.
 
@@ -709,7 +727,7 @@ Required environment variables:
 OPENROUTER_API_KEY=
 ```
 
-## LiteLLM {#litellm}
+## LiteLLM
 
 Requires separate install (`pip install litellm`). Supports any [LiteLLM model string](https://docs.litellm.ai/docs/providers) — useful when you need a provider not covered by the native integrations above.
 
@@ -732,6 +750,152 @@ Any provider with an OpenAI-compatible endpoint works via `ChatOpenAI` with a cu
 **Examples available:**
 
 - [Novita](https://github.com/browser-use/browser-use/blob/main/examples/models/novita.py)
+
+# Model Card: bu-2-0
+Source: https://docs.browser-use.com/open-source/bu-2-0-model-card
+
+
+## Model Details
+
+| Field | Value |
+| --- | --- |
+| Model name | `bu-2-0` |
+| Provider | Browser Use Inc. |
+| Release date | January 27, 2026 |
+| Model type | Mixture-of-Experts |
+| Modality | Native multimodal browser-state model |
+| Primary interface | `ChatBrowserUse(model="bu-2-0")` in the Browser Use open-source library |
+
+`bu-2-0` is a decision model for browser automation. It is called inside the Browser Use agent loop, where it receives the task, browser state, previous step history, and available tool schemas, then returns the next browser action.
+
+The model is not a general-purpose chat or text-generation model. It is built for web tasks where a browser runtime provides screenshots, DOM state, and executable tools.
+
+## How to Use
+
+Set up Browser Use, install the browser runtime, and provide `BROWSER_USE_API_KEY`.
+
+- Install the package: `uv pip install browser-use`
+- Install the browser runtime: `uvx browser-use install`
+- Set the API key: `export BROWSER_USE_API_KEY="your-key"`
+
+```python
+from browser_use import Agent, ChatBrowserUse
+
+agent = Agent(
+    task="Search for Browser Use and summarize the first result.",
+    llm=ChatBrowserUse(model="bu-2-0"),
+)
+
+history = await agent.run()
+```
+
+The Browser Use library executes the action, captures the new page state, and calls the model again. The loop stops when the model returns a terminal result or the configured step, time, or failure limit is reached.
+
+## Inputs and Outputs
+
+| Direction | Data |
+| --- | --- |
+| Input | User task in natural language |
+| Input | Current screenshot or viewport image |
+| Input | Serialized DOM, accessibility, and element-index state from Browser Use |
+| Input | Built-in Browser Use tool schemas |
+| Input | Developer-provided custom tool schemas |
+| Input | Previous model outputs, executed actions, tool results, errors, extracted content, and prior steps from the same browser episode |
+| Output | A structured next action for Browser Use to execute |
+| Output | A terminal result when the task is complete |
+
+Typical actions include clicking an element, entering text, scrolling, navigating, extracting content, selecting a file, downloading a file, calling a custom tool, or returning a final answer.
+
+## Intended Use
+
+`bu-2-0` is intended for browser automation tasks in which the user describes a web task in natural language and Browser Use supplies the browser state and tool interface.
+
+In scope:
+
+- Open-ended tasks that require exploring an unfamiliar website.
+- Step-by-step natural language instructions for browser automation workflows.
+- Multi-step web navigation.
+- Form filling and page interaction.
+- Browser-based data extraction.
+- Website testing and QA workflows.
+- Tasks that require both visual grounding and DOM grounding.
+- Workflows extended with custom Browser Use tools.
+
+## Tools
+
+`bu-2-0` does not directly control a browser process. It selects actions from the tools exposed by Browser Use, and the Browser Use library executes those tools in the browser.
+
+The Browser Use tools documentation lists the basic built-in tools: [Tools: Basics](https://docs.browser-use.com/open-source/customize/tools/basics).
+
+Common tool categories include:
+
+- Navigation.
+- Clicks and text input.
+- Scrolling and keyboard actions.
+- Page extraction.
+- File upload and download.
+- Completion with a final answer.
+- Developer-defined custom tools.
+
+Custom tools are part of the model input for that run. This lets teams expose deterministic operations, private APIs, authentication helpers, or workflow-specific actions without changing the base model.
+
+## Benchmarks
+
+<img className="block" src="https://docs.browser-use.com/open-source/images/bu-2-0-benchmark-scores.png" alt="BU Bench V1 success-rate comparison for bu-2-0" />
+
+BU Bench V1 is a browser-agent benchmark, not a generic language benchmark. The public benchmark draws challenging but completable browser tasks from five sources:
+
+| Source | Weight | Area |
+| --- | ---: | --- |
+| Custom | 20% | Page interaction, including iframes, drag-and-drop, and complex forms |
+| WebBench | 20% | Web browsing tasks |
+| Mind2Web 2 | 20% | Multi-step web navigation |
+| GAIA | 20% | Web-grounded assistant tasks |
+| BrowseComp | 20% | Browser comprehension |
+
+The benchmark contains 100 tasks in total.
+
+In the public BU Bench V1 model table, `bu-2-0` is reported as `OSS + BU LLM (ChatBrowserUse-2)` with a **63.3%** success rate when used through the open-source Browser Use library.
+
+## Judge
+
+BU Bench V1 uses binary task success. A task is run through the browser-agent loop and then judged as complete or incomplete based on whether the final agent output satisfies the user's intent.
+
+The judge primarily rates agent outcomes. It checks whether the requested task was fulfilled from the user's perspective, using the final agent output and the run trace. This means failures caused by external circumstances can still count as failures. For example, if a target website is unavailable, has changed, or blocks access, the browser agent may behave correctly at the computer-control level but still fail the benchmark task because the user intent was not completed.
+
+Public judge details:
+
+- 100 tasks.
+- Multiple runs per model.
+- Standard error bars in the original plots.
+- 200 hand-labeled traces used to estimate evaluator quality.
+- 87% reported agreement with human labels, with most disagreements on partial successes and technicalities.
+
+Browser Use also evaluates `bu-2-0` on internal suites with thousands of tasks across many domains and websites. These evaluations are used to optimize accuracy, cost, latency, recovery behavior, task coverage, and error patterns.
+
+## Known Limitations
+
+- This model is for browser automation and is not intended for token-heavy generation workflows, such as long code generation.
+- Heavily client-rendered pages, cross-origin iframes, canvas-only interfaces, and hidden state can reduce observability and make interactions less reliable.
+- Pages with thousands of interactive elements can overload the CPU in sandbox environments. This can cause screenshot or DOM capture timeouts inside the Browser Use library, leading to missing model context, timeouts, or other model-call errors.
+- The model can only choose from tools made available by Browser Use or the developer. For example, if no drag-and-drop tool is available, the model may not be able to perform a drag-and-drop action reliably.
+- A website can change while the model is deciding on the next action, which can lead to an incorrect action.
+- High-impact tasks should use features such as domain allowlists, step limits, tool allowlists, and custom human-approval tools for irreversible actions such as purchases.
+- BU Bench V1 is useful but not exhaustive. It does not cover every language, website type, authentication flow, or production constraint.
+- Because the web changes constantly, measured performance can change over time.
+
+## Sources
+
+- Browser Use library: https://github.com/browser-use/browser-use
+- `ChatBrowserUse` source: https://github.com/browser-use/browser-use/blob/main/browser_use/llm/browser_use/chat.py
+- Open-source docs: https://docs.browser-use.com/open-source/introduction
+- Tools docs: https://docs.browser-use.com/open-source/customize/tools/basics
+- API keys: https://cloud.browser-use.com/new-api-key
+- BU Bench V1 blog post: https://browser-use.com/posts/ai-browser-agent-benchmark
+- WebBench: https://github.com/Halluminate/WebBench
+- Mind2Web 2: https://osu-nlp-group.github.io/Mind2Web-2/
+- GAIA: https://arxiv.org/abs/2311.12983
+- BrowseComp: https://openai.com/index/browsecomp/
 
 # Browser Use CLI
 Source: https://docs.browser-use.com/open-source/browser-use-cli
@@ -884,11 +1048,13 @@ You can use Browser Use Terminal in four ways:
 | **TUI**               | The interactive terminal app you launch with `browser`. Best for normal, hands-on use.                                                                                                        |
 | **CLI**               | Scriptable commands such as `browser-use-terminal run-openai`. Best for automation and one-off tasks.                                                                                         |
 | **Python**            | `browser_use.beta.Agent`, backed by the same Rust runtime. Best when you want browser-use code with terminal runtime behavior.                                                                |
-| **Coding assistants** | A skill plus the `browser-use-terminal browser` commands let Claude Code, Codex, OpenCode, and other agents drive the browser. See [Use From Coding Assistants](#use-from-coding-assistants). |
+| **Coding assistants** | A skill plus the `browser-use-terminal browser` commands let Claude Code, Codex, OpenCode, and other agents drive the browser. See [Use From Coding Assistants](https://docs.browser-use.com/open-source/browser-use-terminal#use-from-coding-assistants). |
+
 
   Browser Use Terminal is separate from the lower-level `browser-use` CLI. Use
   `browser` for the Terminal TUI, `browser-use-terminal` for Terminal task
   commands, and `browser-use` for direct browser-control commands.
+
 
 ## Terms
 
@@ -1135,7 +1301,9 @@ Use `/browser` to choose how the agent should run the browser:
 
 Common choices are your local Chrome, a headless browser, or Browser Use Cloud.
 
-Browser Use Cloud is the easiest option to get started: it gives you a free, one-click browser setup without managing a local Chrome profile.
+Browser Use Cloud provides one-click browser setup without managing a local
+Chrome profile. See the [pricing page](https://browser-use.com/pricing) for
+current plans and usage rates.
 
 Use `/profile` to choose the default Chrome profile:
 
@@ -1530,14 +1698,14 @@ async def main():
 ```
 
 - `task`: The task you want to automate.
-- `llm`: Your favorite LLM. See <a href="/open-source/supported-models">Supported Models</a>.
+- `llm`: Your favorite LLM. See [Supported Models](https://docs.browser-use.com/open-source/supported-models).
 
 
 The agent is executed using the async `run()` method:
 
 - `max_steps` (default: `100`): Maximum number of steps an agent can take.
 
-Check out all customizable parameters <a href="/open-source/customize/agent/all-parameters"> here</a>. 
+Check out all customizable parameters [ here](https://docs.browser-use.com/open-source/customize/agent/all-parameters).
 
 # Prompting Guide
 Source: https://docs.browser-use.com/open-source/customize/agent/prompting-guide
@@ -1577,7 +1745,7 @@ task = """
 """
 ```
 
-See [Available Tools](/open-source/customize/tools/available) for the complete list of actions.
+See [Available Tools](https://docs.browser-use.com/open-source/customize/tools/available) for the complete list of actions.
 
 
 ### 3. Handle interaction problems via keyboard navigation
@@ -1643,7 +1811,7 @@ history = await agent.run()
 
 # Access useful information
 history.urls()                    # List of visited URLs
-history.screenshot_paths()        # List of screenshot paths  
+history.screenshot_paths()        # List of screenshot paths
 history.screenshots()             # List of screenshots as base64 strings
 history.action_names()            # Names of executed actions
 history.extracted_content()       # List of extracted content from all actions
@@ -1680,8 +1848,8 @@ Source: https://docs.browser-use.com/open-source/customize/agent/all-parameters
 ## Available Parameters
 
 ### Core Settings
-- `tools`: Registry of <a href = "../tools/available">tools</a> the agent can call. <a href = "../tools/basics">Example</a>
-- `skills` (or `skill_ids`): List of skill IDs to load (e.g., `['skill-uuid']` or `['*']` for all). Requires `BROWSER_USE_API_KEY`. <a href = "../skills/basics">Docs</a>
+- `tools`: Registry of [tools](https://docs.browser-use.com/open-source/customize/tools/available) the agent can call. [Example](https://docs.browser-use.com/open-source/customize/tools/basics)
+- `skills` (or `skill_ids`): List of skill IDs to load (e.g., `['skill-uuid']` or `['*']` for all). Requires `BROWSER_USE_API_KEY`. [Docs](https://docs.browser-use.com/open-source/customize/skills/basics)
 - `browser`: Browser object where you can specify the browser settings.
 - `output_model_schema`: Pydantic model class for structured output validation. [Example](https://github.com/browser-use/browser-use/blob/main/examples/features/custom_output.py)
 
@@ -1702,7 +1870,7 @@ Source: https://docs.browser-use.com/open-source/customize/agent/all-parameters
 - `flash_mode` (default: `False`): Fast mode that skips evaluation, next goal and thinking and only uses memory. If `flash_mode` is enabled, it overrides `use_thinking` and disables the thinking process entirely. [Example](https://github.com/browser-use/browser-use/blob/main/examples/getting_started/05_fast_agent.py)
 
 ### System Messages
-- `override_system_message`: Completely replace the default system prompt. 
+- `override_system_message`: Completely replace the default system prompt.
 - `extend_system_message`: Add additional instructions to the default system prompt. [Example](https://github.com/browser-use/browser-use/blob/main/examples/features/custom_system_prompt.py)
 
 ### File & Data Management
@@ -1716,7 +1884,7 @@ Source: https://docs.browser-use.com/open-source/customize/agent/all-parameters
 - `include_attributes`: List of HTML attributes to include in page analysis
 
 ### Performance & Limits
-- `max_history_items`: Maximum number of last steps to keep in the LLM memory. If `None`, we keep all steps. 
+- `max_history_items`: Maximum number of last steps to keep in the LLM memory. If `None`, we keep all steps.
 - `llm_timeout` (default: `90`): Timeout in seconds for LLM calls
 - `step_timeout` (default: `120`): Timeout in seconds for each step
 - `directly_open_url` (default: `True`): If we detect a url in the task, we directly open it.
@@ -1848,10 +2016,10 @@ Browser-Use supports multiple authentication strategies depending on your use ca
 
 | Approach | Best For | Setup Effort |
 |----------|----------|--------------|
-| [Real Browser](#real-browser-profiles) | Personal automation, existing logins | Low |
-| [Storage State](#storage-state-persistence) | Production, CI/CD, headless | Medium |
-| [TOTP 2FA](#totp-2fa) | Sites with authenticator apps | Low |
-| [Email and SMS 2FA](#email-and-sms-2fa) | Sites with email/SMS verification | Medium |
+| [Real Browser](https://docs.browser-use.com/open-source/customize/browser/authentication#real-browser-profiles) | Personal automation, existing logins | Low |
+| [Storage State](https://docs.browser-use.com/open-source/customize/browser/authentication#storage-state-persistence) | Production, CI/CD, headless | Medium |
+| [TOTP 2FA](https://docs.browser-use.com/open-source/customize/browser/authentication#totp-2fa) | Sites with authenticator apps | Low |
+| [Email and SMS 2FA](https://docs.browser-use.com/open-source/customize/browser/authentication#email-and-sms-2fa) | Sites with email/SMS verification | Medium |
 
 ---
 
@@ -1859,9 +2027,13 @@ Browser-Use supports multiple authentication strategies depending on your use ca
 
 Connect to your existing Chrome browser to reuse your authenticated sessions. No need to handle logins, cookies, or 2FA - if you are logged in on Chrome, the agent is, too.
 
-See [Real Browser](/open-source/customize/browser/real-browser) for more details and platform paths.
+
+See [Real Browser](https://docs.browser-use.com/open-source/customize/browser/real-browser) for more details and platform paths.
+
+
 
 You may need to close Chrome completely before running. Browser-Use launches Chrome in debug mode, which can conflict with existing Chrome processes.
+
 
 ```python
 from browser_use import Agent, Browser, ChatBrowserUse
@@ -1883,7 +2055,9 @@ await agent.run()
 
 Export cookies and localStorage from an authenticated browser, then load them in headless mode. Useful for production/CI where you cannot use a real browser profile.
 
-See [Browser Parameters](/open-source/customize/browser/all-parameters#user-data--profiles) for all storage options.
+
+See [Browser Parameters](https://docs.browser-use.com/open-source/customize/browser/all-parameters#user-data-&-profiles) for all storage options.
+
 
 ### Export from Real Browser
 
@@ -1958,7 +2132,9 @@ The JSON file follows Playwright's format:
 
 For sites using authenticator apps (Google Authenticator, 1Password, etc.), Browser-Use can generate TOTP codes automatically.
 
-See [Sensitive Data](/open-source/examples/templates/sensitive-data) for more on credential handling.
+
+See [Sensitive Data](https://docs.browser-use.com/open-source/examples/templates/sensitive-data) for more on credential handling.
+
 
 ### How It Works
 
@@ -1989,7 +2165,9 @@ agent = Agent(
 await agent.run()
 ```
 
+
 The placeholder name must end with `bu_2fa_code`. You can use any prefix: `google_bu_2fa_code`, `github_bu_2fa_code`, etc.
+
 
 ### Where to Find TOTP Secrets
 
@@ -2100,7 +2278,9 @@ See [`examples/integrations/gmail_2fa_integration.py`](https://github.com/browse
 
 ## Security Best Practices
 
-See [Secure Setup](/open-source/examples/templates/secure) for enterprise security with Azure OpenAI.
+
+See [Secure Setup](https://docs.browser-use.com/open-source/examples/templates/secure) for enterprise security with Azure OpenAI.
+
 
 ### Restrict Domains
 
@@ -2171,7 +2351,9 @@ Source: https://docs.browser-use.com/open-source/customize/browser/real-browser
 
 This allows you to automate your existing Chrome browser, so you are already logged into your websites.
 
+
 You may need to fully close Chrome before running these examples. Additionally, if Google search blocks automated browsers, use DuckDuckGo or other search engines instead.
+
 
 ## Basic Example
 
@@ -2243,10 +2425,10 @@ browser = Browser(
 Source: https://docs.browser-use.com/open-source/customize/browser/remote
 
 
+### Browser Infrastructure or a CDP URL
 
-### Browser-Use Cloud Browser or CDP URL
-
-The easiest way to use a cloud browser is with the built-in Browser-Use cloud service:
+Browser Infrastructure provides hosted cloud browsers for AI agents. Use
+the built-in Cloud connection or provide a CDP URL from any compatible browser:
 
 ```python
 from browser_use import Agent, Browser, ChatBrowserUse
@@ -2257,11 +2439,10 @@ browser = Browser(
 )
 
 # Advanced: Configure cloud browser parameters
-# Using this settings can bypass any captcha protection on any website
 browser = Browser(
     cloud_profile_id='your-profile-id',  # Optional: specific browser profile
-    cloud_proxy_country_code='us',  # Optional: proxy location (us, uk, fr, it, jp, au, de, fi, ca, in)
-    cloud_timeout=30,  # Optional: session timeout in minutes (MAX free: 15min, paid: 240min)
+    cloud_proxy_country_code='us',  # Optional: supported proxy location
+    cloud_timeout=30,  # Optional: 1–240 minutes; defaults to 60 when omitted
 )
 
 # Or use a CDP URL from any cloud browser provider
@@ -2282,16 +2463,20 @@ agent = Agent(
 
 **Cloud Browser Parameters:**
 - `cloud_profile_id`: UUID of a browser profile (optional, uses default if not specified)
-- `cloud_proxy_country_code`: Country code for proxy location - supports: us, uk, fr, it, jp, au, de, fi, ca, in
-- `cloud_timeout`: Session timeout in minutes (free users: max 15 min, paid users: max 240 min)
+- `cloud_proxy_country_code`: Country code for a supported proxy location
+- `cloud_timeout`: Requested session timeout in minutes (1–240; defaults to 60 when omitted)
+
+See the [Browser Infrastructure quickstart](https://docs.browser-use.com/cloud/browser/quickstart),
+[CAPTCHA handling](https://docs.browser-use.com/cloud/browser/captcha-handling), and
+[pricing](https://browser-use.com/pricing) for the maintained product details.
 
 **Benefits:**
 - ✅ No local browser setup required
-- ✅ Scalable and fast cloud infrastructure
-- ✅ Automatic provisioning and teardown
-- ✅ Built-in authentication handling
-- ✅ Optimized for browser automation
-- ✅ Global proxy support for geo-restricted content
+- ✅ Managed cloud infrastructure
+- ✅ Session lifecycle APIs and timeouts
+- ✅ Profile-based authentication state
+- ✅ Browser automation over CDP
+- ✅ Configurable proxy routing
 
 ### Third-Party Cloud Browsers
 You can pass in a CDP URL from any remote browser
@@ -2326,7 +2511,9 @@ agent = Agent(
 Source: https://docs.browser-use.com/open-source/customize/browser/all-parameters
 
 
-The `Browser` instance also provides all [Actor](/open-source/legacy/actor/all-parameters) methods for direct browser control (page management, element interactions, etc.).
+
+The `Browser` instance also provides all [Actor](https://docs.browser-use.com/open-source/legacy/actor/all-parameters) methods for direct browser control (page management, element interactions, etc.).
+
 
 ## Core Settings
 
@@ -2410,6 +2597,7 @@ The `Browser` instance also provides all [Actor](/open-source/legacy/actor/all-p
 
 ## Recording & Debugging
 
+
 Video recording requires additional optional dependencies. If these are not installed, no video will be saved and no error will be raised.
 
 Install with:
@@ -2420,6 +2608,7 @@ or:
 ```bash
 pip install imageio[ffmpeg] numpy
 ```
+
 
 - `record_video_dir`: Directory to save video recordings as `.mp4` files
 - `record_video_size` (default: `ViewportSize`): The frame size (width, height) of the video recording.
@@ -2532,10 +2721,13 @@ agent = Agent(
 )
 ```
 
-**Important**: The parameter must be named exactly `browser_session` with type `BrowserSession` (not `browser: Browser`). 
+
+**Important**: The parameter must be named exactly `browser_session` with type `BrowserSession` (not `browser: Browser`).
 The agent injects parameters by name matching, so using the wrong name will cause your tool to fail silently.
 
-Use `browser_session` parameter in tools for deterministic [Actor](/open-source/legacy/actor/basics) actions.
+
+
+Use `browser_session` parameter in tools for deterministic [Actor](https://docs.browser-use.com/open-source/legacy/actor/basics) actions.
 
 # Available Tools
 Source: https://docs.browser-use.com/open-source/customize/tools/available
@@ -2622,9 +2814,11 @@ agent = Agent(task='...', llm=llm, tools=tools)
 
 The Agent fills your function parameters based on their names, type hints, & defaults.
 
-**Common Pitfall**: Parameter names must match exactly! Use `browser_session: BrowserSession` (not `browser: Browser`). 
+
+**Common Pitfall**: Parameter names must match exactly! Use `browser_session: BrowserSession` (not `browser: Browser`).
 The agent injects special parameters by **name matching**, so using incorrect names will cause your tool to fail silently.
-See [Available Objects](#available-objects) below for the correct parameter names.
+See [Available Objects](https://docs.browser-use.com/open-source/customize/tools/add#available-objects) below for the correct parameter names.
+
 
 
 ## Available Objects
@@ -2719,7 +2913,9 @@ This shows how to create custom actions that use Playwright's precise browser au
 
 ## Common Pitfalls
 
+
 The agent injects special parameters **by name**, not by type. Using incorrect parameter names is the most common cause of tools failing silently.
+
 
 ### ❌ Wrong: Using `browser: Browser`
 
@@ -2749,7 +2945,7 @@ async def my_action(browser_session: BrowserSession) -> ActionResult:  # CORRECT
 1. **Use `browser_session: BrowserSession`** - not `browser: Browser`
 2. **Use `async` functions** - recommended for consistency with browser operations
 3. **Return `ActionResult`** - not plain strings (though strings work, `ActionResult` provides more control)
-4. **Parameter names must match exactly** - see [Available Objects](#available-objects) for the full list of injectable parameters
+4. **Parameter names must match exactly** - see [Available Objects](https://docs.browser-use.com/open-source/customize/tools/add#available-objects) for the full list of injectable parameters
 
 # Remove Tools
 Source: https://docs.browser-use.com/open-source/customize/tools/remove
@@ -2805,7 +3001,7 @@ With this you control the context for the LLM.
 ### 1. Include short content always in context
 ```python
 def simple_tool() -> str:
-    return "Hello, world!"  # Keep in context for all future steps 
+    return "Hello, world!"  # Keep in context for all future steps
 ```
 
 ### 2. Show long content once, remember subset in context
@@ -2836,9 +3032,97 @@ def finish_task() -> ActionResult:
     return ActionResult(
         extracted_content="Task completed!",
         is_done=True,        # Stops the agent
-        success=True         # Task succeeded 
+        success=True         # Task succeeded
     )
 ```
+
+# Basics
+Source: https://docs.browser-use.com/open-source/customize/skills/basics
+
+
+To learn more visit [Skills - Concepts](https://docs.browser-use.com/cloud/legacy/skills).
+
+
+## Quick Example
+
+
+Load `['*']` for all skills or specific skill IDs from [cloud.browser-use.com/skills](https://cloud.browser-use.com/skills).
+
+```python
+from browser_use import Agent, ChatBrowserUse
+
+agent = Agent(
+    task='Your task',
+    skills=['skill-uuid-1', 'skill-uuid-2'],  # Specific skills (recommended)
+    # or
+    # skills=['*'],  # All skills
+    llm=ChatBrowserUse()
+)
+
+await agent.run()
+```
+
+
+Be careful using `*`. Each skill will contribute around 200 tokens to the prompt.
+
+
+Remember to add your API key to `.env`:
+
+```bash .env
+BROWSER_USE_API_KEY=your-api-key
+```
+
+
+Get your API key on [cloud](https://cloud.browser-use.com/new-api-key). See
+[pricing](https://browser-use.com/pricing) for current plans and credits.
+
+
+## Cookie Handling
+
+Cookies are automatically injected from your browser:
+
+```python
+agent = Agent(
+    task='Post a tweet saying "Hello World"',
+    skills=['tweet-poster-skill-id'],
+    llm=ChatBrowserUse()
+)
+
+# Agent navigates to twitter.com, logs in if needed,
+# extracts cookies, and passes them to the skill automatically
+await agent.run()
+```
+
+If cookies are missing, the LLM sees which cookies are needed and navigates to obtain them.
+
+---
+
+## Full Example
+
+```python
+from browser_use import Agent, ChatBrowserUse
+from dotenv import load_dotenv
+import asyncio
+
+load_dotenv()
+
+async def main():
+    agent = Agent(
+        task='Analyze TikTak and Instegram profiles',
+        skills=[
+            'a582eb44-e4e2-4c55-acc2-2f5a875e35e9',  # TikTak Profile Scraper
+            'f8d91c2a-3b4e-4f7d-9a1e-6c8e2d3f4a5b',  # Instegram Profile Scraper
+        ],
+        llm=ChatBrowserUse()
+    )
+
+    await agent.run()
+    await agent.close()
+
+asyncio.run(main())
+```
+
+Browse and create skills at [cloud.browser-use.com/skills](https://cloud.browser-use.com/skills).
 
 # MCP Server
 Source: https://docs.browser-use.com/open-source/customize/integrations/mcp-server
@@ -2846,7 +3130,9 @@ Source: https://docs.browser-use.com/open-source/customize/integrations/mcp-serv
 
 Browser Use can run as a local **Model Context Protocol (MCP)** server on your machine via stdio. This is the **free, open-source option** that gives you direct, low-level control over browser automation but requires your own LLM API keys.
 
+
 Looking for a hosted solution? Use the [Cloud MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server) instead — no setup required, just an API key.
+
 
 ## Quick Start
 
@@ -2858,9 +3144,17 @@ The server will start in stdio mode, ready to accept MCP connections.
 
 ## Client Setup
 
+
+
+**Claude Code**
+
 ```bash
 claude mcp add browser-use -- uvx --from 'browser-use[cli]' browser-use --mcp
 ```
+
+
+**Claude Desktop**
+
 Add to your Claude Desktop config file:
 
 **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -2897,12 +3191,18 @@ Add to your Claude Desktop config file:
 
 Restart Claude Desktop after saving.
 
+
 **macOS/Linux PATH Issue:** Claude Desktop may not find `uvx` in your PATH. Use the full path to `uvx` instead:
 - Run `which uvx` in your terminal to find the location (usually `/Users/username/.local/bin/uvx` or `~/.local/bin/uvx`)
 - Replace `"command": "uvx"` with the full path, e.g., `"command": "/Users/your-username/.local/bin/uvx"`
 - Replace `your-username` with your actual username
 
 **CLI Extras Required:** The `--from browser-use[cli]` flag installs the CLI extras needed for MCP server support.
+
+
+
+**Cursor**
+
 Add to `~/.cursor/mcp.json`:
 
 ```json
@@ -2918,6 +3218,10 @@ Add to `~/.cursor/mcp.json`:
   }
 }
 ```
+
+
+**Windsurf**
+
 Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ```json
@@ -2933,6 +3237,8 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
   }
 }
 ```
+
+
 
 ## Environment Variables
 
@@ -3259,7 +3565,7 @@ await browser.stop()
 
 ### Constructor Parameters
 
-See [Browser Parameters](/open-source/customize/browser/all-parameters) for complete configuration options.
+See [Browser Parameters](https://docs.browser-use.com/open-source/customize/browser/all-parameters) for complete configuration options.
 
 ## Page
 
@@ -3320,9 +3626,13 @@ Coordinate-based mouse operations.
 Source: https://docs.browser-use.com/open-source/legacy/sandbox/quickstart
 
 
-Sandboxes are the **easiest way to run Browser-Use in production**. We handle agents, browsers, persistence, auth, cookies, and LLMs. It is also the **fastest way to deploy** - the agent runs right next to the browser, so latency is minimal.
+Sandboxes package agents, browsers, persistence, authentication, cookies, and
+LLMs into a managed runtime.
 
-Get your API key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key) — eligible new accounts receive $15 in one-time credits.
+
+Get your API key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key).
+See [pricing](https://browser-use.com/pricing) for current plans and credits.
+
 
 ## Basic Example
 
@@ -3345,7 +3655,7 @@ await my_task()
 ```python
 @sandbox(
     cloud_profile_id='your-profile-id',      # Use saved cookies/auth
-    cloud_proxy_country_code='us',           # Bypass captchas, cloudflare, geo-restrictions
+    cloud_proxy_country_code='us',           # Route traffic through a supported location
     cloud_timeout=60,                        # Max session time (minutes)
 )
 async def task(browser: Browser, url: str):
@@ -3357,7 +3667,7 @@ await task(url="https://example.com")
 
 **What each does:**
 - `cloud_profile_id` - Use saved cookies/authentication from your cloud profile
-- `cloud_proxy_country_code` - Route through country-specific proxy for stealth (bypass captchas, Cloudflare, geo-blocks)
+- `cloud_proxy_country_code` - Route traffic through a supported proxy location
 - `cloud_timeout` - Maximum time browser stays open in minutes
 
 ---
@@ -3404,8 +3714,8 @@ Source: https://docs.browser-use.com/open-source/legacy/sandbox/all-parameters
 |-----------|------|-------------|---------|
 | `BROWSER_USE_API_KEY` | `str` | API key (or env var) | Required |
 | `cloud_profile_id` | `str` | Browser profile UUID | `None` |
-| `cloud_proxy_country_code` | `str` | us, uk, fr, it, jp, au, de, fi, ca, in | `None` |
-| `cloud_timeout` | `int` | Minutes (max: 15 free, 240 paid) | `None` |
+| `cloud_proxy_country_code` | `str` | Supported proxy country code | `None` |
+| `cloud_timeout` | `int` | Requested session timeout in minutes (1–240; service default 60 when omitted) | `None` |
 | `on_browser_created` | `Callable` | Live URL callback | `None` |
 | `on_log` | `Callable` | Log event callback | `None` |
 | `on_result` | `Callable` | Success callback | `None` |
@@ -3424,6 +3734,10 @@ async def task(browser: Browser):
     agent = Agent(task="your task", browser=browser, llm=ChatBrowserUse())
     await agent.run()
 ```
+
+See the [Browser Infrastructure reference](https://docs.browser-use.com/cloud/browser/quickstart) for
+maintained browser settings and [pricing](https://browser-use.com/pricing) for
+current commercial terms.
 
 # Fast Agent
 Source: https://docs.browser-use.com/open-source/examples/templates/fast-agent
@@ -3466,7 +3780,7 @@ async def main():
 
 	# 3. Define a speed-focused task
 	task = """
-	1. Go to reddit https://www.reddit.com/search/?q=browser+agent&type=communities 
+	1. Go to reddit https://www.reddit.com/search/?q=browser+agent&type=communities
 	2. Click directly on the first 5 communities to open each in new tabs
     3. Find out what the latest post is about, and switch directly to the next tab
 	4. Return the latest post summary for each page
@@ -3559,8 +3873,9 @@ asyncio.run(main())
 1. **Persistent Browser**: `Browser(keep_alive=True)` prevents browser from closing between tasks
 2. **Task Chaining**: Use `agent.add_new_task()` to add follow-up tasks
 3. **Context Preservation**: Agent maintains memory and browser state across tasks
-4. **Interactive Flow**: Perfect for conversational interfaces 
+4. **Interactive Flow**: Perfect for conversational interfaces
 5. **Break down long flows**: If you have very long flows, you can keep the browser alive and send new agents to it.
+
 
 The browser session remains active throughout the entire chain, preserving all cookies, local storage, and page state.
 
@@ -4010,7 +4325,9 @@ if __name__ == '__main__':
 Source: https://docs.browser-use.com/open-source/examples/templates/sensitive-data
 
 
-For comprehensive authentication guidance including real browser profiles, storage state, and 2FA, see the [Authentication Guide](/open-source/customize/browser/authentication).
+
+For comprehensive authentication guidance including real browser profiles, storage state, and 2FA, see the [Authentication Guide](https://docs.browser-use.com/open-source/customize/browser/authentication).
+
 
 ```python
 import os
@@ -4048,7 +4365,7 @@ async def main():
 
 ## Best Practices
 - Use `Browser(allowed_domains=[...])` to restrict navigation
-- Set `use_vision=False` to prevent screenshot leaks  
+- Set `use_vision=False` to prevent screenshot leaks
 - Use `storage_state='./auth.json'` for login cookies instead of passwords when possible
 
 # Secure Setup
@@ -4074,7 +4391,7 @@ llm = ChatAzureOpenAI(model='gpt-4.1-mini', api_key=api_key, azure_endpoint=azur
 
 # Secure browser configuration
 browser_profile = BrowserProfile(
-    allowed_domains=['*google.com', 'browser-use.com'], 
+    allowed_domains=['*google.com', 'browser-use.com'],
     enable_default_extensions=False
 )
 
@@ -4099,7 +4416,7 @@ asyncio.run(main())
 
 **Azure OpenAI:**
 - NOT used to train OpenAI models
-- NOT shared with other customers  
+- NOT shared with other customers
 - Hosted entirely within Azure
 - 30-day retention (or zero with Limited Access Program)
 
@@ -4107,6 +4424,7 @@ asyncio.run(main())
 - `allowed_domains`: Restrict navigation to trusted sites
 - `enable_default_extensions=False`: Disable potentially dangerous extensions
 - `sensitive_data`: Filter sensitive information from LLM input
+
 
 
 
@@ -4128,7 +4446,9 @@ Have a great use case? **[Submit a pull request](https://github.com/browser-use/
 Source: https://docs.browser-use.com/open-source/examples/apps/ad-use
 
 
+
 This demo requires browser-use v0.7.6+.
+
 
 <video
   controls
@@ -4152,7 +4472,7 @@ Make sure the newest version of browser-use is installed (with screenshot functi
 pip install -U browser-use
 ```
 
-Export your Gemini API key, get it from: [Google AI Studio](https://makersuite.google.com/app/apikey) 
+Export your Gemini API key, get it from: [Google AI Studio](https://makersuite.google.com/app/apikey)
 ```
 export GOOGLE_API_KEY='your-google-api-key-here'
 ```
@@ -4219,7 +4539,9 @@ Full implementation: [https://github.com/browser-use/browser-use/tree/main/examp
 Source: https://docs.browser-use.com/open-source/examples/apps/vibetest-use
 
 
-Requires **browser-use&nbsp; < v0.5.0** and Playwright Chromium. Currently getting an update to v0.7.6+. 
+
+Requires **browser-use&nbsp; < v0.5.0** and Playwright Chromium. Currently getting an update to v0.7.6+.
+
 
 <video
   controls
@@ -4238,7 +4560,7 @@ Requires **browser-use&nbsp; < v0.5.0** and Playwright Chromium. Currently getti
 
 ```bash
 
-# 1. Clone repo 
+# 1. Clone repo
 git clone https://github.com/browser-use/vibetest-use.git
 cd vibetest-use
 
@@ -4268,7 +4590,7 @@ claude mcp add vibetest /full/path/to/vibetest-use/.venv/bin/vibetest-mcp \
 
 ### 2) Cursor (manual MCP entry)
 
-1. Open **Settings → MCP**  
+1. Open **Settings → MCP**
 2. Click **Add Server** and paste:
 
 ```json
@@ -4310,7 +4632,9 @@ Full implementation: [https://github.com/browser-use/vibetest-use](https://githu
 Source: https://docs.browser-use.com/open-source/examples/apps/news-use
 
 
+
 This demo requires browser-use v0.7.7+.
+
 
 <video
   controls
@@ -4333,7 +4657,7 @@ Make sure the newest version of browser-use is installed:
 pip install -U browser-use
 ```
 
-Export your Gemini API key, get it from: [Google AI Studio](https://makersuite.google.com/app/apikey) 
+Export your Gemini API key, get it from: [Google AI Studio](https://makersuite.google.com/app/apikey)
 ```bash
 export GOOGLE_API_KEY='your-google-api-key-here'
 ```
@@ -4439,7 +4763,9 @@ Full implementation: [https://github.com/browser-use/browser-use/tree/main/examp
 Source: https://docs.browser-use.com/open-source/examples/apps/msg-use
 
 
+
 This demo requires browser-use v0.7.7+.
+
 
 <video
   controls
@@ -4537,14 +4863,14 @@ The scheduler processes natural language and outputs structured results:
     "scheduled_time": "2025-06-13 18:15"
   },
   {
-    "contact": "Camila", 
+    "contact": "Camila",
     "original_message": "I miss her",
     "composed_message": "I miss you ❤️",
     "scheduled_time": "2025-06-14 20:00"
   },
   {
     "contact": "sister",
-    "original_message": "happy birthday message", 
+    "original_message": "happy birthday message",
     "composed_message": "Happy birthday! 🎉 Wishing you an amazing day, sis! Hope you have the best birthday ever! ❤️🎂🎈",
     "scheduled_time": "2025-06-15 09:00"
   }
@@ -4575,22 +4901,32 @@ For example, to install the QA skill:
 npx skills add https://github.com/browser-use/browser-use --skill qa
 ```
 
+
 The skills CLI drops the skill into your agent's skills directory (e.g. `.claude/skills/` for Claude Code). Your agent picks it up automatically — no extra wiring.
+
 
 ## Available skills
 
+
   [browser-use](https://docs.browser-use.com/open-source/examples/skills/browser-use)
 Drive a browser directly from the CLI — navigate, click, fill forms, screenshot, and extract data.
-  [cloud](https://docs.browser-use.com/open-source/examples/skills/cloud)
-Reference for Browser Use Cloud — the hosted REST API (v2 & v3) and the Python/TypeScript SDKs.
+
   [open-source](https://docs.browser-use.com/open-source/examples/skills/open-source)
 Reference for writing Python against the `browser-use` library — Agent, Browser, Tools, and more.
+
+  [cloud](https://docs.browser-use.com/open-source/examples/skills/cloud)
+Find the current Cloud docs and schemas for Browser Use Agents and Browser Infrastructure.
+
+  [x402](https://docs.browser-use.com/open-source/examples/skills/x402)
+Review wallet-based x402 setup and its approval, network, and spend-safety requirements.
+
   [qa](https://docs.browser-use.com/open-source/examples/skills/qa)
 QA-test any site or local dev server and return a 1–5 quality score with evidence.
+
   [remote-browser](https://docs.browser-use.com/open-source/examples/skills/remote-browser)
 Control a headless browser from a sandboxed remote machine (cloud VMs, CI, coding agents).
-  [x402](https://docs.browser-use.com/open-source/examples/skills/x402)
-Pay for Browser Use Cloud per request from a crypto wallet — no signup or API key.
+
+
 
 ## Source
 
@@ -4600,7 +4936,7 @@ All skills live in the [`skills/` directory](https://github.com/browser-use/brow
 Source: https://docs.browser-use.com/open-source/examples/skills/browser-use
 
 
-The `browser-use` skill teaches your agent the [Browser Use CLI](/open-source/browser-use-cli). The CLI runs Python in the browser to do actions online. The agent can connect to your real Chrome, preserving logins, or to a Browser Use cloud browser.
+The `browser-use` skill teaches your agent the [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli). The CLI runs Python in the browser to do actions online. The agent can connect to your real Chrome, preserving logins, or to a Browser Use cloud browser.
 
 ## Install
 
@@ -4610,35 +4946,19 @@ Install or upgrade browser-use with `uv tool install --python 3.12 --upgrade --f
 
 ## Links
 
+
   [skills.sh](https://www.skills.sh/browser-use/browser-use/browser-use)
   [Source](https://github.com/browser-use/browser-use/tree/main/skills/browser-use)
-
-# cloud
-Source: https://docs.browser-use.com/open-source/examples/skills/cloud
-
-
-The `cloud` skill gives your agent a reference for [Browser Use Cloud](https://docs.browser-use.com/cloud/quickstart): the REST API (v2 and v3), the `browser-use-sdk` (Python and TypeScript), `X-Browser-Use-API-Key` authentication, cloud sessions, browser profiles and profile sync, CDP WebSocket access, stealth browsers, residential proxies, CAPTCHA handling, webhooks, workspaces, the skills marketplace, `liveUrl` streaming, pricing, and integration patterns (chat UI, subagents, n8n/Make/Zapier, Playwright/Puppeteer/Selenium).
-
-For the open-source Python library (`Agent`, `Browser`, `Tools`), use the [`open-source`](/open-source/examples/skills/open-source) skill instead.
-
-## Install
-
-```bash
-npx skills add https://github.com/browser-use/browser-use --skill cloud
-```
-
-## Links
-
-  [skills.sh](https://www.skills.sh/browser-use/browser-use/cloud)
-  [Source](https://github.com/browser-use/browser-use/tree/main/skills/cloud)
 
 # open-source
 Source: https://docs.browser-use.com/open-source/examples/skills/open-source
 
 
-The `open-source` skill gives your agent a reference for writing Python against the [`browser-use` library](/open-source/quickstart): `Agent`, `Browser`, and `Tools` configuration, supported LLM models (15+ providers), the Actor API, custom tools, lifecycle hooks, MCP server setup, sensitive-data handling, prompting strategies, and monitoring/observability with Laminar or OpenLIT.
+The `open-source` skill gives your agent a reference for writing Python against the [`browser-use` library](https://docs.browser-use.com/open-source/quickstart): `Agent`, `Browser`, and `Tools` configuration, LLM providers, the Actor API, custom tools, lifecycle hooks, MCP server setup, sensitive-data handling, prompting strategies, and monitoring/observability with Laminar or OpenLIT.
 
-For the Cloud API/SDK, use the [`cloud`](/open-source/examples/skills/cloud) skill. To drive a browser directly via CLI, use the [`browser-use`](/open-source/examples/skills/browser-use) skill.
+
+For Browser Use Agents and Browser Infrastructure, use the [Cloud quickstart](https://docs.browser-use.com/cloud/quickstart) and its generated API references. To drive a browser directly via CLI, use the [`browser-use`](https://docs.browser-use.com/open-source/examples/skills/browser-use) skill.
+
 
 ## Install
 
@@ -4648,8 +4968,71 @@ npx skills add https://github.com/browser-use/browser-use --skill open-source
 
 ## Links
 
+
   [skills.sh](https://www.skills.sh/browser-use/browser-use/open-source)
   [Source](https://github.com/browser-use/browser-use/tree/main/skills/open-source)
+
+# cloud
+Source: https://docs.browser-use.com/open-source/examples/skills/cloud
+
+
+The `cloud` skill is published in the Browser Use repository for questions
+about Browser Use Cloud's two products:
+
+- **Browser Use Agents** complete web tasks from natural-language goals.
+- **Browser Infrastructure** provides hosted browsers through SDK, REST, or
+  CDP.
+
+Skill versions are loaded from the repository at install time. Review the
+linked source before relying on it. If an installed version bundles snapshots
+or hardcodes mutable prices, limits, models, or lifecycle claims, treat those
+details as stale and use the [current Cloud docs](https://docs.browser-use.com/cloud/quickstart), REST
+schemas, and [pricing](https://browser-use.com/pricing) instead. For the
+self-hosted Python framework, use the
+[`open-source`](https://docs.browser-use.com/open-source/examples/skills/open-source) skill.
+
+## Install
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill cloud
+```
+
+## Links
+
+
+  [Cloud docs](https://docs.browser-use.com/cloud/quickstart)
+  [Source](https://github.com/browser-use/browser-use/tree/main/skills/cloud)
+
+# x402
+Source: https://docs.browser-use.com/open-source/examples/skills/x402
+
+
+The `x402` skill is published in the Browser Use repository for wallet-based
+Browser Use Cloud requests. Skill versions are loaded from the repository at
+install time, so inspect the linked source before using it.
+
+This is a real-money workflow. Do not execute an installed version that asks
+for a private key in chat or agent-visible tools, lacks explicit approval for
+the exact paying request, accepts networks other than Base mainnet, or cannot
+enforce separate per-payment and per-task caps. Update the skill or follow the
+[current x402 guide](https://docs.browser-use.com/cloud/guides/x402); never drop a safety control to make an
+example run.
+
+An API key remains the normal authentication path. Use this skill only when the
+user specifically requests wallet-funded access, and read the current x402
+guide and pricing before acting.
+
+## Install
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill x402
+```
+
+## Links
+
+
+  [x402 guide](https://docs.browser-use.com/cloud/guides/x402)
+  [Source](https://github.com/browser-use/browser-use/tree/main/skills/x402)
 
 # qa
 Source: https://docs.browser-use.com/open-source/examples/skills/qa
@@ -4665,6 +5048,7 @@ npx skills add https://github.com/browser-use/browser-use --skill qa
 
 ## Links
 
+
   [skills.sh](https://www.skills.sh/browser-use/browser-use/qa)
   [Source](https://github.com/browser-use/browser-use/tree/main/skills/qa)
 
@@ -4672,7 +5056,7 @@ npx skills add https://github.com/browser-use/browser-use --skill qa
 Source: https://docs.browser-use.com/open-source/examples/skills/remote-browser
 
 
-The `remote-browser` skill is for agents running on **sandboxed remote machines** (cloud VMs, CI, coding agents) that need to control a headless browser. It uses the same [Browser Use CLI](/open-source/browser-use-cli) workflow as the [`browser-use`](/open-source/examples/skills/browser-use) skill — `open`, `state`, `click`, `input`, `screenshot`, `close` — plus headless Chromium, cloud browsers, CDP connection, and tunnels to expose local dev servers.
+The `remote-browser` skill is for agents running on **sandboxed remote machines** (cloud VMs, CI, coding agents) that need to control a headless browser. It uses the same [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli) workflow as the [`browser-use`](https://docs.browser-use.com/open-source/examples/skills/browser-use) skill — `open`, `state`, `click`, `input`, `screenshot`, `close` — plus headless Chromium, cloud browsers, CDP connection, and tunnels to expose local dev servers.
 
 ## Install
 
@@ -4682,25 +5066,9 @@ npx skills add https://github.com/browser-use/browser-use --skill remote-browser
 
 ## Links
 
+
   [skills.sh](https://www.skills.sh/browser-use/browser-use/remote-browser)
   [Source](https://github.com/browser-use/browser-use/tree/main/skills/remote-browser)
-
-# x402
-Source: https://docs.browser-use.com/open-source/examples/skills/x402
-
-
-The `x402` skill walks your agent through setting up [Browser Use Cloud payments with x402](https://docs.browser-use.com/cloud/guides/x402) — pay per request from a crypto wallet (USDC on Base mainnet), with no signup, API key, or credit card. It guides wallet setup, funding, writing the key to `.env`, and a ~$1 test run. The SDK is the easiest path, and non-SDK flows are available via x402-aware client libraries. Use it when you want pay-per-use access without an API key.
-
-## Install
-
-```bash
-npx skills add https://github.com/browser-use/browser-use --skill x402
-```
-
-## Links
-
-  [skills.sh](https://www.skills.sh/browser-use/browser-use/x402)
-  [Source](https://github.com/browser-use/browser-use/tree/main/skills/x402)
 
 # Local Development Setup
 Source: https://docs.browser-use.com/open-source/development/setup/local-setup
@@ -4728,7 +5096,7 @@ cp .env.example .env
 ```
 
 
-## Helper Scripts 
+## Helper Scripts
 For common development tasks
 ```bash
 # Complete setup script - installs uv, creates a venv, and installs dependencies
@@ -4765,21 +5133,21 @@ Source: https://docs.browser-use.com/open-source/development/setup/contribution-
 
 - This space is moving fast. We have 10 ideas daily. Let us exchange some.
 - Browse our [GitHub Issues](https://github.com/browser-use/browser-use/issues)
-- Check out our most active issues on [Discord](https://discord.gg/zXJJHtJf3k) 
+- Check out our most active issues on [Discord](https://discord.gg/zXJJHtJf3k)
 - Get inspiration in [`#showcase-your-work`](https://discord.com/channels/1303749220842340412/1305549200678850642) channel
 
 
 ## What makes a great PR?
 
 1. Why do we need this PR?
-2. Include a demo screenshot/gif 
+2. Include a demo screenshot/gif
 3. Make sure the PR passes all CI tests
-4. Keep your PR focused on a single feature 
+4. Keep your PR focused on a single feature
 
 
 ## How?
 1. Fork the repository
-2. Create a new branch for your feature 
+2. Create a new branch for your feature
 3. Submit a PR
 
 We are overwhelmed with Issues. Feel free to bump your issues/PRs with comments periodically if you need faster feedback.
@@ -4895,7 +5263,7 @@ When working with agent hooks, you have access to the entire `Agent` instance. H
 ## Tips for Using Hooks
 
 - **Avoid blocking operations**: Since hooks run in the same execution thread as the agent, keep them efficient and avoid blocking operations.
-- **Use custom tools instead**: Hooks are fairly advanced. Most use cases can be implemented with [custom tools](/open-source/customize/tools/basics) instead.
+- **Use custom tools instead**: Hooks are fairly advanced. Most use cases can be implemented with [custom tools](https://docs.browser-use.com/open-source/customize/tools/basics) instead.
 - **Increase step_timeout**: If your hook is doing something that takes a long time, you can increase the `step_timeout` parameter in the `Agent(...)` constructor.
 
 ---
@@ -4915,7 +5283,7 @@ Browser session recordings allow developers to see full video replay of the brow
 Install Laminar python SDK.
 ```bash
 pip install lmnr
-``` 
+```
 
 Register on [Laminar Cloud](https://laminar.sh) or [self-host Laminar](https://github.com/lmnr-ai/lmnr), create a project and get the project API key from your project settings. Set the `LMNR_PROJECT_API_KEY` environment variable.
 ```bash
@@ -4933,7 +5301,7 @@ import asyncio
 from lmnr import Laminar
 import os
 
-# At initialization time, Laminar auto-instruments 
+# At initialization time, Laminar auto-instruments
 # Browser Use and any browser you use (local or remote)
 Laminar.initialize(project_api_key=os.getenv('LMNR_PROJECT_API_KEY'))
 
@@ -4955,7 +5323,7 @@ When you select a trace, you can see both the browser session recording and the 
 Timeline of the browser session is synced with the agent execution steps.
 In the trace view, you can also see the agent's current step, the tool it is using, and the tool's input and output.
 
-<img className="block" src="/open-source/images/laminar.png" alt="Laminar" />
+<img className="block" src="https://docs.browser-use.com/open-source/images/laminar.png" alt="Laminar" />
 
 ## Laminar
 
@@ -5151,8 +5519,10 @@ import os
 os.environ["ANONYMIZED_TELEMETRY"] = "false"
 ```
 
+
   Even when enabled, telemetry has zero impact on the library's performance. Code is available in [Telemetry
   Service](https://github.com/browser-use/browser-use/tree/main/browser_use/telemetry).
+
 
 ## Legal
 

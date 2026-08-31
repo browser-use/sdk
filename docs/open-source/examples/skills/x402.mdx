@@ -1,10 +1,23 @@
 ---
 title: "x402"
-description: "Set up Browser Use Cloud payments with x402 — pay per request from a crypto wallet (USDC on Base mainnet), no signup or API key."
+description: "Review the published Browser Use x402 skill and current wallet-funded Cloud setup requirements."
 icon: "wallet"
 ---
 
-The `x402` skill walks your agent through setting up [Browser Use Cloud payments with x402](/cloud/guides/x402) — pay per request from a crypto wallet (USDC on Base mainnet), with no signup, API key, or credit card. It guides wallet setup, funding, writing the key to `.env`, and a ~$1 test run. The SDK is the easiest path, and non-SDK flows are available via x402-aware client libraries. Use it when you want pay-per-use access without an API key.
+The `x402` skill is published in the Browser Use repository for wallet-based
+Browser Use Cloud requests. Skill versions are loaded from the repository at
+install time, so inspect the linked source before using it.
+
+This is a real-money workflow. Do not execute an installed version that asks
+for a private key in chat or agent-visible tools, lacks explicit approval for
+the exact paying request, accepts networks other than Base mainnet, or cannot
+enforce separate per-payment and per-task caps. Update the skill or follow the
+[current x402 guide](/cloud/guides/x402); never drop a safety control to make an
+example run.
+
+An API key remains the normal authentication path. Use this skill only when the
+user specifically requests wallet-funded access, and read the current x402
+guide and pricing before acting.
 
 ## Install
 
@@ -15,6 +28,6 @@ npx skills add https://github.com/browser-use/browser-use --skill x402
 ## Links
 
 <CardGroup cols={2}>
-  <Card title="skills.sh" icon="up-right-from-square" href="https://www.skills.sh/browser-use/browser-use/x402" />
+  <Card title="x402 guide" icon="wallet" href="/cloud/guides/x402" />
   <Card title="Source" icon="github" href="https://github.com/browser-use/browser-use/tree/main/skills/x402" />
 </CardGroup>

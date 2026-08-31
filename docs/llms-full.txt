@@ -1,14 +1,22 @@
 # Browser Use Cloud — Full Documentation
 
+- API v4 OpenAPI specification: https://docs.browser-use.com/cloud/openapi/v4.json
+- API v3 OpenAPI specification: https://docs.browser-use.com/cloud/openapi/v3.json
+- API v2 OpenAPI specification: https://docs.browser-use.com/cloud/openapi/v2.json
+
 
 # Quick start
 Source: https://docs.browser-use.com/cloud/quickstart
 
 
+
   [Browser Use Agents](https://docs.browser-use.com/cloud/agent/quickstart)
 Give an agent a task and get the result.
+
   [Browser Infrastructure](https://docs.browser-use.com/cloud/browser/quickstart)
-Launch a cloud browser and connect to it from your code.
+Control a hosted cloud browser through the SDK, REST, or CDP.
+
+
 
 Get an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) and
 export it:
@@ -21,6 +29,7 @@ export BROWSER_USE_API_KEY=your_key
 
 Skip this step if you use curl.
 
+
 ```bash Python
 pip install --upgrade browser-use-sdk
 ```
@@ -28,7 +37,9 @@ pip install --upgrade browser-use-sdk
 npm install browser-use-sdk@latest
 ```
 
+
 ## Run Browser Use Agents
+
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -55,12 +66,15 @@ curl https://api.browser-use.com/api/v4/runs \
   -d '{"task":"Find the top Hacker News story"}'
 ```
 
+
 ## Use Browser Infrastructure
 
 Launch a browser, connect to its CDP URL, then stop it:
 
-The browser-management resource currently uses the explicit V3 SDK namespace.
-The equivalent REST endpoint is API V4.
+The examples use the V3 SDK browser resource and the V4 REST browser endpoint.
+See the [developer overview](https://browser-use.com/developers) when choosing
+an interface for a new integration.
+
 
 ```python Python
 from browser_use_sdk.v3 import BrowserUse
@@ -99,28 +113,35 @@ curl -X PATCH \
   -d '{"action":"stop"}'
 ```
 
+
+
   Closing Playwright, Puppeteer, or CDP does not stop the browser. Use
   `client.browsers.stop(browser.id)` or call `PATCH /api/v4/browsers/{id}` with
   `{"action":"stop"}`.
 
+
 [Copy for an LLM](https://docs.browser-use.com/cloud/llms.txt)
-  Give your coding agent the compact API V4 context.
+  Give your coding agent the compact Cloud documentation index.
 
 # Choosing an Agent
 Source: https://docs.browser-use.com/cloud/choosing-an-agent
 
 
-Browser Use Cloud offers three agents that can complete your tasks. Use V4 when accuracy matters most, V3 when speed and cost matter most, and V2 only for older integrations.
+Browser Use Cloud has V2, V3, and V4 agent interfaces. The measurements below
+compare their behavior on the stated evaluation. See the
+[developer overview](https://browser-use.com/developers) when choosing an
+interface for a new integration.
+
+For current model, browser, and network rates, use the
+[pricing page](https://browser-use.com/pricing).
 
 ## At a glance
 
-|                        | V4 Agent                 | V3 Agent                             | V2 Agent                          |
-| ---------------------- | ------------------------ | ------------------------------------ | --------------------------------- |
-|                        | Most accurate            | Fastest                              | Legacy                            |
-| Verdict                | Choose for complex tasks | Choose for quick, cost-optimized work | Keep only for existing integrations |
-| Accuracy on hard tasks | **76%**                  | 67%                                  | 54%                               |
-| Speed                  | slower, more thorough    | **fastest on identical tasks**       | quick on small tasks              |
-| Cost level             | \$\$\$                      | \$\$                                   | \$                                 |
+| Criterion              | V4 Agent              | V3 Agent                       | V2 Agent         |
+| ---------------------- | --------------------- | ------------------------------ | ---------------- |
+| Verdict                | Most accurate         | Fastest                        | First generation |
+| Accuracy on hard tasks | **76%**               | 67%                            | 54%              |
+| Speed                  | slower in this evaluation | **fastest in this evaluation** | slower in this evaluation |
 
 ### V4 Agent — most accurate
 
@@ -137,16 +158,17 @@ V4 writes and runs code to complete long, multi-step browser tasks. It can resea
 - "Collect every document with its title, reference, and deadline."
 - "Create a spreadsheet of all the pricing plans across these five competitors."
 
-The most thorough option, but it takes its time.
+In this evaluation, V4 was the most accurate and slower than V3.
 
 ### V3 Agent — fastest
 
-V3 looks at the page and acts step-by-step like a human would. Use only when cost and speed matter more than accuracy.
+V3 looks at the page and acts step-by-step like a human would. In this
+evaluation, it was the fastest and less accurate than V4.
 
 **Best for:**
 
 - Simple tasks, such as finding publicly available information
-- Workloads where cost and speed are essential
+- Workloads where speed is essential
 - Open-ended research
 
 **Example tasks:**
@@ -154,13 +176,12 @@ V3 looks at the page and acts step-by-step like a human would. Use only when cos
 - "Get a shipping quote for a 3 lb package between two zip codes."
 - "Check whether this product is in stock and what it costs right now."
 
-Faster but less reliable.
+In this evaluation, V3 was faster and less accurate than V4.
 
-### V2 Agent — legacy
+### V2 Agent — first generation
 
-Our first-generation agent remains available for compatibility. It is based on our open-source repository, but it is not actively maintained and is less accurate.
-
-Starting something new? Use V4 instead; it's far more accurate.
+V2 is based on the open-source agent architecture. In this evaluation it was
+less accurate than V3 and V4.
 
 ## V4 completes the hardest tasks
 
@@ -168,24 +189,14 @@ V4 completed 76% of difficult, real-world browser tasks — nine points ahead of
 
 ![Browser Use Cloud success rate on hard web tasks: V2 Agent 54.25%, V3 Agent 67.25%, V4 Agent 76.47%](https://docs.browser-use.com/cloud/images/agent-accuracy.png)
 
-## Typical tasks cost \$0.70–\$1.64
-
-Measured with the same model — Claude Opus 4.7 — across the last 30 days of production usage, the typical customer's successful task costs \$0.70 on V2, \$0.87 on V3, and \$1.64 on V4, taking about 1, 2, and 5 minutes respectively. V4 costs more per task because customers use it for more complex work, and V2's tasks run shortest only because it gets the simplest ones. On identical hard tasks, V3 is the fastest agent (about 6 minutes, versus about 10 for V2 and V4).
-
-|               | V2 Agent | V3 Agent | V4 Agent |
-| ------------- | -------- | -------- | -------- |
-| Cost per task | \$0.70    | \$0.87    | \$1.64    |
-| Time per task | ~1 min   | ~2 min   | ~5 min   |
-
-![What a task costs with Claude Opus 4.7 from real usage: V2 \$0.70, V3 \$0.87, V4 \$1.64 per successful task](https://docs.browser-use.com/cloud/images/agent-real-cost.png)
-
-## Comparing accuracy, speed, and cost
-
-![Comparing agent accuracy, speed, and cost: V4 is most accurate at \$1.64 per task, V3 is fastest at \$0.87, V2 is cheapest at \$0.70 but least accurate](https://docs.browser-use.com/cloud/images/agent-comparison.png)
-
 ## How we measured this
 
-In July 2026, we ran each agent four times on Internal Bench Hard: 106 difficult tasks on real websites. Every run used Claude Opus 4.8, and the same independent judge scored each result. We left out tasks blocked by websites' anti-bot measures. The speed and cost figures are averages; simpler tasks usually run faster and cost less. Real-world cost and speed figures are the median customer's successful task with Claude Opus 4.7 over the last 30 days of production, our own testing excluded.
+In July 2026, we ran each agent four times on Internal Bench Hard: 106 difficult
+tasks on real websites. Every run used Claude Opus 4.8, and the same independent
+judge scored each result. We left out tasks blocked by websites' anti-bot
+measures. Accuracy is the share of included tasks the judge marked successful.
+Speed compares the average duration of those matched evaluation runs; simpler
+tasks usually run faster.
 
 # Prompt for Vibecoders
 Source: https://docs.browser-use.com/cloud/vibecoding
@@ -206,6 +217,7 @@ Create an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) a
 ```bash
 export BROWSER_USE_API_KEY=your_key
 ```
+
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -232,6 +244,7 @@ curl https://api.browser-use.com/api/v4/runs \
   -d '{"task":"Find the top Hacker News story"}'
 ```
 
+
 Install the latest SDK with `pip install --upgrade browser-use-sdk` or
 `npm install browser-use-sdk@latest`. Curl needs no installation.
 
@@ -240,49 +253,44 @@ conversation and live browser, plus a [workspace](https://docs.browser-use.com/c
 persistent files.
 
 <img
-  src="/cloud/images/v4-agent-overview-light.svg"
+  src="https://docs.browser-use.com/cloud/images/v4-agent-overview-light.svg"
   alt="A task starts a run inside a session and the run reads and writes persistent workspace files"
   noZoom
   className="block dark:hidden"
 />
 <img
-  src="/cloud/images/v4-agent-overview-dark.svg"
+  src="https://docs.browser-use.com/cloud/images/v4-agent-overview-dark.svg"
   alt="A task starts a run inside a session and the run reads and writes persistent workspace files"
   noZoom
   className="hidden dark:block"
 />
 
-  [Copy API V4 docs](https://docs.browser-use.com/cloud/llms.txt)
-Give the compact context file to your coding agent.
+
+  [Copy Cloud docs](https://docs.browser-use.com/cloud/llms.txt)
+Give the compact Cloud documentation index to your coding agent.
 
 # Models
 Source: https://docs.browser-use.com/cloud/agent/models
 
 
-Omit `model` to use **GPT-5.6 Luna**, or pass a model ID when creating a run.
-These are the recommended Browser Use-hosted models with published token
-pricing:
+Omit `model` to use the default, `gpt-5.6-luna`, or pass a model ID when creating a run.
+These common choices appear in the V4 request schema:
 
-| Model | API string | Input | Cache read | Output | BYOK |
-| ----- | ---------- | ----: | ---------: | -----: | ---- |
-| GPT-5.6 Luna (recommended) | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
-| Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
-| Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
-| GPT-5.6 Sol | `gpt-5.6-sol` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
-| MiniMax M3 | `minimax-m3` | \$0.36 | \$0.072 | \$1.44 | — |
+| Model | API string | BYOK provider |
+| ----- | ---------- | ------------- |
+| GPT-5.6 Luna | `gpt-5.6-luna` | OpenAI |
+| Claude Opus 5 | `claude-opus-5` | Anthropic |
+| Grok 4.5 | `grok-4.5` | — |
+| GPT-5.6 Sol | `gpt-5.6-sol` | OpenAI |
+| MiniMax M3 | `minimax-m3` | — |
 
-Token prices are USD per 1 million tokens. Browser sessions
-(\$0.02/hour) and network traffic (\$5/GB managed proxy or \$0.20/GB
-proxyless/BYOP) are charged separately. See [full pricing](https://browser-use.com/pricing).
+See [current pricing](https://browser-use.com/pricing) for model, browser, and
+network rates.
 
 See [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels) for V4 `modelParams` and
 the normalized `thinkingLevel` values available in V2 and V3.
 
-  We recommend **GPT-5.6 Luna** for most tasks. It combines near-Opus benchmark
-  performance with the lowest token price and fastest median response time in
-  current V4 production traffic.
-
-## All supported V4 model IDs
+## V4 model IDs in the API schema
 
 The V4 request schema accepts the following model IDs. The Cloud dashboard may
 show a smaller curated set; availability can also depend on your account's
@@ -301,11 +309,6 @@ rollout and configured provider key.
 See [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels) for the reasoning controls
 accepted by each model. Not every model accepts `modelParams`.
 
-  The current generated SDK request types predate this contract. The
-  TypeScript model union does not yet include GPT-5.6 Luna or every model on
-  this page, and neither generated V4 request model exposes `modelParams`.
-  Use `POST /api/v4/runs` directly for those fields until the follow-up SDK
-  regeneration is released.
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -322,8 +325,7 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Compare three project-management tools",
-  // Use REST for GPT-5.6 Luna until the generated union is updated.
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
 });
 ```
 ```bash curl
@@ -333,13 +335,14 @@ curl https://api.browser-use.com/api/v4/runs \
   -d '{"task":"Compare three PM tools","model":"gpt-5.6-luna"}'
 ```
 
+
 ## Bring your own key
 
-On plans with BYOK, add an Anthropic, OpenAI, or Google key under **Settings →
-API Keys → Bring Your Own Key**. V4 uses it automatically for matching models;
-no request flag is needed. You pay the provider directly, plus a 0.2× Browser
-Use orchestration fee. Models from other providers use Browser Use-managed
-keys.
+If BYOK is enabled for your project, add an Anthropic, OpenAI, or Google key
+under **Settings → API Keys → Bring Your Own Key**. V4 uses it automatically
+for matching models; no request flag is needed. Models from other providers use
+Browser Use-managed keys. See [pricing](https://browser-use.com/pricing) for
+current BYOK billing.
 
 # Thinking levels
 Source: https://docs.browser-use.com/cloud/agent/thinking-levels
@@ -351,8 +354,8 @@ Browser Use exposes reasoning controls in two forms:
 - **API V3 and V2** use the provider-neutral `thinkingLevel` field with
   `disabled`, `low`, `medium`, or `high`.
 
-See [Models](https://docs.browser-use.com/cloud/agent/models) for the complete V4 model list, recommended
-model, token pricing, and BYOK routes.
+See [Models](https://docs.browser-use.com/cloud/agent/models) for the V4 model list and BYOK routes. See
+[pricing](https://browser-use.com/pricing) for current token rates.
 
 ## API V4 model parameters
 
@@ -372,11 +375,14 @@ field names and accepted values therefore differ by model family.
 `glm-5.2`, `grok-4.5`, `kimi-k3`, `minimax-m3`, and `claude-fable-5`
 do not currently accept V4 `modelParams`.
 
+
   Omitting `modelParams` applies Browser Use's defaults for that V4 model. For
   example, `gpt-5.6-luna` defaults to `reasoning.effort: xhigh`. Send an empty
   object (`"modelParams": {}`) to opt out and use the provider's defaults.
 
+
 ### V4 examples
+
 
 ```bash OpenAI
 curl -X POST https://api.browser-use.com/api/v4/runs \
@@ -410,6 +416,7 @@ curl -X POST https://api.browser-use.com/api/v4/runs \
     "modelParams": {"thinkingConfig": {"thinkingLevel": "high"}}
   }'
 ```
+
 
 ## API V3 support
 
@@ -454,7 +461,7 @@ cannot safely replay their thinking blocks. Those Claude models still accept
 | `gpt-5.5`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | Yes | Yes | Yes | Yes |
 | `claude-sonnet-5`, `claude-opus-4-7`, `claude-opus-4-8`, `claude-opus-5` | Yes | Yes | Yes | Yes |
 | `claude-sonnet-4-20250514`, `claude-sonnet-4-5-20250929`, `claude-opus-4-5-20251101` | Yes | — | — | — |
-| `gpt-4.1`, `gpt-4.1-mini`, `glm-5.2`, `minimax-m3`, `llama-4-maverick-17b-128e-instruct`, `claude-3-7-sonnet-20250219` | — | — | — | — |
+| `bu-2-0-mini-preview`, `gpt-4.1`, `gpt-4.1-mini`, `glm-5.2`, `minimax-m3`, `llama-4-maverick-17b-128e-instruct`, `claude-3-7-sonnet-20250219` | — | — | — | — |
 
 V2's existing `thinking` boolean controls legacy agent behavior. It does not
 select a provider reasoning depth and does not replace `thinkingLevel`.
@@ -490,6 +497,7 @@ to the provider's native control.
 
 REST JSON uses the camelCase wire field `thinkingLevel` in both API versions.
 
+
 ```bash API V3
 curl -X POST https://api.browser-use.com/api/v3/sessions \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
@@ -512,6 +520,7 @@ curl -X POST https://api.browser-use.com/api/v2/tasks \
   }'
 ```
 
+
 ## Validation errors
 
 Unsupported V2/V3 model-level pairs return HTTP 422. The request field is
@@ -532,15 +541,18 @@ Model "gemini-3.1-pro" does not support modelParams.thinkingConfig.thinkingLevel
 
 The normalized V2/V3 field is optional and nullable. New sessions use provider
 defaults until a level is supplied. Existing V3 sessions retain their current
-setting when the field is omitted; send `null` to clear it. The checked-in
-generated SDK clients do not expose this field yet, so use the REST examples
-above until the follow-up SDK regeneration is released. V4 SDK clients can
-send `modelParams` once their generated V4 type includes the current contract.
+setting when the field is omitted; send `null` to clear it. Generated V2 and V3
+SDK clients expose the field as `thinking_level` in Python and `thinkingLevel`
+in TypeScript. Generated V4 SDK clients expose `model_params` in Python and
+`modelParams` in TypeScript.
+
 
   [V4 create run](https://docs.browser-use.com/cloud/api-v4/runs/create-run)
 Generated V4 `modelParams` schema.
+
   [V3 create session](https://docs.browser-use.com/cloud/api-v3/sessions/create-session)
 Generated V3 `thinkingLevel` schema.
+
   [V2 create task](https://docs.browser-use.com/cloud/api-v2/tasks/create-task)
 Generated V2 `thinkingLevel` schema.
 
@@ -550,6 +562,7 @@ Source: https://docs.browser-use.com/cloud/agent/structured-output
 
 V4 returns `run.result` as a string. Ask for JSON only, then validate it
 client-side:
+
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -580,11 +593,12 @@ const Story = z.object({
 
 const run = await client.runs.create({
   task: 'Find the top HN story. Return only {"title":"...","points":0}.',
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
 });
 const result = await client.runs.waitForCompletion(run.id);
 const story = Story.parse(JSON.parse(result.result ?? "{}"));
 ```
+
 
 V4 does not accept `output_schema` / `outputSchema`. Handle validation errors
 and retry with a [session follow-up](https://docs.browser-use.com/cloud/agent/sessions) when needed.
@@ -598,19 +612,20 @@ One session ID can contain multiple runs. Every run creates a session implicitly
 unless you pass an existing session ID.
 
 <img
-  src="/cloud/images/v4-sessions-light.svg"
+  src="https://docs.browser-use.com/cloud/images/v4-sessions-light.svg"
   alt="One session ID containing three sequential runs, where each run continues the same conversation, workspace, and live browser"
   noZoom
   className="block dark:hidden"
 />
 <img
-  src="/cloud/images/v4-sessions-dark.svg"
+  src="https://docs.browser-use.com/cloud/images/v4-sessions-dark.svg"
   alt="One session ID containing three sequential runs, where each run continues the same conversation, workspace, and live browser"
   noZoom
   className="hidden dark:block"
 />
 
 Pass `session_id` / `sessionId` to continue:
+
 
 ```python Python
 first = client.runs.create("Open Hacker News")
@@ -626,18 +641,19 @@ print(result.result)
 ```typescript TypeScript
 const first = await client.runs.create({
   task: "Open Hacker News",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
 });
 await client.runs.waitForCompletion(first.id);
 
 const followUp = await client.runs.create({
   task: "Now summarize the top story",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   sessionId: first.sessionId,
 });
 const result = await client.runs.waitForCompletion(followUp.id);
 console.log(result.result);
 ```
+
 
 Omit the session ID for a new conversation. Pass only a [workspace
 ID](https://docs.browser-use.com/cloud/agent/workspaces) when you want a fresh conversation that keeps the
@@ -651,19 +667,20 @@ A **workspace** is a persistent filesystem shared by runs—even runs in
 different sessions. Use it for inputs, scripts, and generated files.
 
 <img
-  src="/cloud/images/v4-workspaces-light.svg"
+  src="https://docs.browser-use.com/cloud/images/v4-workspaces-light.svg"
   alt="Two independent sessions reading and writing people.csv, script.py, and output.json in one persistent workspace"
   noZoom
   className="block dark:hidden"
 />
 <img
-  src="/cloud/images/v4-workspaces-dark.svg"
+  src="https://docs.browser-use.com/cloud/images/v4-workspaces-dark.svg"
   alt="Two independent sessions reading and writing people.csv, script.py, and output.json in one persistent workspace"
   noZoom
   className="hidden dark:block"
 />
 
 ## Upload and attach a file
+
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -692,17 +709,19 @@ const uploaded = await client.workspaces.upload(
 
 const run = await client.runs.create({
   task: "Find everyone in the CSV who works at Google",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   workspaceId: workspace.id,
   attachedFileIds: [uploaded[0].id],
 });
 ```
+
 
 Attachments are run-scoped. Reusing a workspace does not reattach every upload.
 
 ## Retrieve created files
 
 Ask the agent to save its output, then list the workspace:
+
 
 ```python Python
 files = client.workspaces.files(
@@ -722,6 +741,7 @@ for (const file of files.files) {
 }
 ```
 
+
 Download URLs expire after 60 seconds. See the [workspace API
 reference](https://docs.browser-use.com/cloud/api-v4/workspaces/list-workspace-files) for pagination and
 limits.
@@ -739,25 +759,28 @@ example below collects the top five Hacker News stories. The first run writes
 and tests the script. Every later run sends a new request to the live page.
 
 <img
-  src="/cloud/images/v4-scripts-light.svg"
+  src="https://docs.browser-use.com/cloud/images/v4-scripts-light.svg"
   alt="A first agent run saves and tests script.py and a README in a workspace; later runs reuse the script and repair it only when necessary"
   noZoom
   className="block dark:hidden"
 />
 <img
-  src="/cloud/images/v4-scripts-dark.svg"
+  src="https://docs.browser-use.com/cloud/images/v4-scripts-dark.svg"
   alt="A first agent run saves and tests script.py and a README in a workspace; later runs reuse the script and repair it only when necessary"
   noZoom
   className="hidden dark:block"
 />
 
+
   The file stays. The running process does not. Each later run starts an agent
   again, but it can reuse the code instead of rebuilding the browser workflow.
+
 
 ## Save the working script
 
 Create one workspace, then ask the first run to do the job and save a tested
 script:
+
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -780,7 +803,7 @@ first = client.runs.create(
     proof/run-2.json. Confirm both outputs have a fresh fetched_at value and
     five stories. Add scripts/README.md with the command to run it again.
     """,
-    model="grok-4.5",
+    model="gpt-5.6-luna",
     workspace_id=workspace.id,
 )
 client.runs.wait_for_completion(first.id)
@@ -810,7 +833,7 @@ const first = await client.runs.create({
     proof/run-2.json. Confirm both outputs have a fresh fetched_at value and
     five stories. Add scripts/README.md with the command to run it again.
   `,
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   workspaceId: workspace.id,
 });
 await client.runs.waitForCompletion(first.id);
@@ -822,10 +845,12 @@ console.log(saved.files.map((file) => file.path));
 console.log(`Keep this workspace ID: ${workspace.id}`);
 ```
 
+
 ## Rerun it later
 
 Copy the workspace ID from the first process. Pass that ID without a session ID
 to start a new conversation with the saved files:
+
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -840,7 +865,7 @@ later = client.runs.create(
     has five stories. If the script fails or the result is malformed, inspect
     the live page and repair the saved script before returning the new result.
     """,
-    model="grok-4.5",
+    model="gpt-5.6-luna",
     workspace_id=workspace_id,
 )
 result = client.runs.wait_for_completion(later.id)
@@ -859,12 +884,13 @@ const later = await client.runs.create({
     has five stories. If the script fails or the result is malformed, inspect
     the live page and repair the saved script before returning the new result.
   `,
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   workspaceId,
 });
 const result = await client.runs.waitForCompletion(later.id);
 console.log(result.result);
 ```
+
 
 ## Live data, not a cached answer
 
@@ -902,6 +928,7 @@ Source: https://docs.browser-use.com/cloud/agent/human-in-the-loop
 Use a human checkpoint for approvals, authentication, payments, or review.
 After a run stops, get its `live_view_url` from the `browser.ready` event:
 
+
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
 
@@ -930,7 +957,7 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Open the login page and stop for human review",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
 });
 await client.runs.waitForCompletion(run.id);
 
@@ -945,10 +972,11 @@ console.log(ready?.data.live_view_url);
 // After the human finishes:
 const nextRun = await client.runs.create({
   task: "Continue from the current page",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   sessionId: run.sessionId,
 });
 ```
+
 
 The same session preserves the conversation and workspace and reuses the live
 browser while it is available. Treat live-view URLs as credentials.
@@ -958,6 +986,7 @@ Source: https://docs.browser-use.com/cloud/agent/observability
 
 
 Poll `runs.events()` with the previous cursor to receive only new events:
+
 
 ```python Python
 import time
@@ -989,6 +1018,7 @@ while (true) {
 }
 ```
 
+
 Events cover run lifecycle, model calls, browser readiness, tool activity,
 artifacts, and completion. See [Get run events](https://docs.browser-use.com/cloud/api-v4/runs/get-run-events)
 for the complete response shape.
@@ -997,17 +1027,18 @@ for the complete response shape.
 Source: https://docs.browser-use.com/cloud/browser/quickstart
 
 
-Every browser includes stealth, proxies, live preview, and recording. Its
-**CDP URL** is a WebSocket endpoint for remotely controlling Chrome.
+Browser Infrastructure is hosted cloud browser infrastructure for AI agents,
+controlled through the SDK, REST, or CDP. A browser's **CDP URL** is a WebSocket
+endpoint for remotely controlling Chrome.
 
 <img
-  src="/cloud/images/browser-cdp-light.svg"
+  src="https://docs.browser-use.com/cloud/images/browser-cdp-light.svg"
   alt="Your code using a CDP URL to connect to and control a cloud browser that accesses the web"
   noZoom
   className="block dark:hidden"
 />
 <img
-  src="/cloud/images/browser-cdp-dark.svg"
+  src="https://docs.browser-use.com/cloud/images/browser-cdp-dark.svg"
   alt="Your code using a CDP URL to connect to and control a cloud browser that accesses the web"
   noZoom
   className="hidden dark:block"
@@ -1024,6 +1055,7 @@ export BROWSER_USE_API_KEY=your_key
 
 Skip this step if you use curl.
 
+
 ```bash Python
 pip install --upgrade browser-use-sdk
 ```
@@ -1031,10 +1063,13 @@ pip install --upgrade browser-use-sdk
 npm install browser-use-sdk@latest
 ```
 
+
 ## Launch a browser
 
-The browser-management resource currently uses the explicit V3 SDK namespace.
-The equivalent REST endpoint is API V4.
+The examples use the V3 SDK browser resource and the V4 REST browser endpoint.
+See the [developer overview](https://browser-use.com/developers) when choosing
+an interface for a new integration.
+
 
 ```python Python
 from browser_use_sdk.v3 import BrowserUse
@@ -1074,12 +1109,17 @@ curl -X PATCH \
   -d '{"action":"stop"}'
 ```
 
+
+
   `browser.close()`, disconnecting CDP, or `client.close()` does not stop the
   managed browser. Use `client.browsers.stop(browser.id)` or call
   `PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`.
 
+
+
   [Connect over CDP](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium)
 Use the CDP URL with Playwright or Puppeteer.
+
   [Browser settings](https://docs.browser-use.com/cloud/api-v4/browsers/create-browser-session)
 Configure proxies, screen size, recording, and timeout.
 
@@ -1093,9 +1133,13 @@ See [how we perform in the hardest stealth benchmark](https://browser-use.com/po
 
 Every cloud browser session runs in a hardened Chromium fork with stealth enabled by default — no configuration needed.
 
-- **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and other browser fingerprints are randomized per session to appear as a real user. Passes CreepJS, BrowserLeaks, and other fingerprint detectors.
+- **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and
+  other browser fingerprints are varied per session to reduce detectable
+  automation signatures.
 - **Ad and cookie banner blocking** — Banners are dismissed automatically so the agent sees clean pages and executes faster.
-- **Cloudflare / anti-bot bypass** — Works on sites protected by Cloudflare, PerimeterX, and other bot detection services.
+- **Anti-bot resilience** — Hardened browser fingerprints and proxy routing can
+  reduce automated traffic blocks. Site behavior varies, so access is not
+  guaranteed.
 
 Cloud browsers also solve reCAPTCHA and other supported challenges automatically.
 See [CAPTCHA handling](https://docs.browser-use.com/cloud/browser/captcha-handling) for what to do when a
@@ -1103,7 +1147,9 @@ solver is still working or a site has a specific anti-bot issue.
 
 ## Residential proxies
 
-Residential proxies are enabled by default across 195+ countries. This makes browser sessions appear as real users from the target geography. See [Proxies](https://docs.browser-use.com/cloud/browser/proxies) for details on geo-targeting and custom proxy configuration.
+Residential proxy routing is enabled by default. See
+[Proxies](https://docs.browser-use.com/cloud/browser/proxies) for geo-targeting and custom proxy
+configuration.
 
 # CAPTCHA handling
 Source: https://docs.browser-use.com/cloud/browser/captcha-handling
@@ -1140,13 +1186,13 @@ through that residential IP before reaching the website, so the website sees
 the proxy's location—not your server's.
 
 <img
-  src="/cloud/images/browser-proxy-light.svg"
+  src="https://docs.browser-use.com/cloud/images/browser-proxy-light.svg"
   alt="A cloud browser routing its traffic through a residential proxy before reaching a website"
   noZoom
   className="block dark:hidden"
 />
 <img
-  src="/cloud/images/browser-proxy-dark.svg"
+  src="https://docs.browser-use.com/cloud/images/browser-proxy-dark.svg"
   alt="A cloud browser routing its traffic through a residential proxy before reaching a website"
   noZoom
   className="hidden dark:block"
@@ -1155,9 +1201,16 @@ the proxy's location—not your server's.
 Set `browser_settings` / `browserSettings` when you create a V4 run to choose
 another country:
 
+
   The current TypeScript SDK type requires `proxyCountryCode` whenever
   `browserSettings` is present. Use `"us"` to keep the default, or `null` to
   disable the managed proxy.
+
+
+The API accepts the lowercase two-letter country codes enumerated by
+`ProxyCountryCode` in the current [V4 OpenAPI schema](https://docs.browser-use.com/cloud/openapi/v4.json).
+Unsupported values are rejected when the run is created.
+
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -1174,7 +1227,7 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Get the iPhone 16 price on amazon.de",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: { proxyCountryCode: "de" },
 });
 ```
@@ -1186,9 +1239,11 @@ curl https://api.browser-use.com/api/v4/runs \
        "browserSettings":{"proxyCountryCode":"de"}}'
 ```
 
+
 ## Disable proxies
 
 Pass `null` for QA or internal sites that do not need a residential proxy:
+
 
 ```python Python
 run = client.runs.create(
@@ -1199,14 +1254,17 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Test my staging site",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: { proxyCountryCode: null },
 });
 ```
 
+
 ## Custom proxy
 
-Custom HTTP and SOCKS5 proxies are available on paid plans:
+Custom HTTP and SOCKS5 proxies require an active subscription. See the
+[pricing page](https://browser-use.com/pricing) for current commercial terms.
+
 
 ```python Python
 run = client.runs.create(
@@ -1225,7 +1283,7 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Check the account dashboard",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: {
     proxyCountryCode: "us",
     customProxy: {
@@ -1239,6 +1297,7 @@ const run = await client.runs.create({
 });
 ```
 
+
 A custom proxy overrides `proxyCountryCode` and must be passed again when a
 follow-up provisions a new browser. See the [Create run
 reference](https://docs.browser-use.com/cloud/api-v4/runs/create-run) for the complete settings object.
@@ -1249,6 +1308,7 @@ Source: https://docs.browser-use.com/cloud/browser/live-preview
 
 Wait for `browser.ready` as soon as you create the run so the URL is available
 while the browser is live:
+
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -1264,11 +1324,12 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Find the top Hacker News story",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
 });
 const ready = await client.runs.waitForEvent(run.id, "browser.ready");
 console.log(ready.data.live_view_url);
 ```
+
 
 The helper advances the event cursor and times out after five minutes. See [run
 events](https://docs.browser-use.com/cloud/agent/observability) for the full event stream and custom polling.
@@ -1291,6 +1352,7 @@ a credential: anyone with it can interact with the active browser.
 
 Enable recording when the run creates its browser:
 
+
 ```python Python
 run = client.runs.create(
     "Test the checkout flow",
@@ -1300,7 +1362,7 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Test the checkout flow",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: { proxyCountryCode: "us", record: true },
 });
 ```
@@ -1310,6 +1372,7 @@ curl https://api.browser-use.com/api/v4/runs \
   -H "Content-Type: application/json" \
   -d '{"task":"Test checkout","browserSettings":{"record":true}}'
 ```
+
 
 The MP4 becomes available in the Dashboard after the browser stops. API runs
 default to recording off, and Zero Data Retention projects never record.
@@ -1322,8 +1385,10 @@ Every browser runs in a [hardened Chromium fork](https://docs.browser-use.com/cl
 stealth, anti-fingerprinting, and [residential
 proxies](https://docs.browser-use.com/cloud/browser/proxies) enabled by default.
 
+
   This page is for direct browser control. To give an AI agent a goal instead,
   [create an API V4 run](https://docs.browser-use.com/cloud/agent/quickstart).
+
 
 ## 1. Create a browser
 
@@ -1340,6 +1405,7 @@ export BROWSER_USE_CDP_URL=$(echo "$session" | jq -r .cdpUrl)
 ## 2. Connect over CDP
 
 ### Playwright
+
 
 ```python Python
 import os
@@ -1361,6 +1427,7 @@ const page = browser.contexts()[0].pages()[0];
 await page.goto("https://example.com");
 console.log(await page.title());
 ```
+
 
 ### Puppeteer
 
@@ -1390,8 +1457,10 @@ curl -X PATCH \
   -d '{"action":"stop"}'
 ```
 
+
   `browser.close()` and disconnecting CDP do not stop the managed browser.
   Call `PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`.
+
 
 See [Create browser session](https://docs.browser-use.com/cloud/api-v4/browsers/create-browser-session) and
 [Update browser session](https://docs.browser-use.com/cloud/api-v4/browsers/update-browser-session) for
@@ -1406,13 +1475,13 @@ Log in once, save the profile, then reuse it to start future browsers already
 logged in.
 
 <img
-  src="/cloud/images/browser-profile-light.svg"
+  src="https://docs.browser-use.com/cloud/images/browser-profile-light.svg"
   alt="One login saved as a profile and reused by multiple future browsers"
   noZoom
   className="block dark:hidden"
 />
 <img
-  src="/cloud/images/browser-profile-dark.svg"
+  src="https://docs.browser-use.com/cloud/images/browser-profile-dark.svg"
   alt="One login saved as a profile and reused by multiple future browsers"
   noZoom
   className="hidden dark:block"
@@ -1420,6 +1489,7 @@ logged in.
 
 Create or select one under [Dashboard → Profiles](https://cloud.browser-use.com/settings?tab=profiles),
 then pass its ID in V4 browser settings:
+
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -1438,7 +1508,7 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Open my account dashboard and summarize it",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: {
     profileId: "YOUR_PROFILE_ID",
     proxyCountryCode: "us",
@@ -1454,6 +1524,7 @@ curl https://api.browser-use.com/api/v4/runs \
   -d '{"task":"Summarize my account dashboard",
        "browserSettings":{"profileId":"YOUR_PROFILE_ID"}}'
 ```
+
 
 Use one profile per end user. Follow-ups in the same [session](https://docs.browser-use.com/cloud/agent/sessions)
 reuse the live browser; later sessions can load the same profile again.
@@ -1473,6 +1544,7 @@ curl -fsSL https://browser-use.com/profile.sh | sh
 
 Choose the accounts to sync, then use the returned profile ID:
 
+
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
 
@@ -1488,13 +1560,14 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Check my LinkedIn messages",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: {
     profileId: "YOUR_PROFILE_ID",
     proxyCountryCode: "us",
   },
 });
 ```
+
 
 The profile supplies cookies and local storage without putting credentials in
 the prompt. Re-sync when the site's login expires.
@@ -1510,6 +1583,7 @@ The most reliable options are a saved profile or a human checkpoint.
 [Sync your local login](https://docs.browser-use.com/cloud/guides/profile-sync), then load that profile in
 the run:
 
+
 ```python Python
 run = client.runs.create(
     "Download my latest invoice",
@@ -1519,13 +1593,14 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Download my latest invoice",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   browserSettings: {
     profileId: "YOUR_PROFILE_ID",
     proxyCountryCode: "us",
   },
 });
 ```
+
 
 This avoids another 2FA challenge while the site's cookies remain valid.
 
@@ -1534,6 +1609,7 @@ This avoids another 2FA challenge while the site's cookies remain valid.
 Ask the first run to stop at the 2FA screen, get its `live_view_url` from the
 [`browser.ready` event](https://docs.browser-use.com/cloud/agent/human-in-the-loop), and have the user enter
 the code. Then continue with the same session:
+
 
 ```python Python
 first = client.runs.create(
@@ -1549,16 +1625,17 @@ next_run = client.runs.create(
 ```typescript TypeScript
 const first = await client.runs.create({
   task: "Open the login page and stop at the 2FA prompt",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
 });
 await client.runs.waitForCompletion(first.id);
 
 const nextRun = await client.runs.create({
   task: "Continue after login and download the invoice",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
   sessionId: first.sessionId,
 });
 ```
+
 
 See [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop) for retrieving and
 embedding the live browser URL. Never put passwords or TOTP secrets directly
@@ -1568,7 +1645,7 @@ in a prompt.
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/claude-code
 
 
-[Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) is Anthropic's agentic coding tool that runs in the terminal. Add Browser Use and it gets full cloud browser automation — anti-detect profiles, CAPTCHA solving, residential proxies in 195+ countries, persistent profiles, and stealth browsing.
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) is Anthropic's agentic coding tool that runs in the terminal. Add Browser Use and it can control Browser Infrastructure — hosted cloud browsers for AI agents with managed profiles, proxy routing, supported CAPTCHA handling, and live viewing.
 
 ## Setup
 
@@ -1600,7 +1677,7 @@ Sign up at [cloud.browser-use.com](https://cloud.browser-use.com), then authenti
 browser-use auth login
 ```
 
-Or let Claude Code provision a free API key itself — see [Agent Self-Registration](#agent-self-registration) below.
+Or let Claude Code provision an API key itself — see [Agent Self-Registration](https://docs.browser-use.com/cloud/tutorials/integrations/claude-code#agent-self-registration) below.
 
 **5. Use it**
 
@@ -1614,7 +1691,9 @@ For the complete CLI reference and Python execution examples, see the [Browser U
 
 ## Agent Self-Registration
 
-Claude Code can provision its own Browser Use API key autonomously — no human interaction needed. The free tier includes unlimited browser hours, free proxies in 195+ countries, persistent browser profiles, CAPTCHA solving, and stealth browsing at zero cost.
+Claude Code can provision its own Browser Use API key autonomously — no human
+interaction needed. See [pricing](https://browser-use.com/pricing) for current
+plans, credits, browser usage, and proxy rates.
 
 Install the Browser Use CLI and skill:
 
@@ -1638,7 +1717,7 @@ If the human wants to see the account in the dashboard later, use the [claim end
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/claude-managed-agents
 
 
-[Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents) run on Anthropic's hosted platform. Install the `browser-use` CLI in the agent's environment and it can drive a stealth cloud browser — with proxies, CAPTCHA solving, live view, and recording. Your API key stays in a credential vault; the model never sees it.
+[Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents) run on Anthropic's hosted platform. Install the `browser-use` CLI in the agent's environment and it can drive Browser Infrastructure — hosted cloud browsers for AI agents with managed proxy routing, supported CAPTCHA handling, live view, and recording. Your API key stays in a credential vault; the model never sees it.
 
 The sandbox can't run a local browser, so the agent starts a named Browser Use Cloud browser and drives it with `browser-use <<'PY'` Python snippets.
 
@@ -1677,7 +1756,7 @@ Tell it to use the CLI in cloud mode.
 name: browser agent
 model:
   id: claude-opus-4-8
-description: Drives a stealth cloud browser with the Browser Use CLI.
+description: Drives Browser Infrastructure with the Browser Use CLI.
 system: |
   You are a browser agent. Use the `browser-use` CLI to complete web tasks.
   Never launch a local browser in this sandbox. Start a named cloud browser:
@@ -1716,6 +1795,7 @@ curl -sS "https://api.anthropic.com/v1/sessions/$SESSION_ID/events?beta=true" \
 
 The agent starts a named cloud browser, runs Python helper snippets through `browser-use`, then returns the result. The session shows up in [cloud.browser-use.com](https://cloud.browser-use.com) → **Remote Browsers** with a **Live View** and an **mp4 recording**.
 
+
   Always use a cloud browser — the Managed Agents sandbox has no GUI, so a local
   browser won't start. Cloud mode also gives you stealth, residential proxies,
   live view, and recording.
@@ -1724,7 +1804,7 @@ The agent starts a named cloud browser, runs Python helper snippets through `bro
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/openclaw
 
 
-[OpenClaw](https://openclaw.ai) is a self-hosted gateway that connects chat apps like WhatsApp, Telegram, and Discord to AI coding agents. Add Browser Use and those agents get full browser automation — anti-detect profiles, CAPTCHA solving, residential proxies in 195+ countries, and stealth browsing out of the box.
+[OpenClaw](https://openclaw.ai) is a self-hosted gateway that connects chat apps like WhatsApp, Telegram, and Discord to AI coding agents. Add Browser Use and those agents can control Browser Infrastructure — hosted cloud browsers for AI agents with managed profiles, proxy routing, supported CAPTCHA handling, and live viewing.
 
 Two ways to set it up: connect a Browser Use cloud browser to OpenClaw's native browser tool via CDP, or install the Browser Use CLI as a skill.
 
@@ -1761,11 +1841,15 @@ Open `~/.openclaw/openclaw.json` and add a `browser-use` profile:
 }
 ```
 
-Replace `<BROWSER_USE_API_KEY>` with your actual key. All Browser Use session parameters can be passed as query params in the `cdpUrl`:
+Replace `<BROWSER_USE_API_KEY>` with your actual key. These Browser Use session
+parameters can be passed as query parameters in the `cdpUrl`:
 
-- `timeout` — session duration in minutes (max 240)
+- `timeout` — requested session duration in minutes (1–240; defaults to 60)
 - `profileId` — load a saved browser profile with persistent cookies and localStorage
 - `proxyCountryCode` — route traffic through a specific country (e.g. `us`, `de`, `jp`)
+
+See the [browser reference](https://docs.browser-use.com/cloud/browser/quickstart) for maintained settings
+and [pricing](https://browser-use.com/pricing) for current commercial terms.
 
 **3. Use it**
 
@@ -1819,7 +1903,7 @@ For the complete CLI reference, see the [Browser Use CLI docs](https://docs.brow
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/hermes-agent
 
 
-[Hermes Agent](https://github.com/nousresearch/hermes-agent) is an open-source, self-improving AI agent by Nous Research. It has built-in browser automation tools that work with local Chromium out of the box. Add Browser Use and those tools run on cloud browsers with anti-detect profiles, residential proxies in 195+ countries, and stealth browsing.
+[Hermes Agent](https://github.com/nousresearch/hermes-agent) is an open-source, self-improving AI agent by Nous Research. It has built-in browser automation tools that work with local Chromium out of the box. Add Browser Use and those tools can control Browser Infrastructure — hosted cloud browsers for AI agents with managed profiles, proxy routing, and live viewing.
 
 Two ways to set it up: configure Browser Use as Hermes's cloud browser backend, or install the Browser Use CLI and let Hermes drive it directly.
 
@@ -1833,7 +1917,7 @@ Hermes has built-in browser tools (`browser_navigate`, `browser_click`, `browser
 
 Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and copy your API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
 
-Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
+Or let the agent provision one itself — see [Agent Self-Registration](https://docs.browser-use.com/cloud/tutorials/integrations/hermes-agent#agent-self-registration) below.
 
 **2. Configure Hermes**
 
@@ -1902,7 +1986,7 @@ Authenticate with your API key:
 browser-use auth login
 ```
 
-Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
+Or let the agent provision one itself — see [Agent Self-Registration](https://docs.browser-use.com/cloud/tutorials/integrations/hermes-agent#agent-self-registration) below.
 
 **5. Use it**
 
@@ -1950,7 +2034,7 @@ If the human wants to see the account in the dashboard later, use the [claim end
 Source: https://docs.browser-use.com/cloud/agent-signup
 
 
-An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
+An AI agent can create its own Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks. See the [pricing page](https://browser-use.com/pricing) for current credits and terms.
 
 The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
 
@@ -2061,13 +2145,14 @@ Source: https://docs.browser-use.com/cloud/faq
 
 ## Which model should I use?
 
-- **GPT-5.6 Luna** (`gpt-5.6-luna`, recommended) — the best balance of accuracy, speed, and price for most tasks.
-- **Claude Opus 5** (`claude-opus-5`) — maximum intelligence for difficult, long-horizon work.
-- **Grok 4.5** (`grok-4.5`) — a strong general-purpose alternative.
-- **GPT-5.6 Sol** (`gpt-5.6-sol`) — a higher-cost OpenAI option for complex tasks.
-- **MiniMax M3** (`minimax-m3`) — inexpensive for simple and high-volume tasks.
+- **GPT-5.6 Luna** (`gpt-5.6-luna`) — the default starting point.
+- **Claude Opus 5** (`claude-opus-5`) — an option for difficult, long-horizon work.
+- **Grok 4.5** (`grok-4.5`) — a general-purpose alternative.
+- **GPT-5.6 Sol** (`gpt-5.6-sol`) — an OpenAI option for complex tasks.
+- **MiniMax M3** (`minimax-m3`) — another option for simple and high-volume tasks.
 
-See [Models](https://docs.browser-use.com/cloud/agent/models) for the complete V4 picker and pricing.
+See [Models](https://docs.browser-use.com/cloud/agent/models) for the V4 picker and
+[pricing](https://browser-use.com/pricing) for current rates.
 
 ## How do I get the live browser URL?
 
@@ -2099,21 +2184,17 @@ If it still doesn't work, contact support inside the [Cloud Dashboard](https://c
 
 The SDK auto-retries 429 responses with exponential backoff. If persistent, you may need more concurrent sessions — contact support.
 
-## V2 or V4 — which should I use?
+## Which API interface should I use?
 
-Use **V4** for difficult tasks where accuracy matters. It supports:
+The V2, V3, and V4 references are all retained in these docs. See the
+[developer overview](https://browser-use.com/developers) for the maintained
+product map and guidance for new integrations.
 
-- Run-focused API with a cheap status polling endpoint
-- Conversation sessions with follow-ups
-- Persistent workspaces and turn-scoped file attachments
-- Incremental events for custom UIs and monitoring
-- Per-run cost totals, cost caps, and optional judgement
-
-Use **V2** when tasks are simple and your priority is very low cost and
-predictable speed. Its accuracy is substantially lower.
-
-See Browser Use at #1 on the
-[Odysseys benchmark](https://odysseysbench.com/leaderboard).
+V4 provides a run-focused API, conversation follow-ups, persistent workspaces,
+turn-scoped file attachments, incremental events, per-run cost totals and cost
+caps, and optional judgement. Compare those capabilities with the retained
+[V3](https://docs.browser-use.com/cloud/api-reference) and [V2](https://docs.browser-use.com/cloud/api-v2-overview) references before
+changing an existing integration.
 
 # Agent (v2)
 Source: https://docs.browser-use.com/cloud/legacy/agent
@@ -2121,16 +2202,18 @@ Source: https://docs.browser-use.com/cloud/legacy/agent
 
 ## Models
 
-| Model | API String | Cost per Step |
-| ----- | ---------- | ------------- |
-| Browser Use 2.0 (default) | `browser-use-2.0` | \$0.006 |
-| O3 | `o3` | \$0.03 |
-| Gemini Flash Latest | `gemini-flash-latest` | \$0.0075 |
-| Gemini Flash Lite Latest | `gemini-flash-lite-latest` | \$0.005 |
-| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
-| Claude Sonnet 4.6 | `claude-sonnet-4.6` | \$0.05 |
+| Model | API String |
+| ----- | ---------- |
+| Browser Use 2.0 (default) | `browser-use-2.0` |
+| O3 | `o3` |
+| Gemini Flash Latest | `gemini-flash-latest` |
+| Gemini Flash Lite Latest | `gemini-flash-lite-latest` |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` |
+
+See [pricing](https://browser-use.com/pricing) for current model rates.
 
 Pass `llm` explicitly to select a model:
+
 
 ```python Python
 result = await client.run("...", llm="browser-use-2.0")
@@ -2138,6 +2221,7 @@ result = await client.run("...", llm="browser-use-2.0")
 ```typescript TypeScript
 const result = await client.run("...", { llm: "browser-use-2.0" });
 ```
+
 
 ---
 
@@ -2148,6 +2232,7 @@ Upload images, PDFs, documents, and text files (10 MB max) to sessions, and down
 ### Upload a file
 
 Get a presigned URL, then upload via POST.
+
 
 ```python Python
 import httpx
@@ -2191,9 +2276,13 @@ await fetch(upload.url, {
 const result = await client.run("Summarize the uploaded PDF", { sessionId: session.id });
 ```
 
+
+
   Presigned URLs expire after 120 seconds. Max file size: 10 MB.
 
+
 ### Download task output files
+
 
 ```python Python
 result = await client.tasks.get(task_id)
@@ -2209,11 +2298,13 @@ for (const file of result.outputFiles) {
 }
 ```
 
+
 ---
 
 ## Streaming steps
 
 Use `async for` to yield steps as the agent works.
+
 
 ```python Python
 from browser_use_sdk import AsyncBrowserUse
@@ -2239,6 +2330,7 @@ for await (const step of run) {
 console.log(run.result?.output);  // final result after iteration
 ```
 
+
 ---
 
 ## Key parameters
@@ -2255,7 +2347,7 @@ console.log(run.result?.output);  // final result after iteration
 | `session_settings` | `SessionSettings` | Proxy, profile, browser config. See [Profiles](https://docs.browser-use.com/cloud/guides/authentication). |
 | `flash_mode` | `bool` | Faster but less careful navigation. |
 | `thinking` | `bool` | Enable legacy agent thinking behavior. This does not set model reasoning depth. |
-| `thinkingLevel` (REST) | `str` | Provider reasoning depth. The generated SDK parameter is pending; see [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels). |
+| `thinking_level` / `thinkingLevel` | `str` | Provider reasoning depth in the Python / TypeScript SDKs. REST JSON uses `thinkingLevel`; see [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels). |
 | `vision` | `bool \| str` | Enable screenshots for the agent. |
 | `highlight_elements` | `bool` | Highlight interactive elements on the page. |
 | `system_prompt_extension` | `str` | Append custom instructions to the system prompt. |
@@ -2269,6 +2361,7 @@ Source: https://docs.browser-use.com/cloud/legacy/public-share
 
 
 Generate a public URL that anyone can open to watch the entire agent session — no API key needed. Useful for sharing with teammates, stakeholders, or embedding in dashboards.
+
 
 ```python Python
 share = await client.sessions.create_share(session.id)
@@ -2293,9 +2386,12 @@ Every skill has two parts:
 
 - **Demonstration** (`agent_prompt`) — shows *how* to perform the task, but only once. Think of it like onboarding a new colleague: you would not walk them through all 100 listings. You would show the first one or two and say "keep going like this for the rest." The demonstration navigates the site, triggers the necessary network requests, and the system builds the actual endpoint logic from that recording.
 
+
   The demonstration only needs to trigger the right network requests — it does not need to complete the full task. If extracting from many pages, open the first item and maybe paginate once. The system handles the rest.
 
+
 ## Create a skill
+
 
 ```python Python
 from browser_use_sdk import AsyncBrowserUse
@@ -2318,9 +2414,11 @@ const skill = await client.skills.create({
 console.log(skill.id);
 ```
 
+
 Skill creation takes ~30 seconds. You can also create skills visually from the [Cloud Dashboard](https://cloud.browser-use.com/skills) — record yourself performing the task, or let the agent demonstrate it.
 
 ## Execute a skill
+
 
 ```python Python
 result = await client.skills.execute(
@@ -2336,9 +2434,11 @@ const result = await client.skills.execute(skill.id, {
 console.log(result);
 ```
 
+
 ## Refine with feedback
 
-If execution is not quite right, iterate for free:
+If execution is not quite right, refine it with feedback:
+
 
 ```python Python
 await client.skills.refine(skill.id, feedback="Also extract the product description and available colors")
@@ -2349,9 +2449,11 @@ await client.skills.refine(skill.id, {
 });
 ```
 
+
 ## Marketplace
 
 Browse and use community-created skills.
+
 
 ```python Python
 skills = await client.marketplace.list()
@@ -2363,6 +2465,7 @@ const skills = await client.marketplace.list();
 const mySkill = await client.marketplace.clone(skillId);
 const result = await client.marketplace.execute(skillId, { parameters: { ... } });
 ```
+
 
 See [Pricing](https://browser-use.com/pricing) for skill costs.
 
@@ -2391,6 +2494,7 @@ Create a new vault in 1Password for Browser Use. Add the credentials you want th
 
 ## Run tasks with 1Password
 
+
 ```python Python
 from browser_use_sdk import AsyncBrowserUse
 
@@ -2416,7 +2520,9 @@ const result = await client.run(
 console.log(result.output);
 ```
 
+
 For SSO/OAuth redirects, include all required domains:
+
 
 ```python Python
 result = await client.run(
@@ -2435,6 +2541,7 @@ const result = await client.run(
 );
 ```
 
+
 ## How it works
 
 When the agent encounters a login form:
@@ -2444,6 +2551,7 @@ When the agent encounters a login form:
 3. Fills in the username and password
 4. If 2FA is required and a TOTP code is stored, it generates and enters the code automatically
 
+
   The agent never sees your actual credentials. The actual username, password, and 2FA codes are filled in programmatically — keeping your secrets hidden from the AI model.
 
 # Secrets
@@ -2451,6 +2559,7 @@ Source: https://docs.browser-use.com/cloud/guides/secrets
 
 
 Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
+
 
 ```python Python
 from browser_use_sdk import AsyncBrowserUse
@@ -2475,9 +2584,11 @@ const result = await client.run(
 );
 ```
 
+
 Use `allowed_domains` to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`.
 
 For SSO/OAuth redirects, include all domains in the auth flow:
+
 
 ```python Python
 result = await client.run(
@@ -2522,6 +2633,10 @@ Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/sett
 https://api.browser-use.com/api/v4
 ```
 
+See the [developer overview](https://browser-use.com/developers) when choosing
+an interface for a new integration. The V2, V3, and V4 references remain
+available in the documentation navigation.
+
 See [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels) for V4 `modelParams`,
 provider-native reasoning values, and BYOK behavior.
 
@@ -2565,11 +2680,1512 @@ Use the browser endpoints when your code will control Chrome over CDP instead of
 2. Use `cdpUrl` with a local Browser Use agent (`Browser(cdp_url=...)`), Browser Use CLI (`BU_CDP_URL`), Playwright, Puppeteer, or Selenium.
 3. `PATCH /browsers/{id}` with `{"action":"stop"}` stops the browser.
 
-See [remote Browser Use](/open-source/customize/browser/remote), [Browser Use CLI](/open-source/browser-use-cli), or [Playwright, Puppeteer, Selenium](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium) for complete connection examples.
+See [remote Browser Use](https://docs.browser-use.com/open-source/customize/browser/remote), [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli), or [Playwright, Puppeteer, Selenium](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium) for complete connection examples.
 
 ## SDKs
 
 The [Cloud SDK quick start](https://docs.browser-use.com/cloud/agent/quickstart) wraps this loop — `runs.create()` then `runs.waitForCompletion()` / `runs.wait_for_completion()` — for TypeScript and Python.
+
+# API Reference
+Source: https://docs.browser-use.com/cloud/api-reference
+
+
+## Authentication
+
+All requests require an API key in the `X-Browser-Use-API-Key` header:
+
+```
+X-Browser-Use-API-Key: bu_your_key_here
+```
+
+Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1). Keys start with `bu_`.
+
+## Base URL
+
+```
+https://api.browser-use.com/api/v3
+```
+
+See [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels) for V3 model support,
+follow-up behavior, BYOK handling, and a `thinkingLevel` request example.
+
+## Quick example
+
+```bash Create a session
+curl -X POST https://api.browser-use.com/api/v3/sessions \
+  -H "X-Browser-Use-API-Key: bu_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Find the top 3 trending repos on GitHub today"}'
+```
+
+```bash Get session result (replace SESSION_ID)
+curl https://api.browser-use.com/api/v3/sessions/SESSION_ID \
+  -H "X-Browser-Use-API-Key: bu_your_key_here"
+```
+
+## Environment variable
+
+Set the key once so SDKs pick it up automatically:
+
+```bash
+export BROWSER_USE_API_KEY=bu_your_key_here
+```
+
+---
+
+Prefer the SDK? See the [Agent docs](https://docs.browser-use.com/cloud/agent/quickstart) — the SDK has all API endpoints available as methods, including `client.browsers.create()`.
+
+
+```bash Python
+pip install browser-use-sdk
+```
+```bash TypeScript
+npm install browser-use-sdk
+```
+
+# MCP Server
+Source: https://docs.browser-use.com/cloud/guides/mcp-server
+
+
+```
+https://api.browser-use.com/v3/mcp
+```
+
+Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+## Claude Code
+
+```bash
+claude mcp add -t http -H "x-browser-use-api-key: YOUR_API_KEY" browser-use https://api.browser-use.com/v3/mcp
+```
+
+## Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Cursor
+
+Add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Windsurf
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "serverUrl": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `run_session` | Create a session and run a task. Supports `keep_alive`, `model` (`claude-sonnet-4.6`, `claude-opus-4.6`, `gpt-5.4-mini`), `output_schema`, and `profile_id`. |
+| `get_session` | Poll session status and output. Returns status, step count, cost breakdown, and live URL. |
+| `send_task` | Send a follow-up task to an idle keep-alive session. |
+| `stop_session` | Stop a session. `strategy: "task"` stops only the task, `"session"` destroys the sandbox. |
+| `get_session_messages` | Get the agent's messages — browser actions, reasoning, and results. |
+| `list_sessions` | List recent sessions with status and cost. |
+| `list_browser_profiles` | List browser profiles for authenticated tasks. |
+
+# Webhooks
+Source: https://docs.browser-use.com/cloud/guides/webhooks
+
+
+Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.browser-use.com/settings?tab=webhooks).
+
+## Events
+
+| Event | When |
+|-------|------|
+| `agent.task.status_update` | Task status changes (`running`, `idle`, or `stopped`) |
+| `test` | Webhook test ping |
+
+## Payload
+
+```json
+{
+  "type": "agent.task.status_update",
+  "timestamp": "2025-01-15T10:30:00Z",
+  "payload": {
+    "task_id": "task_abc123",
+    "session_id": "session_xyz",
+    "status": "idle",
+    "metadata": {}
+  }
+}
+```
+
+## Signature verification
+
+Every webhook request includes two headers:
+
+- `X-Browser-Use-Signature` — HMAC-SHA256 signature of the payload
+- `X-Browser-Use-Timestamp` — Unix timestamp (seconds) when the request was sent
+
+The signature is computed over `{timestamp}.{body}`, where `body` is the JSON-serialized payload with keys sorted alphabetically and no extra whitespace. Verify it to ensure the request is authentic and to prevent replay attacks.
+
+
+```python Python
+import hashlib
+import hmac
+import json
+import time
+
+def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
+    # Reject requests older than 5 minutes
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        return False
+    if abs(time.time() - ts) > 300:
+        return False
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
+```
+```typescript TypeScript
+import { createHmac, timingSafeEqual } from "crypto";
+
+function sortKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortKeys);
+  if (obj !== null && typeof obj === "object") {
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
+  }
+  return obj;
+}
+
+function verifyWebhook(body: string, signature: string, timestamp: string, secret: string): boolean {
+  // Reject requests older than 5 minutes
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) return false;
+  const payload = JSON.parse(body);
+  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
+  const expected = createHmac("sha256", secret).update(message).digest("hex");
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+}
+```
+
+
+## Example: Express webhook handler
+
+```typescript
+import express from "express";
+import { createHmac, timingSafeEqual } from "crypto";
+
+const app = express();
+app.use(express.raw({ type: "application/json" }));
+
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
+
+function sortKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortKeys);
+  if (obj !== null && typeof obj === "object") {
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
+  }
+  return obj;
+}
+
+app.post("/webhook", (req, res) => {
+  const signature = req.headers["x-browser-use-signature"] as string;
+  const timestamp = req.headers["x-browser-use-timestamp"] as string;
+
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
+    return res.status(401).send("Request too old");
+  }
+
+  const body = req.body.toString();
+  const payload = JSON.parse(body);
+  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
+  const expected = createHmac("sha256", WEBHOOK_SECRET).update(message).digest("hex");
+
+  if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
+    return res.status(401).send("Invalid signature");
+  }
+
+  if (payload.type === "agent.task.status_update") {
+    const { task_id, status, session_id } = payload.payload;
+    console.log(`Task ${task_id} is now ${status}`);
+  }
+
+  res.status(200).send("OK");
+});
+
+app.listen(3000);
+```
+
+## Example: FastAPI webhook handler
+
+```python
+from fastapi import FastAPI, Request, HTTPException
+import hashlib
+import hmac
+import json
+import os
+import time
+
+app = FastAPI()
+
+WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
+
+@app.post("/webhook")
+async def handle_webhook(request: Request):
+    body = await request.body()
+    signature = request.headers.get("x-browser-use-signature", "")
+    timestamp = request.headers.get("x-browser-use-timestamp", "")
+
+    # Reject requests older than 5 minutes
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid timestamp")
+    if abs(time.time() - ts) > 300:
+        raise HTTPException(status_code=401, detail="Request too old")
+
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
+
+    if not hmac.compare_digest(expected, signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
+    if payload["type"] == "agent.task.status_update":
+        task_id = payload["payload"]["task_id"]
+        status = payload["payload"]["status"]
+        print(f"Task {task_id} is now {status}")
+
+    return {"status": "ok"}
+```
+
+
+  For local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose your local server: `ngrok http 3000`. Then set the ngrok URL as your webhook endpoint in the dashboard.
+
+# x402 wallet payments
+Source: https://docs.browser-use.com/cloud/guides/x402
+
+
+[x402](https://www.x402.org) is a payment protocol [created by Coinbase](https://www.coinbase.com/developer-platform/discover/launches/x402) that lets APIs, or AI agents, charge for requests directly with crypto.
+
+x402 lets your code, or an autonomous AI agent, fund Browser Use Cloud directly
+with cryptocurrency. Browser Use converts each payment into project credit; it
+is not a separate fee for each API call. No account signup, credit card, or API
+key is needed. Your wallet is your identity.
+
+
+
+**New to crypto?** Here's the gist:
+
+- **USDC** is a stablecoin designed to track the US dollar.
+- **Base** is the blockchain network used for these payments.
+- **Wallet** = a public address (your "username") and a private key (your "password"). The private key signs payments.
+- You'll need USDC on Base in a wallet you control. Check the current payment
+  options before funding it.
+
+
+
+**Three ways to start:**
+
+
+  [Agent wallets](https://docs.browser-use.com/cloud/guides/x402-agent-wallets)
+AgentCash or Coinbase's Agentic Wallet. Your coding agent gets a wallet directly and
+pays as it goes.
+
+  [SDK](https://docs.browser-use.com/cloud/guides/x402#sdk-quickstart)
+One line in your Python or TypeScript app. Bring your own wallet.
+
+  [Raw HTTP](https://docs.browser-use.com/cloud/guides/x402#raw-http-quickstart)
+Use a reference x402 client library without the Browser Use SDK.
+
+
+
+## SDK quickstart
+
+The Browser Use SDK has built-in x402 support. Pass a wallet private key, and you're done.
+
+
+```bash Python
+pip install "browser-use-sdk[x402]"
+```
+```bash TypeScript
+npm install browser-use-sdk @x402/fetch @x402/evm viem
+```
+
+
+
+```python Python
+import asyncio
+import os
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse(
+        x402_private_key=os.environ["BROWSER_USE_X402_PRIVATE_KEY"],
+    )
+    result = await client.run(
+        "Go to example.com and tell me the heading.",
+        max_cost_usd=0.75,
+    )
+    print(result.output)
+
+asyncio.run(main())
+```
+
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({
+  x402PrivateKey: process.env.BROWSER_USE_X402_PRIVATE_KEY!,
+});
+const result = await client.run(
+  "Go to example.com and tell me the heading.",
+  { maxCostUsd: 0.75 },
+);
+console.log(result.output);
+```
+
+
+Or set `BROWSER_USE_X402_PRIVATE_KEY` in your env, and skip the constructor arg entirely:
+
+
+```python Python
+client = AsyncBrowserUse()   # auto-detects from env
+```
+```typescript TypeScript
+const client = new BrowserUse(); // auto-detects from env
+```
+
+
+
+  Python x402 is async-only: use `AsyncBrowserUse`, not `BrowserUse`.
+
+
+
+  The SDK's private-key convenience path does not currently enforce a
+  client-side maximum per payment. Use a wallet funded only for the intended
+  workload, or pass a pre-built x402 client with your own payment policy through
+  `x402` (Python) / `x402` (TypeScript).
+
+
+## Raw HTTP quickstart
+
+Use this if you're in a language we don't ship an SDK for (Go, Rust, Ruby, etc.), or if you want to use other x402 APIs from the same client library. Hit `https://x402.api.browser-use.com` directly with any [x402 client library](https://github.com/coinbase/x402#all-available-reference-sdks):
+
+```python
+import asyncio
+import os
+
+from x402 import max_amount, x402Client
+from x402.http.clients import x402HttpxClient
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+
+def base_mainnet_only(version, requirements):
+    allowed_network = "eip155:8453" if version == 2 else "base" if version == 1 else None
+    return [requirement for requirement in requirements if requirement.network == allowed_network]
+
+async def main():
+    payment_cap = int(os.environ["X402_MAX_ATOMIC_USDC"])
+    task_cap_usd = float(os.environ["BROWSER_USE_TASK_MAX_COST_USD"])
+    client = x402Client()
+    register_exact_evm_client(
+        client,
+        EthAccountSigner(Account.from_key(os.environ["BROWSER_USE_X402_PRIVATE_KEY"])),
+        networks="eip155:8453",
+        policies=[base_mainnet_only, max_amount(payment_cap)],
+    )
+
+    async with x402HttpxClient(client, timeout=120.0) as http:
+        response = await http.post(
+            "https://x402.api.browser-use.com/api/v3/sessions",
+            json={"task": "...", "maxCostUsd": task_cap_usd},
+        )
+        print(response.status_code, response.text[:500])
+
+asyncio.run(main())
+```
+
+Set `X402_MAX_ATOMIC_USDC` only after reviewing the payment options
+returned by the x402 challenge. The value uses atomic USDC units.
+Set `BROWSER_USE_TASK_MAX_COST_USD` separately to the maximum USD the task may
+spend.
+
+`https://x402.api.browser-use.com` exposes the same routes as `https://api.browser-use.com`. It supports every `/api/v2/*` and `/api/v3/*` route, gated by an x402 challenge instead of API key auth.
+
+## What you need
+
+- **EVM wallet** (MetaMask, Rabby, Coinbase Wallet, etc.) with its private key available to your app
+- **USD Coin (USDC) on Base mainnet**
+
+You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIPS/eip-3009), so you sign offchain, and the facilitator pays gas.
+
+No wallet yet? Jump to [Wallet setup](https://docs.browser-use.com/cloud/guides/x402#wallet-setup) below.
+
+## Pricing and credits
+
+The SDK first authenticates requests with a single-use wallet signature. If
+the wallet project does not exist yet or has insufficient credits, the backend
+marks the response as requiring a top-up, and the SDK makes an x402 payment.
+Review the current payment options and rates on the
+[pricing page](https://browser-use.com/pricing).
+
+
+  **Mid-task drain still terminates the task.** Browser Use sessions run on a
+  worker that doesn't see x402, so once a long-running task starts and burns
+  through its credits, it stops with `INSUFFICIENT_CREDITS` — it does not pause
+  and wait for the next x402 payment.
+
+
+See the [pricing page](https://browser-use.com/pricing) for model and browser costs.
+
+## Topping up an existing account
+
+If you already have a Browser Use API key (for example, one created via the dashboard or the agent signup REST flow), you can use x402 to add credits to **that** account instead of creating a new project based on your crypto wallet. Send your existing API key alongside the payment:
+
+
+```python Python
+import asyncio
+import os
+
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse(
+    api_key=os.environ["BROWSER_USE_API_KEY"],
+    base_url="https://x402.api.browser-use.com/api/v3",
+    x402_private_key=os.environ["BROWSER_USE_X402_PRIVATE_KEY"],
+)
+async def main():
+    result = await client.run("...", max_cost_usd=0.75)
+    print(result.output)
+
+asyncio.run(main())
+
+```
+
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({
+  apiKey: process.env.BROWSER_USE_API_KEY,
+  baseUrl: "https://x402.api.browser-use.com/api/v3",
+  x402PrivateKey: process.env.BROWSER_USE_X402_PRIVATE_KEY!,
+});
+const result = await client.run("...", { maxCostUsd: 0.75 });
+```
+
+
+When the backend sees both a payment and a valid API key, the credit goes to the key's project rather than auto-creating a new wallet-keyed one. Useful for:
+
+- Agents that ran out of credits and need to keep going
+- Adding credits via crypto when you already have a regular Browser Use account
+- Multi-wallet setups funding one shared account
+
+## Checking your credit balance
+
+When you sign up the normal way, Browser Use creates an **account** for you (we call it a "project") that holds your credits and runs your tasks, and you log into it with an API key. When you pay with **only a wallet** (no API key), there's no signup step — so the very first time you pay, Browser Use automatically creates one of these same accounts for you and ties it to your wallet. From then on it behaves exactly like a normal account. The only difference is how you prove it's yours: instead of an API key, you sign with your wallet.
+
+This balance is your **Browser Use credit balance** — the prepaid USD you've added to that account through x402 payments, minus what your tasks have spent.
+
+To check how much credit that account has left, use the method below:
+
+
+```python Python
+import asyncio
+import os
+
+from browser_use_sdk.v3 import get_wallet_balance
+
+async def main():
+    balance = await get_wallet_balance(os.environ["BROWSER_USE_X402_PRIVATE_KEY"])
+    print(balance["total_credits_usd"])
+
+asyncio.run(main())
+
+```
+
+```typescript TypeScript
+import { getWalletBalance } from "browser-use-sdk/v3";
+
+const balance = await getWalletBalance(process.env.BROWSER_USE_X402_PRIVATE_KEY!);
+console.log(balance.total_credits_usd);
+```
+
+
+The response contains:
+
+| Field                    | Description                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| `wallet`                 | The wallet address (lowercased)                                                 |
+| `project_id`             | The account (project) tied to your wallet that the credits live in              |
+| `total_credits_usd`      | Your remaining Browser Use credit balance, in USD                               |
+| `additional_credits_usd` | Of that total, the portion added via x402 top-ups (excludes any plan allowance) |
+
+
+  This is for accounts created from a wallet (the default x402 mode). If you're
+  [topping up an existing account](https://docs.browser-use.com/cloud/guides/x402#topping-up-an-existing-account), check that
+  account's balance the normal way with your API key via
+  `client.billing.account()`. A wallet that has never paid yet has no account,
+  so the call returns `404` until the first payment.
+
+
+
+**How the balance check works**
+
+  The SDK signs a fixed, server-defined message
+  ([EIP-191](https://eips.ethereum.org/EIPS/eip-191), the same "Sign-In with
+  Ethereum" mechanism) with your wallet's private key. The signature proves you
+  control the address without moving any funds. The server recovers the signer,
+  matches it to the wallet's project, and returns the balance.
+
+
+## How it works
+
+Your code asks for something. If your Browser Use credit balance needs a top-up,
+the SDK's x402 client handles the server's payment challenge; otherwise it
+proceeds without moving wallet funds. The private-key convenience path does not
+add a payment cap. A cap applies only when you pass a pre-built x402 client with
+an explicit payment policy, as shown above.
+
+A bit more detail:
+
+1. Your code makes a request (e.g. "run this task").
+2. The SDK signs a request-bound wallet authentication message without moving
+   wallet funds.
+3. If the server explicitly requests a top-up, the x402 client checks any
+   caller-supplied payment policy, signs an allowed payment, and retries. With
+   the private-key convenience path, no client-side cap is registered.
+4. Coinbase moves the authorized USDC on-chain, and the server updates your
+   project's credit balance. See the [pricing page](https://browser-use.com/pricing)
+   for current crediting terms.
+5. Status polls use wallet authentication without moving funds while the task
+   runs.
+
+## Wallet setup
+
+If you don't have a wallet ready, here's an easy way to set one up using **MetaMask**. It's a popular crypto wallet. Any other EVM-compatible wallet works equally well: [Rabby](https://rabby.io), [Coinbase Wallet](https://www.coinbase.com/wallet), [Frame](https://frame.sh), [Trust Wallet](https://trustwallet.com), [Phantom](https://phantom.com), etc. Pick whichever you prefer.
+
+
+
+**Install MetaMask (or your wallet of choice)**
+
+Get the [MetaMask browser extension](https://metamask.io) via the official
+site only. Create a new wallet, save the seed phrase somewhere offline, set
+a password.
+
+
+**Add the Base network**
+
+By default, most wallets only show Ethereum. You need to add **Base** (the
+network we accept payments on) so your wallet can hold USDC there.
+
+
+**Get USDC into your wallet on Base**
+
+Click **"Buy"** inside MetaMask. Pick **USDC**, set network to **Base**, and
+pay with credit card, bank, etc. The USDC lands directly in your wallet.
+
+
+**Export the private key**
+
+In MetaMask: click the account menu → **Account details** → **Private keys**
+→ enter your password → copy. That string (starts with `0x`) is your
+`BROWSER_USE_X402_PRIVATE_KEY`. Other wallets have similar export options in
+their account settings.
+
+
+
+
+  Wallets hold real money, and anyone with the private key can drain it. Be
+  careful with your keys.
+
+
+## Advanced: bring your own x402 client
+
+For custom signers or multi-network setups that support Base/EVM, build the x402
+client yourself, and pass it as `x402` instead of `x402_private_key`:
+
+
+```python Python
+import os
+
+from x402 import max_amount, x402Client
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+key = os.environ["BROWSER_USE_X402_PRIVATE_KEY"]
+payment_cap = int(os.environ["X402_MAX_ATOMIC_USDC"])
+x402 = x402Client()
+
+def base_mainnet_only(version, requirements):
+    allowed_network = "eip155:8453" if version == 2 else "base" if version == 1 else None
+    return [requirement for requirement in requirements if requirement.network == allowed_network]
+
+register_exact_evm_client(
+    x402,
+    EthAccountSigner(Account.from_key(key)),
+    networks="eip155:8453",
+    policies=[base_mainnet_only, max_amount(payment_cap)],
+)
+client = AsyncBrowserUse(x402=x402)
+
+```
+
+```typescript TypeScript
+import { x402Client } from "@x402/fetch";
+import { ExactEvmScheme } from "@x402/evm";
+import { privateKeyToAccount } from "viem/accounts";
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const key = process.env.BROWSER_USE_X402_PRIVATE_KEY! as `0x${string}`;
+const paymentCap = BigInt(process.env.X402_MAX_ATOMIC_USDC!);
+const x402 = new x402Client();
+x402.register("eip155:8453", new ExactEvmScheme(privateKeyToAccount(key)));
+x402.registerPolicy((_version, requirements) =>
+  requirements.filter(({ amount }) => BigInt(amount) <= paymentCap),
+);
+const client = new BrowserUse({ x402 });
+```
+
+
+Set `X402_MAX_ATOMIC_USDC` only after reviewing the current x402
+payment options. The value uses atomic USDC units.
+
+## Troubleshooting
+
+
+
+**HTTP 402 keeps coming back, never settles**
+
+Two likely causes:
+
+- **Wallet has no USDC on Base.** Check your balance. If empty, top it up.
+- **Your HTTP client isn't x402-aware.** Plain `requests` / `fetch` just sees a 402 and stops; it doesn't know how to read the payment instructions and sign a payment. Use the SDK (which handles this automatically), or wrap your HTTP client with one of the [x402 client libraries](https://github.com/coinbase/x402#all-available-reference-sdks).
+
+
+
+
+**ImportError / Cannot find module '@x402/fetch'**
+
+  You haven't installed the optional x402 deps. Run `pip install
+  "browser-use-sdk[x402]"` (Python) or `npm install @x402/fetch @x402/evm viem`
+  (TypeScript).
+
+
+
+**HTTP 503 with "payment was not settled... you were not charged"**
+
+  We verified your payment request but couldn't credit your project, so we
+  deliberately did not settle on-chain. No USDC was moved, so just retry. This
+  is rare.
+
+
+
+**Insufficient credits despite paying**
+
+  Check the balance again after the payment request completes. If a settled
+  payment is not reflected, contact support with your wallet address and
+  transaction details. See the [pricing page](https://browser-use.com/pricing)
+  for current crediting and failed-request terms.
+
+
+
+**Wallet on the wrong network**
+
+`eip155:8453` is Base mainnet; `eip155:84532` is Base Sepolia testnet. Browser Use Cloud only accepts mainnet. Withdrawing USDC to Sepolia from Coinbase is **not** the same as Base mainnet, even though both use the same wallet address.
+
+
+
+## Related
+
+- [x402 protocol spec](https://www.x402.org)
+- [Agent wallets quickstart](https://docs.browser-use.com/cloud/guides/x402-agent-wallets) — pay from AgentCash or a Coinbase Agentic Wallet
+- [Standard API key auth](https://docs.browser-use.com/cloud/quickstart) — authenticate through a Browser Use project instead of a wallet
+
+# x402 agent wallets
+Source: https://docs.browser-use.com/cloud/guides/x402-agent-wallets
+
+
+Give your agent a wallet with a few dollars of USDC in it, and it can run Browser Use tasks and pay as it goes. Pick a wallet:
+
+
+  [AgentCash](https://docs.browser-use.com/cloud/guides/x402-agent-wallets#agentcash-quickstart)
+A wallet that lives on your machine, built for coding agents: Claude Code,
+Cursor, Codex.
+
+  [Coinbase Agentic Wallet](https://docs.browser-use.com/cloud/guides/x402-agent-wallets#coinbase-agentic-wallet-quickstart)
+A wallet Coinbase hosts for you. Sign in with email, fund with Apple Pay or
+card, pay from the terminal.
+
+
+
+
+  Payments to Browser Use are **credit top-ups, not per-call fees**: each x402
+  payment buys prepaid credit for a project tied to your wallet. See the
+  current options and credit terms under [pricing and
+  credits](https://docs.browser-use.com/cloud/guides/x402#pricing-and-credits).
+
+
+## AgentCash quickstart
+
+[AgentCash](https://agentcash.dev) gives your coding agent a wallet and the tools to spend from it: check prices, pay for API calls, watch the balance. The wallet is a file on your machine.
+
+
+
+**Install the MCP server**
+
+```bash
+npx agentcash install
+```
+
+The interactive installer detects your agent client. Or add it directly:
+
+```bash
+claude mcp add agentcash --scope user -- npx -y agentcash@latest   # Claude Code
+codex mcp add agentcash -- npx -y agentcash@latest                 # Codex
+npx agentcash install --client cursor                              # Cursor
+```
+
+
+
+**Fund the wallet**
+
+The first run creates a wallet at `~/.agentcash/wallet.json`. Get its
+deposit address and send it USDC on **Base mainnet**. Check the current
+top-up options before funding:
+
+```bash
+npx agentcash@latest accounts
+```
+
+Or just ask your agent — the `list_accounts` and `get_balance` tools do the
+same thing.
+
+
+
+**Run a browser task**
+
+Prompt your agent:
+
+```text
+Use AgentCash to POST to https://x402.api.browser-use.com/api/v3/sessions
+with body {"task": "Go to example.com and tell me the page title", "maxCostUsd": 0.75}.
+Pay the smallest available top-up, then poll the returned session id at
+GET /api/v3/sessions/{id} until status is "stopped", "error", or
+"timed_out". Show me the output on "stopped"; otherwise surface the final
+status and error.
+```
+
+The `fetch` tool handles the whole 402 → sign → retry loop. Use
+`check_endpoint_schema` first if you want to see the price and input schema
+without paying. `maxCostUsd` is a per-task budget, separate from the
+wallet tool's per-payment cap; replace the example value with the budget
+you want for the task.
+
+
+
+
+## Coinbase Agentic Wallet quickstart
+
+[Agentic Wallet](https://docs.cdp.coinbase.com/agentic-wallet/welcome) is a wallet Coinbase hosts for you, driven from the terminal with the [`awal`](https://www.npmjs.com/package/awal) CLI. Sign in with your email — no keys to manage — fund it with Apple Pay or a card, and pay for API calls with one command. The [agentic-wallet-skills](https://github.com/coinbase/agentic-wallet-skills) package teaches your coding agent the same commands.
+
+
+
+**Install and sign in**
+
+```bash
+npx skills add coinbase/agentic-wallet-skills   # optional: teach your agent
+npx awal auth login you@example.com             # sends an OTP to your email
+npx awal auth verify 123456                     # paste the code
+npx awal status
+```
+
+
+
+**Fund with USDC on Base**
+
+```bash
+npx awal show      # opens the wallet UI → Fund → Apple Pay / card / Coinbase
+npx awal balance
+```
+
+Or send USDC on Base directly to the address from `npx awal address`.
+
+
+
+**Check the price, then pay**
+
+```bash
+npx awal x402 details https://x402.api.browser-use.com/api/v3/sessions
+```
+
+shows the current payment options and task input schema without paying.
+Then:
+
+```bash
+: "${X402_MAX_ATOMIC_USDC:?Set a cap after reviewing x402 details}"
+: "${BROWSER_USE_TASK_MAX_COST_USD:?Set a per-task budget in USD}"
+npx awal x402 pay https://x402.api.browser-use.com/api/v3/sessions \
+  -X POST \
+  -d "{\"task\":\"Go to example.com and tell me the page title\",\"maxCostUsd\":${BROWSER_USE_TASK_MAX_COST_USD}}" \
+  --max-amount "$X402_MAX_ATOMIC_USDC" --json
+```
+
+Set `X402_MAX_ATOMIC_USDC` after reviewing the options returned
+by `awal x402 details`. The value uses atomic USDC units.
+`BROWSER_USE_TASK_MAX_COST_USD` separately limits the task's spend in USD.
+
+
+
+**Poll the session**
+
+The response contains the session `id`. Poll
+`https://x402.api.browser-use.com/api/v3/sessions/{id}` until `status` is
+`"stopped"`, `"error"`, or `"timed_out"`. Read `output` only after
+`"stopped"`; otherwise surface the final status and error.
+
+
+
+
+## Which one?
+
+| | AgentCash | Coinbase Agentic Wallet |
+| --- | --- | --- |
+| Wallet | Local file, self-custody | Coinbase-hosted, email OTP |
+| Funding | Send USDC on Base to your address | Onramp (Apple Pay / card / bank) or direct USDC |
+| Interface | MCP tools + CLI | CLI (+ skill for agents, [MCP variant](https://docs.cdp.coinbase.com/agentic-wallet/mcp/welcome)) |
+| Best for | Autonomous coding agents | Humans who want fiat funding; CDP-ecosystem apps |
+
+Building a production app instead of driving a CLI? Use
+[`CdpX402Client`](https://docs.cdp.coinbase.com/x402/quickstart-for-buyers) from
+the CDP SDK (a CDP-managed server wallet) or [bring your own x402
+client](https://docs.browser-use.com/cloud/guides/x402#advanced-bring-your-own-x402-client).
+
+## Related
+
+- [x402 overview](https://docs.browser-use.com/cloud/guides/x402) — SDK, raw HTTP, pricing, and troubleshooting
+- [AgentCash docs](https://agentcash.dev) · [agentcash-skills](https://github.com/Merit-Systems/agentcash-skills)
+- [Agentic Wallet CLI quickstart](https://docs.cdp.coinbase.com/agentic-wallet/cli/quickstart) (Coinbase)
+
+# n8n
+Source: https://docs.browser-use.com/cloud/tutorials/integrations/n8n
+
+
+Browser Use works with [n8n](https://n8n.io) as a standard HTTP integration — no custom nodes needed.
+
+## 1. Create a credential
+
+In n8n, go to **Credentials → Add Credential → Header Auth** and set:
+
+| Field | Value |
+|-------|-------|
+| Name | `X-Browser-Use-API-Key` |
+| Value | `YOUR_API_KEY` |
+
+Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+
+## 2. Start a session
+
+Add an **HTTP Request** node:
+
+| Setting | Value |
+|---------|-------|
+| Method | `POST` |
+| URL | `https://api.browser-use.com/api/v3/sessions` |
+| Authentication | Header Auth (from step 1) |
+| Body Type | JSON |
+
+Body:
+```json
+{
+  "task": "Find the top 3 trending repos on GitHub today"
+}
+```
+
+The response includes an `id` you'll use to poll for results.
+
+## 3. Poll for completion
+
+Add a second **HTTP Request** node in a loop:
+
+| Setting | Value |
+|---------|-------|
+| Method | `GET` |
+| URL | `https://api.browser-use.com/api/v3/sessions/{{ $json.id }}` |
+| Authentication | Header Auth (from step 1) |
+
+Check the `status` field. The session is done when status is `idle`, `stopped`, `error`, or `timed_out`. Use an **If** node to loop back with a **Wait** node (5–10 seconds) until complete.
+
+The final response contains `output` with the agent's result.
+
+## Event-driven alternative
+
+Instead of polling, use [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks) to receive a callback when the session completes. Configure your webhook endpoint in the [dashboard](https://cloud.browser-use.com/settings?tab=webhooks), then add a **Webhook** trigger node in n8n to receive `agent.task.status_update` events when sessions finish.
+
+
+  This pattern works with any workflow tool that supports HTTP requests — Make, Zapier, Pipedream, or custom orchestrators.
+
+# Chat UI
+Source: https://docs.browser-use.com/cloud/tutorials/chat-ui
+
+
+[Related UI example](https://github.com/browser-use/chat-ui-example)
+  Use the Next.js UI as a reference. Its current URL-parameter transport differs
+  from the safer session-state pattern below.
+
+
+This tutorial adapts the [chat-ui-example](https://github.com/browser-use/chat-ui-example) architecture for a Next.js app that lets users chat with a Browser Use agent. Follow the integration on this page rather than copying the example repository's query-parameter transport.
+
+The app has two pages:
+
+1. **Home** — the user types a task, the app creates a session and sends the task.
+2. **Session** — live browser preview, task messages, follow-ups, and recording download.
+
+In this pattern, the SDK client lives in one server-only file,
+`src/lib/api.ts`. Short calls use Server Actions. The long-running task and its
+stop control use separate Route Handlers so the stop request can run while the
+task request is still pending.
+
+## Setup
+
+```typescript api.ts
+import { BrowserUse } from "browser-use-sdk/v3";
+
+// Server-only — no NEXT_PUBLIC_ prefix, never exposed to the browser
+const apiKey = process.env.BROWSER_USE_API_KEY ?? "";
+const sessionMaxCostUsd = Number(process.env.BROWSER_USE_SESSION_MAX_COST_USD);
+if (!Number.isFinite(sessionMaxCostUsd) || sessionMaxCostUsd <= 0) {
+  throw new Error("Set BROWSER_USE_SESSION_MAX_COST_USD to a positive number");
+}
+
+export const client = new BrowserUse({ apiKey });
+export { sessionMaxCostUsd };
+```
+
+
+  The API key uses `BROWSER_USE_API_KEY` (no `NEXT_PUBLIC_` prefix) so it stays
+  server-side. All SDK calls go through server-only
+  [Server Actions](https://nextjs.org/docs/app/guides/forms) or Route Handlers —
+  never call the SDK directly from client components.
+
+
+
+  This is a trusted-user prototype. Before exposing it publicly, authenticate
+  every server entry point, verify that each session ID belongs to the caller, and
+  enforce rate limits and spend quotas. A server-only API key prevents key
+  disclosure; it does not prevent an unauthenticated visitor from spending
+  against that key.
+
+
+---
+
+## 1. Create a session
+
+```typescript actions.ts
+"use server";
+import { client, sessionMaxCostUsd } from "./api";
+
+export async function createSession() {
+  const session = await client.sessions.create({
+    keepAlive: true,
+    enableRecording: true,
+    maxCostUsd: sessionMaxCostUsd,
+  });
+  if (!session.liveUrl) {
+    throw new Error("The session did not return a live browser URL");
+  }
+  return { ...session, liveUrl: session.liveUrl };
+}
+```
+
+- **`keepAlive: true`** keeps the session open after each task so the user can send follow-ups (default is `false`).
+- **`enableRecording: true`** produces an MP4 video of the browser session.
+- **`maxCostUsd`** bounds total spend across the keep-alive session, including
+  follow-up turns. Set the environment value to the session cap your
+  application accepts.
+- **`liveUrl`** is checked before the server action returns, so the client receives a string rather than the SDK's nullable response field.
+
+The home page creates the session and navigates with only the opaque session ID.
+Keep the signed `liveUrl` and task out of query parameters, which can be copied
+into browser history, analytics, and request logs. This prototype uses
+`sessionStorage`; a production app should keep this state server-side under the
+authenticated user's ownership:
+
+```typescript page.tsx
+async function handleSend(message: string) {
+  const session = await createSession();
+  sessionStorage.setItem(
+    `browser-use:session:${session.id}`,
+    JSON.stringify({ session, initialTask: message }),
+  );
+  router.push(`/session/${session.id}`);
+}
+```
+
+---
+
+## 2. Run a task through a Route Handler
+
+Consume `client.run()` inside a Route Handler so the API key and SDK client
+never enter the browser bundle. A long-running Server Action would block a
+second Server Action from the same client, preventing the Stop button from
+interrupting the task. The handler collects task messages and returns them with
+the final session state:
+
+```typescript app/api/browser-use/run/route.ts
+import { client, sessionMaxCostUsd } from "@/lib/api";
+
+// Keep the SDK wait below the deployment function limit so cleanup can run.
+export const maxDuration = 300;
+const taskWaitTimeoutMs = 240_000;
+
+export async function POST(request: Request) {
+  const { sessionId, task } = await request.json();
+  if (typeof sessionId !== "string" || typeof task !== "string") {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Authenticate the caller and verify ownership of sessionId here.
+  const run = client.run(task, {
+    sessionId,
+    // Re-send the same absolute cumulative cap. Omitting it on an existing
+    // session refreshes the API budget from the current spend.
+    maxCostUsd: sessionMaxCostUsd,
+    timeout: taskWaitTimeoutMs,
+  });
+  const messages = [];
+
+  try {
+    for await (const msg of run) {
+      messages.push(msg);
+    }
+  } catch (error) {
+    // The SDK timeout only stops polling. Explicitly stop the task before the
+    // Route Handler exits so it cannot continue unattended.
+    await client.sessions.stop(sessionId, { strategy: "task" }).catch(() => {});
+    throw error;
+  }
+
+  if (!run.result) throw new Error("Task ended without a session result");
+  return Response.json({ messages, session: run.result });
+}
+```
+
+Call the handler from the client component and update local UI state after it
+returns:
+
+```typescript session-context.tsx
+const submitTask = useCallback(async (task: string) => {
+  const response = await fetch("/api/browser-use/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId, task }),
+  });
+  if (!response.ok) throw new Error("Task request failed");
+
+  const result = await response.json();
+  setMessages((prev) => [...prev, ...result.messages]);
+  setSession(result.session);
+}, [sessionId]);
+```
+
+When the `for await` loop ends on the server, `run.result` contains the final session state. This pattern returns the collected messages after completion. For token-by-token or message-by-message browser updates, expose a server Route Handler that encodes the iterator as a `ReadableStream`; do not import the SDK client into a client component.
+
+`client.run()` otherwise waits for up to four hours. This example gives the
+Route Handler five minutes and the SDK four, leaving time to stop the task on a
+timeout. Set both values to limits supported by your deployment platform. For
+tasks longer than one request, persist messages and task state server-side and
+resume polling from a queue or worker rather than depending on one HTTP request.
+
+Read and delete the prototype's initial task from `sessionStorage`, then run it:
+
+```typescript session-context.tsx
+useEffect(() => {
+  const key = `browser-use:session:${sessionId}`;
+  const saved = sessionStorage.getItem(key);
+  if (!saved) return;
+  sessionStorage.removeItem(key);
+  const { session, initialTask } = JSON.parse(saved);
+  setLiveUrl(session.liveUrl);
+  setSession(session);
+  if (initialTask) submitTask(initialTask);
+}, [sessionId, submitTask]);
+```
+
+---
+
+## 3. Follow-up tasks
+
+Follow-ups call the same Route Handler with the existing session ID:
+
+```typescript session-context.tsx
+const sendMessage = useCallback(async (task: string) => {
+  await submitTask(task);
+}, [submitTask]);
+```
+
+The SDK auto-sets `keepAlive: true` when targeting an existing session, so follow-up tasks work without extra config.
+
+---
+
+## 4. Finish the session and get the recording
+
+After a task completes, its recording URLs become available on the session.
+When the conversation is finished, wait for the recording and then stop the
+keep-alive session so its sandbox is released:
+
+```typescript app/api/browser-use/finish/route.ts
+import { client } from "@/lib/api";
+
+export async function POST(request: Request) {
+  const { sessionId } = await request.json();
+  if (typeof sessionId !== "string") {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Authenticate the caller and verify ownership of sessionId here.
+  let recordingUrls: Awaited<ReturnType<typeof client.sessions.waitForRecording>>;
+  let session: Awaited<ReturnType<typeof client.sessions.stop>>;
+  try {
+    recordingUrls = await client.sessions.waitForRecording(sessionId);
+  } finally {
+    // Release the keep-alive sandbox even if recording polling fails.
+    session = await client.sessions.stop(sessionId, { strategy: "session" });
+  }
+  return Response.json({ session, recordingUrls });
+}
+```
+
+```typescript session-context.tsx
+const finishSession = useCallback(async () => {
+  const response = await fetch("/api/browser-use/finish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId }),
+  });
+  if (!response.ok) throw new Error("Finish request failed");
+
+  const result = await response.json();
+  setSession(result.session);
+  setRecordingUrls(result.recordingUrls);
+}, [sessionId]);
+```
+
+`waitForRecording` polls for up to 15 seconds and returns presigned MP4
+download URLs. It returns an empty array if the agent never opened a browser.
+Stopping the session after the poll destroys its sandbox, so call this route
+only when the user is finished with follow-ups.
+
+---
+
+## 5. Stop a task
+
+```typescript app/api/browser-use/stop/route.ts
+import { client } from "@/lib/api";
+
+export async function POST(request: Request) {
+  const { sessionId } = await request.json();
+  if (typeof sessionId !== "string") {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Authenticate the caller and verify ownership of sessionId here.
+  await client.sessions.stop(sessionId, { strategy: "task" });
+  return new Response(null, { status: 204 });
+}
+```
+
+```typescript session-context.tsx
+const stopTask = useCallback(async () => {
+  const response = await fetch("/api/browser-use/stop", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId }),
+  });
+  if (!response.ok) throw new Error("Stop request failed");
+}, [sessionId]);
+```
+
+Because the task and stop controls are independent Route Handler requests, the
+stop request can reach the server while the task request is still pending.
+Using `strategy: "task"` stops only the current task, keeping the session alive
+for follow-ups.
+
+---
+
+## 6. Session page
+
+The session page consumes everything through a context provider:
+
+```typescript session/[id]/page.tsx
+function SessionPage() {
+  const {
+    session,
+    liveUrl,
+    turns,
+    isBusy,
+    recordingUrls,
+    sendMessage,
+    stopTask,
+    finishSession,
+  } = useSession();
+  const sessionEnded =
+    session != null && ["stopped", "timed_out", "error"].includes(session.status);
+
+  return (
+    <div className="flex h-screen w-full overflow-hidden">
+      {/* Chat column */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <ChatMessages turns={turns} isBusy={isBusy} />
+        <ChatInput
+          onSend={sendMessage}
+          onStop={stopTask}
+          disabled={sessionEnded}
+        />
+        <button type="button" onClick={finishSession} disabled={!session || isBusy || sessionEnded}>
+          End session and get recording
+        </button>
+      </div>
+
+      {/* Live browser view — liveUrl came from session creation */}
+      <BrowserPanel liveUrl={liveUrl} />
+    </div>
+  );
+}
+```
+
+---
+
+## Summary
+
+| Server-side SDK method | Entry point and purpose |
+|---|---|
+| `client.sessions.create()` | Server Action: create a session and validate its `liveUrl` |
+| `client.run()` | Route Handler: send a task and collect messages with `for await` |
+| `client.sessions.stop(..., { strategy: "task" })` | Separate Route Handler: stop the current task concurrently |
+| `client.sessions.stop(..., { strategy: "session" })` | Finish Route Handler: end the browser session after follow-ups |
+| `client.sessions.waitForRecording()` | Finish Route Handler: get MP4 URLs after task completion, before ending the session |
+
+# Grow Therapy provider search
+Source: https://docs.browser-use.com/cloud/tutorials/grow-therapy-compare
+
+
+This tutorial builds a provider search tool for [Grow Therapy](https://www.growtherapy.com) — a therapy marketplace that handles insurance credentialing for providers. We combine [structured output](https://docs.browser-use.com/cloud/agent/structured-output) with [saved scripts](https://docs.browser-use.com/cloud/agent/scripts) to build a fast, repeatable search pipeline.
+
+## What you'll build
+
+A script that:
+1. Searches Grow Therapy's provider directory with filters (location, insurance, specialty)
+2. Extracts therapist profiles with ratings and availability
+3. Caches the search so you can sweep across geographies or specialties instantly
+
+---
+
+## Setup
+
+
+```python Python
+import asyncio
+import json
+from pydantic import BaseModel
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+import { z } from "zod";
+
+const client = new BrowserUse();
+```
+
+
+## 1. Define the output schema
+
+
+```python Python
+class Provider(BaseModel):
+    name: str
+    title: str
+    specialties: list[str]
+    insurance_plans: list[str]
+    rating: float | None = None
+    next_available: str | None = None
+
+class ProviderSearch(BaseModel):
+    providers: list[Provider]
+    total_found: int | None = None
+    location: str
+    specialty: str
+```
+```typescript TypeScript
+const ProviderSearch = z.object({
+  providers: z.array(z.object({
+    name: z.string(),
+    title: z.string(),
+    specialties: z.array(z.string()),
+    insurancePlans: z.array(z.string()),
+    rating: z.number().nullable(),
+    nextAvailable: z.string().nullable(),
+  })),
+  totalFound: z.number().nullable(),
+  location: z.string(),
+  specialty: z.string(),
+});
+```
+
+
+## 2. Create a workspace
+
+
+```python Python
+workspace = await client.workspaces.create(name="grow-therapy-search")
+```
+```typescript TypeScript
+const workspace = await client.workspaces.create({ name: "grow-therapy-search" });
+```
+
+
+## 3. Search for providers
+
+
+```python Python
+result = await client.run(
+    "Go to growtherapy.com and search for therapists in {{New York}} "
+    "who specialize in {{anxiety}} and accept insurance. "
+    "Return the first 5 provider profiles as JSON.",
+    workspace_id=str(workspace.id),
+    output_schema=ProviderSearch,
+)
+
+for p in result.output.providers:
+    print(f"{p.name} ({p.title})")
+    print(f"  Specialties: {', '.join(p.specialties)}")
+    print(f"  Rating: {p.rating}")
+    print(f"  Next available: {p.next_available}")
+    print()
+```
+```typescript TypeScript
+const result = await client.run(
+  "Go to growtherapy.com and search for therapists in {{New York}} " +
+  "who specialize in {{anxiety}} and accept insurance. " +
+  "Return the first 5 provider profiles as JSON.",
+  { workspaceId: workspace.id, schema: ProviderSearch },
+);
+
+for (const p of result.output.providers) {
+  console.log(`${p.name} (${p.title})`);
+  console.log(`  Specialties: ${p.specialties.join(", ")}`);
+  console.log(`  Rating: ${p.rating}`);
+  console.log(`  Next available: ${p.nextAvailable}`);
+}
+```
+
+
+## 4. Sweep across locations and specialties
+
+After the first run caches the search flow, sweep across different parameters
+without another LLM generation step:
+
+
+```python Python
+locations = ["Los Angeles", "Chicago", "Houston", "Miami"]
+specialties = ["depression", "trauma", "ADHD"]
+
+for location in locations:
+    for specialty in specialties:
+        result = await client.run(
+            f"Go to growtherapy.com and search for therapists in {{{{{location}}}}} "
+            f"who specialize in {{{{{specialty}}}}} and accept insurance. "
+            f"Return the first 5 provider profiles as JSON.",
+            workspace_id=str(workspace.id),
+            output_schema=ProviderSearch,
+        )
+        count = len(result.output.providers)
+        print(f"{location} / {specialty}: {count} providers found")
+```
+```typescript TypeScript
+const locations = ["Los Angeles", "Chicago", "Houston", "Miami"];
+const specialties = ["depression", "trauma", "ADHD"];
+
+for (const location of locations) {
+  for (const specialty of specialties) {
+    const result = await client.run(
+      `Go to growtherapy.com and search for therapists in {{${location}}} ` +
+      `who specialize in {{${specialty}}} and accept insurance. ` +
+      `Return the first 5 provider profiles as JSON.`,
+      { workspaceId: workspace.id, schema: ProviderSearch },
+    );
+    console.log(`${location} / ${specialty}: ${result.output.providers.length} providers`);
+  }
+}
+```
+
+
+---
+
+## Summary
+
+| Step | What happens |
+|------|-------------|
+| First search | Agent navigates Grow Therapy and caches the flow |
+| 12 cached sweeps (4 cities x 3 specialties) | Script reruns with new parameters without another LLM generation step |
+| Site layout change | The [saved script](https://docs.browser-use.com/cloud/agent/scripts) can be repaired and retested |
+
+
+Therapy platforms have dynamic UIs that can change frequently. A later agent run can repair and retest the [saved script](https://docs.browser-use.com/cloud/agent/scripts) when the site changes.
+
+
+## Next steps
+
+- [Structured output](https://docs.browser-use.com/cloud/agent/structured-output) — Learn more about extracting typed data with Pydantic and Zod schemas.
+- [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop) — Let a human review or interact with the browser mid-task, useful for auth flows or approving results before continuing.
+- [Scripts](https://docs.browser-use.com/cloud/agent/scripts) — Save, reuse, and repair browser workflows.
 
 # API key
 Source: https://docs.browser-use.com/cloud/api-v2-overview
@@ -2589,6 +4205,7 @@ provider mappings, and a `thinkingLevel` request example.
 ---
 
 Prefer the SDK? See the [Agent (v2) docs](https://docs.browser-use.com/cloud/legacy/agent).
+
 
 ```bash Python
 pip install browser-use-sdk

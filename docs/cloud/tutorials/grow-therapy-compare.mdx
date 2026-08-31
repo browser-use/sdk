@@ -118,7 +118,8 @@ for (const p of result.output.providers) {
 
 ## 4. Sweep across locations and specialties
 
-After the first run caches the search flow, sweep across different parameters at $0 LLM cost:
+After the first run caches the search flow, sweep across different parameters
+without another LLM generation step:
 
 <CodeGroup>
 ```python Python
@@ -159,11 +160,11 @@ for (const location of locations) {
 
 ## Summary
 
-| Step | What happens | Cost |
-|------|-------------|------|
-| First search | Agent navigates Grow Therapy, caches the flow | ~$0.10 |
-| 12 cached sweeps (4 cities x 3 specialties) | Script reruns with new params | **$0 LLM each** |
-| Site layout change | The [saved script](/cloud/agent/scripts) can be repaired and retested | ~$0.10 |
+| Step | What happens |
+|------|-------------|
+| First search | Agent navigates Grow Therapy and caches the flow |
+| 12 cached sweeps (4 cities x 3 specialties) | Script reruns with new parameters without another LLM generation step |
+| Site layout change | The [saved script](/cloud/agent/scripts) can be repaired and retested |
 
 <Info>
 Therapy platforms have dynamic UIs that can change frequently. A later agent run can repair and retest the [saved script](/cloud/agent/scripts) when the site changes.

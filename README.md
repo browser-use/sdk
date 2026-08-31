@@ -7,10 +7,10 @@
 
 Official SDKs for [Browser Use Cloud](https://browser-use.com).
 
-- **Browser Use Agents:** use the explicit V4 interface to give an agent a task
+- **Browser Use Agents:** use the V4 interface to give an agent a task
   and receive its completed result.
-- **Browser Infrastructure:** use the explicit V3 SDK browser resource, or the
-  V4 REST API, to create and control a managed browser.
+- **Browser Infrastructure:** hosted cloud browser infrastructure for AI agents,
+  controlled through the V3 SDK browser resource, the V4 REST API, or CDP.
 
 | Package | Language | Registry |
 |---------|----------|----------|
@@ -18,6 +18,8 @@ Official SDKs for [Browser Use Cloud](https://browser-use.com).
 | [browser-use-sdk](browser-use-node/) | TypeScript | npm |
 
 Start with the [Cloud quickstart](https://docs.browser-use.com/cloud/quickstart).
+See the [developer overview](https://browser-use.com/developers) when choosing
+an interface for a new integration.
 
 ## Docs
 

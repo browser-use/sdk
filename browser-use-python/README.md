@@ -25,9 +25,11 @@ with BrowserUse() as client:
     print(result.result)
 ```
 
-This is the current **Browser Use Agents** interface. Browser Infrastructure's
-browser-management resource currently lives in the explicit `browser_use_sdk.v3`
-namespace; see the [browser quickstart](https://docs.browser-use.com/cloud/browser/quickstart).
+This example uses **Browser Use Agents**. **Browser Infrastructure** is hosted
+cloud browser infrastructure for AI agents, controlled through the
+`browser_use_sdk.v3` browser resource, REST, or CDP. See the
+[browser quickstart](https://docs.browser-use.com/cloud/browser/quickstart) and
+[developer overview](https://browser-use.com/developers).
 
 ## v3 Bring Your Own LLM Key
 

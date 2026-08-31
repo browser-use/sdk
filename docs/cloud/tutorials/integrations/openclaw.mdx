@@ -3,7 +3,7 @@ title: OpenClaw
 description: Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
 ---
 
-[OpenClaw](https://openclaw.ai) is a self-hosted gateway that connects chat apps like WhatsApp, Telegram, and Discord to AI coding agents. Add Browser Use and those agents get full browser automation — anti-detect profiles, CAPTCHA solving, residential proxies in 195+ countries, and stealth browsing out of the box.
+[OpenClaw](https://openclaw.ai) is a self-hosted gateway that connects chat apps like WhatsApp, Telegram, and Discord to AI coding agents. Add Browser Use and those agents can control Browser Infrastructure — hosted cloud browsers for AI agents with managed profiles, proxy routing, supported CAPTCHA handling, and live viewing.
 
 Two ways to set it up: connect a Browser Use cloud browser to OpenClaw's native browser tool via CDP, or install the Browser Use CLI as a skill.
 
@@ -40,11 +40,15 @@ Open `~/.openclaw/openclaw.json` and add a `browser-use` profile:
 }
 ```
 
-Replace `<BROWSER_USE_API_KEY>` with your actual key. All Browser Use session parameters can be passed as query params in the `cdpUrl`:
+Replace `<BROWSER_USE_API_KEY>` with your actual key. These Browser Use session
+parameters can be passed as query parameters in the `cdpUrl`:
 
-- `timeout` — session duration in minutes (max 240)
+- `timeout` — requested session duration in minutes (1–240; defaults to 60)
 - `profileId` — load a saved browser profile with persistent cookies and localStorage
 - `proxyCountryCode` — route traffic through a specific country (e.g. `us`, `de`, `jp`)
+
+See the [browser reference](/cloud/browser/quickstart) for maintained settings
+and [pricing](https://browser-use.com/pricing) for current commercial terms.
 
 **3. Use it**
 

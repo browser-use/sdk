@@ -6,14 +6,15 @@ icon: robot
 
 ## Models
 
-| Model | API String | Cost per Step |
-| ----- | ---------- | ------------- |
-| Browser Use 2.0 (default) | `browser-use-2.0` | \$0.006 |
-| O3 | `o3` | \$0.03 |
-| Gemini Flash Latest | `gemini-flash-latest` | \$0.0075 |
-| Gemini Flash Lite Latest | `gemini-flash-lite-latest` | \$0.005 |
-| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` | \$0.05 |
-| Claude Sonnet 4.6 | `claude-sonnet-4.6` | \$0.05 |
+| Model | API String |
+| ----- | ---------- |
+| Browser Use 2.0 (default) | `browser-use-2.0` |
+| O3 | `o3` |
+| Gemini Flash Latest | `gemini-flash-latest` |
+| Gemini Flash Lite Latest | `gemini-flash-lite-latest` |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5-20250929` |
+
+See [pricing](https://browser-use.com/pricing) for current model rates.
 
 Pass `llm` explicitly to select a model:
 
@@ -150,7 +151,7 @@ console.log(run.result?.output);  // final result after iteration
 | `session_settings` | `SessionSettings` | Proxy, profile, browser config. See [Profiles](/cloud/guides/authentication). |
 | `flash_mode` | `bool` | Faster but less careful navigation. |
 | `thinking` | `bool` | Enable legacy agent thinking behavior. This does not set model reasoning depth. |
-| `thinkingLevel` (REST) | `str` | Provider reasoning depth. The generated SDK parameter is pending; see [Thinking levels](/cloud/agent/thinking-levels). |
+| `thinking_level` / `thinkingLevel` | `str` | Provider reasoning depth in the Python / TypeScript SDKs. REST JSON uses `thinkingLevel`; see [Thinking levels](/cloud/agent/thinking-levels). |
 | `vision` | `bool \| str` | Enable screenshots for the agent. |
 | `highlight_elements` | `bool` | Highlight interactive elements on the page. |
 | `system_prompt_extension` | `str` | Append custom instructions to the system prompt. |

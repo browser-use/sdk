@@ -10,8 +10,8 @@ icon: "sliders"
 |-----------|------|-------------|---------|
 | `BROWSER_USE_API_KEY` | `str` | API key (or env var) | Required |
 | `cloud_profile_id` | `str` | Browser profile UUID | `None` |
-| `cloud_proxy_country_code` | `str` | us, uk, fr, it, jp, au, de, fi, ca, in | `None` |
-| `cloud_timeout` | `int` | Minutes (max: 15 free, 240 paid) | `None` |
+| `cloud_proxy_country_code` | `str` | Supported proxy country code | `None` |
+| `cloud_timeout` | `int` | Requested session timeout in minutes (1–240; service default 60 when omitted) | `None` |
 | `on_browser_created` | `Callable` | Live URL callback | `None` |
 | `on_log` | `Callable` | Log event callback | `None` |
 | `on_result` | `Callable` | Success callback | `None` |
@@ -30,3 +30,7 @@ async def task(browser: Browser):
     agent = Agent(task="your task", browser=browser, llm=ChatBrowserUse())
     await agent.run()
 ```
+
+See the [Browser Infrastructure reference](/cloud/browser/quickstart) for
+maintained browser settings and [pricing](https://browser-use.com/pricing) for
+current commercial terms.

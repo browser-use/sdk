@@ -1,32 +1,32 @@
 ---
-title: x402 (pay-per-request)
-description: "Pay for Browser Use Cloud with crypto (USDC on Base). ~30 seconds from wallet to first request."
+title: x402 wallet payments
+description: "Pay for Browser Use Cloud with crypto (USDC on Base), without an API key."
 ---
 
 {/* prettier-ignore-start */}
 
 [x402](https://www.x402.org) is a payment protocol [created by Coinbase](https://www.coinbase.com/developer-platform/discover/launches/x402) that lets APIs, or AI agents, charge for requests directly with crypto.
 
-x402 lets your code, or an autonomous AI agent, pay Browser Use Cloud directly with cryptocurrency. No account signup, no credit card, and no API key is needed. Your wallet is your identity.
+x402 lets your code, or an autonomous AI agent, fund Browser Use Cloud directly
+with cryptocurrency. Browser Use converts each payment into project credit; it
+is not a separate fee for each API call. No account signup, credit card, or API
+key is needed. Your wallet is your identity.
 
 <Note>
 
 **New to crypto?** Here's the gist:
 
-- **USDC** is a stablecoin pegged 1:1 to the US dollar. 1 USDC = $1.
-- **Base** is a low-fee blockchain network operated by Coinbase. Sending a payment costs fractions of a cent.
+- **USDC** is a stablecoin designed to track the US dollar.
+- **Base** is the blockchain network used for these payments.
 - **Wallet** = a public address (your "username") and a private key (your "password"). The private key signs payments.
-- You'll need at least $1 of USDC on Base in a wallet you control. The Claude Code quickstart below walks you through everything from scratch.
+- You'll need USDC on Base in a wallet you control. Check the current payment
+  options before funding it.
 
 </Note>
 
-**Four ways to start, ranked by laziness:**
+**Three ways to start:**
 
 <CardGroup cols={2}>
-  <Card title="Claude Code" icon="terminal" href="#claude-code-quickstart">
-    One command. Claude does the wallet setup, funding walkthrough, and
-    verification for you.
-  </Card>
   <Card
     title="Agent wallets"
     icon="wallet"
@@ -39,31 +39,11 @@ x402 lets your code, or an autonomous AI agent, pay Browser Use Cloud directly w
     One line in your Python or TypeScript app. Bring your own wallet.
   </Card>
   <Card title="Raw HTTP" icon="globe" href="#raw-http-quickstart">
-    Skip the SDK. Sign EIP-3009, send `X-PAYMENT` header.
+    Use a reference x402 client library without the Browser Use SDK.
   </Card>
 </CardGroup>
 
-## Claude Code quickstart
-
-The fastest path. Install the [x402 skill](https://github.com/browser-use/browser-use/tree/main/skills/x402), and Claude walks you through everything:
-
-```bash
-npx skills add https://github.com/browser-use/browser-use --skill x402
-```
-
-Then in Claude Code:
-
-```
-> /x402
-```
-
-Claude walks you through creating or importing a wallet outside the chat, loading `BROWSER_USE_X402_PRIVATE_KEY` before Claude starts, installing the SDK, and running a verification task.
-
-<Tip>
-  Already have a Browser Use Cloud account? The skill detects this and switches
-  to **top-up mode**, adding credits to that existing account instead of
-  creating a new, wallet-keyed one.
-</Tip>
+<a id="claude-code-quickstart" />
 
 ## SDK quickstart
 
@@ -81,10 +61,13 @@ npm install browser-use-sdk @x402/fetch @x402/evm viem
 <CodeGroup>
 ```python Python
 import asyncio
+import os
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 async def main():
-    client = AsyncBrowserUse(x402_max_payment_usd=1.0)
+    client = AsyncBrowserUse(
+        x402_private_key=os.environ["BROWSER_USE_X402_PRIVATE_KEY"],
+    )
     result = await client.run(
         "Go to example.com and tell me the heading.",
         max_cost_usd=0.75,
@@ -97,10 +80,13 @@ asyncio.run(main())
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v3";
 
-const client = new BrowserUse({ x402MaxPaymentUsd: 1 });
-const result = await client.run("Go to example.com and tell me the heading.", {
-  maxCostUsd: 0.75,
+const client = new BrowserUse({
+  x402PrivateKey: process.env.BROWSER_USE_X402_PRIVATE_KEY!,
 });
+const result = await client.run(
+  "Go to example.com and tell me the heading.",
+  { maxCostUsd: 0.75 },
+);
 console.log(result.output);
 ```
 </CodeGroup>
@@ -120,6 +106,13 @@ const client = new BrowserUse(); // auto-detects from env
   Python x402 is async-only: use `AsyncBrowserUse`, not `BrowserUse`.
 </Note>
 
+<Warning>
+  The SDK's private-key convenience path does not currently enforce a
+  client-side maximum per payment. Use a wallet funded only for the intended
+  workload, or pass a pre-built x402 client with your own payment policy through
+  `x402` (Python) / `x402` (TypeScript).
+</Warning>
+
 ## Raw HTTP quickstart
 
 Use this if you're in a language we don't ship an SDK for (Go, Rust, Ruby, etc.), or if you want to use other x402 APIs from the same client library. Hit `https://x402.api.browser-use.com` directly with any [x402 client library](https://github.com/coinbase/x402#all-available-reference-sdks):
@@ -134,23 +127,35 @@ from x402.mechanisms.evm import EthAccountSigner
 from x402.mechanisms.evm.exact.register import register_exact_evm_client
 from eth_account import Account
 
+def base_mainnet_only(version, requirements):
+    allowed_network = "eip155:8453" if version == 2 else "base" if version == 1 else None
+    return [requirement for requirement in requirements if requirement.network == allowed_network]
+
 async def main():
+    payment_cap = int(os.environ["X402_MAX_ATOMIC_USDC"])
+    task_cap_usd = float(os.environ["BROWSER_USE_TASK_MAX_COST_USD"])
     client = x402Client()
     register_exact_evm_client(
         client,
         EthAccountSigner(Account.from_key(os.environ["BROWSER_USE_X402_PRIVATE_KEY"])),
-        policies=[max_amount(1_000_000)],
+        networks="eip155:8453",
+        policies=[base_mainnet_only, max_amount(payment_cap)],
     )
 
     async with x402HttpxClient(client, timeout=120.0) as http:
         response = await http.post(
             "https://x402.api.browser-use.com/api/v3/sessions",
-            json={"task": "..."},
+            json={"task": "...", "maxCostUsd": task_cap_usd},
         )
         print(response.status_code, response.text[:500])
 
 asyncio.run(main())
 ```
+
+Set `X402_MAX_ATOMIC_USDC` only after reviewing the payment options
+returned by the x402 challenge. The value uses atomic USDC units.
+Set `BROWSER_USE_TASK_MAX_COST_USD` separately to the maximum USD the task may
+spend.
 
 `https://x402.api.browser-use.com` exposes the same routes as `https://api.browser-use.com`. It supports every `/api/v2/*` and `/api/v3/*` route, gated by an x402 challenge instead of API key auth.
 
@@ -158,7 +163,6 @@ asyncio.run(main())
 
 - **EVM wallet** (MetaMask, Rabby, Coinbase Wallet, etc.) with its private key available to your app
 - **USD Coin (USDC) on Base mainnet**
-- **SDK top-up:** `$1.00` USDC by default, with a configurable hard per-payment cap
 
 You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIPS/eip-3009), so you sign offchain, and the facilitator pays gas.
 
@@ -166,10 +170,11 @@ You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIP
 
 ## Pricing and credits
 
-The SDK first authenticates requests with a free, single-use wallet signature. If
+The SDK first authenticates requests with a single-use wallet signature. If
 the wallet project does not exist yet or has insufficient credits, the backend
-marks the response as requiring a top-up, and the SDK makes one x402 payment. The
-default SDK cap is `$1.00` USDC per payment.
+marks the response as requiring a top-up, and the SDK makes an x402 payment.
+Review the current payment options and rates on the
+[pricing page](https://browser-use.com/pricing).
 
 <Warning>
   **Mid-task drain still terminates the task.** Browser Use sessions run on a
@@ -193,8 +198,8 @@ from browser_use_sdk.v3 import AsyncBrowserUse
 
 client = AsyncBrowserUse(
     api_key=os.environ["BROWSER_USE_API_KEY"],
-    x402_max_payment_usd=1.0,              # hard cap for each top-up
     base_url="https://x402.api.browser-use.com/api/v3",
+    x402_private_key=os.environ["BROWSER_USE_X402_PRIVATE_KEY"],
 )
 async def main():
     result = await client.run("...", max_cost_usd=0.75)
@@ -209,8 +214,8 @@ import { BrowserUse } from "browser-use-sdk/v3";
 
 const client = new BrowserUse({
   apiKey: process.env.BROWSER_USE_API_KEY,
-  x402MaxPaymentUsd: 1,
   baseUrl: "https://x402.api.browser-use.com/api/v3",
+  x402PrivateKey: process.env.BROWSER_USE_X402_PRIVATE_KEY!,
 });
 const result = await client.run("...", { maxCostUsd: 0.75 });
 ```
@@ -218,7 +223,7 @@ const result = await client.run("...", { maxCostUsd: 0.75 });
 
 When the backend sees both a payment and a valid API key, the credit goes to the key's project rather than auto-creating a new wallet-keyed one. Useful for:
 
-- Agents that ran out of free-tier credits and need to keep going
+- Agents that ran out of credits and need to keep going
 - Adding credits via crypto when you already have a regular Browser Use account
 - Multi-wallet setups funding one shared account
 
@@ -281,16 +286,24 @@ The response contains:
 ## How it works
 
 Your code asks for something. If your Browser Use credit balance needs a top-up,
-the SDK authorizes up to your configured payment cap; otherwise it proceeds
-without moving wallet funds.
+the SDK's x402 client handles the server's payment challenge; otherwise it
+proceeds without moving wallet funds. The private-key convenience path does not
+add a payment cap. A cap applies only when you pass a pre-built x402 client with
+an explicit payment policy, as shown above.
 
 A bit more detail:
 
 1. Your code makes a request (e.g. "run this task").
-2. The SDK signs a free, request-bound wallet authentication message.
-3. If the server explicitly requests a top-up, the SDK signs one capped payment and retries.
-4. Coinbase moves the USDC on-chain, and we add the same amount to your project's credit balance.
-5. Status polls use free wallet authentication while the task runs.
+2. The SDK signs a request-bound wallet authentication message without moving
+   wallet funds.
+3. If the server explicitly requests a top-up, the x402 client checks any
+   caller-supplied payment policy, signs an allowed payment, and retries. With
+   the private-key convenience path, no client-side cap is registered.
+4. Coinbase moves the authorized USDC on-chain, and the server updates your
+   project's credit balance. See the [pricing page](https://browser-use.com/pricing)
+   for current crediting terms.
+5. Status polls use wallet authentication without moving funds while the task
+   runs.
 
 ## Wallet setup
 
@@ -325,7 +338,8 @@ If you don't have a wallet ready, here's an easy way to set one up using **MetaM
 
 ## Advanced: bring your own x402 client
 
-For custom signers, multi-network setups, or non-EVM wallets, build the x402 client yourself, and pass it as `x402` instead of `x402_private_key`:
+For custom signers or multi-network setups that support Base/EVM, build the x402
+client yourself, and pass it as `x402` instead of `x402_private_key`:
 
 <CodeGroup>
 ```python Python
@@ -338,13 +352,20 @@ from eth_account import Account
 from browser_use_sdk.v3 import AsyncBrowserUse
 
 key = os.environ["BROWSER_USE_X402_PRIVATE_KEY"]
+payment_cap = int(os.environ["X402_MAX_ATOMIC_USDC"])
 x402 = x402Client()
+
+def base_mainnet_only(version, requirements):
+    allowed_network = "eip155:8453" if version == 2 else "base" if version == 1 else None
+    return [requirement for requirement in requirements if requirement.network == allowed_network]
+
 register_exact_evm_client(
     x402,
     EthAccountSigner(Account.from_key(key)),
-    policies=[max_amount(1_000_000)],
+    networks="eip155:8453",
+    policies=[base_mainnet_only, max_amount(payment_cap)],
 )
-client = AsyncBrowserUse(x402=x402, x402_private_key=key)
+client = AsyncBrowserUse(x402=x402)
 
 ```
 
@@ -355,14 +376,18 @@ import { privateKeyToAccount } from "viem/accounts";
 import { BrowserUse } from "browser-use-sdk/v3";
 
 const key = process.env.BROWSER_USE_X402_PRIVATE_KEY! as `0x${string}`;
+const paymentCap = BigInt(process.env.X402_MAX_ATOMIC_USDC!);
 const x402 = new x402Client();
-x402.register("eip155:*", new ExactEvmScheme(privateKeyToAccount(key)));
+x402.register("eip155:8453", new ExactEvmScheme(privateKeyToAccount(key)));
 x402.registerPolicy((_version, requirements) =>
-  requirements.filter(({ amount }) => BigInt(amount) <= 1_000_000n),
+  requirements.filter(({ amount }) => BigInt(amount) <= paymentCap),
 );
-const client = new BrowserUse({ x402, x402PrivateKey: key });
+const client = new BrowserUse({ x402 });
 ```
 </CodeGroup>
+
+Set `X402_MAX_ATOMIC_USDC` only after reviewing the current x402
+payment options. The value uses atomic USDC units.
 
 ## Troubleshooting
 
@@ -388,11 +413,10 @@ const client = new BrowserUse({ x402, x402PrivateKey: key });
 </Accordion>
 
 <Accordion title="Insufficient credits despite paying">
-  Wait a few seconds. Settlement and credit grant happen in the same request,
-  but the response may be sent before the credit grant fully commits. If credits
-  still show `$0` after a few minutes, contact support with your wallet address.
-  (Conversely, if a payment settles but the request itself then fails, we
-  automatically reclaim the credits so you aren't charged for nothing.)
+  Check the balance again after the payment request completes. If a settled
+  payment is not reflected, contact support with your wallet address and
+  transaction details. See the [pricing page](https://browser-use.com/pricing)
+  for current crediting and failed-request terms.
 </Accordion>
 
   <Accordion title="Wallet on the wrong network">
@@ -404,7 +428,6 @@ const client = new BrowserUse({ x402, x402PrivateKey: key });
 
 - [x402 protocol spec](https://www.x402.org)
 - [Agent wallets quickstart](/cloud/guides/x402-agent-wallets) — pay from AgentCash or a Coinbase Agentic Wallet
-- [Standard API key auth](/cloud/quickstart) — alternative if you don't want pay-per-use
-- [`x402` Claude Code skill source](https://github.com/browser-use/browser-use/tree/main/skills/x402)
+- [Standard API key auth](/cloud/quickstart) — authenticate through a Browser Use project instead of a wallet
 
 {/* prettier-ignore-end */}

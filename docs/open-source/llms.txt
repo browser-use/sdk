@@ -4,16 +4,17 @@
 
 - GitHub: https://github.com/browser-use/browser-use
 - Docs: https://docs.browser-use.com/open-source/introduction
-- Product map: https://browser-use.com/llms.txt — Compare the Open Source Library with Hosted Agents and Browser Infrastructure.
+- Product map: https://browser-use.com/llms.txt — Compare the Open Source Library with Browser Use Agents and Browser Infrastructure.
 
 Install: `pip install browser-use`
 
 
 ## Get Started
-- [Browser Use Open Source](https://docs.browser-use.com/open-source/introduction): Python library for AI browser automation with 79k+ GitHub stars. Connect any LLM and run locally or self-hosted.
+- [Browser Use Open Source](https://docs.browser-use.com/open-source/introduction): Python library for AI browser automation. Connect an LLM and run locally or self-hosted.
 - [Human Quickstart](https://docs.browser-use.com/open-source/quickstart): Install and run your first AI browser agent in minutes. Python setup with pip, environment variables, and a working example.
 - [Prompts for Vibecoders](https://docs.browser-use.com/open-source/vibecoding): Complete Python SDK reference for AI coding agents. Paste into Claude Code, Cursor, or Copilot for instant integration.
 - [Supported Models](https://docs.browser-use.com/open-source/supported-models): Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider.
+- [Model Card: bu-2-0](https://docs.browser-use.com/open-source/bu-2-0-model-card): Browser Use's browser-specialized model for web automation
 - [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli): Direct browser control for coding agents.
 - [Browser Use Terminal](https://docs.browser-use.com/open-source/browser-use-terminal): Use the terminal app for browser agents, or use the same runtime from Python.
 
@@ -27,7 +28,7 @@ Install: `pip install browser-use`
 - [Configuration](https://docs.browser-use.com/open-source/customize/browser/basics): Configure the browser instance — headless mode, viewport size, proxy settings, and Playwright launch options.
 - [Authentication](https://docs.browser-use.com/open-source/customize/browser/authentication): Log into websites using real browser profiles, saved storage state, and 2FA codes for authenticated automation.
 - [Real Browser](https://docs.browser-use.com/open-source/customize/browser/real-browser): Connect to your existing Chrome browser to preserve login sessions, cookies, and extensions for authenticated tasks.
-- [Remote Browser](https://docs.browser-use.com/open-source/customize/browser/remote): Connect to remote browsers via CDP — use with the Cloud, Browserbase, or any remote Chrome instance.
+- [Remote Browser](https://docs.browser-use.com/open-source/customize/browser/remote): Connect to Browser Infrastructure or another remote Chrome instance via CDP.
 - [All Parameters](https://docs.browser-use.com/open-source/customize/browser/all-parameters): Complete reference for all browser configuration options — launch args, proxy, viewport, user data, and CDP settings.
 
 ## Tools
@@ -36,6 +37,9 @@ Install: `pip install browser-use`
 - [Add Tools](https://docs.browser-use.com/open-source/customize/tools/add): Extend agents with custom Python functions. Add API calls, file operations, or any custom logic as agent tools.
 - [Remove Tools](https://docs.browser-use.com/open-source/customize/tools/remove): Exclude default tools to restrict agent capabilities.
 - [Response Format](https://docs.browser-use.com/open-source/customize/tools/response): Customize how tools return data to the agent. Control response formatting, extraction, and content filtering.
+
+## Agent Skills
+- [Basics](https://docs.browser-use.com/open-source/customize/skills/basics): Attach reusable task instructions to an open-source Browser Use agent.
 
 ## Integration
 - [MCP Server](https://docs.browser-use.com/open-source/customize/integrations/mcp-server): Run browser-use as a local Model Context Protocol server. Connect AI models to browser automation through the MCP standard.
@@ -66,16 +70,16 @@ Install: `pip install browser-use`
 - [Msg-Use (WhatsApp Sender)](https://docs.browser-use.com/open-source/examples/apps/msg-use): AI-powered WhatsApp message scheduler using browser agents and Gemini. Schedule personalized messages in natural language.
 
 ## Skills
-- [Overview](https://docs.browser-use.com/open-source/examples/skills/overview): Install Browser Use as an agent skill. Drop browser automation, cloud, QA, and payments into Claude Code, Cursor, and any agent that supports SKILL.md.
+- [Overview](https://docs.browser-use.com/open-source/examples/skills/overview): Install Browser Use agent skills for browser automation, QA, open-source development, and remote browsers.
 - [browser-use](https://docs.browser-use.com/open-source/examples/skills/browser-use): Automates browser interactions for web testing, form filling, screenshots, and data extraction. Use when the agent needs to navigate websites, interact with web pages, fill forms, take screenshots, or extract information.
-- [cloud](https://docs.browser-use.com/open-source/examples/skills/cloud): Documentation reference for using Browser Use Cloud — the hosted API and SDK for browser automation.
 - [open-source](https://docs.browser-use.com/open-source/examples/skills/open-source): Documentation reference for writing Python code using the browser-use open-source library.
+- [cloud](https://docs.browser-use.com/open-source/examples/skills/cloud): Review the published Browser Use Cloud skill and current documentation for Browser Use Agents and Browser Infrastructure.
+- [x402](https://docs.browser-use.com/open-source/examples/skills/x402): Review the published Browser Use x402 skill and current wallet-funded Cloud setup requirements.
 - [qa](https://docs.browser-use.com/open-source/examples/skills/qa): QA-test a website or web app and return a 1–5 quality score (5 = flawless, 1 = broken) with evidence.
 - [remote-browser](https://docs.browser-use.com/open-source/examples/skills/remote-browser): Controls a local browser from a sandboxed remote machine. Use when the agent runs in a sandbox (no GUI) and needs to navigate, interact, screenshot, or expose local dev servers via tunnels.
-- [x402](https://docs.browser-use.com/open-source/examples/skills/x402): Set up Browser Use Cloud payments with x402 — pay per request from a crypto wallet (USDC on Base mainnet), no signup or API key.
 
 ## Development
-- [Get Help](https://docs.browser-use.com/open-source/development/get-help): Get help — join 20k+ developers on Discord, search GitHub issues, or ask the community.
+- [Get Help](https://docs.browser-use.com/open-source/development/get-help): Get help on Discord, search GitHub issues, or ask the community.
 
 ## Contribution
 - [Local Development Setup](https://docs.browser-use.com/open-source/development/setup/local-setup): Set up for local development. Clone the repo, install dependencies, and run tests to start contributing.

@@ -60,7 +60,7 @@
         },
         "tabs": [
           {
-            "tab": "Cloud SDK",
+            "tab": "Cloud products",
             "groups": [
               {
                 "group": "Get Started",
@@ -71,10 +71,10 @@
                 ]
               },
               {
-                "group": "Pillars",
+                "group": "Products",
                 "pages": [
                   {
-                    "group": "Agent",
+                    "group": "Browser Use Agents",
                     "icon": "robot",
                     "root": "cloud/agent/quickstart",
                     "pages": [
@@ -90,8 +90,9 @@
                     ]
                   },
                   {
-                    "group": "Browser",
+                    "group": "Browser Infrastructure",
                     "icon": "globe",
+                    "root": "cloud/browser/quickstart",
                     "pages": [
                       "cloud/browser/quickstart",
                       "cloud/browser/stealth",
@@ -139,8 +140,8 @@
                   },
                   "cloud/faq",
                   {
-                    "group": "Legacy (v2)",
-                    "icon": "box-archive",
+                    "group": "API v2 guides",
+                    "icon": "book",
                     "isDefaultOpen": false,
                     "pages": [
                       "cloud/legacy/agent",
@@ -240,6 +241,7 @@
               "open-source/quickstart",
               "open-source/vibecoding",
               "open-source/supported-models",
+              "open-source/bu-2-0-model-card",
               "open-source/browser-use-cli",
               "open-source/browser-use-terminal"
             ]
@@ -278,6 +280,13 @@
                   "open-source/customize/tools/add",
                   "open-source/customize/tools/remove",
                   "open-source/customize/tools/response"
+                ]
+              },
+              {
+                "group": "Agent Skills",
+                "icon": "wand-magic-sparkles",
+                "pages": [
+                  "open-source/customize/skills/basics"
                 ]
               },
               {
@@ -343,11 +352,11 @@
                 "pages": [
                   "open-source/examples/skills/overview",
                   "open-source/examples/skills/browser-use",
-                  "open-source/examples/skills/cloud",
                   "open-source/examples/skills/open-source",
+                  "open-source/examples/skills/cloud",
+                  "open-source/examples/skills/x402",
                   "open-source/examples/skills/qa",
-                  "open-source/examples/skills/remote-browser",
-                  "open-source/examples/skills/x402"
+                  "open-source/examples/skills/remote-browser"
                 ]
               }
             ]
@@ -729,11 +738,23 @@
     },
     {
       "source": "/development/n8n-integration",
-      "destination": "/open-source/development/n8n-integration"
+      "destination": "/cloud/tutorials/integrations/n8n"
     },
     {
       "source": "/development/roadmap",
-      "destination": "/open-source/development/roadmap"
+      "destination": "https://github.com/browser-use/browser-use/issues"
+    },
+    {
+      "source": "/open-source/development",
+      "destination": "/open-source/development/setup/local-setup"
+    },
+    {
+      "source": "/open-source/development/n8n-integration",
+      "destination": "/cloud/tutorials/integrations/n8n"
+    },
+    {
+      "source": "/open-source/development/roadmap",
+      "destination": "https://github.com/browser-use/browser-use/issues"
     },
     {
       "source": "/use-cloud",
