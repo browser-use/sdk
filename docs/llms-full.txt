@@ -1016,18 +1016,27 @@ Source: https://docs.browser-use.com/cloud/browser/quickstart
 Every browser includes stealth, proxies, live preview, and recording. Its
 **CDP URL** is a WebSocket endpoint for remotely controlling Chrome.
 
-<img
-  src="/cloud/images/browser-cdp-light.svg"
-  alt="Your code using a CDP URL to connect to and control a cloud browser that accesses the web"
-  noZoom
-  className="block dark:hidden"
-/>
-<img
-  src="/cloud/images/browser-cdp-dark.svg"
-  alt="Your code using a CDP URL to connect to and control a cloud browser that accesses the web"
-  noZoom
-  className="hidden dark:block"
-/>
+```text
++-------------------+
+| Your code         |
++-------------------+
+          |
+          | CDP URL
+          v
++-------------------+
+| Cloud browser     |
+|                   |
+| - Stealth         |
+| - Proxy           |
+| - Live preview    |
+| - Recording       |
++-------------------+
+          |
+          v
++-------------------+
+| Web               |
++-------------------+
+```
 
 Get an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) and
 export it:
