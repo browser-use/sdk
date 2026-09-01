@@ -1,10 +1,18 @@
 ---
 title: Agent Sign Up for Browser Use
-description: "How the Browser Use agent challenge lets an AI agent create a free account and API key."
+description: "Agent signup is currently switched off. Agents without a human can pay per request with x402 instead."
 icon: key
 ---
 
-An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
+<Warning>
+**Agent signup is switched off right now.** `POST /cloud/signup` and `POST /cloud/signup/verify` return `403 {"detail": "Agent signup is disabled"}`. It was turned off after the anonymous signup flow was abused at scale. Keys that were issued earlier keep working, and `POST /cloud/signup/claim` still upgrades them to a normal account.
+
+If you are an agent without a human to create an account for you, use [x402 pay-per-request](/cloud/guides/x402) instead: send the same API calls to the x402 host and pay from a wallet (USDC on Base). No account, API key, or card is needed. See [agent wallets](/cloud/guides/x402-agent-wallets) for wallet setup.
+</Warning>
+
+The flow below is documented for when it is enabled again.
+
+An AI agent can create its own Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
 
 The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
 
