@@ -1097,7 +1097,8 @@ curl -X PATCH \
 ## Connect over CDP
 
 Point Playwright or Puppeteer at the CDP URL. Nothing else changes in your
-code.
+code. The snippets read `BROWSER_USE_CDP_URL`; if you launched with the SDK
+above, pass `browser.cdp_url` / `browser.cdpUrl` instead of the variable.
 
 ```python Python
 import os
@@ -2265,7 +2266,6 @@ async def handle_webhook(request: Request):
 Source: https://docs.browser-use.com/cloud/guides/x402
 
 
-{/* prettier-ignore-start */}
 
 [x402](https://www.x402.org) is a payment protocol [created by Coinbase](https://www.coinbase.com/developer-platform/discover/launches/x402) that lets APIs, or AI agents, charge for requests directly with crypto.
 
@@ -2610,13 +2610,11 @@ Two likely causes:
 - [Standard API key auth](https://docs.browser-use.com/cloud/quickstart) — alternative if you don't want pay-per-use
 - [`x402` Claude Code skill source](https://github.com/browser-use/browser-use/tree/main/skills/x402)
 
-{/* prettier-ignore-end */}
 
 # x402 agent wallets
 Source: https://docs.browser-use.com/cloud/guides/x402-agent-wallets
 
 
-{/* prettier-ignore-start */}
 
 Give your agent a wallet with a few dollars of USDC in it, and it can run Browser Use tasks and pay as it goes. Pick a wallet:
 
@@ -2731,7 +2729,6 @@ client](https://docs.browser-use.com/cloud/guides/x402#advanced-bring-your-own-x
 - [AgentCash docs](https://agentcash.dev) · [agentcash-skills](https://github.com/Merit-Systems/agentcash-skills)
 - [Agentic Wallet CLI quickstart](https://docs.cdp.coinbase.com/agentic-wallet/cli/quickstart) (Coinbase)
 
-{/* prettier-ignore-end */}
 
 # Agent Sign Up for Browser Use
 Source: https://docs.browser-use.com/cloud/agent-signup

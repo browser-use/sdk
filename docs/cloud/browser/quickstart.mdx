@@ -95,7 +95,8 @@ curl -X PATCH \
 ## Connect over CDP
 
 Point Playwright or Puppeteer at the CDP URL. Nothing else changes in your
-code.
+code. The snippets read `BROWSER_USE_CDP_URL`; if you launched with the SDK
+above, pass `browser.cdp_url` / `browser.cdpUrl` instead of the variable.
 
 <CodeGroup>
 ```python Python

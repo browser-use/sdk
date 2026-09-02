@@ -222,6 +222,7 @@ def render_card(match):
 sys.stdout.write(re.sub(r"<Card\b([^>]*)>", render_card, content, flags=re.DOTALL))
 ' "$BASE_URL" \
       | sed -E '/<\/?(CodeGroup|Note|Tip|Warning|Info|Card|Tabs|Tab|Steps|Step|Accordion|AccordionGroup)[^>]*>/d' \
+      | sed -E '/^\{\/\* prettier-ignore-(start|end) \*\/\}$/d' \
       | python3 -c '
 # Dedent component-nested content without corrupting code indentation:
 # fenced code blocks are dedented by their common leading whitespace,
