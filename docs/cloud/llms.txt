@@ -106,7 +106,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Claude Managed Agents](https://docs.browser-use.com/cloud/tutorials/integrations/claude-managed-agents): Give Anthropic's Claude Managed Agents a stealth cloud browser via the Browser Use CLI.
 
 ## Tutorials
-- [Agent Sign Up for Browser Use](https://docs.browser-use.com/cloud/agent-signup): Agent signup is currently switched off. Agents without a human can pay per request with x402 instead.
+- [Get a Browser Use API Key](https://docs.browser-use.com/cloud/agent-signup): Create an account and API key for Browser Use Cloud.
 
 ## Legacy (v2)
 - [Agent (v2)](https://docs.browser-use.com/cloud/legacy/agent): V2 agent models and file handling.
