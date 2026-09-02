@@ -105,7 +105,9 @@
                         "pages": [
                           "cloud/guides/authentication",
                           "cloud/guides/profile-sync",
-                          "cloud/guides/2fa"
+                          "cloud/guides/2fa",
+                          "cloud/guides/1password",
+                          "cloud/guides/secrets"
                         ]
                       }
                     ]
@@ -145,9 +147,7 @@
                     "pages": [
                       "cloud/legacy/agent",
                       "cloud/legacy/public-share",
-                      "cloud/legacy/skills",
-                      "cloud/guides/1password",
-                      "cloud/guides/secrets"
+                      "cloud/legacy/skills"
                     ]
                   }
                 ]
