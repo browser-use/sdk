@@ -100,6 +100,10 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 ## Integrations
 - [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
 - [Hermes Agent](https://docs.browser-use.com/cloud/tutorials/integrations/hermes-agent): Give Hermes Agent cloud browser automation with Browser Use.
+- [MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server): Run browser automation tasks from your AI coding assistant. Connect to Claude, Cursor, Windsurf, or any MCP client.
+- [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks): Receive real-time notifications when tasks complete. Configure webhook endpoints for async task monitoring.
+- [x402 (pay-per-request)](https://docs.browser-use.com/cloud/guides/x402): Pay for Browser Use Cloud with crypto (USDC on Base). ~30 seconds from wallet to first request.
+- [x402 agent wallets](https://docs.browser-use.com/cloud/guides/x402-agent-wallets): Pay for Browser Use Cloud from an agent-native wallet: AgentCash (local wallet, MCP) or Coinbase's Agentic Wallet (hosted wallet, CLI).
 
 ## Anthropic
 - [Claude Code](https://docs.browser-use.com/cloud/tutorials/integrations/claude-code): Give Claude Code cloud browser automation with Browser Use.

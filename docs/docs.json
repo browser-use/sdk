@@ -127,7 +127,11 @@
                         ]
                       },
                       "cloud/tutorials/integrations/openclaw",
-                      "cloud/tutorials/integrations/hermes-agent"
+                      "cloud/tutorials/integrations/hermes-agent",
+                      "cloud/guides/mcp-server",
+                      "cloud/guides/webhooks",
+                      "cloud/guides/x402",
+                      "cloud/guides/x402-agent-wallets"
                     ]
                   },
                   {
@@ -186,10 +190,6 @@
               {
                 "group": "V3 guides and tutorials",
                 "pages": [
-                  "cloud/guides/mcp-server",
-                  "cloud/guides/webhooks",
-                  "cloud/guides/x402",
-                  "cloud/guides/x402-agent-wallets",
                   "cloud/tutorials/integrations/n8n",
                   "cloud/tutorials/chat-ui",
                   "cloud/tutorials/grow-therapy-compare"
