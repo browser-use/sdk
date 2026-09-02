@@ -1825,6 +1825,8 @@ Hermes has built-in browser tools (`browser_navigate`, `browser_click`, `browser
 
 Create an API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
 
+Running Hermes without a human? Use [x402 pay-per-request](https://docs.browser-use.com/cloud/guides/x402) instead; it needs no account or API key.
+
 **2. Configure Hermes**
 
 Run the setup wizard:
@@ -1906,9 +1908,11 @@ For the complete CLI reference and Python execution examples, see the [Browser U
 Source: https://docs.browser-use.com/cloud/agent-signup
 
 
+Agent signup is off. The `/cloud/signup` endpoints return `403`.
+
 Create an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then follow the [API V4 quick start](https://docs.browser-use.com/cloud/agent/quickstart).
 
-For pay-per-request access from a crypto wallet, see [x402](https://docs.browser-use.com/cloud/guides/x402). Most users should create an API key.
+No human available? Use [x402](https://docs.browser-use.com/cloud/guides/x402): pay per request from a wallet, without an account or API key.
 
 # FAQ
 Source: https://docs.browser-use.com/cloud/faq
