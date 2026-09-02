@@ -1,110 +1,15 @@
 ---
-title: Agent Sign Up for Browser Use
-description: "How the Browser Use agent challenge lets an AI agent create a free account and API key."
+title: Get a Browser Use API Key
+description: "Agent signup is off. Create an API key in Cloud, or use x402 without a human."
 icon: key
 ---
 
-An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
+<Warning>
+Agent signup is off. The `/cloud/signup` endpoints return `403`.
+</Warning>
 
-The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
+Create an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then follow the [API V4 quick start](/cloud/agent/quickstart).
 
-## REST flow
-
-### 1. Request a challenge
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-Request body, optional (include a user email/name if available):
-
-```json
-{
-  "email": "user@example.com",
-  "name": "User Name"
-}
-```
-
-Response:
-
-```json
-{
-  "challenge_id": "uuid",
-  "challenge_text": "..."
-}
-```
-
-### 2. Solve the challenge
-
-Read `challenge_text` and solve the math problem. Return the answer as a string with two decimal places, for example `"144.00"`.
-
-### 3. Verify the answer
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup/verify \
-  -H "Content-Type: application/json" \
-  -d '{"challenge_id":"uuid","answer":"144.00"}'
-```
-
-Request body:
-
-```json
-{
-  "challenge_id": "uuid",
-  "answer": "144.00"
-}
-```
-
-Response:
-
-```json
-{
-  "api_key": "bu_..."
-}
-```
-
-Use the returned key for Browser Use Cloud API requests.
-
-For example, create an API V4 run:
-
-```bash
-curl https://api.browser-use.com/api/v4/runs \
-  -H "X-Browser-Use-API-Key: bu_..." \
-  -H "Content-Type: application/json" \
-  -d '{"task":"Find the top Hacker News story"}'
-```
-
-See the [API V4 quick start](/cloud/agent/quickstart).
-
-## Claim the account
-
-If a human wants to see the agent-created account in the dashboard later, the agent can create a claim link:
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup/claim \
-  -H "X-Browser-Use-API-Key: bu_..."
-```
-
-Response:
-
-```json
-{
-  "claim_url": "https://..."
-}
-```
-
-The claim URL is valid for 1 hour.
-
-## CLI usage
-
-Agents with shell access can use the Browser Use CLI after the REST flow returns an API key:
-
-```bash
-uv tool install browser-use
-export BROWSER_USE_API_KEY=bu_...
-browser-use auth status
-```
-
-Replace `bu_...` with the key returned by the REST flow.
+<Note>
+No human available? Use [x402](/cloud/guides/x402): pay per request from a wallet, without an account or API key.
+</Note>
