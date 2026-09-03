@@ -19,45 +19,29 @@ Full SDK reference in a single page.
 Source: https://docs.browser-use.com/cloud/which-product
 
 
-Browser Use is one API key and five ways to use it. Start from what you want to happen, not from the product name.
+Browser Use is one API key and three ways to use it. Start from where your agent runs.
 
 | You want | Use | What runs where |
 |---|---|---|
-| A result from a browser task, by API or chat, without running anything yourself | [Browser Use Cloud](https://docs.browser-use.com/cloud/quickstart) | Our agent and our stealth browsers, in our cloud |
-| Your coding agent (Claude Code, Codex, Gemini CLI) to drive a browser you are logged into | [Browser Use CLI](/open-source/browser-use-cli) | Your coding agent, your Chrome or a cloud browser, Python over CDP |
-| To build your own agent in Python with any LLM | [Browser Use library](/open-source/quickstart) | Your code, your model, a local or self-hosted browser |
-| A desktop app instead of a terminal | [Browser Use Desktop](https://github.com/browser-use/desktop) | The CLI with a window around it, on your machine |
-| An always-on agent you text from your phone | [Browser Use Box](https://github.com/browser-use/bux) | Claude Code plus a real browser on a VPS you own, via Telegram |
+| Your own agent, running locally, driving your own browser | [Browser Use CLI](/open-source/browser-use-cli) | Your coding agent (Claude Code, Codex, Gemini CLI) writes Python over CDP against your Chrome |
+| A deployed agent you call through an API | [Browser Use Cloud v4](https://docs.browser-use.com/cloud/quickstart) | Our agent and our browsers, hosted; one API call in, a result out |
+| Only a browser: you bring your own agent, or you just need browser automation | [Browser infrastructure](https://docs.browser-use.com/cloud/guides/browser-api) | Our stealth browsers with proxies, profiles and CAPTCHA handling, reachable over CDP from any agent |
 
-## Cloud
+## Browser Use CLI
 
-Send a task, get a result. The v4 API and the chat UI at [cloud.browser-use.com](https://cloud.browser-use.com) run the agent on hosted stealth browsers with residential proxies, CAPTCHA solving, persistent profiles, and a live preview. Nothing to install; the SDK is optional.
+For an agent that runs on your machine. The coding agent you already use gets a skill that talks to a browser over CDP: your running Chrome with its tabs, cookies and logins, or one of our cloud browsers. Setup is one prompt; see [Browser Use CLI](/open-source/browser-use-cli).
 
-Pick this when you need stealth or proxies, when the task runs on a server, or when you want to scale to many sessions.
+## Browser Use Cloud v4
 
-## Browser Use CLI (`browser-use`)
+For an agent that runs on our side. Send a task through the API or the chat at [cloud.browser-use.com](https://cloud.browser-use.com) and get the result back. The agent, the browsers, the proxies and the live preview are all hosted. This is the CLI and our browser together, as a service.
 
-A skill for coding agents, backed by the open-source [browser-harness](https://github.com/browser-use/browser-harness) project. The agent writes Python that talks to a browser over CDP: your running Chrome with its tabs, cookies, and logins, a Browser Use cloud browser, or any CDP endpoint.
+## Browser infrastructure
 
-Pick this when you are already inside Claude Code or Codex and want it to click, type, and read pages in a browser you control. Setup is a single prompt; see [Browser Use CLI](/open-source/browser-use-cli).
-
-## Browser Use library (`pip install browser-use`)
-
-The Python framework the company started with. Bring your own LLM, run the agent in your own process, and customize tools, prompts, and the browser session. Works with a local browser or with cloud browsers through the same API key.
-
-Pick this when you are building your own agent product or need full control over the loop.
-
-## Browser Use Desktop
-
-An open-source desktop app for people who do not live in a terminal. It gives the CLI a window: type a goal, watch the browser, approve steps. Same local-browser model as the CLI.
-
-## Browser Use Box (BUX)
-
-One install script turns any Ubuntu box into a 24/7 agent with Claude Code, the CLI, and a real browser preinstalled. You talk to it over Telegram. Pick this when you want an agent that keeps working while your laptop is closed.
+For teams that have an agent and only need the browser. Create a stealth browser with residential proxies, persistent profiles and CAPTCHA handling, connect over CDP, and drive it from any framework or your own code.
 
 ## They share one account
 
-The same API key from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1) authenticates the SDK, the CLI's cloud browsers (`browser-use auth login`), the library's `ChatBrowserUse` model, and Browser Use Box. Credits and profiles live in the same project.
+One API key from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1) authenticates the CLI's cloud browsers (`browser-use auth login`), the v4 API, and the browser API. Credits and profiles live in the same project.
 
 # Human Quickstart
 Source: https://docs.browser-use.com/open-source/quickstart
