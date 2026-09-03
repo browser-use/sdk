@@ -1632,16 +1632,28 @@ configure email forwarding, then continue the same session with AgentMail
 enabled.
 
 ```python Python
+inbox_run = client.runs.create(
+    "Open example.com and stop while I configure email forwarding to your inbox.",
+    agentmail=True,
+)
+client.runs.wait_for_completion(inbox_run.id)
+
 follow_up = client.runs.create(
     "Check the inbox again and finish verification",
-    session_id=run.session_id,
+    session_id=inbox_run.session_id,
     agentmail=True,
 )
 ```
 ```typescript TypeScript
+const inboxRun = await client.runs.create({
+  task: "Open example.com and stop while I configure email forwarding to your inbox.",
+  agentmail: true,
+});
+await client.runs.waitForCompletion(inboxRun.id);
+
 const followUp = await client.runs.create({
   task: "Check the inbox again and finish verification",
-  sessionId: run.sessionId,
+  sessionId: inboxRun.sessionId,
   agentmail: true,
 });
 ```
