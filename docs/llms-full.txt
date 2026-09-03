@@ -2915,7 +2915,7 @@ Source: https://docs.browser-use.com/cloud/legacy/skills
   be viewed and run, and Marketplace skills can still be cloned and executed.
 
   For new work, use [rerunnable scripts](https://docs.browser-use.com/cloud/agent/scripts). A Cloud agent learns the
-  task once, saves the working code in its workspace, and later runs reuse that script.
+  task once and saves the working code in its workspace, so every later run reuses it.
 
 ## Run an existing skill
 
