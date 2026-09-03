@@ -23,13 +23,13 @@
   </g>
   <g font-family="Virgil, Comic Sans MS, cursive">
     <text x="210" y="150" font-size="40" fill="#F4F4F5" text-anchor="middle">YOUR AGENT</text>
-    <text x="210" y="200" font-size="22" fill="#A1A1AA" text-anchor="middle">codex · claude code · hermes</text>
+    <text x="210" y="200" font-size="20" fill="#A1A1AA" text-anchor="middle">codex · claude code · hermes</text>
     <text x="600" y="150" font-size="40" fill="#F4F4F5" text-anchor="middle">BROWSER USE CLI</text>
     <text x="600" y="200" font-size="22" fill="#A1A1AA" text-anchor="middle">the harness your agent runs</text>
     <text x="990" y="150" font-size="40" fill="#F4F4F5" text-anchor="middle">BROWSER</text>
-    <text x="990" y="200" font-size="22" fill="#A1A1AA" text-anchor="middle">your chrome · our cloud browser</text>
+    <text x="990" y="200" font-size="20" fill="#A1A1AA" text-anchor="middle">your chrome · our cloud browser</text>
     <text x="600" y="350" font-size="30" fill="#FE750E" text-anchor="middle">ALL THREE, HOSTED = CLOUD V4 (one API call)</text>
-    <text x="410" y="425" font-size="26" fill="#A1A1AA" text-anchor="middle">YOUR AGENT + OUR CLI + ANY BROWSER = CLI</text>
-    <text x="990" y="425" font-size="26" fill="#A1A1AA" text-anchor="middle">ONLY THE BROWSER = BROWSER API</text>
+    <text x="410" y="425" font-size="24" fill="#A1A1AA" text-anchor="middle">YOUR AGENT + OUR CLI + ANY BROWSER = CLI</text>
+    <text x="990" y="425" font-size="21" fill="#A1A1AA" text-anchor="middle">BROWSER ONLY = BROWSER API</text>
   </g>
 </svg>
