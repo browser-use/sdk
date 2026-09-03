@@ -126,29 +126,30 @@ curl -X PATCH \
 Source: https://docs.browser-use.com/cloud/which-product
 
 
-Browser Use is one API key and three ways to use it. Start from where your agent runs.
+Browser Use is three parts. An agent, the Browser Use CLI it runs, and a browser. You can take all three, or only the parts you need.
 
-| You want | Use | What runs where |
+<img src="/cloud/images/which-product-light.svg" alt="Your agent, the Browser Use CLI, and a browser; all three hosted is Cloud v4" noZoom className="block dark:hidden" />
+<img src="/cloud/images/which-product-dark.svg" alt="Your agent, the Browser Use CLI, and a browser; all three hosted is Cloud v4" noZoom className="hidden dark:block" />
+
+| You bring | You take from us | That is |
 |---|---|---|
-| Your own agent, running locally, driving your own browser | [Browser Use CLI](/open-source/browser-use-cli) | Your coding agent (Claude Code, Codex, Gemini CLI) writes Python over CDP against your Chrome |
-| A deployed agent you call through an API | [Browser Use Cloud v4](https://docs.browser-use.com/cloud/quickstart) | Our agent and our browsers, hosted; one API call in, a result out |
-| Only a browser: you bring your own agent, or you just need browser automation | [Browser infrastructure](https://docs.browser-use.com/cloud/browser/stealth) | Our stealth browsers with proxies, profiles and CAPTCHA handling, reachable over CDP from any agent |
+| Nothing. Send a task, get a result | Agent, CLI and browser, hosted | [Cloud v4](https://docs.browser-use.com/cloud/quickstart) |
+| Your agent: Codex, Claude Code, Hermes | The CLI, plus your Chrome or one of our cloud browsers | [Browser Use CLI](/open-source/browser-use-cli) |
+| Your agent and your own harness | Only the browser, over CDP | [Browser API](https://docs.browser-use.com/cloud/browser/stealth) |
+
+## Cloud v4
+
+The whole stack on our side. One API call or the chat at [cloud.browser-use.com](https://cloud.browser-use.com); the agent, the CLI, the browsers, proxies and live preview are hosted.
 
 ## Browser Use CLI
 
-For an agent that runs on your machine. The coding agent you already use gets a skill that talks to a browser over CDP: your running Chrome with its tabs, cookies and logins, or one of our cloud browsers. Setup is one prompt; see [Browser Use CLI](/open-source/browser-use-cli).
+Your coding agent gets the CLI as a skill and drives a browser over CDP. Your running Chrome, with its tabs and logins, or a cloud browser from us with `browser-use auth login`. Hermes ships with it by default. Setup is one prompt, see [Browser Use CLI](/open-source/browser-use-cli).
 
-## Browser Use Cloud v4
+## Browser API
 
-For an agent that runs on our side. Send a task through the API or the chat at [cloud.browser-use.com](https://cloud.browser-use.com) and get the result back. The agent, the browsers, the proxies and the live preview are all hosted. This is the CLI and our browser together, as a service.
+You have an agent and a harness and only need the browser. Create a stealth browser with residential proxies, persistent profiles and CAPTCHA handling, connect over CDP from anything.
 
-## Browser infrastructure
-
-For teams that have an agent and only need the browser. Create a stealth browser with residential proxies, persistent profiles and CAPTCHA handling, connect over CDP, and drive it from any framework or your own code.
-
-## They share one account
-
-One API key from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1) authenticates the CLI's cloud browsers (`browser-use auth login`), the v4 API, and the browser API. Credits and profiles live in the same project.
+One API key from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1) works for all three. Credits and profiles live in the same project.
 
 # Choosing an Agent
 Source: https://docs.browser-use.com/cloud/choosing-an-agent

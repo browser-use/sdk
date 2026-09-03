@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" role="img" aria-labelledby="title desc">
+  <title id="title">Three parts of Browser Use</title>
+  <desc id="desc">Your agent, the Browser Use CLI, and a browser. Take all three hosted as Cloud v4, bring your own agent with our CLI, or take only the browser.</desc>
+  <defs>
+    <filter id="rough">
+      <feTurbulence type="fractalNoise" baseFrequency=".01" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.4"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="460" fill="#09090B"/>
+  <rect x="20" y="20" width="1160" height="420" fill="none" stroke="#27272A" stroke-width="2"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#rough)">
+    <rect x="60" y="90" width="300" height="150" rx="30" fill="#111113" stroke="#A1A1AA" stroke-width="4" stroke-dasharray="16 12"/>
+    <path d="M365 165 C402 157 418 173 445 165" stroke="#A1A1AA" stroke-width="4"/>
+    <path d="M423 150 L445 165 L423 182" stroke="#A1A1AA" stroke-width="4"/>
+    <rect x="450" y="90" width="300" height="150" rx="30" fill="#24140B" stroke="#FE750E" stroke-width="4"/>
+    <path d="M755 165 C792 157 808 173 835 165" stroke="#A1A1AA" stroke-width="4"/>
+    <path d="M813 150 L835 165 L813 182" stroke="#A1A1AA" stroke-width="4"/>
+    <rect x="840" y="90" width="300" height="150" rx="30" fill="#111113" stroke="#A1A1AA" stroke-width="4" stroke-dasharray="16 12"/>
+    <path d="M70 290 L70 320 L1130 320 L1130 290" stroke="#FE750E" stroke-width="4"/>
+    <path d="M70 360 L70 390 L750 390 L750 360" stroke="#A1A1AA" stroke-width="4"/>
+    <path d="M850 360 L850 390 L1130 390 L1130 360" stroke="#A1A1AA" stroke-width="4"/>
+  </g>
+  <g font-family="Virgil, Comic Sans MS, cursive">
+    <text x="210" y="150" font-size="40" fill="#F4F4F5" text-anchor="middle">YOUR AGENT</text>
+    <text x="210" y="200" font-size="22" fill="#A1A1AA" text-anchor="middle">codex · claude code · hermes</text>
+    <text x="600" y="150" font-size="40" fill="#F4F4F5" text-anchor="middle">BROWSER USE CLI</text>
+    <text x="600" y="200" font-size="22" fill="#A1A1AA" text-anchor="middle">the harness your agent runs</text>
+    <text x="990" y="150" font-size="40" fill="#F4F4F5" text-anchor="middle">BROWSER</text>
+    <text x="990" y="200" font-size="22" fill="#A1A1AA" text-anchor="middle">your chrome · our cloud browser</text>
+    <text x="600" y="350" font-size="30" fill="#FE750E" text-anchor="middle">ALL THREE, HOSTED = CLOUD V4 (one API call)</text>
+    <text x="410" y="425" font-size="26" fill="#A1A1AA" text-anchor="middle">YOUR AGENT + OUR CLI + ANY BROWSER = CLI</text>
+    <text x="990" y="425" font-size="26" fill="#A1A1AA" text-anchor="middle">ONLY THE BROWSER = BROWSER API</text>
+  </g>
+</svg>
