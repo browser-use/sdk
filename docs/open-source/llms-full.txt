@@ -25,7 +25,7 @@ Browser Use is one API key and three ways to use it. Start from where your agent
 |---|---|---|
 | Your own agent, running locally, driving your own browser | [Browser Use CLI](/open-source/browser-use-cli) | Your coding agent (Claude Code, Codex, Gemini CLI) writes Python over CDP against your Chrome |
 | A deployed agent you call through an API | [Browser Use Cloud v4](https://docs.browser-use.com/cloud/quickstart) | Our agent and our browsers, hosted; one API call in, a result out |
-| Only a browser: you bring your own agent, or you just need browser automation | [Browser infrastructure](https://docs.browser-use.com/cloud/guides/browser-api) | Our stealth browsers with proxies, profiles and CAPTCHA handling, reachable over CDP from any agent |
+| Only a browser: you bring your own agent, or you just need browser automation | [Browser infrastructure](https://docs.browser-use.com/cloud/browser/stealth) | Our stealth browsers with proxies, profiles and CAPTCHA handling, reachable over CDP from any agent |
 
 ## Browser Use CLI
 
