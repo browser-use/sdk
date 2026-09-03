@@ -10,6 +10,7 @@ import httpx
 import pytest
 
 from browser_use_sdk.v4 import InlineSecretSource, SecretBinding
+from browser_use_sdk.v4.resources.browsers import AsyncBrowsers, Browsers
 from browser_use_sdk.v4.resources.runs import AsyncRuns, Runs
 from browser_use_sdk.v4.resources.sessions import Sessions
 from browser_use_sdk.v4.resources.workspaces import AsyncWorkspaces, Workspaces
@@ -52,6 +53,27 @@ def _queued_message(status: str = "pending") -> dict[str, Any]:
     }
 
 
+def _stopped_browser() -> dict[str, Any]:
+    return {
+        "id": SESSION_ID,
+        "status": "stopped",
+        "timeoutAt": "2026-01-01T01:00:00Z",
+        "startedAt": "2026-01-01T00:00:00Z",
+        "proxyUsedMb": "0",
+        "proxyCost": "0",
+        "browserCost": "0.01",
+        "metadata": {},
+    }
+
+
+def _active_browser() -> dict[str, Any]:
+    return {
+        **_stopped_browser(),
+        "status": "active",
+        "cdpUrl": "wss://connect.browser-use.com/devtools/browser/test",
+    }
+
+
 class FakeSyncHttp:
     """Fake SyncHttpClient — returns queued responses, records every call."""
 
@@ -86,6 +108,64 @@ class FakeAsyncHttp:
     ) -> dict[str, Any]:
         self.calls.append((method, path, json, params))
         return self.responses.pop(0)
+
+
+def test_browsers_stop() -> None:
+    http = FakeSyncHttp([_stopped_browser()])
+    browsers = Browsers(http)  # type: ignore[arg-type]
+
+    browser = browsers.stop(SESSION_ID)
+
+    assert http.calls[0][:3] == (
+        "PATCH",
+        f"/browsers/{SESSION_ID}",
+        {"action": "stop"},
+    )
+    assert browser.status.value == "stopped"
+
+
+def test_browsers_create() -> None:
+    http = FakeSyncHttp([_active_browser()])
+    browsers = Browsers(http)  # type: ignore[arg-type]
+
+    browser = browsers.create(proxy_country_code="DE", metadata={"flow": "quickstart"})
+
+    assert http.calls[0][:3] == (
+        "POST",
+        "/browsers",
+        {"proxyCountryCode": "de", "metadata": {"flow": "quickstart"}},
+    )
+    assert browser.cdp_url == "wss://connect.browser-use.com/devtools/browser/test"
+
+
+def test_async_browsers_stop() -> None:
+    async def run() -> None:
+        http = FakeAsyncHttp([_stopped_browser()])
+        browsers = AsyncBrowsers(http)  # type: ignore[arg-type]
+
+        browser = await browsers.stop(SESSION_ID)
+
+        assert http.calls[0][:3] == (
+            "PATCH",
+            f"/browsers/{SESSION_ID}",
+            {"action": "stop"},
+        )
+        assert browser.status.value == "stopped"
+
+    asyncio.run(run())
+
+
+def test_async_browsers_create() -> None:
+    async def run() -> None:
+        http = FakeAsyncHttp([_active_browser()])
+        browsers = AsyncBrowsers(http)  # type: ignore[arg-type]
+
+        browser = await browsers.create(proxy_country_code="us")
+
+        assert http.calls[0][:3] == ("POST", "/browsers", {"proxyCountryCode": "us"})
+        assert browser.status.value == "active"
+
+    asyncio.run(run())
 
 
 # ---------------------------------------------------------------------------
@@ -153,6 +233,105 @@ def test_async_wait_for_completion() -> None:
             f"/runs/{RUN_ID}/status",
             f"/runs/{RUN_ID}",
         ]
+
+    asyncio.run(run())
+
+
+def test_wait_for_event_returns_browser_ready_before_terminal_wait() -> None:
+    http = FakeSyncHttp(
+        [
+            {
+                "events": [
+                    {
+                        "runId": RUN_ID,
+                        "id": 1,
+                        "ts": "2026-01-01T00:00:00Z",
+                        "type": "run.created",
+                        "data": {},
+                    }
+                ],
+                "nextAfter": 1,
+                "hasMore": True,
+            },
+            {
+                "events": [
+                    {
+                        "runId": RUN_ID,
+                        "id": 2,
+                        "ts": "2026-01-01T00:00:01Z",
+                        "type": "browser.ready",
+                        "data": {"live_view_url": "https://live"},
+                    }
+                ],
+                "nextAfter": 2,
+                "hasMore": False,
+            },
+        ]
+    )
+    event = Runs(http).wait_for_event(RUN_ID, "browser.ready", interval=0)  # type: ignore[arg-type]
+    assert event.data["live_view_url"] == "https://live"
+    assert http.calls[-1][3] == {"after": 1, "limit": 100}
+
+
+def test_async_wait_for_event_returns_browser_ready() -> None:
+    async def run() -> None:
+        http = FakeAsyncHttp(
+            [
+                {
+                    "events": [],
+                    "nextAfter": 0,
+                    "hasMore": False,
+                },
+                {
+                    "events": [
+                        {
+                            "runId": RUN_ID,
+                            "id": 1,
+                            "ts": "2026-01-01T00:00:01Z",
+                            "type": "browser.ready",
+                            "data": {"live_view_url": "https://live"},
+                        }
+                    ],
+                    "nextAfter": 1,
+                    "hasMore": False,
+                },
+            ]
+        )
+        event = await AsyncRuns(http).wait_for_event(  # type: ignore[arg-type]
+            RUN_ID, "browser.ready", interval=0
+        )
+        assert event.data["live_view_url"] == "https://live"
+        assert http.calls[-1][3] == {"after": 0, "limit": 100}
+
+    asyncio.run(run())
+
+
+def test_wait_for_event_stops_when_run_ends_first() -> None:
+    terminal = {
+        "events": [
+            {
+                "runId": RUN_ID,
+                "id": 1,
+                "ts": "2026-01-01T00:00:00Z",
+                "type": "run.dispatch_failed",
+                "data": {},
+            }
+        ],
+        "nextAfter": 1,
+        "hasMore": False,
+    }
+    sync_http = FakeSyncHttp([terminal])
+    with pytest.raises(RuntimeError, match="run.dispatch_failed before browser.ready"):
+        Runs(sync_http).wait_for_event(RUN_ID, "browser.ready")  # type: ignore[arg-type]
+    assert len(sync_http.calls) == 1
+
+    async def run() -> None:
+        async_http = FakeAsyncHttp([terminal])
+        with pytest.raises(RuntimeError, match="run.dispatch_failed before browser.ready"):
+            await AsyncRuns(async_http).wait_for_event(  # type: ignore[arg-type]
+                RUN_ID, "browser.ready"
+            )
+        assert len(async_http.calls) == 1
 
     asyncio.run(run())
 

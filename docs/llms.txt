@@ -93,6 +93,8 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Profiles](https://docs.browser-use.com/cloud/guides/authentication): Reuse cookies and browser state in API V4 runs.
 - [Sync local and cloud cookies](https://docs.browser-use.com/cloud/guides/profile-sync): Sync a local login, then use it in an API V4 run.
 - [2FA](https://docs.browser-use.com/cloud/guides/2fa): Handle two-factor authentication in API V4 runs.
+- [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password): Auto-fill passwords and TOTP codes from 1Password in API tasks: v4 runs with secret bindings, v2 and v3 tasks with a vault id.
+- [Secrets](https://docs.browser-use.com/cloud/guides/secrets): Pass domain-scoped credentials to the agent securely.
 
 ## More
 - [FAQ](https://docs.browser-use.com/cloud/faq): Common questions and solutions.
@@ -100,20 +102,22 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 ## Integrations
 - [OpenClaw](https://docs.browser-use.com/cloud/tutorials/integrations/openclaw): Give OpenClaw agents browser automation with Browser Use — via CDP or the CLI skill.
 - [Hermes Agent](https://docs.browser-use.com/cloud/tutorials/integrations/hermes-agent): Give Hermes Agent cloud browser automation with Browser Use.
+- [MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server): Run browser automation tasks from your AI coding assistant. Connect to Claude, Cursor, Windsurf, or any MCP client.
+- [Webhooks](https://docs.browser-use.com/cloud/guides/webhooks): Receive real-time notifications when tasks complete. Configure webhook endpoints for async task monitoring.
+- [x402 (pay-per-request)](https://docs.browser-use.com/cloud/guides/x402): Pay for Browser Use Cloud with crypto (USDC on Base). ~30 seconds from wallet to first request.
+- [x402 agent wallets](https://docs.browser-use.com/cloud/guides/x402-agent-wallets): Pay for Browser Use Cloud from an agent-native wallet: AgentCash (local wallet, MCP) or Coinbase's Agentic Wallet (hosted wallet, CLI).
 
 ## Anthropic
 - [Claude Code](https://docs.browser-use.com/cloud/tutorials/integrations/claude-code): Give Claude Code cloud browser automation with Browser Use.
 - [Claude Managed Agents](https://docs.browser-use.com/cloud/tutorials/integrations/claude-managed-agents): Give Anthropic's Claude Managed Agents a stealth cloud browser via the Browser Use CLI.
 
 ## Tutorials
-- [Agent Sign Up for Browser Use](https://docs.browser-use.com/cloud/agent-signup): How the Browser Use agent challenge lets an AI agent create a free account and API key.
+- [Get a Browser Use API Key](https://docs.browser-use.com/cloud/agent-signup): Agent signup is off. Create an API key in Cloud, or use x402 without a human.
 
 ## Legacy (v2)
 - [Agent (v2)](https://docs.browser-use.com/cloud/legacy/agent): V2 agent models and file handling.
 - [Public share links (v2)](https://docs.browser-use.com/cloud/legacy/public-share): Generate shareable URLs for agent sessions using the v2 API.
-- [Skills](https://docs.browser-use.com/cloud/legacy/skills): Turn any website into a deterministic API endpoint. Create once, call repeatedly.
-- [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password): Auto-fill passwords and TOTP codes from 1Password during agent tasks.
-- [Secrets](https://docs.browser-use.com/cloud/guides/secrets): Pass domain-scoped credentials to the agent securely.
+- [Skills](https://docs.browser-use.com/cloud/legacy/skills): Retired. Existing skills still run; new skills are no longer created.
 
 ## API v4
 - [API Reference](https://docs.browser-use.com/cloud/api-v4-overview): Authenticate and start using the Browser Use API v4 — the current REST API for long-horizon agents.

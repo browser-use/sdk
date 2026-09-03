@@ -4,7 +4,8 @@ description: "Watch an API V4 run in real time or record its browser."
 icon: eye
 ---
 
-The `browser.ready` event contains the live browser URL:
+Wait for `browser.ready` as soon as you create the run so the URL is available
+while the browser is live:
 
 <CodeGroup>
 ```python Python
@@ -12,13 +13,7 @@ from browser_use_sdk.v4 import BrowserUse
 
 client = BrowserUse()
 run = client.runs.create("Find the top Hacker News story")
-run = client.runs.wait_for_completion(run.id)
-
-events = client.runs.events(run.id, limit=100)
-ready = next(
-    event for event in events.events
-    if event.type == "browser.ready"
-)
+ready = client.runs.wait_for_event(run.id, "browser.ready")
 print(ready.data["live_view_url"])
 ```
 ```typescript TypeScript
@@ -29,20 +24,13 @@ const run = await client.runs.create({
   task: "Find the top Hacker News story",
   model: "grok-4.5",
 });
-await client.runs.waitForCompletion(run.id);
-
-const events = await client.runs.events(run.id, {
-  limit: 100,
-});
-const ready = events.events.find(
-  (event) => event.type === "browser.ready",
-);
-console.log(ready?.data.live_view_url);
+const ready = await client.runs.waitForEvent(run.id, "browser.ready");
+console.log(ready.data.live_view_url);
 ```
 </CodeGroup>
 
-Poll [run events](/cloud/agent/observability) if you need the URL as soon as
-the browser starts.
+The helper advances the event cursor and times out after five minutes. See [run
+events](/cloud/agent/observability) for the full event stream and custom polling.
 
 ## Embed the live browser
 

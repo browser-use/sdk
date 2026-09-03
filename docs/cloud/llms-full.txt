@@ -10,6 +10,10 @@ Give an agent a task and get the result.
   [Browser Infrastructure](https://docs.browser-use.com/cloud/browser/quickstart)
 Launch a cloud browser and connect to it from your code.
 
+Both Cloud paths use API V4. Choose whether Browser Use drives the browser or
+your Playwright/Puppeteer code connects directly over CDP. For a local agent,
+use the [open-source library](/open-source/quickstart).
+
 Get an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) and
 export it:
 
@@ -22,10 +26,10 @@ export BROWSER_USE_API_KEY=your_key
 Skip this step if you use curl.
 
 ```bash Python
-pip install browser-use-sdk
+pip install --upgrade browser-use-sdk playwright
 ```
 ```bash TypeScript
-npm install browser-use-sdk
+npm install browser-use-sdk@latest puppeteer-core
 ```
 
 ## Run Browser Use Agents
@@ -59,25 +63,37 @@ curl https://api.browser-use.com/api/v4/runs \
 
 Launch a browser, connect to its CDP URL, then stop it:
 
-The browser-management resource currently uses the explicit V3 SDK namespace.
-The equivalent REST endpoint is API V4.
-
 ```python Python
-from browser_use_sdk.v3 import BrowserUse
+from browser_use_sdk.v4 import BrowserUse
+from playwright.sync_api import sync_playwright
 
 client = BrowserUse()
 browser = client.browsers.create(proxy_country_code="us")
 print(browser.cdp_url)
 
+with sync_playwright() as p:
+    chrome = p.chromium.connect_over_cdp(browser.cdp_url)
+    page = chrome.new_page()
+    page.goto("https://example.com")
+    print(page.title())
+
 # When finished:
 client.browsers.stop(browser.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
+import puppeteer from "puppeteer-core";
 
 const client = new BrowserUse();
 const browser = await client.browsers.create({ proxyCountryCode: "us" });
 console.log(browser.cdpUrl);
+
+const chrome = await puppeteer.connect({
+  browserWSEndpoint: browser.cdpUrl,
+});
+const page = await chrome.newPage();
+await page.goto("https://example.com");
+console.log(await page.title());
 
 // When finished:
 await client.browsers.stop(browser.id);
@@ -232,8 +248,8 @@ curl https://api.browser-use.com/api/v4/runs \
   -d '{"task":"Find the top Hacker News story"}'
 ```
 
-Install the SDK with `pip install browser-use-sdk` or
-`npm install browser-use-sdk`. Curl needs no installation.
+Install the latest SDK with `pip install --upgrade browser-use-sdk` or
+`npm install browser-use-sdk@latest`. Curl needs no installation.
 
 Every new run implicitly creates a [session](https://docs.browser-use.com/cloud/agent/sessions) for its
 conversation and live browser, plus a [workspace](https://docs.browser-use.com/cloud/agent/workspaces) for
@@ -1025,10 +1041,10 @@ export BROWSER_USE_API_KEY=your_key
 Skip this step if you use curl.
 
 ```bash Python
-pip install browser-use-sdk
+pip install --upgrade browser-use-sdk
 ```
 ```bash TypeScript
-npm install browser-use-sdk
+npm install browser-use-sdk@latest
 ```
 
 ## Launch a browser
@@ -1078,8 +1094,50 @@ curl -X PATCH \
   managed browser. Use `client.browsers.stop(browser.id)` or call
   `PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`.
 
-  [Connect over CDP](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium)
-Use the CDP URL with Playwright or Puppeteer.
+## Connect over CDP
+
+Point Playwright or Puppeteer at the CDP URL. Nothing else changes in your
+code. The snippets read `BROWSER_USE_CDP_URL`; if you launched with the SDK
+above, pass `browser.cdp_url` / `browser.cdpUrl` instead of the variable.
+
+```python Python
+import os
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(os.environ["BROWSER_USE_CDP_URL"])
+    page = browser.contexts[0].pages[0]
+    page.goto("https://example.com")
+    print(page.title())
+```
+```typescript TypeScript
+import { chromium } from "playwright";
+
+const browser = await chromium.connectOverCDP(
+  process.env.BROWSER_USE_CDP_URL!,
+);
+const page = browser.contexts()[0].pages()[0];
+await page.goto("https://example.com");
+console.log(await page.title());
+```
+```typescript Puppeteer
+import puppeteer from "puppeteer-core";
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: process.env.BROWSER_USE_CDP_URL!,
+});
+const [page] = await browser.pages();
+await page.goto("https://example.com");
+console.log(await page.title());
+```
+
+Selenium cannot connect to a remote WebSocket CDP URL; use Playwright or
+Puppeteer. Stop the browser when you are done (see the warning above), and
+the session ends with a [live preview](https://docs.browser-use.com/cloud/browser/live-preview) and
+recording you can open from the dashboard.
+
+  [Playwright, Puppeteer, Selenium](https://docs.browser-use.com/cloud/browser/playwright-puppeteer-selenium)
+Full connection guide and stop semantics.
   [Browser settings](https://docs.browser-use.com/cloud/api-v4/browsers/create-browser-session)
 Configure proxies, screen size, recording, and timeout.
 
@@ -1097,7 +1155,7 @@ Every cloud browser session runs in a hardened Chromium fork with stealth enable
 - **Ad and cookie banner blocking** — Banners are dismissed automatically so the agent sees clean pages and executes faster.
 - **Cloudflare / anti-bot bypass** — Works on sites protected by Cloudflare, PerimeterX, and other bot detection services.
 
-Cloud browsers also solve reCAPTCHA and other supported challenges automatically.
+Cloud browsers also solve reCAPTCHA challenges automatically.
 See [CAPTCHA handling](https://docs.browser-use.com/cloud/browser/captcha-handling) for what to do when a
 solver is still working or a site has a specific anti-bot issue.
 
@@ -1113,7 +1171,7 @@ Every Browser Use Cloud browser enables automatic CAPTCHA solving. This applies
 to API V4 Agent runs and standalone Cloud Browser sessions. There is no request
 field to turn on.
 
-The automatic solver handles reCAPTCHA and other supported challenges.
+The automatic solver handles **reCAPTCHA** challenges. Cloudflare and other bot walls are handled by the browser's stealth layer and residential proxies, not by the CAPTCHA solver.
 
 Other anti-bot pages may still be passed by the browser's stealth protections
 or residential proxy. That is separate from automatic CAPTCHA solver coverage.
@@ -1247,20 +1305,15 @@ reference](https://docs.browser-use.com/cloud/api-v4/runs/create-run) for the co
 Source: https://docs.browser-use.com/cloud/browser/live-preview
 
 
-The `browser.ready` event contains the live browser URL:
+Wait for `browser.ready` as soon as you create the run so the URL is available
+while the browser is live:
 
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
 
 client = BrowserUse()
 run = client.runs.create("Find the top Hacker News story")
-run = client.runs.wait_for_completion(run.id)
-
-events = client.runs.events(run.id, limit=100)
-ready = next(
-    event for event in events.events
-    if event.type == "browser.ready"
-)
+ready = client.runs.wait_for_event(run.id, "browser.ready")
 print(ready.data["live_view_url"])
 ```
 ```typescript TypeScript
@@ -1271,19 +1324,12 @@ const run = await client.runs.create({
   task: "Find the top Hacker News story",
   model: "grok-4.5",
 });
-await client.runs.waitForCompletion(run.id);
-
-const events = await client.runs.events(run.id, {
-  limit: 100,
-});
-const ready = events.events.find(
-  (event) => event.type === "browser.ready",
-);
-console.log(ready?.data.live_view_url);
+const ready = await client.runs.waitForEvent(run.id, "browser.ready");
+console.log(ready.data.live_view_url);
 ```
 
-Poll [run events](https://docs.browser-use.com/cloud/agent/observability) if you need the URL as soon as
-the browser starts.
+The helper advances the event cursor and times out after five minutes. See [run
+events](https://docs.browser-use.com/cloud/agent/observability) for the full event stream and custom polling.
 
 ## Embed the live browser
 
@@ -1576,6 +1622,198 @@ See [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-lo
 embedding the live browser URL. Never put passwords or TOTP secrets directly
 in a prompt.
 
+# 1Password & 2FA
+Source: https://docs.browser-use.com/cloud/guides/1password
+
+
+## Setup
+
+### 1. Create a dedicated vault
+
+Create a new vault in 1Password for Browser Use. Add the credentials you want the agent to access (usernames, passwords, and 2FA/TOTP codes).
+
+### 2. Create a service account token
+
+1. Go to [1Password Developer Tools - Service Accounts](https://my.1password.eu/developer-tools/active/service-accounts)
+2. Click **New Service Account**, name it "Browser Use Cloud"
+3. Grant **read access** to the dedicated vault
+4. Copy the generated token
+
+### 3. Connect to Browser Use Cloud
+
+1. Go to [Browser Use Cloud Settings - Secrets](https://cloud.browser-use.com/settings?tab=secrets)
+2. Click **Create Integration**
+3. Paste your service account token
+
+## Use a vault in a v4 run
+
+A v4 run does not take a vault id. It takes **secret bindings**: each binding names one field of one 1Password item, gives it an alias the agent can ask for, and lists the hosts it may be typed into. The value never reaches the model; the server types it into the focused field when the agent asks for the alias on an allowed domain. Bindings are run-scoped, so a follow-up run that needs the same login must send them again.
+
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+with BrowserUse() as client:
+    run = client.runs.create(
+        "Log into Jira and create a ticket for the Q4 release",
+        secret_bindings=[
+            {
+                "alias": "jira_password",
+                "source": {
+                    "type": "onepassword",
+                    "integrationId": "<integration id from Settings → Secrets>",
+                    "vaultId": "<vault id>",
+                    "itemId": "<item id>",
+                    "fieldId": "password",
+                },
+                "allowedDomains": ["atlassian.net"],
+            }
+        ],
+    )
+    print(client.runs.wait_for_completion(run.id).result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const run = await client.runs.create({
+  task: "Log into Jira and create a ticket for the Q4 release",
+  secretBindings: [
+    {
+      alias: "jira_password",
+      source: {
+        type: "onepassword",
+        integrationId: "<integration id from Settings → Secrets>",
+        vaultId: "<vault id>",
+        itemId: "<item id>",
+        fieldId: "password",
+      },
+      allowedDomains: ["atlassian.net"],
+    },
+  ],
+});
+```
+
+- `integrationId` is the 1Password integration you connected under **Settings → Secrets**.
+- `vaultId` and `itemId` are the 1Password UUIDs of the vault and item (copy them from 1Password).
+- `fieldId` is the field's id, not its label: `username`, `password`, or `one-time-password` for a TOTP field, which resolves to the current code.
+- `allowedDomains` are bare hostnames; a host covers its subdomains.
+
+In the chat UI at cloud.browser-use.com the same picker lives under **Run settings → Credentials**: choose the vault, the item, and the field, give it an alias, and list the domains.
+
+## Use a vault in a v2 or v3 task
+
+
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Log into my Jira account and create a new ticket",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net"],
+)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Log into my Jira account and create a new ticket",
+  {
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net"],
+  },
+);
+console.log(result.output);
+```
+
+For SSO/OAuth redirects, include all required domains:
+
+```python Python
+result = await client.run(
+    "Log into Jira and create a ticket for the Q4 release",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net", "*.okta.com"],
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Log into Jira and create a ticket for the Q4 release",
+  {
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net", "*.okta.com"],
+  },
+);
+```
+
+## How it works
+
+When the agent encounters a login form:
+
+1. It identifies the service (e.g., Twitter, GitHub, LinkedIn)
+2. Retrieves matching credentials from your 1Password vault
+3. Fills in the username and password
+4. If 2FA is required and a TOTP code is stored, it generates and enters the code automatically
+
+  The agent never sees your actual credentials. The actual username, password, and 2FA codes are filled in programmatically — keeping your secrets hidden from the AI model.
+
+# Secrets
+Source: https://docs.browser-use.com/cloud/guides/secrets
+
+
+Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
+
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Log into GitHub and star the browser-use/browser-use repo",
+    secrets={"github.com": "username:password123"},
+    allowed_domains=["github.com"],
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Log into GitHub and star the browser-use/browser-use repo",
+  {
+    secrets: { "github.com": "username:password123" },
+    allowedDomains: ["github.com"],
+  },
+);
+```
+
+Use `allowed_domains` to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`.
+
+For SSO/OAuth redirects, include all domains in the auth flow:
+
+```python Python
+result = await client.run(
+    "Log into the company portal and download the Q4 report",
+    secrets={
+        "portal.example.com": "user@company.com:password123",
+        "okta.com": "user@company.com:password123",
+    },
+    allowed_domains=["portal.example.com", "*.okta.com"],
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Log into the company portal and download the Q4 report",
+  {
+    secrets: {
+      "portal.example.com": "user@company.com:password123",
+      "okta.com": "user@company.com:password123",
+    },
+    allowedDomains: ["portal.example.com", "*.okta.com"],
+  },
+);
+```
+
 # Claude Code
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/claude-code
 
@@ -1606,13 +1844,11 @@ browser-use skill install
 
 **4. Authenticate for cloud browsers**
 
-Sign up at [cloud.browser-use.com](https://cloud.browser-use.com), then authenticate:
+Create an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then authenticate:
 
 ```bash
 browser-use auth login
 ```
-
-Or let Claude Code provision a free API key itself — see [Agent Self-Registration](#agent-self-registration) below.
 
 **5. Use it**
 
@@ -1623,28 +1859,6 @@ Claude Code uses its bash tool to run CLI commands directly:
 ```
 
 For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
-
-## Agent Self-Registration
-
-Claude Code can provision its own Browser Use API key autonomously — no human interaction needed. The free tier includes unlimited browser hours, free proxies in 195+ countries, persistent browser profiles, CAPTCHA solving, and stealth browsing at zero cost.
-
-Install the Browser Use CLI and skill:
-
-```bash
-uv tool install browser-use
-browser-use skill install
-```
-
-Claude Code can follow the [REST flow](https://docs.browser-use.com/cloud/agent-signup#rest-flow) to request and verify a challenge, then put the returned key in its shell environment:
-
-```bash
-export BROWSER_USE_API_KEY=bu_...
-browser-use auth status
-```
-
-### Claim the account (optional)
-
-If the human wants to see the account in the dashboard later, use the [claim endpoint](https://docs.browser-use.com/cloud/agent-signup#claim-the-account). The returned claim URL is valid for 1 hour.
 
 # Claude Managed Agents
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/claude-managed-agents
@@ -1843,9 +2057,9 @@ Hermes has built-in browser tools (`browser_navigate`, `browser_click`, `browser
 
 **1. Get your API key**
 
-Sign up at [cloud.browser-use.com](https://cloud.browser-use.com) and copy your API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+Create an API key from [Settings → API Keys](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
 
-Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
+Running Hermes without a human? Use [x402 pay-per-request](https://docs.browser-use.com/cloud/guides/x402) instead; it needs no account or API key.
 
 **2. Configure Hermes**
 
@@ -1914,8 +2128,6 @@ Authenticate with your API key:
 browser-use auth login
 ```
 
-Or let the agent provision one itself — see [Agent Self-Registration](#agent-self-registration) below.
-
 **5. Use it**
 
 Once the skill is loaded, Hermes can drive the browser through CLI commands via its terminal tool:
@@ -1926,146 +2138,741 @@ Once the skill is loaded, Hermes can drive the browser through CLI commands via 
 
 For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
 
-## Agent Self-Registration
+# MCP Server
+Source: https://docs.browser-use.com/cloud/guides/mcp-server
 
-Hermes can provision its own Browser Use API key autonomously — no human interaction needed. This works with both options above.
 
-Install the Browser Use CLI and skill:
-
-```bash
-uv tool install browser-use
-browser-use skill install
+```
+https://api.browser-use.com/v3/mcp
 ```
 
-The agent can follow the [REST flow](https://docs.browser-use.com/cloud/agent-signup#rest-flow) to request and verify a challenge, then use the returned API key.
+Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
 
-**Copy the key to Hermes config**
-
-For the cloud browser backend (Option 1):
+## Claude Code
 
 ```bash
-hermes config set BROWSER_USE_API_KEY <api-key>
+claude mcp add -t http -H "x-browser-use-api-key: YOUR_API_KEY" browser-use https://api.browser-use.com/v3/mcp
 ```
 
-For CLI mode (Option 2), put the key in the agent's shell environment:
+## Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Cursor
+
+Add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "url": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Windsurf
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "serverUrl": "https://api.browser-use.com/v3/mcp",
+      "headers": {
+        "x-browser-use-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `run_session` | Create a session and run a task. Supports `keep_alive`, `model` (`claude-sonnet-4.6`, `claude-opus-4.6`, `gpt-5.4-mini`), `output_schema`, and `profile_id`. |
+| `get_session` | Poll session status and output. Returns status, step count, cost breakdown, and live URL. |
+| `send_task` | Send a follow-up task to an idle keep-alive session. |
+| `stop_session` | Stop a session. `strategy: "task"` stops only the task, `"session"` destroys the sandbox. |
+| `get_session_messages` | Get the agent's messages — browser actions, reasoning, and results. |
+| `list_sessions` | List recent sessions with status and cost. |
+| `list_browser_profiles` | List browser profiles for authenticated tasks. |
+
+# Webhooks
+Source: https://docs.browser-use.com/cloud/guides/webhooks
+
+
+Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.browser-use.com/settings?tab=webhooks).
+
+## Events
+
+| Event | When |
+|-------|------|
+| `agent.task.status_update` | Task status changes (`running`, `idle`, or `stopped`) |
+| `test` | Webhook test ping |
+
+## Payload
+
+```json
+{
+  "type": "agent.task.status_update",
+  "timestamp": "2025-01-15T10:30:00Z",
+  "payload": {
+    "task_id": "task_abc123",
+    "session_id": "session_xyz",
+    "status": "idle",
+    "metadata": {}
+  }
+}
+```
+
+## Signature verification
+
+Every webhook request includes two headers:
+
+- `X-Browser-Use-Signature` — HMAC-SHA256 signature of the payload
+- `X-Browser-Use-Timestamp` — Unix timestamp (seconds) when the request was sent
+
+The signature is computed over `{timestamp}.{body}`, where `body` is the JSON-serialized payload with keys sorted alphabetically and no extra whitespace. Verify it to ensure the request is authentic and to prevent replay attacks.
+
+```python Python
+import hashlib
+import hmac
+import json
+import time
+
+def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
+    # Reject requests older than 5 minutes
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        return False
+    if abs(time.time() - ts) > 300:
+        return False
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
+```
+```typescript TypeScript
+import { createHmac, timingSafeEqual } from "crypto";
+
+function sortKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortKeys);
+  if (obj !== null && typeof obj === "object") {
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
+  }
+  return obj;
+}
+
+function verifyWebhook(body: string, signature: string, timestamp: string, secret: string): boolean {
+  // Reject requests older than 5 minutes
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) return false;
+  const payload = JSON.parse(body);
+  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
+  const expected = createHmac("sha256", secret).update(message).digest("hex");
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+}
+```
+
+## Example: Express webhook handler
+
+```typescript
+import express from "express";
+import { createHmac, timingSafeEqual } from "crypto";
+
+const app = express();
+app.use(express.raw({ type: "application/json" }));
+
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
+
+function sortKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortKeys);
+  if (obj !== null && typeof obj === "object") {
+    return Object.keys(obj as object)
+      .sort()
+      .reduce((acc, key) => {
+        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {} as Record<string, unknown>);
+  }
+  return obj;
+}
+
+app.post("/webhook", (req, res) => {
+  const signature = req.headers["x-browser-use-signature"] as string;
+  const timestamp = req.headers["x-browser-use-timestamp"] as string;
+
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
+    return res.status(401).send("Request too old");
+  }
+
+  const body = req.body.toString();
+  const payload = JSON.parse(body);
+  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
+  const expected = createHmac("sha256", WEBHOOK_SECRET).update(message).digest("hex");
+
+  if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
+    return res.status(401).send("Invalid signature");
+  }
+
+  if (payload.type === "agent.task.status_update") {
+    const { task_id, status, session_id } = payload.payload;
+    console.log(`Task ${task_id} is now ${status}`);
+  }
+
+  res.status(200).send("OK");
+});
+
+app.listen(3000);
+```
+
+## Example: FastAPI webhook handler
+
+```python
+from fastapi import FastAPI, Request, HTTPException
+import hashlib
+import hmac
+import json
+import os
+import time
+
+app = FastAPI()
+
+WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
+
+@app.post("/webhook")
+async def handle_webhook(request: Request):
+    body = await request.body()
+    signature = request.headers.get("x-browser-use-signature", "")
+    timestamp = request.headers.get("x-browser-use-timestamp", "")
+
+    # Reject requests older than 5 minutes
+    try:
+        ts = int(timestamp)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid timestamp")
+    if abs(time.time() - ts) > 300:
+        raise HTTPException(status_code=401, detail="Request too old")
+
+    payload = json.loads(body)
+    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
+    expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
+
+    if not hmac.compare_digest(expected, signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
+    if payload["type"] == "agent.task.status_update":
+        task_id = payload["payload"]["task_id"]
+        status = payload["payload"]["status"]
+        print(f"Task {task_id} is now {status}")
+
+    return {"status": "ok"}
+```
+
+  For local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose your local server: `ngrok http 3000`. Then set the ngrok URL as your webhook endpoint in the dashboard.
+
+# x402 (pay-per-request)
+Source: https://docs.browser-use.com/cloud/guides/x402
+
+
+
+[x402](https://www.x402.org) is a payment protocol [created by Coinbase](https://www.coinbase.com/developer-platform/discover/launches/x402) that lets APIs, or AI agents, charge for requests directly with crypto.
+
+x402 lets your code, or an autonomous AI agent, pay Browser Use Cloud directly with cryptocurrency. No account signup, no credit card, and no API key is needed. Your wallet is your identity.
+
+
+**New to crypto?** Here's the gist:
+
+- **USDC** is a stablecoin pegged 1:1 to the US dollar. 1 USDC = $1.
+- **Base** is a low-fee blockchain network operated by Coinbase. Sending a payment costs fractions of a cent.
+- **Wallet** = a public address (your "username") and a private key (your "password"). The private key signs payments.
+- You'll need at least $1 of USDC on Base in a wallet you control. The Claude Code quickstart below walks you through everything from scratch.
+
+
+**Four ways to start, ranked by laziness:**
+
+  [Claude Code](#claude-code-quickstart)
+One command. Claude does the wallet setup, funding walkthrough, and
+verification for you.
+  [Agent wallets](https://docs.browser-use.com/cloud/guides/x402-agent-wallets)
+AgentCash or Coinbase's Agentic Wallet. Your coding agent gets a wallet directly and
+pays as it goes.
+  [SDK](#sdk-quickstart)
+One line in your Python or TypeScript app. Bring your own wallet.
+  [Raw HTTP](#raw-http-quickstart)
+Skip the SDK. Sign EIP-3009, send `X-PAYMENT` header.
+
+## Claude Code quickstart
+
+The fastest path. Install the [x402 skill](https://github.com/browser-use/browser-use/tree/main/skills/x402), and Claude walks you through everything:
 
 ```bash
-export BROWSER_USE_API_KEY=bu_...
-browser-use auth status
+npx skills add https://github.com/browser-use/browser-use --skill x402
 ```
 
-### Claim the account (optional)
+Then in Claude Code:
 
-If the human wants to see the account in the dashboard later, use the [claim endpoint](https://docs.browser-use.com/cloud/agent-signup#claim-the-account). The returned claim URL is valid for 1 hour.
+```
+> /x402
+```
 
-# Agent Sign Up for Browser Use
+Claude walks you through creating or importing a wallet outside the chat, loading `BROWSER_USE_X402_PRIVATE_KEY` before Claude starts, installing the SDK, and running a verification task.
+
+  Already have a Browser Use Cloud account? The skill detects this and switches
+  to **top-up mode**, adding credits to that existing account instead of
+  creating a new, wallet-keyed one.
+
+## SDK quickstart
+
+The Browser Use SDK has built-in x402 support. Pass a wallet private key, and you're done.
+
+```bash Python
+pip install "browser-use-sdk[x402]"
+```
+```bash TypeScript
+npm install browser-use-sdk @x402/fetch @x402/evm viem
+```
+
+```python Python
+import asyncio
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+async def main():
+    client = AsyncBrowserUse(x402_max_payment_usd=1.0)
+    result = await client.run(
+        "Go to example.com and tell me the heading.",
+        max_cost_usd=0.75,
+    )
+    print(result.output)
+
+asyncio.run(main())
+```
+
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({ x402MaxPaymentUsd: 1 });
+const result = await client.run("Go to example.com and tell me the heading.", {
+  maxCostUsd: 0.75,
+});
+console.log(result.output);
+```
+
+Or set `BROWSER_USE_X402_PRIVATE_KEY` in your env, and skip the constructor arg entirely:
+
+```python Python
+client = AsyncBrowserUse()   # auto-detects from env
+```
+```typescript TypeScript
+const client = new BrowserUse(); // auto-detects from env
+```
+
+  Python x402 is async-only: use `AsyncBrowserUse`, not `BrowserUse`.
+
+## Raw HTTP quickstart
+
+Use this if you're in a language we don't ship an SDK for (Go, Rust, Ruby, etc.), or if you want to use other x402 APIs from the same client library. Hit `https://x402.api.browser-use.com` directly with any [x402 client library](https://github.com/coinbase/x402#all-available-reference-sdks):
+
+```python
+import asyncio
+import os
+
+from x402 import max_amount, x402Client
+from x402.http.clients import x402HttpxClient
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+
+async def main():
+    client = x402Client()
+    register_exact_evm_client(
+        client,
+        EthAccountSigner(Account.from_key(os.environ["BROWSER_USE_X402_PRIVATE_KEY"])),
+        policies=[max_amount(1_000_000)],
+    )
+
+    async with x402HttpxClient(client, timeout=120.0) as http:
+        response = await http.post(
+            "https://x402.api.browser-use.com/api/v3/sessions",
+            json={"task": "..."},
+        )
+        print(response.status_code, response.text[:500])
+
+asyncio.run(main())
+```
+
+`https://x402.api.browser-use.com` exposes the same routes as `https://api.browser-use.com`. It supports every `/api/v2/*` and `/api/v3/*` route, gated by an x402 challenge instead of API key auth.
+
+## What you need
+
+- **EVM wallet** (MetaMask, Rabby, Coinbase Wallet, etc.) with its private key available to your app
+- **USD Coin (USDC) on Base mainnet**
+- **SDK top-up:** `$1.00` USDC by default, with a configurable hard per-payment cap
+
+You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIPS/eip-3009), so you sign offchain, and the facilitator pays gas.
+
+
+## Pricing and credits
+
+The SDK first authenticates requests with a free, single-use wallet signature. If
+the wallet project does not exist yet or has insufficient credits, the backend
+marks the response as requiring a top-up, and the SDK makes one x402 payment. The
+default SDK cap is `$1.00` USDC per payment.
+
+  **Mid-task drain still terminates the task.** Browser Use sessions run on a
+  worker that doesn't see x402, so once a long-running task starts and burns
+  through its credits, it stops with `INSUFFICIENT_CREDITS` — it does not pause
+  and wait for the next x402 payment.
+
+See the [pricing page](https://browser-use.com/pricing) for model and browser costs.
+
+## Topping up an existing account
+
+If you already have a Browser Use API key from the dashboard, you can use x402 to add credits to **that** account instead of creating a new project based on your crypto wallet. Send your existing API key alongside the payment:
+
+```python Python
+import asyncio
+import os
+
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+client = AsyncBrowserUse(
+    api_key=os.environ["BROWSER_USE_API_KEY"],
+    x402_max_payment_usd=1.0,              # hard cap for each top-up
+    base_url="https://x402.api.browser-use.com/api/v3",
+)
+async def main():
+    result = await client.run("...", max_cost_usd=0.75)
+    print(result.output)
+
+asyncio.run(main())
+
+```
+
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const client = new BrowserUse({
+  apiKey: process.env.BROWSER_USE_API_KEY,
+  x402MaxPaymentUsd: 1,
+  baseUrl: "https://x402.api.browser-use.com/api/v3",
+});
+const result = await client.run("...", { maxCostUsd: 0.75 });
+```
+
+When the backend sees both a payment and a valid API key, the credit goes to the key's project rather than auto-creating a new wallet-keyed one. Useful for:
+
+- Agents that ran out of free-tier credits and need to keep going
+- Adding credits via crypto when you already have a regular Browser Use account
+- Multi-wallet setups funding one shared account
+
+## Checking your credit balance
+
+When you sign up the normal way, Browser Use creates an **account** for you (we call it a "project") that holds your credits and runs your tasks, and you log into it with an API key. When you pay with **only a wallet** (no API key), there's no signup step — so the very first time you pay, Browser Use automatically creates one of these same accounts for you and ties it to your wallet. From then on it behaves exactly like a normal account. The only difference is how you prove it's yours: instead of an API key, you sign with your wallet.
+
+This balance is your **Browser Use credit balance** — the prepaid USD you've added to that account through x402 payments, minus what your tasks have spent.
+
+To check how much credit that account has left, use the method below:
+
+```python Python
+import asyncio
+import os
+
+from browser_use_sdk.v3 import get_wallet_balance
+
+async def main():
+    balance = await get_wallet_balance(os.environ["BROWSER_USE_X402_PRIVATE_KEY"])
+    print(balance["total_credits_usd"])
+
+asyncio.run(main())
+
+```
+
+```typescript TypeScript
+import { getWalletBalance } from "browser-use-sdk/v3";
+
+const balance = await getWalletBalance(process.env.BROWSER_USE_X402_PRIVATE_KEY!);
+console.log(balance.total_credits_usd);
+```
+
+The response contains:
+
+| Field                    | Description                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| `wallet`                 | The wallet address (lowercased)                                                 |
+| `project_id`             | The account (project) tied to your wallet that the credits live in              |
+| `total_credits_usd`      | Your remaining Browser Use credit balance, in USD                               |
+| `additional_credits_usd` | Of that total, the portion added via x402 top-ups (excludes any plan allowance) |
+
+  This is for accounts created from a wallet (the default x402 mode). If you're
+  [topping up an existing account](#topping-up-an-existing-account), check that
+  account's balance the normal way with your API key via
+  `client.billing.account()`. A wallet that has never paid yet has no account,
+  so the call returns `404` until the first payment.
+
+  The SDK signs a fixed, server-defined message
+  ([EIP-191](https://eips.ethereum.org/EIPS/eip-191), the same "Sign-In with
+  Ethereum" mechanism) with your wallet's private key. The signature proves you
+  control the address without moving any funds. The server recovers the signer,
+  matches it to the wallet's project, and returns the balance.
+
+## How it works
+
+Your code asks for something. If your Browser Use credit balance needs a top-up,
+the SDK authorizes up to your configured payment cap; otherwise it proceeds
+without moving wallet funds.
+
+A bit more detail:
+
+1. Your code makes a request (e.g. "run this task").
+2. The SDK signs a free, request-bound wallet authentication message.
+3. If the server explicitly requests a top-up, the SDK signs one capped payment and retries.
+4. Coinbase moves the USDC on-chain, and we add the same amount to your project's credit balance.
+5. Status polls use free wallet authentication while the task runs.
+
+## Wallet setup
+
+If you don't have a wallet ready, here's an easy way to set one up using **MetaMask**. It's a popular crypto wallet. Any other EVM-compatible wallet works equally well: [Rabby](https://rabby.io), [Coinbase Wallet](https://www.coinbase.com/wallet), [Frame](https://frame.sh), [Trust Wallet](https://trustwallet.com), [Phantom](https://phantom.com), etc. Pick whichever you prefer.
+
+Get the [MetaMask browser extension](https://metamask.io) via the official
+site only. Create a new wallet, save the seed phrase somewhere offline, set
+a password.
+By default, most wallets only show Ethereum. You need to add **Base** (the
+network we accept payments on) so your wallet can hold USDC there.
+Click **"Buy"** inside MetaMask. Pick **USDC**, set network to **Base**, and
+pay with credit card, bank, etc. The USDC lands directly in your wallet.
+In MetaMask: click the account menu → **Account details** → **Private keys**
+→ enter your password → copy. That string (starts with `0x`) is your
+`BROWSER_USE_X402_PRIVATE_KEY`. Other wallets have similar export options in
+their account settings.
+
+  Wallets hold real money, and anyone with the private key can drain it. Be
+  careful with your keys.
+
+## Advanced: bring your own x402 client
+
+For custom signers, multi-network setups, or non-EVM wallets, build the x402 client yourself, and pass it as `x402` instead of `x402_private_key`:
+
+```python Python
+import os
+
+from x402 import max_amount, x402Client
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+from browser_use_sdk.v3 import AsyncBrowserUse
+
+key = os.environ["BROWSER_USE_X402_PRIVATE_KEY"]
+x402 = x402Client()
+register_exact_evm_client(
+    x402,
+    EthAccountSigner(Account.from_key(key)),
+    policies=[max_amount(1_000_000)],
+)
+client = AsyncBrowserUse(x402=x402, x402_private_key=key)
+
+```
+
+```typescript TypeScript
+import { x402Client } from "@x402/fetch";
+import { ExactEvmScheme } from "@x402/evm";
+import { privateKeyToAccount } from "viem/accounts";
+import { BrowserUse } from "browser-use-sdk/v3";
+
+const key = process.env.BROWSER_USE_X402_PRIVATE_KEY! as `0x${string}`;
+const x402 = new x402Client();
+x402.register("eip155:*", new ExactEvmScheme(privateKeyToAccount(key)));
+x402.registerPolicy((_version, requirements) =>
+  requirements.filter(({ amount }) => BigInt(amount) <= 1_000_000n),
+);
+const client = new BrowserUse({ x402, x402PrivateKey: key });
+```
+
+## Troubleshooting
+
+Two likely causes:
+
+- **Wallet has no USDC on Base.** Check your balance. If empty, top it up.
+- **Your HTTP client isn't x402-aware.** Plain `requests` / `fetch` just sees a 402 and stops; it doesn't know how to read the payment instructions and sign a payment. Use the SDK (which handles this automatically), or wrap your HTTP client with one of the [x402 client libraries](https://github.com/coinbase/x402#all-available-reference-sdks).
+
+
+  You haven't installed the optional x402 deps. Run `pip install
+  "browser-use-sdk[x402]"` (Python) or `npm install @x402/fetch @x402/evm viem`
+  (TypeScript).
+
+  We verified your payment request but couldn't credit your project, so we
+  deliberately did not settle on-chain. No USDC was moved, so just retry. This
+  is rare.
+
+  Wait a few seconds. Settlement and credit grant happen in the same request,
+  but the response may be sent before the credit grant fully commits. If credits
+  still show `$0` after a few minutes, contact support with your wallet address.
+  (Conversely, if a payment settles but the request itself then fails, we
+  automatically reclaim the credits so you aren't charged for nothing.)
+
+`eip155:8453` is Base mainnet; `eip155:84532` is Base Sepolia testnet. Browser Use Cloud only accepts mainnet. Withdrawing USDC to Sepolia from Coinbase is **not** the same as Base mainnet, even though both use the same wallet address.
+
+## Related
+
+- [x402 protocol spec](https://www.x402.org)
+- [Agent wallets quickstart](https://docs.browser-use.com/cloud/guides/x402-agent-wallets) — pay from AgentCash or a Coinbase Agentic Wallet
+- [Standard API key auth](https://docs.browser-use.com/cloud/quickstart) — alternative if you don't want pay-per-use
+- [`x402` Claude Code skill source](https://github.com/browser-use/browser-use/tree/main/skills/x402)
+
+
+# x402 agent wallets
+Source: https://docs.browser-use.com/cloud/guides/x402-agent-wallets
+
+
+
+Give your agent a wallet with a few dollars of USDC in it, and it can run Browser Use tasks and pay as it goes. Pick a wallet:
+
+  [AgentCash](#agentcash-quickstart)
+A wallet that lives on your machine, built for coding agents: Claude Code,
+Cursor, Codex.
+  [Coinbase Agentic Wallet](#coinbase-agentic-wallet-quickstart)
+A wallet Coinbase hosts for you. Sign in with email, fund with Apple Pay or
+card, pay from the terminal.
+
+  Payments to Browser Use are **credit top-ups, not per-call fees**: each x402
+  payment (\$5 default, \$1 minimum) buys prepaid credit for a project tied to
+  your wallet, and unused credit carries over. See [pricing and
+  credits](https://docs.browser-use.com/cloud/guides/x402#pricing-and-credits).
+
+## AgentCash quickstart
+
+[AgentCash](https://agentcash.dev) gives your coding agent a wallet and the tools to spend from it: check prices, pay for API calls, watch the balance. The wallet is a file on your machine.
+
+```bash
+npx agentcash install
+```
+
+The interactive installer detects your agent client. Or add it directly:
+
+```bash
+claude mcp add agentcash --scope user -- npx -y agentcash@latest   # Claude Code
+codex mcp add agentcash -- npx -y agentcash@latest                 # Codex
+npx agentcash install --client cursor                              # Cursor
+```
+
+The first run creates a wallet at `~/.agentcash/wallet.json`. Get its
+deposit address and send it USDC on **Base mainnet** (\$5 covers the default
+top-up; \$1 is the minimum):
+
+```bash
+npx agentcash@latest accounts
+```
+
+Or just ask your agent — the `list_accounts` and `get_balance` tools do the
+same thing.
+
+Prompt your agent:
+
+```text
+Use AgentCash to POST to https://x402.api.browser-use.com/api/v3/sessions
+with body {"task": "Go to example.com and tell me the page title"}.
+Pay the $1 minimum option, then poll the returned session id at
+GET /api/v3/sessions/{id} until status is "stopped" and show me the output.
+```
+
+The `fetch` tool handles the whole 402 → sign → retry loop. Use
+`check_endpoint_schema` first if you want to see the price and input schema
+without paying.
+
+
+## Coinbase Agentic Wallet quickstart
+
+[Agentic Wallet](https://docs.cdp.coinbase.com/agentic-wallet/welcome) is a wallet Coinbase hosts for you, driven from the terminal with the [`awal`](https://www.npmjs.com/package/awal) CLI. Sign in with your email — no keys to manage — fund it with Apple Pay or a card, and pay for API calls with one command. The [agentic-wallet-skills](https://github.com/coinbase/agentic-wallet-skills) package teaches your coding agent the same commands.
+
+```bash
+npx skills add coinbase/agentic-wallet-skills   # optional: teach your agent
+npx awal auth login you@example.com             # sends an OTP to your email
+npx awal auth verify 123456                     # paste the code
+npx awal status
+```
+
+```bash
+npx awal show      # opens the wallet UI → Fund → Apple Pay / card / Coinbase
+npx awal balance
+```
+
+Or send USDC on Base directly to the address from `npx awal address`.
+
+```bash
+npx awal x402 details https://x402.api.browser-use.com/api/v3/sessions
+```
+
+shows our payment options (\$5 default / \$1 minimum, USDC on Base) and the
+task input schema, without paying. Then:
+
+```bash
+npx awal x402 pay https://x402.api.browser-use.com/api/v3/sessions \
+  -X POST -d '{"task": "Go to example.com and tell me the page title"}' \
+  --max-amount 5000000 --json
+```
+
+`--max-amount` is in atomic USDC units: `1000000` = \$1.00.
+
+The response contains the session `id`. Poll
+`https://x402.api.browser-use.com/api/v3/sessions/{id}` until `status` is
+`"stopped"`, then read `output`.
+
+
+## Which one?
+
+| | AgentCash | Coinbase Agentic Wallet |
+| --- | --- | --- |
+| Wallet | Local file, self-custody | Coinbase-hosted, email OTP |
+| Funding | Send USDC on Base to your address | Onramp (Apple Pay / card / bank) or direct USDC |
+| Interface | MCP tools + CLI | CLI (+ skill for agents, [MCP variant](https://docs.cdp.coinbase.com/agentic-wallet/mcp/welcome)) |
+| Best for | Autonomous coding agents | Humans who want fiat funding; CDP-ecosystem apps |
+
+Building a production app instead of driving a CLI? Use
+[`CdpX402Client`](https://docs.cdp.coinbase.com/x402/quickstart-for-buyers) from
+the CDP SDK (a CDP-managed server wallet) or [bring your own x402
+client](https://docs.browser-use.com/cloud/guides/x402#advanced-bring-your-own-x402-client).
+
+## Related
+
+- [x402 overview](https://docs.browser-use.com/cloud/guides/x402) — SDK, Claude Code skill, raw HTTP, pricing, troubleshooting
+- [AgentCash docs](https://agentcash.dev) · [agentcash-skills](https://github.com/Merit-Systems/agentcash-skills)
+- [Agentic Wallet CLI quickstart](https://docs.cdp.coinbase.com/agentic-wallet/cli/quickstart) (Coinbase)
+
+
+# Get a Browser Use API Key
 Source: https://docs.browser-use.com/cloud/agent-signup
 
 
-An AI agent can create its own free Browser Use account without a human opening the dashboard. This is useful when an agent has terminal or HTTP access and needs a Browser Use API key before it can run cloud browser tasks.
+Agent signup is off. The `/cloud/signup` endpoints return `403`.
 
-The flow is a Browser Use agent challenge: the agent requests a challenge, solves the math problem, verifies the answer, and receives an API key.
+Create an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then follow the [API V4 quick start](https://docs.browser-use.com/cloud/agent/quickstart).
 
-## REST flow
-
-### 1. Request a challenge
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
-Request body, optional (include a user email/name if available):
-
-```json
-{
-  "email": "user@example.com",
-  "name": "User Name"
-}
-```
-
-Response:
-
-```json
-{
-  "challenge_id": "uuid",
-  "challenge_text": "..."
-}
-```
-
-### 2. Solve the challenge
-
-Read `challenge_text` and solve the math problem. Return the answer as a string with two decimal places, for example `"144.00"`.
-
-### 3. Verify the answer
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup/verify \
-  -H "Content-Type: application/json" \
-  -d '{"challenge_id":"uuid","answer":"144.00"}'
-```
-
-Request body:
-
-```json
-{
-  "challenge_id": "uuid",
-  "answer": "144.00"
-}
-```
-
-Response:
-
-```json
-{
-  "api_key": "bu_..."
-}
-```
-
-Use the returned key for Browser Use Cloud API requests.
-
-For example, create an API V4 run:
-
-```bash
-curl https://api.browser-use.com/api/v4/runs \
-  -H "X-Browser-Use-API-Key: bu_..." \
-  -H "Content-Type: application/json" \
-  -d '{"task":"Find the top Hacker News story"}'
-```
-
-See the [API V4 quick start](https://docs.browser-use.com/cloud/agent/quickstart).
-
-## Claim the account
-
-If a human wants to see the agent-created account in the dashboard later, the agent can create a claim link:
-
-```bash
-curl -X POST https://api.browser-use.com/cloud/signup/claim \
-  -H "X-Browser-Use-API-Key: bu_..."
-```
-
-Response:
-
-```json
-{
-  "claim_url": "https://..."
-}
-```
-
-The claim URL is valid for 1 hour.
-
-## CLI usage
-
-Agents with shell access can use the Browser Use CLI after the REST flow returns an API key:
-
-```bash
-uv tool install browser-use
-export BROWSER_USE_API_KEY=bu_...
-browser-use auth status
-```
-
-Replace `bu_...` with the key returned by the REST flow.
+No human available? Use [x402](https://docs.browser-use.com/cloud/guides/x402): pay per request from a wallet, without an account or API key.
 
 # FAQ
 Source: https://docs.browser-use.com/cloud/faq
@@ -2295,75 +3102,32 @@ console.log(share.shareUrl);
 Source: https://docs.browser-use.com/cloud/legacy/skills
 
 
-A skill turns a website interaction into a reusable, reliable API. Describe what you need, Browser Use builds the automation, you call it like a function.
+  Skills are retired. You can no longer create or refine a skill: `skills.create`,
+  `skills.refine`, and manual recording return `410 Gone`. Existing skills can still
+  be viewed and run, and Marketplace skills can still be cloned and executed.
 
-## How skills work
+  For new work, use [rerunnable scripts](https://docs.browser-use.com/cloud/agent/scripts). A Cloud agent learns the
+  task once and saves the working code in its workspace, so every later run reuses it.
 
-Every skill has two parts:
-
-- **Goal** — the full specification: what parameters it accepts, what data it returns, and the complete scope of work. If you want to extract data from 100 listings, the goal describes extracting from *all* of them.
-
-- **Demonstration** (`agent_prompt`) — shows *how* to perform the task, but only once. Think of it like onboarding a new colleague: you would not walk them through all 100 listings. You would show the first one or two and say "keep going like this for the rest." The demonstration navigates the site, triggers the necessary network requests, and the system builds the actual endpoint logic from that recording.
-
-  The demonstration only needs to trigger the right network requests — it does not need to complete the full task. If extracting from many pages, open the first item and maybe paginate once. The system handles the rest.
-
-## Create a skill
-
-```python Python
-from browser_use_sdk import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-skill = await client.skills.create(
-    goal="Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
-    agent_prompt="Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
-)
-print(skill.id)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
-
-const client = new BrowserUse();
-const skill = await client.skills.create({
-  goal: "Extract the top X posts from HackerNews. For each post return: title, URL, score, author, comment count, and rank. X is an input parameter.",
-  agentPrompt: "Go to https://news.ycombinator.com, click on the first post to load its content, go back to the list, and scroll down to trigger loading of additional posts.",
-});
-console.log(skill.id);
-```
-
-Skill creation takes ~30 seconds. You can also create skills visually from the [Cloud Dashboard](https://cloud.browser-use.com/skills) — record yourself performing the task, or let the agent demonstrate it.
-
-## Execute a skill
+## Run an existing skill
 
 ```python Python
 result = await client.skills.execute(
-    skill.id,
+    skill_id,
     parameters={"X": 10},
 )
 print(result)
 ```
 ```typescript TypeScript
-const result = await client.skills.execute(skill.id, {
+const result = await client.skills.execute(skillId, {
   parameters: { X: 10 },
 });
 console.log(result);
 ```
 
-## Refine with feedback
-
-If execution is not quite right, iterate for free:
-
-```python Python
-await client.skills.refine(skill.id, feedback="Also extract the product description and available colors")
-```
-```typescript TypeScript
-await client.skills.refine(skill.id, {
-  feedback: "Also extract the product description and available colors",
-});
-```
-
 ## Marketplace
 
-Browse and use community-created skills.
+Browse, clone, and run community-created skills. Creating new skills is no longer available.
 
 ```python Python
 skills = await client.marketplace.list()
@@ -2377,142 +3141,6 @@ const result = await client.marketplace.execute(skillId, { parameters: { ... } }
 ```
 
 See [Pricing](https://browser-use.com/pricing) for skill costs.
-
-# 1Password & 2FA
-Source: https://docs.browser-use.com/cloud/guides/1password
-
-
-## Setup
-
-### 1. Create a dedicated vault
-
-Create a new vault in 1Password for Browser Use. Add the credentials you want the agent to access (usernames, passwords, and 2FA/TOTP codes).
-
-### 2. Create a service account token
-
-1. Go to [1Password Developer Tools - Service Accounts](https://my.1password.eu/developer-tools/active/service-accounts)
-2. Click **New Service Account**, name it "Browser Use Cloud"
-3. Grant **read access** to the dedicated vault
-4. Copy the generated token
-
-### 3. Connect to Browser Use Cloud
-
-1. Go to [Browser Use Cloud Settings - Secrets](https://cloud.browser-use.com/settings?tab=secrets)
-2. Click **Create Integration**
-3. Paste your service account token
-
-## Run tasks with 1Password
-
-```python Python
-from browser_use_sdk import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-result = await client.run(
-    "Log into my Jira account and create a new ticket",
-    op_vault_id="your-vault-id",
-    allowed_domains=["*.atlassian.net"],
-)
-print(result.output)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
-
-const client = new BrowserUse();
-const result = await client.run(
-  "Log into my Jira account and create a new ticket",
-  {
-    opVaultId: "your-vault-id",
-    allowedDomains: ["*.atlassian.net"],
-  },
-);
-console.log(result.output);
-```
-
-For SSO/OAuth redirects, include all required domains:
-
-```python Python
-result = await client.run(
-    "Log into Jira and create a ticket for the Q4 release",
-    op_vault_id="your-vault-id",
-    allowed_domains=["*.atlassian.net", "*.okta.com"],
-)
-```
-```typescript TypeScript
-const result = await client.run(
-  "Log into Jira and create a ticket for the Q4 release",
-  {
-    opVaultId: "your-vault-id",
-    allowedDomains: ["*.atlassian.net", "*.okta.com"],
-  },
-);
-```
-
-## How it works
-
-When the agent encounters a login form:
-
-1. It identifies the service (e.g., Twitter, GitHub, LinkedIn)
-2. Retrieves matching credentials from your 1Password vault
-3. Fills in the username and password
-4. If 2FA is required and a TOTP code is stored, it generates and enters the code automatically
-
-  The agent never sees your actual credentials. The actual username, password, and 2FA codes are filled in programmatically — keeping your secrets hidden from the AI model.
-
-# Secrets
-Source: https://docs.browser-use.com/cloud/guides/secrets
-
-
-Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
-
-```python Python
-from browser_use_sdk import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-result = await client.run(
-    "Log into GitHub and star the browser-use/browser-use repo",
-    secrets={"github.com": "username:password123"},
-    allowed_domains=["github.com"],
-)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
-
-const client = new BrowserUse();
-const result = await client.run(
-  "Log into GitHub and star the browser-use/browser-use repo",
-  {
-    secrets: { "github.com": "username:password123" },
-    allowedDomains: ["github.com"],
-  },
-);
-```
-
-Use `allowed_domains` to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`.
-
-For SSO/OAuth redirects, include all domains in the auth flow:
-
-```python Python
-result = await client.run(
-    "Log into the company portal and download the Q4 report",
-    secrets={
-        "portal.example.com": "user@company.com:password123",
-        "okta.com": "user@company.com:password123",
-    },
-    allowed_domains=["portal.example.com", "*.okta.com"],
-)
-```
-```typescript TypeScript
-const result = await client.run(
-  "Log into the company portal and download the Q4 report",
-  {
-    secrets: {
-      "portal.example.com": "user@company.com:password123",
-      "okta.com": "user@company.com:password123",
-    },
-    allowedDomains: ["portal.example.com", "*.okta.com"],
-  },
-);
-```
 
 # API Reference
 Source: https://docs.browser-use.com/cloud/api-v4-overview

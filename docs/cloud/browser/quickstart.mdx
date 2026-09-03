@@ -34,10 +34,10 @@ Skip this step if you use curl.
 
 <CodeGroup>
 ```bash Python
-pip install browser-use-sdk
+pip install --upgrade browser-use-sdk
 ```
 ```bash TypeScript
-npm install browser-use-sdk
+npm install browser-use-sdk@latest
 ```
 </CodeGroup>
 
@@ -92,13 +92,57 @@ curl -X PATCH \
   `PATCH /api/v4/browsers/{id}` with `{"action":"stop"}`.
 </Warning>
 
+## Connect over CDP
+
+Point Playwright or Puppeteer at the CDP URL. Nothing else changes in your
+code. The snippets read `BROWSER_USE_CDP_URL`; if you launched with the SDK
+above, pass `browser.cdp_url` / `browser.cdpUrl` instead of the variable.
+
+<CodeGroup>
+```python Python
+import os
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(os.environ["BROWSER_USE_CDP_URL"])
+    page = browser.contexts[0].pages[0]
+    page.goto("https://example.com")
+    print(page.title())
+```
+```typescript TypeScript
+import { chromium } from "playwright";
+
+const browser = await chromium.connectOverCDP(
+  process.env.BROWSER_USE_CDP_URL!,
+);
+const page = browser.contexts()[0].pages()[0];
+await page.goto("https://example.com");
+console.log(await page.title());
+```
+```typescript Puppeteer
+import puppeteer from "puppeteer-core";
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: process.env.BROWSER_USE_CDP_URL!,
+});
+const [page] = await browser.pages();
+await page.goto("https://example.com");
+console.log(await page.title());
+```
+</CodeGroup>
+
+Selenium cannot connect to a remote WebSocket CDP URL; use Playwright or
+Puppeteer. Stop the browser when you are done (see the warning above), and
+the session ends with a [live preview](/cloud/browser/live-preview) and
+recording you can open from the dashboard.
+
 <CardGroup cols={2}>
   <Card
-    title="Connect over CDP"
+    title="Playwright, Puppeteer, Selenium"
     icon="code"
     href="/cloud/browser/playwright-puppeteer-selenium"
   >
-    Use the CDP URL with Playwright or Puppeteer.
+    Full connection guide and stop semantics.
   </Card>
   <Card title="Browser settings" icon="sliders" href="/cloud/api-v4/browsers/create-browser-session">
     Configure proxies, screen size, recording, and timeout.

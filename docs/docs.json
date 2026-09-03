@@ -105,7 +105,9 @@
                         "pages": [
                           "cloud/guides/authentication",
                           "cloud/guides/profile-sync",
-                          "cloud/guides/2fa"
+                          "cloud/guides/2fa",
+                          "cloud/guides/1password",
+                          "cloud/guides/secrets"
                         ]
                       }
                     ]
@@ -127,7 +129,11 @@
                         ]
                       },
                       "cloud/tutorials/integrations/openclaw",
-                      "cloud/tutorials/integrations/hermes-agent"
+                      "cloud/tutorials/integrations/hermes-agent",
+                      "cloud/guides/mcp-server",
+                      "cloud/guides/webhooks",
+                      "cloud/guides/x402",
+                      "cloud/guides/x402-agent-wallets"
                     ]
                   },
                   {
@@ -145,9 +151,7 @@
                     "pages": [
                       "cloud/legacy/agent",
                       "cloud/legacy/public-share",
-                      "cloud/legacy/skills",
-                      "cloud/guides/1password",
-                      "cloud/guides/secrets"
+                      "cloud/legacy/skills"
                     ]
                   }
                 ]
@@ -186,10 +190,6 @@
               {
                 "group": "V3 guides and tutorials",
                 "pages": [
-                  "cloud/guides/mcp-server",
-                  "cloud/guides/webhooks",
-                  "cloud/guides/x402",
-                  "cloud/guides/x402-agent-wallets",
                   "cloud/tutorials/integrations/n8n",
                   "cloud/tutorials/chat-ui",
                   "cloud/tutorials/grow-therapy-compare"

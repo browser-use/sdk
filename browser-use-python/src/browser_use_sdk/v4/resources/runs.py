@@ -9,6 +9,7 @@ from ...generated.v4.models import (
     RunAttachmentsResponse,
     RunBrowserSettings,
     RunCreateResponse,
+    RunEvent,
     RunEventsResponse,
     RunJudgeSettings,
     RunListResponse,
@@ -22,6 +23,12 @@ if TYPE_CHECKING:
 
 # Terminal run statuses — closed enum in the v4 spec.
 _TERMINAL_STATUSES = {"completed", "failed", "cancelled"}
+_TERMINAL_EVENT_TYPES = {
+    "run.completed",
+    "run.failed",
+    "run.cancelled",
+    "run.dispatch_failed",
+}
 
 
 def _build_create_body(
@@ -49,7 +56,9 @@ def _build_create_body(
         body["workspaceId"] = str(workspace_id)
     if browser_settings is not None:
         if isinstance(browser_settings, RunBrowserSettings):
-            body["browserSettings"] = browser_settings.model_dump(by_alias=True, exclude_none=True, mode="json")
+            body["browserSettings"] = browser_settings.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
         else:
             body["browserSettings"] = browser_settings
     if agentmail is not None:
@@ -72,7 +81,9 @@ def _build_create_body(
         ]
     if judge is not None:
         if isinstance(judge, RunJudgeSettings):
-            body["judge"] = judge.model_dump(by_alias=True, exclude_none=True, mode="json")
+            body["judge"] = judge.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
         else:
             body["judge"] = judge
     if max_cost_usd is not None:
@@ -142,9 +153,7 @@ class Runs:
 
     def get(self, run_id: str | UUID) -> RunSummary:
         """Get the full run summary."""
-        return RunSummary.model_validate(
-            self._http.request("GET", f"/runs/{run_id}")
-        )
+        return RunSummary.model_validate(self._http.request("GET", f"/runs/{run_id}"))
 
     def status(self, run_id: str | UUID) -> RunStatusResponse:
         """Get just the run's status — the cheap poll target."""
@@ -170,6 +179,41 @@ class Runs:
                 },
             )
         )
+
+    def wait_for_event(
+        self,
+        run_id: str | UUID,
+        event_type: str,
+        *,
+        timeout: float = 300,
+        interval: float = 1,
+        after: int | None = None,
+        limit: int = 100,
+    ) -> RunEvent:
+        """Poll run events until ``event_type`` appears."""
+        deadline = time.monotonic() + timeout
+        while True:
+            page = self.events(run_id, after=after, limit=limit)
+            event = next(
+                (item for item in page.events if item.type == event_type), None
+            )
+            if event is not None:
+                return event
+            terminal = next(
+                (item for item in page.events if item.type in _TERMINAL_EVENT_TYPES),
+                None,
+            )
+            if terminal is not None:
+                raise RuntimeError(
+                    f"Run {run_id} emitted {terminal.type} before {event_type}"
+                )
+            after = page.next_after if page.next_after is not None else after
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError(
+                    f"Run {run_id} did not emit {event_type} within {timeout}s"
+                )
+            time.sleep(min(interval, remaining))
 
     def cancel(self, run_id: str | UUID) -> RunSummary:
         """Cancel a run. Returns the updated run summary."""
@@ -305,6 +349,41 @@ class AsyncRuns:
                 },
             )
         )
+
+    async def wait_for_event(
+        self,
+        run_id: str | UUID,
+        event_type: str,
+        *,
+        timeout: float = 300,
+        interval: float = 1,
+        after: int | None = None,
+        limit: int = 100,
+    ) -> RunEvent:
+        """Poll run events until ``event_type`` appears."""
+        deadline = time.monotonic() + timeout
+        while True:
+            page = await self.events(run_id, after=after, limit=limit)
+            event = next(
+                (item for item in page.events if item.type == event_type), None
+            )
+            if event is not None:
+                return event
+            terminal = next(
+                (item for item in page.events if item.type in _TERMINAL_EVENT_TYPES),
+                None,
+            )
+            if terminal is not None:
+                raise RuntimeError(
+                    f"Run {run_id} emitted {terminal.type} before {event_type}"
+                )
+            after = page.next_after if page.next_after is not None else after
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError(
+                    f"Run {run_id} did not emit {event_type} within {timeout}s"
+                )
+            await asyncio.sleep(min(interval, remaining))
 
     async def cancel(self, run_id: str | UUID) -> RunSummary:
         """Cancel a run. Returns the updated run summary."""

@@ -29,13 +29,11 @@ browser-use skill install
 
 **4. Authenticate for cloud browsers**
 
-Sign up at [cloud.browser-use.com](https://cloud.browser-use.com), then authenticate:
+Create an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1), then authenticate:
 
 ```bash
 browser-use auth login
 ```
-
-Or let Claude Code provision a free API key itself — see [Agent Self-Registration](#agent-self-registration) below.
 
 **5. Use it**
 
@@ -46,25 +44,3 @@ Claude Code uses its bash tool to run CLI commands directly:
 ```
 
 For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
-
-## Agent Self-Registration
-
-Claude Code can provision its own Browser Use API key autonomously — no human interaction needed. The free tier includes unlimited browser hours, free proxies in 195+ countries, persistent browser profiles, CAPTCHA solving, and stealth browsing at zero cost.
-
-Install the Browser Use CLI and skill:
-
-```bash
-uv tool install browser-use
-browser-use skill install
-```
-
-Claude Code can follow the [REST flow](/cloud/agent-signup#rest-flow) to request and verify a challenge, then put the returned key in its shell environment:
-
-```bash
-export BROWSER_USE_API_KEY=bu_...
-browser-use auth status
-```
-
-### Claim the account (optional)
-
-If the human wants to see the account in the dashboard later, use the [claim endpoint](/cloud/agent-signup#claim-the-account). The returned claim URL is valid for 1 hour.

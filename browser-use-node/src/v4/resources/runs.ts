@@ -7,6 +7,7 @@ type RunSummary = components["schemas"]["RunSummary"];
 type RunStatusResponse = components["schemas"]["RunStatusResponse"];
 type RunListResponse = components["schemas"]["RunListResponse"];
 type RunEventsResponse = components["schemas"]["RunEventsResponse"];
+type RunEvent = components["schemas"]["RunEvent"];
 type RunAttachmentsResponse = components["schemas"]["RunAttachmentsResponse"];
 
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
@@ -14,6 +15,12 @@ export type RunCreateBody = Pick<RunCreateRequest, "task"> &
 
 /** Terminal run statuses — closed enum in the v4 spec. */
 const TERMINAL_STATUSES = new Set(["completed", "failed", "cancelled"]);
+const TERMINAL_EVENT_TYPES = new Set([
+  "run.completed",
+  "run.failed",
+  "run.cancelled",
+  "run.dispatch_failed",
+]);
 
 export interface RunListParams {
   sessionId?: string;
@@ -62,6 +69,32 @@ export class Runs {
       `/runs/${runId}/events`,
       params as Record<string, unknown>,
     );
+  }
+
+  /** Poll events until the requested type appears (5-minute timeout, 1-second interval). */
+  async waitForEvent(
+    runId: string,
+    type: string,
+    options?: WaitOptions & RunEventsParams,
+  ): Promise<RunEvent> {
+    const timeout = options?.timeout ?? 300_000;
+    const interval = options?.interval ?? 1_000;
+    const deadline = Date.now() + timeout;
+    let after = options?.after ?? null;
+
+    for (;;) {
+      const page = await this.events(runId, { after, limit: options?.limit ?? 100 });
+      const event = page.events.find((candidate) => candidate.type === type);
+      if (event) return event;
+      const terminal = page.events.find((candidate) => TERMINAL_EVENT_TYPES.has(candidate.type));
+      if (terminal) {
+        throw new Error(`Run ${runId} emitted ${terminal.type} before ${type}`);
+      }
+      after = page.nextAfter ?? after;
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) throw new Error(`Run ${runId} did not emit ${type} within ${timeout}ms`);
+      await new Promise((resolve) => setTimeout(resolve, Math.min(interval, remaining)));
+    }
   }
 
   /** Cancel a run. Returns the updated run summary. */

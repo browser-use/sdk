@@ -3,6 +3,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { Browsers } from "../src/v4/resources/browsers.js";
 import { Runs } from "../src/v4/resources/runs.js";
 import { Sessions } from "../src/v4/resources/sessions.js";
 import { Workspaces } from "../src/v4/resources/workspaces.js";
@@ -30,6 +31,53 @@ function runSummary(status: string) {
     updatedAt: "2026-01-01T00:00:00Z",
   };
 }
+
+describe("v4 browsers", () => {
+  it("creates a browser session", async () => {
+    const active = {
+      id: SESSION_ID,
+      status: "active",
+      cdpUrl: "wss://connect.browser-use.com/devtools/browser/test",
+      timeoutAt: "2026-01-01T01:00:00Z",
+      startedAt: "2026-01-01T00:00:00Z",
+      proxyUsedMb: "0",
+      proxyCost: "0",
+      browserCost: "0.01",
+      metadata: {},
+    };
+    const http = { post: vi.fn(async () => active) };
+    const browsers = new Browsers(http as any);
+
+    const browser = await browsers.create({ proxyCountryCode: "us" });
+
+    expect(http.post).toHaveBeenCalledWith("/browsers", {
+      proxyCountryCode: "us",
+    });
+    expect(browser.cdpUrl).toContain("devtools/browser/test");
+  });
+
+  it("stops a browser session", async () => {
+    const stopped = {
+      id: SESSION_ID,
+      status: "stopped",
+      timeoutAt: "2026-01-01T01:00:00Z",
+      startedAt: "2026-01-01T00:00:00Z",
+      proxyUsedMb: "0",
+      proxyCost: "0",
+      browserCost: "0.01",
+      metadata: {},
+    };
+    const http = { patch: vi.fn(async () => stopped) };
+    const browsers = new Browsers(http as any);
+
+    const browser = await browsers.stop(SESSION_ID);
+
+    expect(http.patch).toHaveBeenCalledWith(`/browsers/${SESSION_ID}`, {
+      action: "stop",
+    });
+    expect(browser.status).toBe("stopped");
+  });
+});
 
 describe("v4 runs.waitForCompletion", () => {
   it("polls status until terminal, then fetches the full run once", async () => {
@@ -80,6 +128,34 @@ describe("v4 runs.waitForCompletion", () => {
     await expect(
       runs.waitForCompletion(RUN_ID, { timeout: 10, interval: 1 }),
     ).rejects.toThrow(/did not complete/);
+  });
+});
+
+describe("v4 runs.waitForEvent", () => {
+  it("returns browser.ready before any terminal-status wait", async () => {
+    const http = { get: vi.fn(async (_path: string, query?: Record<string, unknown>) =>
+      query?.after === 1
+        ? { events: [{ runId: RUN_ID, id: 2, ts: "2026-01-01T00:00:01Z", type: "browser.ready", data: { live_view_url: "https://live" } }], nextAfter: 2, hasMore: false }
+        : { events: [{ runId: RUN_ID, id: 1, ts: "2026-01-01T00:00:00Z", type: "run.created", data: {} }], nextAfter: 1, hasMore: true }) };
+    const runs = new Runs(http as any);
+    const event = await runs.waitForEvent(RUN_ID, "browser.ready", { interval: 0 });
+    expect(event.data.live_view_url).toBe("https://live");
+    expect(http.get).toHaveBeenLastCalledWith(`/runs/${RUN_ID}/events`, { after: 1, limit: 100 });
+  });
+
+  it("fails immediately when the run ends before the requested event", async () => {
+    const http = {
+      get: vi.fn(async () => ({
+        events: [{ runId: RUN_ID, id: 1, ts: "2026-01-01T00:00:00Z", type: "run.dispatch_failed", data: {} }],
+        nextAfter: 1,
+        hasMore: false,
+      })),
+    };
+    const runs = new Runs(http as any);
+    await expect(runs.waitForEvent(RUN_ID, "browser.ready")).rejects.toThrow(
+      /emitted run\.dispatch_failed before browser\.ready/,
+    );
+    expect(http.get).toHaveBeenCalledTimes(1);
   });
 });
 
