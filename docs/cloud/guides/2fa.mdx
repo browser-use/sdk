@@ -43,6 +43,23 @@ For an existing account, start one AgentMail-enabled run, copy that address,
 configure email forwarding, then continue the same session with AgentMail
 enabled.
 
+<CodeGroup>
+```python Python
+follow_up = client.runs.create(
+    "Check the inbox again and finish verification",
+    session_id=run.session_id,
+    agentmail=True,
+)
+```
+```typescript TypeScript
+const followUp = await client.runs.create({
+  task: "Check the inbox again and finish verification",
+  sessionId: run.sessionId,
+  agentmail: true,
+});
+```
+</CodeGroup>
+
 ## Forward SMS codes to the inbox
 
 If a site only sends codes by SMS, you can use your own phone automation or
