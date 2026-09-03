@@ -1,31 +1,34 @@
 ---
 title: "Which Browser Use do I need?"
 sidebarTitle: "Which product?"
-description: "Three parts: your agent, our CLI, a browser. Take all three hosted, or only what you need."
+description: "Run our CLI on your machine with your Chrome or our cloud browser, send a prompt to the fully hosted agent, or take only the browser."
 icon: "signs-post"
 ---
 
-Browser Use is three parts. An agent, the Browser Use CLI it runs, and a browser. You can take all three, or only the parts you need.
+Three ways to use Browser Use. Run our CLI next to your own agent, hand the whole task to a hosted agent, or take only a browser.
 
-<img src="/cloud/images/which-product-light.svg" alt="Your agent, the Browser Use CLI, and a browser; all three hosted is Cloud v4" noZoom className="block dark:hidden" />
-<img src="/cloud/images/which-product-dark.svg" alt="Your agent, the Browser Use CLI, and a browser; all three hosted is Cloud v4" noZoom className="hidden dark:block" />
-
-| You bring | You take from us | That is |
-|---|---|---|
-| Nothing. Send a task, get a result | Agent, CLI and browser, hosted | [Cloud v4](/cloud/quickstart) |
-| Your agent: Codex, Claude Code, Hermes | The CLI, plus your Chrome or one of our cloud browsers | [Browser Use CLI](/open-source/browser-use-cli) |
-| Your agent and your own harness | Only the browser, over CDP | [Browser API](/cloud/browser/stealth) |
-
-## Cloud v4
-
-The whole stack on our side. One API call or the chat at [cloud.browser-use.com](https://cloud.browser-use.com); the agent, the CLI, the browsers, proxies and live preview are hosted.
+<img src="/cloud/images/which-product-light.svg" alt="On your machine, Claude Code or Codex run the Browser Use CLI against your Chrome or our cloud browser. In our cloud, the fully hosted agent, or only a browser for your own agent." noZoom className="block dark:hidden" />
+<img src="/cloud/images/which-product-dark.svg" alt="On your machine, Claude Code or Codex run the Browser Use CLI against your Chrome or our cloud browser. In our cloud, the fully hosted agent, or only a browser for your own agent." noZoom className="hidden dark:block" />
 
 ## Browser Use CLI
 
-Your coding agent gets the CLI as a skill and drives a browser over CDP. Your running Chrome, with its tabs and logins, or a cloud browser from us with `browser-use auth login`. Hermes ships with it by default. Setup is one prompt, see [Browser Use CLI](/open-source/browser-use-cli).
+Your agent stays yours. Claude Code, Codex or anything else picks up the [Browser Use CLI](/open-source/browser-use-cli) as a skill and drives a browser over CDP. Hermes ships with it by default.
 
-## Browser API
+You get two browsers to choose from:
 
-You have an agent and a harness and only need the browser. Create a stealth browser with residential proxies, persistent profiles and CAPTCHA handling, connect over CDP from anything.
+- **Your own Chrome**, with the tabs and logins you already have.
+- **Our cloud browser**, with stealth, residential proxies and CAPTCHA handling. Run `browser-use auth login` once.
+
+Same CLI either way. Start local, switch to the cloud when a site blocks you or you need many browsers at once.
+
+## Fully hosted agent
+
+[Cloud v4](/cloud/quickstart) runs the whole thing on our side: the agent, the CLI and the browser. You send a prompt, you get the result back, plus a live preview and any files it produced. Nothing runs on your machine.
+
+Use it for scheduled work, for tasks your users trigger, and anywhere you do not want to babysit a browser.
+
+## Only the browser
+
+You already have an agent and a harness and just need a browser that does not get blocked. Create one from the [Browser API](/cloud/browser/stealth) and connect over CDP from anything.
 
 One API key from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1) works for all three. Credits and profiles live in the same project.

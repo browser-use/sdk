@@ -1,35 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" role="img" aria-labelledby="title desc">
-  <title id="title">Three parts of Browser Use</title>
-  <desc id="desc">Your agent, the Browser Use CLI, and a browser. Take all three hosted as Cloud v4, bring your own agent with our CLI, or take only the browser.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" role="img" aria-labelledby="title desc">
+  <title id="title">Which Browser Use do I need</title>
+  <desc id="desc">On your machine: Claude Code or Codex run the Browser Use CLI against your own Chrome or one of our cloud browsers. In our cloud: the fully hosted agent you send a prompt to, or just a browser for your own agent.</desc>
   <defs>
     <filter id="rough">
       <feTurbulence type="fractalNoise" baseFrequency=".01" numOctaves="2" seed="7" result="noise"/>
       <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.4"/>
     </filter>
   </defs>
-  <rect width="1200" height="460" fill="#FFFFFF"/>
-  <rect x="20" y="20" width="1160" height="420" fill="none" stroke="#E4E4E7" stroke-width="2"/>
+  <rect width="1200" height="500" fill="#FFFFFF"/>
+  <rect x="20" y="20" width="1160" height="460" fill="none" stroke="#E4E4E7" stroke-width="2"/>
   <g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#rough)">
-    <rect x="60" y="90" width="300" height="150" rx="30" fill="#FAFAFA" stroke="#71717A" stroke-width="4" stroke-dasharray="16 12"/>
-    <path d="M365 165 C402 157 418 173 445 165" stroke="#71717A" stroke-width="4"/>
-    <path d="M423 150 L445 165 L423 182" stroke="#71717A" stroke-width="4"/>
-    <rect x="450" y="90" width="300" height="150" rx="30" fill="#FFF3E8" stroke="#FE750E" stroke-width="4"/>
-    <path d="M755 165 C792 157 808 173 835 165" stroke="#71717A" stroke-width="4"/>
-    <path d="M813 150 L835 165 L813 182" stroke="#71717A" stroke-width="4"/>
-    <rect x="840" y="90" width="300" height="150" rx="30" fill="#FAFAFA" stroke="#71717A" stroke-width="4" stroke-dasharray="16 12"/>
-    <path d="M70 290 L70 320 L1130 320 L1130 290" stroke="#FE750E" stroke-width="4"/>
-    <path d="M70 360 L70 390 L750 390 L750 360" stroke="#71717A" stroke-width="4"/>
-    <path d="M850 360 L850 390 L1130 390 L1130 360" stroke="#71717A" stroke-width="4"/>
+    <rect x="40" y="70" width="560" height="300" rx="22" fill="#FAFAFA" stroke="#71717A" stroke-width="4"/>
+    <path d="M20 370 L620 370 L600 405 L40 405 Z" fill="#FAFAFA" stroke="#71717A" stroke-width="4"/>
+    <rect x="70" y="130" width="200" height="90" rx="30" fill="#FAFAFA" stroke="#71717A" stroke-width="4" stroke-dasharray="16 12"/>
+    <path d="M275 175 C300 167 292 183 315 175" stroke="#71717A" stroke-width="4"/>
+    <path d="M293 160 L315 175 L293 192" stroke="#71717A" stroke-width="4"/>
+    <rect x="320" y="130" width="260" height="90" rx="30" fill="#FFF3E8" stroke="#FE750E" stroke-width="4"/>
+    <rect x="70" y="255" width="200" height="80" rx="30" fill="#FAFAFA" stroke="#71717A" stroke-width="4" stroke-dasharray="16 12"/>
+    <rect x="320" y="255" width="260" height="80" rx="30" fill="#FFF3E8" stroke="#FE750E" stroke-width="4"/>
+    <path d="M680 240 C640 240 630 180 690 175 C690 120 790 100 815 150 C850 110 940 120 935 180 C1000 175 1010 240 960 250 L700 250 Z" fill="#FFF3E8" stroke="#FE750E" stroke-width="4"/>
+    <rect x="700" y="285" width="460" height="88" rx="30" fill="#FFF3E8" stroke="#FE750E" stroke-width="4"/>
+    <rect x="700" y="390" width="460" height="80" rx="30" fill="#FAFAFA" stroke="#71717A" stroke-width="4" stroke-dasharray="16 12"/>
   </g>
   <g font-family="Virgil, Comic Sans MS, cursive">
-    <text x="210" y="150" font-size="40" fill="#18181B" text-anchor="middle">YOUR AGENT</text>
-    <text x="210" y="200" font-size="20" fill="#52525B" text-anchor="middle">codex · claude code · hermes</text>
-    <text x="600" y="150" font-size="40" fill="#18181B" text-anchor="middle">BROWSER USE CLI</text>
-    <text x="600" y="200" font-size="22" fill="#52525B" text-anchor="middle">the harness your agent runs</text>
-    <text x="990" y="150" font-size="40" fill="#18181B" text-anchor="middle">BROWSER</text>
-    <text x="990" y="200" font-size="20" fill="#52525B" text-anchor="middle">your chrome · our cloud browser</text>
-    <text x="600" y="350" font-size="30" fill="#FE750E" text-anchor="middle">ALL THREE, HOSTED = CLOUD V4 (one API call)</text>
-    <text x="410" y="425" font-size="24" fill="#52525B" text-anchor="middle">YOUR AGENT + OUR CLI + ANY BROWSER = CLI</text>
-    <text x="990" y="425" font-size="21" fill="#52525B" text-anchor="middle">BROWSER ONLY = BROWSER API</text>
+    <text x="320" y="110" font-size="30" fill="#52525B" text-anchor="middle">YOUR MACHINE</text>
+    <text x="170" y="172" font-size="25" fill="#18181B" text-anchor="middle">YOUR AGENT</text>
+    <text x="170" y="200" font-size="18" fill="#52525B" text-anchor="middle">claude code · codex</text>
+    <text x="450" y="185" font-size="24" fill="#18181B" text-anchor="middle">BROWSER USE CLI</text>
+    <text x="170" y="303" font-size="24" fill="#18181B" text-anchor="middle">YOUR CHROME</text>
+    <text x="450" y="303" font-size="22" fill="#18181B" text-anchor="middle">OUR CLOUD BROWSER</text>
+    <text x="320" y="358" font-size="20" fill="#52525B" text-anchor="middle">pick either browser</text>
+    <text x="815" y="205" font-size="34" fill="#18181B" text-anchor="middle">OUR CLOUD</text>
+    <text x="930" y="322" font-size="24" fill="#18181B" text-anchor="middle">FULLY HOSTED AGENT = V4</text>
+    <text x="930" y="352" font-size="19" fill="#52525B" text-anchor="middle">send a prompt, get the result back</text>
+    <text x="930" y="424" font-size="24" fill="#18181B" text-anchor="middle">ONLY THE BROWSER</text>
+    <text x="930" y="452" font-size="19" fill="#52525B" text-anchor="middle">your own agent, over CDP</text>
   </g>
 </svg>
