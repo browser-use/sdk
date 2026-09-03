@@ -19,31 +19,31 @@ Full SDK reference in a single page.
 Source: https://docs.browser-use.com/cloud/which-product
 
 
-Three ways to use Browser Use. Run our CLI next to your own agent, hand the whole task to a hosted agent, or take only a browser.
+Three products. The difference is where your agent runs and whether you want us to provide the agent, the browser, or both.
 
 <img src="/cloud/images/which-product-light.svg" alt="On your machine, Claude Code or Codex run the Browser Use CLI against your Chrome or our cloud browser. In our cloud, the fully hosted agent, or only a browser for your own agent." noZoom className="block dark:hidden" />
 <img src="/cloud/images/which-product-dark.svg" alt="On your machine, Claude Code or Codex run the Browser Use CLI against your Chrome or our cloud browser. In our cloud, the fully hosted agent, or only a browser for your own agent." noZoom className="hidden dark:block" />
 
 ## Browser Use CLI
 
-Your agent stays yours. Claude Code, Codex or anything else picks up the [Browser Use CLI](/open-source/browser-use-cli) as a skill and drives a browser over CDP. Hermes ships with it by default.
+Claude Code, Codex or another agent runs on your machine with the [Browser Use CLI](/open-source/browser-use-cli). The CLI drives a browser over CDP.
 
 You get two browsers to choose from:
 
 - **Your own Chrome**, with the tabs and logins you already have.
 - **Our cloud browser**, with stealth, residential proxies and CAPTCHA handling. Run `browser-use auth login` once.
 
-Same CLI either way. Start local, switch to the cloud when a site blocks you or you need many browsers at once.
+Same agent and CLI either way. Start with your Chrome. Switch to our cloud browser when a site blocks you or you need many browsers at once.
 
 ## Fully hosted agent
 
-[Cloud v4](https://docs.browser-use.com/cloud/quickstart) runs the whole thing on our side: the agent, the CLI and the browser. You send a prompt, you get the result back, plus a live preview and any files it produced. Nothing runs on your machine.
+[Cloud v4](https://docs.browser-use.com/cloud/quickstart) runs the agent and browser for you. You send a prompt to our API and get the result back, plus a live preview and any files it produced. Nothing runs on your machine.
 
 Use it for scheduled work, for tasks your users trigger, and anywhere you do not want to babysit a browser.
 
 ## Only the browser
 
-You already have an agent and a harness and just need a browser that does not get blocked. Create one from the [Browser API](https://docs.browser-use.com/cloud/browser/stealth) and connect over CDP from anything.
+You already have an agent and only want our browser. Your agent can run on your machine or in your own cloud. Create a browser from the [Browser API](https://docs.browser-use.com/cloud/browser/stealth) and connect over CDP.
 
 One API key from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1) works for all three. Credits and profiles live in the same project.
 

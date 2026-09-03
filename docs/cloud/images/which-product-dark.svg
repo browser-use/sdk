@@ -20,7 +20,10 @@
     <rect x="320" y="255" width="260" height="80" rx="30" fill="#24140B" stroke="#FE750E" stroke-width="4"/>
     <path d="M680 240 C640 240 630 180 690 175 C690 120 790 100 815 150 C850 110 940 120 935 180 C1000 175 1010 240 960 250 L700 250 Z" fill="#24140B" stroke="#FE750E" stroke-width="4"/>
     <rect x="700" y="285" width="460" height="88" rx="30" fill="#24140B" stroke="#FE750E" stroke-width="4"/>
-    <rect x="700" y="390" width="460" height="80" rx="30" fill="#111113" stroke="#A1A1AA" stroke-width="4" stroke-dasharray="16 12"/>
+    <rect x="700" y="390" width="185" height="80" rx="30" fill="#111113" stroke="#A1A1AA" stroke-width="4" stroke-dasharray="16 12"/>
+    <path d="M890 430 C905 423 905 437 920 430" stroke="#A1A1AA" stroke-width="4"/>
+    <path d="M905 416 L920 430 L905 444" stroke="#A1A1AA" stroke-width="4"/>
+    <rect x="925" y="390" width="235" height="80" rx="30" fill="#23170F" stroke="#FE750E" stroke-width="4"/>
   </g>
   <g font-family="Virgil, Comic Sans MS, cursive">
     <text x="320" y="110" font-size="30" fill="#A1A1AA" text-anchor="middle">YOUR MACHINE</text>
@@ -33,7 +36,9 @@
     <text x="815" y="205" font-size="34" fill="#F4F4F5" text-anchor="middle">OUR CLOUD</text>
     <text x="930" y="322" font-size="24" fill="#F4F4F5" text-anchor="middle">FULLY HOSTED AGENT = V4</text>
     <text x="930" y="352" font-size="19" fill="#A1A1AA" text-anchor="middle">send a prompt, get the result back</text>
-    <text x="930" y="424" font-size="24" fill="#F4F4F5" text-anchor="middle">ONLY THE BROWSER</text>
-    <text x="930" y="452" font-size="19" fill="#A1A1AA" text-anchor="middle">your own agent, over CDP</text>
+    <text x="792" y="424" font-size="21" fill="#F4F4F5" text-anchor="middle">YOUR AGENT</text>
+    <text x="792" y="451" font-size="16" fill="#A1A1AA" text-anchor="middle">anywhere</text>
+    <text x="1042" y="424" font-size="21" fill="#F4F4F5" text-anchor="middle">BROWSER API</text>
+    <text x="1042" y="451" font-size="16" fill="#A1A1AA" text-anchor="middle">only our browser</text>
   </g>
 </svg>
