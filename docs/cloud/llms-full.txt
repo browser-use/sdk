@@ -1622,6 +1622,198 @@ See [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-lo
 embedding the live browser URL. Never put passwords or TOTP secrets directly
 in a prompt.
 
+# 1Password & 2FA
+Source: https://docs.browser-use.com/cloud/guides/1password
+
+
+## Setup
+
+### 1. Create a dedicated vault
+
+Create a new vault in 1Password for Browser Use. Add the credentials you want the agent to access (usernames, passwords, and 2FA/TOTP codes).
+
+### 2. Create a service account token
+
+1. Go to [1Password Developer Tools - Service Accounts](https://my.1password.eu/developer-tools/active/service-accounts)
+2. Click **New Service Account**, name it "Browser Use Cloud"
+3. Grant **read access** to the dedicated vault
+4. Copy the generated token
+
+### 3. Connect to Browser Use Cloud
+
+1. Go to [Browser Use Cloud Settings - Secrets](https://cloud.browser-use.com/settings?tab=secrets)
+2. Click **Create Integration**
+3. Paste your service account token
+
+## Use a vault in a v4 run
+
+A v4 run does not take a vault id. It takes **secret bindings**: each binding names one field of one 1Password item, gives it an alias the agent can ask for, and lists the hosts it may be typed into. The value never reaches the model; the server types it into the focused field when the agent asks for the alias on an allowed domain. Bindings are run-scoped, so a follow-up run that needs the same login must send them again.
+
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+with BrowserUse() as client:
+    run = client.runs.create(
+        "Log into Jira and create a ticket for the Q4 release",
+        secret_bindings=[
+            {
+                "alias": "jira_password",
+                "source": {
+                    "type": "onepassword",
+                    "integrationId": "<integration id from Settings → Secrets>",
+                    "vaultId": "<vault id>",
+                    "itemId": "<item id>",
+                    "fieldId": "password",
+                },
+                "allowedDomains": ["atlassian.net"],
+            }
+        ],
+    )
+    print(client.runs.wait_for_completion(run.id).result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const run = await client.runs.create({
+  task: "Log into Jira and create a ticket for the Q4 release",
+  secretBindings: [
+    {
+      alias: "jira_password",
+      source: {
+        type: "onepassword",
+        integrationId: "<integration id from Settings → Secrets>",
+        vaultId: "<vault id>",
+        itemId: "<item id>",
+        fieldId: "password",
+      },
+      allowedDomains: ["atlassian.net"],
+    },
+  ],
+});
+```
+
+- `integrationId` is the 1Password integration you connected under **Settings → Secrets**.
+- `vaultId` and `itemId` are the 1Password UUIDs of the vault and item (copy them from 1Password).
+- `fieldId` is the field's id, not its label: `username`, `password`, or `one-time-password` for a TOTP field, which resolves to the current code.
+- `allowedDomains` are bare hostnames; a host covers its subdomains.
+
+In the chat UI at cloud.browser-use.com the same picker lives under **Run settings → Credentials**: choose the vault, the item, and the field, give it an alias, and list the domains.
+
+## Use a vault in a v2 or v3 task
+
+
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Log into my Jira account and create a new ticket",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net"],
+)
+print(result.output)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Log into my Jira account and create a new ticket",
+  {
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net"],
+  },
+);
+console.log(result.output);
+```
+
+For SSO/OAuth redirects, include all required domains:
+
+```python Python
+result = await client.run(
+    "Log into Jira and create a ticket for the Q4 release",
+    op_vault_id="your-vault-id",
+    allowed_domains=["*.atlassian.net", "*.okta.com"],
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Log into Jira and create a ticket for the Q4 release",
+  {
+    opVaultId: "your-vault-id",
+    allowedDomains: ["*.atlassian.net", "*.okta.com"],
+  },
+);
+```
+
+## How it works
+
+When the agent encounters a login form:
+
+1. It identifies the service (e.g., Twitter, GitHub, LinkedIn)
+2. Retrieves matching credentials from your 1Password vault
+3. Fills in the username and password
+4. If 2FA is required and a TOTP code is stored, it generates and enters the code automatically
+
+  The agent never sees your actual credentials. The actual username, password, and 2FA codes are filled in programmatically — keeping your secrets hidden from the AI model.
+
+# Secrets
+Source: https://docs.browser-use.com/cloud/guides/secrets
+
+
+Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
+
+```python Python
+from browser_use_sdk import AsyncBrowserUse
+
+client = AsyncBrowserUse()
+result = await client.run(
+    "Log into GitHub and star the browser-use/browser-use repo",
+    secrets={"github.com": "username:password123"},
+    allowed_domains=["github.com"],
+)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run(
+  "Log into GitHub and star the browser-use/browser-use repo",
+  {
+    secrets: { "github.com": "username:password123" },
+    allowedDomains: ["github.com"],
+  },
+);
+```
+
+Use `allowed_domains` to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`.
+
+For SSO/OAuth redirects, include all domains in the auth flow:
+
+```python Python
+result = await client.run(
+    "Log into the company portal and download the Q4 report",
+    secrets={
+        "portal.example.com": "user@company.com:password123",
+        "okta.com": "user@company.com:password123",
+    },
+    allowed_domains=["portal.example.com", "*.okta.com"],
+)
+```
+```typescript TypeScript
+const result = await client.run(
+  "Log into the company portal and download the Q4 report",
+  {
+    secrets: {
+      "portal.example.com": "user@company.com:password123",
+      "okta.com": "user@company.com:password123",
+    },
+    allowedDomains: ["portal.example.com", "*.okta.com"],
+  },
+);
+```
+
 # Claude Code
 Source: https://docs.browser-use.com/cloud/tutorials/integrations/claude-code
 
@@ -2949,142 +3141,6 @@ const result = await client.marketplace.execute(skillId, { parameters: { ... } }
 ```
 
 See [Pricing](https://browser-use.com/pricing) for skill costs.
-
-# 1Password & 2FA
-Source: https://docs.browser-use.com/cloud/guides/1password
-
-
-## Setup
-
-### 1. Create a dedicated vault
-
-Create a new vault in 1Password for Browser Use. Add the credentials you want the agent to access (usernames, passwords, and 2FA/TOTP codes).
-
-### 2. Create a service account token
-
-1. Go to [1Password Developer Tools - Service Accounts](https://my.1password.eu/developer-tools/active/service-accounts)
-2. Click **New Service Account**, name it "Browser Use Cloud"
-3. Grant **read access** to the dedicated vault
-4. Copy the generated token
-
-### 3. Connect to Browser Use Cloud
-
-1. Go to [Browser Use Cloud Settings - Secrets](https://cloud.browser-use.com/settings?tab=secrets)
-2. Click **Create Integration**
-3. Paste your service account token
-
-## Run tasks with 1Password
-
-```python Python
-from browser_use_sdk import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-result = await client.run(
-    "Log into my Jira account and create a new ticket",
-    op_vault_id="your-vault-id",
-    allowed_domains=["*.atlassian.net"],
-)
-print(result.output)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
-
-const client = new BrowserUse();
-const result = await client.run(
-  "Log into my Jira account and create a new ticket",
-  {
-    opVaultId: "your-vault-id",
-    allowedDomains: ["*.atlassian.net"],
-  },
-);
-console.log(result.output);
-```
-
-For SSO/OAuth redirects, include all required domains:
-
-```python Python
-result = await client.run(
-    "Log into Jira and create a ticket for the Q4 release",
-    op_vault_id="your-vault-id",
-    allowed_domains=["*.atlassian.net", "*.okta.com"],
-)
-```
-```typescript TypeScript
-const result = await client.run(
-  "Log into Jira and create a ticket for the Q4 release",
-  {
-    opVaultId: "your-vault-id",
-    allowedDomains: ["*.atlassian.net", "*.okta.com"],
-  },
-);
-```
-
-## How it works
-
-When the agent encounters a login form:
-
-1. It identifies the service (e.g., Twitter, GitHub, LinkedIn)
-2. Retrieves matching credentials from your 1Password vault
-3. Fills in the username and password
-4. If 2FA is required and a TOTP code is stored, it generates and enters the code automatically
-
-  The agent never sees your actual credentials. The actual username, password, and 2FA codes are filled in programmatically — keeping your secrets hidden from the AI model.
-
-# Secrets
-Source: https://docs.browser-use.com/cloud/guides/secrets
-
-
-Pass credentials to the agent scoped by domain. The agent uses them only on matching domains.
-
-```python Python
-from browser_use_sdk import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-result = await client.run(
-    "Log into GitHub and star the browser-use/browser-use repo",
-    secrets={"github.com": "username:password123"},
-    allowed_domains=["github.com"],
-)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
-
-const client = new BrowserUse();
-const result = await client.run(
-  "Log into GitHub and star the browser-use/browser-use repo",
-  {
-    secrets: { "github.com": "username:password123" },
-    allowedDomains: ["github.com"],
-  },
-);
-```
-
-Use `allowed_domains` to restrict the agent to specific domains. Supports wildcards: `example.com`, `*.example.com`.
-
-For SSO/OAuth redirects, include all domains in the auth flow:
-
-```python Python
-result = await client.run(
-    "Log into the company portal and download the Q4 report",
-    secrets={
-        "portal.example.com": "user@company.com:password123",
-        "okta.com": "user@company.com:password123",
-    },
-    allowed_domains=["portal.example.com", "*.okta.com"],
-)
-```
-```typescript TypeScript
-const result = await client.run(
-  "Log into the company portal and download the Q4 report",
-  {
-    secrets: {
-      "portal.example.com": "user@company.com:password123",
-      "okta.com": "user@company.com:password123",
-    },
-    allowedDomains: ["portal.example.com", "*.okta.com"],
-  },
-);
-```
 
 # API Reference
 Source: https://docs.browser-use.com/cloud/api-v4-overview
