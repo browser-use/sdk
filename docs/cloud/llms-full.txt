@@ -255,6 +255,33 @@ Every new run implicitly creates a [session](https://docs.browser-use.com/cloud/
 conversation and live browser, plus a [workspace](https://docs.browser-use.com/cloud/agent/workspaces) for
 persistent files.
 
+## Verify an account by email
+
+Set `agentmail` to give the V4 agent its own inbox. The agent can use that
+address for a signup, read the verification email, and enter the code:
+
+```python Python
+run = client.runs.create(
+    "Create an account at example.com with your inbox. Read the verification email and enter its code.",
+    agentmail=True,
+)
+```
+```typescript TypeScript
+const run = await client.runs.create({
+  task: "Create an account at example.com with your inbox. Read the verification email and enter its code.",
+  agentmail: true,
+});
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Create an account at example.com with your inbox. Read the verification email and enter its code.","agentmail":true}'
+```
+
+See [2FA](https://docs.browser-use.com/cloud/guides/2fa) for existing accounts, SMS forwarding, saved
+profiles, and human checkpoints.
+
 <img
   src="/cloud/images/v4-agent-overview-light.svg"
   alt="A task starts a run inside a session and the run reads and writes persistent workspace files"
@@ -1561,7 +1588,52 @@ the prompt. Re-sync when the site's login expires.
 Source: https://docs.browser-use.com/cloud/guides/2fa
 
 
-The most reliable options are a saved profile or a human checkpoint.
+Use the agent's inbox for email codes, reuse a logged-in profile, or pause for
+a human. These paths do not require Browser Use to store a TOTP seed.
+
+## Let the agent read email codes
+
+Set `agentmail` on an API V4 run to provision an inbox for its workspace. The
+inbox address and email skill are added to the agent's context, so it can
+receive the message, read the code, and finish the browser flow:
+
+```python Python
+run = client.runs.create(
+    "Create an account at example.com with your inbox. Read the verification email and enter its code.",
+    agentmail=True,
+)
+result = client.runs.wait_for_completion(run.id)
+```
+```typescript TypeScript
+const run = await client.runs.create({
+  task: "Create an account at example.com with your inbox. Read the verification email and enter its code.",
+  agentmail: true,
+});
+const result = await client.runs.waitForCompletion(run.id);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Create an account at example.com with your inbox. Read the verification email and enter its code.","agentmail":true}'
+```
+
+The inbox persists with the workspace. For each API follow-up that needs inbox
+access, pass `agentmail=true` again and reuse the same session. Its address is
+also shown under [Settings → Workspaces](https://cloud.browser-use.com/settings?tab=workspaces).
+For an existing account, start one AgentMail-enabled run, copy that address,
+configure email forwarding, then continue the same session with AgentMail
+enabled.
+
+## Forward SMS codes to the inbox
+
+If a site only sends codes by SMS, you can use your own phone automation or
+forwarding provider to email those messages to the workspace inbox. Then tell
+the agent to read the forwarded message and enter its code.
+
+  SMS forwarding is a customer-managed pattern, not a built-in Browser Use
+  integration. Browser Use does not read your phone or mobile account. Limit
+  forwarding to the intended sender and treat verification codes as sensitive.
 
 ## Reuse a logged-in profile
 
