@@ -286,7 +286,7 @@ curl https://api.browser-use.com/api/v4/runs \
 ```
 
 See [2FA](https://docs.browser-use.com/cloud/guides/2fa) for existing accounts, SMS forwarding, saved
-profiles, and human checkpoints.
+profiles, and human takeovers.
 
 <img
   src="/cloud/images/v4-agent-overview-light.svg"
