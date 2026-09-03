@@ -26,7 +26,7 @@ Three products. The difference is where your agent runs and whether you want us 
 
 ## Browser Use CLI
 
-Claude Code, Codex or another agent runs on your machine with the [Browser Use CLI](/open-source/browser-use-cli). The CLI drives a browser over CDP.
+Claude Code, Codex or another agent runs on your machine with the [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli). The CLI drives a browser over CDP.
 
 You get two browsers to choose from:
 
