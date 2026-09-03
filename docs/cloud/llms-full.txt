@@ -261,12 +261,18 @@ Set `agentmail` to give the V4 agent its own inbox. The agent can use that
 address for a signup, read the verification email, and enter the code:
 
 ```python Python
-run = client.runs.create(
-    "Create an account at example.com with your inbox. Read the verification email and enter its code.",
-    agentmail=True,
-)
+from browser_use_sdk.v4 import BrowserUse
+
+with BrowserUse() as client:
+    run = client.runs.create(
+        "Create an account at example.com with your inbox. Read the verification email and enter its code.",
+        agentmail=True,
+    )
 ```
 ```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Create an account at example.com with your inbox. Read the verification email and enter its code.",
   agentmail: true,
