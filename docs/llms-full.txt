@@ -128,8 +128,8 @@ Source: https://docs.browser-use.com/cloud/which-product
 
 Pick where your agent and browser should run.
 
-<img src="/cloud/images/which-product-light.svg" alt="On your computer, Claude Code, Codex, OpenCode, Hermes Agent, and other local agents can use Browser Use CLI or another computer-use CLI. Those CLIs can control real Chrome or the single Cloud Browser. Cloud v4 runs OpenCode and Browser Use CLI together above that Cloud Browser. Browser API is the browser-only route." noZoom className="block dark:hidden" />
-<img src="/cloud/images/which-product-dark.svg" alt="On your computer, Claude Code, Codex, OpenCode, Hermes Agent, and other local agents can use Browser Use CLI or another computer-use CLI. Those CLIs can control real Chrome or the single Cloud Browser. Cloud v4 runs OpenCode and Browser Use CLI together above that Cloud Browser. Browser API is the browser-only route." noZoom className="hidden dark:block" />
+<img src="/cloud/images/which-product-light.svg" alt="On your computer, Claude Code, Codex, OpenCode, and Hermes Agent sit above Browser Use CLI and Playwright CLI. The CLIs use either real Chrome locally or the Cloud Browser directly. In Cloud v4, OpenCode and Browser Use CLI run above that Cloud Browser." noZoom className="block dark:hidden" />
+<img src="/cloud/images/which-product-dark.svg" alt="On your computer, Claude Code, Codex, OpenCode, and Hermes Agent sit above Browser Use CLI and Playwright CLI. The CLIs use either real Chrome locally or the Cloud Browser directly. In Cloud v4, OpenCode and Browser Use CLI run above that Cloud Browser." noZoom className="hidden dark:block" />
 
 ## On your computer
 
