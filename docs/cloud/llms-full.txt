@@ -1649,6 +1649,8 @@ Create a new vault in 1Password for Browser Use. Add the credentials you want th
 
 Pass the vault id and the domains where its credentials may be typed. Browser Use finds the project's connected 1Password integration and makes the vault's username, password, and TOTP fields available to the run. You do not need the integration, item, or field ids.
 
+  Every supported credential field in the vault is made available to the run. Use a dedicated vault containing only the accounts the agent needs.
+
 ```bash
 curl -X POST https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
@@ -1665,7 +1667,7 @@ curl -X POST https://api.browser-use.com/api/v4/runs \
 - Vault fields and explicit `secretBindings` share a limit of 10 bindings per run. The API returns `422` if the combined total exceeds 10.
 - Vault access requires exactly one active 1Password integration on the project and is unavailable for zero-data-retention projects.
 
-  These fields are available in the v4 REST API. Typed Python and TypeScript SDK support will follow the v4 OpenAPI specification update. Until then, use the REST request above.
+  These fields work through the v4 REST API. The currently published Python and TypeScript SDK types do not expose them yet; use the REST request above until those clients are regenerated.
 
 ## Bind individual fields in a v4 run
 
