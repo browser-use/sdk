@@ -1,48 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
-  <title id="title">Where each Browser Use part runs</title>
-  <desc id="desc">Claude Code or Codex use Browser Use CLI on your machine. The CLI drives real Chrome locally or connects to the single Cloud Browser in our cloud. OpenCode and Browser Use CLI also run beside Cloud Browser as the fully hosted stack. Your own agent can connect directly through the Browser API.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">Choose a local or cloud Browser Use setup</title>
+  <desc id="desc">On your computer, Claude Code, Codex, OpenCode, Hermes Agent, and other agents can use Browser Use CLI or another computer-use CLI. Those CLIs can control real Chrome or connect through Browser API to the single Cloud Browser. Cloud v4 runs OpenCode and Browser Use CLI at the same level above that Cloud Browser. Browser API is the browser-only route.</desc>
   <defs>
-    <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".012" numOctaves="2" seed="7" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="1.2"/></filter>
     <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#E96505"/></marker>
     <marker id="arrow-gray" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#71717A"/></marker>
   </defs>
-  <rect width="1200" height="620" fill="#FFFFFF"/>
-  <g filter="url(#rough)" font-family="Virgil, Comic Sans MS, cursive">
-    <rect x="28" y="28" width="556" height="564" rx="30" fill="#FAFAFA" stroke="#A1A1AA" stroke-width="3"/>
-    <rect x="616" y="28" width="556" height="564" rx="30" fill="#FFF7ED" stroke="#E96505" stroke-width="3"/>
-    <text x="306" y="77" font-size="30" fill="#18181B" text-anchor="middle">YOUR MACHINE</text>
-    <text x="894" y="77" font-size="30" fill="#18181B" text-anchor="middle">OUR CLOUD</text>
-    <rect x="66" y="112" width="214" height="78" rx="24" fill="#FFFFFF" stroke="#71717A" stroke-width="3" stroke-dasharray="13 10"/>
-    <text x="173" y="145" font-size="22" fill="#18181B" text-anchor="middle">YOUR AGENT</text>
-    <text x="173" y="173" font-size="16" fill="#71717A" text-anchor="middle">Claude Code · Codex</text>
-    <rect x="330" y="112" width="216" height="78" rx="24" fill="#FFF3E8" stroke="#E96505" stroke-width="3"/>
-    <text x="438" y="160" font-size="21" fill="#18181B" text-anchor="middle">BROWSER USE CLI</text>
-    <path d="M280 151H324" fill="none" stroke="#71717A" stroke-width="4" marker-end="url(#arrow-gray)"/>
-    <rect x="126" y="274" width="360" height="136" rx="26" fill="#FFFFFF" stroke="#71717A" stroke-width="3"/>
-    <circle cx="156" cy="302" r="6" fill="#FF5F57"/><circle cx="177" cy="302" r="6" fill="#FEBC2E"/><circle cx="198" cy="302" r="6" fill="#28C840"/>
-    <text x="306" y="348" font-size="24" fill="#18181B" text-anchor="middle">REAL CHROME</text>
-    <text x="306" y="382" font-size="17" fill="#71717A" text-anchor="middle">tabs · cookies · logins</text>
-    <path d="M438 190V236H306V268" fill="none" stroke="#71717A" stroke-width="4" marker-end="url(#arrow-gray)"/>
-    <rect x="672" y="112" width="174" height="76" rx="24" fill="#FFFFFF" stroke="#71717A" stroke-width="3" stroke-dasharray="13 10"/>
-    <text x="759" y="159" font-size="22" fill="#18181B" text-anchor="middle">OPENCODE</text>
-    <rect x="896" y="112" width="222" height="76" rx="24" fill="#FFF3E8" stroke="#E96505" stroke-width="3"/>
-    <text x="1007" y="159" font-size="20" fill="#18181B" text-anchor="middle">BROWSER USE CLI</text>
-    <path d="M846 150H890" fill="none" stroke="#E96505" stroke-width="4" marker-end="url(#arrow-orange)"/>
-    <rect x="760" y="274" width="268" height="136" rx="28" fill="#FFF3E8" stroke="#E96505" stroke-width="4"/>
-    <circle cx="790" cy="302" r="6" fill="#FF5F57"/><circle cx="811" cy="302" r="6" fill="#FEBC2E"/><circle cx="832" cy="302" r="6" fill="#28C840"/>
-    <text x="894" y="348" font-size="25" fill="#18181B" text-anchor="middle">CLOUD BROWSER</text>
-    <text x="894" y="382" font-size="17" fill="#B84D00" text-anchor="middle">stealth · profiles · proxies</text>
-    <path d="M1007 188V232H894V268" fill="none" stroke="#E96505" stroke-width="4" marker-end="url(#arrow-orange)"/>
-    <path d="M438 190V224H650V342H754" fill="none" stroke="#E96505" stroke-width="4" marker-end="url(#arrow-orange)"/>
-    <text x="608" y="214" font-size="16" fill="#B84D00" text-anchor="middle">or connect to our cloud</text>
-    <rect x="672" y="474" width="174" height="72" rx="22" fill="#FFFFFF" stroke="#71717A" stroke-width="3" stroke-dasharray="13 10"/>
-    <text x="759" y="505" font-size="19" fill="#18181B" text-anchor="middle">YOUR AGENT</text>
-    <text x="759" y="530" font-size="15" fill="#71717A" text-anchor="middle">anywhere</text>
-    <rect x="896" y="474" width="222" height="72" rx="22" fill="#FFF3E8" stroke="#E96505" stroke-width="3"/>
-    <text x="1007" y="518" font-size="20" fill="#18181B" text-anchor="middle">BROWSER API</text>
-    <path d="M846 510H890" fill="none" stroke="#71717A" stroke-width="4" marker-end="url(#arrow-gray)"/>
-    <path d="M1007 474V440H894V416" fill="none" stroke="#E96505" stroke-width="4" marker-end="url(#arrow-orange)"/>
-    <text x="306" y="558" font-size="18" fill="#71717A" text-anchor="middle">CLI + local Chrome</text>
-    <text x="894" y="558" font-size="18" fill="#B84D00" text-anchor="middle">hosted stack or browser only</text>
+  <rect width="1200" height="700" fill="#FFFFFF"/>
+  <g font-family="Inter, ui-sans-serif, system-ui, sans-serif">
+    <text x="338" y="39" font-size="26" font-weight="750" fill="#18181B" text-anchor="middle">YOUR COMPUTER</text>
+    <rect x="28" y="52" width="620" height="586" rx="28" fill="#27272A" stroke="#18181B" stroke-width="3"/>
+    <circle cx="338" cy="68" r="4" fill="#71717A"/>
+    <rect x="50" y="78" width="576" height="536" rx="17" fill="#FAFAFA" stroke="#A1A1AA" stroke-width="2"/>
+    <rect x="74" y="102" width="528" height="486" rx="15" fill="#FFFFFF" stroke="#D4D4D8" stroke-width="2"/>
+    <path d="M74 149H602" stroke="#D4D4D8" stroke-width="2"/>
+    <circle cx="96" cy="126" r="6" fill="#FF5F57"/><circle cx="117" cy="126" r="6" fill="#FEBC2E"/><circle cx="138" cy="126" r="6" fill="#28C840"/>
+    <rect x="168" y="115" width="394" height="23" rx="11" fill="#F4F4F5"/>
+    <text x="365" y="132" font-size="13" fill="#71717A" text-anchor="middle">local</text>
+
+    <rect x="99" y="174" width="478" height="68" rx="18" fill="#F4F4F5" stroke="#A1A1AA" stroke-width="2" stroke-dasharray="8 7"/>
+    <text x="338" y="199" font-size="14" font-weight="700" fill="#71717A" text-anchor="middle">LOCAL AGENTS</text>
+    <text x="338" y="226" font-size="18" font-weight="650" fill="#18181B" text-anchor="middle">Claude Code · Codex · OpenCode · Hermes Agent</text>
+    <path d="M338 242V267H212V286" fill="none" stroke="#71717A" stroke-width="3" marker-end="url(#arrow-gray)"/>
+    <path d="M338 267H464V286" fill="none" stroke="#71717A" stroke-width="3" marker-end="url(#arrow-gray)"/>
+
+    <rect x="99" y="292" width="226" height="74" rx="18" fill="#FFF3E8" stroke="#E96505" stroke-width="3"/>
+    <text x="212" y="337" font-size="20" font-weight="750" fill="#18181B" text-anchor="middle">BROWSER USE CLI</text>
+    <rect x="351" y="292" width="226" height="74" rx="18" fill="#FFFFFF" stroke="#71717A" stroke-width="3"/>
+    <text x="464" y="318" font-size="13" font-weight="700" fill="#71717A" text-anchor="middle">OTHER COMPUTER-USE CLIs</text>
+    <text x="464" y="344" font-size="14" font-weight="650" fill="#18181B" text-anchor="middle">Playwright CLI · Agent Browser</text>
+
+    <path d="M212 366V404M464 366V404M212 404H464M338 404V440" fill="none" stroke="#71717A" stroke-width="3" marker-end="url(#arrow-gray)"/>
+    <text x="309" y="429" font-size="13" font-weight="700" fill="#71717A" text-anchor="end">LOCAL</text>
+    <rect x="190" y="446" width="296" height="106" rx="20" fill="#FFFFFF" stroke="#71717A" stroke-width="3"/>
+    <path d="M190 478H486" stroke="#D4D4D8" stroke-width="2"/>
+    <circle cx="212" cy="462" r="5" fill="#FF5F57"/><circle cx="230" cy="462" r="5" fill="#FEBC2E"/><circle cx="248" cy="462" r="5" fill="#28C840"/>
+    <text x="338" y="512" font-size="22" font-weight="750" fill="#18181B" text-anchor="middle">REAL CHROME</text>
+    <text x="338" y="538" font-size="15" fill="#71717A" text-anchor="middle">your tabs · cookies · logins</text>
+    <path d="M78 638H598L632 672H44Z" fill="#E4E4E7" stroke="#18181B" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M263 654H413" stroke="#A1A1AA" stroke-width="4" stroke-linecap="round"/>
+
+    <rect x="686" y="52" width="486" height="620" rx="28" fill="#FFF7ED" stroke="#E96505" stroke-width="3"/>
+    <text x="929" y="91" font-size="26" font-weight="750" fill="#18181B" text-anchor="middle">OUR CLOUD</text>
+    <rect x="716" y="112" width="426" height="404" rx="24" fill="#FFFFFF" stroke="#E96505" stroke-width="2"/>
+    <text x="929" y="148" font-size="17" font-weight="800" fill="#B84D00" text-anchor="middle">CLOUD V4 API</text>
+    <rect x="748" y="172" width="164" height="68" rx="17" fill="#F4F4F5" stroke="#71717A" stroke-width="2" stroke-dasharray="8 7"/>
+    <text x="830" y="214" font-size="20" font-weight="750" fill="#18181B" text-anchor="middle">OPENCODE</text>
+    <rect x="946" y="172" width="164" height="68" rx="17" fill="#FFF3E8" stroke="#E96505" stroke-width="3"/>
+    <text x="1028" y="199" font-size="13" font-weight="700" fill="#B84D00" text-anchor="middle">SAME LEVEL</text>
+    <text x="1028" y="222" font-size="16" font-weight="750" fill="#18181B" text-anchor="middle">BROWSER USE CLI</text>
+    <path d="M830 240V277M1028 240V277M830 277H1028M929 277V326" fill="none" stroke="#E96505" stroke-width="3" marker-end="url(#arrow-orange)"/>
+
+    <rect x="794" y="332" width="270" height="126" rx="22" fill="#FFF3E8" stroke="#E96505" stroke-width="4"/>
+    <path d="M794 367H1064" stroke="#F6B98A" stroke-width="2"/>
+    <circle cx="816" cy="349" r="5" fill="#FF5F57"/><circle cx="834" cy="349" r="5" fill="#FEBC2E"/><circle cx="852" cy="349" r="5" fill="#28C840"/>
+    <text x="929" y="410" font-size="23" font-weight="800" fill="#18181B" text-anchor="middle">CLOUD BROWSER</text>
+    <text x="929" y="438" font-size="15" fill="#B84D00" text-anchor="middle">stealth · profiles · proxies</text>
+
+    <path d="M464 404H666V602H814" fill="none" stroke="#E96505" stroke-width="4" marker-end="url(#arrow-orange)"/>
+    <text x="646" y="390" font-size="13" font-weight="800" fill="#B84D00" text-anchor="end">OR CLOUD</text>
+    <rect x="820" y="566" width="218" height="74" rx="19" fill="#FFF3E8" stroke="#E96505" stroke-width="3"/>
+    <text x="929" y="596" font-size="20" font-weight="800" fill="#18181B" text-anchor="middle">BROWSER API</text>
+    <text x="929" y="621" font-size="14" fill="#B84D00" text-anchor="middle">browser only</text>
+    <path d="M929 566V464" fill="none" stroke="#E96505" stroke-width="4" marker-end="url(#arrow-orange)"/>
   </g>
 </svg>

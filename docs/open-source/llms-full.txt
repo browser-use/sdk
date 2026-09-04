@@ -21,24 +21,24 @@ Source: https://docs.browser-use.com/cloud/which-product
 
 Pick where your agent and browser should run.
 
-<img src="/cloud/images/which-product-light.svg" alt="On your machine, Claude Code or Codex use Browser Use CLI with real Chrome or connect to the browser in our cloud. In our cloud, OpenCode, Browser Use CLI, and Cloud Browser form the fully hosted stack. Your own agent can also connect directly through the Browser API." noZoom className="block dark:hidden" />
-<img src="/cloud/images/which-product-dark.svg" alt="On your machine, Claude Code or Codex use Browser Use CLI with real Chrome or connect to the browser in our cloud. In our cloud, OpenCode, Browser Use CLI, and Cloud Browser form the fully hosted stack. Your own agent can also connect directly through the Browser API." noZoom className="hidden dark:block" />
+<img src="/cloud/images/which-product-light.svg" alt="On your computer, Claude Code, Codex, OpenCode, Hermes Agent, and other local agents can use Browser Use CLI or another computer-use CLI. Those CLIs can control real Chrome or the single Cloud Browser. Cloud v4 runs OpenCode and Browser Use CLI together above that Cloud Browser. Browser API is the browser-only route." noZoom className="block dark:hidden" />
+<img src="/cloud/images/which-product-dark.svg" alt="On your computer, Claude Code, Codex, OpenCode, Hermes Agent, and other local agents can use Browser Use CLI or another computer-use CLI. Those CLIs can control real Chrome or the single Cloud Browser. Cloud v4 runs OpenCode and Browser Use CLI together above that Cloud Browser. Browser API is the browser-only route." noZoom className="hidden dark:block" />
 
-## On your machine
+## On your computer
 
-Claude Code, Codex, or another coding agent runs the [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli) on your machine. The CLI either drives your real Chrome, with its tabs and logins, or connects to the hosted browser shown in our cloud.
+Claude Code, Codex, OpenCode, Hermes Agent, or another local agent can run the [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli) on your computer. Local computer-use CLIs such as Playwright CLI and Agent Browser fit the same shape. They can control real Chrome, with its tabs and logins, or use the single hosted browser shown in our cloud.
 
 Start with real Chrome. Connect to our cloud when a site blocks you or you need many browsers at once. Run `browser-use auth login` once before the first cloud connection.
 
 ## In our cloud
 
-[Cloud v4](https://docs.browser-use.com/cloud/quickstart) runs OpenCode, Browser Use CLI, and Cloud Browser together. You send a prompt to our API and get the result back, plus a live preview and any files it produced. Nothing runs on your machine.
+[Cloud v4](https://docs.browser-use.com/cloud/quickstart) runs OpenCode and Browser Use CLI at the same level, with Cloud Browser underneath. You send a prompt to our API and get the result back, plus a live preview and any files it produced. Nothing runs on your computer.
 
 Use the full hosted stack for scheduled work, tasks your users trigger, and work that should keep running without your computer.
 
 ## Only the browser
 
-Bring your own agent and connect directly to the same hosted browser through the [Browser API](https://docs.browser-use.com/cloud/browser/stealth). Your agent can run on your machine or in your own cloud.
+Use the [Browser API](https://docs.browser-use.com/cloud/browser/stealth) when you only need the hosted browser. Browser Use CLI or a custom computer-use CLI can connect to the same Cloud Browser from your computer or your own cloud; Browser API does not add a hosted agent.
 
 One API key from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1) works for all three. Credits and profiles live in the same project.
 
