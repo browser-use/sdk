@@ -48,6 +48,7 @@ export class HttpClient {
     options?: {
       body?: unknown;
       query?: Record<string, unknown>;
+      headers?: Record<string, string>;
       signal?: AbortSignal;
     },
   ): Promise<T> {
@@ -66,7 +67,7 @@ export class HttpClient {
       }
     }
 
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { ...options?.headers };
     if (this.useApiKeyHeader) {
       headers["X-Browser-Use-API-Key"] = this.apiKey;
     }
@@ -148,8 +149,13 @@ export class HttpClient {
     return this.request<T>("GET", path, { query });
   }
 
-  post<T>(path: string, body?: unknown, query?: Record<string, unknown>): Promise<T> {
-    return this.request<T>("POST", path, { body, query });
+  post<T>(
+    path: string,
+    body?: unknown,
+    query?: Record<string, unknown>,
+    headers?: Record<string, string>,
+  ): Promise<T> {
+    return this.request<T>("POST", path, { body, query, headers });
   }
 
   patch<T>(path: string, body?: unknown, query?: Record<string, unknown>): Promise<T> {

@@ -12,6 +12,11 @@ export interface SessionListParams {
   limit?: number;
 }
 
+export interface SendMessageOptions {
+  /** Optional server-side deduplication strategy, such as `exact-text-v1`. */
+  deduplicate?: string | null;
+}
+
 export class Sessions {
   constructor(private readonly http: HttpClient) {}
 
@@ -35,7 +40,19 @@ export class Sessions {
    * busy; set `interrupt: true` to cancel the active run so the message runs
    * immediately.
    */
-  sendMessage(sessionId: string, body: QueueMessageRequest): Promise<QueuedMessage> {
+  sendMessage(
+    sessionId: string,
+    body: QueueMessageRequest,
+    options?: SendMessageOptions,
+  ): Promise<QueuedMessage> {
+    if (options?.deduplicate != null) {
+      return this.http.post<QueuedMessage>(
+        `/sessions/${sessionId}/queue`,
+        body,
+        undefined,
+        { "X-V4-Queue-Deduplicate": options.deduplicate },
+      );
+    }
     return this.http.post<QueuedMessage>(`/sessions/${sessionId}/queue`, body);
   }
 

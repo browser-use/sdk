@@ -82,6 +82,7 @@ class FakeSyncHttp:
     def __init__(self, responses: list[dict[str, Any]]) -> None:
         self.responses = list(responses)
         self.calls: list[tuple[str, str, dict[str, Any] | None, dict[str, Any] | None]] = []
+        self.headers: list[dict[str, str] | None] = []
 
     def request(
         self,
@@ -90,8 +91,10 @@ class FakeSyncHttp:
         *,
         json: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         self.calls.append((method, path, json, params))
+        self.headers.append(headers)
         return self.responses.pop(0)
 
 
@@ -99,6 +102,7 @@ class FakeAsyncHttp:
     def __init__(self, responses: list[dict[str, Any]]) -> None:
         self.responses = list(responses)
         self.calls: list[tuple[str, str, dict[str, Any] | None, dict[str, Any] | None]] = []
+        self.headers: list[dict[str, str] | None] = []
 
     async def request(
         self,
@@ -107,8 +111,10 @@ class FakeAsyncHttp:
         *,
         json: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         self.calls.append((method, path, json, params))
+        self.headers.append(headers)
         return self.responses.pop(0)
 
 
@@ -522,11 +528,17 @@ def test_sessions_send_message() -> None:
     http = FakeSyncHttp([_queued_message()])
     sessions = Sessions(http)  # type: ignore[arg-type]
 
-    msg = sessions.send_message(SESSION_ID, "also check the careers page", interrupt=True)
+    msg = sessions.send_message(
+        SESSION_ID,
+        "also check the careers page",
+        interrupt=True,
+        deduplicate="exact-text-v1",
+    )
 
     method, path, body, _ = http.calls[0]
     assert (method, path) == ("POST", f"/sessions/{SESSION_ID}/queue")
     assert body == {"text": "also check the careers page", "interrupt": True}
+    assert http.headers[0] == {"X-V4-Queue-Deduplicate": "exact-text-v1"}
     assert msg.status.value == "pending"
 
 

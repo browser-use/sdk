@@ -306,6 +306,26 @@ describe("v4 sessions queue", () => {
     expect(msg.status).toBe("pending");
   });
 
+  it("can request server-side queue deduplication", async () => {
+    const http = {
+      post: vi.fn(async () => queuedMessage),
+    };
+    const sessions = new Sessions(http as any);
+
+    await sessions.sendMessage(
+      SESSION_ID,
+      { text: "also check the careers page" },
+      { deduplicate: "exact-text-v1" },
+    );
+
+    expect(http.post).toHaveBeenCalledWith(
+      `/sessions/${SESSION_ID}/queue`,
+      { text: "also check the careers page" },
+      undefined,
+      { "X-V4-Queue-Deduplicate": "exact-text-v1" },
+    );
+  });
+
   it("lists pending queued messages", async () => {
     const http = {
       get: vi.fn(async () => ({ queue: [queuedMessage] })),

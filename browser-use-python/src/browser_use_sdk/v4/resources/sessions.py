@@ -68,19 +68,22 @@ class Sessions:
         *,
         interrupt: bool | None = None,
         attached_file_ids: list[str | UUID] | None = None,
+        deduplicate: str | None = None,
         **extra: Any,
     ) -> QueuedMessage:
         """Send a message to the session.
 
         Runs as the next turn when the session is busy; pass ``interrupt=True``
-        to cancel the active run so the message runs immediately.
+        to cancel the active run so the message runs immediately. Pass
+        ``deduplicate="exact-text-v1"`` to reuse an equivalent queued message.
         """
+        request_kwargs: dict[str, Any] = {
+            "json": _build_message_body(text, interrupt, attached_file_ids, extra)
+        }
+        if deduplicate is not None:
+            request_kwargs["headers"] = {"X-V4-Queue-Deduplicate": deduplicate}
         return QueuedMessage.model_validate(
-            self._http.request(
-                "POST",
-                f"/sessions/{session_id}/queue",
-                json=_build_message_body(text, interrupt, attached_file_ids, extra),
-            )
+            self._http.request("POST", f"/sessions/{session_id}/queue", **request_kwargs)
         )
 
     def queue(self, session_id: str | UUID) -> QueueListResponse:
@@ -141,18 +144,23 @@ class AsyncSessions:
         *,
         interrupt: bool | None = None,
         attached_file_ids: list[str | UUID] | None = None,
+        deduplicate: str | None = None,
         **extra: Any,
     ) -> QueuedMessage:
         """Send a message to the session.
 
         Runs as the next turn when the session is busy; pass ``interrupt=True``
-        to cancel the active run so the message runs immediately.
+        to cancel the active run so the message runs immediately. Pass
+        ``deduplicate="exact-text-v1"`` to reuse an equivalent queued message.
         """
+        request_kwargs: dict[str, Any] = {
+            "json": _build_message_body(text, interrupt, attached_file_ids, extra)
+        }
+        if deduplicate is not None:
+            request_kwargs["headers"] = {"X-V4-Queue-Deduplicate": deduplicate}
         return QueuedMessage.model_validate(
             await self._http.request(
-                "POST",
-                f"/sessions/{session_id}/queue",
-                json=_build_message_body(text, interrupt, attached_file_ids, extra),
+                "POST", f"/sessions/{session_id}/queue", **request_kwargs
             )
         )
 
