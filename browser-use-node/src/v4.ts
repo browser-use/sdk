@@ -39,6 +39,7 @@ export type RunAttachmentsResponse = S["RunAttachmentsResponse"];
 export type RunBrowserSettings = S["RunBrowserSettings"];
 export type RunJudgeSettings = S["RunJudgeSettings"];
 export type InlineSecretSource = S["InlineSecretSource"];
+export type OnePasswordSecretSource = S["OnePasswordSecretSource"];
 export type SecretBinding = S["SecretBinding"];
 
 // Session models

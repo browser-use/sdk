@@ -8,6 +8,7 @@ from ..generated.v4.models import (
     CustomProxy,
     InlineSecretSource,
     Model as RunModel,
+    OnePasswordSecretSource,
     ProxyCountryCode,
     QueuedMessage,
     QueueListResponse,
@@ -60,6 +61,7 @@ __all__ = [
     "RunBrowserSettings",
     "RunJudgeSettings",
     "InlineSecretSource",
+    "OnePasswordSecretSource",
     "SecretBinding",
     "SecretBindings",
     # Session models

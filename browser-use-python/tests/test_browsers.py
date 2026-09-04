@@ -39,11 +39,19 @@ def test_browser_metadata_create_and_list(browser_cls: type[Any]) -> None:
     http = FakeHttp()
     browsers = browser_cls(http)
 
-    created = browsers.create(metadata={"team": "sdk", "env": "test"})
+    created = browsers.create(
+        metadata={"team": "sdk", "env": "test"},
+        pdf_renderer_enabled=False,
+        solve_captchas=False,
+    )
     browsers.list(metadata=["team", "env=test"])
 
     assert created.metadata == {"team": "sdk", "env": "test"}
-    assert http.calls[0][2] == {"metadata": {"team": "sdk", "env": "test"}}
+    assert http.calls[0][2] == {
+        "metadata": {"team": "sdk", "env": "test"},
+        "pdfRendererEnabled": False,
+        "solveCaptchas": False,
+    }
     assert http.calls[1][3] == {
         "pageSize": None,
         "pageNumber": None,

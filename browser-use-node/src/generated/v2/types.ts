@@ -1118,6 +1118,18 @@ export interface components {
              */
             allowResizing: boolean;
             /**
+             * PDF Renderer Enabled
+             * @description Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.
+             * @default true
+             */
+            pdfRendererEnabled: boolean;
+            /**
+             * Solve Captchas
+             * @description Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.
+             * @default true
+             */
+            solveCaptchas: boolean;
+            /**
              * Custom Proxy
              * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.
              */
@@ -1308,7 +1320,7 @@ export interface components {
             thinking: boolean;
             /**
              * Thinking Level
-             * @description Optional model reasoning depth. Omit this field to preserve the provider default. API V2 accepts disabled/low/medium/high for browser-use-llm, browser-use-2.0, gemini-2.5-flash, gemini-3-flash-preview, gemini-3.5-flash, gemini-flash-latest, gemini-flash-lite-latest, gpt-5.5, gpt-5.6-sol, gpt-5.6-terra, gpt-5.6-luna, claude-sonnet-5, claude-opus-4-7, claude-opus-4-8, and claude-opus-5; low/medium/high for gemini-2.5-pro, o3, and o4-mini; low/high for gemini-3-pro-preview and gemini-3.1-pro-preview; and disabled only for claude-sonnet-4-20250514, claude-sonnet-4-5-20250929, and claude-opus-4-5-20251101. For browser-use-llm, browser-use-2.0, Gemini 3 Flash, and Gemini 3.5 Flash, disabled maps to Google's minimal thinking level. For Gemini 2.5 Flash and the gemini-flash-latest variants, disabled maps to a zero thinking budget. bu-2-0-mini-preview does not support configurable thinking, so omit thinkingLevel for that model. Other V2 models reject an explicit level. API V2 cannot configure GLM thinking or enable fixed-budget Claude thinking; use API V3 or V4 for those combinations.
+             * @description Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected. API V2 cannot configure GLM or fixed-budget Claude thinking; use API V3 or V4 for those combinations.
              */
             thinkingLevel?: components["schemas"]["ThinkingLevel"] | null;
             /**
@@ -2412,7 +2424,7 @@ export interface components {
          * SupportedLLMs
          * @enum {string}
          */
-        SupportedLLMs: "browser-use-llm" | "browser-use-2.0" | "bu-2-0-mini-preview" | "gpt-4.1" | "gpt-4.1-mini" | "o4-mini" | "o3" | "gpt-5.5" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-3-pro-preview" | "gemini-3.1-pro-preview" | "gemini-3-flash-preview" | "gemini-3.5-flash" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "claude-sonnet-4-20250514" | "claude-sonnet-4-5-20250929" | "claude-sonnet-5" | "claude-opus-4-5-20251101" | "claude-opus-4-7" | "claude-opus-4-8" | "claude-opus-5" | "glm-5.2" | "minimax-m3" | "llama-4-maverick-17b-128e-instruct" | "claude-3-7-sonnet-20250219";
+        SupportedLLMs: "browser-use-llm" | "browser-use-2.0" | "bu-2-0-mini-preview" | "gpt-4.1" | "gpt-4.1-mini" | "o4-mini" | "o3" | "gpt-5.5" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-3-pro-preview" | "gemini-3.1-pro-preview" | "gemini-3-flash-preview" | "gemini-3.5-flash" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "claude-sonnet-4-20250514" | "claude-sonnet-4-5-20250929" | "claude-sonnet-5" | "claude-opus-4-5-20251101" | "claude-opus-4-7" | "claude-opus-4-8" | "claude-opus-5" | "glm-5.2" | "minimax-m3" | "grok-4.6" | "glm-5.3-flash" | "deepseek-v4-flash-vision" | "llama-4-maverick-17b-128e-instruct" | "claude-3-7-sonnet-20250219";
         /**
          * TaskCreatedResponse
          * @description Response model for creating a task

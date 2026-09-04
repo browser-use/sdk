@@ -2212,6 +2212,9 @@
           "gpt-5.4-mini",
           "glm-5.2",
           "minimax-m3",
+          "grok-4.6",
+          "glm-5.3-flash",
+          "deepseek-v4-flash-vision",
           "claude-haiku-4.5",
           "gpt-5.2",
           "gpt-5-mini",
@@ -2224,7 +2227,7 @@
           "gemini-3.5-flash"
         ],
         "title": "BuModel",
-        "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash \u2014 fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6` (legacy aliases) / `claude-sonnet-5`: Claude Sonnet 5 \u2014 balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 \u2014 capable general-purpose Opus tier.\n- `claude-opus-4.7`: Claude Opus 4.7 \u2014 most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.\n- `claude-opus-4.8`: Claude Opus 4.8 \u2014 most capable Opus-tier model, state-of-the-art on long-horizon agentic work.\n- `gpt-5.4-mini`: GPT-5.4 mini \u2014 OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities.\n- `glm-5.2`: Z.ai GLM 5.2 \u2014 capable, low-cost open model. Best for cost-sensitive agentic tasks.\n- `minimax-m3`: MiniMax M3 \u2014 fast, very low-cost model. Best for simple, high-volume tasks.\n\nAdditional provider models (e.g. `gemini-3.5-flash`, `gpt-5.2`, and `gpt-5-mini`)\nare selectable only with `use_own_key=true`, where your own provider key serves\nthem. The GPT-5.6 family is native when either Browser Use's direct OpenAI key\nor Amazon Bedrock route is configured. GPT-5.5 becomes native only through the\nBedrock rollout."
+        "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash \u2014 fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6` (legacy aliases) / `claude-sonnet-5`: Claude Sonnet 5 \u2014 balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 \u2014 capable general-purpose Opus tier.\n- `claude-opus-4.7`: Claude Opus 4.7 \u2014 most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.\n- `claude-opus-4.8`: Claude Opus 4.8 \u2014 most capable Opus-tier model, state-of-the-art on long-horizon agentic work.\n- `gpt-5.4-mini`: GPT-5.4 mini \u2014 OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities.\n- `glm-5.2`: Z.ai GLM 5.2 \u2014 capable, low-cost open model. Best for cost-sensitive agentic tasks.\n- `minimax-m3`: MiniMax M3 \u2014 fast, very low-cost model. Best for simple, high-volume tasks.\n- `grok-4.6`: xAI Grok 4.6. Fast frontier model with a large context window.\n- `glm-5.3-flash`: Z.ai GLM 5.3 Flash. Multimodal, very low cost, served by Fireworks.\n- `deepseek-v4-flash-vision`: DeepSeek V4 Flash Vision. Experimental, very low cost.\n\nAdditional provider models (e.g. `gemini-3.5-flash`, `gpt-5.2`, and `gpt-5-mini`)\nare selectable only with `use_own_key=true`, where your own provider key serves\nthem. The GPT-5.6 family is native when either Browser Use's direct OpenAI key\nor Amazon Bedrock route is configured. GPT-5.5 becomes native only through the\nBedrock rollout."
       },
       "CreateBrowserSessionRequest": {
         "properties": {
@@ -2260,7 +2263,6 @@
                 "additionalProperties": {
                   "type": "string"
                 },
-                "maxProperties": 10,
                 "type": "object"
               },
               {
@@ -2311,6 +2313,18 @@
             "title": "Allow Resizing",
             "description": "Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).",
             "default": false
+          },
+          "pdfRendererEnabled": {
+            "type": "boolean",
+            "title": "PDF Renderer Enabled",
+            "description": "Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.",
+            "default": true
+          },
+          "solveCaptchas": {
+            "type": "boolean",
+            "title": "Solve Captchas",
+            "description": "Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.",
+            "default": true
           },
           "customProxy": {
             "anyOf": [

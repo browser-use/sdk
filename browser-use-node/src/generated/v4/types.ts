@@ -844,6 +844,18 @@ export interface components {
              */
             allowResizing: boolean;
             /**
+             * PDF Renderer Enabled
+             * @description Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.
+             * @default true
+             */
+            pdfRendererEnabled: boolean;
+            /**
+             * Solve Captchas
+             * @description Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.
+             * @default true
+             */
+            solveCaptchas: boolean;
+            /**
              * Custom Proxy
              * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.
              */
@@ -919,8 +931,8 @@ export interface components {
          */
         InlineSecretSource: {
             /**
-             * Type
-             * @constant
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
              */
             type: "inline";
             /**
@@ -940,6 +952,39 @@ export interface components {
              * @default Insufficient credits
              */
             detail: string;
+        };
+        /**
+         * OnePasswordSecretSource
+         * @description One field of a 1Password item, resolved only when the agent asks for it.
+         *
+         *     Nothing here is a secret: the quadruple NAMES a credential without carrying
+         *     it. Creating the binding makes no call to 1Password — a provider outage must
+         *     not stop a run from being dispatched, and no vault is ever enumerated.
+         *
+         *     A one-time-password field resolves to its current code; its seed is never
+         *     read, so there is no flag to ask for one.
+         */
+        OnePasswordSecretSource: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "onepassword";
+            /**
+             * Integrationid
+             * Format: uuid
+             * @description 1Password integration to resolve through. Must belong to this project.
+             */
+            integrationId: string;
+            /** Vaultid */
+            vaultId: string;
+            /** Itemid */
+            itemId: string;
+            /**
+             * Fieldid
+             * @description Field id from the item-fields endpoint, e.g. "password".
+             */
+            fieldId: string;
         };
         /**
          * ProfileCreateRequest
@@ -1200,7 +1245,7 @@ export interface components {
              * @default gpt-5.6-luna
              * @enum {string}
              */
-            model: "glm-5.2" | "grok-4.5" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-fable-5" | "claude-sonnet-5" | "gpt-5.5" | "gpt-5.6" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash";
+            model: "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "deepseek-v4-flash-vision" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-fable-5" | "claude-sonnet-5" | "gpt-5.5" | "gpt-5.6" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash";
             /**
              * Modelparams
              * @description Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-5.6-luna defaults to {"reasoning": {"effort": "xhigh"}}); passing {} opts out of that default and leaves the provider's own defaults in place.
@@ -1401,7 +1446,8 @@ export interface components {
              * @description Name the agent refers to this secret by, e.g. "github_password".
              */
             alias: string;
-            source: components["schemas"]["InlineSecretSource"];
+            /** Source */
+            source: components["schemas"]["InlineSecretSource"] | components["schemas"]["OnePasswordSecretSource"];
             /**
              * Alloweddomains
              * @description Hosts the secret may be typed into, e.g. ["github.com"]. A host covers its subdomains. Bare hostnames only — no scheme, port, path, or wildcard.
@@ -2241,7 +2287,9 @@ export interface operations {
     queue_session_message_sessions__session_id__queue_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-V4-Queue-Deduplicate"?: string | null;
+            };
             path: {
                 session_id: string;
             };

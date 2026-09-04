@@ -670,6 +670,22 @@
               "format": "uuid",
               "title": "Session Id"
             }
+          },
+          {
+            "name": "X-V4-Queue-Deduplicate",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-V4-Queue-Deduplicate"
+            }
           }
         ],
         "requestBody": {
@@ -2567,6 +2583,18 @@
             "description": "Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).",
             "default": false
           },
+          "pdfRendererEnabled": {
+            "type": "boolean",
+            "title": "PDF Renderer Enabled",
+            "description": "Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.",
+            "default": true
+          },
+          "solveCaptchas": {
+            "type": "boolean",
+            "title": "Solve Captchas",
+            "description": "Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.",
+            "default": true
+          },
           "customProxy": {
             "anyOf": [
               {
@@ -2591,7 +2619,6 @@
                 "additionalProperties": {
                   "type": "string"
                 },
-                "maxProperties": 10,
                 "type": "object"
               },
               {
@@ -2746,6 +2773,51 @@
         "type": "object",
         "title": "InsufficientCreditsError",
         "description": "Error response when there are insufficient credits"
+      },
+      "OnePasswordSecretSource": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "onepassword",
+            "title": "Type"
+          },
+          "integrationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Integrationid",
+            "description": "1Password integration to resolve through. Must belong to this project."
+          },
+          "vaultId": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Vaultid"
+          },
+          "itemId": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Itemid"
+          },
+          "fieldId": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Fieldid",
+            "description": "Field id from the item-fields endpoint, e.g. \"password\"."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "integrationId",
+          "vaultId",
+          "itemId",
+          "fieldId"
+        ],
+        "title": "OnePasswordSecretSource",
+        "description": "One field of a 1Password item, resolved only when the agent asks for it.\n\nNothing here is a secret: the quadruple NAMES a credential without carrying\nit. Creating the binding makes no call to 1Password \u2014 a provider outage must\nnot stop a run from being dispatched, and no vault is ever enumerated.\n\nA one-time-password field resolves to its current code; its seed is never\nread, so there is no flag to ask for one."
       },
       "ProfileCreateRequest": {
         "properties": {
@@ -3490,6 +3562,9 @@
             "enum": [
               "glm-5.2",
               "grok-4.5",
+              "grok-4.6",
+              "glm-5.3-flash",
+              "deepseek-v4-flash-vision",
               "kimi-k3",
               "minimax-m3",
               "claude-opus-4.7",
@@ -3987,7 +4062,22 @@
             "description": "Name the agent refers to this secret by, e.g. \"github_password\"."
           },
           "source": {
-            "$ref": "#/components/schemas/InlineSecretSource"
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/InlineSecretSource"
+              },
+              {
+                "$ref": "#/components/schemas/OnePasswordSecretSource"
+              }
+            ],
+            "title": "Source",
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "inline": "#/components/schemas/InlineSecretSource",
+                "onepassword": "#/components/schemas/OnePasswordSecretSource"
+              }
+            }
           },
           "allowedDomains": {
             "items": {

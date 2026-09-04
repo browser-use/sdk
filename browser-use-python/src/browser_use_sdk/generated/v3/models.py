@@ -168,6 +168,9 @@ class BuModel(Enum):
     gpt_5_4_mini = 'gpt-5.4-mini'
     glm_5_2 = 'glm-5.2'
     minimax_m3 = 'minimax-m3'
+    grok_4_6 = 'grok-4.6'
+    glm_5_3_flash = 'glm-5.3-flash'
+    deepseek_v4_flash_vision = 'deepseek-v4-flash-vision'
     claude_haiku_4_5 = 'claude-haiku-4.5'
     gpt_5_2 = 'gpt-5.2'
     gpt_5_mini = 'gpt-5-mini'
@@ -1102,6 +1105,18 @@ class CreateBrowserSessionRequest(BaseModel):
         alias='allowResizing',
         description='Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).',
         title='Allow Resizing',
+    )
+    pdf_renderer_enabled: bool | None = Field(
+        True,
+        alias='pdfRendererEnabled',
+        description="Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.",
+        title='PDF Renderer Enabled',
+    )
+    solve_captchas: bool | None = Field(
+        True,
+        alias='solveCaptchas',
+        description='Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.',
+        title='Solve Captchas',
     )
     custom_proxy: CustomProxy | None = Field(
         None,

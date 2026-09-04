@@ -239,6 +239,33 @@ class InsufficientCreditsError(BaseModel):
     detail: str | None = Field('Insufficient credits', title='Detail')
 
 
+class OnePasswordSecretSource(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    type: Literal['onepassword'] = Field(..., title='Type')
+    integration_id: UUID = Field(
+        ...,
+        alias='integrationId',
+        description='1Password integration to resolve through. Must belong to this project.',
+        title='Integrationid',
+    )
+    vault_id: str = Field(
+        ..., alias='vaultId', max_length=64, min_length=1, title='Vaultid'
+    )
+    item_id: str = Field(
+        ..., alias='itemId', max_length=64, min_length=1, title='Itemid'
+    )
+    field_id: str = Field(
+        ...,
+        alias='fieldId',
+        description='Field id from the item-fields endpoint, e.g. "password".',
+        max_length=64,
+        min_length=1,
+        title='Fieldid',
+    )
+
+
 class Name(RootModel[str]):
     root: str = Field(
         ..., description='Optional name for the profile', max_length=100, title='Name'
@@ -693,6 +720,9 @@ class RunBrowserSettings(BaseModel):
 class Model(Enum):
     glm_5_2 = 'glm-5.2'
     grok_4_5 = 'grok-4.5'
+    grok_4_6 = 'grok-4.6'
+    glm_5_3_flash = 'glm-5.3-flash'
+    deepseek_v4_flash_vision = 'deepseek-v4-flash-vision'
     kimi_k3 = 'kimi-k3'
     minimax_m3 = 'minimax-m3'
     claude_opus_4_7 = 'claude-opus-4.7'
@@ -809,7 +839,9 @@ class SecretBinding(BaseModel):
         description='Name the agent refers to this secret by, e.g. "github_password".',
         title='Alias',
     )
-    source: InlineSecretSource
+    source: InlineSecretSource | OnePasswordSecretSource = Field(
+        ..., discriminator='type', title='Source'
+    )
     allowed_domains: List[str] = Field(
         ...,
         alias='allowedDomains',
@@ -1137,6 +1169,18 @@ class CreateBrowserSessionRequest(BaseModel):
         alias='allowResizing',
         description='Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).',
         title='Allow Resizing',
+    )
+    pdf_renderer_enabled: bool | None = Field(
+        True,
+        alias='pdfRendererEnabled',
+        description="Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.",
+        title='PDF Renderer Enabled',
+    )
+    solve_captchas: bool | None = Field(
+        True,
+        alias='solveCaptchas',
+        description='Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.',
+        title='Solve Captchas',
     )
     custom_proxy: CustomProxy | None = Field(
         None,

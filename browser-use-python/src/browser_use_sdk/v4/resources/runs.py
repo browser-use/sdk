@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
+    InlineSecretSource,
     RunAttachmentsResponse,
     RunBrowserSettings,
     RunCreateResponse,
@@ -69,10 +70,16 @@ def _build_create_body(
         body["secretBindings"] = [
             {
                 "alias": binding.alias,
-                "source": {
-                    "type": binding.source.type,
-                    "value": binding.source.value.get_secret_value(),
-                },
+                "source": (
+                    {
+                        "type": binding.source.type,
+                        "value": binding.source.value.get_secret_value(),
+                    }
+                    if isinstance(binding.source, InlineSecretSource)
+                    else binding.source.model_dump(
+                        by_alias=True, exclude_none=True, mode="json"
+                    )
+                ),
                 "allowedDomains": binding.allowed_domains,
             }
             if isinstance(binding, SecretBinding)

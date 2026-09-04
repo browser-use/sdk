@@ -965,6 +965,9 @@ class SupportedLLMs(Enum):
     claude_opus_5 = 'claude-opus-5'
     glm_5_2 = 'glm-5.2'
     minimax_m3 = 'minimax-m3'
+    grok_4_6 = 'grok-4.6'
+    glm_5_3_flash = 'glm-5.3-flash'
+    deepseek_v4_flash_vision = 'deepseek-v4-flash-vision'
     llama_4_maverick_17b_128e_instruct = 'llama-4-maverick-17b-128e-instruct'
     claude_3_7_sonnet_20250219 = 'claude-3-7-sonnet-20250219'
 
@@ -1535,6 +1538,18 @@ class CreateBrowserSessionRequest(BaseModel):
         description='Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).',
         title='Allow Resizing',
     )
+    pdf_renderer_enabled: bool | None = Field(
+        True,
+        alias='pdfRendererEnabled',
+        description="Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.",
+        title='PDF Renderer Enabled',
+    )
+    solve_captchas: bool | None = Field(
+        True,
+        alias='solveCaptchas',
+        description='Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.',
+        title='Solve Captchas',
+    )
     custom_proxy: CustomProxy | None = Field(
         None,
         alias='customProxy',
@@ -1691,7 +1706,7 @@ class CreateTaskRequest(BaseModel):
     thinking_level: ThinkingLevel | None = Field(
         None,
         alias='thinkingLevel',
-        description="Optional model reasoning depth. Omit this field to preserve the provider default. API V2 accepts disabled/low/medium/high for browser-use-llm, browser-use-2.0, gemini-2.5-flash, gemini-3-flash-preview, gemini-3.5-flash, gemini-flash-latest, gemini-flash-lite-latest, gpt-5.5, gpt-5.6-sol, gpt-5.6-terra, gpt-5.6-luna, claude-sonnet-5, claude-opus-4-7, claude-opus-4-8, and claude-opus-5; low/medium/high for gemini-2.5-pro, o3, and o4-mini; low/high for gemini-3-pro-preview and gemini-3.1-pro-preview; and disabled only for claude-sonnet-4-20250514, claude-sonnet-4-5-20250929, and claude-opus-4-5-20251101. For browser-use-llm, browser-use-2.0, Gemini 3 Flash, and Gemini 3.5 Flash, disabled maps to Google's minimal thinking level. For Gemini 2.5 Flash and the gemini-flash-latest variants, disabled maps to a zero thinking budget. bu-2-0-mini-preview does not support configurable thinking, so omit thinkingLevel for that model. Other V2 models reject an explicit level. API V2 cannot configure GLM thinking or enable fixed-budget Claude thinking; use API V3 or V4 for those combinations.",
+        description="Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected. API V2 cannot configure GLM or fixed-budget Claude thinking; use API V3 or V4 for those combinations.",
         title='Thinking Level',
     )
     vision: bool | str | None = Field(

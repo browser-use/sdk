@@ -5,11 +5,13 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import httpx
 import pytest
+from pydantic import SecretStr
 
-from browser_use_sdk.v4 import InlineSecretSource, SecretBinding
+from browser_use_sdk.v4 import InlineSecretSource, OnePasswordSecretSource, SecretBinding
 from browser_use_sdk.v4.resources.browsers import AsyncBrowsers, Browsers
 from browser_use_sdk.v4.resources.runs import AsyncRuns, Runs
 from browser_use_sdk.v4.resources.sessions import Sessions
@@ -128,12 +130,22 @@ def test_browsers_create() -> None:
     http = FakeSyncHttp([_active_browser()])
     browsers = Browsers(http)  # type: ignore[arg-type]
 
-    browser = browsers.create(proxy_country_code="DE", metadata={"flow": "quickstart"})
+    browser = browsers.create(
+        proxy_country_code="DE",
+        metadata={"flow": "quickstart"},
+        pdf_renderer_enabled=False,
+        solve_captchas=False,
+    )
 
     assert http.calls[0][:3] == (
         "POST",
         "/browsers",
-        {"proxyCountryCode": "de", "metadata": {"flow": "quickstart"}},
+        {
+            "proxyCountryCode": "de",
+            "metadata": {"flow": "quickstart"},
+            "pdfRendererEnabled": False,
+            "solveCaptchas": False,
+        },
     )
     assert browser.cdp_url == "wss://connect.browser-use.com/devtools/browser/test"
 
@@ -367,7 +379,9 @@ def test_runs_create_sends_camel_case_body() -> None:
         secret_bindings=[
             SecretBinding(
                 alias="github_password",
-                source=InlineSecretSource(type="inline", value="not-masked"),
+                source=InlineSecretSource(
+                    type="inline", value=SecretStr("not-masked")
+                ),
                 allowedDomains=["github.com"],
             )
         ],
@@ -394,6 +408,57 @@ def test_runs_create_sends_camel_case_body() -> None:
         "maxCostUsd": "1.50",
     }
     assert str(created.id) == RUN_ID
+
+
+def test_runs_create_serializes_onepassword_binding() -> None:
+    http = FakeSyncHttp(
+        [
+            {
+                "id": RUN_ID,
+                "status": "queued",
+                "model": "gpt-5.6-luna",
+                "sessionId": SESSION_ID,
+                "workspaceId": WORKSPACE_ID,
+                "eventsUrl": f"https://api.browser-use.com/api/v4/runs/{RUN_ID}/events",
+            }
+        ]
+    )
+    runs = Runs(http)  # type: ignore[arg-type]
+    integration_id = "00000000-0000-0000-0000-000000000004"
+
+    runs.create(
+        "Sign in",
+        secret_bindings=[
+            SecretBinding(
+                alias="github_password",
+                source=OnePasswordSecretSource(
+                    type="onepassword",
+                    integrationId=UUID(integration_id),
+                    vaultId="vault-id",
+                    itemId="item-id",
+                    fieldId="password",
+                ),
+                allowedDomains=["github.com"],
+            )
+        ],
+    )
+
+    assert http.calls[0][2] == {
+        "task": "Sign in",
+        "secretBindings": [
+            {
+                "alias": "github_password",
+                "source": {
+                    "type": "onepassword",
+                    "integrationId": integration_id,
+                    "vaultId": "vault-id",
+                    "itemId": "item-id",
+                    "fieldId": "password",
+                },
+                "allowedDomains": ["github.com"],
+            }
+        ],
+    }
 
 
 def test_runs_list_cursor_pagination() -> None:

@@ -14,11 +14,17 @@ describe.each([
     };
     const browsers = new Browsers(http as any);
 
-    await browsers.create({ metadata: { team: "sdk", env: "test" } });
+    await browsers.create({
+      metadata: { team: "sdk", env: "test" },
+      pdfRendererEnabled: false,
+      solveCaptchas: false,
+    });
     await browsers.list({ metadata: ["team", "env=test"] });
 
     expect(http.post).toHaveBeenCalledWith("/browsers", {
       metadata: { team: "sdk", env: "test" },
+      pdfRendererEnabled: false,
+      solveCaptchas: false,
     });
     expect(http.get).toHaveBeenCalledWith("/browsers", {
       metadata: ["team", "env=test"],

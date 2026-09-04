@@ -23,6 +23,8 @@ def _build_create_body(
     browser_screen_width: int | None = None,
     browser_screen_height: int | None = None,
     allow_resizing: bool | None = None,
+    pdf_renderer_enabled: bool | None = None,
+    solve_captchas: bool | None = None,
     custom_proxy: CustomProxy | None = None,
     enable_recording: bool | None = None,
     **extra: Any,
@@ -45,6 +47,10 @@ def _build_create_body(
         body["browserScreenHeight"] = browser_screen_height
     if allow_resizing is not None:
         body["allowResizing"] = allow_resizing
+    if pdf_renderer_enabled is not None:
+        body["pdfRendererEnabled"] = pdf_renderer_enabled
+    if solve_captchas is not None:
+        body["solveCaptchas"] = solve_captchas
     if custom_proxy is not None:
         body["customProxy"] = custom_proxy.model_dump(by_alias=True, exclude_none=True)
     if enable_recording is not None:
@@ -67,6 +73,8 @@ class Browsers:
         browser_screen_width: int | None = None,
         browser_screen_height: int | None = None,
         allow_resizing: bool | None = None,
+        pdf_renderer_enabled: bool | None = None,
+        solve_captchas: bool | None = None,
         custom_proxy: CustomProxy | None = None,
         enable_recording: bool | None = None,
         **extra: Any,
@@ -80,6 +88,8 @@ class Browsers:
             browser_screen_width=browser_screen_width,
             browser_screen_height=browser_screen_height,
             allow_resizing=allow_resizing,
+            pdf_renderer_enabled=pdf_renderer_enabled,
+            solve_captchas=solve_captchas,
             custom_proxy=custom_proxy,
             enable_recording=enable_recording,
             **extra,
@@ -165,6 +175,8 @@ class AsyncBrowsers:
         browser_screen_width: int | None = None,
         browser_screen_height: int | None = None,
         allow_resizing: bool | None = None,
+        pdf_renderer_enabled: bool | None = None,
+        solve_captchas: bool | None = None,
         custom_proxy: CustomProxy | None = None,
         enable_recording: bool | None = None,
         **extra: Any,
@@ -178,6 +190,8 @@ class AsyncBrowsers:
             browser_screen_width=browser_screen_width,
             browser_screen_height=browser_screen_height,
             allow_resizing=allow_resizing,
+            pdf_renderer_enabled=pdf_renderer_enabled,
+            solve_captchas=solve_captchas,
             custom_proxy=custom_proxy,
             enable_recording=enable_recording,
             **extra,
