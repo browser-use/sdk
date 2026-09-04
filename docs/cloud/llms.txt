@@ -93,7 +93,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Profiles](https://docs.browser-use.com/cloud/guides/authentication): Reuse cookies and browser state in API V4 runs.
 - [Sync local and cloud cookies](https://docs.browser-use.com/cloud/guides/profile-sync): Sync a local login, then use it in an API V4 run.
 - [2FA](https://docs.browser-use.com/cloud/guides/2fa): Handle two-factor authentication in API V4 runs.
-- [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password): Auto-fill passwords and TOTP codes from 1Password in API tasks: v4 runs with secret bindings, v2 and v3 tasks with a vault id.
+- [1Password & 2FA](https://docs.browser-use.com/cloud/guides/1password): Auto-fill passwords and TOTP codes from 1Password in API tasks.
 - [Secrets](https://docs.browser-use.com/cloud/guides/secrets): Pass domain-scoped credentials to the agent securely.
 
 ## More
