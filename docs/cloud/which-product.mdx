@@ -1,34 +1,29 @@
 ---
 title: "Which Browser Use do I need?"
 sidebarTitle: "Which product?"
-description: "Keep Claude Code or Codex on your machine, send the whole task to our cloud, or take only our browser."
+description: "Run Browser Use on your machine, run the full stack in our cloud, or bring your own agent and use only the hosted browser."
 icon: "signs-post"
 ---
 
-Three products. The difference is where your agent runs and whether you want us to provide the agent, the browser, or both.
+Pick where your agent and browser should run.
 
-<img src="/cloud/images/which-product-light.svg" alt="On your machine, Claude Code or Codex run the Browser Use CLI against your Chrome or our cloud browser. In our cloud, the fully hosted agent, or only a browser for your own agent." noZoom className="block dark:hidden" />
-<img src="/cloud/images/which-product-dark.svg" alt="On your machine, Claude Code or Codex run the Browser Use CLI against your Chrome or our cloud browser. In our cloud, the fully hosted agent, or only a browser for your own agent." noZoom className="hidden dark:block" />
+<img src="/cloud/images/which-product-light.svg" alt="On your machine, Claude Code or Codex use Browser Use CLI with real Chrome or connect to the browser in our cloud. In our cloud, OpenCode, Browser Use CLI, and Cloud Browser form the fully hosted stack. Your own agent can also connect directly through the Browser API." noZoom className="block dark:hidden" />
+<img src="/cloud/images/which-product-dark.svg" alt="On your machine, Claude Code or Codex use Browser Use CLI with real Chrome or connect to the browser in our cloud. In our cloud, OpenCode, Browser Use CLI, and Cloud Browser form the fully hosted stack. Your own agent can also connect directly through the Browser API." noZoom className="hidden dark:block" />
 
-## Browser Use CLI
+## On your machine
 
-Claude Code, Codex or another agent runs on your machine with the [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli). The CLI drives a browser over CDP.
+Claude Code, Codex, or another coding agent runs the [Browser Use CLI](https://docs.browser-use.com/open-source/browser-use-cli) on your machine. The CLI either drives your real Chrome, with its tabs and logins, or connects to the hosted browser shown in our cloud.
 
-You get two browsers to choose from:
+Start with real Chrome. Connect to our cloud when a site blocks you or you need many browsers at once. Run `browser-use auth login` once before the first cloud connection.
 
-- **Your own Chrome**, with the tabs and logins you already have.
-- **Our cloud browser**, with stealth, residential proxies and CAPTCHA handling. Run `browser-use auth login` once.
+## In our cloud
 
-Same agent and CLI either way. Start with your Chrome. Switch to our cloud browser when a site blocks you or you need many browsers at once.
+[Cloud v4](/cloud/quickstart) runs OpenCode, Browser Use CLI, and Cloud Browser together. You send a prompt to our API and get the result back, plus a live preview and any files it produced. Nothing runs on your machine.
 
-## Fully hosted agent
-
-[Cloud v4](/cloud/quickstart) runs the agent and browser for you. You send a prompt to our API and get the result back, plus a live preview and any files it produced. Nothing runs on your machine.
-
-Use it for scheduled work, for tasks your users trigger, and anywhere you do not want to babysit a browser.
+Use the full hosted stack for scheduled work, tasks your users trigger, and work that should keep running without your computer.
 
 ## Only the browser
 
-You already have an agent and only want our browser. Your agent can run on your machine or in your own cloud. Create a browser from the [Browser API](/cloud/browser/stealth) and connect over CDP.
+Bring your own agent and connect directly to the same hosted browser through the [Browser API](/cloud/browser/stealth). Your agent can run on your machine or in your own cloud.
 
 One API key from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1) works for all three. Credits and profiles live in the same project.
