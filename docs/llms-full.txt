@@ -317,12 +317,6 @@ rollout and configured provider key.
 See [Thinking levels](https://docs.browser-use.com/cloud/agent/thinking-levels) for the reasoning controls
 accepted by each model. Not every model accepts `modelParams`.
 
-  The current generated SDK request types predate this contract. The
-  TypeScript model union does not yet include GPT-5.6 Luna or every model on
-  this page, and neither generated V4 request model exposes `modelParams`.
-  Use `POST /api/v4/runs` directly for those fields until the follow-up SDK
-  regeneration is released.
-
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
 
@@ -338,8 +332,7 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Compare three project-management tools",
-  // Use REST for GPT-5.6 Luna until the generated union is updated.
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
 });
 ```
 ```bash curl
@@ -548,10 +541,9 @@ Model "gemini-3.1-pro" does not support modelParams.thinkingConfig.thinkingLevel
 
 The normalized V2/V3 field is optional and nullable. New sessions use provider
 defaults until a level is supplied. Existing V3 sessions retain their current
-setting when the field is omitted; send `null` to clear it. The checked-in
-generated SDK clients do not expose this field yet, so use the REST examples
-above until the follow-up SDK regeneration is released. V4 SDK clients can
-send `modelParams` once their generated V4 type includes the current contract.
+setting when the field is omitted; send `null` to clear it. The current Python
+and TypeScript SDKs expose the V2/V3 and V4 reasoning fields in their request
+types and client methods.
 
   [V4 create run](https://docs.browser-use.com/cloud/api-v4/runs/create-run)
 Generated V4 `modelParams` schema.
