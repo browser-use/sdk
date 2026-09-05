@@ -128,8 +128,14 @@ Source: https://docs.browser-use.com/cloud/which-product
 
 Pick where your agent and browser should run.
 
-<img src="/cloud/images/which-product-light.svg" alt="On your computer, Claude Code, Codex, OpenCode, and Hermes Agent sit above Browser Use CLI and Playwright CLI. The CLIs use either real Chrome locally or the Cloud Browser directly. In Cloud v4, OpenCode and Browser Use CLI run above that Cloud Browser." noZoom className="block dark:hidden" />
-<img src="/cloud/images/which-product-dark.svg" alt="On your computer, Claude Code, Codex, OpenCode, and Hermes Agent sit above Browser Use CLI and Playwright CLI. The CLIs use either real Chrome locally or the Cloud Browser directly. In Cloud v4, OpenCode and Browser Use CLI run above that Cloud Browser." noZoom className="hidden dark:block" />
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/which-product-light-mobile.svg" />
+  <img src="/cloud/images/which-product-light.svg" alt="On your computer, choose Claude Code, Codex, OpenCode or Hermes Agent, then Playwright CLI or Browser Use CLI. Either CLI can use real Chrome or the single Cloud Browser. A separate Profile Sync step copies selected cookies from real Chrome to a cloud profile. Hosted V4 runs OpenCode, Browser Use CLI and Cloud Browser: send a prompt, get a result." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/which-product-dark-mobile.svg" />
+  <img src="/cloud/images/which-product-dark.svg" alt="On your computer, choose Claude Code, Codex, OpenCode or Hermes Agent, then Playwright CLI or Browser Use CLI. Either CLI can use real Chrome or the single Cloud Browser. A separate Profile Sync step copies selected cookies from real Chrome to a cloud profile. Hosted V4 runs OpenCode, Browser Use CLI and Cloud Browser: send a prompt, get a result." noZoom />
+</picture>
 
 ## On your computer
 
@@ -137,9 +143,11 @@ Claude Code, Codex, OpenCode, Hermes Agent, or another local agent can run the [
 
 Start with real Chrome. Connect to our cloud when a site blocks you or you need many browsers at once. Run `browser-use auth login` once before the first cloud connection.
 
+[Profile Sync](https://docs.browser-use.com/cloud/guides/profile-sync) copies selected cookies from real Chrome into a cloud profile. Run it explicitly for the accounts you want to use in the cloud; the dashed line does not mean automatic synchronization.
+
 ## In our cloud
 
-[Cloud v4](https://docs.browser-use.com/cloud/quickstart) runs OpenCode and Browser Use CLI at the same level, with Cloud Browser underneath. You send a prompt to our API and get the result back, plus a live preview and any files it produced. Nothing runs on your computer.
+[Cloud v4](https://docs.browser-use.com/cloud/quickstart) runs OpenCode, Browser Use CLI and Cloud Browser. You send a prompt to our API and get the result back, plus a live preview and any files it produced. Nothing runs on your computer.
 
 Use the full hosted stack for scheduled work, tasks your users trigger, and work that should keep running without your computer.
 
