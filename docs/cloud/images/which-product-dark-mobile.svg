@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="704" viewBox="0 0 360 704" role="img" aria-labelledby="title desc">
+<title id="title">Choose your agent, CLI and browser</title>
+<desc id="desc">Both columns share three aligned rows: agent, CLI, browser. On your computer, choose Claude Code, Codex, OpenCode or Hermes Agent, then Playwright CLI or Browser Use CLI. Both CLIs can use real Chrome or the single Cloud Browser in our cloud. Hosted V4 runs OpenCode, Browser Use CLI and that Cloud Browser. Profile Sync copies selected cookies from real Chrome to a cloud profile; it is a separate, explicit step. Send a prompt through the V4 API and get a result back.</desc>
+<defs><marker id="gray-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7Z" fill="#A1A1AA"/></marker><marker id="orange-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7Z" fill="#FFAA66"/></marker></defs>
+<rect width="360" height="704" fill="#18181B"/><g font-family="Inter, ui-sans-serif, system-ui, sans-serif">
+<rect x="196" y="10" width="156" height="686" rx="12" fill="#29211B" stroke="#835733" stroke-width="1.7"/>
+<text x="90" y="39" fill="#FAFAFA" font-size="16" font-weight="750" text-anchor="middle">YOUR COMPUTER</text>
+<text x="90" y="63" fill="#C0C0C8" font-size="16" font-weight="450" text-anchor="middle">Choose each part</text>
+<text x="274" y="39" fill="#FAFAFA" font-size="16" font-weight="750" text-anchor="middle">OUR CLOUD</text>
+<text x="274" y="63" fill="#FFAA66" font-size="16" font-weight="600" text-anchor="middle">Send a prompt.</text>
+<text x="274" y="84" fill="#C0C0C8" font-size="16" font-weight="450" text-anchor="middle">Get a result.</text>
+<rect x="8" y="95" width="166" height="128" rx="12" fill="#27272A" stroke="#A1A1AA" stroke-width="1.7"/>
+<text x="91" y="119" fill="#C0C0C8" font-size="16" font-weight="700" text-anchor="middle">YOUR AGENT</text>
+<text x="91" y="143" fill="#FAFAFA" font-size="16" font-weight="600" text-anchor="middle">Claude Code</text>
+<text x="91" y="165" fill="#FAFAFA" font-size="16" font-weight="600" text-anchor="middle">Codex · OpenCode</text>
+<text x="91" y="187" fill="#FAFAFA" font-size="16" font-weight="600" text-anchor="middle">Hermes Agent</text>
+<rect x="208" y="95" width="132" height="128" rx="12" fill="#27272A" stroke="#A1A1AA" stroke-width="1.7"/>
+<text x="274" y="166" fill="#FAFAFA" font-size="18" font-weight="750" text-anchor="middle">OpenCode</text>
+<path d="M91 223V253" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linejoin="round" marker-end="url(#gray-arrow)"/>
+<path d="M274 223V253" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linejoin="round" marker-end="url(#gray-arrow)"/>
+<rect x="8" y="263" width="166" height="92" rx="12" fill="#3A281A" stroke="#FFAA66" stroke-width="1.7"/>
+<text x="91" y="292" fill="#FAFAFA" font-size="16" font-weight="750" text-anchor="middle">Playwright CLI</text>
+<text x="91" y="316" fill="#C0C0C8" font-size="16" font-weight="450" text-anchor="middle">or</text>
+<text x="91" y="340" fill="#FAFAFA" font-size="16" font-weight="600" text-anchor="middle">Browser Use CLI</text>
+<rect x="208" y="263" width="132" height="92" rx="12" fill="#3A281A" stroke="#FFAA66" stroke-width="1.7"/>
+<text x="274" y="303" fill="#FAFAFA" font-size="16" font-weight="750" text-anchor="middle">Browser Use</text>
+<text x="274" y="326" fill="#FAFAFA" font-size="16" font-weight="750" text-anchor="middle">CLI</text>
+<path d="M50 355V379H132V355" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linejoin="round"/>
+<path d="M50 379V406H87V425" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linejoin="round" marker-end="url(#gray-arrow)"/>
+<path d="M132 379H183V489H202" fill="none" stroke="#FFAA66" stroke-width="2" stroke-linejoin="round" marker-end="url(#orange-arrow)"/>
+<path d="M274 355V425" fill="none" stroke="#FFAA66" stroke-width="2" marker-end="url(#orange-arrow)"/>
+<circle cx="50" cy="379" r="3" fill="#A1A1AA"/>
+<circle cx="132" cy="379" r="3" fill="#FFAA66"/>
+<rect x="18" y="435" width="138" height="108" rx="12" fill="#18181B" stroke="#A1A1AA" stroke-width="1.7"/>
+<path d="M18 462H156" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="32" cy="449" r="2.6" fill="#A1A1AA"/>
+<circle cx="42" cy="449" r="2.6" fill="#A1A1AA"/>
+<circle cx="52" cy="449" r="2.6" fill="#A1A1AA"/>
+<text x="87" y="491" fill="#FAFAFA" font-size="16" font-weight="750" text-anchor="middle">Real Chrome</text>
+<text x="87" y="514" fill="#C0C0C8" font-size="16" font-weight="450" text-anchor="middle">your tabs,</text>
+<text x="87" y="532" fill="#C0C0C8" font-size="16" font-weight="450" text-anchor="middle">cookies, logins</text>
+<rect x="208" y="435" width="132" height="108" rx="12" fill="#3A281A" stroke="#FFAA66" stroke-width="1.7"/>
+<path d="M208 462H340" fill="none" stroke="#FFAA66" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="222" cy="449" r="2.6" fill="#FFAA66"/>
+<circle cx="232" cy="449" r="2.6" fill="#FFAA66"/>
+<circle cx="242" cy="449" r="2.6" fill="#FFAA66"/>
+<text x="274" y="491" fill="#FAFAFA" font-size="16" font-weight="750" text-anchor="middle">Cloud Browser</text>
+<text x="274" y="514" fill="#C0C0C8" font-size="16" font-weight="450" text-anchor="middle">profiles, stealth,</text>
+<text x="274" y="532" fill="#C0C0C8" font-size="16" font-weight="450" text-anchor="middle">proxies</text>
+<path d="M87 543V573H274V553" fill="none" stroke="#A1A1AA" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round" marker-end="url(#gray-arrow)"/>
+<rect x="80" y="580" width="204" height="26" rx="4" fill="#18181B"/>
+<text x="182" y="599" fill="#C0C0C8" font-size="16" font-weight="600" text-anchor="middle">Profile Sync · cookies</text>
+<text x="89" y="651" fill="#C0C0C8" font-size="16" font-weight="600" text-anchor="middle">Both CLIs.</text>
+<text x="89" y="673" fill="#C0C0C8" font-size="16" font-weight="600" text-anchor="middle">Either browser.</text>
+<text x="274" y="651" fill="#FFAA66" font-size="16" font-weight="600" text-anchor="middle">Hosted V4 API</text>
+</g></svg>

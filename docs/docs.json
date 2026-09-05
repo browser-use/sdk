@@ -66,6 +66,7 @@
                 "group": "Get Started",
                 "pages": [
                   "cloud/quickstart",
+                  "cloud/which-product",
                   "cloud/choosing-an-agent",
                   "cloud/vibecoding"
                 ]
@@ -237,6 +238,7 @@
             "group": "Get Started",
             "pages": [
               "open-source/introduction",
+              "cloud/which-product",
               "open-source/quickstart",
               "open-source/vibecoding",
               "open-source/supported-models",

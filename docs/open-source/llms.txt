@@ -11,6 +11,7 @@ Install: `pip install browser-use`
 
 ## Get Started
 - [Browser Use Open Source](https://docs.browser-use.com/open-source/introduction): Python library for AI browser automation with 79k+ GitHub stars. Connect any LLM and run locally or self-hosted.
+- [Which Browser Use do I need?](https://docs.browser-use.com/cloud/which-product): Run Browser Use on your machine, run the full stack in our cloud, or bring your own agent and use only the hosted browser.
 - [Human Quickstart](https://docs.browser-use.com/open-source/quickstart): Install and run your first AI browser agent in minutes. Python setup with pip, environment variables, and a working example.
 - [Prompts for Vibecoders](https://docs.browser-use.com/open-source/vibecoding): Complete Python SDK reference for AI coding agents. Paste into Claude Code, Cursor, or Copilot for instant integration.
 - [Supported Models](https://docs.browser-use.com/open-source/supported-models): Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider.
