@@ -61,6 +61,20 @@ from urllib.parse import urlsplit
 from playwright.async_api import async_playwright
 
 
+def http_origin(value):
+    try:
+        url = urlsplit(value)
+        if url.scheme not in {"http", "https"} or not url.hostname:
+            return None
+        host = f"[{url.hostname}]" if ":" in url.hostname else url.hostname
+        port = url.port
+    except ValueError:
+        return None  # A malformed URL must not interrupt the capture.
+    default_port = {"http": 80, "https": 443}[url.scheme]
+    suffix = f":{port}" if port not in (None, default_port) else ""
+    return f"{url.scheme}://{host}{suffix}"
+
+
 async def main():
     async with async_playwright() as p:
         cdp_url = os.environ["BROWSER_CDP_URL"]
@@ -87,16 +101,8 @@ async def main():
                            "requestId": params["requestId"]}
                     if event == "request":
                         request = params["request"]
-                        url = urlsplit(request["url"])
-                        host = url.hostname
-                        if host and ":" in host:
-                            host = f"[{host}]"  # Preserve IPv6 brackets.
-                        origin = f"{url.scheme}://{host}" if host else None
-                        default_port = {"http": 80, "https": 443}.get(url.scheme)
-                        if origin and url.port not in (None, default_port):
-                            origin += f":{url.port}"
                         row.update(method=request["method"],
-                                   origin=origin,
+                                   origin=http_origin(request["url"]),
                                    resourceType=params.get("type"))
                     elif event == "response":
                         response = params["response"]
@@ -140,8 +146,8 @@ means no matching events were observed, not that the run made no requests.
 
 The example does not navigate, intercept requests, change the cache, or stop the
 browser. It drops URL paths, queries, credentials, headers, cookies, and request
-and response bodies. HTTP origins retain non-default ports; hostless URLs have a
-null origin. Origins can still be sensitive; review the file before
+and response bodies. HTTP origins retain non-default ports; malformed and non-HTTP
+URLs have a null origin. Origins can still be sensitive; review the file before
 sharing it. Keep a bounded capture duration and a retention policy.
 
 ## Coverage and lifecycle
