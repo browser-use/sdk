@@ -1001,6 +1001,178 @@ Events cover run lifecycle, model calls, browser readiness, tool activity,
 artifacts, and completion. See [Get run events](https://docs.browser-use.com/cloud/api-v4/runs/get-run-events)
 for the complete response shape.
 
+For browser HTTP traffic, attach your own [CDP network observer](https://docs.browser-use.com/cloud/agent/network-capture).
+Run events are not a network log or a historical HAR export.
+
+# Capture browser network events
+Source: https://docs.browser-use.com/cloud/agent/network-capture
+
+
+You can attach a CDP client to a live V4 browser and record its network events.
+This is a live observer, not a download of everything that happened during a run.
+V4 [run events](https://docs.browser-use.com/cloud/agent/observability) describe agent activity; they are not
+the browser's HTTP request log.
+
+## Find the live browser
+
+For an agent run, watch its ordered run events for `browser.ready` or
+`browser.reattached`. The event's `data.browser_session_id` identifies the browser.
+You can also list the session's browsers with
+`GET /api/v4/browsers?agentSessionId=SESSION_ID`. A session can use more than one
+browser over time, so do not assume the first browser lasts for every follow-up.
+
+Use an API key with browser read access in the same project to retrieve the
+active browser's `cdpUrl`. `BROWSER_SESSION_ID` is a browser ID, not a run ID or
+agent session ID.
+
+```bash
+export BROWSER_SESSION_ID="your-active-browser-id"
+# BROWSER_USE_API_KEY must already be set. Do not print the resulting CDP URL.
+set -o pipefail
+BROWSER_CDP_URL="$(curl --fail --silent --show-error \
+  "https://api.browser-use.com/api/v4/browsers/$BROWSER_SESSION_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  | jq --exit-status --raw-output '.cdpUrl // empty')" || exit 1
+export BROWSER_CDP_URL
+```
+
+For a standalone V4 browser, you can use `cdpUrl` from the create response
+instead. A stopped browser has no live CDP URL. Check the HTTP status and browser
+state if discovery fails; do not create a replacement browser and mistake it for
+the agent's browser.
+
+Treat the CDP URL as a credential. Anyone who can connect can control the browser
+and read its session. Keep it out of logs, tickets, source control, and shared
+shell history.
+
+## Record metadata from existing pages
+
+Install Playwright with `pip install playwright`. No local browser download is
+needed because this example connects to an existing browser.
+
+Save this as `capture_network.py`, then run `python capture_network.py`. It records
+for 30 seconds and creates `network.jsonl` with owner-only permissions. It refuses
+to overwrite an existing file. Start it before the activity you want to observe.
+
+```python
+import asyncio
+import json
+import os
+from urllib.parse import urlsplit
+
+from playwright.async_api import async_playwright
+
+
+def http_origin(value):
+    try:
+        url = urlsplit(value)
+        if url.scheme not in {"http", "https"} or not url.hostname:
+            return None
+        host = f"[{url.hostname}]" if ":" in url.hostname else url.hostname
+        port = url.port
+    except ValueError:
+        return None  # A malformed URL must not interrupt the capture.
+    default_port = {"http": 80, "https": 443}[url.scheme]
+    suffix = f":{port}" if port not in (None, default_port) else ""
+    return f"{url.scheme}://{host}{suffix}"
+
+
+async def main():
+    async with async_playwright() as p:
+        cdp_url = os.environ["BROWSER_CDP_URL"]
+        try:
+            browser = await p.chromium.connect_over_cdp(cdp_url)
+        except Exception:
+            # Transport errors can include the credential-bearing CDP URL.
+            raise RuntimeError("Check the live CDP URL and browser state") from None
+        context = browser.contexts[0]
+        sessions = []
+        fd = os.open("network.jsonl", os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+
+        with os.fdopen(fd, "w") as output:
+            def write(row):
+                output.write(json.dumps(row) + "\n")
+                output.flush()
+
+            async def observe(page, page_number):
+                cdp = await context.new_cdp_session(page)
+                sessions.append(cdp)
+
+                def record(event, params):
+                    row = {"event": event, "page": page_number,
+                           "requestId": params["requestId"]}
+                    if event == "request":
+                        request = params["request"]
+                        row.update(method=request["method"],
+                                   origin=http_origin(request["url"]),
+                                   resourceType=params.get("type"))
+                    elif event == "response":
+                        response = params["response"]
+                        row.update(status=response["status"],
+                                   mimeType=response["mimeType"])
+                    elif event == "finished":
+                        row["bytes"] = params["encodedDataLength"]
+                    else:
+                        row["error"] = params.get("errorText")
+                    write(row)
+
+                events = {
+                    "requestWillBeSent": "request", "responseReceived": "response",
+                    "loadingFinished": "finished", "loadingFailed": "failed",
+                }
+                for name, event in events.items():
+                    cdp.on(f"Network.{name}",
+                           lambda params, event=event: record(event, params))
+                await cdp.send("Network.enable")
+
+            try:
+                for number, page in enumerate(context.pages, start=1):
+                    await observe(page, number)
+                print(f"Observing {len(sessions)} existing page(s) for 30 seconds")
+                await asyncio.sleep(30)
+            finally:
+                for cdp in sessions:
+                    try:
+                        await cdp.detach()
+                    except Exception:
+                        pass  # The page or browser may already have closed.
+
+
+asyncio.run(main())
+```
+
+Each request is correlated by `(page, requestId)`. A response row gives the HTTP
+status; a finished row gives transferred bytes. Keep the event sequence: redirects
+can produce more than one request event with the same request ID. Empty output
+means no matching events were observed, not that the run made no requests.
+
+The example does not navigate, intercept requests, change the cache, or stop the
+browser. It drops URL paths, queries, credentials, headers, cookies, and request
+and response bodies. HTTP origins retain non-default ports; malformed and non-HTTP
+URLs have a null origin. Origins can still be sensitive; review the file before
+sharing it. Keep a bounded capture duration and a retention policy.
+
+## Coverage and lifecycle
+
+- Capture starts only after `Network.enable` for each attached page. Earlier
+  traffic is not reconstructed, and attaching after `browser.ready` can miss
+  startup requests.
+- This small example attaches only to pages present at startup. Popups, new
+  tabs, workers, service workers, and some cross-process frames need separate
+  target handling. It is not complete browser-wide capture.
+- Reattach if V4 provisions a new browser. A logger attached to the old browser
+  cannot observe the replacement.
+- JSONL events are not HAR. A HAR exporter needs its own request, redirect,
+  timing, and body handling. `Network.getResponseBody` is a separate, optional
+  CDP call; bodies may be unavailable and can contain secrets or customer data.
+- Detaching an observer does not stop a browser or end its billing. Leave an
+  agent-owned browser under the agent's lifecycle. For a standalone browser you
+  created, stop it through the browser API when finished.
+
+See the [CDP Network reference](https://chromedevtools.github.io/devtools-protocol/tot/Network/)
+and [Playwright CDP sessions](https://playwright.dev/python/docs/api/class-cdpsession)
+for event fields and target-specific behavior.
+
 # Browser Infrastructure quickstart
 Source: https://docs.browser-use.com/cloud/browser/quickstart
 
