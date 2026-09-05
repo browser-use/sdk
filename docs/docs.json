@@ -86,7 +86,8 @@
                       "cloud/agent/workspaces",
                       "cloud/agent/scripts",
                       "cloud/agent/human-in-the-loop",
-                      "cloud/agent/observability"
+                      "cloud/agent/observability",
+                      "cloud/agent/network-capture"
                     ]
                   },
                   {

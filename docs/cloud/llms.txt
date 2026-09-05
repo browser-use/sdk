@@ -80,6 +80,7 @@ export BROWSER_USE_API_KEY=bu_your_key_here
 - [Rerunnable scripts](https://docs.browser-use.com/cloud/agent/scripts): Save a Browser Use task as a rerunnable script for repeated live data extraction and self-healing runs.
 - [Human in the loop](https://docs.browser-use.com/cloud/agent/human-in-the-loop): Open the live browser, take over, then continue the same session.
 - [Observability](https://docs.browser-use.com/cloud/agent/observability): Poll ordered V4 events to monitor a run or build a custom UI.
+- [Capture browser network events](https://docs.browser-use.com/cloud/agent/network-capture): Attach your own CDP observer to a live V4 browser and save request metadata.
 
 ## Browser
 - [Browser Infrastructure quickstart](https://docs.browser-use.com/cloud/browser/quickstart): Launch a cloud browser and connect to it from your code.
