@@ -1,0 +1,21 @@
+browser-use-node/package.json
+  s_9c07202ce68d72::t_bbae2c6c45fc06 111
+browser-use-node/pnpm-lock.yaml
+  ai_agent 15,725-726,1303,1664
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "9eb85ca7956d3767a7ef49ba10cf9bf2d918e665",
+  "prompts": {},
+  "sessions": {
+    "s_9c07202ce68d72": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a03f3f-8335-7540-8c8b-88f07cf0b9bc",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Saurav Panda <sgp65@cornell.edu>"
+    }
+  }
+}

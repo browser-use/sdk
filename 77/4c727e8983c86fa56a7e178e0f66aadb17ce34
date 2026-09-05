@@ -1,0 +1,33 @@
+browser-use-python/tests/test_v4.py
+  s_86d24eaeebcb12::t_983097811a9826 205-214,216-218,220-227,229-231,233-238
+  s_86d24eaeebcb12::t_62b6cb81225a18 239-240,242,270-273,274-303
+  s_86d24eaeebcb12::t_4bfef01828e31c 241,243-269
+  s_86d24eaeebcb12::t_c79b6eb078fe46 74,91,367,389-390,397,425,537,580,599,604,680
+browser-use-python/src/browser_use_sdk/v4/resources/runs.py
+  s_86d24eaeebcb12::t_983097811a9826 12,59-61,84-86,156,183-201,210-217,353-371,380-386,209,379
+  s_86d24eaeebcb12::t_62b6cb81225a18 26-31,202-208,372-378
+browser-use-node/src/v4/resources/runs.ts
+  s_86d24eaeebcb12::t_983097811a9826 10,80-88,93-97
+  s_86d24eaeebcb12::t_bc6ee8d087b83c 75-79
+  s_86d24eaeebcb12::t_3653482f7df8ba 74
+  s_86d24eaeebcb12::t_62b6cb81225a18 18-23,89-92
+browser-use-node/tests/v4.test.ts
+  s_86d24eaeebcb12::t_983097811a9826 111-120,137-138
+  s_86d24eaeebcb12::t_62b6cb81225a18 121,123-136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "774c727e8983c86fa56a7e178e0f66aadb17ce34",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}

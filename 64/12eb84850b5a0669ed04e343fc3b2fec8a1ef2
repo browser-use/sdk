@@ -1,0 +1,86 @@
+browser-use-python/src/browser_use_sdk/v4/resources/runs.py
+  s_ec58a9e45d8271::t_2b05ceddc99cbf 9,73-82
+docs/openapi/v2.json
+  s_ec58a9e45d8271::t_670c5447505ca0 4263,7238
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 3903-3914,6312-6314
+docs/cloud/openapi/v4.json
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 2586-2597,3565-3567
+  s_ec58a9e45d8271::t_670c5447505ca0 673-688,2777-2820,4065-4080
+snapshots/v2.json
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 3903-3914,6312-6314
+  s_ec58a9e45d8271::t_670c5447505ca0 4263,7238
+browser-use-python/src/browser_use_sdk/v4/resources/browsers.py
+  s_ec58a9e45d8271::t_2b05ceddc99cbf 26-27,54-57,80-81,95-96,128-129,143-144
+browser-use-python/src/browser_use_sdk/v3/resources/browsers.py
+  s_ec58a9e45d8271::t_8ad7d993086baa 38-39,61-64,154-155,177-180
+browser-use-python/tests/test_browsers.py
+  s_ec58a9e45d8271::t_8ad7d993086baa 42-46,50-54
+browser-use-python/pyproject.toml
+  s_ec58a9e45d8271::t_de7787ee93bd73 7
+browser-use-python/uv.lock
+  ai_agent 345
+browser-use-python/src/browser_use_sdk/generated/v4/models.py
+  s_ec58a9e45d8271::t_670c5447505ca0 242-268,842-843
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 723-725,1173-1183
+docs/openapi/v3.json
+  s_ec58a9e45d8271::t_670c5447505ca0 4082
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 2215-2217,2230,2317-2327
+browser-use-node/src/generated/v4/types.ts
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 847-857,1248
+  s_ec58a9e45d8271::t_670c5447505ca0 934-935,956-987,1449-1450,2290-2292
+browser-use-node/tests/v4.test.ts
+  s_ec58a9e45d8271::t_2b05ceddc99cbf 51-55,59-60,191-201,214-222
+snapshots/v4.json
+  s_ec58a9e45d8271::t_670c5447505ca0 673-688,2777-2820,4065-4080
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 2586-2597,3565-3567
+browser-use-node/tests/browsers.test.ts
+  s_ec58a9e45d8271::t_8ad7d993086baa 17-21,26-27
+browser-use-node/package.json
+  s_ec58a9e45d8271::t_de7787ee93bd73 3
+browser-use-node/src/generated/v2/types.ts
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 1121-1131,2427
+  s_ec58a9e45d8271::t_670c5447505ca0 1323
+browser-use-python/src/browser_use_sdk/generated/v2/models.py
+  s_ec58a9e45d8271::t_670c5447505ca0 1709
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 968-970,1541-1551
+browser-use-python/src/browser_use_sdk/v4/__init__.py
+  s_ec58a9e45d8271::t_2b05ceddc99cbf 11,64
+browser-use-python/src/browser_use_sdk/generated/v3/models.py
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 171-173,1109-1119
+browser-use-node/src/v4.ts
+  s_ec58a9e45d8271::t_2b05ceddc99cbf 42
+snapshots/v3.json
+  s_ec58a9e45d8271::t_670c5447505ca0 4082
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 2215-2217,2230,2317-2327
+browser-use-node/src/generated/v3/types.ts
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 784-786,795,841-852
+docs/cloud/openapi/v3.json
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 2215-2217,2230,2317-2327
+docs/openapi/v4.json
+  s_ec58a9e45d8271::t_670c5447505ca0 673-688,2777-2820,4065-4080
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 2586-2597,3565-3567
+browser-use-python/src/browser_use_sdk/v2/resources/browsers.py
+  s_ec58a9e45d8271::t_8ad7d993086baa 26-27,50-53,76-77,91-92,178-179,193-194
+docs/cloud/openapi/v2.json
+  s_ec58a9e45d8271::t_670c5447505ca0 4263
+  s_ec58a9e45d8271::t_abe4f9bd7a5324 3903-3914,6312-6314
+browser-use-python/tests/test_v4.py
+  s_ec58a9e45d8271::t_2b05ceddc99cbf 14,133-138,143-148,413-435,437-461
+  s_ec58a9e45d8271::t_c47c78fedde457 8,12,382-384,436
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "6412eb84850b5a0669ed04e343fc3b2fec8a1ef2",
+  "prompts": {},
+  "sessions": {
+    "s_ec58a9e45d8271": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a069d8-c93c-7481-b53c-9fcb38173e0a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Saurav Panda <sgp65@cornell.edu>"
+    }
+  }
+}

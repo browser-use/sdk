@@ -1,0 +1,19 @@
+docs/cloud/guides/2fa.mdx
+  s_86d24eaeebcb12::t_60cb2f00f60c9a 46-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "cc770df49ed039f6fa966962fb9e793cc88b4b55",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+browser-use-node/package.json
+  s_a95dbf3efe366d::t_1505e8489a0828 3
+browser-use-python/pyproject.toml
+  s_a95dbf3efe366d::t_1505e8489a0828 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "91929425c194f28e8c69a69d539c50a665c9c4c9",
+  "prompts": {},
+  "sessions": {
+    "s_a95dbf3efe366d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a00132-f3d5-74a3-8926-accbdfde06dd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+docs/cloud/agent/quickstart.mdx
+  s_86d24eaeebcb12::t_93e720d2d44479 47-75
+docs/cloud/guides/2fa.mdx
+  s_86d24eaeebcb12::t_93e720d2d44479 7,9-12,15-38,45-56
+  s_86d24eaeebcb12::t_2b1e87762b3bcf 8,42
+  s_86d24eaeebcb12::t_3d359e5858f5d9 13-14,39-41,43-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "6a08c127040c8a1ee25dce35d06faad35a1b7cdf",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}

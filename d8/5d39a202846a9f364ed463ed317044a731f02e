@@ -1,0 +1,23 @@
+browser-use-node/examples/sessions.ts
+  s_86d24eaeebcb12::t_a38cfcd1fd2a47 4-5
+  s_86d24eaeebcb12::t_df0c740e61abf2 8,13-16,18-20,22-28,31
+browser-use-python/examples/sessions.py
+  s_86d24eaeebcb12::t_a38cfcd1fd2a47 4-5
+  s_86d24eaeebcb12::t_df0c740e61abf2 10,16-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d85d39a202846a9f364ed463ed317044a731f02e",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}

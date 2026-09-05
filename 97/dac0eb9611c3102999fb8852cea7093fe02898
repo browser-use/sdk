@@ -1,0 +1,294 @@
+docs/cloud/agent/thinking-levels.mdx
+  s_720d8e6117a3d3::t_0c47572a1b51c6 200-203
+  s_720d8e6117a3d3::t_9d3e2dfff3469b 13-14
+  s_720d8e6117a3d3::t_101a4098aba669 120
+docs/cloud/tutorials/grow-therapy-compare.mdx
+  s_720d8e6117a3d3::t_771e4311f03dca 121-122,163-167
+docs/cloud/faq.mdx
+  s_720d8e6117a3d3::t_8a87fbde6b494b 56-60
+  s_720d8e6117a3d3::t_2d71613b4b65c7 9-10,15-16,50,52-54
+  s_720d8e6117a3d3::t_9d3e2dfff3469b 11,13
+  s_720d8e6117a3d3::t_81538e260a7b72 48
+  s_720d8e6117a3d3::t_bace830f7a131a 12
+docs/open-source/llms.txt
+  s_1acc5a3da5345b::t_bb52483a6b6500 17,43
+docs/cloud/browser/proxies.mdx
+  s_720d8e6117a3d3::t_df219c3ad2a8f0 33-36
+  s_720d8e6117a3d3::t_6fd7f24974ab01 53,80,109
+  s_720d8e6117a3d3::t_5392728b0ee941 88-89
+docs/cloud/agent/models.mdx
+  s_720d8e6117a3d3::t_5392728b0ee941 7
+  s_720d8e6117a3d3::t_0c47572a1b51c6 61
+  s_720d8e6117a3d3::t_a7fac7fe6776b9 8
+  s_720d8e6117a3d3::t_ff695266677c20 24
+  s_720d8e6117a3d3::t_2d71613b4b65c7 3,10-16,18-19,26,74-78
+.github/workflows/docs-generated.yml
+  s_720d8e6117a3d3::t_251b2830f997bb 72
+  s_720d8e6117a3d3::t_81538e260a7b72 36,41,43,45,47-50,52,54-56,58-68,74-76,82-83,85
+  s_720d8e6117a3d3::t_a2f12c5135482c 19-22,30-35,37-40,42,44,46,51,53,57,69-71,73,77-81,84,86
+  s_720d8e6117a3d3::t_0d9e48ac3de302 93,99-103
+  s_720d8e6117a3d3::t_f70942cca0c5f0 1-18,23-29,87-92,94-98
+docs/cloud/agent/scripts.mdx
+  s_720d8e6117a3d3::t_6fd7f24974ab01 60,90,122,141
+docs/cloud/api-v4-overview.mdx
+  s_720d8e6117a3d3::t_e303e7e39663d9 4,24-26
+docs/cloud/tutorials/integrations/claude-code.mdx
+  s_720d8e6117a3d3::t_2d71613b4b65c7 6,52-54
+  s_720d8e6117a3d3::t_ff695266677c20 38
+docs/open-source/quickstart.mdx
+  s_720d8e6117a3d3::t_e303e7e39663d9 10-13,37-40,55,147-148
+docs/cloud/browser/stealth.mdx
+  s_720d8e6117a3d3::t_e303e7e39663d9 3,17-19,27
+  s_720d8e6117a3d3::t_5392728b0ee941 28-29
+  s_720d8e6117a3d3::t_9a1af7eca5dcdd 13-15
+docs/open-source/examples/skills/cloud.mdx
+  s_720d8e6117a3d3::t_b25b8bf4c887ac 7-8,14-20
+  s_720d8e6117a3d3::t_251b2830f997bb 10-13,31
+  s_720d8e6117a3d3::t_dfd6f9a03b7450 3
+.gitignore
+  s_720d8e6117a3d3::t_5ea5fa352e0150 34
+docs/open-source/introduction.mdx
+  s_720d8e6117a3d3::t_e303e7e39663d9 4,21-24
+docs/open-source/llms-full.txt
+  s_178c1890d09118::t_98c2f32dde1b71 4904
+  s_7a7707ac9b4b28::t_ce27adc9c93665 251,255,258,307,310,336,366,369,404,464,510,531,646,667,688,709,730
+  s_1acc5a3da5345b::t_bb52483a6b6500 754-843,845-899,1051-1052,1058,1304-1306,1701,1708,1748,1814,1851-1852,1873,1887,2019-2022,2030-2033,2037,2058-2060,2135-2137,2168,2171,2281-2283,2354,2357,2428,2430-2431,2444-2445,2466-2471,2475-2479,2514-2516,2600,2612,2724-2725,2728-2730,2817-2818,2820-2821,2916,2919,2948,3004,3035-3042,3044-3116,3118-3122,3125
+docs/llms-full.txt
+  s_1acc5a3da5345b::t_bb52483a6b6500 1680,1694-1696,1720,1759,1798,1807,1844-1845,1847,1851-1853,1906,1920,1989,3037-3040,3166,3269-3461
+  s_ae911416455638::t_92646ed767f1c3 3892-4012
+  s_178c1890d09118::t_acf49403b57147 2151-2152,2154-2155,2187,2189-2191,2193-2197,2205-2213,2217,2225,2236,2279-2280,2283,2286,2301,2308,2333,2350,2365,2389,2392,2395,2417,2422,2437,2440-2441,2452,2457,2469,2497,2523,2526,2544,2554,2563,2587,2592,2636-2639,2683,2689-2690,2693-2695,2697-2698,2701,2703-2732,2736-3026,3065-3068,3071,3083,3086-3112,3153-3156,3170-3174,3578,3580-3650
+docs/cloud/agent/workspaces.mdx
+  s_720d8e6117a3d3::t_6fd7f24974ab01 53
+docs/cloud/browser/quickstart.mdx
+  s_720d8e6117a3d3::t_e303e7e39663d9 4,8-10,47-49
+docs/open-source/development/get-help.mdx
+  s_720d8e6117a3d3::t_f22973fbf2551f 3
+docs/open-source/customize/agent/all-parameters.mdx
+  s_720d8e6117a3d3::t_a7fac7fe6776b9 11-12
+docs/generate-llms-txt.sh
+  s_720d8e6117a3d3::t_8a87fbde6b494b 448-450
+  s_720d8e6117a3d3::t_4bd7028fd373ae 391
+  s_720d8e6117a3d3::t_0d9e48ac3de302 90-93,95-98,101-104,128-145
+  s_720d8e6117a3d3::t_b57a5860605144 28,30-52,56-67
+  s_720d8e6117a3d3::t_7c531e85dd9ae3 11-12,15-27,68-89,94,99-100,105-106,114,116-118,539,542-543,545,548-550,560
+  s_720d8e6117a3d3::t_771e4311f03dca 338,520
+  s_720d8e6117a3d3::t_cbe54271de6884 13-14,109-113,115,122,533-535,540,547,551-559
+  s_720d8e6117a3d3::t_5ea5fa352e0150 55
+  s_720d8e6117a3d3::t_f22973fbf2551f 456
+  s_720d8e6117a3d3::t_7f5581d3fd8dfa 541,544,546
+  s_720d8e6117a3d3::t_d9e8ab6500db29 394,457-458
+  s_720d8e6117a3d3::t_fe1f494e3be52b 108,123-124,430-433,500-501,508-511,526-527,536-538,561
+  s_720d8e6117a3d3::t_7bacb0fbeb0313 379,381-382,390,397,421-422
+  s_720d8e6117a3d3::t_62a4172027539b 10,119-121,146-147
+  s_720d8e6117a3d3::t_5392728b0ee941 107,361
+  s_720d8e6117a3d3::t_766700f0731bc9 125-127,224,243,249,251,265-272,399,532,562
+  s_720d8e6117a3d3::t_2c0d5eef0cc4d8 241-242,299-315
+  s_720d8e6117a3d3::t_5e417d417cbb4d 53-54
+  s_720d8e6117a3d3::t_2734f0b8bf1b26 244
+  s_720d8e6117a3d3::t_d445a42025a993 383-384,386-389,393,395
+  s_720d8e6117a3d3::t_1de4381c69db01 385
+  s_720d8e6117a3d3::t_6ca17419a73b6b 392
+  s_720d8e6117a3d3::t_5b537eac0be8a2 29
+  s_720d8e6117a3d3::t_2d71613b4b65c7 439-442,451,453-454,463-464,485-486
+  s_720d8e6117a3d3::t_07835bdb365d8a 359,363-368,376,380,396,398
+docs/cloud/agent/human-in-the-loop.mdx
+  s_720d8e6117a3d3::t_6fd7f24974ab01 39,54
+docs/cloud/tutorials/integrations/openclaw.mdx
+  s_720d8e6117a3d3::t_9a1af7eca5dcdd 43-44
+  s_720d8e6117a3d3::t_2d71613b4b65c7 6
+  s_720d8e6117a3d3::t_5392728b0ee941 46,50-51
+docs/cloud/guides/x402-agent-wallets.mdx
+  s_720d8e6117a3d3::t_5e4c703d09a2b1 151
+  s_720d8e6117a3d3::t_771e4311f03dca 49-50,66,109-110
+  s_720d8e6117a3d3::t_a7fac7fe6776b9 23-24,67-69,129-130
+  s_720d8e6117a3d3::t_e151a6a7c40dbe 65,74-76,114,116-117,123
+  s_720d8e6117a3d3::t_f22973fbf2551f 113,118,121
+  s_720d8e6117a3d3::t_bace830f7a131a 122
+docs/cloud/tutorials/integrations/claude-managed-agents.mdx
+  s_720d8e6117a3d3::t_2d71613b4b65c7 3,6,45
+docs/cloud/tutorials/integrations/hermes-agent.mdx
+  s_720d8e6117a3d3::t_2d71613b4b65c7 6
+docs/cloud/agent-signup.mdx
+  s_720d8e6117a3d3::t_ff695266677c20 3,7
+docs/cloud/browser/live-preview.mdx
+  s_720d8e6117a3d3::t_6fd7f24974ab01 25,63
+docs/cloud/guides/2fa.mdx
+  s_720d8e6117a3d3::t_6fd7f24974ab01 24,56,62
+docs/cloud/guides/profile-sync.mdx
+  s_720d8e6117a3d3::t_6fd7f24974ab01 32
+browser-use-node/README.md
+  s_720d8e6117a3d3::t_e303e7e39663d9 30-34
+docs/cloud/legacy/skills.mdx
+  s_720d8e6117a3d3::t_80e8d0e93eb18a 68
+docs/cloud/quickstart.mdx
+  s_720d8e6117a3d3::t_e303e7e39663d9 3,12,69-71
+  s_720d8e6117a3d3::t_ad25d1d4f8d5dd 119
+docs/open-source/examples/skills/overview.mdx
+  s_720d8e6117a3d3::t_b25b8bf4c887ac 37,40
+  s_720d8e6117a3d3::t_251b2830f997bb 36,38-39,41
+  s_720d8e6117a3d3::t_a4dabba28987b3 3
+docs/cloud/agent/quickstart.mdx
+  s_720d8e6117a3d3::t_ad25d1d4f8d5dd 61-62
+docs/cloud/guides/x402.mdx
+  s_720d8e6117a3d3::t_bace830f7a131a 3,19-20,22,109-114,156,173,175-177
+  s_720d8e6117a3d3::t_e151a6a7c40dbe 136,148,157-158
+  s_720d8e6117a3d3::t_e4db3df3fb60a6 141,365,381
+  s_720d8e6117a3d3::t_47dd3dfdbd3eaf 226
+  s_720d8e6117a3d3::t_8bff38198358f0 64,68-70,83-84,202,218,368,383,385,390
+  s_720d8e6117a3d3::t_a4dabba28987b3 23,27
+  s_720d8e6117a3d3::t_5392728b0ee941 42
+  s_720d8e6117a3d3::t_9dab521a840b9a 130-133,142,357-361,366
+  s_720d8e6117a3d3::t_251b2830f997bb 46
+  s_720d8e6117a3d3::t_bd0d1f38fed267 289-292,299-301
+  s_720d8e6117a3d3::t_7e7d67ea2e8876 86-89
+  s_720d8e6117a3d3::t_f22973fbf2551f 135,155,355,379,389
+  s_720d8e6117a3d3::t_143ab939f33fed 297-298,302-306,416-419
+  s_720d8e6117a3d3::t_f3c5972903d28e 341-342
+  s_720d8e6117a3d3::t_b7a430fd9cc2f0 2,10-13
+  s_720d8e6117a3d3::t_a7fac7fe6776b9 431
+docs/open-source/legacy/sandbox/all-parameters.mdx
+  s_720d8e6117a3d3::t_e303e7e39663d9 13,33
+  s_720d8e6117a3d3::t_5392728b0ee941 14,34-36
+docs/open-source/customize/skills/basics.mdx
+  s_720d8e6117a3d3::t_5392728b0ee941 7
+  s_720d8e6117a3d3::t_a4dabba28987b3 3
+  s_720d8e6117a3d3::t_e303e7e39663d9 40-41
+docs/cloud/tutorials/integrations/n8n.mdx
+  s_720d8e6117a3d3::t_bace830f7a131a 14-15,37
+docs/open-source/examples/skills/open-source.mdx
+  s_720d8e6117a3d3::t_9d3e2dfff3469b 7
+  s_720d8e6117a3d3::t_0d9e48ac3de302 10
+docs/README.md
+  s_720d8e6117a3d3::t_f70942cca0c5f0 5-16
+  s_720d8e6117a3d3::t_e303e7e39663d9 3-4
+docs/cloud/legacy/agent.mdx
+  s_720d8e6117a3d3::t_0c47572a1b51c6 154
+  s_720d8e6117a3d3::t_9d3e2dfff3469b 9-17
+RUNBOOK.md
+  s_720d8e6117a3d3::t_251b2830f997bb 110
+docs/open-source/supported-models.mdx
+  s_720d8e6117a3d3::t_e303e7e39663d9 7-8,14-16,41,45-46
+  s_720d8e6117a3d3::t_d8d1d9cd1c6fc6 48,50,135,137,205,207,267,269,315,317,338,340,455,457,478,480,501,503,524,526,547,549
+  s_720d8e6117a3d3::t_404a3413d3e43f 136,206,268,316,339,456,479,502,525,548
+docs/cloud/choosing-an-agent.mdx
+  s_720d8e6117a3d3::t_143ab939f33fed 40,44-45,58
+  s_720d8e6117a3d3::t_258ac9309aea04 3,20,22,50,65,77-82
+  s_720d8e6117a3d3::t_e303e7e39663d9 7-10,62,64
+  s_720d8e6117a3d3::t_81538e260a7b72 12,60
+  s_720d8e6117a3d3::t_5ea5fa352e0150 19,21
+  s_720d8e6117a3d3::t_f22973fbf2551f 23
+  s_720d8e6117a3d3::t_ff695266677c20 13-15,73
+docs/docs.json
+  s_720d8e6117a3d3::t_8a87fbde6b494b 95
+  s_720d8e6117a3d3::t_2a0263003374c4 144
+  s_720d8e6117a3d3::t_251b2830f997bb 356-357
+  s_720d8e6117a3d3::t_5392728b0ee941 286
+  s_720d8e6117a3d3::t_0d9e48ac3de302 359
+  s_720d8e6117a3d3::t_df219c3ad2a8f0 741,745-757
+  s_720d8e6117a3d3::t_e303e7e39663d9 63,74,77,93,143
+  s_720d8e6117a3d3::t_07835bdb365d8a 244,285,287-289
+docs/open-source/examples/skills/x402.mdx
+  s_720d8e6117a3d3::t_b25b8bf4c887ac 7-16
+  s_720d8e6117a3d3::t_dfd6f9a03b7450 3,19-20
+  s_720d8e6117a3d3::t_251b2830f997bb 17-18,31
+docs/cloud/guides/authentication.mdx
+  s_720d8e6117a3d3::t_6fd7f24974ab01 45
+docs/open-source/customize/browser/remote.mdx
+  s_720d8e6117a3d3::t_2a0263003374c4 58-59
+  s_720d8e6117a3d3::t_e303e7e39663d9 13,26,48,51-53,57,60-61
+  s_720d8e6117a3d3::t_0c47572a1b51c6 3,10,12
+  s_720d8e6117a3d3::t_ff695266677c20 8
+  s_720d8e6117a3d3::t_5392728b0ee941 27,49
+docs/open-source/customize/browser/authentication.mdx
+  s_720d8e6117a3d3::t_81538e260a7b72 52
+docs/cloud/agent/structured-output.mdx
+  s_720d8e6117a3d3::t_6fd7f24974ab01 40
+Taskfile.yml
+  s_720d8e6117a3d3::t_f70942cca0c5f0 355-359,361,369
+browser-use-python/README.md
+  s_720d8e6117a3d3::t_e303e7e39663d9 28-32
+README.md
+  s_720d8e6117a3d3::t_e303e7e39663d9 10,12-13,21-22
+docs/cloud/tutorials/chat-ui.mdx
+  s_720d8e6117a3d3::t_733ca4a853ff33 7-9,12,250
+  s_720d8e6117a3d3::t_9a91d9723cdd1c 19
+  s_720d8e6117a3d3::t_ed5470c499f5c9 3,17,69-71,81,133,146,148-149,153-155,164-165,169,200-201,235-236,341
+  s_720d8e6117a3d3::t_2acfeadbf5a02d 31-33,37,61,67,72,78-80,94,185-187,312,324
+  s_720d8e6117a3d3::t_302f10308a8769 196,210,216-225,234,239-243,245-249,253-254,301,303-310,325-326,344-345
+  s_720d8e6117a3d3::t_a7fac7fe6776b9 47-48,50-54,83-87,92-93,96,177,181-184,188
+  s_720d8e6117a3d3::t_940eb8341d9f4a 20-22,41-44,49,104,106-112,114,119-123,125,147,151-152,156-163,262-273,277-291,340,342-343
+  s_720d8e6117a3d3::t_b8cc26bca6d235 189,329-330
+  s_720d8e6117a3d3::t_0877a1ed0a9609 208
+  s_720d8e6117a3d3::t_f22973fbf2551f 102
+  s_720d8e6117a3d3::t_a305d3a4631525 212-214,255-256
+  s_720d8e6117a3d3::t_b57a5860605144 226-233,346
+  s_720d8e6117a3d3::t_d9e8ab6500db29 34-35,115-118,126-127,131-132,135-143,171-175,302,311,322
+  s_720d8e6117a3d3::t_be8748779756ee 113,128-130
+docs/cloud/llms-full.txt
+  s_ae911416455638::t_92646ed767f1c3 3892-4012
+  s_178c1890d09118::t_acf49403b57147 2151-2152,2154-2155,2187,2189-2191,2193-2197,2205-2213,2217,2225,2236,2279-2280,2283,2286,2301,2308,2333,2350,2365,2389,2392,2395,2417,2422,2437,2440-2441,2452,2457,2469,2497,2523,2526,2544,2554,2563,2587,2592,2636-2639,2683,2689-2690,2693-2695,2697-2698,2701,2703-2732,2736-3026,3065-3068,3071,3083,3086-3112,3153-3156,3170-3174,3578,3580-3650
+  s_1acc5a3da5345b::t_bb52483a6b6500 1680,1694-1696,1720,1759,1798,1807,1844-1845,1847,1851-1853,1906,1920,1989,3037-3040,3166,3269,3457-3461
+  s_486ffc7506c166::t_22a6902cdcdcd6 3288-3300
+docs/open-source/legacy/sandbox/quickstart.mdx
+  s_720d8e6117a3d3::t_e303e7e39663d9 7-8,11-12,36,48
+docs/open-source/browser-use-terminal.mdx
+  s_720d8e6117a3d3::t_80e8d0e93eb18a 300-302
+docs/cloud/agent/sessions.mdx
+  s_720d8e6117a3d3::t_6fd7f24974ab01 41,47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "97dac0eb9611c3102999fb8852cea7093fe02898",
+  "prompts": {},
+  "sessions": {
+    "s_178c1890d09118": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dbcfa1d1-1bfc-4e05-af26-50ac71f5b5ea",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    },
+    "s_1acc5a3da5345b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "180313c8-fdaf-41ea-928c-c94fee4c1a4e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    },
+    "s_486ffc7506c166": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b82571ed-f5d3-472e-9c57-f47627d50dee",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    },
+    "s_720d8e6117a3d3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0557c-d108-7360-8ad8-bd2346c683a3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    },
+    "s_7a7707ac9b4b28": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "861a6dc2-d3de-4166-bfa2-02c6034c3a15",
+        "model": "unknown"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    },
+    "s_ae911416455638": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f51dd0df-b196-4ee1-b666-3664323a77aa",
+        "model": "unknown"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}

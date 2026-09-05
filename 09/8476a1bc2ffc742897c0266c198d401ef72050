@@ -1,0 +1,56 @@
+browser-use-node/tests/v4.test.ts
+  s_ec58a9e45d8271::t_7fa972559604de 309-328
+snapshots/v2.json
+  s_ec58a9e45d8271::t_c75b0c65283712 4263,7238
+browser-use-python/tests/test_http.py
+  s_ec58a9e45d8271::t_d1a589a2ff8749 3,26-54
+browser-use-python/tests/test_v4.py
+  s_ec58a9e45d8271::t_7fa972559604de 85,94,97,105,114,117,531-536,541
+browser-use-node/src/v4.ts
+  s_ec58a9e45d8271::t_7fa972559604de 18
+browser-use-python/src/browser_use_sdk/v4/resources/sessions.py
+  s_ec58a9e45d8271::t_7fa972559604de 71,80-84,86,147,156-160,163
+  s_ec58a9e45d8271::t_d1a589a2ff8749 77-78,153-154
+browser-use-node/src/core/http.ts
+  s_ec58a9e45d8271::t_7fa972559604de 51,70,152-158
+browser-use-node/src/v4/resources/sessions.ts
+  s_ec58a9e45d8271::t_7fa972559604de 15-19,43-55
+browser-use-node/tests/http.test.ts
+  s_ec58a9e45d8271::t_7fa972559604de 29-53
+browser-use-python/src/browser_use_sdk/generated/v3/models.py
+  s_ec58a9e45d8271::t_c75b0c65283712 1186
+browser-use-node/src/generated/v3/types.ts
+  s_ec58a9e45d8271::t_c75b0c65283712 1267
+snapshots/v3.json
+  s_ec58a9e45d8271::t_c75b0c65283712 3259,4082
+docs/cloud/openapi/v3.json
+  s_ec58a9e45d8271::t_c75b0c65283712 3259
+browser-use-node/src/generated/v2/types.ts
+  s_ec58a9e45d8271::t_c75b0c65283712 1323
+docs/openapi/v2.json
+  s_ec58a9e45d8271::t_c75b0c65283712 4263,7238
+browser-use-python/src/browser_use_sdk/_core/http.py
+  s_ec58a9e45d8271::t_7fa972559604de 87,95,151,159
+docs/openapi/v3.json
+  s_ec58a9e45d8271::t_c75b0c65283712 3259,4082
+browser-use-python/src/browser_use_sdk/generated/v2/models.py
+  s_ec58a9e45d8271::t_c75b0c65283712 1709
+docs/cloud/openapi/v2.json
+  s_ec58a9e45d8271::t_c75b0c65283712 4263
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "098476a1bc2ffc742897c0266c198d401ef72050",
+  "prompts": {},
+  "sessions": {
+    "s_ec58a9e45d8271": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a069d8-c93c-7481-b53c-9fcb38173e0a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Saurav Panda <sgp65@cornell.edu>"
+    }
+  }
+}

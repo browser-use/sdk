@@ -1,0 +1,25 @@
+docs/cloud/llms.txt
+  s_86d24eaeebcb12::t_d046c4223aaf7c 30-47
+docs/docs.json
+  s_86d24eaeebcb12::t_d046c4223aaf7c 530-544
+docs/generate-llms-txt.sh
+  s_86d24eaeebcb12::t_619b582662bc56 288-305
+docs/llms.txt
+  s_86d24eaeebcb12::t_619b582662bc56 30-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3b3dffb37f3eeae917488eb6eb4d167a7790e16f",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}
