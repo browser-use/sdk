@@ -2844,7 +2844,7 @@ def finish_task() -> ActionResult:
 Source: https://docs.browser-use.com/open-source/customize/integrations/mcp-server
 
 
-Browser Use can run as a local **Model Context Protocol (MCP)** server on your machine via stdio. This is the **free, open-source option** that gives you direct, low-level control over browser automation but requires your own LLM API keys.
+Browser Use can run as a local **Model Context Protocol (MCP)** server on your machine via stdio. This is the **free, open-source option** for direct browser control. Navigation, clicks, typing, page state, HTML, and screenshots do not need an LLM API key. Content extraction requires an OpenAI-compatible key. `retry_with_browser_use_agent` uses an OpenAI-compatible key by default or configured AWS Bedrock credentials when `MODEL_PROVIDER=bedrock`.
 
 Looking for a hosted solution? Use the [Cloud MCP Server](https://docs.browser-use.com/cloud/guides/mcp-server) instead — no setup required, just an API key.
 
@@ -2936,8 +2936,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 ## Environment Variables
 
-- `OPENAI_API_KEY` - Your OpenAI API key (required)
-- `ANTHROPIC_API_KEY` - Your Anthropic API key (alternative to OpenAI)
+- `OPENAI_API_KEY` - Optional for direct browser control; required for `browser_extract_content` and the default OpenAI-compatible route of `retry_with_browser_use_agent`
 - `BROWSER_USE_HEADLESS` - Set to `false` to show browser window
 - `BROWSER_USE_DISABLE_SECURITY` - Set to `true` to disable browser security features
 
@@ -3039,9 +3038,8 @@ Claude Desktop cannot find `uvx` in its PATH. Use the full path in your config:
 - Ensure no other browser instances are using the same profile
 
 **API Key Issues**
-- Verify your `OPENAI_API_KEY` is set correctly
-- Check API key permissions and billing status
-- Try using `ANTHROPIC_API_KEY` as an alternative
+- Direct browser tools such as navigate, click, type, page state, HTML, and screenshot do not require a key
+- For `browser_extract_content` or the default OpenAI-compatible agent route, verify that `OPENAI_API_KEY` is set and has billing enabled
 
 **Connection Issues in Claude Desktop**
 - Restart Claude Desktop after config changes
