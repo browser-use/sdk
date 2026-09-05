@@ -153,7 +153,7 @@ Use the full hosted stack for scheduled work, tasks your users trigger, and work
 
 ## Only the browser
 
-Use the [Browser API](https://docs.browser-use.com/cloud/browser/stealth) when you only need the hosted browser. Browser Use CLI or a custom computer-use CLI can connect to the same Cloud Browser from your computer or your own cloud; Browser API does not add a hosted agent.
+Use the [Browser API](https://docs.browser-use.com/cloud/browser/quickstart) when you only need the hosted browser. Browser Use CLI or a custom computer-use CLI can connect to the same Cloud Browser from your computer or your own cloud; Browser API does not add a hosted agent.
 
 One API key from [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1) works for all three. Credits and profiles live in the same project.
 
