@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="674" viewBox="0 0 1200 674" role="img" aria-labelledby="title desc">
+<title id="title">Choose your agent, CLI and browser</title>
+<desc id="desc">Both columns share three aligned rows: agent, CLI, browser. On your computer, choose Claude Code, Codex, OpenCode or Hermes Agent, then Playwright CLI or Browser Use CLI. Both CLIs can use real Chrome or the single Cloud Browser in our cloud. Hosted V4 runs OpenCode, Browser Use CLI and that Cloud Browser. Profile Sync copies selected cookies from real Chrome to a cloud profile; it is a separate, explicit step. Send a prompt through the V4 API and get a result back.</desc>
+<defs><marker id="gray-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7Z" fill="#A1A1AA"/></marker><marker id="orange-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7Z" fill="#FFAA66"/></marker></defs>
+<rect width="1200" height="674" fill="#18181B"/><g font-family="Inter, ui-sans-serif, system-ui, sans-serif">
+<rect x="648" y="18" width="524" height="620" rx="17" fill="#29211B" stroke="#835733" stroke-width="2.5"/>
+<text x="298" y="62" fill="#FAFAFA" font-size="25" font-weight="750" text-anchor="middle">YOUR COMPUTER</text>
+<text x="298" y="91" fill="#C0C0C8" font-size="17" font-weight="450" text-anchor="middle">Choose each part</text>
+<text x="910" y="62" fill="#FAFAFA" font-size="25" font-weight="750" text-anchor="middle">OUR CLOUD</text>
+<text x="910" y="91" fill="#C0C0C8" font-size="17" font-weight="450" text-anchor="middle">Send a prompt, get a result</text>
+<rect x="48" y="128" width="500" height="96" rx="17" fill="#27272A" stroke="#A1A1AA" stroke-width="2.5"/>
+<text x="298" y="161" fill="#C0C0C8" font-size="14" font-weight="700" text-anchor="middle">YOUR AGENT</text>
+<text x="298" y="195" fill="#FAFAFA" font-size="18" font-weight="600" text-anchor="middle">Claude Code · Codex · OpenCode · Hermes Agent</text>
+<rect x="784" y="128" width="252" height="96" rx="17" fill="#27272A" stroke="#A1A1AA" stroke-width="2.5"/>
+<text x="910" y="184" fill="#FAFAFA" font-size="23" font-weight="750" text-anchor="middle">OpenCode</text>
+<path d="M298 224V245H167V270" fill="none" stroke="#A1A1AA" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#gray-arrow)"/>
+<path d="M298 245H429V270" fill="none" stroke="#A1A1AA" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#gray-arrow)"/>
+<path d="M910 224V270" fill="none" stroke="#A1A1AA" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#gray-arrow)"/>
+<rect x="48" y="280" width="238" height="78" rx="17" fill="#27272A" stroke="#A1A1AA" stroke-width="2.5"/>
+<text x="167" y="327" fill="#FAFAFA" font-size="21" font-weight="750" text-anchor="middle">Playwright CLI</text>
+<rect x="310" y="280" width="238" height="78" rx="17" fill="#3A281A" stroke="#FFAA66" stroke-width="2.5"/>
+<text x="429" y="327" fill="#FAFAFA" font-size="21" font-weight="750" text-anchor="middle">Browser Use CLI</text>
+<rect x="784" y="280" width="252" height="78" rx="17" fill="#3A281A" stroke="#FFAA66" stroke-width="2.5"/>
+<text x="910" y="327" fill="#FAFAFA" font-size="21" font-weight="750" text-anchor="middle">Browser Use CLI</text>
+<path d="M167 358V395H429V358" fill="none" stroke="#A1A1AA" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M167 395V444" fill="none" stroke="#A1A1AA" stroke-width="2.5" marker-end="url(#gray-arrow)"/>
+<path d="M429 395V425H746V520H772" fill="none" stroke="#FFAA66" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#orange-arrow)"/>
+<path d="M910 358V444" fill="none" stroke="#FFAA66" stroke-width="2.5" marker-end="url(#orange-arrow)"/>
+<circle cx="167" cy="395" r="4" fill="#A1A1AA"/>
+<circle cx="429" cy="395" r="4" fill="#FFAA66"/>
+<text x="125" y="423" fill="#C0C0C8" font-size="14" font-weight="750" text-anchor="middle">LOCAL</text>
+<text x="585" y="413" fill="#FFAA66" font-size="14" font-weight="750" text-anchor="middle">CLOUD</text>
+<rect x="41" y="454" width="252" height="124" rx="17" fill="#18181B" stroke="#A1A1AA" stroke-width="2.5"/>
+<path d="M41 481H293" fill="none" stroke="#A1A1AA" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="55" cy="468" r="2.6" fill="#A1A1AA"/>
+<circle cx="65" cy="468" r="2.6" fill="#A1A1AA"/>
+<circle cx="75" cy="468" r="2.6" fill="#A1A1AA"/>
+<text x="167" y="525" fill="#FAFAFA" font-size="24" font-weight="750" text-anchor="middle">Real Chrome</text>
+<text x="167" y="553" fill="#C0C0C8" font-size="16" font-weight="450" text-anchor="middle">your tabs · cookies · logins</text>
+<rect x="784" y="454" width="252" height="124" rx="17" fill="#3A281A" stroke="#FFAA66" stroke-width="2.5"/>
+<path d="M784 481H1036" fill="none" stroke="#FFAA66" stroke-width="2.5" stroke-linejoin="round"/>
+<circle cx="798" cy="468" r="2.6" fill="#FFAA66"/>
+<circle cx="808" cy="468" r="2.6" fill="#FFAA66"/>
+<circle cx="818" cy="468" r="2.6" fill="#FFAA66"/>
+<text x="910" y="525" fill="#FAFAFA" font-size="24" font-weight="750" text-anchor="middle">Cloud Browser</text>
+<text x="910" y="553" fill="#C0C0C8" font-size="16" font-weight="450" text-anchor="middle">profiles · stealth · proxies</text>
+<path d="M305 561H772" fill="none" stroke="#A1A1AA" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#gray-arrow)"/>
+<text x="538" y="587" fill="#C0C0C8" font-size="16" font-weight="600" text-anchor="middle">Profile Sync · cookies</text>
+<text x="910" y="613" fill="#FFAA66" font-size="17" font-weight="600" text-anchor="middle">Hosted V4 API</text>
+<text x="298" y="625" fill="#C0C0C8" font-size="17" font-weight="500" text-anchor="middle">Either CLI can control either browser.</text>
+</g></svg>
