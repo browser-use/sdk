@@ -1784,6 +1784,10 @@ Use `secret_bindings` / `secretBindings` with the explicit V4 client. Give each
 credential an alias and the hostnames where it may be typed. Refer to the alias
 in the task, not the credential value.
 
+Aliases avoid putting raw credentials in the task text. They do not guarantee
+that the agent cannot see the value: once typed, it is accessible to the page
+and to an agent with browser/CDP access.
+
 This example fills a password field and stops before submitting. Replace the
 example portal URL and provide `PORTAL_PASSWORD` through your application's
 secret store or environment. Do not commit the value or print the request body.
