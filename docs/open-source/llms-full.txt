@@ -2963,6 +2963,8 @@ The local MCP server exposes these low-level browser automation tools for direct
 
 #### Content Extraction
 - **`browser_extract_content`** - Extract structured content from the current page
+- **`browser_get_html`** - Return the full page HTML or one CSS-selected element
+- **`browser_screenshot`** - Capture the viewport or the full scrollable page
 
 #### Session Management
 - **`browser_list_sessions`** - List all active browser sessions with details
