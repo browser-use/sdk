@@ -1065,8 +1065,9 @@ from playwright.async_api import async_playwright
 
 async def main():
     async with async_playwright() as p:
+        cdp_url = os.environ["BROWSER_CDP_URL"]
         try:
-            browser = await p.chromium.connect_over_cdp(os.environ["BROWSER_CDP_URL"])
+            browser = await p.chromium.connect_over_cdp(cdp_url)
         except Exception:
             # Transport errors can include the credential-bearing CDP URL.
             raise RuntimeError("Check the live CDP URL and browser state") from None
