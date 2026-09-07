@@ -266,6 +266,8 @@ cat > "$CLOUD_INDEX" << 'HEADER'
 > proxies, profiles, and live observability. Auth uses
 > `X-Browser-Use-API-Key` (keys start with `bu_`).
 
+**Start with free credits:** Eligible new Google, GitHub, or Microsoft signups receive a one-time $15 Cloud credit. No credit card is required. Email/password signups are not eligible; the credit does not renew. Start with the default V4 model (`gpt-5.6-luna`); paid-only models require a top-up. See [pricing](https://browser-use.com/pricing.md) for current eligibility and rates.
+
 - Dashboard: https://cloud.browser-use.com
 - Create API key: https://cloud.browser-use.com/settings?tab=api-keys&new=1
 - Docs: https://docs.browser-use.com
@@ -305,14 +307,23 @@ Log in once in that browser, stop it, then use the same profile ID to start the
 next browser already logged in. Full guide:
 https://docs.browser-use.com/cloud/guides/authentication
 
-**Current TypeScript SDK typing:** Pass `model` explicitly. Prefer
-`gpt-5.6-luna`, the recommended V4 model; if the generated union does not yet
-include it, use `grok-4.5` or call `POST /api/v4/runs` directly. Whenever
-`browserSettings` is present, also pass `proxyCountryCode`: use `"us"` to keep
-the default or `null` to disable the managed proxy. New model strings can reach
-REST before the generated TypeScript union. The generated SDK request types do
-not yet expose V4 `modelParams`; use REST for that field until the follow-up SDK
-release.
+**Current SDK (3.11.3 or newer):** V4 exposes `runs`, `sessions`,
+`workspaces`, and `browsers` in both Python and TypeScript. `runs.create`
+accepts an omitted `model` (the default is `gpt-5.6-luna`), and TypeScript
+supports `modelParams`. Upgrade older SDKs instead of switching a free starter
+to a paid-only model. Whenever `browserSettings` is present, current TypeScript
+types still require `proxyCountryCode`: use `"us"` for the default or `null`
+to disable the managed proxy.
+
+**Finish the integration:** Create one bounded run with `maxCostUsd`, retain
+its returned ID, and use `runs.waitForCompletion` (TypeScript) or
+`runs.wait_for_completion` (Python). The helpers also return `failed` and
+`cancelled` runs: check `status == "completed"` before consuming `result`.
+V4 returns a result string; parse and validate structured output in your code.
+A polling timeout does not cancel remote work. Cancel the run explicitly if
+you are abandoning it, and do not blindly retry an ambiguous create request.
+Keep API keys in server-side environment variables, never client bundles or
+prompts. Existing V2/V3 integrations can keep their versioned imports.
 
 Before writing code, check if `browser-use-sdk` is already installed. If so, upgrade to the latest version. If not, install it:
 - Python: `pip install --upgrade browser-use-sdk`
