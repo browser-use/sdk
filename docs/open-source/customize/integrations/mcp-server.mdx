@@ -3,7 +3,7 @@ title: "MCP Server"
 description: "Run browser-use as a local Model Context Protocol server. Connect AI models to browser automation through the MCP standard."
 ---
 
-Browser Use can run as a local **Model Context Protocol (MCP)** server on your machine via stdio. This is the **free, open-source option** that gives you direct, low-level control over browser automation but requires your own LLM API keys.
+Connect your MCP client to Browser Use running locally on your machine. The free, open-source server lets your AI navigate, click, type and inspect pages. Direct browser control needs no LLM API key in the server.
 
 <Note>
 Looking for a hosted solution? Use the [Cloud MCP Server](/cloud/guides/mcp-server) instead — no setup required, just an API key.
@@ -107,12 +107,41 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 </Tab>
 </Tabs>
 
+## Model keys
+
+Your MCP client supplies the AI for direct browser control. Two optional tools ask the server to call a model itself:
+
+| What you call | What the server needs |
+| --- | --- |
+| Direct browser tools: navigate, click, type, state, HTML, screenshot | No LLM key |
+| `browser_extract_content`: turn page content into structured data | An OpenAI-compatible key |
+| `retry_with_browser_use_agent`: hand a complete task to a separate browser agent | An OpenAI-compatible key, or the Bedrock setup below |
+
+The last row is an existing tool name, not an automatic retry of every browser action.
+
 ## Environment Variables
 
-- `OPENAI_API_KEY` - Your OpenAI API key (required)
-- `ANTHROPIC_API_KEY` - Your Anthropic API key (alternative to OpenAI)
+- `OPENAI_API_KEY` - Required for extraction and the default autonomous agent. Omit it from the client configurations above if you only use direct browser tools
 - `BROWSER_USE_HEADLESS` - Set to `false` to show browser window
 - `BROWSER_USE_DISABLE_SECURITY` - Set to `true` to disable browser security features
+
+### AWS Bedrock agent setup
+
+For the optional autonomous agent tool, use `browser-use[cli,aws]` instead of `browser-use[cli]` in your MCP client's command arguments. This installs the required AWS dependency:
+
+```bash
+uvx --from 'browser-use[cli,aws]' browser-use --mcp
+```
+
+Set these in the MCP server's environment:
+
+- `MODEL_PROVIDER=bedrock` - Select Bedrock for the autonomous agent
+- `BROWSER_USE_LLM_MODEL` - A Bedrock model or inference-profile ID available to your AWS account and region. This overrides the saved model; `MODEL` alone does not override it
+- `REGION` - Your Bedrock region, for example `us-east-1`. The MCP agent defaults to `us-east-1`; `AWS_DEFAULT_REGION` does not override this choice
+- `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` - Your AWS credentials with access to the chosen Bedrock model
+- `AWS_SESSION_TOKEN` - Also set this when using temporary AWS credentials
+
+This setup does not need `OPENAI_API_KEY` for the autonomous agent. It does not configure `browser_extract_content` for Bedrock; extraction still uses the separate OpenAI-compatible LLM path.
 
 ## Available Tools
 
@@ -212,9 +241,8 @@ Claude Desktop cannot find `uvx` in its PATH. Use the full path in your config:
 - Ensure no other browser instances are using the same profile
 
 **API Key Issues**
-- Verify your `OPENAI_API_KEY` is set correctly
-- Check API key permissions and billing status
-- Try using `ANTHROPIC_API_KEY` as an alternative
+- Direct browser tools such as navigate, click, type, page state, HTML, and screenshot do not require a key
+- For `browser_extract_content` or the default OpenAI-compatible agent route, verify that `OPENAI_API_KEY` is set and has billing enabled
 
 **Connection Issues in Claude Desktop**
 - Restart Claude Desktop after config changes
