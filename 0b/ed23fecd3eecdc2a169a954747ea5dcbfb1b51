@@ -1,0 +1,43 @@
+docs/cloud/guides/x402.mdx
+  s_86d24eaeebcb12::t_b0f70c05755f1b 309,311-315,369,385,392-398
+  s_86d24eaeebcb12::t_74c593ecaa53eb 183-193,246-250,253
+  s_86d24eaeebcb12::t_86dbeb43207f3d 12-16,128-134,167-169
+browser-use-node/src/v3/client.ts
+  s_86d24eaeebcb12::t_e6b62d831bcdda 5,45-49,75-82
+browser-use-python/src/browser_use_sdk/v2/client.py
+  s_86d24eaeebcb12::t_3aad0ff371ffeb 11-15,32-36,39-40,44,49,395,397-399
+  s_86d24eaeebcb12::t_e7ed2bd2777d1c 45-48
+browser-use-node/tests/x402.test.ts
+  s_86d24eaeebcb12::t_3b6e2254816369 1-43
+browser-use-python/src/browser_use_sdk/v3/client.py
+  s_86d24eaeebcb12::t_e6b62d831bcdda 12-16,30-34,37-38,42,47,372-374
+  s_86d24eaeebcb12::t_e7ed2bd2777d1c 43-46
+  s_86d24eaeebcb12::t_3aad0ff371ffeb 370
+browser-use-python/tests/test_x402.py
+  s_86d24eaeebcb12::t_ad2c50f1bae865 49-50
+  s_86d24eaeebcb12::t_3b6e2254816369 1-48,51-61
+browser-use-node/src/core/x402.ts
+  s_86d24eaeebcb12::t_e6b62d831bcdda 23-24,32-74,131,151
+docs/cloud/guides/x402-agent-wallets.mdx
+  s_86d24eaeebcb12::t_b0f70c05755f1b 24-26
+browser-use-node/src/v2/client.ts
+  s_86d24eaeebcb12::t_3aad0ff371ffeb 5,33-37,64-71
+browser-use-python/src/browser_use_sdk/_core/x402.py
+  s_86d24eaeebcb12::t_e6b62d831bcdda 17,31-32,103-139,163
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "0bed23fecd3eecdc2a169a954747ea5dcbfb1b51",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}

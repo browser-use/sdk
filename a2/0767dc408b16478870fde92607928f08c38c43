@@ -1,0 +1,49 @@
+browser-use-node/src/v4/resources/workspaces.ts
+  s_86d24eaeebcb12::t_164b866fb56cd1 2,50,57-73,242-244,282,286-288
+  s_86d24eaeebcb12::t_087bfb5218696e 1,3,11,51-56,74-93,106-116,230-241,245-252,254-269,271-281,283-285,289-290
+  s_86d24eaeebcb12::t_a1848e82bdd697 94-105,253,270
+browser-use-python/src/browser_use_sdk/v4/resources/workspaces.py
+  s_86d24eaeebcb12::t_01478ed013bb12 311-313,334-347,352,542-544,567-575,577-578,580-581,586
+  s_86d24eaeebcb12::t_164b866fb56cd1 300-303,348-351,531-534,582-585
+  s_86d24eaeebcb12::t_12e5b4666df68a 5,32-38,251,274-299,304-310,314-333,502-530,535-541,545-566,579
+  s_86d24eaeebcb12::t_50072d91d8c472 476
+  s_86d24eaeebcb12::t_c32c5800eab4c6 6,39-83
+  s_86d24eaeebcb12::t_a1848e82bdd697 576
+docs/cloud/agent/workspaces.mdx
+  s_86d24eaeebcb12::t_7570ed39afda94 64,68,70-76,80,84-85,87,92-97
+  s_86d24eaeebcb12::t_164b866fb56cd1 81-83
+browser-use-python/tests/test_v4.py
+  s_86d24eaeebcb12::t_ebd0e61d7a0e6a 634-649,737-739,749-755,763-766
+  s_86d24eaeebcb12::t_34e9ba630b1b89 8,539,543,572-573,851-852
+  s_86d24eaeebcb12::t_30f4d40afcea2d 535-538,540-541,554-571,574-579,581,593-594,596-599,606-608,666,772-774,860,872-873,875-878
+  s_86d24eaeebcb12::t_c01bd04f274115 547,550-551
+  s_86d24eaeebcb12::t_5a560d0f47a1e3 549,629,711,720
+  s_86d24eaeebcb12::t_a1848e82bdd697 6,13,925-927,929-934,960-961
+  s_86d24eaeebcb12::t_ea43a5f4a0b835 665,667-672,677-693,729-736
+  s_86d24eaeebcb12::t_3d5abea90febbd 696,699-708,742-748,756-762,781
+  s_86d24eaeebcb12::t_28c59de586fb34 794-827
+  s_86d24eaeebcb12::t_1f704d43464ada 964-1083
+  s_86d24eaeebcb12::t_8b8b6e887775a9 846-850,853-858,920-922,938-942
+  s_86d24eaeebcb12::t_a272e2e35c599f 358-366,534,542,544-546,548,552,580,582-592,595,600-605,609-628,630-633,650-664,673-676,694-695,697-698,712-719,721-728,767-771,775-780,782-793,859,861-871,874,879-880,916-919,923-924,928,935-937,943-959
+browser-use-node/tests/v4.test.ts
+  s_86d24eaeebcb12::t_a1848e82bdd697 2,524-581
+  s_86d24eaeebcb12::t_e3859bea0977a5 679-683
+  s_86d24eaeebcb12::t_7a5a6654da2cee 458-523,582-673,703-741
+  s_86d24eaeebcb12::t_164b866fb56cd1 1,674-678,684-702
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "a20767dc408b16478870fde92607928f08c38c43",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}

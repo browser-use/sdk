@@ -1,0 +1,21 @@
+docs/cloud/browser/stealth.mdx
+  s_86d24eaeebcb12::t_582dc79f03aae7 17
+docs/cloud/browser/captcha-handling.mdx
+  s_86d24eaeebcb12::t_582dc79f03aae7 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7b57774da288c200f66a1566382e09fceee33e5e",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}
