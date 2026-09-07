@@ -2453,7 +2453,7 @@ pip install "browser-use[video]"
 ```
 or:
 ```bash
-pip install imageio[ffmpeg] numpy
+pip install "imageio[ffmpeg]" numpy
 ```
 
 - `record_video_dir`: Directory to save video recordings as `.mp4` files
