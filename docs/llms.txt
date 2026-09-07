@@ -59,7 +59,8 @@ to disable the managed proxy.
 **Finish the integration:** Create one bounded run with `maxCostUsd`, retain
 its returned ID, and use `runs.waitForCompletion` (TypeScript) or
 `runs.wait_for_completion` (Python). The helpers also return `failed` and
-`cancelled` runs: check `status == "completed"` before consuming `result`.
+`cancelled` runs: check `status === "completed"` (TypeScript) or `status.value == "completed"`
+(Python) before consuming `result`.
 V4 returns a result string; parse and validate structured output in your code.
 A polling timeout does not cancel remote work. Cancel the run explicitly if
 you are abandoning it, and do not blindly retry an ambiguous create request.

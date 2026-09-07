@@ -24,7 +24,7 @@ from browser_use_sdk.v4 import BrowserUse
 with BrowserUse() as client:
     run = client.runs.create("Find the top 3 trending repos on GitHub today")
     result = client.runs.wait_for_completion(run.id)
-    if result.status != "completed":
+    if result.status.value != "completed":
         raise RuntimeError(f"Run {result.id}: {result.status}")
     print(result.result)
 ```
