@@ -352,8 +352,13 @@ tasks:
       - diff snapshots/v4.json {{.OPENAPI_V4}} || true
 
   # ── Docs ─────────────────────────────────────────────────────
+  docs:refresh-production:
+    desc: Refresh the public API reference from production without regenerating the SDKs
+    cmds:
+      - python3 scripts/refresh_docs_openapi.py
+
   docs:sync:
-    desc: Copy OpenAPI specs into docs for Mintlify
+    desc: Copy SDK generation snapshots into docs (can replace a newer production reference)
     cmds:
       - cp snapshots/v2.json docs/openapi/v2.json
       - cp snapshots/v3.json docs/openapi/v3.json
@@ -363,8 +368,7 @@ tasks:
       - python3 -m json.tool --indent 4 snapshots/v4.json docs/cloud/openapi/v4.json
 
   docs:dev:
-    desc: Start Mintlify docs dev server
-    deps: [docs:sync]
+    desc: Start Mintlify docs dev server using the checked-in public reference
     dir: docs
     cmds:
       - mint dev

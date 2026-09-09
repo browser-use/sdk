@@ -1457,7 +1457,7 @@
                         }
                     },
                     "402": {
-                        "description": "Subscription required for additional profiles",
+                        "description": "Profile limit reached; delete unused profiles to create new ones",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1789,6 +1789,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/BrowserSessionItemView"
+                                }
+                            }
+                        }
+                    },
+                    "402": {
+                        "description": "Insufficient credits, or the API key reached its monthly spend limit.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIKeySpendLimitError"
                                 }
                             }
                         }
@@ -3306,6 +3316,56 @@
     },
     "components": {
         "schemas": {
+            "APIKeySpendLimitDetail": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "title": "Code",
+                        "default": "api_key_monthly_spend_limit_reached"
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "cap": {
+                        "type": "number",
+                        "title": "Cap"
+                    },
+                    "spent": {
+                        "type": "number",
+                        "title": "Spent"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message",
+                    "cap",
+                    "spent"
+                ],
+                "title": "APIKeySpendLimitDetail",
+                "description": "Machine-readable 402 detail shared by run and browser creation."
+            },
+            "APIKeySpendLimitError": {
+                "properties": {
+                    "detail": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/components/schemas/APIKeySpendLimitDetail"
+                            }
+                        ],
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "detail"
+                ],
+                "title": "APIKeySpendLimitError",
+                "description": "FastAPI wraps endpoint errors in a top-level ``detail`` field."
+            },
             "AccountNotFoundError": {
                 "properties": {
                     "detail": {
@@ -3350,7 +3410,17 @@
                     "rateLimit": {
                         "type": "integer",
                         "title": "Rate Limit",
-                        "description": "The rate limit for the account"
+                        "description": "Legacy alias for the concurrent browser session limit"
+                    },
+                    "concurrentSessionLimit": {
+                        "type": "integer",
+                        "title": "Concurrent Session Limit",
+                        "description": "The maximum number of concurrent browser sessions for the project"
+                    },
+                    "activeSessionCount": {
+                        "type": "integer",
+                        "title": "Active Session Count",
+                        "description": "The number of browser sessions currently active for the project"
                     },
                     "planInfo": {
                         "$ref": "#/components/schemas/PlanInfo",
@@ -3369,6 +3439,19 @@
                         "title": "Project ID",
                         "description": "The ID of the project"
                     },
+                    "apiKeyId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "API Key ID",
+                        "description": "The internal ID of the authenticated API key"
+                    },
                     "tracingDisabled": {
                         "type": "boolean",
                         "title": "Tracing Disabled",
@@ -3382,6 +3465,8 @@
                     "monthlyCreditsBalanceUsd",
                     "additionalCreditsBalanceUsd",
                     "rateLimit",
+                    "concurrentSessionLimit",
+                    "activeSessionCount",
                     "planInfo",
                     "projectId"
                 ],
@@ -3922,7 +4007,7 @@
                             }
                         ],
                         "title": "Custom Proxy",
-                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription."
+                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used."
                     },
                     "enableRecording": {
                         "type": "boolean",
@@ -4025,7 +4110,7 @@
                             }
                         ],
                         "title": "Custom Proxy",
-                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription."
+                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used."
                     },
                     "enableRecording": {
                         "type": "boolean",
@@ -4260,7 +4345,7 @@
                             }
                         ],
                         "title": "Thinking Level",
-                        "description": "Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level for Gemini 3 Flash and 3.5 Flash, and to a zero thinking budget for Gemini 2.5 Flash and the gemini-flash-latest variants); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected. API V2 cannot configure GLM or fixed-budget Claude thinking; use API V3 or V4 for those combinations."
+                        "description": "Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected. API V2 cannot configure GLM or fixed-budget Claude thinking; use API V3 or V4 for those combinations."
                     },
                     "vision": {
                         "anyOf": [

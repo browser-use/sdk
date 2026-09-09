@@ -1,0 +1,88 @@
+---
+title: Troubleshooting
+description: "Diagnose account, browser, file, and integration problems before retrying."
+---
+
+## My API key has credits, but a request fails
+
+Read `GET /api/v2/billing/account` with the same key. It also works for V4
+users. Confirm the `projectId`, balance, and `concurrentSessionLimit` against
+the project selected in the dashboard. Keys in different projects do not
+share credits. A pay-as-you-go account can legitimately have `planInfo: null`.
+
+Read the complete error response before changing billing settings:
+
+| Response | What to check |
+| --- | --- |
+| 401 | Send `X-Browser-Use-API-Key`; do not put the API key in a Bearer header. |
+| 402 | Distinguish insufficient project credits from `api_key_monthly_spend_limit_reached`. A top-up does not raise a key's spending cap. |
+| 404 for a profile/workspace/session | Check the ID type, API version, and owning project. An ID visible in one dashboard project may be inaccessible to another key. |
+| 409 | Check the detail: a busy conversation and a workspace-file overwrite conflict require different actions. |
+| 413 | Check per-file and workspace limits. Retrying the same oversized payload does not make it smaller. |
+| 422 | Compare the request with the reference for that exact endpoint. Standalone-browser fields and V4 run `browserSettings` differ. |
+| 429 | Distinguish HTTP request-rate limits from occupied browser slots. Reduce polling for the first; stop unneeded browsers or reduce concurrent work for the second. |
+
+See [billing](/cloud/guides/billing), [concurrency](/cloud/guides/concurrency),
+and [workspaces](/cloud/agent/workspaces) for the relevant limits and remedies.
+
+## Why am I charged when I bring my own key or proxy?
+
+BYOK means your model provider bills its tokens. Browser Use still charges
+orchestration plus browser and network usage. A custom proxy has its own
+provider charges and does not remove Browser Use browser/network charges.
+A Claude or ChatGPT consumer subscription is not a provider API key.
+See the [billing breakdown](/cloud/guides/billing).
+
+## The dashboard works, but the same integration does not
+
+Check the API key's project, selected model, profile, proxy settings, and API
+version. A connected integration in the dashboard does not automatically
+grant every API run access to it. Pass the documented run-level bindings or
+grants. For example, see [1Password](/cloud/guides/1password) and
+[Secrets](/cloud/guides/secrets).
+
+A site can also challenge a fresh browser even if it accepts an existing
+logged-in browser. Reuse an appropriate [profile](/cloud/guides/profile-sync),
+and compare the actual proxy configuration before changing the agent prompt.
+
+## The browser is idle, but usage or a concurrency slot remains
+
+A completed agent run can leave its browser available for follow-ups. Closing
+your SDK client or disconnecting CDP does not stop the managed browser. Stop
+an unneeded browser with `PATCH /api/v4/browsers/{id}` and
+`{"action":"stop"}`. See [browser lifetime](/cloud/guides/concurrency#keep-track-of-browser-lifetime).
+
+If a local wait times out, the server may still be running. Fetch the existing
+run's status before creating a replacement, especially if it might already
+have submitted a form or performed another external action.
+
+## I cannot find a file or recording
+
+Wait for the run to finish before listing generated files, and use its V4
+workspace ID. Request a fresh download URL if an old one expired. A session's
+conversation, workspace files, and browser profile are different resources.
+See [Workspaces and files](/cloud/agent/workspaces).
+
+Recordings are off by default for API browsers. Enable recording when
+creating the browser, stop it when finished, and allow time for processing.
+A live preview is not a stored video. See [Live preview and recording](/cloud/browser/live-preview).
+
+## Does a new browser guarantee a new IP or a CAPTCHA bypass?
+
+No. Selecting a proxy country chooses a location; it does not promise a
+particular city or a unique IP on every launch. Websites can still block
+requests or require human verification. Let the automatic solver work before
+clicking or refreshing a challenge. See [proxies](/cloud/browser/proxies) and
+[CAPTCHA handling](/cloud/browser/captcha-handling).
+
+## What should I send support?
+
+Include the API version and endpoint, run/session/browser/workspace IDs that
+apply, the project ID, timestamp with time zone, SDK version, and the complete
+redacted error response. State what you expected and what actually happened.
+For billing, include the payment reference and selected project; for a file
+problem, include the filename, size, and the operation that failed.
+
+Do not send API keys, passwords, custom-proxy credentials, session cookies,
+or active CDP/live-view URLs. A screenshot alone often omits the identifier
+needed to trace a request.

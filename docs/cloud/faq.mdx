@@ -42,7 +42,11 @@ If it still doesn't work, contact support inside the [Cloud Dashboard](https://c
 
 ## Rate limited (429 errors)
 
-The SDK auto-retries 429 responses with exponential backoff. If persistent, you may need more concurrent sessions — contact support.
+HTTP request limits, browser concurrency, and a full session message queue can all return 429. Inspect the response before retrying: increasing browser concurrency does not increase the general request bucket used by V4 event reads.
+
+Use bounded workers, stagger polling, and respect `Retry-After` when provided. The SDK retries 429 responses, but a sustained workload needs its own request budget. See [Concurrency and limits](/cloud/guides/concurrency) for account-limit lookup, polling budgets, queue behavior, and error handling.
+
+For insufficient-balance or API-key spending-cap errors (402), see [Billing and credits](/cloud/guides/billing).
 
 ## V2 or V4 — which should I use?
 

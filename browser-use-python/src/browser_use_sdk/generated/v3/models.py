@@ -1121,7 +1121,7 @@ class CreateBrowserSessionRequest(BaseModel):
     custom_proxy: CustomProxy | None = Field(
         None,
         alias='customProxy',
-        description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.',
+        description='Custom proxy settings to use for the session. If not provided, our proxies will be used.',
         title='Custom Proxy',
     )
     enable_recording: bool | None = Field(

@@ -696,7 +696,7 @@ class RunBrowserSettings(BaseModel):
     custom_proxy: CustomProxy | None = Field(
         None,
         alias='customProxy',
-        description='Custom proxy for the browser. Overrides proxyCountryCode. Requires an active subscription. Never stored or inherited by follow-up runs; pass it on each run that should use it.',
+        description='Custom proxy for the browser. Overrides proxyCountryCode. Never stored or inherited by follow-up runs; pass it on each run that should use it.',
     )
     screen_width: ScreenWidth | None = Field(
         None,
@@ -1185,7 +1185,7 @@ class CreateBrowserSessionRequest(BaseModel):
     custom_proxy: CustomProxy | None = Field(
         None,
         alias='customProxy',
-        description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.',
+        description='Custom proxy settings to use for the session. If not provided, our proxies will be used.',
         title='Custom Proxy',
     )
     enable_recording: bool | None = Field(

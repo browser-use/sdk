@@ -5,8 +5,7 @@ icon: microchip
 ---
 
 Omit `model` to use **GPT-5.6 Luna**, or pass a model ID when creating a run.
-These are the recommended Browser Use-hosted models with published token
-pricing:
+The following Browser Use-hosted models have published token pricing:
 
 | Model | API string | Input | Cache read | Output | BYOK |
 | ----- | ---------- | ----: | ---------: | -----: | ---- |
@@ -33,15 +32,19 @@ the normalized `thinkingLevel` values available in V2 and V3.
 
 The V4 request schema accepts the following model IDs. The Cloud dashboard may
 show a smaller curated set; availability can also depend on your account's
-rollout and configured provider key.
+rollout and configured provider key. An accepted ID does not guarantee access
+to every upstream provider. Experimental models are not recommended as a
+production default. MiniMax M3 remains an API option even where it is absent
+from the dashboard picker.
 
 | Provider | Model IDs | BYOK provider |
 | --- | --- | --- |
 | Anthropic | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-fable-5`, `claude-sonnet-5` | Anthropic |
-| OpenAI | `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | OpenAI |
+| OpenAI | `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-astra` | OpenAI |
 | Google | `gemini-3-flash`, `gemini-3.1-pro`, `gemini-3.5-flash`, `gemini-3.6-flash` | Google |
-| xAI | `grok-4.5` | — |
-| Z.ai | `glm-5.2` | — |
+| xAI | `grok-4.5`, `grok-4.6` | — |
+| Z.ai | `glm-5.2`, `glm-5.3-flash` | — |
+| DeepSeek (experimental) | `deepseek-v4-flash-vision` | — |
 | Moonshot AI | `kimi-k3` | — |
 | MiniMax | `minimax-m3` | — |
 
@@ -77,7 +80,7 @@ curl https://api.browser-use.com/api/v4/runs \
 
 ## Bring your own key
 
-On plans with BYOK, add an Anthropic, OpenAI, or Google key under **Settings →
+BYOK is available to pay-as-you-go customers; no recurring subscription is required. After adding credits, add an Anthropic, OpenAI, or Google key under **Settings →
 API Keys → Bring Your Own Key**. V4 uses it automatically for matching models;
 no request flag is needed. You pay the provider directly, plus a 0.2× Browser
 Use orchestration fee. Models from other providers use Browser Use-managed

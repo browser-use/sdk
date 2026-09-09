@@ -1,11 +1,29 @@
 ---
 title: Prompt for Vibecoders
-description: "Complete Cloud SDK reference for AI coding agents."
+description: "Current Cloud documentation, API schemas, concurrency, and billing guidance for AI coding agents."
 icon: brain
 ---
 
-Copy this link and paste it into your coding agent (Cursor, Claude Code, Windsurf, etc.) — it contains all the context needed to build with Browser Use.
+Give your coding agent (Cursor, Claude Code, Windsurf, or another tool) the current documentation index:
 
+```text
+https://docs.browser-use.com/llms.txt
 ```
-https://docs.browser-use.com/cloud/llms.txt
+
+Ask it to use the **Cloud** pages and **API V4** for a new hosted agent integration. The open-source library has a separate API.
+
+The index links to Markdown pages and API specifications. For a single bundle of documentation, use [llms-full.txt](https://docs.browser-use.com/.well-known/llms-full.txt). These managed exports include guidance on [concurrency](/cloud/guides/concurrency) and [billing](/cloud/guides/billing).
+
+Full bundles can be cached for up to 24 hours. For the freshest guidance, have your agent follow the index to the linked `.md` pages. Use these managed exports instead of the older `/cloud/llms*.txt` or `/open-source/llms*.txt` URLs.
+
+If you need a full snapshot immediately after a docs update, fetch the bundle
+with a fresh query value:
+
+```bash
+curl --fail --location \
+  "https://docs.browser-use.com/llms-full.txt?updated=$(date +%s)" \
+  --output browser-use-docs.txt
 ```
+
+This requests a fresh cache entry; it does not update a copy your coding agent
+already downloaded. Replace that copy or ask the agent to fetch it again.
