@@ -857,7 +857,7 @@ export interface components {
             solveCaptchas: boolean;
             /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
@@ -1218,7 +1218,7 @@ export interface components {
              * @default us
              */
             proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
-            /** @description Custom proxy for the browser. Overrides proxyCountryCode. Requires an active subscription. Never stored or inherited by follow-up runs; pass it on each run that should use it. */
+            /** @description Custom proxy for the browser. Overrides proxyCountryCode. Never stored or inherited by follow-up runs; pass it on each run that should use it. */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
              * Screenwidth
