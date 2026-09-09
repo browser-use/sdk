@@ -2,6 +2,45 @@
 
 Decision guide for the `/sdk` pipeline. Read this, then go.
 
+## Releasing
+
+1. **From `main`, run `task release -- patch`** (or `minor` / `major`). This pulls latest main, creates a fresh `release/<timestamp>` branch off it, bumps both `browser-use-node/package.json` and `browser-use-python/pyproject.toml`, commits as `release: v<NEW_VERSION>`, pushes the branch, and opens a PR.
+
+   Manual alternative (if you don't want the helper):
+
+   ```bash
+   git checkout main && git pull --ff-only origin main
+   git checkout -b release/$(date +%Y%m%d-%H%M%S)
+   task version:bump -- patch
+
+   # Read the new version after the bump, then use it in commit + PR.
+   NEW_VERSION=$(node -p "require('./browser-use-node/package.json').version")
+
+   git add browser-use-node/package.json browser-use-python/pyproject.toml README.md
+   git commit -m "release: v$NEW_VERSION"
+   git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
+   gh pr create --base main --title "release: v$NEW_VERSION" --body "Release v$NEW_VERSION"
+   ```
+2. **Commit + PR + merge to main.**
+
+That's it. The `auto-release-on-version-bump` workflow detects the bump on main and creates a GitHub Release at the bump commit (tag `v<NEW_VERSION>`). The Release event fires `publish.yml`, which runs preflight (env protection + version coherence + already-published guard), pauses at the `release` environment approval gate, and on approval publishes to both npm and PyPI via OIDC.
+
+If a publish fails after the Release is created: the Release stays (it's the rollback handle). Investigate, fix on a new patch version, repeat. Re-running the auto-release workflow on the same commit is a no-op, it detects the existing Release and exits cleanly.
+
+Manual `gh release create v<VERSION> --generate-notes --repo browser-use/sdk` from the CLI also works as an escape hatch if you want to ship without the bump-PR cycle.
+
+`task publish` is intentionally broken, see "Release authentication" below for the rationale.
+
+## Release authentication
+
+Both registries use OIDC trusted publishing. **No static tokens, no secrets to rotate.**
+
+- **PyPI**: trusted publishing configured at https://pypi.org/manage/project/browser-use-sdk/settings/publishing/ (Owner: browser-use, Repository: sdk, Workflow: publish.yml, Environment: release).
+- **npm**: trusted publishing configured at https://www.npmjs.com/package/browser-use-sdk/access (same four fields, Allowed action: npm publish).
+- The `release` environment requires approval from a reviewer other than the release author (`prevent_self_review: true`). Reviewers: gregpr07, LarsenCundric.
+
+If a trusted publisher binding is ever revoked or misconfigured, publishing will fail at the publish step with a clear OIDC error from the registry. The release tag stays cut (you can re-dispatch after re-binding).
+
 ## Phase 0: Discover
 
 Diff the fresh OpenAPI specs (`$CLOUD_REPO_PATH/backend/spec/api/v{2,3}/openapi.json`) against the snapshots (`snapshots/v{2,3}.json`). Classify each change:
@@ -39,7 +78,7 @@ Follow existing patterns in the codebase. Read before writing.
 1. Run `task test`. Fix failures (max 3 attempts, then escalate).
 2. Optionally run `task test:live` if backend is reachable.
 3. Confirm version bump with user → bump both packages → save snapshots → commit.
-4. Do NOT publish. Tell user to run `task publish`.
+4. **Merge the bump PR to main.** The `auto-release-on-version-bump` workflow creates the GitHub Release for `v$NEW_VERSION` at the bump commit, which fires `publish.yml`. See the "Releasing" section above for the full flow. Ping a release reviewer (gregpr07 or LarsenCundric, whoever is NOT you) to approve at the `release` environment gate in the Actions tab. On approval: npm + PyPI publish in parallel, ~3-5 minutes. If publish fails: the GitHub Release stays as the rollback handle; investigate, fix, re-cut a new patch version.
 
 ---
 
@@ -68,4 +107,4 @@ Follow existing patterns in the codebase. Read before writing.
 - **Python SDK type safety**: All resource methods return Pydantic model instances (via `model_validate()`), NOT dicts.
 - **Structured output**: V2 only. Python auto-converts Pydantic models via `output_schema`. TS uses Zod schemas via `{ schema }` option.
 - **Polling**: `await client.run()` polls `tasks.status()` (lightweight). `for await`/`for step in client.stream()` polls full `tasks.get()` and yields new `TaskStepView` steps.
-- **docs/openapi dir**: `task snapshot:save` calls `task docs:sync` which requires `docs/openapi/` to exist. Create it with `mkdir -p docs/openapi` if missing (e.g., on fresh clone).
+- **Docs OpenAPI dirs**: `task snapshot:save` calls `task docs:sync`, which updates both `docs/openapi/` and the `docs/cloud/openapi/` files consumed by Mintlify. Both directories must exist on a fresh clone.

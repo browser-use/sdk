@@ -1,0 +1,24 @@
+{
+  "source": "browser-use/cloud fdcfb4204e8e4bc58dff8870c2f230ffcedd07a9 backend/lambdas/webhook_sender/handler.py _sign_payload; synthetic data only",
+  "secret": "synthetic-docs-secret",
+  "vectors": [
+    {
+      "name": "ascii",
+      "body": "{\"type\": \"session.status.update\", \"timestamp\": \"2026-09-09T12:00:00Z\", \"payload\": {\"session_id\": \"synthetic-session\", \"status\": \"idle\"}}",
+      "timestamp": "1788955200",
+      "signature": "f59cc6ea939b61b0faffb4840f6072031de4c6432656847b3a2e6c97387fafa9"
+    },
+    {
+      "name": "unicode",
+      "body": "{\"type\": \"session.status.update\", \"timestamp\": \"2026-09-09T12:00:00Z\", \"payload\": {\"session_id\": \"synthetic-session\", \"output\": \"München 🎉\", \"𐀀\": \"high\", \"\": \"low\"}}",
+      "timestamp": "1788955200",
+      "signature": "4b3070fd50a528876c8afdde17504394057971443340f29a76b2156934f38997"
+    },
+    {
+      "name": "nested_numeric_keys_and_floats",
+      "body": "{\"type\": \"session.status.update\", \"timestamp\": \"2026-09-09T12:00:00Z\", \"payload\": {\"session_id\": \"synthetic-session\", \"metadata\": {\"2\": 2, \"10\": 10, \"1\": 1, \"nested\": [1.0, 1e-07, 1e+20, {\"city\": \"東京\"}]}}}",
+      "timestamp": "1788955200",
+      "signature": "b50ee1407ae9bbeea542ae102dfe4849dca2bcce8e743706c3dfa8b22be91e8b"
+    }
+  ]
+}

@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { HttpClient } from "../core/http.js";
+import {
+  X402_BASE_URL_DEFAULT_V2,
+  type X402Client,
+  wrapFetchWithX402,
+  x402ClientFromPrivateKey,
+} from "../core/x402.js";
 import { Billing } from "./resources/billing.js";
 import { Browsers } from "./resources/browsers.js";
 import { Files } from "./resources/files.js";
@@ -19,6 +25,10 @@ export interface BrowserUseOptions {
   baseUrl?: string;
   maxRetries?: number;
   timeout?: number;
+  /** Pre-built x402 client for pay-per-request authentication. */
+  x402?: X402Client;
+  /** EVM wallet private key for x402 mode (also reads `BROWSER_USE_X402_PRIVATE_KEY`). */
+  x402PrivateKey?: string;
 }
 
 export type RunTaskOptions = Partial<Omit<CreateTaskBody, "task">> &
@@ -37,19 +47,44 @@ export class BrowserUse {
   private readonly http: HttpClient;
 
   constructor(options: BrowserUseOptions = {}) {
-    const apiKey =
-      options.apiKey ?? process.env.BROWSER_USE_API_KEY ?? "";
-    if (!apiKey) {
-      throw new Error(
-        "No API key provided. Pass apiKey or set BROWSER_USE_API_KEY.",
-      );
+    const x402PrivateKey =
+      options.x402PrivateKey ?? process.env.BROWSER_USE_X402_PRIVATE_KEY;
+
+    if (options.x402 || x402PrivateKey) {
+      // Top-up mode: when apiKey is also set, forward it as a header so the
+      // backend credits the API key's project instead of one keyed to the wallet.
+      const topupKey = options.apiKey ?? process.env.BROWSER_USE_API_KEY ?? "";
+      const fetchPromise = (async () => {
+        const x402Client = options.x402 ?? (await x402ClientFromPrivateKey(x402PrivateKey!));
+        return wrapFetchWithX402(globalThis.fetch, x402Client);
+      })();
+      // Suppress unhandled-rejection warnings if the user constructs the client
+      // but never makes a request
+      fetchPromise.catch(() => {});
+      this.http = new HttpClient({
+        apiKey: topupKey,
+        baseUrl: options.baseUrl ?? X402_BASE_URL_DEFAULT_V2,
+        maxRetries: options.maxRetries,
+        timeout: options.timeout,
+        fetch: fetchPromise,
+      });
+    } else {
+      const apiKey =
+        options.apiKey ?? process.env.BROWSER_USE_API_KEY ?? "";
+      if (!apiKey) {
+        throw new Error(
+          "No credentials provided. Pass apiKey / set BROWSER_USE_API_KEY, " +
+            "or pass x402PrivateKey / set BROWSER_USE_X402_PRIVATE_KEY for " +
+            "pay-per-request access via USDC.",
+        );
+      }
+      this.http = new HttpClient({
+        apiKey,
+        baseUrl: options.baseUrl ?? DEFAULT_BASE_URL,
+        maxRetries: options.maxRetries,
+        timeout: options.timeout,
+      });
     }
-    this.http = new HttpClient({
-      apiKey,
-      baseUrl: options.baseUrl ?? DEFAULT_BASE_URL,
-      maxRetries: options.maxRetries,
-      timeout: options.timeout,
-    });
 
     this.billing = new Billing(this.http);
     this.tasks = new Tasks(this.http);

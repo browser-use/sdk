@@ -2,10 +2,9 @@
 title: "Supported Models"
 description: "Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider."
 icon: "microchip-ai"
-
 ---
 
-Browser Use natively supports 15+ LLM providers. Most providers accept any model string. Check each provider's docs to see which models are available.
+Browser Use natively supports 15\+ LLM providers. Most providers accept any model string. Check each provider's docs to see which models are available.
 
 > **Which model should I use?** See our [benchmark results and recommendations](https://browser-use.com/posts/what-model-to-use) for detailed comparisons across real-world browser tasks.
 
@@ -13,14 +12,15 @@ Browser Use natively supports 15+ LLM providers. Most providers accept any model
 
 `ChatBrowserUse()` is our optimized in-house model, matching the accuracy of top models while completing tasks **3-5x** faster. [See our blog post→](https://browser-use.com/posts/speed-matters)
 
+<Info>
+  Read the [bu-2-0 model card](/open-source/bu-2-0-model-card) for details on intended use, inputs and outputs, tools, benchmarks, judge setup, and limitations.
+</Info>
+
 ```python
 from browser_use import Agent, ChatBrowserUse
 
-# Initialize the model (defaults to bu-latest)
+# Initialize the model - defaults to bu-latest (bu-2-0)
 llm = ChatBrowserUse()
-
-# Or use the premium model
-llm = ChatBrowserUse(model='bu-2-0')
 
 # Create agent with the model
 agent = Agent(
@@ -35,40 +35,36 @@ Required environment variables:
 BROWSER_USE_API_KEY=
 ```
 
-Get your API key from the [Browser Use Cloud](https://cloud.browser-use.com/new-api-key). New users get 5 free tasks.
-
-#### Available Models
-
-- `bu-latest` or `bu-1-0`: Default model
-- `bu-2-0`: Latest premium model with improved capabilities
+Get your API key from the [Browser Use Cloud](https://cloud.browser-use.com/new-api-key). Eligible new accounts receive $15 in one-time credits.
 
 #### Pricing
 
 ChatBrowserUse offers competitive pricing per 1 million tokens:
 
-**bu-1-0 / bu-latest (Default)**
+**bu-2-0 / bu-latest (Default)**
 
 | Token Type | Price per 1M tokens |
-|------------|---------------------|
-| Input tokens | $0.20 |
-| Cached tokens | $0.02 |
-| Output tokens | $2.00 |
+| --- | --- |
+| Input tokens | \$0.60 |
+| Cached tokens | \$0.06 |
+| Output tokens | \$3.50 |
 
-**bu-2-0 (Premium)**
+**bu-1-0**
+
+Since May 20, 2026, `bu-1-0` is priced the same as `bu-2-0`:
 
 | Token Type | Price per 1M tokens |
-|------------|---------------------|
-| Input tokens | $0.60 |
-| Cached tokens | $0.06 |
-| Output tokens | $3.50 |
-
+| --- | --- |
+| Input tokens | \$0.60 |
+| Cached tokens | \$0.06 |
+| Output tokens | \$3.50 |
 
 ### Google Gemini [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gemini.py) {#google-gemini}
 
 [Available models](https://ai.google.dev/api/models). Also supports Gemma models and Vertex AI via `ChatGoogle(model="...", vertexai=True)`.
 
 <Warning>
-`GEMINI_API_KEY` is deprecated and should be named `GOOGLE_API_KEY` as of 2025-05.
+  `GEMINI_API_KEY` is deprecated and should be named `GOOGLE_API_KEY` as of 2025-05.
 </Warning>
 
 ```python
@@ -93,7 +89,6 @@ Required environment variables:
 ```bash .env
 GOOGLE_API_KEY=
 ```
-
 
 ### OpenAI [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gpt-5-mini.py)
 
@@ -121,9 +116,7 @@ OPENAI_API_KEY=
 ```
 
 <Info>
-  You can use any OpenAI compatible model by passing the model name to the
-  `ChatOpenAI` class using a custom URL (or any other parameter that would go
-  into the normal OpenAI API call).
+  You can use any OpenAI compatible model by passing the model name to the `ChatOpenAI` class using a custom URL (or any other parameter that would go into the normal OpenAI API call).
 </Info>
 
 ### Anthropic [example](https://github.com/browser-use/browser-use/blob/main/examples/models/claude-4-sonnet.py)
@@ -182,11 +175,11 @@ AZURE_OPENAI_API_KEY=
 #### Using the Responses API (for GPT-5.1 Codex models)
 
 <Info>
-Azure OpenAI now requires `api_version >= 2025-03-01-preview` for certain models like `gpt-5.1-codex-mini`.
-These models only support the [Responses API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses) instead of the Chat Completions API.
+  Azure OpenAI now requires `api_version >= 2025-03-01-preview` for certain models like `gpt-5.1-codex-mini`. These models only support the [Responses API](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/responses) instead of the Chat Completions API.
 </Info>
 
 Browser Use automatically detects and uses the Responses API for these models:
+
 - `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5.1-codex-max`
 - `gpt-5-codex`, `codex-mini-latest`
 - `computer-use-preview`
@@ -214,6 +207,7 @@ agent = Agent(
 ```
 
 The `use_responses_api` parameter accepts:
+
 - `'auto'` (default): Automatically uses Responses API for models that require it
 - `True`: Force use of the Responses API
 - `False`: Force use of the Chat Completions API
@@ -278,6 +272,52 @@ You can also use AWS profiles or IAM roles instead of environment variables. The
 - Session tokens for temporary credentials
 - AWS SSO authentication (`aws_sso_auth=True`)
 
+## Vercel AI Gateway [example](https://github.com/browser-use/browser-use/blob/main/examples/models/vercel_ai_gateway.py) {#vercel}
+
+[Available models](https://vercel.com/ai-gateway/models). Vercel AI Gateway provides an OpenAI-compatible API endpoint that acts as a proxy to various AI providers, with features like rate limiting, caching, and monitoring.
+
+```python
+from browser_use import Agent, ChatVercel
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+# Get API key (https://vercel.com/ai-gateway)
+api_key = os.getenv('VERCEL_API_KEY')
+if not api_key:
+    raise ValueError('VERCEL_API_KEY is not set')
+
+# Basic usage
+llm = ChatVercel(
+    model='openai/gpt-4o',
+    api_key=api_key,
+)
+
+# With provider options - control which providers are used and in what order
+# This will try Vertex AI first, then fall back to Anthropic if Vertex fails
+llm_with_provider_options = ChatVercel(
+    model='anthropic/claude-sonnet-4',
+    api_key=api_key,
+    provider_options={
+        'gateway': {
+            'order': ['vertex', 'anthropic']  # Try Vertex AI first, then Anthropic
+        }
+    },
+)
+
+agent = Agent(
+    task="Your task here",
+    llm=llm
+)
+```
+
+Required environment variables:
+
+```bash .env
+VERCEL_API_KEY=
+```
+
 ## Groq [example](https://github.com/browser-use/browser-use/blob/main/examples/models/llama4-groq.py) {#groq}
 
 [Available models](https://console.groq.com/docs/models)
@@ -327,11 +367,13 @@ agent = Agent(
 ```
 
 Required setup:
+
 1. Set up OCI configuration file at `~/.oci/config`
 2. Have access to OCI Generative AI models in your tenancy
 3. Install the OCI Python SDK: `uv add oci` or `pip install oci`
 
 Authentication methods supported:
+
 - `API_KEY`: Uses API key authentication (default)
 - `INSTANCE_PRINCIPAL`: Uses instance principal authentication
 - `RESOURCE_PRINCIPAL`: Uses resource principal authentication
@@ -340,7 +382,7 @@ Authentication methods supported:
 
 [Available models](https://ollama.com/library).
 
-1. Install Ollama: https://github.com/ollama/ollama
+1. Install Ollama: [https://github.com/ollama/ollama](https://github.com/ollama/ollama)
 2. Run `ollama serve` to start the server
 3. In a new terminal, install the model you want to use: `ollama pull llama3.1:8b` (this has 4.9GB)
 
@@ -356,8 +398,7 @@ llm = ChatOllama(model="llama3.1:8b")
 
 ## Qwen [example](https://github.com/browser-use/browser-use/blob/main/examples/models/qwen.py)
 
-Currently, only `qwen-vl-max` is recommended for Browser Use. Other Qwen models, including `qwen-max`, have issues with the action schema format.
-Smaller Qwen models may return incorrect action schema formats (e.g., `actions: [{"navigate": "google.com"}]` instead of `[{"navigate": {"url": "google.com"}}]`). If you want to use other models, add concrete examples of the correct action format to your prompt.
+Currently, only `qwen-vl-max` is recommended for Browser Use. Other Qwen models, including `qwen-max`, have issues with the action schema format. Smaller Qwen models may return incorrect action schema formats (e.g., `actions: [{"navigate": "google.com"}]` instead of `[{"navigate": {"url": "google.com"}}]`). If you want to use other models, add concrete examples of the correct action format to your prompt.
 
 ```python
 from browser_use import Agent, ChatOpenAI
@@ -411,52 +452,6 @@ Required environment variables:
 
 ```bash .env
 MODELSCOPE_API_KEY=
-```
-
-### Vercel AI Gateway [example](https://github.com/browser-use/browser-use/blob/main/examples/models/vercel_ai_gateway.py) {#vercel}
-
-[Available models](https://vercel.com/ai-gateway/models). Vercel AI Gateway provides an OpenAI-compatible API endpoint that acts as a proxy to various AI providers, with features like rate limiting, caching, and monitoring.
-
-```python
-from browser_use import Agent, ChatVercel
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-# Get API key (https://vercel.com/ai-gateway)
-api_key = os.getenv('VERCEL_API_KEY')
-if not api_key:
-    raise ValueError('VERCEL_API_KEY is not set')
-
-# Basic usage
-llm = ChatVercel(
-    model='openai/gpt-4o',
-    api_key=api_key,
-)
-
-# With provider options - control which providers are used and in what order
-# This will try Vertex AI first, then fall back to Anthropic if Vertex fails
-llm_with_provider_options = ChatVercel(
-    model='anthropic/claude-sonnet-4',
-    api_key=api_key,
-    provider_options={
-        'gateway': {
-            'order': ['vertex', 'anthropic']  # Try Vertex AI first, then Anthropic
-        }
-    },
-)
-
-agent = Agent(
-    task="Your task here",
-    llm=llm
-)
-```
-
-Required environment variables:
-
-```bash .env
-VERCEL_API_KEY=
 ```
 
 ## DeepSeek [example](https://github.com/browser-use/browser-use/blob/main/examples/models/deepseek-chat.py) {#deepseek}
@@ -524,7 +519,7 @@ CEREBRAS_API_KEY=
 
 ## OpenRouter [example](https://github.com/browser-use/browser-use/blob/main/examples/models/openrouter.py) {#openrouter}
 
-[Available models](https://openrouter.ai/models). Access 300+ models from any provider through a single API.
+[Available models](https://openrouter.ai/models). Access 300\+ models from any provider through a single API.
 
 ```python
 from browser_use import Agent, ChatOpenRouter
@@ -564,4 +559,5 @@ agent = Agent(
 Any provider with an OpenAI-compatible endpoint works via `ChatOpenAI` with a custom `base_url`:
 
 **Examples available:**
+
 - [Novita](https://github.com/browser-use/browser-use/blob/main/examples/models/novita.py)

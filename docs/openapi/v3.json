@@ -63,7 +63,7 @@
           "Sessions"
         ],
         "summary": "List Sessions",
-        "description": "List sessions for the authenticated project.",
+        "description": "List sessions for the authenticated project.\n\nList responses intentionally omit per-session presigned URLs\n(`screenshot_url`, `recording_urls`). Each presign is a synchronous boto3\nSigV4 signing call that holds the GIL and blocks the event loop. With\npage_size up to 100 this CPU-pegs the worker and starves the DB pool,\ncascading into pool exhaustion across the fleet. Clients should fetch\nthese URLs on demand via `GET /api/v3/sessions/{id}`, which signs exactly\none screenshot URL plus any recording URLs for a single session.",
         "operationId": "list_sessions_sessions_get",
         "security": [
           {
@@ -385,7 +385,7 @@
           "Browsers"
         ],
         "summary": "List Browser Sessions",
-        "description": "Get paginated list of browser sessions with optional status filtering.",
+        "description": "Get paginated list of browser sessions with optional status filtering.\n\nList responses intentionally omit per-session presigned recording URLs\n(`recording_url` is always `null` here). Each recording URL requires a\nsynchronous boto3 SigV4 signing call (plus an S3 HEAD) that holds the GIL\nand blocks the event loop. With page_size up to the max this CPU-pegs the\nworker and starves the DB pool, cascading into pool exhaustion across the\nfleet. Clients should fetch the recording URL on demand via\n`GET /api/v2/browsers/{id}`, which signs exactly one URL for a single\nsession. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).",
         "operationId": "list_browser_sessions_browsers_get",
         "security": [
           {
@@ -393,6 +393,27 @@
           }
         ],
         "parameters": [
+          {
+            "name": "metadata",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only browsers tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND).",
+              "title": "Metadata"
+            },
+            "description": "Only browsers tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND)."
+          },
           {
             "name": "pageSize",
             "in": "query",
@@ -431,6 +452,23 @@
               ],
               "title": "Filterby"
             }
+          },
+          {
+            "name": "agentSessionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Agentsessionid"
+            }
           }
         ],
         "responses": {
@@ -461,7 +499,7 @@
           "Browsers"
         ],
         "summary": "Create Browser Session",
-        "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged per hour with tiered pricing:\n- Pay As You Go users: $0.06/hour\n- Business/Scaleup subscribers: $0.03/hour (50% discount)\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
+        "description": "Create a new browser session.\n\n**Pricing:** Browser sessions are charged at $0.02/hour for all users.\n\nThe full rate is charged upfront when the session starts.\nWhen you stop the session, any unused time is automatically refunded proportionally.\n\nBilling is rounded up to the minute (minimum 1 minute).\nFor example, if you stop a session after 30 minutes, you'll be refunded half the charged amount.\n\n**Session Limits:**\n- All users: Up to 4 hours per session",
         "operationId": "create_browser_session_browsers_post",
         "security": [
           {
@@ -485,6 +523,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BrowserSessionItemView"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient credits, or the API key reached its monthly spend limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIKeySpendLimitError"
                 }
               }
             }
@@ -658,6 +706,103 @@
         }
       }
     },
+    "/browsers/{session_id}/downloads": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "List Browser Session Downloads",
+        "description": "List files the browser downloaded to S3 during the session.\n\nPass ``includeUrls=true`` to receive presigned download URLs (15 min expiry) inline.\nFiles are stored at ``downloads/projects/{project_id}/sessions/{session_id}/`` in\nthe private bucket.",
+        "operationId": "list_browser_session_downloads_browsers__session_id__downloads_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "includeUrls",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Includeurls"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserDownloadListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/profiles": {
       "get": {
         "tags": [
@@ -769,7 +914,7 @@
             }
           },
           "402": {
-            "description": "Subscription required for additional profiles",
+            "description": "Profile limit reached; delete unused profiles to create new ones",
             "content": {
               "application/json": {
                 "schema": {
@@ -1531,10 +1676,102 @@
           }
         ]
       }
+    },
+    "/x402/balance": {
+      "post": {
+        "tags": [
+          "x402"
+        ],
+        "summary": "X402 Balance",
+        "description": "Read a wallet-derived project's credit balance auth by off-chain wallet signature",
+        "operationId": "x402_balance_x402_balance_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/X402BalanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/X402BalanceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "APIKeySpendLimitDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "default": "api_key_monthly_spend_limit_reached"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "cap": {
+            "type": "number",
+            "title": "Cap"
+          },
+          "spent": {
+            "type": "number",
+            "title": "Spent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "cap",
+          "spent"
+        ],
+        "title": "APIKeySpendLimitDetail",
+        "description": "Machine-readable 402 detail shared by run and browser creation."
+      },
+      "APIKeySpendLimitError": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/components/schemas/APIKeySpendLimitDetail"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "APIKeySpendLimitError",
+        "description": "FastAPI wraps endpoint errors in a top-level ``detail`` field."
+      },
       "AccountNotFoundError": {
         "properties": {
           "detail": {
@@ -1579,18 +1816,53 @@
           "rateLimit": {
             "type": "integer",
             "title": "Rate Limit",
-            "description": "The rate limit for the account"
+            "description": "Legacy alias for the concurrent browser session limit"
+          },
+          "concurrentSessionLimit": {
+            "type": "integer",
+            "title": "Concurrent Session Limit",
+            "description": "The maximum number of concurrent browser sessions for the project"
+          },
+          "activeSessionCount": {
+            "type": "integer",
+            "title": "Active Session Count",
+            "description": "The number of browser sessions currently active for the project"
           },
           "planInfo": {
             "$ref": "#/components/schemas/PlanInfo",
             "title": "Plan Info",
             "description": "The plan information"
           },
+          "isFreeTier": {
+            "type": "boolean",
+            "title": "Is Free Tier",
+            "description": "Whether the account is on the free tier",
+            "default": false
+          },
           "projectId": {
             "type": "string",
             "format": "uuid",
             "title": "Project ID",
             "description": "The ID of the project"
+          },
+          "apiKeyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "API Key ID",
+            "description": "The internal ID of the authenticated API key"
+          },
+          "tracingDisabled": {
+            "type": "boolean",
+            "title": "Tracing Disabled",
+            "description": "Whether third-party LLM tracing is disabled for this project",
+            "default": false
           }
         },
         "type": "object",
@@ -1599,11 +1871,89 @@
           "monthlyCreditsBalanceUsd",
           "additionalCreditsBalanceUsd",
           "rateLimit",
+          "concurrentSessionLimit",
+          "activeSessionCount",
           "planInfo",
           "projectId"
         ],
         "title": "AccountView",
         "description": "View model for account information."
+      },
+      "BrowserDownloadFile": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "File name (basename relative to the session downloads prefix)"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size",
+            "description": "File size in bytes"
+          },
+          "lastModified": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Lastmodified",
+            "description": "When the file was last modified in S3"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "description": "Presigned download URL (15 min expiry). Only included when `includeUrls=true`."
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "size",
+          "lastModified"
+        ],
+        "title": "BrowserDownloadFile",
+        "description": "A single file the browser downloaded during the session."
+      },
+      "BrowserDownloadListResponse": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserDownloadFile"
+            },
+            "type": "array",
+            "title": "Files",
+            "description": "List of files downloaded by the browser"
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextcursor",
+            "description": "Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page."
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore",
+            "description": "Whether there are more files beyond this page.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "BrowserDownloadListResponse",
+        "description": "Paginated list of browser downloads with optional presigned URLs."
       },
       "BrowserSessionItemView": {
         "properties": {
@@ -1711,7 +2061,16 @@
               }
             ],
             "title": "Recording URL",
-            "description": "Presigned URL to download the session recording (available after session ends, if recording was enabled)"
+            "description": "Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses."
+          },
+          "metadata": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Metadata",
+            "description": "Caller-supplied labels set when the browser was created.",
+            "default": {}
           }
         },
         "type": "object",
@@ -1883,7 +2242,22 @@
               }
             ],
             "title": "Recording URL",
-            "description": "Presigned URL to download the session recording (available after session ends, if recording was enabled)"
+            "description": "Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response."
+          },
+          "recordingAvailable": {
+            "type": "boolean",
+            "title": "Recording Available",
+            "description": "False when a recording can never appear for this session: recording was disabled, or the browser stopped long enough ago that the upload is not coming. Only ever false from proof, so a failed recording lookup leaves it true. Clients polling for `recordingUrl` must stop when this is false.",
+            "default": true
+          },
+          "metadata": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Metadata",
+            "description": "Caller-supplied labels set when the browser was created.",
+            "default": {}
           }
         },
         "type": "object",
@@ -1916,12 +2290,29 @@
           "bu-max",
           "bu-ultra",
           "gemini-3-flash",
-          "claude-sonnet-4.6",
           "claude-opus-4.6",
-          "gpt-5.4-mini"
+          "claude-opus-4.7",
+          "claude-sonnet-5",
+          "claude-opus-4.8",
+          "gpt-5.4-mini",
+          "glm-5.2",
+          "minimax-m3",
+          "grok-4.6",
+          "glm-5.3-flash",
+          "deepseek-v4-flash-vision",
+          "claude-haiku-4.5",
+          "gpt-5.2",
+          "gpt-5-mini",
+          "gpt-5.5",
+          "gpt-5.6-sol",
+          "gpt-5.6-terra",
+          "gpt-5.6-luna",
+          "gemini-3-pro",
+          "gemini-3.1-pro",
+          "gemini-3.5-flash"
         ],
         "title": "BuModel",
-        "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash \u2014 fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 \u2014 balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 \u2014 most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.\n- `gpt-5.4-mini`: GPT-5.4 mini \u2014 OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities."
+        "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash \u2014 fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6` (legacy aliases) / `claude-sonnet-5`: Claude Sonnet 5 \u2014 balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 \u2014 capable general-purpose Opus tier.\n- `claude-opus-4.7`: Claude Opus 4.7 \u2014 most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.\n- `claude-opus-4.8`: Claude Opus 4.8 \u2014 most capable Opus-tier model, state-of-the-art on long-horizon agentic work.\n- `gpt-5.4-mini`: GPT-5.4 mini \u2014 OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities.\n- `glm-5.2`: Z.ai GLM 5.2 \u2014 capable, low-cost open model. Best for cost-sensitive agentic tasks.\n- `minimax-m3`: MiniMax M3 \u2014 fast, very low-cost model. Best for simple, high-volume tasks.\n- `grok-4.6`: xAI Grok 4.6. Fast frontier model with a large context window.\n- `glm-5.3-flash`: Z.ai GLM 5.3 Flash. Multimodal, very low cost, served by Fireworks.\n- `deepseek-v4-flash-vision`: DeepSeek V4 Flash Vision. Experimental, very low cost.\n\nAdditional provider models (e.g. `gemini-3.5-flash`, `gpt-5.2`, and `gpt-5-mini`)\nare selectable only with `use_own_key=true`, where your own provider key serves\nthem. The GPT-5.6 family is native when either Browser Use's direct OpenAI key\nor Amazon Bedrock route is configured. GPT-5.5 becomes native only through the\nBedrock rollout."
       },
       "CreateBrowserSessionRequest": {
         "properties": {
@@ -1951,10 +2342,25 @@
             "description": "Country code for proxy location. Defaults to US. Set to null to disable proxy.",
             "default": "us"
           },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history."
+          },
           "timeout": {
             "type": "integer",
             "title": "Timeout",
-            "description": "The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.",
+            "description": "The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.",
             "default": 60,
             "ge": 1,
             "le": 240
@@ -1993,6 +2399,18 @@
             "description": "Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).",
             "default": false
           },
+          "pdfRendererEnabled": {
+            "type": "boolean",
+            "title": "PDF Renderer Enabled",
+            "description": "Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.",
+            "default": true
+          },
+          "solveCaptchas": {
+            "type": "boolean",
+            "title": "Solve Captchas",
+            "description": "Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.",
+            "default": true
+          },
           "customProxy": {
             "anyOf": [
               {
@@ -2003,7 +2421,7 @@
               }
             ],
             "title": "Custom Proxy",
-            "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription."
+            "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used."
           },
           "enableRecording": {
             "type": "boolean",
@@ -2059,6 +2477,12 @@
             ],
             "title": "Password",
             "description": "Password for proxy authentication."
+          },
+          "ignoreCertErrors": {
+            "type": "boolean",
+            "title": "Ignore Certificate Errors",
+            "description": "Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).",
+            "default": false
           }
         },
         "type": "object",
@@ -2681,6 +3105,7 @@
           "cf",
           "cg",
           "ch",
+          "ci",
           "ck",
           "cl",
           "cm",
@@ -2904,8 +3329,19 @@
           },
           "model": {
             "$ref": "#/components/schemas/BuModel",
-            "description": "The model to use. \"gemini-3-flash\" is fast and cheap, \"claude-sonnet-4.6\" is balanced, \"claude-opus-4.6\" is most capable. See BuModel for details.",
-            "default": "claude-sonnet-4.6"
+            "description": "The model to use. \"gemini-3-flash\" is fast and cheap, \"claude-sonnet-5\" is balanced, \"claude-opus-4.7\" is most capable (default), and \"claude-opus-4.8\" is the newest Opus-tier model. GPT-5.6 models are Browser Use native models when either direct OpenAI or Amazon Bedrock routing is configured; otherwise they require use_own_key=true. GPT-5.5 becomes native when Bedrock routing is enabled; otherwise it requires use_own_key=true. Other additional provider models (e.g. \"gemini-3.5-flash\" and \"gpt-5.2\") require use_own_key=true. See BuModel for details.",
+            "default": "claude-opus-4.7"
+          },
+          "thinkingLevel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ThinkingLevel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected."
           },
           "sessionId": {
             "anyOf": [
@@ -2940,7 +3376,7 @@
               }
             ],
             "title": "Maxcostusd",
-            "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance)."
+            "description": "Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default."
           },
           "profileId": {
             "anyOf": [
@@ -2980,6 +3416,34 @@
             "description": "Country code for the browser proxy (e.g. \"US\", \"DE\", \"JP\"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.",
             "default": "us"
           },
+          "browserScreenWidth": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 6144.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserscreenwidth",
+            "description": "Custom browser screen width in pixels. Must be set together with browserScreenHeight. When omitted, the browser keeps its own default resolution."
+          },
+          "browserScreenHeight": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3456.0,
+                "minimum": 320.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserscreenheight",
+            "description": "Custom browser screen height in pixels. Must be set together with browserScreenWidth. When omitted, the browser keeps its own default resolution."
+          },
           "outputSchema": {
             "anyOf": [
               {
@@ -2999,6 +3463,21 @@
             "description": "If true, the agent can create scheduled tasks that run on a recurring basis (e.g. \"every Monday morning, check my inbox and summarize new emails\"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.",
             "default": false
           },
+          "sensitiveData": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensitivedata",
+            "description": "Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values."
+          },
           "enableRecording": {
             "type": "boolean",
             "title": "Enablerecording",
@@ -3008,7 +3487,7 @@
           "skills": {
             "type": "boolean",
             "title": "Skills",
-            "description": "If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.",
+            "description": "If true, the agent generates and persists reusable skills from completed tasks (saved per-domain in the DB and auto-injected into future runs). Set to false to skip skill generation \u2014 useful for privacy-sensitive tasks or to avoid the extra LLM cost.",
             "default": true
           },
           "agentmail": {
@@ -3016,6 +3495,12 @@
             "title": "Agentmail",
             "description": "If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.",
             "default": true
+          },
+          "codeMode": {
+            "type": "boolean",
+            "title": "Codemode",
+            "description": "When true, the agent returns structured output with `text` (summary) and `code` (validated Python source) fields instead of free-form text.",
+            "default": false
           },
           "cacheScript": {
             "anyOf": [
@@ -3028,6 +3513,12 @@
             ],
             "title": "Cachescript",
             "description": "Controls deterministic script caching. `null` (default): auto-detected \u2014 enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: \"Get prices from @{{https://example.com}} for @{{electronics}}\"."
+          },
+          "useOwnKey": {
+            "type": "boolean",
+            "title": "Useownkey",
+            "description": "If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2\u00d7 of provider list prices). If no key is configured for the model's provider, the request is rejected.",
+            "default": false
           },
           "autoHeal": {
             "type": "boolean",
@@ -3103,6 +3594,17 @@
             "$ref": "#/components/schemas/BuModel",
             "description": "The model tier used for this session."
           },
+          "thinkingLevel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ThinkingLevel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Configured model reasoning depth for this session, or null when provider defaults are used."
+          },
           "title": {
             "anyOf": [
               {
@@ -3123,7 +3625,7 @@
               }
             ],
             "title": "Output",
-            "description": "The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false."
+            "description": "The agent's final output. If `codeMode` was true, this will be an object with `text` (summary), `code` (Python source), and optionally `output` (execution result). If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null."
           },
           "outputSchema": {
             "anyOf": [
@@ -3186,7 +3688,7 @@
             },
             "type": "array",
             "title": "Recordingurls",
-            "description": "URLs to download session recordings. Only populated if `enableRecording` was set to true and the task has completed.",
+            "description": "URLs to download session recordings. Only populated on `GET /api/v3/sessions/{id}`; always `[]` in list responses.",
             "default": []
           },
           "profileId": {
@@ -3225,6 +3727,30 @@
               }
             ],
             "description": "Country code of the proxy used for this session, or null if no proxy."
+          },
+          "browserScreenWidth": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserscreenwidth",
+            "description": "Custom browser screen width set for this session, or null for the default."
+          },
+          "browserScreenHeight": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browserscreenheight",
+            "description": "Custom browser screen height set for this session, or null for the default."
           },
           "maxCostUsd": {
             "anyOf": [
@@ -3296,7 +3822,7 @@
               }
             ],
             "title": "Screenshoturl",
-            "description": "URL of the latest browser screenshot. This is a presigned URL that expires after 5 minutes. A new URL is generated each time you fetch the session."
+            "description": "Presigned URL of the latest screenshot (expires after 5 minutes). Only populated on `GET /api/v3/sessions/{id}`; always `null` in list responses."
           },
           "agentmailEmail": {
             "anyOf": [
@@ -3309,6 +3835,14 @@
             ],
             "title": "Agentmailemail",
             "description": "Temporary email address provisioned for this session (via AgentMail). Only present if `agentmail` was enabled."
+          },
+          "integrationsUsed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Integrationsused",
+            "description": "List of integration providers used during this session (e.g. [\"gmail\", \"slack\", \"agentmail\"])."
           },
           "createdAt": {
             "type": "string",
@@ -3365,6 +3899,17 @@
         ],
         "title": "StopStrategy",
         "description": "Strategy for stopping a session.\n\n- `task`: Stop the currently running task but keep the session alive in idle state. You can dispatch another task to the same session afterwards.\n- `session`: Stop the session entirely and destroy the sandbox. The session cannot be reused after this."
+      },
+      "ThinkingLevel": {
+        "type": "string",
+        "enum": [
+          "disabled",
+          "low",
+          "medium",
+          "high"
+        ],
+        "title": "ThinkingLevel",
+        "description": "Provider-neutral model reasoning depth."
       },
       "TooManyConcurrentActiveSessionsError": {
         "properties": {
@@ -3543,6 +4088,72 @@
         ],
         "title": "WorkspaceView",
         "description": "View model for a workspace \u2014 persistent shared storage across sessions."
+      },
+      "X402BalanceRequest": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "title": "Address",
+            "description": "EVM wallet address that signed the message (0x...)."
+          },
+          "issued_at": {
+            "type": "string",
+            "title": "Issued At",
+            "description": "ISO-8601 UTC timestamp included in the signed message."
+          },
+          "nonce": {
+            "type": "string",
+            "title": "Nonce",
+            "description": "Random single-use nonce included in the signed message."
+          },
+          "signature": {
+            "type": "string",
+            "title": "Signature",
+            "description": "EIP-191 personal_sign signature of the canonical message."
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "issued_at",
+          "nonce",
+          "signature"
+        ],
+        "title": "X402BalanceRequest",
+        "description": "Wallet-signature auth payload for a free, read-only balance check"
+      },
+      "X402BalanceResponse": {
+        "properties": {
+          "wallet": {
+            "type": "string",
+            "title": "Wallet",
+            "description": "Lowercased wallet address (verified from the signature)."
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id",
+            "description": "Wallet-derived project the balance belongs to."
+          },
+          "total_credits_usd": {
+            "type": "number",
+            "title": "Total Credits Usd",
+            "description": "Total spendable credit balance in USD."
+          },
+          "additional_credits_usd": {
+            "type": "number",
+            "title": "Additional Credits Usd",
+            "description": "Standalone (x402 top-up / one_off) credit balance in USD."
+          }
+        },
+        "type": "object",
+        "required": [
+          "wallet",
+          "project_id",
+          "total_credits_usd",
+          "additional_credits_usd"
+        ],
+        "title": "X402BalanceResponse"
       }
     },
     "securitySchemes": {

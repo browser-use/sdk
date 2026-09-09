@@ -1,0 +1,57 @@
+---
+title: Sessions
+description: "Continue one conversation across multiple V4 runs."
+icon: comments
+---
+
+A **session** holds the agent's conversation and can reuse its live browser.
+One session ID can contain multiple runs. Every run creates a session implicitly
+unless you pass an existing session ID.
+
+<img
+  src="/cloud/images/v4-sessions-light.svg"
+  alt="One session ID containing three sequential runs, where each run continues the same conversation, workspace, and live browser"
+  noZoom
+  className="block dark:hidden"
+/>
+<img
+  src="/cloud/images/v4-sessions-dark.svg"
+  alt="One session ID containing three sequential runs, where each run continues the same conversation, workspace, and live browser"
+  noZoom
+  className="hidden dark:block"
+/>
+
+Pass `session_id` / `sessionId` to continue:
+
+<CodeGroup>
+```python Python
+first = client.runs.create("Open Hacker News")
+client.runs.wait_for_completion(first.id)
+
+follow_up = client.runs.create(
+    "Now summarize the top story",
+    session_id=first.session_id,
+)
+result = client.runs.wait_for_completion(follow_up.id)
+print(result.result)
+```
+```typescript TypeScript
+const first = await client.runs.create({
+  task: "Open Hacker News",
+  model: "grok-4.5",
+});
+await client.runs.waitForCompletion(first.id);
+
+const followUp = await client.runs.create({
+  task: "Now summarize the top story",
+  model: "grok-4.5",
+  sessionId: first.sessionId,
+});
+const result = await client.runs.waitForCompletion(followUp.id);
+console.log(result.result);
+```
+</CodeGroup>
+
+Omit the session ID for a new conversation. Pass only a [workspace
+ID](/cloud/agent/workspaces) when you want a fresh conversation that keeps the
+same files.

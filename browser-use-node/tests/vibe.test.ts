@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 
 import { BrowserUse as BrowserUseV2 } from "../src/v2/client.js";
 import { BrowserUse as BrowserUseV3 } from "../src/v3/client.js";
+import { BrowserUse as BrowserUseV4 } from "../src/v4/client.js";
+import { getWalletBalance } from "../src/v3.js";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -14,23 +16,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const SDK_ROOT = resolve(__dirname, "..");
 const REPO_ROOT = resolve(SDK_ROOT, "..");
 
-/** Read CLOUD_REPO_PATH from .env */
-function getCloudRepoPath(): string {
-  const envPath = resolve(REPO_ROOT, ".env");
-  const envContent = readFileSync(envPath, "utf-8");
-  for (const line of envContent.split("\n")) {
-    const trimmed = line.trim();
-    if (trimmed.startsWith("CLOUD_REPO_PATH=") && !trimmed.startsWith("#")) {
-      return trimmed.slice("CLOUD_REPO_PATH=".length).trim();
-    }
-  }
-  throw new Error("CLOUD_REPO_PATH not found in .env");
-}
-
-const CLOUD_REPO = getCloudRepoPath();
-
-function loadSpec(version: "v2" | "v3") {
-  const specPath = resolve(CLOUD_REPO, "backend", "spec", "api", version, "openapi.json");
+function loadSpec(version: "v2" | "v3" | "v4") {
+  const specPath = resolve(REPO_ROOT, "snapshots", `${version}.json`);
   const raw = readFileSync(specPath, "utf-8");
   return JSON.parse(raw);
 }
@@ -94,6 +81,7 @@ function v2EndpointToSdkMethod(
   if (method === "get" && path === "/browsers") return { resource: "browsers", method: "list" };
   if (method === "get" && path === "/browsers/{session_id}") return { resource: "browsers", method: "get" };
   if (method === "patch" && path === "/browsers/{session_id}") return { resource: "browsers", method: "stop" };
+  if (method === "get" && path === "/browsers/{session_id}/downloads") return { resource: "browsers", method: "downloads" };
 
   // Skills
   if (method === "post" && path === "/skills") return { resource: "skills", method: "create" };
@@ -137,6 +125,7 @@ function v3EndpointToSdkMethod(
   if (method === "get" && path === "/browsers") return { resource: "browsers", method: "list" };
   if (method === "get" && path === "/browsers/{session_id}") return { resource: "browsers", method: "get" };
   if (method === "patch" && path === "/browsers/{session_id}") return { resource: "browsers", method: "stop" };
+  if (method === "get" && path === "/browsers/{session_id}/downloads") return { resource: "browsers", method: "downloads" };
 
   // Profiles
   if (method === "post" && path === "/profiles") return { resource: "profiles", method: "create" };
@@ -154,6 +143,42 @@ function v3EndpointToSdkMethod(
   if (method === "get" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "files" };
   if (method === "delete" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "deleteFile" };
   if (method === "get" && path === "/workspaces/{workspace_id}/size") return { resource: "workspaces", method: "size" };
+  if (method === "post" && path === "/workspaces/{workspace_id}/files/upload") return { resource: "workspaces", method: "uploadFiles" };
+
+  return null;
+}
+
+function v4EndpointToSdkMethod(
+  ep: { method: string; path: string },
+): { resource: string; method: string } | null {
+  const { method, path } = ep;
+
+  // Runs
+  if (method === "post" && path === "/runs") return { resource: "runs", method: "create" };
+  if (method === "get" && path === "/runs") return { resource: "runs", method: "list" };
+  if (method === "get" && path === "/runs/{run_id}") return { resource: "runs", method: "get" };
+  if (method === "get" && path === "/runs/{run_id}/status") return { resource: "runs", method: "status" };
+  if (method === "get" && path === "/runs/{run_id}/events") return { resource: "runs", method: "events" };
+  if (method === "post" && path === "/runs/{run_id}/cancel") return { resource: "runs", method: "cancel" };
+  if (method === "get" && path === "/runs/{run_id}/attachments") return { resource: "runs", method: "attachments" };
+
+  // Sessions + queue
+  if (method === "get" && path === "/sessions") return { resource: "sessions", method: "list" };
+  if (method === "get" && path === "/sessions/{session_id}") return { resource: "sessions", method: "get" };
+  if (method === "post" && path === "/sessions/{session_id}/purge") return { resource: "sessions", method: "purge" };
+  if (method === "post" && path === "/sessions/{session_id}/queue") return { resource: "sessions", method: "sendMessage" };
+  if (method === "get" && path === "/sessions/{session_id}/queue") return { resource: "sessions", method: "queue" };
+  if (method === "get" && path === "/sessions/{session_id}/queue/{message_id}") return { resource: "sessions", method: "getMessage" };
+  if (method === "delete" && path === "/sessions/{session_id}/queue/{message_id}") return { resource: "sessions", method: "removeMessage" };
+
+  // Workspaces
+  if (method === "post" && path === "/workspaces") return { resource: "workspaces", method: "create" };
+  if (method === "get" && path === "/workspaces/{workspace_id}") return { resource: "workspaces", method: "get" };
+  if (method === "patch" && path === "/workspaces/{workspace_id}") return { resource: "workspaces", method: "update" };
+  if (method === "delete" && path === "/workspaces/{workspace_id}") return { resource: "workspaces", method: "delete" };
+  if (method === "get" && path === "/workspaces/{workspace_id}/size") return { resource: "workspaces", method: "size" };
+  if (method === "get" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "files" };
+  if (method === "delete" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "deleteFile" };
   if (method === "post" && path === "/workspaces/{workspace_id}/files/upload") return { resource: "workspaces", method: "uploadFiles" };
 
   return null;
@@ -189,6 +214,43 @@ describe("V2 SDK coverage", () => {
 
   it("should have run() helper on client", () => {
     expect(typeof client.run).toBe("function");
+  });
+});
+
+describe("V4 SDK coverage", () => {
+  const spec = loadSpec("v4");
+  const endpoints = extractEndpoints(spec);
+
+  const client = new BrowserUseV4({ apiKey: "test" });
+
+  // /browsers and /profiles mount the same handlers as v3 — use the v3
+  // namespace for those. Not duplicated in the v4 SDK surface.
+  const v4SkippedPaths = (path: string) =>
+    path.startsWith("/browsers") || path.startsWith("/profiles");
+
+  it("should map every v4 endpoint to a known SDK method", () => {
+    const unmapped: string[] = [];
+    for (const ep of endpoints) {
+      if (v4SkippedPaths(ep.path)) continue;
+      const mapping = v4EndpointToSdkMethod(ep);
+      if (!mapping) {
+        unmapped.push(`${ep.method.toUpperCase()} ${ep.path}`);
+      }
+    }
+    expect(unmapped).toEqual([]);
+  });
+
+  it.each(endpoints)("$method $path -> SDK method exists", (ep) => {
+    const mapping = v4EndpointToSdkMethod(ep);
+    if (!mapping) return;
+
+    const resource = (client as any)[mapping.resource];
+    expect(resource).toBeDefined();
+    expect(typeof resource[mapping.method]).toBe("function");
+  });
+
+  it("should have waitForCompletion() helper on runs", () => {
+    expect(typeof client.runs.waitForCompletion).toBe("function");
   });
 });
 
@@ -349,9 +411,16 @@ describe("V3 SDK coverage", () => {
 
   const client = new BrowserUseV3({ apiKey: "test" });
 
+  // Box management and its Slack OAuth redirect callback are not exposed.
+  // x402 balance is exposed as getWalletBalance() because it uses wallet
+  // signature authentication rather than the API client.
+  const v3SkippedPaths = (path: string) =>
+    path.startsWith("/boxes") || path.startsWith("/oauth") || path === "/x402/balance";
+
   it("should map every v3 endpoint to a known SDK method", () => {
     const unmapped: string[] = [];
     for (const ep of endpoints) {
+      if (v3SkippedPaths(ep.path)) continue;
       const mapping = v3EndpointToSdkMethod(ep);
       if (!mapping) {
         unmapped.push(`${ep.method.toUpperCase()} ${ep.path}`);
@@ -371,5 +440,9 @@ describe("V3 SDK coverage", () => {
 
   it("should have run() helper on client", () => {
     expect(typeof client.run).toBe("function");
+  });
+
+  it("should expose the x402 balance endpoint as a wallet helper", () => {
+    expect(typeof getWalletBalance).toBe("function");
   });
 });

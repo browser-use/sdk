@@ -6,18 +6,30 @@ icon: circle-question
 
 ## Which model should I use?
 
-- **Claude Opus 4.6** (`claude-opus-4.6`) — most capable. Use for the hardest tasks that need maximum accuracy.
-- **Claude Sonnet 4.6** (`claude-sonnet-4.6`, default) — best balance of capability and cost. Use for complex multi-step workflows.
-- **GPT-5.4 mini** (`gpt-5.4-mini`) — fast and efficient. Good for simple, well-defined tasks.
+- **GPT-5.6 Luna** (`gpt-5.6-luna`, recommended) — the best balance of accuracy, speed, and price for most tasks.
+- **Claude Opus 5** (`claude-opus-5`) — maximum intelligence for difficult, long-horizon work.
+- **Grok 4.5** (`grok-4.5`) — a strong general-purpose alternative.
+- **GPT-5.6 Sol** (`gpt-5.6-sol`) — a higher-cost OpenAI option for complex tasks.
+- **MiniMax M3** (`minimax-m3`) — inexpensive for simple and high-volume tasks.
+
+See [Models](/cloud/agent/models) for the complete V4 picker and pricing.
 
 ## How do I get the live browser URL?
 
-`live_url` is returned on session creation. Embed it in an iframe or open it in a browser.
+The V4 run's `browser.ready` event contains `live_view_url`. Embed it in an iframe or open it in a browser.
 
 ```python
-session = await client.sessions.create(task="Go to example.com")
-print(session.live_url)
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+created = client.runs.create("Go to example.com")
+client.runs.wait_for_completion(created.id)
+events = client.runs.events(created.id, limit=100)
+ready = next(event for event in events.events if event.type == "browser.ready")
+print(ready.data["live_view_url"])
 ```
+
+Poll events until `browser.ready` appears if you need the URL while the run is still active. See [Human in the loop](/cloud/agent/human-in-the-loop) for a complete flow.
 
 ## Getting blocked by a website
 
@@ -30,23 +42,24 @@ If it still doesn't work, contact support inside the [Cloud Dashboard](https://c
 
 ## Rate limited (429 errors)
 
-The SDK auto-retries 429 responses with exponential backoff. If persistent, you may need more concurrent sessions — contact support.
+HTTP request limits, browser concurrency, and a full session message queue can all return 429. Inspect the response before retrying: increasing browser concurrency does not increase the general request bucket used by V4 event reads.
 
-## v2 vs v3 — which should I use?
+Use bounded workers, stagger polling, and respect `Retry-After` when provided. The SDK retries 429 responses, but a sustained workload needs its own request budget. See [Concurrency and limits](/cloud/guides/concurrency) for account-limit lookup, polling budgets, queue behavior, and error handling.
 
-**v3 is the recommendation for everything.** It's a premium agent (not available in open source) that is significantly more capable than v2:
+For insufficient-balance or API-key spending-cap errors (402), see [Billing and credits](/cloud/guides/billing).
 
-- **Much better at complex tasks** and multi-step workflows
-- **Much better at large data extraction**
-- **File system** with persistent memory across tasks
-- **Task scheduling** with 1,000+ integrations (Gmail, Slack, and more)
+## V2 or V4 — which should I use?
 
-v2 is the closest to the open-source experience — pure browser automation, nothing else. If the open source already works great for your use case, v2 is the natural fit. For everything else, use v3.
+Use **V4** for difficult tasks where accuracy matters. It supports:
 
-```python
-# v3 (recommended)
-from browser_use_sdk.v3 import AsyncBrowserUse
+- Run-focused API with a cheap status polling endpoint
+- Conversation sessions with follow-ups
+- Persistent workspaces and turn-scoped file attachments
+- Incremental events for custom UIs and monitoring
+- Per-run cost totals, cost caps, and optional judgement
 
-# v2 (simple browser-only tasks)
-from browser_use_sdk.v2 import AsyncBrowserUse
-```
+Use **V2** when tasks are simple and your priority is very low cost and
+predictable speed. Its accuracy is substantially lower.
+
+See Browser Use at #1 on the
+[Odysseys benchmark](https://odysseysbench.com/leaderboard).

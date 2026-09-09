@@ -1,0 +1,176 @@
+---
+title: Rerunnable scripts
+description: "Save a Browser Use task as a rerunnable script for repeated live data extraction and self-healing runs."
+icon: file-code
+---
+
+Teach a Cloud agent a repeated browser task once. It can save the working code
+in its [workspace](/cloud/agent/workspaces). Later runs reuse that script,
+fetch fresh data from the live site, and repair the code if the site changed.
+
+This pattern works well for repeated data extraction, checks, and reports. The
+example below collects the top five Hacker News stories. The first run writes
+and tests the script. Every later run sends a new request to the live page.
+
+<img
+  src="/cloud/images/v4-scripts-light.svg"
+  alt="A first agent run saves and tests script.py and a README in a workspace; later runs reuse the script and repair it only when necessary"
+  noZoom
+  className="block dark:hidden"
+/>
+<img
+  src="/cloud/images/v4-scripts-dark.svg"
+  alt="A first agent run saves and tests script.py and a README in a workspace; later runs reuse the script and repair it only when necessary"
+  noZoom
+  className="hidden dark:block"
+/>
+
+<Note>
+  The file stays. The running process does not. Each later run starts an agent
+  again, but it can reuse the code instead of rebuilding the browser workflow.
+</Note>
+
+## Save the working script
+
+Create one workspace, then ask the first run to do the job and save a tested
+script:
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+workspace = client.workspaces.create(name="live-hn-data")
+
+first = client.runs.create(
+    """
+    Open https://news.ycombinator.com/ and return the top five story titles and
+    URLs as JSON.
+
+    Save a script at scripts/extract_top_stories.py that collects the same
+    fields. The script must send a fresh request to the live page every time it
+    runs. Do not hard-code story titles, save the page HTML, or read an old
+    result. Print JSON with source_url set to https://news.ycombinator.com/ and
+    include fetched_at, source_sha256, and stories.
+
+    Run the script twice and save the outputs as proof/run-1.json and
+    proof/run-2.json. Confirm both outputs have a fresh fetched_at value and
+    five stories. Add scripts/README.md with the command to run it again.
+    """,
+    model="grok-4.5",
+    workspace_id=workspace.id,
+)
+client.runs.wait_for_completion(first.id)
+
+saved = client.workspaces.files(workspace.id, prefix="scripts/")
+print([file.path for file in saved.files])
+print(f"Keep this workspace ID: {workspace.id}")
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const workspace = await client.workspaces.create({ name: "live-hn-data" });
+
+const first = await client.runs.create({
+  task: `
+    Open https://news.ycombinator.com/ and return the top five story titles and
+    URLs as JSON.
+
+    Save a script at scripts/extract_top_stories.py that collects the same
+    fields. The script must send a fresh request to the live page every time it
+    runs. Do not hard-code story titles, save the page HTML, or read an old
+    result. Print JSON with source_url set to https://news.ycombinator.com/ and
+    include fetched_at, source_sha256, and stories.
+
+    Run the script twice and save the outputs as proof/run-1.json and
+    proof/run-2.json. Confirm both outputs have a fresh fetched_at value and
+    five stories. Add scripts/README.md with the command to run it again.
+  `,
+  model: "grok-4.5",
+  workspaceId: workspace.id,
+});
+await client.runs.waitForCompletion(first.id);
+
+const saved = await client.workspaces.files(workspace.id, {
+  prefix: "scripts/",
+});
+console.log(saved.files.map((file) => file.path));
+console.log(`Keep this workspace ID: ${workspace.id}`);
+```
+</CodeGroup>
+
+## Rerun it later
+
+Copy the workspace ID from the first process. Pass that ID without a session ID
+to start a new conversation with the saved files:
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+workspace_id = "your-workspace-id"
+
+later = client.runs.create(
+    """
+    Run python scripts/extract_top_stories.py and return its JSON. Check that
+    fetched_at is current, source_url is https://news.ycombinator.com/, and it
+    has five stories. If the script fails or the result is malformed, inspect
+    the live page and repair the saved script before returning the new result.
+    """,
+    model="grok-4.5",
+    workspace_id=workspace_id,
+)
+result = client.runs.wait_for_completion(later.id)
+print(result.result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const workspaceId = "your-workspace-id";
+
+const later = await client.runs.create({
+  task: `
+    Run python scripts/extract_top_stories.py and return its JSON. Check that
+    fetched_at is current, source_url is https://news.ycombinator.com/, and it
+    has five stories. If the script fails or the result is malformed, inspect
+    the live page and repair the saved script before returning the new result.
+  `,
+  model: "grok-4.5",
+  workspaceId,
+});
+const result = await client.runs.waitForCompletion(later.id);
+console.log(result.result);
+```
+</CodeGroup>
+
+## Live data, not a cached answer
+
+The saved script must request the source page on every execution. `fetched_at`
+shows when the request ran, and `source_sha256` identifies the response body.
+The data can stay the same between two runs when the page has not changed. The
+script still fetched it again.
+
+Do not put old output, page HTML, or fixed values inside the script. Save output
+files only as optional history or proof.
+
+## Can rerunnable tasks be cheaper at scale?
+
+Reusing code can remove browser steps and model work that would otherwise be
+repeated on every extraction. Every later run still starts a model and uses
+tokens, so the savings depend on the task, site, and model. Compare the cost and
+duration of the first run with later runs in your own project before making a
+savings claim.
+
+## Workspace or session?
+
+- Pass `workspace_id` / `workspaceId` for a new conversation with the same
+  files. The new run gets a new browser.
+- Pass `session_id` / `sessionId` to continue the old conversation and its
+  workspace. Cloud can also reuse that session's browser while it is still
+  alive.
+
+A saved script can break when a site changes. Ask the agent to check the live
+result and self-heal the script instead of trusting stale output.

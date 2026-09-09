@@ -372,6 +372,15 @@ export interface paths {
         /**
          * List Browser Sessions
          * @description Get paginated list of browser sessions with optional status filtering.
+         *
+         *     List responses intentionally omit per-session presigned recording URLs
+         *     (`recording_url` is always `null` here). Each recording URL requires a
+         *     synchronous boto3 SigV4 signing call (plus an S3 HEAD) that holds the GIL
+         *     and blocks the event loop. With page_size up to the max this CPU-pegs the
+         *     worker and starves the DB pool, cascading into pool exhaustion across the
+         *     fleet. Clients should fetch the recording URL on demand via
+         *     `GET /api/v2/browsers/{id}`, which signs exactly one URL for a single
+         *     session. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).
          */
         get: operations["list_browser_sessions_browsers_get"];
         put?: never;
@@ -379,9 +388,7 @@ export interface paths {
          * Create Browser Session
          * @description Create a new browser session.
          *
-         *     **Pricing:** Browser sessions are charged per hour with tiered pricing:
-         *     - Pay As You Go users: $0.06/hour
-         *     - Business/Scaleup subscribers: $0.03/hour (50% discount)
+         *     **Pricing:** Browser sessions are charged at $0.02/hour for all users.
          *
          *     The full rate is charged upfront when the session starts.
          *     When you stop the session, any unused time is automatically refunded proportionally.
@@ -425,6 +432,30 @@ export interface paths {
          *     Billing is ceil to the nearest minute (minimum 1 minute).
          */
         patch: operations["update_browser_session_browsers__session_id__patch"];
+        trace?: never;
+    };
+    "/browsers/{session_id}/downloads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Browser Session Downloads
+         * @description List files the browser downloaded to S3 during the session.
+         *
+         *     Pass ``includeUrls=true`` to receive presigned download URLs (15 min expiry) inline.
+         *     Files are stored at ``downloads/projects/{project_id}/sessions/{session_id}/`` in
+         *     the private bucket.
+         */
+        get: operations["list_browser_session_downloads_browsers__session_id__downloads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/skills": {
@@ -730,11 +761,72 @@ export interface components {
              */
             planInfo: components["schemas"]["PlanInfo"];
             /**
+             * Is Free Tier
+             * @description Whether the account is on the free tier
+             * @default false
+             */
+            isFreeTier: boolean;
+            /**
              * Project ID
              * Format: uuid
              * @description The ID of the project
              */
             projectId: string;
+            /**
+             * Tracing Disabled
+             * @description Whether third-party LLM tracing is disabled for this project
+             * @default false
+             */
+            tracingDisabled: boolean;
+        };
+        /**
+         * BrowserDownloadFile
+         * @description A single file the browser downloaded during the session.
+         */
+        BrowserDownloadFile: {
+            /**
+             * Path
+             * @description File name (basename relative to the session downloads prefix)
+             */
+            path: string;
+            /**
+             * Size
+             * @description File size in bytes
+             */
+            size: number;
+            /**
+             * Lastmodified
+             * Format: date-time
+             * @description When the file was last modified in S3
+             */
+            lastModified: string;
+            /**
+             * Url
+             * @description Presigned download URL (15 min expiry). Only included when `includeUrls=true`.
+             */
+            url?: string | null;
+        };
+        /**
+         * BrowserDownloadListResponse
+         * @description Paginated list of browser downloads with optional presigned URLs.
+         */
+        BrowserDownloadListResponse: {
+            /**
+             * Files
+             * @description List of files downloaded by the browser
+             */
+            files: components["schemas"]["BrowserDownloadFile"][];
+            /**
+             * Nextcursor
+             * @description Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page.
+             */
+            nextCursor?: string | null;
+            /**
+             * Hasmore
+             * @description Whether there are more files beyond this page.
+             * @default false
+             */
+            hasMore: boolean;
         };
         /**
          * BrowserSessionItemView
@@ -804,9 +896,17 @@ export interface components {
             agentSessionId?: string | null;
             /**
              * Recording URL
-             * @description Presigned URL to download the session recording (available after session ends, if recording was enabled)
+             * @description Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses.
              */
             recordingUrl?: string | null;
+            /**
+             * Metadata
+             * @description Caller-supplied labels set when the browser was created.
+             * @default {}
+             */
+            metadata: {
+                [key: string]: string;
+            };
         };
         /**
          * BrowserSessionListResponse
@@ -921,9 +1021,23 @@ export interface components {
             agentSessionId?: string | null;
             /**
              * Recording URL
-             * @description Presigned URL to download the session recording (available after session ends, if recording was enabled)
+             * @description Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.
              */
             recordingUrl?: string | null;
+            /**
+             * Recording Available
+             * @description False when a recording can never appear for this session: recording was disabled, or the browser stopped long enough ago that the upload is not coming. Only ever false from proof, so a failed recording lookup leaves it true. Clients polling for `recordingUrl` must stop when this is false.
+             * @default true
+             */
+            recordingAvailable: boolean;
+            /**
+             * Metadata
+             * @description Caller-supplied labels set when the browser was created.
+             * @default {}
+             */
+            metadata: {
+                [key: string]: string;
+            };
         };
         /**
          * CannotDeleteSkillWhileGeneratingError
@@ -975,8 +1089,15 @@ export interface components {
              */
             proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
             /**
+             * Metadata
+             * @description Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history.
+             */
+            metadata?: {
+                [key: string]: string;
+            } | null;
+            /**
              * Timeout
-             * @description The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.
+             * @description The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.
              * @default 60
              */
             timeout: number;
@@ -997,8 +1118,20 @@ export interface components {
              */
             allowResizing: boolean;
             /**
+             * PDF Renderer Enabled
+             * @description Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.
+             * @default true
+             */
+            pdfRendererEnabled: boolean;
+            /**
+             * Solve Captchas
+             * @description Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.
+             * @default true
+             */
+            solveCaptchas: boolean;
+            /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
@@ -1053,7 +1186,7 @@ export interface components {
             keepAlive: boolean;
             /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
@@ -1186,6 +1319,11 @@ export interface components {
              */
             thinking: boolean;
             /**
+             * Thinking Level
+             * @description Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level for Gemini 3 Flash and 3.5 Flash, and to a zero thinking budget for Gemini 2.5 Flash and the gemini-flash-latest variants); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected. API V2 cannot configure GLM or fixed-budget Claude thinking; use API V3 or V4 for those combinations.
+             */
+            thinkingLevel?: components["schemas"]["ThinkingLevel"] | null;
+            /**
              * Vision
              * @description Whether agent vision capabilities are enabled. Set to 'auto' to let the agent decide based on the model capabilities.
              * @default true
@@ -1244,6 +1382,12 @@ export interface components {
              * @description Password for proxy authentication.
              */
             password?: string | null;
+            /**
+             * Ignore Certificate Errors
+             * @description Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).
+             * @default false
+             */
+            ignoreCertErrors: boolean;
         };
         /**
          * DownloadUrlGenerationError
@@ -1678,7 +1822,7 @@ export interface components {
          * ProxyCountryCode
          * @enum {string}
          */
-        ProxyCountryCode: "ad" | "ae" | "af" | "ag" | "ai" | "al" | "am" | "an" | "ao" | "aq" | "ar" | "as" | "at" | "au" | "aw" | "az" | "ba" | "bb" | "bd" | "be" | "bf" | "bg" | "bh" | "bi" | "bj" | "bl" | "bm" | "bn" | "bo" | "bq" | "br" | "bs" | "bt" | "bv" | "bw" | "by" | "bz" | "ca" | "cc" | "cd" | "cf" | "cg" | "ch" | "ck" | "cl" | "cm" | "co" | "cr" | "cs" | "cu" | "cv" | "cw" | "cx" | "cy" | "cz" | "de" | "dj" | "dk" | "dm" | "do" | "dz" | "ec" | "ee" | "eg" | "eh" | "er" | "es" | "et" | "fi" | "fj" | "fk" | "fm" | "fo" | "fr" | "ga" | "gd" | "ge" | "gf" | "gg" | "gh" | "gi" | "gl" | "gm" | "gn" | "gp" | "gq" | "gr" | "gs" | "gt" | "gu" | "gw" | "gy" | "hk" | "hm" | "hn" | "hr" | "ht" | "hu" | "id" | "ie" | "il" | "im" | "in" | "iq" | "ir" | "is" | "it" | "je" | "jm" | "jo" | "jp" | "ke" | "kg" | "kh" | "ki" | "km" | "kn" | "kp" | "kr" | "kw" | "ky" | "kz" | "la" | "lb" | "lc" | "li" | "lk" | "lr" | "ls" | "lt" | "lu" | "lv" | "ly" | "ma" | "mc" | "md" | "me" | "mf" | "mg" | "mh" | "mk" | "ml" | "mm" | "mn" | "mo" | "mp" | "mq" | "mr" | "ms" | "mt" | "mu" | "mv" | "mw" | "mx" | "my" | "mz" | "na" | "nc" | "ne" | "nf" | "ng" | "ni" | "nl" | "no" | "np" | "nr" | "nu" | "nz" | "om" | "pa" | "pe" | "pf" | "pg" | "ph" | "pk" | "pl" | "pm" | "pn" | "pr" | "ps" | "pt" | "pw" | "py" | "qa" | "re" | "ro" | "rs" | "ru" | "rw" | "sa" | "sb" | "sc" | "sd" | "se" | "sg" | "sh" | "si" | "sj" | "sk" | "sl" | "sm" | "sn" | "so" | "sr" | "ss" | "st" | "sv" | "sx" | "sy" | "sz" | "tc" | "td" | "tf" | "tg" | "th" | "tj" | "tk" | "tl" | "tm" | "tn" | "to" | "tr" | "tt" | "tv" | "tw" | "tz" | "ua" | "ug" | "uk" | "us" | "uy" | "uz" | "va" | "vc" | "ve" | "vg" | "vi" | "vn" | "vu" | "wf" | "ws" | "xk" | "ye" | "yt" | "za" | "zm" | "zw";
+        ProxyCountryCode: "ad" | "ae" | "af" | "ag" | "ai" | "al" | "am" | "an" | "ao" | "aq" | "ar" | "as" | "at" | "au" | "aw" | "az" | "ba" | "bb" | "bd" | "be" | "bf" | "bg" | "bh" | "bi" | "bj" | "bl" | "bm" | "bn" | "bo" | "bq" | "br" | "bs" | "bt" | "bv" | "bw" | "by" | "bz" | "ca" | "cc" | "cd" | "cf" | "cg" | "ch" | "ci" | "ck" | "cl" | "cm" | "co" | "cr" | "cs" | "cu" | "cv" | "cw" | "cx" | "cy" | "cz" | "de" | "dj" | "dk" | "dm" | "do" | "dz" | "ec" | "ee" | "eg" | "eh" | "er" | "es" | "et" | "fi" | "fj" | "fk" | "fm" | "fo" | "fr" | "ga" | "gd" | "ge" | "gf" | "gg" | "gh" | "gi" | "gl" | "gm" | "gn" | "gp" | "gq" | "gr" | "gs" | "gt" | "gu" | "gw" | "gy" | "hk" | "hm" | "hn" | "hr" | "ht" | "hu" | "id" | "ie" | "il" | "im" | "in" | "iq" | "ir" | "is" | "it" | "je" | "jm" | "jo" | "jp" | "ke" | "kg" | "kh" | "ki" | "km" | "kn" | "kp" | "kr" | "kw" | "ky" | "kz" | "la" | "lb" | "lc" | "li" | "lk" | "lr" | "ls" | "lt" | "lu" | "lv" | "ly" | "ma" | "mc" | "md" | "me" | "mf" | "mg" | "mh" | "mk" | "ml" | "mm" | "mn" | "mo" | "mp" | "mq" | "mr" | "ms" | "mt" | "mu" | "mv" | "mw" | "mx" | "my" | "mz" | "na" | "nc" | "ne" | "nf" | "ng" | "ni" | "nl" | "no" | "np" | "nr" | "nu" | "nz" | "om" | "pa" | "pe" | "pf" | "pg" | "ph" | "pk" | "pl" | "pm" | "pn" | "pr" | "ps" | "pt" | "pw" | "py" | "qa" | "re" | "ro" | "rs" | "ru" | "rw" | "sa" | "sb" | "sc" | "sd" | "se" | "sg" | "sh" | "si" | "sj" | "sk" | "sl" | "sm" | "sn" | "so" | "sr" | "ss" | "st" | "sv" | "sx" | "sy" | "sz" | "tc" | "td" | "tf" | "tg" | "th" | "tj" | "tk" | "tl" | "tm" | "tn" | "to" | "tr" | "tt" | "tv" | "tw" | "tz" | "ua" | "ug" | "uk" | "us" | "uy" | "uz" | "va" | "vc" | "ve" | "vg" | "vi" | "vn" | "vu" | "wf" | "ws" | "xk" | "ye" | "yt" | "za" | "zm" | "zw";
         /**
          * RefineSkillRequest
          * @description Request to refine an existing skill.
@@ -2280,7 +2424,7 @@ export interface components {
          * SupportedLLMs
          * @enum {string}
          */
-        SupportedLLMs: "browser-use-llm" | "browser-use-2.0" | "gpt-4.1" | "gpt-4.1-mini" | "o4-mini" | "o3" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-3-pro-preview" | "gemini-3-flash-preview" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "claude-sonnet-4-20250514" | "claude-sonnet-4-5-20250929" | "claude-sonnet-4-6" | "claude-opus-4-5-20251101" | "llama-4-maverick-17b-128e-instruct" | "claude-3-7-sonnet-20250219";
+        SupportedLLMs: "browser-use-llm" | "browser-use-2.0" | "bu-2-0-mini-preview" | "gpt-4.1" | "gpt-4.1-mini" | "o4-mini" | "o3" | "gpt-5.5" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-2.5-flash" | "gemini-2.5-pro" | "gemini-3-pro-preview" | "gemini-3.1-pro-preview" | "gemini-3-flash-preview" | "gemini-3.5-flash" | "gemini-flash-latest" | "gemini-flash-lite-latest" | "claude-sonnet-4-20250514" | "claude-sonnet-4-5-20250929" | "claude-sonnet-5" | "claude-opus-4-5-20251101" | "claude-opus-4-7" | "claude-opus-4-8" | "claude-opus-5" | "glm-5.2" | "minimax-m3" | "grok-4.6" | "glm-5.3-flash" | "deepseek-v4-flash-vision" | "llama-4-maverick-17b-128e-instruct" | "claude-3-7-sonnet-20250219";
         /**
          * TaskCreatedResponse
          * @description Response model for creating a task
@@ -2663,6 +2807,12 @@ export interface components {
                 [key: string]: unknown;
             }[] | null;
         };
+        /**
+         * ThinkingLevel
+         * @description Provider-neutral model reasoning depth.
+         * @enum {string}
+         */
+        ThinkingLevel: "disabled" | "low" | "medium" | "high";
         /**
          * TooManyConcurrentActiveSessionsError
          * @description Error response when user has too many concurrent active sessions
@@ -3868,9 +4018,12 @@ export interface operations {
     list_browser_sessions_browsers_get: {
         parameters: {
             query?: {
+                /** @description Only browsers tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND). */
+                metadata?: string[] | null;
                 pageSize?: number;
                 pageNumber?: number;
                 filterBy?: components["schemas"]["BrowserSessionStatus"] | null;
+                agentSessionId?: string | null;
             };
             header?: never;
             path?: never;
@@ -4038,6 +4191,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+        };
+    };
+    list_browser_session_downloads_browsers__session_id__downloads_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                includeUrls?: boolean;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserDownloadListResponse"];
+                };
+            };
+            /** @description Session not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotFoundError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

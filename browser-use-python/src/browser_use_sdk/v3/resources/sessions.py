@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v3.models import (
+    BrowserDownloadListResponse,
     MessageListResponse,
     SessionListResponse,
     SessionResponse,
@@ -17,24 +18,39 @@ if TYPE_CHECKING:
 
 
 class Sessions:
-    def __init__(self, http: SyncHttpClient) -> None:
+    def __init__(
+        self,
+        http: SyncHttpClient,
+        *,
+        use_own_key: bool | None = None,
+    ) -> None:
         self._http = http
+        self._use_own_key = use_own_key
 
     def create(
         self,
         task: str | None = None,
         *,
         model: str | None = None,
+        thinking_level: str | None = None,
         session_id: str | UUID | None = None,
         keep_alive: bool | None = None,
-        max_cost_usd: float | None = None,
+        max_cost_usd: float | str | None = None,
         profile_id: str | None = None,
         proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
+        browser_screen_width: int | None = None,
+        browser_screen_height: int | None = None,
         output_schema: dict[str, Any] | None = None,
         workspace_id: str | None = None,
         enable_scheduled_tasks: bool | None = None,
+        sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
+        skills: bool | None = None,
+        agentmail: bool | None = None,
         cache_script: bool | None = None,
+        code_mode: bool | None = None,
+        use_own_key: bool | None = None,
+        auto_heal: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -43,6 +59,8 @@ class Sessions:
             body["task"] = task
         if model is not None:
             body["model"] = model
+        if thinking_level is not None:
+            body["thinkingLevel"] = thinking_level
         if session_id is not None:
             body["sessionId"] = str(session_id)
         if keep_alive is not None:
@@ -53,16 +71,35 @@ class Sessions:
             body["profileId"] = profile_id
         if proxy_country_code is not _UNSET:
             body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
+        if browser_screen_width is not None:
+            body["browserScreenWidth"] = browser_screen_width
+        if browser_screen_height is not None:
+            body["browserScreenHeight"] = browser_screen_height
         if output_schema is not None:
             body["outputSchema"] = output_schema
         if workspace_id is not None:
             body["workspaceId"] = workspace_id
         if enable_scheduled_tasks is not None:
             body["enableScheduledTasks"] = enable_scheduled_tasks
+        if sensitive_data is not None:
+            body["sensitiveData"] = sensitive_data
         if enable_recording is not None:
             body["enableRecording"] = enable_recording
+        if skills is not None:
+            body["skills"] = skills
+        if agentmail is not None:
+            body["agentmail"] = agentmail
         if cache_script is not None:
             body["cacheScript"] = cache_script
+        if code_mode is not None:
+            body["codeMode"] = code_mode
+        effective_use_own_key = (
+            self._use_own_key if use_own_key is None else use_own_key
+        )
+        if effective_use_own_key is not None:
+            body["useOwnKey"] = effective_use_own_key
+        if auto_heal is not None:
+            body["autoHeal"] = auto_heal
         body.update(extra)
         return SessionResponse.model_validate(
             self._http.request("POST", "/sessions", json=body)
@@ -154,24 +191,39 @@ class Sessions:
 
 
 class AsyncSessions:
-    def __init__(self, http: AsyncHttpClient) -> None:
+    def __init__(
+        self,
+        http: AsyncHttpClient,
+        *,
+        use_own_key: bool | None = None,
+    ) -> None:
         self._http = http
+        self._use_own_key = use_own_key
 
     async def create(
         self,
         task: str | None = None,
         *,
         model: str | None = None,
+        thinking_level: str | None = None,
         session_id: str | UUID | None = None,
         keep_alive: bool | None = None,
-        max_cost_usd: float | None = None,
+        max_cost_usd: float | str | None = None,
         profile_id: str | None = None,
         proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
+        browser_screen_width: int | None = None,
+        browser_screen_height: int | None = None,
         output_schema: dict[str, Any] | None = None,
         workspace_id: str | None = None,
         enable_scheduled_tasks: bool | None = None,
+        sensitive_data: dict[str, str] | None = None,
         enable_recording: bool | None = None,
+        skills: bool | None = None,
+        agentmail: bool | None = None,
         cache_script: bool | None = None,
+        code_mode: bool | None = None,
+        use_own_key: bool | None = None,
+        auto_heal: bool | None = None,
         **extra: Any,
     ) -> SessionResponse:
         """Create a session and optionally dispatch a task."""
@@ -180,6 +232,8 @@ class AsyncSessions:
             body["task"] = task
         if model is not None:
             body["model"] = model
+        if thinking_level is not None:
+            body["thinkingLevel"] = thinking_level
         if session_id is not None:
             body["sessionId"] = str(session_id)
         if keep_alive is not None:
@@ -190,16 +244,35 @@ class AsyncSessions:
             body["profileId"] = profile_id
         if proxy_country_code is not _UNSET:
             body["proxyCountryCode"] = proxy_country_code.lower() if isinstance(proxy_country_code, str) else proxy_country_code
+        if browser_screen_width is not None:
+            body["browserScreenWidth"] = browser_screen_width
+        if browser_screen_height is not None:
+            body["browserScreenHeight"] = browser_screen_height
         if output_schema is not None:
             body["outputSchema"] = output_schema
         if workspace_id is not None:
             body["workspaceId"] = workspace_id
         if enable_scheduled_tasks is not None:
             body["enableScheduledTasks"] = enable_scheduled_tasks
+        if sensitive_data is not None:
+            body["sensitiveData"] = sensitive_data
         if enable_recording is not None:
             body["enableRecording"] = enable_recording
+        if skills is not None:
+            body["skills"] = skills
+        if agentmail is not None:
+            body["agentmail"] = agentmail
         if cache_script is not None:
             body["cacheScript"] = cache_script
+        if code_mode is not None:
+            body["codeMode"] = code_mode
+        effective_use_own_key = (
+            self._use_own_key if use_own_key is None else use_own_key
+        )
+        if effective_use_own_key is not None:
+            body["useOwnKey"] = effective_use_own_key
+        if auto_heal is not None:
+            body["autoHeal"] = auto_heal
         body.update(extra)
         return SessionResponse.model_validate(
             await self._http.request("POST", "/sessions", json=body)

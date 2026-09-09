@@ -1,0 +1,43 @@
+---
+title: Observability
+description: "Poll ordered V4 events to monitor a run or build a custom UI."
+icon: chart-line
+---
+
+Poll `runs.events()` with the previous cursor to receive only new events:
+
+<CodeGroup>
+```python Python
+import time
+
+after = None
+while True:
+    page = client.runs.events(run.id, after=after)
+    for event in page.events:
+        print(event.type, event.data)
+    after = page.next_after if page.next_after is not None else after
+
+    status = client.runs.status(run.id).status.value
+    if status in {"completed", "failed", "cancelled"}:
+        break
+    time.sleep(1)
+```
+```typescript TypeScript
+let after: number | undefined;
+while (true) {
+  const page = await client.runs.events(run.id, { after });
+  for (const event of page.events) {
+    console.log(event.type, event.data);
+  }
+  after = page.nextAfter ?? after;
+
+  const { status } = await client.runs.status(run.id);
+  if (["completed", "failed", "cancelled"].includes(status)) break;
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+}
+```
+</CodeGroup>
+
+Events cover run lifecycle, model calls, browser readiness, tool activity,
+artifacts, and completion. See [Get run events](/cloud/api-v4/runs/get-run-events)
+for the complete response shape.

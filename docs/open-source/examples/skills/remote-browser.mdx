@@ -1,0 +1,20 @@
+---
+title: "remote-browser"
+description: "Controls a local browser from a sandboxed remote machine. Use when the agent runs in a sandbox (no GUI) and needs to navigate, interact, screenshot, or expose local dev servers via tunnels."
+icon: "server"
+---
+
+The `remote-browser` skill is for agents running on **sandboxed remote machines** (cloud VMs, CI, coding agents) that need to control a headless browser. It uses the same [Browser Use CLI](/open-source/browser-use-cli) workflow as the [`browser-use`](/open-source/examples/skills/browser-use) skill — `open`, `state`, `click`, `input`, `screenshot`, `close` — plus headless Chromium, cloud browsers, CDP connection, and tunnels to expose local dev servers.
+
+## Install
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill remote-browser
+```
+
+## Links
+
+<CardGroup cols={2}>
+  <Card title="skills.sh" icon="up-right-from-square" href="https://www.skills.sh/browser-use/browser-use/remote-browser" />
+  <Card title="Source" icon="github" href="https://github.com/browser-use/browser-use/tree/main/skills/remote-browser" />
+</CardGroup>

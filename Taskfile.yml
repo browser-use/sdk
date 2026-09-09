@@ -5,6 +5,7 @@ dotenv: ['.env']
 vars:
   OPENAPI_V2: '{{.CLOUD_REPO_PATH}}/backend/spec/api/v2/openapi.json'
   OPENAPI_V3: '{{.CLOUD_REPO_PATH}}/backend/spec/api/v3/openapi.json'
+  OPENAPI_V4: '{{.CLOUD_REPO_PATH}}/backend/spec/api/v4/openapi.json'
   TS_SDK: browser-use-node
   PY_SDK: browser-use-python
 
@@ -15,6 +16,7 @@ tasks:
     cmds:
       - curl -sf {{.BACKEND_URL}}/api/v2/openapi.json | python3 -m json.tool > {{.OPENAPI_V2}}
       - curl -sf {{.BACKEND_URL}}/api/v3/openapi.json | python3 -m json.tool > {{.OPENAPI_V3}}
+      - curl -sf {{.BACKEND_URL}}/api/v4/openapi.json | python3 -m json.tool > {{.OPENAPI_V4}}
       - echo "Updated OpenAPI specs from {{.BACKEND_URL}}"
 
   spec:diff:
@@ -26,21 +28,22 @@ tasks:
 
   # ── Type Generation (deterministic, no AI) ────────────────────
   gen:types:
-    desc: Generate v2 + v3 types for both TS and Python
+    desc: Generate v2 + v3 + v4 types for both TS and Python
     cmds:
       - task: gen:types:ts
       - task: gen:types:py
 
   gen:types:ts:
-    desc: Generate TypeScript types from OpenAPI (v2 + v3)
+    desc: Generate TypeScript types from OpenAPI (v2 + v3 + v4)
     dir: '{{.TS_SDK}}'
     cmds:
       - npx openapi-typescript {{.OPENAPI_V2}} -o src/generated/v2/types.ts
       - npx openapi-typescript {{.OPENAPI_V3}} -o src/generated/v3/types.ts
-      - echo "TypeScript types generated (v2 + v3)"
+      - npx openapi-typescript {{.OPENAPI_V4}} -o src/generated/v4/types.ts
+      - echo "TypeScript types generated (v2 + v3 + v4)"
 
   gen:types:py:
-    desc: Generate Python models from OpenAPI (v2 + v3)
+    desc: Generate Python models from OpenAPI (v2 + v3 + v4)
     cmds:
       - |
         datamodel-codegen \
@@ -62,7 +65,17 @@ tasks:
           --field-constraints \
           --use-union-operator \
           --disable-timestamp
-      - echo "Python models generated (v2 + v3)"
+      - |
+        datamodel-codegen \
+          --input {{.OPENAPI_V4}} \
+          --input-file-type openapi \
+          --output {{.PY_SDK}}/src/browser_use_sdk/generated/v4/models.py \
+          --output-model-type pydantic_v2.BaseModel \
+          --snake-case-field \
+          --field-constraints \
+          --use-union-operator \
+          --disable-timestamp
+      - echo "Python models generated (v2 + v3 + v4)"
 
   # ── Build ─────────────────────────────────────────────────────
   build:ts:
@@ -180,27 +193,141 @@ tasks:
           echo "README.md versions updated to ${NEW_VERSION}"
       - task: version
 
-  # ── Publish ───────────────────────────────────────────────────
-  publish:ts:
-    desc: Publish TypeScript SDK to npm
-    dir: '{{.TS_SDK}}'
-    deps: [build:ts]
+  release:
+    desc: "Cut a release: bump version, commit, push branch, open PR (usage: task release -- patch|minor|major)"
     cmds:
-      - npm publish --access public
+      - cmd: |
+          set -euo pipefail
+          BUMP="{{.CLI_ARGS}}"
+          if [ -z "$BUMP" ]; then BUMP="patch"; fi
+          if [ "$BUMP" != "patch" ] && [ "$BUMP" != "minor" ] && [ "$BUMP" != "major" ]; then
+            echo "ERROR: invalid bump '$BUMP'. Use patch, minor, or major." >&2
+            exit 1
+          fi
+
+          # Refuse to run on a dirty tree — too easy to ship unrelated WIP.
+          if ! git diff --quiet || ! git diff --cached --quiet; then
+            echo "ERROR: working tree is dirty. Commit or stash before releasing." >&2
+            git status --short >&2
+            exit 1
+          fi
+
+          # The task auto-creates the release branch from main, so it must be
+          # run FROM main. Refuse otherwise — running from a feature branch
+          # would surprise the user with a branch named off a non-main tip.
+          CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+          if [ "$CURRENT_BRANCH" != "main" ]; then
+            echo "ERROR: refusing to run. \`task release\` auto-creates a release branch off main, so it must be started from main." >&2
+            echo "Currently on: $CURRENT_BRANCH" >&2
+            echo "Switch first:" >&2
+            echo "  git checkout main" >&2
+            exit 1
+          fi
+
+          # Fast-forward main to origin/main so the new branch is based on the
+          # latest published main, not whatever stale state we have locally.
+          # --ff-only fails if local main has unpushed commits, which would be
+          # weird — bail loud so the user reconciles.
+          git fetch origin main --quiet
+          if ! git merge-base --is-ancestor origin/main HEAD; then
+            echo "ERROR: local main has commits not on origin/main. Reconcile before releasing." >&2
+            echo "  git log origin/main..HEAD --oneline" >&2
+            exit 1
+          fi
+          git pull --ff-only origin main --quiet
+
+          # Create the release branch. Date+time keeps it unique across
+          # multiple releases the same day; the branch auto-deletes on PR merge
+          # (squash + delete-on-merge), so the branch list stays clean.
+          NEW_BRANCH="release/$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$NEW_BRANCH"
+          echo "::notice::Created release branch $NEW_BRANCH from main."
+      - task: "version:bump"
+        vars: { CLI_ARGS: '{{.CLI_ARGS | default "patch"}}' }
+      - cmd: |
+          set -euo pipefail
+          BUMP="{{.CLI_ARGS}}"
+          if [ -z "$BUMP" ]; then BUMP="patch"; fi
+          NEW_VERSION="$(node -p "require('./{{.TS_SDK}}/package.json').version")"
+          echo
+          echo "Releasing v${NEW_VERSION}."
+
+          # Stage the manifest + README updates that version:bump touched.
+          git add {{.TS_SDK}}/package.json {{.PY_SDK}}/pyproject.toml README.md
+
+          # Commit. Conventional-ish message so it's obvious in main's history.
+          git commit -m "release: v${NEW_VERSION}" -m "Bumps both SDK manifests. Merging this PR will trigger auto-release-on-version-bump → publish.yml (gated by the release env)."
+
+          # Push the branch. -u so future pushes work without args.
+          BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+          git push -u origin "$BRANCH"
+
+          # Open the PR. If gh is logged in, this Just Works; otherwise prints
+          # the manual fallback URL.
+          if command -v gh >/dev/null 2>&1; then
+            gh pr create \
+              --repo browser-use/sdk \
+              --base main \
+              --head "$BRANCH" \
+              --title "release: v${NEW_VERSION}" \
+              --body "Bumps both SDK manifests to v${NEW_VERSION}.
+
+          Merging this PR triggers \`auto-release-on-version-bump\` → \`publish.yml\` (gated by the \`release\` env, requires a non-author approver, OIDC publish to npm + PyPI).
+
+          Generated by \`task release -- $BUMP\`."
+          else
+            echo "gh CLI not found. Push succeeded; open the PR manually:"
+            echo "  https://github.com/browser-use/sdk/compare/main...$BRANCH?expand=1"
+          fi
+
+          echo
+          echo "Done. Merge the PR to trigger the release."
+
+  # ── Publish ───────────────────────────────────────────────────
+  # Releases now ship through GitHub Releases + gated CI (.github/workflows/publish.yml).
+  # The tasks below are intentionally non-functional. The old commands are kept
+  # commented inline so a maintainer can emergency-unblock by editing this file
+  # (intentional friction: editing Taskfile is the only path).
+  publish:ts:
+    desc: "[DEPRECATED] Use GitHub Releases. See RUNBOOK.md."
+    dir: '{{.TS_SDK}}'
+    cmds:
+      - |
+        echo "ERROR: 'task publish:ts' is deprecated."
+        echo "Releases now ship through GitHub Releases + gated CI."
+        echo "See RUNBOOK.md > 'Release authentication' for the new flow."
+        echo
+        echo "Emergency unblock (logged): uncomment the line below in Taskfile.yml"
+        echo "  # npm publish --access public"
+        exit 1
 
   publish:py:
-    desc: Publish Python SDK to PyPI
+    desc: "[DEPRECATED] Use GitHub Releases. See RUNBOOK.md."
     dir: '{{.PY_SDK}}'
     cmds:
-      - rm -rf dist/
-      - task: build:py
-      - uv publish --token {{.PYPI_TOKEN}}
+      - |
+        echo "ERROR: 'task publish:py' is deprecated."
+        echo "Releases now ship through GitHub Releases + gated CI."
+        echo "See RUNBOOK.md > 'Release authentication' for the new flow."
+        echo
+        echo "Emergency unblock (logged): uncomment the lines below in Taskfile.yml"
+        echo "  # rm -rf dist/"
+        echo "  # task: build:py"
+        echo "  # uv publish --token <PYPI_TOKEN>"
+        exit 1
 
   publish:
-    desc: Publish both SDKs
+    desc: "[DEPRECATED] Use GitHub Releases. See RUNBOOK.md."
     cmds:
-      - task: publish:ts
-      - task: publish:py
+      - |
+        echo "ERROR: 'task publish' is deprecated."
+        echo "Releases now ship through GitHub Releases + gated CI."
+        echo "See RUNBOOK.md > 'Release authentication' for the new flow."
+        echo
+        echo "Emergency unblock (logged): uncomment the lines below in Taskfile.yml"
+        echo "  # task: publish:ts"
+        echo "  # task: publish:py"
+        exit 1
 
   # ── Snapshots ─────────────────────────────────────────────────
   snapshot:save:
@@ -208,6 +335,7 @@ tasks:
     cmds:
       - cp {{.OPENAPI_V2}} snapshots/v2.json
       - cp {{.OPENAPI_V3}} snapshots/v3.json
+      - cp {{.OPENAPI_V4}} snapshots/v4.json
       - task: docs:sync
       - echo "Snapshots saved and docs synced"
 
@@ -219,17 +347,28 @@ tasks:
       - echo ""
       - echo "=== v3 changes ==="
       - diff snapshots/v3.json {{.OPENAPI_V3}} || true
+      - echo ""
+      - echo "=== v4 changes ==="
+      - diff snapshots/v4.json {{.OPENAPI_V4}} || true
 
   # ── Docs ─────────────────────────────────────────────────────
+  docs:refresh-production:
+    desc: Refresh the public API reference from production without regenerating the SDKs
+    cmds:
+      - python3 scripts/refresh_docs_openapi.py
+
   docs:sync:
-    desc: Copy OpenAPI specs into docs for Mintlify
+    desc: Copy SDK generation snapshots into docs (can replace a newer production reference)
     cmds:
       - cp snapshots/v2.json docs/openapi/v2.json
       - cp snapshots/v3.json docs/openapi/v3.json
+      - cp snapshots/v4.json docs/openapi/v4.json
+      - python3 -m json.tool --indent 4 snapshots/v2.json docs/cloud/openapi/v2.json
+      - python3 -m json.tool --indent 4 snapshots/v3.json docs/cloud/openapi/v3.json
+      - python3 -m json.tool --indent 4 snapshots/v4.json docs/cloud/openapi/v4.json
 
   docs:dev:
-    desc: Start Mintlify docs dev server
-    deps: [docs:sync]
+    desc: Start Mintlify docs dev server using the checked-in public reference
     dir: docs
     cmds:
       - mint dev

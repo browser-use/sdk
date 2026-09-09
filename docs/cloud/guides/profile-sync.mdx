@@ -1,30 +1,42 @@
 ---
 title: Sync local and cloud cookies
-description: "Sync your local browser cookies to the cloud — instantly authenticate without managing credentials."
+description: "Sync a local login, then use it in an API V4 run."
 icon: arrows-rotate
 ---
 
+Run the profile sync helper:
+
 ```bash
-export BROWSER_USE_API_KEY=your_key && curl -fsSL https://browser-use.com/profile.sh | sh
+export BROWSER_USE_API_KEY=your_key
+curl -fsSL https://browser-use.com/profile.sh | sh
 ```
 
-This opens a browser where you select which accounts to sync. After syncing, you receive a `profile_id` to use in your tasks.
+Choose the accounts to sync, then use the returned profile ID:
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import BrowserUse
 
-client = AsyncBrowserUse()
-session = await client.sessions.create(profile_id="your_synced_profile_id")
-result = await client.run("Check my LinkedIn messages", session_id=session.id)
+client = BrowserUse()
+run = client.runs.create(
+    "Check my LinkedIn messages",
+    browser_settings={"profileId": "YOUR_PROFILE_ID"},
+)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const session = await client.sessions.create({ profileId: "your_synced_profile_id" });
-const result = await client.run("Check my LinkedIn messages", {
-  sessionId: session.id,
+const run = await client.runs.create({
+  task: "Check my LinkedIn messages",
+  model: "grok-4.5",
+  browserSettings: {
+    profileId: "YOUR_PROFILE_ID",
+    proxyCountryCode: "us",
+  },
 });
 ```
 </CodeGroup>
+
+The profile supplies cookies and local storage without putting credentials in
+the prompt. Re-sync when the site's login expires.

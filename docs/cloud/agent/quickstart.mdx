@@ -1,46 +1,64 @@
 ---
-title: Introduction
-description: "Easiest way to automate the web. Tell this agent in natural language what it should do, and it can interact with the web like a human."
+title: Run a task
+description: "Give a high-accuracy browser agent a goal and get the result."
 icon: rocket
 ---
 
-The SDK is a thin wrapper around the [API v3 Reference](/cloud/api-reference). Every endpoint in the API reference is available as an SDK method — `client.sessions`, `client.browsers`, `client.profiles`, `client.workspaces`, and `client.billing`.
+Create an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) and export it:
 
-`client.run()` creates a session, polls every 2 seconds until completion (up to 4 hours), and returns the result. It accepts all parameters from the [Create Session](/cloud/api-v3/sessions/create-session) endpoint. The result is a [Session object](/cloud/api-v3/sessions/get-session) — use `result.output` for the agent's response.
+```bash
+export BROWSER_USE_API_KEY=your_key
+```
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import BrowserUse
 
-client = AsyncBrowserUse()
-result = await client.run("List the top 20 posts on Hacker News today with their points")
-print(result.output)
+with BrowserUse() as client:
+    run = client.runs.create("Find the top Hacker News story")
+    result = client.runs.wait_for_completion(run.id)
+    print(result.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const result = await client.run("List the top 20 posts on Hacker News today with their points");
-console.log(result.output);
+const run = await client.runs.create({
+  task: "Find the top Hacker News story",
+});
+const result = await client.runs.waitForCompletion(run.id);
+console.log(result.result);
 ```
 ```bash curl
-curl -X POST https://api.browser-use.com/api/v3/sessions \
-  -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News today with their points"}'
+  -d '{"task":"Find the top Hacker News story"}'
 ```
 </CodeGroup>
 
-**What this agent can do:**
-- **Data extraction** — scrape websites with thousands of listings
-- **Form filling** — submit applications, fill out surveys, enter data
-- **Multi-step workflows** — log in, navigate, click through flows, download files
-- **Research** — search across multiple sites, compare results, summarize findings
-- **Monitoring** — monitor a website and get notified if something changes
-- **Testing** — test websites end-to-end with natural language instructions
-- **Scheduling** — schedule tasks to run on a recurring basis
-- **1,000+ integrations** — Gmail, Calendar, Notion, and more
+Install the latest SDK with `pip install --upgrade browser-use-sdk` or
+`npm install browser-use-sdk@latest`. Curl needs no installation.
 
-The best SOTA browser agent — see our [online Mind2Web benchmark](https://browser-use.com/posts/online-mind2web-benchmark).
+Every new run implicitly creates a [session](/cloud/agent/sessions) for its
+conversation and live browser, plus a [workspace](/cloud/agent/workspaces) for
+persistent files.
 
-If you are an LLM, read/include [docs.browser-use.com/llms-full.txt](https://docs.browser-use.com/llms-full.txt) — it contains the complete SDK reference with all code examples in a single file optimized for LLMs.
+<img
+  src="/cloud/images/v4-agent-overview-light.svg"
+  alt="A task starts a run inside a session and the run reads and writes persistent workspace files"
+  noZoom
+  className="block dark:hidden"
+/>
+<img
+  src="/cloud/images/v4-agent-overview-dark.svg"
+  alt="A task starts a run inside a session and the run reads and writes persistent workspace files"
+  noZoom
+  className="hidden dark:block"
+/>
+
+<CardGroup cols={2}>
+  <Card title="Copy API V4 docs" icon="sparkles" href="https://docs.browser-use.com/llms.txt">
+    Give the compact context file to your coding agent.
+  </Card>
+</CardGroup>

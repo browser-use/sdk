@@ -84,13 +84,16 @@ class SyncHttpClient:
         *,
         json: Any = None,
         params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> Any:
         json = _clean_json(json) if json is not None else None
-        params = _clean_params(params)
+        cleaned_params = _clean_params(params)
         for attempt in range(self._max_retries + 1):
             if attempt > 0:
                 time.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
-            response = self._client.request(method, path, json=json, params=params)
+            response = self._client.request(
+                method, path, json=json, params=cleaned_params, headers=headers
+            )
 
             if _should_retry(response.status_code) and attempt < self._max_retries:
                 continue
@@ -107,7 +110,14 @@ class SyncHttpClient:
 
 
 class AsyncHttpClient:
-    """Asynchronous HTTP client with retry and error handling."""
+    """Asynchronous HTTP client with retry and error handling.
+
+    Pass ``x402_client`` to authenticate via the x402 payment protocol instead
+    of an API key. When ``x402_client`` is set, an ``x402HttpxClient`` is used
+    as the underlying transport. ``api_key`` is optional in that mode — if
+    non-empty, it triggers top-up behavior (backend credits the API key's
+    project instead of one auto-created from the wallet).
+    """
 
     def __init__(
         self,
@@ -115,13 +125,21 @@ class AsyncHttpClient:
         api_key: str,
         timeout: float = 30.0,
         max_retries: int = _DEFAULT_MAX_RETRIES,
+        *,
+        x402_client: Any = None,
     ) -> None:
         self._max_retries = max_retries
-        self._client = httpx.AsyncClient(
-            base_url=base_url,
-            headers={"X-Browser-Use-API-Key": api_key},
-            timeout=timeout,
-        )
+        if x402_client is not None:
+            from .x402 import x402_async_httpx_client
+            self._client = x402_async_httpx_client(
+                x402_client, base_url=base_url, timeout=timeout, api_key=api_key
+            )
+        else:
+            self._client = httpx.AsyncClient(
+                base_url=base_url,
+                headers={"X-Browser-Use-API-Key": api_key},
+                timeout=timeout,
+            )
 
     async def request(
         self,
@@ -130,13 +148,16 @@ class AsyncHttpClient:
         *,
         json: Any = None,
         params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> Any:
         json = _clean_json(json) if json is not None else None
-        params = _clean_params(params)
+        cleaned_params = _clean_params(params)
         for attempt in range(self._max_retries + 1):
             if attempt > 0:
                 await asyncio.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
-            response = await self._client.request(method, path, json=json, params=params)
+            response = await self._client.request(
+                method, path, json=json, params=cleaned_params, headers=headers
+            )
 
             if _should_retry(response.status_code) and attempt < self._max_retries:
                 continue
@@ -152,15 +173,23 @@ class AsyncHttpClient:
         await self._client.aclose()
 
 
-def _clean_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Remove None values and stringify query params."""
+def _clean_params(
+    params: dict[str, Any] | None,
+) -> dict[str, str | list[str]] | None:
+    """Remove None values and stringify query params, repeating sequence values."""
     if params is None:
         return None
-    cleaned: dict[str, str] = {}
+    cleaned: dict[str, str | list[str]] = {}
     for k, v in params.items():
         if v is None:
             continue
-        if isinstance(v, bool):
+        if isinstance(v, (list, tuple)):
+            cleaned[k] = [
+                "true" if value is True else "false" if value is False else str(value)
+                for value in v
+                if value is not None
+            ]
+        elif isinstance(v, bool):
             cleaned[k] = "true" if v else "false"
         else:
             cleaned[k] = str(v)

@@ -1,46 +1,84 @@
 ---
 title: Models
-description: "Choose the right model for your task."
+description: "Choose a V4 model and understand its token pricing."
 icon: microchip
 ---
 
-Pass `model` to select a model:
+Omit `model` to use **GPT-5.6 Luna**, or pass a model ID when creating a run.
+These are the recommended Browser Use-hosted models with published token
+pricing:
 
-| Model | API String | Input (per 1M tokens) | Output (per 1M tokens) |
-| ----- | ---------- | --------------------- | ---------------------- |
-| Claude Sonnet 4.6 | `claude-sonnet-4.6` | \$3.60 | \$18.00 |
-| Claude Opus 4.6 | `claude-opus-4.6` | \$6.00 | \$30.00 |
-| GPT-5.4 mini | `gpt-5.4-mini` | \$0.90 | \$5.40 |
+| Model | API string | Input | Cache read | Output | BYOK |
+| ----- | ---------- | ----: | ---------: | -----: | ---- |
+| GPT-5.6 Luna (recommended) | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
+| Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
+| Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
+| GPT-5.6 Sol | `gpt-5.6-sol` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
+| MiniMax M3 | `minimax-m3` | \$0.36 | \$0.072 | \$1.44 | — |
+
+Token prices are USD per 1 million tokens. Browser sessions
+(\$0.02/hour) and network traffic (\$5/GB managed proxy or \$0.20/GB
+proxyless/BYOP) are charged separately. See [full pricing](https://browser-use.com/pricing).
+
+See [Thinking levels](/cloud/agent/thinking-levels) for V4 `modelParams` and
+the normalized `thinkingLevel` values available in V2 and V3.
 
 <Tip>
-  We recommend **Claude Sonnet 4.6** (`claude-sonnet-4.6`). It's the model we optimize for the most right now.
+  We recommend **GPT-5.6 Luna** for most tasks. It combines near-Opus benchmark
+  performance with the lowest token price and fastest median response time in
+  current V4 production traffic.
 </Tip>
+
+## All supported V4 model IDs
+
+The V4 request schema accepts the following model IDs. The Cloud dashboard may
+show a smaller curated set; availability can also depend on your account's
+rollout and configured provider key.
+
+| Provider | Model IDs | BYOK provider |
+| --- | --- | --- |
+| Anthropic | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-fable-5`, `claude-sonnet-5` | Anthropic |
+| OpenAI | `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | OpenAI |
+| Google | `gemini-3-flash`, `gemini-3.1-pro`, `gemini-3.5-flash`, `gemini-3.6-flash` | Google |
+| xAI | `grok-4.5` | — |
+| Z.ai | `glm-5.2` | — |
+| Moonshot AI | `kimi-k3` | — |
+| MiniMax | `minimax-m3` | — |
+
+See [Thinking levels](/cloud/agent/thinking-levels) for the reasoning controls
+accepted by each model. Not every model accepts `modelParams`.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import BrowserUse
 
-client = AsyncBrowserUse()
-result = await client.run(
-    "List the top 20 posts on Hacker News today with their points",
-    model="claude-sonnet-4.6",
+client = BrowserUse()
+run = client.runs.create(
+    "Compare three project-management tools",
+    model="gpt-5.6-luna",
 )
-print(result.output)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const result = await client.run(
-  "List the top 20 posts on Hacker News today with their points",
-  { model: "claude-sonnet-4.6" },
-);
-console.log(result.output);
+const run = await client.runs.create({
+  task: "Compare three project-management tools",
+  model: "gpt-5.6-luna",
+});
 ```
 ```bash curl
-curl -X POST https://api.browser-use.com/api/v3/sessions \
-  -H "X-Browser-Use-API-Key: YOUR_API_KEY" \
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task": "List the top 20 posts on Hacker News", "model": "claude-sonnet-4.6"}'
+  -d '{"task":"Compare three PM tools","model":"gpt-5.6-luna"}'
 ```
 </CodeGroup>
+
+## Bring your own key
+
+BYOK is available to pay-as-you-go customers; no recurring subscription is required. After adding credits, add an Anthropic, OpenAI, or Google key under **Settings →
+API Keys → Bring Your Own Key**. V4 uses it automatically for matching models;
+no request flag is needed. You pay the provider directly, plus a 0.2× Browser
+Use orchestration fee. Models from other providers use Browser Use-managed
+keys.

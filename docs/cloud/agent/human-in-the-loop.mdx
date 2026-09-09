@@ -1,88 +1,61 @@
 ---
 title: Human in the loop
-description: "Let a human interact with the live browser while the agent is running. Useful for approvals, payments, complex auth flows, or reviewing agent work before continuing."
+description: "Open the live browser, take over, then continue the same session."
 icon: hand
 ---
 
-## Use cases
-- Human enters payment info or approves a transaction, agent handles the rest
-- Human navigates a complex auth flow, then hands back to agent
-- Human reviews what the agent did before the agent continues
-
-<Warning>
-  Sessions time out after 15 minutes of inactivity. The maximum session duration is 4 hours. If the human needs more time, send a lightweight follow-up task (e.g. "wait") to reset the inactivity timer.
-</Warning>
-
-## Flow
-
-1. Create a session — it stays alive automatically when you pass `session_id` to `run()`
-2. Run an agent task
-3. Human interacts with the live browser
-4. Send a new follow-up task
+Use a human checkpoint for approvals, authentication, payments, or review.
+After a run stops, get its `live_view_url` from the `browser.ready` event:
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import BrowserUse
 
-client = AsyncBrowserUse()
-
-# 1. Create a session
-session = await client.sessions.create()
-print(f"Live view: {session.live_url}")
-
-# 2. Agent does the first part
-result = await client.run(
-    "Go to amazon.com and search for noise cancelling headphones",
-    session_id=session.id,
+client = BrowserUse()
+run = client.runs.create(
+    "Open the login page and stop for human review"
 )
-print(result.output)
+run = client.runs.wait_for_completion(run.id)
 
-# 3. Human opens live_url and picks a product
-input("Press Enter after you've selected a product in the live view...")
-
-# 4. Agent continues where the human left off
-result = await client.run(
-    "Get the details of the selected product — name, price, and rating",
-    session_id=session.id,
+events = client.runs.events(run.id, limit=100)
+ready = next(
+    event for event in events.events
+    if event.type == "browser.ready"
 )
-print(result.output)
+print(ready.data["live_view_url"])
 
-# Clean up
-await client.sessions.stop(session.id)
+# After the human finishes:
+next_run = client.runs.create(
+    "Continue from the current page",
+    session_id=run.session_id,
+)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-import * as readline from "readline";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
+const run = await client.runs.create({
+  task: "Open the login page and stop for human review",
+  model: "grok-4.5",
+});
+await client.runs.waitForCompletion(run.id);
 
-// 1. Create a session
-const session = await client.sessions.create();
-console.log(`Live view: ${session.liveUrl}`);
-
-// 2. Agent does the first part
-const searchResult = await client.run(
-  "Go to amazon.com and search for noise cancelling headphones",
-  { sessionId: session.id },
+const events = await client.runs.events(run.id, {
+  limit: 100,
+});
+const ready = events.events.find(
+  (event) => event.type === "browser.ready",
 );
-console.log(searchResult.output);
+console.log(ready?.data.live_view_url);
 
-// 3. Human opens liveUrl and picks a product
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-await new Promise((resolve) =>
-  rl.question("Press Enter after you've selected a product in the live view...", resolve),
-);
-rl.close();
-
-// 4. Agent continues where the human left off
-const result = await client.run(
-  "Get the details of the selected product — name, price, and rating",
-  { sessionId: session.id },
-);
-console.log(result.output);
-
-// Clean up
-await client.sessions.stop(session.id);
+// After the human finishes:
+const nextRun = await client.runs.create({
+  task: "Continue from the current page",
+  model: "grok-4.5",
+  sessionId: run.sessionId,
+});
 ```
 </CodeGroup>
 
+The same session preserves the conversation and workspace and reuses the live
+browser while it is available. Treat live-view URLs as credentials.

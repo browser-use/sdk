@@ -14,6 +14,44 @@ class AccountNotFoundError(BaseModel):
     detail: str | None = Field('Account not found', title='Detail')
 
 
+class BrowserDownloadFile(BaseModel):
+    path: str = Field(
+        ...,
+        description='File name (basename relative to the session downloads prefix)',
+        title='Path',
+    )
+    size: int = Field(..., description='File size in bytes', title='Size')
+    last_modified: AwareDatetime = Field(
+        ...,
+        alias='lastModified',
+        description='When the file was last modified in S3',
+        title='Lastmodified',
+    )
+    url: str | None = Field(
+        None,
+        description='Presigned download URL (15 min expiry). Only included when `includeUrls=true`.',
+        title='Url',
+    )
+
+
+class BrowserDownloadListResponse(BaseModel):
+    files: List[BrowserDownloadFile] = Field(
+        ..., description='List of files downloaded by the browser', title='Files'
+    )
+    next_cursor: str | None = Field(
+        None,
+        alias='nextCursor',
+        description='Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page.',
+        title='Nextcursor',
+    )
+    has_more: bool | None = Field(
+        False,
+        alias='hasMore',
+        description='Whether there are more files beyond this page.',
+        title='Hasmore',
+    )
+
+
 class BrowserSessionStatus(Enum):
     active = 'active'
     stopped = 'stopped'
@@ -93,8 +131,19 @@ class BrowserSessionView(BaseModel):
     recording_url: str | None = Field(
         None,
         alias='recordingUrl',
-        description='Presigned URL to download the session recording (available after session ends, if recording was enabled)',
+        description='Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.',
         title='Recording URL',
+    )
+    recording_available: bool | None = Field(
+        True,
+        alias='recordingAvailable',
+        description='False when a recording can never appear for this session: recording was disabled, or the browser stopped long enough ago that the upload is not coming. Only ever false from proof, so a failed recording lookup leaves it true. Clients polling for `recordingUrl` must stop when this is false.',
+        title='Recording Available',
+    )
+    metadata: Dict[str, str] | None = Field(
+        {},
+        description='Caller-supplied labels set when the browser was created.',
+        title='Metadata',
     )
 
 
@@ -233,6 +282,12 @@ class CustomProxy(BaseModel):
     )
     password: Password | None = Field(
         None, description='Password for proxy authentication.', title='Password'
+    )
+    ignore_cert_errors: bool | None = Field(
+        False,
+        alias='ignoreCertErrors',
+        description='Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).',
+        title='Ignore Certificate Errors',
     )
 
 
@@ -467,6 +522,7 @@ class ProxyCountryCode(Enum):
     cf = 'cf'
     cg = 'cg'
     ch = 'ch'
+    ci = 'ci'
     ck = 'ck'
     cl = 'cl'
     cm = 'cm'
@@ -883,20 +939,35 @@ class SkillsGenerationStatus(Enum):
 class SupportedLLMs(Enum):
     browser_use_llm = 'browser-use-llm'
     browser_use_2_0 = 'browser-use-2.0'
+    bu_2_0_mini_preview = 'bu-2-0-mini-preview'
     gpt_4_1 = 'gpt-4.1'
     gpt_4_1_mini = 'gpt-4.1-mini'
     o4_mini = 'o4-mini'
     o3 = 'o3'
+    gpt_5_5 = 'gpt-5.5'
+    gpt_5_6_sol = 'gpt-5.6-sol'
+    gpt_5_6_terra = 'gpt-5.6-terra'
+    gpt_5_6_luna = 'gpt-5.6-luna'
     gemini_2_5_flash = 'gemini-2.5-flash'
     gemini_2_5_pro = 'gemini-2.5-pro'
     gemini_3_pro_preview = 'gemini-3-pro-preview'
+    gemini_3_1_pro_preview = 'gemini-3.1-pro-preview'
     gemini_3_flash_preview = 'gemini-3-flash-preview'
+    gemini_3_5_flash = 'gemini-3.5-flash'
     gemini_flash_latest = 'gemini-flash-latest'
     gemini_flash_lite_latest = 'gemini-flash-lite-latest'
     claude_sonnet_4_20250514 = 'claude-sonnet-4-20250514'
     claude_sonnet_4_5_20250929 = 'claude-sonnet-4-5-20250929'
-    claude_sonnet_4_6 = 'claude-sonnet-4-6'
+    claude_sonnet_5 = 'claude-sonnet-5'
     claude_opus_4_5_20251101 = 'claude-opus-4-5-20251101'
+    claude_opus_4_7 = 'claude-opus-4-7'
+    claude_opus_4_8 = 'claude-opus-4-8'
+    claude_opus_5 = 'claude-opus-5'
+    glm_5_2 = 'glm-5.2'
+    minimax_m3 = 'minimax-m3'
+    grok_4_6 = 'grok-4.6'
+    glm_5_3_flash = 'glm-5.3-flash'
+    deepseek_v4_flash_vision = 'deepseek-v4-flash-vision'
     llama_4_maverick_17b_128e_instruct = 'llama-4-maverick-17b-128e-instruct'
     claude_3_7_sonnet_20250219 = 'claude-3-7-sonnet-20250219'
 
@@ -1130,6 +1201,13 @@ class TaskView(BaseModel):
     )
 
 
+class ThinkingLevel(Enum):
+    disabled = 'disabled'
+    low = 'low'
+    medium = 'medium'
+    high = 'high'
+
+
 class TooManyConcurrentActiveSessionsError(BaseModel):
     detail: str | None = Field(
         'Too many concurrent active sessions. Please wait for one to finish, kill one, or upgrade your plan.',
@@ -1302,8 +1380,20 @@ class AccountView(BaseModel):
     plan_info: PlanInfo = Field(
         ..., alias='planInfo', description='The plan information', title='Plan Info'
     )
+    is_free_tier: bool | None = Field(
+        False,
+        alias='isFreeTier',
+        description='Whether the account is on the free tier',
+        title='Is Free Tier',
+    )
     project_id: UUID = Field(
         ..., alias='projectId', description='The ID of the project', title='Project ID'
+    )
+    tracing_disabled: bool | None = Field(
+        False,
+        alias='tracingDisabled',
+        description='Whether third-party LLM tracing is disabled for this project',
+        title='Tracing Disabled',
     )
 
 
@@ -1377,8 +1467,13 @@ class BrowserSessionItemView(BaseModel):
     recording_url: str | None = Field(
         None,
         alias='recordingUrl',
-        description='Presigned URL to download the session recording (available after session ends, if recording was enabled)',
+        description='Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses.',
         title='Recording URL',
+    )
+    metadata: Dict[str, str] | None = Field(
+        {},
+        description='Caller-supplied labels set when the browser was created.',
+        title='Metadata',
     )
 
 
@@ -1415,9 +1510,14 @@ class CreateBrowserSessionRequest(BaseModel):
         description='Country code for proxy location. Defaults to US. Set to null to disable proxy.',
         title='Proxy Country Code',
     )
+    metadata: Dict[str, str] | None = Field(
+        None,
+        description='Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history.',
+        title='Metadata',
+    )
     timeout: int | None = Field(
         60,
-        description='The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.',
+        description='The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.',
         title='Timeout',
     )
     browser_screen_width: BrowserScreenWidth | None = Field(
@@ -1438,10 +1538,22 @@ class CreateBrowserSessionRequest(BaseModel):
         description='Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).',
         title='Allow Resizing',
     )
+    pdf_renderer_enabled: bool | None = Field(
+        True,
+        alias='pdfRendererEnabled',
+        description="Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.",
+        title='PDF Renderer Enabled',
+    )
+    solve_captchas: bool | None = Field(
+        True,
+        alias='solveCaptchas',
+        description='Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.',
+        title='Solve Captchas',
+    )
     custom_proxy: CustomProxy | None = Field(
         None,
         alias='customProxy',
-        description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.',
+        description='Custom proxy settings to use for the session. If not provided, our proxies will be used.',
         title='Custom Proxy',
     )
     enable_recording: bool | None = Field(
@@ -1498,7 +1610,7 @@ class CreateSessionRequest(BaseModel):
     custom_proxy: CustomProxy | None = Field(
         None,
         alias='customProxy',
-        description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.',
+        description='Custom proxy settings to use for the session. If not provided, our proxies will be used.',
         title='Custom Proxy',
     )
     enable_recording: bool | None = Field(
@@ -1591,6 +1703,12 @@ class CreateTaskRequest(BaseModel):
     thinking: bool | None = Field(
         False, description='Whether agent thinking mode is enabled.', title='Thinking'
     )
+    thinking_level: ThinkingLevel | None = Field(
+        None,
+        alias='thinkingLevel',
+        description="Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level for Gemini 3 Flash and 3.5 Flash, and to a zero thinking budget for Gemini 2.5 Flash and the gemini-flash-latest variants); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected. API V2 cannot configure GLM or fixed-budget Claude thinking; use API V3 or V4 for those combinations.",
+        title='Thinking Level',
+    )
     vision: bool | str | None = Field(
         True,
         description="Whether agent vision capabilities are enabled. Set to 'auto' to let the agent decide based on the model capabilities.",
@@ -1600,7 +1718,7 @@ class CreateTaskRequest(BaseModel):
         '',
         alias='systemPromptExtension',
         description='Optional extension to the agent system prompt.',
-        max_length=2000,
+        max_length=10000,
         title='System Prompt Extension',
     )
     judge: bool | None = Field(

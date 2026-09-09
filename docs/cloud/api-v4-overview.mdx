@@ -1,0 +1,71 @@
+---
+title: API Reference
+sidebarTitle: API Reference
+description: "Authenticate and start using the Browser Use API v4 — the current REST API for long-horizon agents."
+mode: wide
+---
+
+## Authentication
+
+All requests require an API key in the `X-Browser-Use-API-Key` header:
+
+```
+X-Browser-Use-API-Key: bu_your_key_here
+```
+
+Get a key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1). Keys start with `bu_`.
+
+## Base URL
+
+```
+https://api.browser-use.com/api/v4
+```
+
+See [Thinking levels](/cloud/agent/thinking-levels) for V4 `modelParams`,
+provider-native reasoning values, and BYOK behavior.
+
+## The core loop
+
+Create a run, poll its status until terminal, then fetch the full result. `status` is a cheap indexed lookup — poll it, not the full run.
+
+```bash Create a run
+curl -X POST https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: bu_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Find the top 3 trending repos on GitHub today"}'
+```
+
+```bash Poll status until completed | failed | cancelled (replace RUN_ID)
+curl https://api.browser-use.com/api/v4/runs/RUN_ID/status \
+  -H "X-Browser-Use-API-Key: bu_your_key_here"
+```
+
+```bash Fetch the full run once it's terminal
+curl https://api.browser-use.com/api/v4/runs/RUN_ID \
+  -H "X-Browser-Use-API-Key: bu_your_key_here"
+```
+
+## Sessions and follow-ups
+
+A run belongs to a session (a conversation). Send a follow-up message to a session's queue — it runs as the next turn, or immediately with `interrupt: true`:
+
+```bash Queue a follow-up (replace SESSION_ID)
+curl -X POST https://api.browser-use.com/api/v4/sessions/SESSION_ID/queue \
+  -H "X-Browser-Use-API-Key: bu_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Now open the top result", "interrupt": false}'
+```
+
+## Direct browser control
+
+Use the browser endpoints when your code will control Chrome over CDP instead of asking a hosted agent to do the work:
+
+1. `POST /browsers` creates a browser and returns its `id` and `cdpUrl`.
+2. Use `cdpUrl` with a local Browser Use agent (`Browser(cdp_url=...)`), Browser Use CLI (`BU_CDP_URL`), Playwright, Puppeteer, or Selenium.
+3. `PATCH /browsers/{id}` with `{"action":"stop"}` stops the browser.
+
+See [remote Browser Use](/open-source/customize/browser/remote), [Browser Use CLI](/open-source/browser-use-cli), or [Playwright, Puppeteer, Selenium](/cloud/browser/playwright-puppeteer-selenium) for complete connection examples.
+
+## SDKs
+
+The [Cloud SDK quick start](/cloud/agent/quickstart) wraps this loop — `runs.create()` then `runs.waitForCompletion()` / `runs.wait_for_completion()` — for TypeScript and Python.

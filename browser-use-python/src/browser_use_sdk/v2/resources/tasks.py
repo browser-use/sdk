@@ -32,6 +32,7 @@ def _build_create_body(
     highlight_elements: bool | None = None,
     flash_mode: bool | None = None,
     thinking: bool | None = None,
+    thinking_level: str | None = None,
     vision: bool | str | None = None,
     system_prompt_extension: str | None = None,
     judge: bool | None = None,
@@ -65,6 +66,8 @@ def _build_create_body(
         body["flashMode"] = flash_mode
     if thinking is not None:
         body["thinking"] = thinking
+    if thinking_level is not None:
+        body["thinkingLevel"] = thinking_level
     if vision is not None:
         body["vision"] = vision
     if system_prompt_extension is not None:
@@ -80,7 +83,7 @@ def _build_create_body(
     if op_vault_id is not None:
         body["opVaultId"] = op_vault_id
     if session_settings is not None:
-        body["sessionSettings"] = session_settings.model_dump(by_alias=True, exclude_none=True)
+        body["sessionSettings"] = session_settings.model_dump(by_alias=True, exclude_unset=True)
     body.update(extra)
     return body
 
@@ -104,6 +107,7 @@ class Tasks:
         highlight_elements: bool | None = None,
         flash_mode: bool | None = None,
         thinking: bool | None = None,
+        thinking_level: str | None = None,
         vision: bool | str | None = None,
         system_prompt_extension: str | None = None,
         judge: bool | None = None,
@@ -128,6 +132,7 @@ class Tasks:
             highlight_elements=highlight_elements,
             flash_mode=flash_mode,
             thinking=thinking,
+            thinking_level=thinking_level,
             vision=vision,
             system_prompt_extension=system_prompt_extension,
             judge=judge,
@@ -238,6 +243,7 @@ class AsyncTasks:
         highlight_elements: bool | None = None,
         flash_mode: bool | None = None,
         thinking: bool | None = None,
+        thinking_level: str | None = None,
         vision: bool | str | None = None,
         system_prompt_extension: str | None = None,
         judge: bool | None = None,
@@ -262,6 +268,7 @@ class AsyncTasks:
             highlight_elements=highlight_elements,
             flash_mode=flash_mode,
             thinking=thinking,
+            thinking_level=thinking_level,
             vision=vision,
             system_prompt_extension=system_prompt_extension,
             judge=judge,

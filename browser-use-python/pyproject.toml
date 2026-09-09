@@ -4,16 +4,45 @@ build-backend = "hatchling.build"
 
 [project]
 name = "browser-use-sdk"
-version = "3.4.2"
+version = "3.11.3"
 description = "Python SDK for the Browser Use cloud API"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-dependencies = ["httpx>=0.24", "pydantic>=2.0"]
+dependencies = [
+    "httpx==0.28.1",
+    "pydantic==2.13.4",
+    # Security pin on a transitive dependency of httpx.
+    "idna==3.18",  # CVE-2026-45409
+]
+
+[project.urls]
+Homepage = "https://github.com/browser-use/sdk"
+Repository = "https://github.com/browser-use/sdk"
+Issues = "https://github.com/browser-use/sdk/issues"
 
 [project.optional-dependencies]
-dev = ["pytest>=7", "pyright>=1.1"]
-examples = ["python-dotenv>=1.0"]
+dev = [
+    # pytest 9.0.3 is the first safe release and requires Python 3.10+.
+    "pytest==9.1.1; python_version >= '3.10'",  # CVE-2025-71176
+    "pyright==1.1.411",
+]
+examples = [
+    # python-dotenv 1.2.2 is the first safe release and requires Python 3.10+.
+    "python-dotenv==1.2.2; python_version >= '3.10'",  # CVE-2026-28684
+]
+# Pay for API access with USDC instead of an API key. Requires Python 3.10+.
+# Install with: pip install "browser-use-sdk[x402]"
+x402 = [
+    "x402[evm]==2.17.0; python_version >= '3.10'",
+    # Security pin on a transitive dep (x402[evm] -> web3 -> requests -> urllib3).
+    # Published in the extra so it reaches consumers, not just this repo's lockfile.
+    "urllib3==2.7.0; python_version >= '3.10'",  # CVE-2026-44431, CVE-2026-44432
+    # Security pin on a transitive dep (x402[evm] -> web3 -> aiohttp).
+    # CVE-2026-34993, CVE-2026-47265, CVE-2026-54273, CVE-2026-54274,
+    # CVE-2026-54276, CVE-2026-54277, CVE-2026-54278
+    "aiohttp==3.14.3; python_version >= '3.10'",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/browser_use_sdk"]
@@ -31,6 +60,6 @@ include = ["src", "tests", "examples"]
 
 [dependency-groups]
 dev = [
-    "pyright>=1.1.408",
-    "pytest>=8.4.2",
+    "pyright==1.1.411",
+    "pytest==9.1.1; python_version >= '3.10'",  # CVE-2025-71176
 ]

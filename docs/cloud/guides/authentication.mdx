@@ -1,98 +1,66 @@
 ---
 title: Profiles
-description: "Persistent browser state — cookies, localStorage, saved passwords. Login once, reuse across sessions."
+description: "Reuse cookies and browser state in API V4 runs."
 icon: user
 ---
 
+A profile persists cookies, local storage, and login state across browsers.
+Log in once, save the profile, then reuse it to start future browsers already
+logged in.
+
+<img
+  src="/cloud/images/browser-profile-light.svg"
+  alt="One login saved as a profile and reused by multiple future browsers"
+  noZoom
+  className="block dark:hidden"
+/>
+<img
+  src="/cloud/images/browser-profile-dark.svg"
+  alt="One login saved as a profile and reused by multiple future browsers"
+  noZoom
+  className="hidden dark:block"
+/>
+
+Create or select one under [Dashboard → Profiles](https://cloud.browser-use.com/settings?tab=profiles),
+then pass its ID in V4 browser settings:
+
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import BrowserUse
 
-client = AsyncBrowserUse()
-profile = await client.profiles.create(name="user-id-1")
-# or search existing
-# profile = (await client.profiles.list(query="user-id-1")).items[0]
-session = await client.sessions.create(profile_id=profile.id)
-result = await client.run("Check browser-use github stars", session_id=session.id)
-print(result.output)
-
-# Always stop the session to persist profile state
-await client.sessions.stop(session.id)
+client = BrowserUse()
+run = client.runs.create(
+    "Open my account dashboard and summarize it",
+    browser_settings={"profileId": "YOUR_PROFILE_ID"},
+)
+result = client.runs.wait_for_completion(run.id)
+print(result.result)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const profile = await client.profiles.create({ name: "user-id-1" });
-// or search existing
-// const profile = (await client.profiles.list({ query: "user-id-1" })).items[0];
-const session = await client.sessions.create({ profileId: profile.id });
-const result = await client.run("Check browser-use github stars", {
-  sessionId: session.id,
+const run = await client.runs.create({
+  task: "Open my account dashboard and summarize it",
+  model: "grok-4.5",
+  browserSettings: {
+    profileId: "YOUR_PROFILE_ID",
+    proxyCountryCode: "us",
+  },
 });
-console.log(result.output);
-
-// Always stop the session to persist profile state
-await client.sessions.stop(session.id);
+const result = await client.runs.waitForCompletion(run.id);
+console.log(result.result);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Summarize my account dashboard",
+       "browserSettings":{"profileId":"YOUR_PROFILE_ID"}}'
 ```
 </CodeGroup>
 
-View your profile IDs at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=profiles).
+Use one profile per end user. Follow-ups in the same [session](/cloud/agent/sessions)
+reuse the live browser; later sessions can load the same profile again.
 
-## Manage profiles
-
-<CodeGroup>
-```python Python
-# Create
-profile = await client.profiles.create(name="work-account")
-
-# List all
-response = await client.profiles.list()
-for p in response.items:
-    print(p.id, p.name)
-
-# Search by name
-response = await client.profiles.list(query="user-id-1")
-profile = response.items[0]  # first match
-
-# Get one by ID
-profile = await client.profiles.get(profile_id)
-
-# Update
-await client.profiles.update(profile_id, name="renamed")
-
-# Delete
-await client.profiles.delete(profile_id)
-```
-```typescript TypeScript
-// Create
-const profile = await client.profiles.create({ name: "work-account" });
-
-// List all
-const response = await client.profiles.list();
-for (const p of response.items) {
-  console.log(p.id, p.name);
-}
-
-// Search by name
-const results = await client.profiles.list({ query: "user-id-1" });
-const found = results.items[0]; // first match
-
-// Get one by ID
-const fetched = await client.profiles.get(profileId);
-
-// Update
-await client.profiles.update(profileId, { name: "renamed" });
-
-// Delete
-await client.profiles.delete(profileId);
-```
-</CodeGroup>
-
-## Usage patterns
-
-- **Per-user profiles:** Create one profile per end-user. Query by name to get the profile ID, or store a mapping between your users and their profile IDs in your database.
-
-<Warning>
-  Profile state is only saved when the session ends. Always call `sessions.stop()` when you are done — if a session is left open or times out, changes may not be persisted. Every code path that uses a profile must stop the session, including error handlers.
-</Warning>
+For the fastest setup, [sync an existing local login](/cloud/guides/profile-sync).

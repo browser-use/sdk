@@ -15,23 +15,14 @@ from typing import Any, Dict, List, Set, Tuple
 import pytest
 
 # ---------------------------------------------------------------------------
-# Locate spec files via CLOUD_REPO_PATH in .env
+# Locate the checked-in spec snapshots
 # ---------------------------------------------------------------------------
 _SDK_REPO = Path(__file__).resolve().parents[2]  # browser-use-python/tests -> sdk repo root
 
 
-def _get_cloud_repo_path() -> Path:
-    env_file = _SDK_REPO / ".env"
-    for line in env_file.read_text().splitlines():
-        line = line.strip()
-        if line.startswith("CLOUD_REPO_PATH=") and not line.startswith("#"):
-            return Path(line.split("=", 1)[1].strip())
-    raise RuntimeError("CLOUD_REPO_PATH not found in .env")
-
-
-_CLOUD = _get_cloud_repo_path()
-_V2_SPEC = _CLOUD / "backend" / "spec" / "api" / "v2" / "openapi.json"
-_V3_SPEC = _CLOUD / "backend" / "spec" / "api" / "v3" / "openapi.json"
+_V2_SPEC = _SDK_REPO / "snapshots" / "v2.json"
+_V3_SPEC = _SDK_REPO / "snapshots" / "v3.json"
+_V4_SPEC = _SDK_REPO / "snapshots" / "v4.json"
 
 
 def _load_spec(path: Path) -> Dict[str, Any]:
@@ -78,6 +69,7 @@ _V2_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/browsers"): ("browsers", "list"),
     ("get", "/browsers/{session_id}"): ("browsers", "get"),
     ("patch", "/browsers/{session_id}"): ("browsers", "stop"),
+    ("get", "/browsers/{session_id}/downloads"): ("browsers", "downloads"),
     # skills
     ("post", "/skills"): ("skills", "create"),
     ("get", "/skills"): ("skills", "list"),
@@ -111,6 +103,7 @@ _V3_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/browsers"): ("browsers", "list"),
     ("get", "/browsers/{session_id}"): ("browsers", "get"),
     ("patch", "/browsers/{session_id}"): ("browsers", "update"),
+    ("get", "/browsers/{session_id}/downloads"): ("browsers", "downloads"),
     # profiles
     ("post", "/profiles"): ("profiles", "create"),
     ("get", "/profiles"): ("profiles", "list"),
@@ -126,6 +119,34 @@ _V3_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/workspaces/{workspace_id}/files"): ("workspaces", "files"),
     ("delete", "/workspaces/{workspace_id}/files"): ("workspaces", "delete_file"),
     ("get", "/workspaces/{workspace_id}/size"): ("workspaces", "size"),
+    ("post", "/workspaces/{workspace_id}/files/upload"): ("workspaces", "upload_files"),
+}
+
+_V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
+    # runs
+    ("post", "/runs"): ("runs", "create"),
+    ("get", "/runs"): ("runs", "list"),
+    ("get", "/runs/{run_id}"): ("runs", "get"),
+    ("get", "/runs/{run_id}/status"): ("runs", "status"),
+    ("get", "/runs/{run_id}/events"): ("runs", "events"),
+    ("post", "/runs/{run_id}/cancel"): ("runs", "cancel"),
+    ("get", "/runs/{run_id}/attachments"): ("runs", "attachments"),
+    # sessions + queue
+    ("get", "/sessions"): ("sessions", "list"),
+    ("get", "/sessions/{session_id}"): ("sessions", "get"),
+    ("post", "/sessions/{session_id}/purge"): ("sessions", "purge"),
+    ("post", "/sessions/{session_id}/queue"): ("sessions", "send_message"),
+    ("get", "/sessions/{session_id}/queue"): ("sessions", "queue"),
+    ("get", "/sessions/{session_id}/queue/{message_id}"): ("sessions", "get_message"),
+    ("delete", "/sessions/{session_id}/queue/{message_id}"): ("sessions", "remove_message"),
+    # workspaces
+    ("post", "/workspaces"): ("workspaces", "create"),
+    ("get", "/workspaces/{workspace_id}"): ("workspaces", "get"),
+    ("patch", "/workspaces/{workspace_id}"): ("workspaces", "update"),
+    ("delete", "/workspaces/{workspace_id}"): ("workspaces", "delete"),
+    ("get", "/workspaces/{workspace_id}/size"): ("workspaces", "size"),
+    ("get", "/workspaces/{workspace_id}/files"): ("workspaces", "files"),
+    ("delete", "/workspaces/{workspace_id}/files"): ("workspaces", "delete_file"),
     ("post", "/workspaces/{workspace_id}/files/upload"): ("workspaces", "upload_files"),
 }
 
@@ -216,9 +237,25 @@ class TestV3Coverage:
 
     def test_all_spec_endpoints_mapped(self) -> None:
         spec_eps = _spec_endpoints(self.spec)
+        # /boxes/* and the /oauth/* Slack redirect callback are intentionally
+        # not exposed. /x402/balance uses a standalone wallet-signature helper.
+        spec_eps = {ep for ep in spec_eps if not (ep[1].startswith("/boxes") or ep[1].startswith("/oauth"))}
+        spec_eps.discard(("post", "/x402/balance"))
         mapped = set(_V3_MAP.keys())
         missing = spec_eps - mapped
         assert not missing, f"Unmapped v3 endpoints: {missing}"
+
+    def test_x402_balance_helper_exists(self) -> None:
+        from browser_use_sdk.v3 import get_wallet_balance
+
+        assert callable(get_wallet_balance)
+
+    def test_browser_metadata_parameters_exist(self) -> None:
+        from browser_use_sdk.v3.resources.browsers import AsyncBrowsers, Browsers
+
+        for cls in (Browsers, AsyncBrowsers):
+            assert "metadata" in inspect.signature(cls.create).parameters
+            assert "metadata" in inspect.signature(cls.list).parameters
 
     def test_sdk_methods_exist(self) -> None:
         from browser_use_sdk.v3.resources import billing, browsers, profiles, sessions, workspaces
@@ -255,6 +292,59 @@ class TestV3Coverage:
             assert inspect.iscoroutinefunction(method), (
                 f"{cls.__name__}.{method_name} should be async"
             )
+
+
+class TestV4Coverage:
+    @pytest.fixture(autouse=True)
+    def _load(self) -> None:
+        self.spec = _load_spec(_V4_SPEC)
+
+    def test_all_spec_endpoints_mapped(self) -> None:
+        spec_eps = _spec_endpoints(self.spec)
+        # /browsers and /profiles mount the same handlers as v3 — use the v3
+        # namespace for those. Not duplicated in the v4 SDK surface.
+        spec_eps = {ep for ep in spec_eps if not (ep[1].startswith("/browsers") or ep[1].startswith("/profiles"))}
+        mapped = set(_V4_MAP.keys())
+        missing = spec_eps - mapped
+        assert not missing, f"Unmapped v4 endpoints: {missing}"
+
+    def test_sdk_methods_exist(self) -> None:
+        from browser_use_sdk.v4.resources import runs, sessions, workspaces
+
+        resource_classes = {
+            "runs": runs.Runs,
+            "sessions": sessions.Sessions,
+            "workspaces": workspaces.Workspaces,
+        }
+        for (_, _), (resource_attr, method_name) in _V4_MAP.items():
+            cls = resource_classes[resource_attr]
+            assert hasattr(cls, method_name), (
+                f"{cls.__name__} missing method '{method_name}'"
+            )
+
+    def test_async_sdk_methods_exist(self) -> None:
+        from browser_use_sdk.v4.resources import runs, sessions, workspaces
+
+        async_classes = {
+            "runs": runs.AsyncRuns,
+            "sessions": sessions.AsyncSessions,
+            "workspaces": workspaces.AsyncWorkspaces,
+        }
+        for (_, _), (resource_attr, method_name) in _V4_MAP.items():
+            cls = async_classes[resource_attr]
+            assert hasattr(cls, method_name), (
+                f"{cls.__name__} missing method '{method_name}'"
+            )
+            method = getattr(cls, method_name)
+            assert inspect.iscoroutinefunction(method), (
+                f"{cls.__name__}.{method_name} should be async"
+            )
+
+    def test_wait_for_completion_helpers_exist(self) -> None:
+        from browser_use_sdk.v4.resources.runs import AsyncRuns, Runs
+
+        assert callable(Runs.wait_for_completion)
+        assert inspect.iscoroutinefunction(AsyncRuns.wait_for_completion)
 
 
 def _snake_to_camel(name: str) -> str:
@@ -446,6 +536,21 @@ class TestClientInit:
         from browser_use_sdk.v3 import BrowserUse
 
         client = BrowserUse(api_key="test-key")
+        assert hasattr(client, "sessions")
+        assert hasattr(client, "workspaces")
+        client.close()
+
+    def test_v4_import(self) -> None:
+        from browser_use_sdk.v4 import BrowserUse, AsyncBrowserUse
+
+        assert BrowserUse is not None
+        assert AsyncBrowserUse is not None
+
+    def test_v4_resources_attached(self) -> None:
+        from browser_use_sdk.v4 import BrowserUse
+
+        client = BrowserUse(api_key="test-key")
+        assert hasattr(client, "runs")
         assert hasattr(client, "sessions")
         assert hasattr(client, "workspaces")
         client.close()

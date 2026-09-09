@@ -10,6 +10,8 @@ from .v2.helpers import AsyncTaskRun, TaskResult, TaskStream
 
 from .generated.v2.models import (
     AccountView,
+    BrowserDownloadFile,
+    BrowserDownloadListResponse,
     BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionView,
@@ -67,6 +69,7 @@ from .generated.v2.models import (
     SkillCategory,
     SkillsGenerationStatus,
     SupportedLLMs,
+    ThinkingLevel,
     TaskStatus,
     TaskUpdateAction,
 )
@@ -81,6 +84,8 @@ __all__ = [
     "TaskResult",
     # Response models
     "AccountView",
+    "BrowserDownloadFile",
+    "BrowserDownloadListResponse",
     "BrowserSessionItemView",
     "BrowserSessionListResponse",
     "BrowserSessionView",
@@ -139,6 +144,7 @@ __all__ = [
     "SkillCategory",
     "SkillsGenerationStatus",
     "SupportedLLMs",
+    "ThinkingLevel",
     "TaskStatus",
     "TaskUpdateAction",
 ]

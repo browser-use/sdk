@@ -8,7 +8,8 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
-      "browser-use-sdk": ["../src/index.ts"]
+      "browser-use-sdk": ["../src/index.ts"],
+      "browser-use-sdk/v4": ["../src/v4.ts"]
     }
   },
   "include": ["."]

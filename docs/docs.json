@@ -18,7 +18,15 @@
     "default": "dark"
   },
   "contextual": {
-    "options": ["copy", "view"]
+    "options": [
+      "copy",
+      "chatgpt",
+      "claude",
+      "mcp",
+      "add-mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "fonts": {
     "family": "Geist"
@@ -33,7 +41,11 @@
       "display": "interactive"
     },
     "examples": {
-      "languages": ["javascript", "curl", "python"],
+      "languages": [
+        "javascript",
+        "curl",
+        "python"
+      ],
       "required": true
     }
   },
@@ -54,6 +66,8 @@
                 "group": "Get Started",
                 "pages": [
                   "cloud/quickstart",
+                  "cloud/which-product",
+                  "cloud/choosing-an-agent",
                   "cloud/vibecoding"
                 ]
               },
@@ -63,22 +77,26 @@
                   {
                     "group": "Agent",
                     "icon": "robot",
+                    "root": "cloud/agent/quickstart",
                     "pages": [
                       "cloud/agent/quickstart",
                       "cloud/agent/models",
+                      "cloud/agent/thinking-levels",
                       "cloud/agent/structured-output",
-                      "cloud/agent/follow-up-tasks",
-                      "cloud/agent/streaming",
+                      "cloud/agent/sessions",
                       "cloud/agent/workspaces",
-                      "cloud/agent/cache-script",
-                      "cloud/agent/human-in-the-loop"
+                      "cloud/agent/scripts",
+                      "cloud/agent/human-in-the-loop",
+                      "cloud/agent/observability"
                     ]
                   },
                   {
                     "group": "Browser",
                     "icon": "globe",
                     "pages": [
+                      "cloud/browser/quickstart",
                       "cloud/browser/stealth",
+                      "cloud/browser/captcha-handling",
                       "cloud/browser/proxies",
                       "cloud/browser/live-preview",
                       "cloud/browser/playwright-puppeteer-selenium",
@@ -88,7 +106,9 @@
                         "pages": [
                           "cloud/guides/authentication",
                           "cloud/guides/profile-sync",
-                          "cloud/guides/2fa"
+                          "cloud/guides/2fa",
+                          "cloud/guides/1password",
+                          "cloud/guides/secrets"
                         ]
                       }
                     ]
@@ -102,22 +122,30 @@
                     "group": "Integrations",
                     "icon": "plug",
                     "pages": [
-                      "cloud/tutorials/integrations/claude-code",
+                      {
+                        "group": "Anthropic",
+                        "pages": [
+                          "cloud/tutorials/integrations/claude-code",
+                          "cloud/tutorials/integrations/claude-managed-agents"
+                        ]
+                      },
                       "cloud/tutorials/integrations/openclaw",
                       "cloud/tutorials/integrations/hermes-agent",
                       "cloud/guides/mcp-server",
                       "cloud/guides/webhooks",
-                      "cloud/tutorials/integrations/n8n"
+                      "cloud/guides/x402",
+                      "cloud/guides/x402-agent-wallets"
                     ]
                   },
                   {
                     "group": "Tutorials",
                     "icon": "graduation-cap",
                     "pages": [
-                      "cloud/tutorials/chat-ui",
-                      "cloud/tutorials/grow-therapy-compare"
+                      "cloud/agent-signup"
                     ]
                   },
+                  "cloud/guides/concurrency",
+                  "cloud/guides/billing",
                   "cloud/faq",
                   {
                     "group": "Legacy (v2)",
@@ -126,12 +154,29 @@
                     "pages": [
                       "cloud/legacy/agent",
                       "cloud/legacy/public-share",
-                      "cloud/legacy/skills",
-                      "cloud/guides/1password",
-                      "cloud/guides/secrets"
+                      "cloud/legacy/skills"
                     ]
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "tab": "API v4",
+            "href": "cloud/api-v4-overview",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "cloud/api-v4-overview"
+                ]
+              },
+              {
+                "group": "Endpoints",
+                "openapi": {
+                  "source": "cloud/openapi/v4.json",
+                  "directory": "cloud/api-v4"
+                }
               }
             ]
           },
@@ -141,7 +186,17 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["cloud/api-reference"]
+                "pages": [
+                  "cloud/api-reference"
+                ]
+              },
+              {
+                "group": "V3 guides and tutorials",
+                "pages": [
+                  "cloud/tutorials/integrations/n8n",
+                  "cloud/tutorials/chat-ui",
+                  "cloud/tutorials/grow-therapy-compare"
+                ]
               },
               {
                 "group": "Endpoints",
@@ -158,7 +213,9 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["cloud/api-v2-overview"]
+                "pages": [
+                  "cloud/api-v2-overview"
+                ]
               },
               {
                 "group": "Endpoints",
@@ -183,10 +240,12 @@
             "group": "Get Started",
             "pages": [
               "open-source/introduction",
+              "cloud/which-product",
               "open-source/quickstart",
               "open-source/vibecoding",
               "open-source/supported-models",
-              "open-source/browser-use-cli"
+              "open-source/browser-use-cli",
+              "open-source/browser-use-terminal"
             ]
           },
           {
@@ -281,6 +340,19 @@
                   "open-source/examples/apps/news-use",
                   "open-source/examples/apps/msg-use"
                 ]
+              },
+              {
+                "group": "Skills",
+                "icon": "wand-magic-sparkles",
+                "pages": [
+                  "open-source/examples/skills/overview",
+                  "open-source/examples/skills/browser-use",
+                  "open-source/examples/skills/cloud",
+                  "open-source/examples/skills/open-source",
+                  "open-source/examples/skills/qa",
+                  "open-source/examples/skills/remote-browser",
+                  "open-source/examples/skills/x402"
+                ]
               }
             ]
           },
@@ -322,8 +394,14 @@
   },
   "navbar": {
     "links": [
-      { "label": "GitHub", "href": "https://github.com/browser-use/browser-use" },
-      { "label": "Discord", "href": "https://link.browser-use.com/discord" }
+      {
+        "label": "GitHub",
+        "href": "https://github.com/browser-use/browser-use"
+      },
+      {
+        "label": "Discord",
+        "href": "https://link.browser-use.com/discord"
+      }
     ],
     "primary": {
       "type": "button",
@@ -340,196 +418,772 @@
   },
   "integrations": {
     "posthog": {
-      "apiKey": "phc_F8JMNjW1i2KbGUTaW1unnDdLSPCoyc52SGRU0JecaUh"
+      "apiKey": "phc_F8JMNjW1i2KbGUTaW1unnDdLSPCoyc52SGRU0JecaUh",
+      "apiHost": "https://eu.i.posthog.com"
     }
   },
   "redirects": [
-    {"source": "/", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/new-features/api-v3", "destination": "/cloud/agent/quickstart"},
-    {"source": "/cloud/guides/sessions", "destination": "/cloud/guides/authentication"},
-    {"source": "/cloud/guides/proxies-and-stealth", "destination": "/cloud/browser/proxies"},
-    {"source": "/cloud/guides/tasks", "destination": "/cloud/agent/quickstart"},
-    {"source": "/cloud/guides/workspaces", "destination": "/cloud/agent/workspaces"},
-    {"source": "/cloud/guides/browser-api", "destination": "/cloud/browser/stealth"},
-    {"source": "/cloud/tips/live-view/iframe-embed", "destination": "/cloud/browser/live-preview"},
-    {"source": "/cloud/tips/live-view/human-takeover", "destination": "/cloud/agent/human-in-the-loop"},
-    {"source": "/cloud/tips/authentication/1password-2fa", "destination": "/cloud/guides/1password"},
-    {"source": "/cloud/tips/authentication/profiles-and-secrets", "destination": "/cloud/guides/authentication"},
-    {"source": "/cloud/guides/authentication/profiles-and-secrets", "destination": "/cloud/guides/authentication"},
-    {"source": "/cloud/tips/authentication/social-media", "destination": "/cloud/guides/authentication"},
-    {"source": "/cloud/tips/data/file-downloads", "destination": "/cloud/agent/workspaces"},
-    {"source": "/cloud/tips/data/geo-scraping", "destination": "/cloud/browser/proxies"},
-    {"source": "/cloud/tips/data/streaming", "destination": "/cloud/agent/streaming"},
-    {"source": "/cloud/tips/data/structured-output", "destination": "/cloud/agent/structured-output"},
-    {"source": "/cloud/tips/parallel/concurrent-extraction", "destination": "/cloud/agent/quickstart"},
-    {"source": "/cloud/tips/parallel/shared-config", "destination": "/cloud/agent/quickstart"},
-    {"source": "/cloud/tutorials/integrations/playwright", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
-    {"source": "/tutorials/integrations/playwright", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
-    {"source": "/cloud/pricing", "destination": "https://browser-use.com/pricing"},
-    {"source": "/cloud/models", "destination": "https://browser-use.com/pricing"},
-    {"source": "/cloud/guides/skills", "destination": "/cloud/legacy/skills"},
-    {"source": "/introduction", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/introduction", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/browsers", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
-    {"source": "/quickstart", "destination": "/open-source/quickstart"},
-    {"source": "/quickstart_llm", "destination": "/open-source/vibecoding"},
-    {"source": "/supported-models", "destination": "/open-source/supported-models"},
-
-    {"source": "/customize/agent/basics", "destination": "/open-source/customize/agent/basics"},
-    {"source": "/customize/agent/prompting-guide", "destination": "/open-source/customize/agent/prompting-guide"},
-    {"source": "/customize/agent/output-format", "destination": "/open-source/customize/agent/output-format"},
-    {"source": "/customize/agent/all-parameters", "destination": "/open-source/customize/agent/all-parameters"},
-    {"source": "/customize/browser/basics", "destination": "/open-source/customize/browser/basics"},
-    {"source": "/customize/browser/authentication", "destination": "/open-source/customize/browser/authentication"},
-    {"source": "/customize/browser/real-browser", "destination": "/open-source/customize/browser/real-browser"},
-    {"source": "/customize/browser/remote", "destination": "/open-source/customize/browser/remote"},
-    {"source": "/customize/browser/all-parameters", "destination": "/open-source/customize/browser/all-parameters"},
-    {"source": "/customize/tools/basics", "destination": "/open-source/customize/tools/basics"},
-    {"source": "/customize/tools/available", "destination": "/open-source/customize/tools/available"},
-    {"source": "/customize/tools/add", "destination": "/open-source/customize/tools/add"},
-    {"source": "/customize/tools/remove", "destination": "/open-source/customize/tools/remove"},
-    {"source": "/customize/tools/response", "destination": "/open-source/customize/tools/response"},
-    {"source": "/customize/skills/basics", "destination": "/cloud/legacy/skills"},
-
-    {"source": "/customize/integrations/docs-mcp", "destination": "/open-source/customize/integrations/mcp-server"},
-    {"source": "/open-source/customize/integrations/docs-mcp", "destination": "/open-source/customize/integrations/mcp-server"},
-    {"source": "/customize/integrations/mcp-server", "destination": "/open-source/customize/integrations/mcp-server"},
-    {"source": "/customize/hooks", "destination": "/open-source/customize/hooks"},
-
-    {"source": "/legacy/actor/basics", "destination": "/open-source/legacy/actor/basics"},
-    {"source": "/legacy/actor/examples", "destination": "/open-source/legacy/actor/examples"},
-    {"source": "/legacy/actor/all-parameters", "destination": "/open-source/legacy/actor/all-parameters"},
-    {"source": "/legacy/sandbox/quickstart", "destination": "/open-source/legacy/sandbox/quickstart"},
-    {"source": "/legacy/sandbox/events", "destination": "/open-source/legacy/sandbox/events"},
-    {"source": "/legacy/sandbox/all-parameters", "destination": "/open-source/legacy/sandbox/all-parameters"},
-
-    {"source": "/examples/templates/fast-agent", "destination": "/open-source/examples/templates/fast-agent"},
-    {"source": "/examples/templates/follow-up-tasks", "destination": "/open-source/examples/templates/follow-up-tasks"},
-    {"source": "/examples/templates/parallel-browser", "destination": "/open-source/examples/templates/parallel-browser"},
-    {"source": "/examples/templates/playwright-integration", "destination": "/open-source/examples/templates/playwright-integration"},
-    {"source": "/examples/templates/sensitive-data", "destination": "/open-source/examples/templates/sensitive-data"},
-    {"source": "/examples/templates/secure", "destination": "/open-source/examples/templates/secure"},
-    {"source": "/examples/templates/more-examples", "destination": "/open-source/examples/templates/more-examples"},
-    {"source": "/examples/apps/ad-use", "destination": "/open-source/examples/apps/ad-use"},
-    {"source": "/examples/apps/vibetest-use", "destination": "/open-source/examples/apps/vibetest-use"},
-    {"source": "/examples/apps/news-use", "destination": "/open-source/examples/apps/news-use"},
-    {"source": "/examples/apps/msg-use", "destination": "/open-source/examples/apps/msg-use"},
-
-    {"source": "/development/setup/local-setup", "destination": "/open-source/development/setup/local-setup"},
-    {"source": "/development/setup/contribution-guide", "destination": "/open-source/development/setup/contribution-guide"},
-    {"source": "/development/get-help", "destination": "/open-source/development/get-help"},
-    {"source": "/development/monitoring/observability", "destination": "/open-source/development/monitoring/observability"},
-    {"source": "/development/monitoring/openlit", "destination": "/open-source/development/monitoring/openlit"},
-    {"source": "/development/monitoring/telemetry", "destination": "/open-source/development/monitoring/telemetry"},
-    {"source": "/development/monitoring/costs", "destination": "/open-source/development/monitoring/costs"},
-    {"source": "/development/n8n-integration", "destination": "/open-source/development/n8n-integration"},
-    {"source": "/development/roadmap", "destination": "/open-source/development/roadmap"},
-
-    {"source": "/use-cloud", "destination": "/cloud/quickstart"},
-    {"source": "/cloud", "destination": "/cloud/quickstart"},
-    {"source": "/use-claude", "destination": "/cloud/quickstart"},
-    {"source": "/production", "destination": "/open-source/legacy/sandbox/quickstart"},
-    {"source": "/customize/actor/basics", "destination": "/open-source/legacy/actor/basics"},
-    {"source": "/customize/actor/examples", "destination": "/open-source/legacy/actor/examples"},
-    {"source": "/customize/actor/all-parameters", "destination": "/open-source/legacy/actor/all-parameters"},
-    {"source": "/customize/sandbox/quickstart", "destination": "/open-source/legacy/sandbox/quickstart"},
-    {"source": "/customize/sandbox/events", "destination": "/open-source/legacy/sandbox/events"},
-    {"source": "/customize/sandbox/all-parameters", "destination": "/open-source/legacy/sandbox/all-parameters"},
-    {"source": "/customize/supported-models", "destination": "/open-source/supported-models"},
-    {"source": "/customize/agent/supported-models", "destination": "/open-source/supported-models"},
-    {"source": "/customize/agent-settings", "destination": "/open-source/customize/agent/all-parameters"},
-    {"source": "/customize/browser-settings", "destination": "/open-source/customize/browser/all-parameters"},
-    {"source": "/customize/custom-functions", "destination": "/open-source/customize/tools/add"},
-    {"source": "/customize/system-prompt", "destination": "/open-source/customize/agent/all-parameters"},
-    {"source": "/development/evaluations", "destination": "/open-source/development/setup/contribution-guide"},
-    {"source": "/cli", "destination": "/open-source/quickstart"},
-    {"source": "/development/local-setup", "destination": "/open-source/development/setup/local-setup"},
-    {"source": "/development/contribution-guide", "destination": "/open-source/development/setup/contribution-guide"},
-    {"source": "/development/telemetry", "destination": "/open-source/development/monitoring/telemetry"},
-    {"source": "/development/observability", "destination": "/open-source/development/monitoring/observability"},
-    {"source": "/development/hooks", "destination": "/open-source/customize/hooks"},
-    {"source": "/customize/mcp-server", "destination": "/open-source/customize/integrations/mcp-server"},
-    {"source": "/customize/examples/chain-agents", "destination": "/open-source/examples/templates/follow-up-tasks"},
-    {"source": "/customize/examples/fast-agent", "destination": "/open-source/examples/templates/fast-agent"},
-    {"source": "/customize/examples/follow-up-tasks", "destination": "/open-source/examples/templates/follow-up-tasks"},
-    {"source": "/customize/examples/parallel-browser", "destination": "/open-source/examples/templates/parallel-browser"},
-    {"source": "/customize/examples/playwright-integration", "destination": "/open-source/examples/templates/playwright-integration"},
-    {"source": "/customize/examples/sensitive-data", "destination": "/open-source/examples/templates/sensitive-data"},
-    {"source": "/customize/examples/secure", "destination": "/open-source/examples/templates/secure"},
-    {"source": "/customize/examples/more-examples", "destination": "/open-source/examples/templates/more-examples"},
-    {"source": "/customize/examples/ad-use", "destination": "/open-source/examples/apps/ad-use"},
-    {"source": "/customize/examples/vibetest-use", "destination": "/open-source/examples/apps/vibetest-use"},
-    {"source": "/customize/examples/prompting-guide", "destination": "/open-source/customize/agent/prompting-guide"},
-
-    {"source": "/pricing", "destination": "https://browser-use.com/pricing"},
-    {"source": "/llm-quickstart", "destination": "/cloud/vibecoding"},
-    {"source": "/cloud/llm-quickstart", "destination": "/cloud/vibecoding"},
-    {"source": "/cloud/coding-agent-quickstart", "destination": "/cloud/vibecoding"},
-    {"source": "/cloud/write-code", "destination": "/cloud/vibecoding"},
-    {"source": "/open-source/coding-agent-quickstart", "destination": "/open-source/vibecoding"},
-    {"source": "/open-source/write-code", "destination": "/open-source/vibecoding"},
-    {"source": "/faq", "destination": "/cloud/faq"},
-    {"source": "/open-source", "destination": "/open-source/introduction"},
-    {"source": "/examples", "destination": "/cloud/agent/structured-output"},
-
-    {"source": "/guides/overview", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/guides/overview", "destination": "/cloud/quickstart"},
-    {"source": "/guides/tasks", "destination": "/cloud/agent/quickstart"},
-    {"source": "/guides/sessions", "destination": "/cloud/guides/authentication"},
-    {"source": "/guides/browser-api", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
-    {"source": "/guides/proxies-and-stealth", "destination": "/cloud/browser/proxies"},
-    {"source": "/guides/skills", "destination": "/cloud/legacy/skills"},
-    {"source": "/guides/authentication", "destination": "/cloud/guides/authentication"},
-    {"source": "/guides/mcp-server", "destination": "/cloud/guides/mcp-server"},
-    {"source": "/guides/webhooks", "destination": "/cloud/guides/webhooks"},
-    {"source": "/guides/workspaces", "destination": "/cloud/agent/workspaces"},
-
-    {"source": "/tutorials/chat-ui", "destination": "/cloud/tutorials/chat-ui"},
-
-    {"source": "/new-features/api-v3", "destination": "/cloud/agent/quickstart"},
-
-    {"source": "/tips/authentication/profiles-and-secrets", "destination": "/cloud/guides/authentication"},
-    {"source": "/tips/authentication/1password-2fa", "destination": "/cloud/guides/1password"},
-    {"source": "/tips/authentication/social-media", "destination": "/cloud/guides/authentication"},
-    {"source": "/tips/live-view/iframe-embed", "destination": "/cloud/browser/live-preview"},
-    {"source": "/tips/live-view/human-takeover", "destination": "/cloud/agent/human-in-the-loop"},
-    {"source": "/tips/parallel/concurrent-extraction", "destination": "/cloud/agent/quickstart"},
-    {"source": "/tips/parallel/shared-config", "destination": "/cloud/agent/quickstart"},
-    {"source": "/tips/data/structured-output", "destination": "/cloud/agent/structured-output"},
-    {"source": "/tips/data/file-downloads", "destination": "/cloud/agent/workspaces"},
-    {"source": "/tips/data/geo-scraping", "destination": "/cloud/browser/proxies"},
-    {"source": "/tips/data/streaming", "destination": "/cloud/agent/streaming"},
-    {"source": "/tips/integrations/playwright", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
-    {"source": "/tips/integrations/n8n", "destination": "/cloud/tutorials/integrations/n8n"},
-    {"source": "/cloud/tips/integrations/playwright", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
-    {"source": "/cloud/tips/integrations/n8n", "destination": "/cloud/tutorials/integrations/n8n"},
-
-    {"source": "/api-v2/*", "destination": "/cloud/api-v2"},
-    {"source": "/api-v3/*", "destination": "/cloud/api-v3"},
-
-    {"source": "/get-started/human-quickstart", "destination": "/cloud/quickstart"},
-    {"source": "/human-quickstart", "destination": "/cloud/quickstart"},
-    {"source": "/get-started/llm-quickstart", "destination": "/cloud/vibecoding"},
-    {"source": "/open-source/quickstart_llm", "destination": "/open-source/vibecoding"},
-    {"source": "/get-started/models-and-pricing", "destination": "https://browser-use.com/pricing"},
-    {"source": "/get-started/pricing", "destination": "https://browser-use.com/pricing"},
-    {"source": "/concepts/overview", "destination": "/cloud/quickstart"},
-    {"source": "/concepts/task", "destination": "/cloud/agent/quickstart"},
-    {"source": "/concepts/skills", "destination": "/cloud/legacy/skills"},
-    {"source": "/concepts/session", "destination": "/cloud/guides/authentication"},
-    {"source": "/concepts/profile", "destination": "/cloud/guides/authentication"},
-    {"source": "/concepts/file", "destination": "/cloud/agent/quickstart"},
-    {"source": "/concepts/browser", "destination": "/cloud/browser/playwright-puppeteer-selenium"},
-    {"source": "/usage/structured-output", "destination": "/cloud/agent/structured-output"},
-    {"source": "/usage/streaming-response", "destination": "/cloud/agent/quickstart"},
-    {"source": "/usage/streaming", "destination": "/cloud/agent/quickstart"},
-    {"source": "/usage/mcp-server", "destination": "/cloud/guides/mcp-server"},
-    {"source": "/usage/stealth", "destination": "/cloud/browser/proxies"},
-    {"source": "/usage/safety", "destination": "/cloud/agent/quickstart"},
-    {"source": "/usage/webhooks", "destination": "/cloud/guides/webhooks"},
-    {"source": "/usage/authentication", "destination": "/cloud/guides/authentication"},
-    {"source": "/api-reference/*", "destination": "/cloud/api-reference"},
-    {"source": "/cloud/v2/quickstart", "destination": "/cloud/quickstart"},
-    {"source": "/cloud/v1/*", "destination": "/cloud/quickstart"}
-  ]
+    {
+      "source": "/",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/new-features/api-v3",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/cloud/guides/sessions",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/guides/proxies-and-stealth",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/cloud/guides/tasks",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/cloud/guides/workspaces",
+      "destination": "/cloud/agent/workspaces"
+    },
+    {
+      "source": "/cloud/guides/browser-api",
+      "destination": "/cloud/browser/stealth"
+    },
+    {
+      "source": "/cloud/tips/live-view/iframe-embed",
+      "destination": "/cloud/browser/live-preview"
+    },
+    {
+      "source": "/cloud/tips/live-view/human-takeover",
+      "destination": "/cloud/agent/human-in-the-loop"
+    },
+    {
+      "source": "/cloud/tips/authentication/1password-2fa",
+      "destination": "/cloud/guides/1password"
+    },
+    {
+      "source": "/cloud/tips/authentication/profiles-and-secrets",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/guides/authentication/profiles-and-secrets",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/tips/authentication/social-media",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/tips/data/file-downloads",
+      "destination": "/cloud/agent/workspaces"
+    },
+    {
+      "source": "/cloud/tips/data/geo-scraping",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/cloud/tips/data/streaming",
+      "destination": "/cloud/agent/observability"
+    },
+    {
+      "source": "/cloud/tips/data/structured-output",
+      "destination": "/cloud/agent/structured-output"
+    },
+    {
+      "source": "/cloud/tips/parallel/concurrent-extraction",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/cloud/tips/parallel/shared-config",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/cloud/tutorials/integrations/playwright",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/tutorials/integrations/playwright",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/cloud/pricing",
+      "destination": "https://browser-use.com/pricing"
+    },
+    {
+      "source": "/cloud/models",
+      "destination": "https://browser-use.com/pricing"
+    },
+    {
+      "source": "/cloud/guides/skills",
+      "destination": "/cloud/legacy/skills"
+    },
+    {
+      "source": "/introduction",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/introduction",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/browsers",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/cloud/connect",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/cloud/playwright",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/cloud/browser/playwright",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/cloud/browsers/playwright",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/quickstart",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/quickstart_llm",
+      "destination": "/open-source/vibecoding"
+    },
+    {
+      "source": "/supported-models",
+      "destination": "/open-source/supported-models"
+    },
+    {
+      "source": "/customize/agent/basics",
+      "destination": "/open-source/customize/agent/basics"
+    },
+    {
+      "source": "/customize/agent/prompting-guide",
+      "destination": "/open-source/customize/agent/prompting-guide"
+    },
+    {
+      "source": "/customize/agent/output-format",
+      "destination": "/open-source/customize/agent/output-format"
+    },
+    {
+      "source": "/customize/agent/all-parameters",
+      "destination": "/open-source/customize/agent/all-parameters"
+    },
+    {
+      "source": "/customize/browser/basics",
+      "destination": "/open-source/customize/browser/basics"
+    },
+    {
+      "source": "/customize/browser/authentication",
+      "destination": "/open-source/customize/browser/authentication"
+    },
+    {
+      "source": "/customize/browser/real-browser",
+      "destination": "/open-source/customize/browser/real-browser"
+    },
+    {
+      "source": "/customize/browser/remote",
+      "destination": "/open-source/customize/browser/remote"
+    },
+    {
+      "source": "/customize/browser/all-parameters",
+      "destination": "/open-source/customize/browser/all-parameters"
+    },
+    {
+      "source": "/customize/tools/basics",
+      "destination": "/open-source/customize/tools/basics"
+    },
+    {
+      "source": "/customize/tools/available",
+      "destination": "/open-source/customize/tools/available"
+    },
+    {
+      "source": "/customize/tools/add",
+      "destination": "/open-source/customize/tools/add"
+    },
+    {
+      "source": "/customize/tools/remove",
+      "destination": "/open-source/customize/tools/remove"
+    },
+    {
+      "source": "/customize/tools/response",
+      "destination": "/open-source/customize/tools/response"
+    },
+    {
+      "source": "/customize/skills/basics",
+      "destination": "/cloud/legacy/skills"
+    },
+    {
+      "source": "/customize/integrations/docs-mcp",
+      "destination": "/open-source/customize/integrations/mcp-server"
+    },
+    {
+      "source": "/open-source/customize/integrations/docs-mcp",
+      "destination": "/open-source/customize/integrations/mcp-server"
+    },
+    {
+      "source": "/customize/integrations/mcp-server",
+      "destination": "/open-source/customize/integrations/mcp-server"
+    },
+    {
+      "source": "/customize/hooks",
+      "destination": "/open-source/customize/hooks"
+    },
+    {
+      "source": "/legacy/actor/basics",
+      "destination": "/open-source/legacy/actor/basics"
+    },
+    {
+      "source": "/legacy/actor/examples",
+      "destination": "/open-source/legacy/actor/examples"
+    },
+    {
+      "source": "/legacy/actor/all-parameters",
+      "destination": "/open-source/legacy/actor/all-parameters"
+    },
+    {
+      "source": "/legacy/sandbox/quickstart",
+      "destination": "/open-source/legacy/sandbox/quickstart"
+    },
+    {
+      "source": "/legacy/sandbox/events",
+      "destination": "/open-source/legacy/sandbox/events"
+    },
+    {
+      "source": "/legacy/sandbox/all-parameters",
+      "destination": "/open-source/legacy/sandbox/all-parameters"
+    },
+    {
+      "source": "/examples/templates/fast-agent",
+      "destination": "/open-source/examples/templates/fast-agent"
+    },
+    {
+      "source": "/examples/templates/follow-up-tasks",
+      "destination": "/open-source/examples/templates/follow-up-tasks"
+    },
+    {
+      "source": "/examples/templates/parallel-browser",
+      "destination": "/open-source/examples/templates/parallel-browser"
+    },
+    {
+      "source": "/examples/templates/playwright-integration",
+      "destination": "/open-source/examples/templates/playwright-integration"
+    },
+    {
+      "source": "/examples/templates/sensitive-data",
+      "destination": "/open-source/examples/templates/sensitive-data"
+    },
+    {
+      "source": "/examples/templates/secure",
+      "destination": "/open-source/examples/templates/secure"
+    },
+    {
+      "source": "/examples/templates/more-examples",
+      "destination": "/open-source/examples/templates/more-examples"
+    },
+    {
+      "source": "/examples/apps/ad-use",
+      "destination": "/open-source/examples/apps/ad-use"
+    },
+    {
+      "source": "/examples/apps/vibetest-use",
+      "destination": "/open-source/examples/apps/vibetest-use"
+    },
+    {
+      "source": "/examples/apps/news-use",
+      "destination": "/open-source/examples/apps/news-use"
+    },
+    {
+      "source": "/examples/apps/msg-use",
+      "destination": "/open-source/examples/apps/msg-use"
+    },
+    {
+      "source": "/development/setup/local-setup",
+      "destination": "/open-source/development/setup/local-setup"
+    },
+    {
+      "source": "/development/setup/contribution-guide",
+      "destination": "/open-source/development/setup/contribution-guide"
+    },
+    {
+      "source": "/development/get-help",
+      "destination": "/open-source/development/get-help"
+    },
+    {
+      "source": "/development/monitoring/observability",
+      "destination": "/open-source/development/monitoring/observability"
+    },
+    {
+      "source": "/development/monitoring/openlit",
+      "destination": "/open-source/development/monitoring/openlit"
+    },
+    {
+      "source": "/development/monitoring/telemetry",
+      "destination": "/open-source/development/monitoring/telemetry"
+    },
+    {
+      "source": "/development/monitoring/costs",
+      "destination": "/open-source/development/monitoring/costs"
+    },
+    {
+      "source": "/development/n8n-integration",
+      "destination": "/open-source/development/n8n-integration"
+    },
+    {
+      "source": "/development/roadmap",
+      "destination": "/open-source/development/roadmap"
+    },
+    {
+      "source": "/use-cloud",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/use-claude",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/production",
+      "destination": "/open-source/legacy/sandbox/quickstart"
+    },
+    {
+      "source": "/customize/actor/basics",
+      "destination": "/open-source/legacy/actor/basics"
+    },
+    {
+      "source": "/customize/actor/examples",
+      "destination": "/open-source/legacy/actor/examples"
+    },
+    {
+      "source": "/customize/actor/all-parameters",
+      "destination": "/open-source/legacy/actor/all-parameters"
+    },
+    {
+      "source": "/customize/sandbox/quickstart",
+      "destination": "/open-source/legacy/sandbox/quickstart"
+    },
+    {
+      "source": "/customize/sandbox/events",
+      "destination": "/open-source/legacy/sandbox/events"
+    },
+    {
+      "source": "/customize/sandbox/all-parameters",
+      "destination": "/open-source/legacy/sandbox/all-parameters"
+    },
+    {
+      "source": "/customize/supported-models",
+      "destination": "/open-source/supported-models"
+    },
+    {
+      "source": "/customize/agent/supported-models",
+      "destination": "/open-source/supported-models"
+    },
+    {
+      "source": "/customize/agent-settings",
+      "destination": "/open-source/customize/agent/all-parameters"
+    },
+    {
+      "source": "/customize/browser-settings",
+      "destination": "/open-source/customize/browser/all-parameters"
+    },
+    {
+      "source": "/customize/custom-functions",
+      "destination": "/open-source/customize/tools/add"
+    },
+    {
+      "source": "/customize/system-prompt",
+      "destination": "/open-source/customize/agent/all-parameters"
+    },
+    {
+      "source": "/development/evaluations",
+      "destination": "/open-source/development/setup/contribution-guide"
+    },
+    {
+      "source": "/cli",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/development/local-setup",
+      "destination": "/open-source/development/setup/local-setup"
+    },
+    {
+      "source": "/development/contribution-guide",
+      "destination": "/open-source/development/setup/contribution-guide"
+    },
+    {
+      "source": "/development/telemetry",
+      "destination": "/open-source/development/monitoring/telemetry"
+    },
+    {
+      "source": "/development/observability",
+      "destination": "/open-source/development/monitoring/observability"
+    },
+    {
+      "source": "/development/hooks",
+      "destination": "/open-source/customize/hooks"
+    },
+    {
+      "source": "/customize/mcp-server",
+      "destination": "/open-source/customize/integrations/mcp-server"
+    },
+    {
+      "source": "/customize/examples/chain-agents",
+      "destination": "/open-source/examples/templates/follow-up-tasks"
+    },
+    {
+      "source": "/customize/examples/fast-agent",
+      "destination": "/open-source/examples/templates/fast-agent"
+    },
+    {
+      "source": "/customize/examples/follow-up-tasks",
+      "destination": "/open-source/examples/templates/follow-up-tasks"
+    },
+    {
+      "source": "/customize/examples/parallel-browser",
+      "destination": "/open-source/examples/templates/parallel-browser"
+    },
+    {
+      "source": "/customize/examples/playwright-integration",
+      "destination": "/open-source/examples/templates/playwright-integration"
+    },
+    {
+      "source": "/customize/examples/sensitive-data",
+      "destination": "/open-source/examples/templates/sensitive-data"
+    },
+    {
+      "source": "/customize/examples/secure",
+      "destination": "/open-source/examples/templates/secure"
+    },
+    {
+      "source": "/customize/examples/more-examples",
+      "destination": "/open-source/examples/templates/more-examples"
+    },
+    {
+      "source": "/customize/examples/ad-use",
+      "destination": "/open-source/examples/apps/ad-use"
+    },
+    {
+      "source": "/customize/examples/vibetest-use",
+      "destination": "/open-source/examples/apps/vibetest-use"
+    },
+    {
+      "source": "/customize/examples/prompting-guide",
+      "destination": "/open-source/customize/agent/prompting-guide"
+    },
+    {
+      "source": "/pricing",
+      "destination": "https://browser-use.com/pricing"
+    },
+    {
+      "source": "/llm-quickstart",
+      "destination": "/cloud/vibecoding"
+    },
+    {
+      "source": "/cloud/llm-quickstart",
+      "destination": "/cloud/vibecoding"
+    },
+    {
+      "source": "/cloud/coding-agent-quickstart",
+      "destination": "/cloud/vibecoding"
+    },
+    {
+      "source": "/cloud/write-code",
+      "destination": "/cloud/vibecoding"
+    },
+    {
+      "source": "/open-source/coding-agent-quickstart",
+      "destination": "/open-source/vibecoding"
+    },
+    {
+      "source": "/open-source/write-code",
+      "destination": "/open-source/vibecoding"
+    },
+    {
+      "source": "/faq",
+      "destination": "/cloud/faq"
+    },
+    {
+      "source": "/open-source",
+      "destination": "/open-source/introduction"
+    },
+    {
+      "source": "/examples",
+      "destination": "/cloud/agent/structured-output"
+    },
+    {
+      "source": "/guides/overview",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/guides/overview",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/guides/tasks",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/guides/sessions",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/guides/browser-api",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/guides/proxies-and-stealth",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/guides/skills",
+      "destination": "/cloud/legacy/skills"
+    },
+    {
+      "source": "/guides/authentication",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/guides/mcp-server",
+      "destination": "/cloud/guides/mcp-server"
+    },
+    {
+      "source": "/guides/webhooks",
+      "destination": "/cloud/guides/webhooks"
+    },
+    {
+      "source": "/guides/workspaces",
+      "destination": "/cloud/agent/workspaces"
+    },
+    {
+      "source": "/tutorials/chat-ui",
+      "destination": "/cloud/tutorials/chat-ui"
+    },
+    {
+      "source": "/new-features/api-v3",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/tips/authentication/profiles-and-secrets",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/tips/authentication/1password-2fa",
+      "destination": "/cloud/guides/1password"
+    },
+    {
+      "source": "/tips/authentication/social-media",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/tips/live-view/iframe-embed",
+      "destination": "/cloud/browser/live-preview"
+    },
+    {
+      "source": "/tips/live-view/human-takeover",
+      "destination": "/cloud/agent/human-in-the-loop"
+    },
+    {
+      "source": "/tips/parallel/concurrent-extraction",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/tips/parallel/shared-config",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/tips/data/structured-output",
+      "destination": "/cloud/agent/structured-output"
+    },
+    {
+      "source": "/tips/data/file-downloads",
+      "destination": "/cloud/agent/workspaces"
+    },
+    {
+      "source": "/tips/data/geo-scraping",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/tips/data/streaming",
+      "destination": "/cloud/agent/observability"
+    },
+    {
+      "source": "/cloud/agent/follow-up-tasks",
+      "destination": "/cloud/agent/sessions"
+    },
+    {
+      "source": "/cloud/agent/streaming",
+      "destination": "/cloud/agent/observability"
+    },
+    {
+      "source": "/cloud/agent/cache-script",
+      "destination": "/cloud/agent/scripts"
+    },
+    {
+      "source": "/tips/integrations/playwright",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/tips/integrations/n8n",
+      "destination": "/cloud/tutorials/integrations/n8n"
+    },
+    {
+      "source": "/cloud/tips/integrations/playwright",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/cloud/tips/integrations/n8n",
+      "destination": "/cloud/tutorials/integrations/n8n"
+    },
+    {
+      "source": "/api-v2/*",
+      "destination": "/cloud/api-v2"
+    },
+    {
+      "source": "/api-v3/*",
+      "destination": "/cloud/api-v3"
+    },
+    {
+      "source": "/api-v4/*",
+      "destination": "/cloud/api-v4"
+    },
+    {
+      "source": "/get-started/human-quickstart",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/human-quickstart",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/get-started/llm-quickstart",
+      "destination": "/cloud/vibecoding"
+    },
+    {
+      "source": "/open-source/quickstart_llm",
+      "destination": "/open-source/vibecoding"
+    },
+    {
+      "source": "/get-started/models-and-pricing",
+      "destination": "https://browser-use.com/pricing"
+    },
+    {
+      "source": "/get-started/pricing",
+      "destination": "https://browser-use.com/pricing"
+    },
+    {
+      "source": "/concepts/overview",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/concepts/task",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/concepts/skills",
+      "destination": "/cloud/legacy/skills"
+    },
+    {
+      "source": "/concepts/session",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/concepts/profile",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/concepts/file",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/concepts/browser",
+      "destination": "/cloud/browser/playwright-puppeteer-selenium"
+    },
+    {
+      "source": "/usage/structured-output",
+      "destination": "/cloud/agent/structured-output"
+    },
+    {
+      "source": "/usage/streaming-response",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/usage/streaming",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/usage/mcp-server",
+      "destination": "/cloud/guides/mcp-server"
+    },
+    {
+      "source": "/usage/stealth",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/usage/safety",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/usage/webhooks",
+      "destination": "/cloud/guides/webhooks"
+    },
+    {
+      "source": "/usage/authentication",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/api-reference/*",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/v2/quickstart",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/v1/*",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/bux/introduction",
+      "destination": "/cloud/which-product"
+    },
+    {
+      "source": "/cloud/bux/quickstart",
+      "destination": "/cloud/which-product"
+    },
+    {
+      "source": "/cloud/bux/authentication",
+      "destination": "/cloud/which-product"
+    },
+    {
+      "source": "/cloud/bux/interfaces",
+      "destination": "/cloud/which-product"
+    },
+    {
+      "source": "/cloud/bux",
+      "destination": "/cloud/which-product"
+    }
+  ],
+  "description": "Documentation for Browser Use Cloud Agent and Browser APIs, and the separate open-source Python library.",
+  "markdown": {
+    "instructions": [
+      "Use https://docs.browser-use.com/llms.txt and its linked .md pages for current documentation. The managed full bundle is https://docs.browser-use.com/.well-known/llms-full.txt and can be cached for up to 24 hours. Do not use the obsolete /cloud/llms*.txt or /open-source/llms*.txt static exports.",
+      "Choose Cloud API V4 for new agent integrations; V2 is the lower-cost option for simple tasks. Keep V3 examples explicitly versioned. The open-source browser-use library and hosted browser-use-sdk have different APIs.",
+      "Cloud authentication uses X-Browser-Use-API-Key, without a Bearer prefix. Install or upgrade browser-use-sdk and use its explicit v4 import for V4. Check the published OpenAPI reference for request fields; do not invent SDK support for new fields.",
+      "Cloud concurrency and HTTP request rate are separate. Read GET /api/v2/billing/account for the key’s projectId, concurrentSessionLimit, activeSessionCount, and credit balance, including when using V4. Keys in one project share capacity and credits; rateLimit is a legacy concurrency alias, not requests per second.",
+      "Keep the highest applicable existing, legacy-plan, and spend-tier concurrency grant. Current spend tiers are 10 / 50 / 250 / 500 / 1000 at $0 / $200 / $1000 / $5000 / $25000 in qualifying project payments. Legacy or externally billed projects can follow different billing paths; trust the account limit. See https://docs.browser-use.com/cloud/guides/concurrency.md.",
+      "Budget polling across the project: the standard general bucket is 25 requests/second, including V4 event reads and full run reads. Selected status reads have a separate higher bucket. Use bounded workers, stagger polls, respect Retry-After, and drain hasMore event pages after terminal status. A busy V4 session returns 409; its queue holds 10 pending messages and is not a project-wide batch queue.",
+      "A completed run or closed CDP connection does not immediately stop its cloud browser. Stop unneeded owned browsers with PATCH /api/v4/browsers/{id} and {\"action\":\"stop\"}. A client wait timeout does not cancel the server-side run.",
+      "Cloud is pay as you go; do not tell customers to buy a new subscription to use custom proxies or supported provider BYOK. Usage funding and model eligibility still apply. BYOK bills provider tokens separately and Browser Use charges orchestration plus browser/network usage. See https://docs.browser-use.com/cloud/guides/billing.md.",
+      "Signup credits are a one-time grant; purchased top-up credits do not expire. Check the API key’s project before diagnosing missing credits. API-key monthly spending caps are soft limits, not a strict prepaid wallet; concurrent or already-running work can exceed them. Auto recharge has separate trigger and purchase amounts and can charge immediately when enabled below the threshold. Use https://browser-use.com/pricing for current rates."
+    ]
+  }
 }

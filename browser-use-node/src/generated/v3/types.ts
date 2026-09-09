@@ -14,6 +14,14 @@ export interface paths {
         /**
          * List Sessions
          * @description List sessions for the authenticated project.
+         *
+         *     List responses intentionally omit per-session presigned URLs
+         *     (`screenshot_url`, `recording_urls`). Each presign is a synchronous boto3
+         *     SigV4 signing call that holds the GIL and blocks the event loop. With
+         *     page_size up to 100 this CPU-pegs the worker and starves the DB pool,
+         *     cascading into pool exhaustion across the fleet. Clients should fetch
+         *     these URLs on demand via `GET /api/v3/sessions/{id}`, which signs exactly
+         *     one screenshot URL plus any recording URLs for a single session.
          */
         get: operations["list_sessions_sessions_get"];
         put?: never;
@@ -113,6 +121,15 @@ export interface paths {
         /**
          * List Browser Sessions
          * @description Get paginated list of browser sessions with optional status filtering.
+         *
+         *     List responses intentionally omit per-session presigned recording URLs
+         *     (`recording_url` is always `null` here). Each recording URL requires a
+         *     synchronous boto3 SigV4 signing call (plus an S3 HEAD) that holds the GIL
+         *     and blocks the event loop. With page_size up to the max this CPU-pegs the
+         *     worker and starves the DB pool, cascading into pool exhaustion across the
+         *     fleet. Clients should fetch the recording URL on demand via
+         *     `GET /api/v2/browsers/{id}`, which signs exactly one URL for a single
+         *     session. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).
          */
         get: operations["list_browser_sessions_browsers_get"];
         put?: never;
@@ -120,9 +137,7 @@ export interface paths {
          * Create Browser Session
          * @description Create a new browser session.
          *
-         *     **Pricing:** Browser sessions are charged per hour with tiered pricing:
-         *     - Pay As You Go users: $0.06/hour
-         *     - Business/Scaleup subscribers: $0.03/hour (50% discount)
+         *     **Pricing:** Browser sessions are charged at $0.02/hour for all users.
          *
          *     The full rate is charged upfront when the session starts.
          *     When you stop the session, any unused time is automatically refunded proportionally.
@@ -166,6 +181,30 @@ export interface paths {
          *     Billing is ceil to the nearest minute (minimum 1 minute).
          */
         patch: operations["update_browser_session_browsers__session_id__patch"];
+        trace?: never;
+    };
+    "/browsers/{session_id}/downloads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Browser Session Downloads
+         * @description List files the browser downloaded to S3 during the session.
+         *
+         *     Pass ``includeUrls=true`` to receive presigned download URLs (15 min expiry) inline.
+         *     Files are stored at ``downloads/projects/{project_id}/sessions/{session_id}/`` in
+         *     the private bucket.
+         */
+        get: operations["list_browser_session_downloads_browsers__session_id__downloads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/profiles": {
@@ -368,6 +407,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/x402/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * X402 Balance
+         * @description Read a wallet-derived project's credit balance auth by off-chain wallet signature
+         */
+        post: operations["x402_balance_x402_balance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -419,11 +478,72 @@ export interface components {
              */
             planInfo: components["schemas"]["PlanInfo"];
             /**
+             * Is Free Tier
+             * @description Whether the account is on the free tier
+             * @default false
+             */
+            isFreeTier: boolean;
+            /**
              * Project ID
              * Format: uuid
              * @description The ID of the project
              */
             projectId: string;
+            /**
+             * Tracing Disabled
+             * @description Whether third-party LLM tracing is disabled for this project
+             * @default false
+             */
+            tracingDisabled: boolean;
+        };
+        /**
+         * BrowserDownloadFile
+         * @description A single file the browser downloaded during the session.
+         */
+        BrowserDownloadFile: {
+            /**
+             * Path
+             * @description File name (basename relative to the session downloads prefix)
+             */
+            path: string;
+            /**
+             * Size
+             * @description File size in bytes
+             */
+            size: number;
+            /**
+             * Lastmodified
+             * Format: date-time
+             * @description When the file was last modified in S3
+             */
+            lastModified: string;
+            /**
+             * Url
+             * @description Presigned download URL (15 min expiry). Only included when `includeUrls=true`.
+             */
+            url?: string | null;
+        };
+        /**
+         * BrowserDownloadListResponse
+         * @description Paginated list of browser downloads with optional presigned URLs.
+         */
+        BrowserDownloadListResponse: {
+            /**
+             * Files
+             * @description List of files downloaded by the browser
+             */
+            files: components["schemas"]["BrowserDownloadFile"][];
+            /**
+             * Nextcursor
+             * @description Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page.
+             */
+            nextCursor?: string | null;
+            /**
+             * Hasmore
+             * @description Whether there are more files beyond this page.
+             * @default false
+             */
+            hasMore: boolean;
         };
         /**
          * BrowserSessionItemView
@@ -493,9 +613,17 @@ export interface components {
             agentSessionId?: string | null;
             /**
              * Recording URL
-             * @description Presigned URL to download the session recording (available after session ends, if recording was enabled)
+             * @description Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses.
              */
             recordingUrl?: string | null;
+            /**
+             * Metadata
+             * @description Caller-supplied labels set when the browser was created.
+             * @default {}
+             */
+            metadata: {
+                [key: string]: string;
+            };
         };
         /**
          * BrowserSessionListResponse
@@ -610,9 +738,23 @@ export interface components {
             agentSessionId?: string | null;
             /**
              * Recording URL
-             * @description Presigned URL to download the session recording (available after session ends, if recording was enabled)
+             * @description Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.
              */
             recordingUrl?: string | null;
+            /**
+             * Recording Available
+             * @description False when a recording can never appear for this session: recording was disabled, or the browser stopped long enough ago that the upload is not coming. Only ever false from proof, so a failed recording lookup leaves it true. Clients polling for `recordingUrl` must stop when this is false.
+             * @default true
+             */
+            recordingAvailable: boolean;
+            /**
+             * Metadata
+             * @description Caller-supplied labels set when the browser was created.
+             * @default {}
+             */
+            metadata: {
+                [key: string]: string;
+            };
         };
         /**
          * BuAgentSessionStatus
@@ -632,12 +774,25 @@ export interface components {
          * @description The model to use for the agent. Each model has different capabilities and pricing.
          *
          *     - `bu-mini` / `gemini-3-flash`: Gemini 3 Flash — fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.
-         *     - `bu-max` / `claude-sonnet-4.6`: Claude Sonnet 4.6 — balanced performance. Best for multi-step workflows that require reasoning and decision-making.
-         *     - `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 — most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.
+         *     - `bu-max` / `claude-sonnet-4.6` (legacy aliases) / `claude-sonnet-5`: Claude Sonnet 5 — balanced performance. Best for multi-step workflows that require reasoning and decision-making.
+         *     - `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 — capable general-purpose Opus tier.
+         *     - `claude-opus-4.7`: Claude Opus 4.7 — most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.
+         *     - `claude-opus-4.8`: Claude Opus 4.8 — most capable Opus-tier model, state-of-the-art on long-horizon agentic work.
          *     - `gpt-5.4-mini`: GPT-5.4 mini — OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities.
+         *     - `glm-5.2`: Z.ai GLM 5.2 — capable, low-cost open model. Best for cost-sensitive agentic tasks.
+         *     - `minimax-m3`: MiniMax M3 — fast, very low-cost model. Best for simple, high-volume tasks.
+         *     - `grok-4.6`: xAI Grok 4.6. Fast frontier model with a large context window.
+         *     - `glm-5.3-flash`: Z.ai GLM 5.3 Flash. Multimodal, very low cost, served by Fireworks.
+         *     - `deepseek-v4-flash-vision`: DeepSeek V4 Flash Vision. Experimental, very low cost.
+         *
+         *     Additional provider models (e.g. `gemini-3.5-flash`, `gpt-5.2`, and `gpt-5-mini`)
+         *     are selectable only with `use_own_key=true`, where your own provider key serves
+         *     them. The GPT-5.6 family is native when either Browser Use's direct OpenAI key
+         *     or Amazon Bedrock route is configured. GPT-5.5 becomes native only through the
+         *     Bedrock rollout.
          * @enum {string}
          */
-        BuModel: "bu-mini" | "bu-max" | "bu-ultra" | "gemini-3-flash" | "claude-sonnet-4.6" | "claude-opus-4.6" | "gpt-5.4-mini";
+        BuModel: "bu-mini" | "bu-max" | "bu-ultra" | "gemini-3-flash" | "claude-opus-4.6" | "claude-opus-4.7" | "claude-sonnet-5" | "claude-opus-4.8" | "gpt-5.4-mini" | "glm-5.2" | "minimax-m3" | "grok-4.6" | "glm-5.3-flash" | "deepseek-v4-flash-vision" | "claude-haiku-4.5" | "gpt-5.2" | "gpt-5-mini" | "gpt-5.5" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3-pro" | "gemini-3.1-pro" | "gemini-3.5-flash";
         /**
          * CreateBrowserSessionRequest
          * @description Request model for creating a browser session.
@@ -655,8 +810,15 @@ export interface components {
              */
             proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
             /**
+             * Metadata
+             * @description Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history.
+             */
+            metadata?: {
+                [key: string]: string;
+            } | null;
+            /**
              * Timeout
-             * @description The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.
+             * @description The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.
              * @default 60
              */
             timeout: number;
@@ -677,8 +839,20 @@ export interface components {
              */
             allowResizing: boolean;
             /**
+             * PDF Renderer Enabled
+             * @description Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.
+             * @default true
+             */
+            pdfRendererEnabled: boolean;
+            /**
+             * Solve Captchas
+             * @description Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.
+             * @default true
+             */
+            solveCaptchas: boolean;
+            /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
@@ -713,6 +887,12 @@ export interface components {
              * @description Password for proxy authentication.
              */
             password?: string | null;
+            /**
+             * Ignore Certificate Errors
+             * @description Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).
+             * @default false
+             */
+            ignoreCertErrors: boolean;
         };
         /**
          * FileInfo
@@ -1063,7 +1243,7 @@ export interface components {
          * ProxyCountryCode
          * @enum {string}
          */
-        ProxyCountryCode: "ad" | "ae" | "af" | "ag" | "ai" | "al" | "am" | "an" | "ao" | "aq" | "ar" | "as" | "at" | "au" | "aw" | "az" | "ba" | "bb" | "bd" | "be" | "bf" | "bg" | "bh" | "bi" | "bj" | "bl" | "bm" | "bn" | "bo" | "bq" | "br" | "bs" | "bt" | "bv" | "bw" | "by" | "bz" | "ca" | "cc" | "cd" | "cf" | "cg" | "ch" | "ck" | "cl" | "cm" | "co" | "cr" | "cs" | "cu" | "cv" | "cw" | "cx" | "cy" | "cz" | "de" | "dj" | "dk" | "dm" | "do" | "dz" | "ec" | "ee" | "eg" | "eh" | "er" | "es" | "et" | "fi" | "fj" | "fk" | "fm" | "fo" | "fr" | "ga" | "gd" | "ge" | "gf" | "gg" | "gh" | "gi" | "gl" | "gm" | "gn" | "gp" | "gq" | "gr" | "gs" | "gt" | "gu" | "gw" | "gy" | "hk" | "hm" | "hn" | "hr" | "ht" | "hu" | "id" | "ie" | "il" | "im" | "in" | "iq" | "ir" | "is" | "it" | "je" | "jm" | "jo" | "jp" | "ke" | "kg" | "kh" | "ki" | "km" | "kn" | "kp" | "kr" | "kw" | "ky" | "kz" | "la" | "lb" | "lc" | "li" | "lk" | "lr" | "ls" | "lt" | "lu" | "lv" | "ly" | "ma" | "mc" | "md" | "me" | "mf" | "mg" | "mh" | "mk" | "ml" | "mm" | "mn" | "mo" | "mp" | "mq" | "mr" | "ms" | "mt" | "mu" | "mv" | "mw" | "mx" | "my" | "mz" | "na" | "nc" | "ne" | "nf" | "ng" | "ni" | "nl" | "no" | "np" | "nr" | "nu" | "nz" | "om" | "pa" | "pe" | "pf" | "pg" | "ph" | "pk" | "pl" | "pm" | "pn" | "pr" | "ps" | "pt" | "pw" | "py" | "qa" | "re" | "ro" | "rs" | "ru" | "rw" | "sa" | "sb" | "sc" | "sd" | "se" | "sg" | "sh" | "si" | "sj" | "sk" | "sl" | "sm" | "sn" | "so" | "sr" | "ss" | "st" | "sv" | "sx" | "sy" | "sz" | "tc" | "td" | "tf" | "tg" | "th" | "tj" | "tk" | "tl" | "tm" | "tn" | "to" | "tr" | "tt" | "tv" | "tw" | "tz" | "ua" | "ug" | "uk" | "us" | "uy" | "uz" | "va" | "vc" | "ve" | "vg" | "vi" | "vn" | "vu" | "wf" | "ws" | "xk" | "ye" | "yt" | "za" | "zm" | "zw";
+        ProxyCountryCode: "ad" | "ae" | "af" | "ag" | "ai" | "al" | "am" | "an" | "ao" | "aq" | "ar" | "as" | "at" | "au" | "aw" | "az" | "ba" | "bb" | "bd" | "be" | "bf" | "bg" | "bh" | "bi" | "bj" | "bl" | "bm" | "bn" | "bo" | "bq" | "br" | "bs" | "bt" | "bv" | "bw" | "by" | "bz" | "ca" | "cc" | "cd" | "cf" | "cg" | "ch" | "ci" | "ck" | "cl" | "cm" | "co" | "cr" | "cs" | "cu" | "cv" | "cw" | "cx" | "cy" | "cz" | "de" | "dj" | "dk" | "dm" | "do" | "dz" | "ec" | "ee" | "eg" | "eh" | "er" | "es" | "et" | "fi" | "fj" | "fk" | "fm" | "fo" | "fr" | "ga" | "gd" | "ge" | "gf" | "gg" | "gh" | "gi" | "gl" | "gm" | "gn" | "gp" | "gq" | "gr" | "gs" | "gt" | "gu" | "gw" | "gy" | "hk" | "hm" | "hn" | "hr" | "ht" | "hu" | "id" | "ie" | "il" | "im" | "in" | "iq" | "ir" | "is" | "it" | "je" | "jm" | "jo" | "jp" | "ke" | "kg" | "kh" | "ki" | "km" | "kn" | "kp" | "kr" | "kw" | "ky" | "kz" | "la" | "lb" | "lc" | "li" | "lk" | "lr" | "ls" | "lt" | "lu" | "lv" | "ly" | "ma" | "mc" | "md" | "me" | "mf" | "mg" | "mh" | "mk" | "ml" | "mm" | "mn" | "mo" | "mp" | "mq" | "mr" | "ms" | "mt" | "mu" | "mv" | "mw" | "mx" | "my" | "mz" | "na" | "nc" | "ne" | "nf" | "ng" | "ni" | "nl" | "no" | "np" | "nr" | "nu" | "nz" | "om" | "pa" | "pe" | "pf" | "pg" | "ph" | "pk" | "pl" | "pm" | "pn" | "pr" | "ps" | "pt" | "pw" | "py" | "qa" | "re" | "ro" | "rs" | "ru" | "rw" | "sa" | "sb" | "sc" | "sd" | "se" | "sg" | "sh" | "si" | "sj" | "sk" | "sl" | "sm" | "sn" | "so" | "sr" | "ss" | "st" | "sv" | "sx" | "sy" | "sz" | "tc" | "td" | "tf" | "tg" | "th" | "tj" | "tk" | "tl" | "tm" | "tn" | "to" | "tr" | "tt" | "tv" | "tw" | "tz" | "ua" | "ug" | "uk" | "us" | "uy" | "uz" | "va" | "vc" | "ve" | "vg" | "vi" | "vn" | "vu" | "wf" | "ws" | "xk" | "ye" | "yt" | "za" | "zm" | "zw";
         /**
          * RunTaskRequest
          * @description Create a new session, dispatch a task, or both.
@@ -1080,10 +1260,12 @@ export interface components {
              */
             task?: string | null;
             /**
-             * @description The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-4.6" is balanced, "claude-opus-4.6" is most capable. See BuModel for details.
-             * @default claude-sonnet-4.6
+             * @description The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-5" is balanced, "claude-opus-4.7" is most capable (default), and "claude-opus-4.8" is the newest Opus-tier model. GPT-5.6 models are Browser Use native models when either direct OpenAI or Amazon Bedrock routing is configured; otherwise they require use_own_key=true. GPT-5.5 becomes native when Bedrock routing is enabled; otherwise it requires use_own_key=true. Other additional provider models (e.g. "gemini-3.5-flash" and "gpt-5.2") require use_own_key=true. See BuModel for details.
+             * @default claude-opus-4.7
              */
             model: components["schemas"]["BuModel"];
+            /** @description Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level for Gemini 3 Flash and 3.5 Flash, and to a zero thinking budget for Gemini 2.5 Flash and the gemini-flash-latest variants); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected. */
+            thinkingLevel?: components["schemas"]["ThinkingLevel"] | null;
             /**
              * Sessionid
              * @description ID of an existing idle session to dispatch the task to. If omitted, a new session is created.
@@ -1097,7 +1279,7 @@ export interface components {
             keepAlive: boolean;
             /**
              * Maxcostusd
-             * @description Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance).
+             * @description Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default.
              */
             maxCostUsd?: number | string | null;
             /**
@@ -1116,6 +1298,16 @@ export interface components {
              */
             proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
             /**
+             * Browserscreenwidth
+             * @description Custom browser screen width in pixels. Must be set together with browserScreenHeight. When omitted, the browser keeps its own default resolution.
+             */
+            browserScreenWidth?: number | null;
+            /**
+             * Browserscreenheight
+             * @description Custom browser screen height in pixels. Must be set together with browserScreenWidth. When omitted, the browser keeps its own default resolution.
+             */
+            browserScreenHeight?: number | null;
+            /**
              * Outputschema
              * @description A JSON Schema that the agent's final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {"type": "object", "properties": {"price": {"type": "number"}, "title": {"type": "string"}}}.
              */
@@ -1129,6 +1321,13 @@ export interface components {
              */
             enableScheduledTasks: boolean;
             /**
+             * Sensitivedata
+             * @description Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values.
+             */
+            sensitiveData?: {
+                [key: string]: string;
+            } | null;
+            /**
              * Enablerecording
              * @description If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.
              * @default false
@@ -1136,7 +1335,7 @@ export interface components {
             enableRecording: boolean;
             /**
              * Skills
-             * @description If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.
+             * @description If true, the agent generates and persists reusable skills from completed tasks (saved per-domain in the DB and auto-injected into future runs). Set to false to skip skill generation — useful for privacy-sensitive tasks or to avoid the extra LLM cost.
              * @default true
              */
             skills: boolean;
@@ -1147,10 +1346,22 @@ export interface components {
              */
             agentmail: boolean;
             /**
+             * Codemode
+             * @description When true, the agent returns structured output with `text` (summary) and `code` (validated Python source) fields instead of free-form text.
+             * @default false
+             */
+            codeMode: boolean;
+            /**
              * Cachescript
              * @description Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from @{{https://example.com}} for @{{electronics}}".
              */
             cacheScript?: boolean | null;
+            /**
+             * Useownkey
+             * @description If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2× of provider list prices). If no key is configured for the model's provider, the request is rejected.
+             * @default false
+             */
+            useOwnKey: boolean;
             /**
              * Autoheal
              * @description When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.
@@ -1210,6 +1421,8 @@ export interface components {
             status: components["schemas"]["BuAgentSessionStatus"];
             /** @description The model tier used for this session. */
             model: components["schemas"]["BuModel"];
+            /** @description Configured model reasoning depth for this session, or null when provider defaults are used. */
+            thinkingLevel?: components["schemas"]["ThinkingLevel"] | null;
             /**
              * Title
              * @description Auto-generated short title summarizing the task. Available after the task starts running.
@@ -1217,7 +1430,7 @@ export interface components {
             title?: string | null;
             /**
              * Output
-             * @description The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false.
+             * @description The agent's final output. If `codeMode` was true, this will be an object with `text` (summary), `code` (Python source), and optionally `output` (execution result). If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null.
              */
             output?: unknown | null;
             /**
@@ -1250,7 +1463,7 @@ export interface components {
             liveUrl?: string | null;
             /**
              * Recordingurls
-             * @description URLs to download session recordings. Only populated if `enableRecording` was set to true and the task has completed.
+             * @description URLs to download session recordings. Only populated on `GET /api/v3/sessions/{id}`; always `[]` in list responses.
              * @default []
              */
             recordingUrls: string[];
@@ -1266,6 +1479,16 @@ export interface components {
             workspaceId?: string | null;
             /** @description Country code of the proxy used for this session, or null if no proxy. */
             proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
+            /**
+             * Browserscreenwidth
+             * @description Custom browser screen width set for this session, or null for the default.
+             */
+            browserScreenWidth?: number | null;
+            /**
+             * Browserscreenheight
+             * @description Custom browser screen height set for this session, or null for the default.
+             */
+            browserScreenHeight?: number | null;
             /**
              * Maxcostusd
              * @description Maximum cost limit in USD set for this session.
@@ -1315,7 +1538,7 @@ export interface components {
             totalCostUsd: string;
             /**
              * Screenshoturl
-             * @description URL of the latest browser screenshot. This is a presigned URL that expires after 5 minutes. A new URL is generated each time you fetch the session.
+             * @description Presigned URL of the latest screenshot (expires after 5 minutes). Only populated on `GET /api/v3/sessions/{id}`; always `null` in list responses.
              */
             screenshotUrl?: string | null;
             /**
@@ -1323,6 +1546,11 @@ export interface components {
              * @description Temporary email address provisioned for this session (via AgentMail). Only present if `agentmail` was enabled.
              */
             agentmailEmail?: string | null;
+            /**
+             * Integrationsused
+             * @description List of integration providers used during this session (e.g. ["gmail", "slack", "agentmail"]).
+             */
+            integrationsUsed?: string[];
             /**
              * Createdat
              * Format: date-time
@@ -1364,6 +1592,12 @@ export interface components {
          * @enum {string}
          */
         StopStrategy: "task" | "session";
+        /**
+         * ThinkingLevel
+         * @description Provider-neutral model reasoning depth.
+         * @enum {string}
+         */
+        ThinkingLevel: "disabled" | "low" | "medium" | "high";
         /**
          * TooManyConcurrentActiveSessionsError
          * @description Error response when user has too many concurrent active sessions
@@ -1471,6 +1705,56 @@ export interface components {
              * @description Timestamp when the workspace was last updated
              */
             updatedAt: string;
+        };
+        /**
+         * X402BalanceRequest
+         * @description Wallet-signature auth payload for a free, read-only balance check
+         */
+        X402BalanceRequest: {
+            /**
+             * Address
+             * @description EVM wallet address that signed the message (0x...).
+             */
+            address: string;
+            /**
+             * Issued At
+             * @description ISO-8601 UTC timestamp included in the signed message.
+             */
+            issued_at: string;
+            /**
+             * Nonce
+             * @description Random single-use nonce included in the signed message.
+             */
+            nonce: string;
+            /**
+             * Signature
+             * @description EIP-191 personal_sign signature of the canonical message.
+             */
+            signature: string;
+        };
+        /** X402BalanceResponse */
+        X402BalanceResponse: {
+            /**
+             * Wallet
+             * @description Lowercased wallet address (verified from the signature).
+             */
+            wallet: string;
+            /**
+             * Project Id
+             * Format: uuid
+             * @description Wallet-derived project the balance belongs to.
+             */
+            project_id: string;
+            /**
+             * Total Credits Usd
+             * @description Total spendable credit balance in USD.
+             */
+            total_credits_usd: number;
+            /**
+             * Additional Credits Usd
+             * @description Standalone (x402 top-up / one_off) credit balance in USD.
+             */
+            additional_credits_usd: number;
         };
     };
     responses: never;
@@ -1684,9 +1968,12 @@ export interface operations {
     list_browser_sessions_browsers_get: {
         parameters: {
             query?: {
+                /** @description Only browsers tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND). */
+                metadata?: string[] | null;
                 pageSize?: number;
                 pageNumber?: number;
                 filterBy?: components["schemas"]["BrowserSessionStatus"] | null;
+                agentSessionId?: string | null;
             };
             header?: never;
             path?: never;
@@ -1854,6 +2141,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+        };
+    };
+    list_browser_session_downloads_browsers__session_id__downloads_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                includeUrls?: boolean;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserDownloadListResponse"];
+                };
+            };
+            /** @description Session not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionNotFoundError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -2369,6 +2700,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountNotFoundError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    x402_balance_x402_balance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["X402BalanceRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["X402BalanceResponse"];
                 };
             };
             /** @description Validation Error */

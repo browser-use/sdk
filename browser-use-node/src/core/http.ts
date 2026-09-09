@@ -1,10 +1,18 @@
 import { BrowserUseError } from "./errors.js";
+import type { FetchLike } from "./x402.js";
 
 export interface HttpClientOptions {
   apiKey: string;
   baseUrl: string;
   maxRetries?: number;
   timeout?: number;
+  /**
+   * Optional custom fetch implementation. May be a sync value or a Promise
+   * (for lazy resolution of e.g. x402-wrapped fetch). When set, replaces
+   * `globalThis.fetch`. The `X-Browser-Use-API-Key` header is still sent if
+   * `apiKey` is non-empty (top-up mode in x402); pass `apiKey: ""` to omit.
+   */
+  fetch?: FetchLike | Promise<FetchLike>;
 }
 
 export class HttpClient {
@@ -12,12 +20,26 @@ export class HttpClient {
   private readonly baseUrl: string;
   private readonly maxRetries: number;
   private readonly timeout: number;
+  private readonly fetchPromise: Promise<FetchLike>;
+  private readonly useApiKeyHeader: boolean;
 
   constructor(options: HttpClientOptions) {
     this.apiKey = options.apiKey;
-    this.baseUrl = options.baseUrl.replace(/\/+$/, "");
+    // Strip trailing slashes without a regex — CodeQL flags /\/+$/ as a
+    // polynomial ReDoS even though baseUrl is developer config, not runtime
+    // input. Linear and provably safe.
+    let base = options.baseUrl;
+    while (base.endsWith("/")) base = base.slice(0, -1);
+    this.baseUrl = base;
     this.maxRetries = options.maxRetries ?? 3;
     this.timeout = options.timeout ?? 30_000;
+    this.fetchPromise = Promise.resolve(
+      options.fetch ?? ((input, init) => fetch(input, init)),
+    );
+    // Send the API key header whenever apiKey is non-empty. In x402 mode
+    // an empty apiKey means "accountless" (wallet is identity); a non-empty
+    // apiKey means "top up the existing key's project".
+    this.useApiKeyHeader = options.apiKey !== "";
   }
 
   async request<T>(
@@ -26,21 +48,29 @@ export class HttpClient {
     options?: {
       body?: unknown;
       query?: Record<string, unknown>;
+      headers?: Record<string, string>;
       signal?: AbortSignal;
     },
   ): Promise<T> {
     const url = new URL(`${this.baseUrl}${path}`);
     if (options?.query) {
       for (const [key, value] of Object.entries(options.query)) {
-        if (value !== undefined && value !== null) {
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            if (item !== undefined && item !== null) {
+              url.searchParams.append(key, String(item));
+            }
+          }
+        } else if (value !== undefined && value !== null) {
           url.searchParams.set(key, String(value));
         }
       }
     }
 
-    const headers: Record<string, string> = {
-      "X-Browser-Use-API-Key": this.apiKey,
-    };
+    const headers: Record<string, string> = { ...options?.headers };
+    if (this.useApiKeyHeader) {
+      headers["X-Browser-Use-API-Key"] = this.apiKey;
+    }
     if (options?.body !== undefined) {
       headers["Content-Type"] = "application/json";
     }
@@ -60,7 +90,8 @@ export class HttpClient {
       const signal = options?.signal ?? controller.signal;
 
       try {
-        const response = await fetch(url.toString(), {
+        const fetchImpl = await this.fetchPromise;
+        const response = await fetchImpl(url.toString(), {
           method,
           headers,
           body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
@@ -118,8 +149,13 @@ export class HttpClient {
     return this.request<T>("GET", path, { query });
   }
 
-  post<T>(path: string, body?: unknown, query?: Record<string, unknown>): Promise<T> {
-    return this.request<T>("POST", path, { body, query });
+  post<T>(
+    path: string,
+    body?: unknown,
+    query?: Record<string, unknown>,
+    headers?: Record<string, string>,
+  ): Promise<T> {
+    return this.request<T>("POST", path, { body, query, headers });
   }
 
   patch<T>(path: string, body?: unknown, query?: Record<string, unknown>): Promise<T> {

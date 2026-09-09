@@ -102,7 +102,11 @@ Available methods on `Element`:
 You can use Pydantic for the tool parameters:
 
 ```python
-from pydantic import BaseModel
+import json
+from pydantic import BaseModel, Field
+from browser_use import Tools
+
+tools = Tools()
 
 class Cars(BaseModel):
     name: str = Field(description='The name of the car, e.g. "Toyota Camry"')

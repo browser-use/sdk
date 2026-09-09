@@ -1,14 +1,18 @@
 from .client import AsyncBrowserUse, BrowserUse
 from .helpers import AsyncSessionRun, SessionResult
 from .._core.errors import BrowserUseError
+from .._core.x402 import get_wallet_balance
 
 from ..generated.v3.models import (
     AccountView,
+    BrowserDownloadFile,
+    BrowserDownloadListResponse,
     BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionStatus,
     BrowserSessionUpdateAction,
     BrowserSessionView,
+    CustomProxy,
     BuAgentSessionStatus,
     BuModel,
     PlanInfo,
@@ -30,6 +34,7 @@ from ..generated.v3.models import (
     SessionResponse,
     StopSessionRequest,
     StopStrategy,
+    ThinkingLevel,
     WorkspaceCreateRequest,
     WorkspaceListResponse,
     WorkspaceUpdateRequest,
@@ -43,15 +48,20 @@ __all__ = [
     "AsyncSessionRun",
     "SessionResult",
     "BrowserUseError",
+    # x402
+    "get_wallet_balance",
     # Billing models
     "AccountView",
     "PlanInfo",
     # Browser models
+    "BrowserDownloadFile",
+    "BrowserDownloadListResponse",
     "BrowserSessionItemView",
     "BrowserSessionListResponse",
     "BrowserSessionStatus",
     "BrowserSessionUpdateAction",
     "BrowserSessionView",
+    "CustomProxy",
     # Profile models
     "ProfileCreateRequest",
     "ProfileListResponse",
@@ -78,6 +88,7 @@ __all__ = [
     # Enums
     "BuAgentSessionStatus",
     "BuModel",
+    "ThinkingLevel",
     "ProxyCountryCode",
     "StopStrategy",
 ]

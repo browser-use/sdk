@@ -14,6 +14,44 @@ class AccountNotFoundError(BaseModel):
     detail: str | None = Field('Account not found', title='Detail')
 
 
+class BrowserDownloadFile(BaseModel):
+    path: str = Field(
+        ...,
+        description='File name (basename relative to the session downloads prefix)',
+        title='Path',
+    )
+    size: int = Field(..., description='File size in bytes', title='Size')
+    last_modified: AwareDatetime = Field(
+        ...,
+        alias='lastModified',
+        description='When the file was last modified in S3',
+        title='Lastmodified',
+    )
+    url: str | None = Field(
+        None,
+        description='Presigned download URL (15 min expiry). Only included when `includeUrls=true`.',
+        title='Url',
+    )
+
+
+class BrowserDownloadListResponse(BaseModel):
+    files: List[BrowserDownloadFile] = Field(
+        ..., description='List of files downloaded by the browser', title='Files'
+    )
+    next_cursor: str | None = Field(
+        None,
+        alias='nextCursor',
+        description='Cursor for the next page. Pass as the `cursor` query parameter to fetch the next page.',
+        title='Nextcursor',
+    )
+    has_more: bool | None = Field(
+        False,
+        alias='hasMore',
+        description='Whether there are more files beyond this page.',
+        title='Hasmore',
+    )
+
+
 class BrowserSessionStatus(Enum):
     active = 'active'
     stopped = 'stopped'
@@ -93,8 +131,19 @@ class BrowserSessionView(BaseModel):
     recording_url: str | None = Field(
         None,
         alias='recordingUrl',
-        description='Presigned URL to download the session recording (available after session ends, if recording was enabled)',
+        description='Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.',
         title='Recording URL',
+    )
+    recording_available: bool | None = Field(
+        True,
+        alias='recordingAvailable',
+        description='False when a recording can never appear for this session: recording was disabled, or the browser stopped long enough ago that the upload is not coming. Only ever false from proof, so a failed recording lookup leaves it true. Clients polling for `recordingUrl` must stop when this is false.',
+        title='Recording Available',
+    )
+    metadata: Dict[str, str] | None = Field(
+        {},
+        description='Caller-supplied labels set when the browser was created.',
+        title='Metadata',
     )
 
 
@@ -112,9 +161,26 @@ class BuModel(Enum):
     bu_max = 'bu-max'
     bu_ultra = 'bu-ultra'
     gemini_3_flash = 'gemini-3-flash'
-    claude_sonnet_4_6 = 'claude-sonnet-4.6'
     claude_opus_4_6 = 'claude-opus-4.6'
+    claude_opus_4_7 = 'claude-opus-4.7'
+    claude_sonnet_5 = 'claude-sonnet-5'
+    claude_opus_4_8 = 'claude-opus-4.8'
     gpt_5_4_mini = 'gpt-5.4-mini'
+    glm_5_2 = 'glm-5.2'
+    minimax_m3 = 'minimax-m3'
+    grok_4_6 = 'grok-4.6'
+    glm_5_3_flash = 'glm-5.3-flash'
+    deepseek_v4_flash_vision = 'deepseek-v4-flash-vision'
+    claude_haiku_4_5 = 'claude-haiku-4.5'
+    gpt_5_2 = 'gpt-5.2'
+    gpt_5_mini = 'gpt-5-mini'
+    gpt_5_5 = 'gpt-5.5'
+    gpt_5_6_sol = 'gpt-5.6-sol'
+    gpt_5_6_terra = 'gpt-5.6-terra'
+    gpt_5_6_luna = 'gpt-5.6-luna'
+    gemini_3_pro = 'gemini-3-pro'
+    gemini_3_1_pro = 'gemini-3.1-pro'
+    gemini_3_5_flash = 'gemini-3.5-flash'
 
 
 class BrowserScreenWidth(RootModel[int]):
@@ -173,6 +239,12 @@ class CustomProxy(BaseModel):
     )
     password: Password | None = Field(
         None, description='Password for proxy authentication.', title='Password'
+    )
+    ignore_cert_errors: bool | None = Field(
+        False,
+        alias='ignoreCertErrors',
+        description='Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).',
+        title='Ignore Certificate Errors',
     )
 
 
@@ -472,6 +544,7 @@ class ProxyCountryCode(Enum):
     cf = 'cf'
     cg = 'cg'
     ch = 'ch'
+    ci = 'ci'
     ck = 'ck'
     cl = 'cl'
     cm = 'cm'
@@ -684,96 +757,29 @@ class MaxCostUsd(RootModel[str]):
     )
     root: str = Field(
         ...,
-        description='Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance).',
+        description="Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default.",
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Maxcostusd',
     )
 
 
-class RunTaskRequest(BaseModel):
-    task: str | None = Field(
-        None,
-        description='The natural-language instruction for the agent to execute (e.g. "Go to amazon.com and find the best-rated wireless mouse under $50"). Required when dispatching to an existing session.',
-        title='Task',
+class BrowserScreenWidth1(RootModel[int]):
+    root: int = Field(
+        ...,
+        description='Custom browser screen width in pixels. Must be set together with browserScreenHeight. When omitted, the browser keeps its own default resolution.',
+        ge=320,
+        le=6144,
+        title='Browserscreenwidth',
     )
-    model: BuModel | None = Field(
-        BuModel.claude_sonnet_4_6,
-        description='The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-4.6" is balanced, "claude-opus-4.6" is most capable. See BuModel for details.',
-    )
-    session_id: UUID | None = Field(
-        None,
-        alias='sessionId',
-        description='ID of an existing idle session to dispatch the task to. If omitted, a new session is created.',
-        title='Sessionid',
-    )
-    keep_alive: bool | None = Field(
-        False,
-        alias='keepAlive',
-        description='If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.',
-        title='Keepalive',
-    )
-    max_cost_usd: float | MaxCostUsd | None = Field(
-        None,
-        alias='maxCostUsd',
-        description='Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance).',
-        title='Maxcostusd',
-    )
-    profile_id: UUID | None = Field(
-        None,
-        alias='profileId',
-        description='ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API.',
-        title='Profileid',
-    )
-    workspace_id: UUID | None = Field(
-        None,
-        alias='workspaceId',
-        description='ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API.',
-        title='Workspaceid',
-    )
-    proxy_country_code: ProxyCountryCode | None = Field(
-        ProxyCountryCode.us,
-        alias='proxyCountryCode',
-        description='Country code for the browser proxy (e.g. "US", "DE", "JP"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.',
-    )
-    output_schema: Dict[str, Any] | None = Field(
-        None,
-        alias='outputSchema',
-        description='A JSON Schema that the agent\'s final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {"type": "object", "properties": {"price": {"type": "number"}, "title": {"type": "string"}}}.',
-        title='Outputschema',
-    )
-    enable_scheduled_tasks: bool | None = Field(
-        False,
-        alias='enableScheduledTasks',
-        description='If true, the agent can create scheduled tasks that run on a recurring basis (e.g. "every Monday morning, check my inbox and summarize new emails"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.',
-        title='Enablescheduledtasks',
-    )
-    enable_recording: bool | None = Field(
-        False,
-        alias='enableRecording',
-        description='If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.',
-        title='Enablerecording',
-    )
-    skills: bool | None = Field(
-        True,
-        description='If true, enables built-in agent skills like Google Sheets integration and file management. Set to false to restrict the agent to browser-only actions.',
-        title='Skills',
-    )
-    agentmail: bool | None = Field(
-        True,
-        description='If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.',
-        title='Agentmail',
-    )
-    cache_script: bool | None = Field(
-        None,
-        alias='cacheScript',
-        description='Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from @{{https://example.com}} for @{{electronics}}".',
-        title='Cachescript',
-    )
-    auto_heal: bool | None = Field(
-        True,
-        alias='autoHeal',
-        description='When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.',
-        title='Autoheal',
+
+
+class BrowserScreenHeight1(RootModel[int]):
+    root: int = Field(
+        ...,
+        description='Custom browser screen height in pixels. Must be set together with browserScreenWidth. When omitted, the browser keeps its own default resolution.',
+        ge=320,
+        le=3456,
+        title='Browserscreenheight',
     )
 
 
@@ -793,158 +799,6 @@ class MaxCostUsd1(RootModel[str]):
     )
 
 
-class SessionResponse(BaseModel):
-    model_config = ConfigDict(
-        regex_engine="python-re",
-    )
-    id: UUID = Field(..., description='Unique session identifier.', title='Id')
-    status: BuAgentSessionStatus = Field(
-        ...,
-        description='Current session lifecycle status. Progresses through: `created` (sandbox starting) → `idle` (ready, waiting for task) → `running` (task executing) → `stopped` / `timed_out` / `error`. Poll this field to track progress.',
-    )
-    model: BuModel = Field(..., description='The model tier used for this session.')
-    title: str | None = Field(
-        None,
-        description='Auto-generated short title summarizing the task. Available after the task starts running.',
-        title='Title',
-    )
-    output: Any = Field(
-        None,
-        description="The agent's final output. If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null. Populated once the task completes, regardless of whether `isTaskSuccessful` is true or false.",
-        title='Output',
-    )
-    output_schema: Dict[str, Any] | None = Field(
-        None,
-        alias='outputSchema',
-        description='The JSON Schema that was requested for structured output, if any.',
-        title='Outputschema',
-    )
-    step_count: int | None = Field(
-        0,
-        alias='stepCount',
-        description='Number of steps the agent has executed so far.',
-        title='Stepcount',
-    )
-    last_step_summary: str | None = Field(
-        None,
-        alias='lastStepSummary',
-        description='Human-readable summary of the most recent agent step (e.g. "Clicking the Submit button"). Useful for showing real-time progress.',
-        title='Laststepsummary',
-    )
-    is_task_successful: bool | None = Field(
-        None,
-        alias='isTaskSuccessful',
-        description='Whether the task completed successfully. `true` if the agent achieved the goal, `false` if it failed or gave up, `null` if the task is still running or no task was dispatched.',
-        title='Istasksuccessful',
-    )
-    live_url: str | None = Field(
-        None,
-        alias='liveUrl',
-        description='URL to view the live browser session. Available immediately on session creation — can be embedded in an iframe to show the browser in real time.',
-        title='Liveurl',
-    )
-    recording_urls: List[str] | None = Field(
-        [],
-        alias='recordingUrls',
-        description='URLs to download session recordings. Only populated if `enableRecording` was set to true and the task has completed.',
-        title='Recordingurls',
-    )
-    profile_id: UUID | None = Field(
-        None,
-        alias='profileId',
-        description='ID of the browser profile loaded in this session, if any.',
-        title='Profileid',
-    )
-    workspace_id: UUID | None = Field(
-        None,
-        alias='workspaceId',
-        description='ID of the workspace attached to this session, if any.',
-        title='Workspaceid',
-    )
-    proxy_country_code: ProxyCountryCode | None = Field(
-        None,
-        alias='proxyCountryCode',
-        description='Country code of the proxy used for this session, or null if no proxy.',
-    )
-    max_cost_usd: MaxCostUsd1 | None = Field(
-        None,
-        alias='maxCostUsd',
-        description='Maximum cost limit in USD set for this session.',
-        title='Maxcostusd',
-    )
-    total_input_tokens: int | None = Field(
-        0,
-        alias='totalInputTokens',
-        description='Total LLM input tokens consumed by this session.',
-        title='Totalinputtokens',
-    )
-    total_output_tokens: int | None = Field(
-        0,
-        alias='totalOutputTokens',
-        description='Total LLM output tokens consumed by this session.',
-        title='Totaloutputtokens',
-    )
-    proxy_used_mb: str | None = Field(
-        '0',
-        alias='proxyUsedMb',
-        description='Proxy bandwidth used in megabytes.',
-        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
-        title='Proxyusedmb',
-    )
-    llm_cost_usd: str | None = Field(
-        '0',
-        alias='llmCostUsd',
-        description='Cost of LLM usage in USD.',
-        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
-        title='Llmcostusd',
-    )
-    proxy_cost_usd: str | None = Field(
-        '0',
-        alias='proxyCostUsd',
-        description='Cost of proxy bandwidth in USD.',
-        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
-        title='Proxycostusd',
-    )
-    browser_cost_usd: str | None = Field(
-        '0',
-        alias='browserCostUsd',
-        description='Cost of browser compute time in USD.',
-        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
-        title='Browsercostusd',
-    )
-    total_cost_usd: str | None = Field(
-        '0',
-        alias='totalCostUsd',
-        description='Total session cost in USD (LLM + proxy + browser).',
-        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
-        title='Totalcostusd',
-    )
-    screenshot_url: str | None = Field(
-        None,
-        alias='screenshotUrl',
-        description='URL of the latest browser screenshot. This is a presigned URL that expires after 5 minutes. A new URL is generated each time you fetch the session.',
-        title='Screenshoturl',
-    )
-    agentmail_email: str | None = Field(
-        None,
-        alias='agentmailEmail',
-        description='Temporary email address provisioned for this session (via AgentMail). Only present if `agentmail` was enabled.',
-        title='Agentmailemail',
-    )
-    created_at: AwareDatetime = Field(
-        ...,
-        alias='createdAt',
-        description='When the session was created.',
-        title='Createdat',
-    )
-    updated_at: AwareDatetime = Field(
-        ...,
-        alias='updatedAt',
-        description='When the session was last updated.',
-        title='Updatedat',
-    )
-
-
 class SessionTimeoutLimitExceededError(BaseModel):
     detail: str | None = Field(
         'Maximum session timeout is 4 hours (240 minutes).', title='Detail'
@@ -954,6 +808,13 @@ class SessionTimeoutLimitExceededError(BaseModel):
 class StopStrategy(Enum):
     task = 'task'
     session = 'session'
+
+
+class ThinkingLevel(Enum):
+    disabled = 'disabled'
+    low = 'low'
+    medium = 'medium'
+    high = 'high'
 
 
 class TooManyConcurrentActiveSessionsError(BaseModel):
@@ -1012,6 +873,52 @@ class WorkspaceView(BaseModel):
     )
 
 
+class X402BalanceRequest(BaseModel):
+    address: str = Field(
+        ...,
+        description='EVM wallet address that signed the message (0x...).',
+        title='Address',
+    )
+    issued_at: str = Field(
+        ...,
+        description='ISO-8601 UTC timestamp included in the signed message.',
+        title='Issued At',
+    )
+    nonce: str = Field(
+        ...,
+        description='Random single-use nonce included in the signed message.',
+        title='Nonce',
+    )
+    signature: str = Field(
+        ...,
+        description='EIP-191 personal_sign signature of the canonical message.',
+        title='Signature',
+    )
+
+
+class X402BalanceResponse(BaseModel):
+    wallet: str = Field(
+        ...,
+        description='Lowercased wallet address (verified from the signature).',
+        title='Wallet',
+    )
+    project_id: UUID = Field(
+        ...,
+        description='Wallet-derived project the balance belongs to.',
+        title='Project Id',
+    )
+    total_credits_usd: float = Field(
+        ...,
+        description='Total spendable credit balance in USD.',
+        title='Total Credits Usd',
+    )
+    additional_credits_usd: float = Field(
+        ...,
+        description='Standalone (x402 top-up / one_off) credit balance in USD.',
+        title='Additional Credits Usd',
+    )
+
+
 class AccountView(BaseModel):
     name: str | None = Field(None, description='The name of the user', title='Name')
     total_credits_balance_usd: float = Field(
@@ -1041,8 +948,20 @@ class AccountView(BaseModel):
     plan_info: PlanInfo = Field(
         ..., alias='planInfo', description='The plan information', title='Plan Info'
     )
+    is_free_tier: bool | None = Field(
+        False,
+        alias='isFreeTier',
+        description='Whether the account is on the free tier',
+        title='Is Free Tier',
+    )
     project_id: UUID = Field(
         ..., alias='projectId', description='The ID of the project', title='Project ID'
+    )
+    tracing_disabled: bool | None = Field(
+        False,
+        alias='tracingDisabled',
+        description='Whether third-party LLM tracing is disabled for this project',
+        title='Tracing Disabled',
     )
 
 
@@ -1116,8 +1035,13 @@ class BrowserSessionItemView(BaseModel):
     recording_url: str | None = Field(
         None,
         alias='recordingUrl',
-        description='Presigned URL to download the session recording (available after session ends, if recording was enabled)',
+        description='Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses.',
         title='Recording URL',
+    )
+    metadata: Dict[str, str] | None = Field(
+        {},
+        description='Caller-supplied labels set when the browser was created.',
+        title='Metadata',
     )
 
 
@@ -1154,9 +1078,14 @@ class CreateBrowserSessionRequest(BaseModel):
         description='Country code for proxy location. Defaults to US. Set to null to disable proxy.',
         title='Proxy Country Code',
     )
+    metadata: Dict[str, str] | None = Field(
+        None,
+        description='Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history.',
+        title='Metadata',
+    )
     timeout: int | None = Field(
         60,
-        description='The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Pay As You Go users are charged $0.06/hour, subscribers get 50% off.',
+        description='The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.',
         title='Timeout',
     )
     browser_screen_width: BrowserScreenWidth | None = Field(
@@ -1177,10 +1106,22 @@ class CreateBrowserSessionRequest(BaseModel):
         description='Whether to allow the browser to be resized during the session (not recommended since it reduces stealthiness).',
         title='Allow Resizing',
     )
+    pdf_renderer_enabled: bool | None = Field(
+        True,
+        alias='pdfRendererEnabled',
+        description="Whether Chrome renders PDFs in a tab. Set to false to stop the in-tab render; the file is saved to the session's download directory either way.",
+        title='PDF Renderer Enabled',
+    )
+    solve_captchas: bool | None = Field(
+        True,
+        alias='solveCaptchas',
+        description='Whether the browser detects and solves CAPTCHAs on its own. Set to false to handle CAPTCHAs yourself. Defaults to true.',
+        title='Solve Captchas',
+    )
     custom_proxy: CustomProxy | None = Field(
         None,
         alias='customProxy',
-        description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.',
+        description='Custom proxy settings to use for the session. If not provided, our proxies will be used.',
         title='Custom Proxy',
     )
     enable_recording: bool | None = Field(
@@ -1229,19 +1170,300 @@ class ProfileListResponse(BaseModel):
     )
 
 
-class SessionListResponse(BaseModel):
-    sessions: List[SessionResponse] = Field(
-        ..., description='List of sessions.', title='Sessions'
+class RunTaskRequest(BaseModel):
+    task: str | None = Field(
+        None,
+        description='The natural-language instruction for the agent to execute (e.g. "Go to amazon.com and find the best-rated wireless mouse under $50"). Required when dispatching to an existing session.',
+        title='Task',
     )
-    total: int = Field(
-        ..., description='Total number of sessions matching the query.', title='Total'
+    model: BuModel | None = Field(
+        BuModel.claude_opus_4_7,
+        description='The model to use. "gemini-3-flash" is fast and cheap, "claude-sonnet-5" is balanced, "claude-opus-4.7" is most capable (default), and "claude-opus-4.8" is the newest Opus-tier model. GPT-5.6 models are Browser Use native models when either direct OpenAI or Amazon Bedrock routing is configured; otherwise they require use_own_key=true. GPT-5.5 becomes native when Bedrock routing is enabled; otherwise it requires use_own_key=true. Other additional provider models (e.g. "gemini-3.5-flash" and "gpt-5.2") require use_own_key=true. See BuModel for details.',
     )
-    page: int = Field(..., description='Current page number (1-indexed).', title='Page')
-    page_size: int = Field(
+    thinking_level: ThinkingLevel | None = Field(
+        None,
+        alias='thinkingLevel',
+        description="Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level for Gemini 3 Flash and 3.5 Flash, and to a zero thinking budget for Gemini 2.5 Flash and the gemini-flash-latest variants); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected.",
+    )
+    session_id: UUID | None = Field(
+        None,
+        alias='sessionId',
+        description='ID of an existing idle session to dispatch the task to. If omitted, a new session is created.',
+        title='Sessionid',
+    )
+    keep_alive: bool | None = Field(
+        False,
+        alias='keepAlive',
+        description='If true, the session stays alive in idle state after the task completes instead of automatically stopping. This lets you dispatch follow-up tasks to the same session, preserving browser state and files.',
+        title='Keepalive',
+    )
+    max_cost_usd: float | MaxCostUsd | None = Field(
+        None,
+        alias='maxCostUsd',
+        description="Maximum total cost in USD allowed for this session. The task will be stopped if this limit is reached. If omitted, a default limit applies (capped by your available balance). When dispatching a follow-up task to an existing session (`sessionId` is set), supplying this value overrides the session's budget for the upcoming dispatch; otherwise the budget is automatically refreshed to current spend + default.",
+        title='Maxcostusd',
+    )
+    profile_id: UUID | None = Field(
+        None,
+        alias='profileId',
+        description='ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions. Create profiles via the Profiles API.',
+        title='Profileid',
+    )
+    workspace_id: UUID | None = Field(
+        None,
+        alias='workspaceId',
+        description='ID of a workspace to attach to the session. Workspaces provide persistent file storage that carries across sessions. Create workspaces via the Workspaces API.',
+        title='Workspaceid',
+    )
+    proxy_country_code: ProxyCountryCode | None = Field(
+        ProxyCountryCode.us,
+        alias='proxyCountryCode',
+        description='Country code for the browser proxy (e.g. "US", "DE", "JP"). Set to null to disable the proxy. The proxy routes browser traffic through the specified country, useful for accessing geo-restricted content.',
+    )
+    browser_screen_width: BrowserScreenWidth1 | None = Field(
+        None,
+        alias='browserScreenWidth',
+        description='Custom browser screen width in pixels. Must be set together with browserScreenHeight. When omitted, the browser keeps its own default resolution.',
+        title='Browserscreenwidth',
+    )
+    browser_screen_height: BrowserScreenHeight1 | None = Field(
+        None,
+        alias='browserScreenHeight',
+        description='Custom browser screen height in pixels. Must be set together with browserScreenWidth. When omitted, the browser keeps its own default resolution.',
+        title='Browserscreenheight',
+    )
+    output_schema: Dict[str, Any] | None = Field(
+        None,
+        alias='outputSchema',
+        description='A JSON Schema that the agent\'s final output must conform to. When set, the agent will return structured data matching this schema in the `output` field of the response. Example: {"type": "object", "properties": {"price": {"type": "number"}, "title": {"type": "string"}}}.',
+        title='Outputschema',
+    )
+    enable_scheduled_tasks: bool | None = Field(
+        False,
+        alias='enableScheduledTasks',
+        description='If true, the agent can create scheduled tasks that run on a recurring basis (e.g. "every Monday morning, check my inbox and summarize new emails"). Scheduled tasks are tied to your project and persist beyond the session. Note: all scheduled tasks are visible project-wide, so avoid enabling this in multi-user setups where task isolation is needed.',
+        title='Enablescheduledtasks',
+    )
+    sensitive_data: Dict[str, str] | None = Field(
+        None,
+        alias='sensitiveData',
+        description='Key-value pairs of sensitive data (e.g. passwords, API keys) that the agent can use via secure placeholders. Keys are exposed to the LLM; values are never shown. The agent uses `<secret>key</secret>` placeholders in browser_type_text to securely enter values.',
+        title='Sensitivedata',
+    )
+    enable_recording: bool | None = Field(
+        False,
+        alias='enableRecording',
+        description='If true, records a video of the browser session. The recording URLs will be available in the `recordingUrls` field of the session response after the task completes.',
+        title='Enablerecording',
+    )
+    skills: bool | None = Field(
+        True,
+        description='If true, the agent generates and persists reusable skills from completed tasks (saved per-domain in the DB and auto-injected into future runs). Set to false to skip skill generation — useful for privacy-sensitive tasks or to avoid the extra LLM cost.',
+        title='Skills',
+    )
+    agentmail: bool | None = Field(
+        True,
+        description='If true, provisions a temporary email inbox (via AgentMail) for the session. The email address is available in the `agentmailEmail` field of the session response. Useful for tasks that require email verification or sign-ups.',
+        title='Agentmail',
+    )
+    code_mode: bool | None = Field(
+        False,
+        alias='codeMode',
+        description='When true, the agent returns structured output with `text` (summary) and `code` (validated Python source) fields instead of free-form text.',
+        title='Codemode',
+    )
+    cache_script: bool | None = Field(
+        None,
+        alias='cacheScript',
+        description='Controls deterministic script caching. `null` (default): auto-detected — enabled when the task contains `@{{value}}` brackets and a workspace is attached. `true`: force-enable script caching even without brackets (caches the exact task). `false`: force-disable, even if brackets are present. When active, the first call runs the full agent and saves a reusable script. Subsequent calls with the same task template execute the cached script with $0 LLM cost. Requires workspace_id when enabled. Example: "Get prices from @{{https://example.com}} for @{{electronics}}".',
+        title='Cachescript',
+    )
+    use_own_key: bool | None = Field(
+        False,
+        alias='useOwnKey',
+        description="If true, uses your own LLM API key (configured in project settings) instead of Browser Use managed keys. You pay your provider directly for inference; Browser Use charges a reduced orchestration fee (0.2× of provider list prices). If no key is configured for the model's provider, the request is rejected.",
+        title='Useownkey',
+    )
+    auto_heal: bool | None = Field(
+        True,
+        alias='autoHeal',
+        description='When cache_script is active, controls whether a lightweight LLM validates the cached script output. If the output looks incorrect (empty, error, wrong structure), the system automatically re-triggers the full agent to generate a new version of the script. Set to false to disable validation and always return the raw script output.',
+        title='Autoheal',
+    )
+
+
+class SessionResponse(BaseModel):
+    model_config = ConfigDict(
+        regex_engine="python-re",
+    )
+    id: UUID = Field(..., description='Unique session identifier.', title='Id')
+    status: BuAgentSessionStatus = Field(
         ...,
-        alias='pageSize',
-        description='Number of sessions per page.',
-        title='Pagesize',
+        description='Current session lifecycle status. Progresses through: `created` (sandbox starting) → `idle` (ready, waiting for task) → `running` (task executing) → `stopped` / `timed_out` / `error`. Poll this field to track progress.',
+    )
+    model: BuModel = Field(..., description='The model tier used for this session.')
+    thinking_level: ThinkingLevel | None = Field(
+        None,
+        alias='thinkingLevel',
+        description='Configured model reasoning depth for this session, or null when provider defaults are used.',
+    )
+    title: str | None = Field(
+        None,
+        description='Auto-generated short title summarizing the task. Available after the task starts running.',
+        title='Title',
+    )
+    output: Any = Field(
+        None,
+        description="The agent's final output. If `codeMode` was true, this will be an object with `text` (summary), `code` (Python source), and optionally `output` (execution result). If `outputSchema` was provided, this will be structured data conforming to that schema. Otherwise it may be a free-form string or null.",
+        title='Output',
+    )
+    output_schema: Dict[str, Any] | None = Field(
+        None,
+        alias='outputSchema',
+        description='The JSON Schema that was requested for structured output, if any.',
+        title='Outputschema',
+    )
+    step_count: int | None = Field(
+        0,
+        alias='stepCount',
+        description='Number of steps the agent has executed so far.',
+        title='Stepcount',
+    )
+    last_step_summary: str | None = Field(
+        None,
+        alias='lastStepSummary',
+        description='Human-readable summary of the most recent agent step (e.g. "Clicking the Submit button"). Useful for showing real-time progress.',
+        title='Laststepsummary',
+    )
+    is_task_successful: bool | None = Field(
+        None,
+        alias='isTaskSuccessful',
+        description='Whether the task completed successfully. `true` if the agent achieved the goal, `false` if it failed or gave up, `null` if the task is still running or no task was dispatched.',
+        title='Istasksuccessful',
+    )
+    live_url: str | None = Field(
+        None,
+        alias='liveUrl',
+        description='URL to view the live browser session. Available immediately on session creation — can be embedded in an iframe to show the browser in real time.',
+        title='Liveurl',
+    )
+    recording_urls: List[str] | None = Field(
+        [],
+        alias='recordingUrls',
+        description='URLs to download session recordings. Only populated on `GET /api/v3/sessions/{id}`; always `[]` in list responses.',
+        title='Recordingurls',
+    )
+    profile_id: UUID | None = Field(
+        None,
+        alias='profileId',
+        description='ID of the browser profile loaded in this session, if any.',
+        title='Profileid',
+    )
+    workspace_id: UUID | None = Field(
+        None,
+        alias='workspaceId',
+        description='ID of the workspace attached to this session, if any.',
+        title='Workspaceid',
+    )
+    proxy_country_code: ProxyCountryCode | None = Field(
+        None,
+        alias='proxyCountryCode',
+        description='Country code of the proxy used for this session, or null if no proxy.',
+    )
+    browser_screen_width: int | None = Field(
+        None,
+        alias='browserScreenWidth',
+        description='Custom browser screen width set for this session, or null for the default.',
+        title='Browserscreenwidth',
+    )
+    browser_screen_height: int | None = Field(
+        None,
+        alias='browserScreenHeight',
+        description='Custom browser screen height set for this session, or null for the default.',
+        title='Browserscreenheight',
+    )
+    max_cost_usd: MaxCostUsd1 | None = Field(
+        None,
+        alias='maxCostUsd',
+        description='Maximum cost limit in USD set for this session.',
+        title='Maxcostusd',
+    )
+    total_input_tokens: int | None = Field(
+        0,
+        alias='totalInputTokens',
+        description='Total LLM input tokens consumed by this session.',
+        title='Totalinputtokens',
+    )
+    total_output_tokens: int | None = Field(
+        0,
+        alias='totalOutputTokens',
+        description='Total LLM output tokens consumed by this session.',
+        title='Totaloutputtokens',
+    )
+    proxy_used_mb: str | None = Field(
+        '0',
+        alias='proxyUsedMb',
+        description='Proxy bandwidth used in megabytes.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxyusedmb',
+    )
+    llm_cost_usd: str | None = Field(
+        '0',
+        alias='llmCostUsd',
+        description='Cost of LLM usage in USD.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Llmcostusd',
+    )
+    proxy_cost_usd: str | None = Field(
+        '0',
+        alias='proxyCostUsd',
+        description='Cost of proxy bandwidth in USD.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Proxycostusd',
+    )
+    browser_cost_usd: str | None = Field(
+        '0',
+        alias='browserCostUsd',
+        description='Cost of browser compute time in USD.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Browsercostusd',
+    )
+    total_cost_usd: str | None = Field(
+        '0',
+        alias='totalCostUsd',
+        description='Total session cost in USD (LLM + proxy + browser).',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Totalcostusd',
+    )
+    screenshot_url: str | None = Field(
+        None,
+        alias='screenshotUrl',
+        description='Presigned URL of the latest screenshot (expires after 5 minutes). Only populated on `GET /api/v3/sessions/{id}`; always `null` in list responses.',
+        title='Screenshoturl',
+    )
+    agentmail_email: str | None = Field(
+        None,
+        alias='agentmailEmail',
+        description='Temporary email address provisioned for this session (via AgentMail). Only present if `agentmail` was enabled.',
+        title='Agentmailemail',
+    )
+    integrations_used: List[str] | None = Field(
+        None,
+        alias='integrationsUsed',
+        description='List of integration providers used during this session (e.g. ["gmail", "slack", "agentmail"]).',
+        title='Integrationsused',
+    )
+    created_at: AwareDatetime = Field(
+        ...,
+        alias='createdAt',
+        description='When the session was created.',
+        title='Createdat',
+    )
+    updated_at: AwareDatetime = Field(
+        ...,
+        alias='updatedAt',
+        description='When the session was last updated.',
+        title='Updatedat',
     )
 
 
@@ -1267,4 +1489,20 @@ class WorkspaceListResponse(BaseModel):
     )
     page_size: int = Field(
         ..., alias='pageSize', description='Number of items per page', title='Page Size'
+    )
+
+
+class SessionListResponse(BaseModel):
+    sessions: List[SessionResponse] = Field(
+        ..., description='List of sessions.', title='Sessions'
+    )
+    total: int = Field(
+        ..., description='Total number of sessions matching the query.', title='Total'
+    )
+    page: int = Field(..., description='Current page number (1-indexed).', title='Page')
+    page_size: int = Field(
+        ...,
+        alias='pageSize',
+        description='Number of sessions per page.',
+        title='Pagesize',
     )

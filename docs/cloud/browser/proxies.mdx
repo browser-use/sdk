@@ -1,84 +1,165 @@
 ---
 title: Proxies
-description: "Residential proxies in 195+ countries. On by default."
+description: "Configure residential or custom proxies for API V4 browsers and agent runs."
 icon: globe
 ---
 
-A US residential proxy is active by default on every browser. To route through a different country, set `proxy_country_code`. See the [API reference](/cloud/api-v3/browsers/create-browser-session) for all supported country codes.
+A US residential proxy is enabled by default. The browser's traffic passes
+through that residential IP before reaching the website, so the website sees
+the proxy's location—not your server's.
+
+<img
+  src="/cloud/images/browser-proxy-light.svg"
+  alt="A cloud browser routing its traffic through a residential proxy before reaching a website"
+  noZoom
+  className="block dark:hidden"
+/>
+<img
+  src="/cloud/images/browser-proxy-dark.svg"
+  alt="A cloud browser routing its traffic through a residential proxy before reaching a website"
+  noZoom
+  className="hidden dark:block"
+/>
+
+Set `browser_settings` / `browserSettings` when you create a V4 run to choose
+another country:
+
+<Note>
+  The current TypeScript SDK type requires `proxyCountryCode` whenever
+  `browserSettings` is present. Use `"us"` to keep the default, or `null` to
+  disable the managed proxy.
+</Note>
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import BrowserUse
 
-client = AsyncBrowserUse()
-browser = await client.browsers.create(proxy_country_code="de")
-print(browser.cdp_url)   # ws://...
-print(browser.live_url)  # debug view
-
-# With an agent:
-# result = await client.run("Get the price of iPhone 16 on amazon.de", proxy_country_code="de")
+client = BrowserUse()
+run = client.runs.create(
+    "Get the iPhone 16 price on amazon.de",
+    browser_settings={"proxyCountryCode": "de"},
+)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
-const browser = await client.browsers.create({ proxyCountryCode: "de" });
-console.log(browser.cdpUrl);
-console.log(browser.liveUrl);
-
-// With an agent:
-// const result = await client.run("Get the price of iPhone 16 on amazon.de", { proxyCountryCode: "de" });
+const run = await client.runs.create({
+  task: "Get the iPhone 16 price on amazon.de",
+  model: "grok-4.5",
+  browserSettings: { proxyCountryCode: "de" },
+});
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Get the iPhone 16 price on amazon.de",
+       "browserSettings":{"proxyCountryCode":"de"}}'
 ```
 </CodeGroup>
 
 ## Disable proxies
 
-If your use case does not need proxies, for example QA testing.
+Pass `null` for QA or internal sites that do not need a residential proxy:
 
 <CodeGroup>
 ```python Python
-browser = await client.browsers.create(proxy_country_code=None)
-
-# With an agent:
-# result = await client.run("Go to http://localhost:3000", proxy_country_code=None)
+run = client.runs.create(
+    "Test my staging site",
+    browser_settings={"proxyCountryCode": None},
+)
 ```
 ```typescript TypeScript
-const browser = await client.browsers.create({ proxyCountryCode: null });
-
-// With an agent:
-// const result = await client.run("Go to http://localhost:3000", { proxyCountryCode: null });
+const run = await client.runs.create({
+  task: "Test my staging site",
+  model: "grok-4.5",
+  browserSettings: { proxyCountryCode: null },
+});
 ```
 </CodeGroup>
 
 ## Custom proxy
 
-Bring your own proxy server (HTTP or SOCKS5). Requires custom plan.
+Custom proxies are available to all accounts, including free and pay-as-you-go
+accounts. No subscription is required. Normal credit, spend, and concurrency
+limits still apply.
+
+The request format depends on what you are creating:
+
+| REST endpoint | Custom proxy field |
+| --- | --- |
+| `POST /api/v4/browsers` | Top-level `customProxy` |
+| `POST /api/v4/runs` | `browserSettings.customProxy` |
+
+`browser_settings` is the Python SDK keyword for agent runs. In REST JSON,
+the agent-run field is `browserSettings`.
+
+### Standalone browsers
+
+For a browser you control with Playwright, Puppeteer, or another CDP client,
+put `customProxy` directly in the request body:
+
+```bash curl
+curl https://api.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customProxy": {
+      "host": "proxy.example.com",
+      "port": 8080,
+      "username": "YOUR_PROXY_USERNAME",
+      "password": "YOUR_PROXY_PASSWORD"
+    }
+  }'
+```
+
+Replace the proxy details with yours. Omit both `username` and `password` if
+your proxy does not require authentication. Do not wrap these settings in
+`browserSettings` or `browser_settings` on `/api/v4/browsers`.
+
+Keep the returned browser ID and stop the browser with
+`PATCH /api/v4/browsers/{id}` and `{"action":"stop"}` when finished. See the
+[Create browser reference](/cloud/api-v4/browsers/create-browser-session) and
+[Browser quickstart](/cloud/browser/quickstart).
+
+### Agent runs
+
+For a hosted agent, pass the proxy in the run's browser settings:
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
-
-client = AsyncBrowserUse()
-browser = await client.browsers.create(
-    custom_proxy={
-        "host": "proxy.example.com",
-        "port": 8080,
-        "username": "user",
-        "password": "pass",
+run = client.runs.create(
+    "Check the account dashboard",
+    browser_settings={
+        "customProxy": {
+            "host": "proxy.example.com",
+            "port": 8080,
+            "username": "user",
+            "password": "pass",
+            "ignoreCertErrors": False,
+        }
     },
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
-
-const client = new BrowserUse();
-const browser = await client.browsers.create({
-  customProxy: {
-    host: "proxy.example.com",
-    port: 8080,
-    username: "user",
-    password: "pass",
+const run = await client.runs.create({
+  task: "Check the account dashboard",
+  model: "grok-4.5",
+  browserSettings: {
+    proxyCountryCode: "us",
+    customProxy: {
+      host: "proxy.example.com",
+      port: 8080,
+      username: "user",
+      password: "pass",
+      ignoreCertErrors: false,
+    },
   },
 });
 ```
 </CodeGroup>
+
+A custom proxy overrides `proxyCountryCode` and must be passed again when a
+follow-up provisions a new browser. See the [Create run
+reference](/cloud/api-v4/runs/create-run) for the complete settings object.

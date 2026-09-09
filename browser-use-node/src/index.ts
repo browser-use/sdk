@@ -15,7 +15,7 @@ export { Files } from "./v2/resources/files.js";
 export { Profiles } from "./v2/resources/profiles.js";
 export type { ProfileListParams } from "./v2/resources/profiles.js";
 export { Browsers } from "./v2/resources/browsers.js";
-export type { CreateBrowserBody, BrowserListParams } from "./v2/resources/browsers.js";
+export type { CreateBrowserBody, BrowserListParams, BrowserDownloadsParams } from "./v2/resources/browsers.js";
 export { Skills } from "./v2/resources/skills.js";
 export type { SkillListParams, SkillExecutionListParams } from "./v2/resources/skills.js";
 export { Marketplace } from "./v2/resources/marketplace.js";
@@ -29,6 +29,8 @@ type S = components["schemas"];
 
 // Response models
 export type AccountView = S["AccountView"];
+export type BrowserDownloadFile = S["BrowserDownloadFile"];
+export type BrowserDownloadListResponse = S["BrowserDownloadListResponse"];
 export type BrowserSessionItemView = S["BrowserSessionItemView"];
 export type BrowserSessionListResponse = S["BrowserSessionListResponse"];
 export type BrowserSessionView = S["BrowserSessionView"];
@@ -88,5 +90,6 @@ export type SessionUpdateAction = S["SessionUpdateAction"];
 export type SkillCategory = S["SkillCategory"];
 export type SkillsGenerationStatus = S["SkillsGenerationStatus"];
 export type SupportedLLMs = S["SupportedLLMs"];
+export type ThinkingLevel = S["ThinkingLevel"];
 export type TaskStatus = S["TaskStatus"];
 export type TaskUpdateAction = S["TaskUpdateAction"];

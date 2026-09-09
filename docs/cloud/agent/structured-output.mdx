@@ -1,57 +1,48 @@
 ---
 title: Structured output
-description: "Get validated, typed data back from agent tasks."
+description: "Ask for JSON and validate the V4 result in your application."
 icon: table
 ---
 
-Pass a Pydantic model (Python) or Zod schema (TypeScript) — `result.output` is automatically validated and converted to the typed object.
-
-<Note>
-  TypeScript requires **Zod v4** (`npm install zod@4`). Zod v3 is not compatible.
-</Note>
+V4 returns `run.result` as a string. Ask for JSON only, then validate it
+client-side:
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk.v3 import AsyncBrowserUse
+from browser_use_sdk.v4 import BrowserUse
 from pydantic import BaseModel
 
-class Post(BaseModel):
-    name: str
+client = BrowserUse()
+
+class Story(BaseModel):
+    title: str
     points: int
-    comments: int
 
-class HNPosts(BaseModel):
-    posts: list[Post]
-
-client = AsyncBrowserUse()
-result = await client.run(
-    "List the top 20 posts on Hacker News today with their points",
-    output_schema=HNPosts,
+run = client.runs.create(
+    'Find the top HN story. Return only {"title":"...","points":0}.'
 )
-for post in result.output.posts:
-    print(f"{post.name} ({post.points} pts, {post.comments} comments)")
+run = client.runs.wait_for_completion(run.id)
+story = Story.model_validate_json(run.result or "{}")
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v3";
+import { BrowserUse } from "browser-use-sdk/v4";
 import { z } from "zod";
 
-const Post = z.object({
-  name: z.string(),
-  points: z.number(),
-  comments: z.number(),
-});
-
-const HNPosts = z.object({
-  posts: z.array(Post),
-});
-
 const client = new BrowserUse();
-const result = await client.run(
-  "List the top 20 posts on Hacker News today with their points",
-  { schema: HNPosts },
-);
-for (const post of result.output.posts) {
-  console.log(`${post.name} (${post.points} pts, ${post.comments} comments)`);
-}
+
+const Story = z.object({
+  title: z.string(),
+  points: z.number(),
+});
+
+const run = await client.runs.create({
+  task: 'Find the top HN story. Return only {"title":"...","points":0}.',
+  model: "grok-4.5",
+});
+const result = await client.runs.waitForCompletion(run.id);
+const story = Story.parse(JSON.parse(result.result ?? "{}"));
 ```
 </CodeGroup>
+
+V4 does not accept `output_schema` / `outputSchema`. Handle validation errors
+and retry with a [session follow-up](/cloud/agent/sessions) when needed.
