@@ -1,0 +1,79 @@
+---
+title: Billing and credits
+description: "Pay-as-you-go credits, project balances, BYOK charges, auto recharge, and API-key spending caps."
+---
+
+Browser Use Cloud uses pay-as-you-go billing. Add credits to the project that owns your API key, then pay for usage. A recurring Browser Use subscription is not required for custom proxies or supported bring-your-own-provider-key (BYOK) usage. Existing customers can retain legacy allowances and pricing.
+
+Use the [pricing page](https://browser-use.com/pricing) for current model, browser, proxy, and network rates. New top-ups have a \$5 minimum and use whole-dollar amounts.
+
+## Which credits does my API key use?
+
+Credits belong to a **project**. All keys in that project use its balance. Funding one project does not fund a key from another project, even if both belong to you.
+
+```bash
+curl --fail-with-body https://api.browser-use.com/api/v2/billing/account \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+This endpoint works with the same key you use for V4. Compare `projectId` with the project selected in the dashboard. Read `totalCreditsBalanceUsd` for the reported total and `monthlyCreditsBalanceUsd` / `additionalCreditsBalanceUsd` for its components. A `null` `planInfo` is normal for a pay-as-you-go project; it does not mean the project cannot use paid features.
+
+If a payment succeeded but the expected credits are missing, first check the project and the payment's status. When contacting support, include the project ID, payment time, amount, and receipt or invoice reference. Never include API keys or card details.
+
+## Do credits expire or renew?
+
+| Credit type | Behavior |
+|---|---|
+| Signup credits | A one-time grant, not a recurring monthly allowance. |
+| Purchased top-up credits | Do not expire. |
+| Included credits on a legacy monthly plan | Follow the plan's billing cycle and do not roll over. |
+
+Concurrency tiers are based on qualifying payments to the project, not credits remaining in its wallet. Using purchased credits does not lower an already-granted concurrency allowance. Credit grants do not count as payments. Higher existing or legacy concurrency grants are preserved; see [Concurrency and limits](/cloud/guides/concurrency).
+
+## What does BYOK pay for?
+
+With a supported provider key, the model provider bills token usage to your provider account. Browser Use still charges an orchestration fee of **0.2× the corresponding model token cost**, plus browser and network usage. Keep both accounts funded.
+
+Configure supported provider keys in **Settings → API Keys → Bring Your Own Key**. The dashboard requires adding credits before BYOK setup is available. A pay-as-you-go top-up satisfies that requirement; no recurring subscription is needed. Accounts that have never paid also have model eligibility restrictions.
+
+A Claude consumer subscription is not an Anthropic API key. BYOK means a supported provider credential, not an arbitrary self-hosted model endpoint. See [Models](/cloud/agent/models) for model selection.
+
+## Proxy and browser charges
+
+A [custom proxy](/cloud/browser/proxies) replaces the Browser Use managed proxy. Your proxy provider bills its own usage, and Browser Use browser/network charges still apply. Disabling the managed proxy also leaves browser and direct network usage billable.
+
+Run completion does not necessarily stop the browser. A browser may remain available for the next turn. When your application no longer needs it, explicitly stop the owned browser with `PATCH /api/v4/browsers/{id}` and `{"action":"stop"}`. Disconnecting Playwright/CDP or closing the SDK client is not the cloud stop operation. See [browser lifetime](/cloud/guides/concurrency#keep-track-of-browser-lifetime).
+
+## Auto recharge
+
+Auto recharge has two separate settings:
+
+- **Threshold:** the balance below which another purchase is triggered.
+- **Recharge amount:** the amount of credits purchased by that recharge.
+
+For example, a \$10 threshold with a \$50 recharge amount purchases \$50 when the balance falls below \$10. It does not target a final balance of \$50.
+
+Enabling auto recharge while already below the threshold can trigger a charge immediately. Choose an amount that covers your expected workload and check payment history if a recharge fails. Funding and concurrent workloads can change the displayed balance while a payment is being processed.
+
+## API-key monthly spending caps
+
+An API key can have a monthly USD spending cap. It is a **soft limit** on Browser Use charges recorded for that key during the current UTC calendar month, shared across that key's applicable usage.
+
+When a cap is reached, new run/browser admission can return HTTP 402 with a structured detail:
+
+```json
+{
+  "detail": {
+    "code": "api_key_monthly_spend_limit_reached",
+    "message": "API key monthly spend limit reached",
+    "cap": 50,
+    "spent": 50.25
+  }
+}
+```
+
+Use `detail.code`, `cap`, and `spent` to distinguish this response from an insufficient project balance. Adding credits does not raise a key's cap. Check the cap in API key settings if the project still has credits.
+
+Spend checks use a cached snapshot, and running or simultaneous work can finish above the cap. A cap is not a strict prepaid wallet or a guarantee that costs stop at exactly that amount. BYOK provider charges are billed separately by the provider. Combine caps with bounded concurrency, project balance monitoring, and per-run controls where available.
+
+See [Concurrency and limits](/cloud/guides/concurrency#diagnose-errors-before-retrying) for 402, 409, and 429 handling.

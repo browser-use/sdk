@@ -1,23 +1,28 @@
 ---
 title: Webhooks
-description: "Receive real-time notifications when tasks complete. Configure webhook endpoints for async task monitoring."
+description: "Receive V2 task and V3 session notifications and verify the webhook signature."
 ---
 
 Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.browser-use.com/settings?tab=webhooks).
 
 ## Events
 
-| Event | When |
-|-------|------|
-| `agent.task.status_update` | Task status changes (`running`, `idle`, or `stopped`) |
-| `test` | Webhook test ping |
+| Event | API | When |
+|-------|-----|------|
+| `agent.task.status_update` | V2 | Task status changes (`running`, `idle`, or `stopped`) |
+| `session.status.update` | V3 | Session status changes; inspect `payload.status` |
+| `test` | Dashboard | Webhook test ping |
+
+Match the event type to the API version you use. For V4 run monitoring, see [Observability](/cloud/agent/observability) and [polling guidance](/cloud/guides/concurrency#budget-http-requests-separately).
 
 ## Payload
+
+A V2 task event includes `task_id`, `session_id`, `status`, and task `metadata`:
 
 ```json
 {
   "type": "agent.task.status_update",
-  "timestamp": "2025-01-15T10:30:00Z",
+  "timestamp": "2026-09-09T12:00:00Z",
   "payload": {
     "task_id": "task_abc123",
     "session_id": "session_xyz",
@@ -27,127 +32,87 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
 }
 ```
 
+A V3 event uses the session's `id` as `payload.session_id`. `output` is included when available:
+
+```json
+{
+  "type": "session.status.update",
+  "timestamp": "2026-09-09T12:00:00Z",
+  "payload": {
+    "session_id": "session_xyz",
+    "status": "idle",
+    "output": "The agent's result"
+  }
+}
+```
+
+Status-change events are not all completion events. Check the status before continuing your workflow.
+
 ## Signature verification
 
 Every webhook request includes two headers:
 
-- `X-Browser-Use-Signature` — HMAC-SHA256 signature of the payload
-- `X-Browser-Use-Timestamp` — Unix timestamp (seconds) when the request was sent
+- `X-Browser-Use-Signature`: lowercase hexadecimal HMAC-SHA256 signature.
+- `X-Browser-Use-Timestamp`: Unix timestamp in seconds when this delivery was sent.
 
-The signature is computed over `{timestamp}.{body}`, where `body` is the JSON-serialized payload with keys sorted alphabetically and no extra whitespace. Verify it to ensure the request is authentic and to prevent replay attacks.
+The signed message is the UTF-8 encoding of `{header_timestamp}.{canonical_payload}`. The canonical payload is exactly Python's `json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=True)`, applied to the **entire event**, including its `type`, `timestamp`, and `payload`.
 
-<CodeGroup>
-```python Python
+This is not a signature over the raw HTTP body. The sender serializes the HTTP body separately. Non-ASCII characters are escaped in the signed representation: for example, `München` becomes `M\u00fcnchen`.
+
+<Warning>
+JavaScript `JSON.stringify`, even after sorting an object's keys, does not implement this format. Unicode escaping, integer-like object keys, and number formatting can differ from Python. Do not use a generic JavaScript JSON canonicalizer or raw-body HMAC verifier for this contract. The Python verifier below matches the current sender; other implementations must match its serialization exactly and preserve number representations when parsing.
+</Warning>
+
+Save this as `webhook_verify.py`:
+
+```python
 import hashlib
 import hmac
 import json
+import re
 import time
 
+
 def verify_webhook(body: bytes, signature: str, timestamp: str, secret: str) -> bool:
-    # Reject requests older than 5 minutes
+    if not isinstance(timestamp, str) or not re.fullmatch(r"[0-9]{1,12}", timestamp):
+        return False
+    if abs(time.time() - int(timestamp)) > 300:
+        return False
+    if not isinstance(signature, str) or not re.fullmatch(r"[0-9a-f]{64}", signature):
+        return False
+
     try:
-        ts = int(timestamp)
-    except (ValueError, TypeError):
+        payload = json.loads(body)
+        if not isinstance(payload, dict):
+            return False
+        canonical = json.dumps(
+            payload, sort_keys=True, separators=(",", ":"),
+            ensure_ascii=True, allow_nan=False,
+        )
+    except (ValueError, TypeError, UnicodeError):
         return False
-    if abs(time.time() - ts) > 300:
-        return False
-    payload = json.loads(body)
-    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
-    expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+
+    message = f"{timestamp}.{canonical}".encode("utf-8")
+    expected = hmac.new(secret.encode("utf-8"), message, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, signature)
 ```
-```typescript TypeScript
-import { createHmac, timingSafeEqual } from "crypto";
 
-function sortKeys(obj: unknown): unknown {
-  if (Array.isArray(obj)) return obj.map(sortKeys);
-  if (obj !== null && typeof obj === "object") {
-    return Object.keys(obj as object)
-      .sort()
-      .reduce((acc, key) => {
-        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
-        return acc;
-      }, {} as Record<string, unknown>);
-  }
-  return obj;
-}
-
-function verifyWebhook(body: string, signature: string, timestamp: string, secret: string): boolean {
-  // Reject requests older than 5 minutes
-  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) return false;
-  const payload = JSON.parse(body);
-  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
-  const expected = createHmac("sha256", secret).update(message).digest("hex");
-  return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
-}
-```
-</CodeGroup>
-
-## Example: Express webhook handler
-
-```typescript
-import express from "express";
-import { createHmac, timingSafeEqual } from "crypto";
-
-const app = express();
-app.use(express.raw({ type: "application/json" }));
-
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
-
-function sortKeys(obj: unknown): unknown {
-  if (Array.isArray(obj)) return obj.map(sortKeys);
-  if (obj !== null && typeof obj === "object") {
-    return Object.keys(obj as object)
-      .sort()
-      .reduce((acc, key) => {
-        (acc as Record<string, unknown>)[key] = sortKeys((obj as Record<string, unknown>)[key]);
-        return acc;
-      }, {} as Record<string, unknown>);
-  }
-  return obj;
-}
-
-app.post("/webhook", (req, res) => {
-  const signature = req.headers["x-browser-use-signature"] as string;
-  const timestamp = req.headers["x-browser-use-timestamp"] as string;
-
-  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
-    return res.status(401).send("Request too old");
-  }
-
-  const body = req.body.toString();
-  const payload = JSON.parse(body);
-  const message = `${timestamp}.${JSON.stringify(sortKeys(payload))}`;
-  const expected = createHmac("sha256", WEBHOOK_SECRET).update(message).digest("hex");
-
-  if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
-    return res.status(401).send("Invalid signature");
-  }
-
-  if (payload.type === "agent.task.status_update") {
-    const { task_id, status, session_id } = payload.payload;
-    console.log(`Task ${task_id} is now ${status}`);
-  }
-
-  res.status(200).send("OK");
-});
-
-app.listen(3000);
-```
+The five-minute timestamp window limits replay, but does not make delivery unique. Make your business action idempotent so a duplicate callback cannot process the same result twice. Keep your server clock synchronized.
 
 ## Example: FastAPI webhook handler
 
+Install `fastapi` and `uvicorn`, put this `app.py` beside `webhook_verify.py`, set `WEBHOOK_SECRET` to the signing secret from your webhook settings, and run `uvicorn app:app --port 3000`.
+
 ```python
-from fastapi import FastAPI, Request, HTTPException
-import hashlib
-import hmac
 import json
 import os
-import time
+
+from fastapi import FastAPI, HTTPException, Request
+from webhook_verify import verify_webhook
 
 app = FastAPI()
-
 WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
+
 
 @app.post("/webhook")
 async def handle_webhook(request: Request):
@@ -155,29 +120,21 @@ async def handle_webhook(request: Request):
     signature = request.headers.get("x-browser-use-signature", "")
     timestamp = request.headers.get("x-browser-use-timestamp", "")
 
-    # Reject requests older than 5 minutes
-    try:
-        ts = int(timestamp)
-    except (ValueError, TypeError):
-        raise HTTPException(status_code=401, detail="Invalid timestamp")
-    if abs(time.time() - ts) > 300:
-        raise HTTPException(status_code=401, detail="Request too old")
+    if not verify_webhook(body, signature, timestamp, WEBHOOK_SECRET):
+        raise HTTPException(status_code=401, detail="Invalid webhook signature or timestamp")
 
-    payload = json.loads(body)
-    message = f"{timestamp}.{json.dumps(payload, separators=(',', ':'), sort_keys=True)}"
-    expected = hmac.new(WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
-
-    if not hmac.compare_digest(expected, signature):
-        raise HTTPException(status_code=401, detail="Invalid signature")
-
-    if payload["type"] == "agent.task.status_update":
-        task_id = payload["payload"]["task_id"]
-        status = payload["payload"]["status"]
-        print(f"Task {task_id} is now {status}")
+    event = json.loads(body)
+    if event.get("type") in {"agent.task.status_update", "session.status.update"}:
+        data = event["payload"]
+        # Persist or enqueue the verified event for your application to process.
+        # Deduplicate before applying business side effects.
+        print(f"Session {data['session_id']} is now {data['status']}")
 
     return {"status": "ok"}
 ```
 
+Return promptly after durably accepting the event. The sender has a 10-second request timeout and retries temporary failures, so slow processing can cause duplicate deliveries. HTTP 400, 401, 403, 404, and 410 are not retried.
+
 <Tip>
-  For local development, use a tunneling tool like [ngrok](https://ngrok.com) to expose your local server: `ngrok http 3000`. Then set the ngrok URL as your webhook endpoint in the dashboard.
+For local development, expose your local server with a tool such as [ngrok](https://ngrok.com): `ngrok http 3000`. Set the resulting `/webhook` URL in the dashboard and use its test action before starting tasks.
 </Tip>
