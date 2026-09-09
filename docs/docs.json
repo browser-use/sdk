@@ -144,6 +144,8 @@
                       "cloud/agent-signup"
                     ]
                   },
+                  "cloud/guides/concurrency",
+                  "cloud/guides/billing",
                   "cloud/faq",
                   {
                     "group": "Legacy (v2)",
@@ -1148,6 +1150,55 @@
     {
       "source": "/cloud/v1/*",
       "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/llms.txt",
+      "destination": "/llms.txt"
+    },
+    {
+      "source": "/cloud/llms-full.txt",
+      "destination": "/llms-full.txt"
+    },
+    {
+      "source": "/open-source/llms.txt",
+      "destination": "/llms.txt"
+    },
+    {
+      "source": "/open-source/llms-full.txt",
+      "destination": "/llms-full.txt"
+    },
+    {
+      "source": "/cloud/bux/introduction",
+      "destination": "/cloud/which-product"
+    },
+    {
+      "source": "/cloud/bux/quickstart",
+      "destination": "/cloud/which-product"
+    },
+    {
+      "source": "/cloud/bux/authentication",
+      "destination": "/cloud/which-product"
+    },
+    {
+      "source": "/cloud/bux/interfaces",
+      "destination": "/cloud/which-product"
+    },
+    {
+      "source": "/cloud/bux",
+      "destination": "/cloud/which-product"
     }
-  ]
+  ],
+  "description": "Documentation for Browser Use Cloud Agent and Browser APIs, and the separate open-source Python library.",
+  "markdown": {
+    "instructions": [
+      "Choose Cloud API V4 for new agent integrations; V2 is the lower-cost option for simple tasks. Keep V3 examples explicitly versioned. The open-source browser-use library and hosted browser-use-sdk have different APIs.",
+      "Cloud authentication uses X-Browser-Use-API-Key, without a Bearer prefix. Install or upgrade browser-use-sdk and use its explicit v4 import for V4. Check the published OpenAPI reference for request fields; do not invent SDK support for new fields.",
+      "Cloud concurrency and HTTP request rate are separate. Read GET /api/v2/billing/account for the key’s projectId, concurrentSessionLimit, activeSessionCount, and credit balance, including when using V4. Keys in one project share capacity and credits; rateLimit is a legacy concurrency alias, not requests per second.",
+      "Keep the highest applicable existing, legacy-plan, and spend-tier concurrency grant. Current spend tiers are 10 / 50 / 250 / 500 / 1000 at $0 / $200 / $1000 / $5000 / $25000 in qualifying project payments. Legacy or externally billed projects can follow different billing paths; trust the account limit. See https://docs.browser-use.com/cloud/guides/concurrency.md.",
+      "Budget polling across the project: the standard general bucket is 25 requests/second, including V4 event reads and full run reads. Selected status reads have a separate higher bucket. Use bounded workers, stagger polls, respect Retry-After, and drain hasMore event pages after terminal status. A busy V4 session returns 409; its queue holds 10 pending messages and is not a project-wide batch queue.",
+      "A completed run or closed CDP connection does not immediately stop its cloud browser. Stop unneeded owned browsers with PATCH /api/v4/browsers/{id} and {\"action\":\"stop\"}. A client wait timeout does not cancel the server-side run.",
+      "Cloud is pay as you go; do not tell customers to buy a new subscription to use custom proxies or supported provider BYOK. Usage funding and model eligibility still apply. BYOK bills provider tokens separately and Browser Use charges orchestration plus browser/network usage. See https://docs.browser-use.com/cloud/guides/billing.md.",
+      "Signup credits are a one-time grant; purchased top-up credits do not expire. Check the API key’s project before diagnosing missing credits. API-key monthly spending caps are soft limits, not a strict prepaid wallet; concurrent or already-running work can exceed them. Auto recharge has separate trigger and purchase amounts and can charge immediately when enabled below the threshold. Use https://browser-use.com/pricing for current rates."
+    ]
+  }
 }

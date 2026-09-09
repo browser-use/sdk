@@ -1,0 +1,153 @@
+---
+title: Concurrency and limits
+description: "Preserved legacy allowances, spend tiers, browser lifetime, polling budgets, queues, and retry guidance."
+---
+
+Browser Use has separate limits for simultaneous browser work and API request frequency. A project can have available browser capacity and still receive a rate-limit response if it sends too many HTTP requests.
+
+For reliable batch processing, use a bounded worker pool, track the browsers your application owns, and budget polling requests across the project.
+
+## Check your project's capacity
+
+Use your API key to inspect its project:
+
+```bash
+curl --fail-with-body \
+  https://api.browser-use.com/api/v2/billing/account \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+This billing endpoint is also useful when your application uses V4 runs. Read:
+
+| Field | Meaning |
+|---|---|
+| `projectId` | The project this API key accesses. Check this if you funded a different project in the dashboard. |
+| `apiKeyId` | The internal identifier of the authenticated key. |
+| `concurrentSessionLimit` | The project's current browser concurrency allowance. |
+| `activeSessionCount` | Reported active browser count. Track the browser IDs your application owns as well. |
+| `totalCreditsBalanceUsd` | Its reported available credit balance. |
+
+`rateLimit` is a legacy concurrency field. It does not tell you the HTTP request limit. Treat account information as a snapshot rather than a reservation for a future request. Several workers may read the same available capacity before any of them starts a browser.
+
+Keys in the same project share its capacity and balance. Creating more keys does not create more browser slots. Free accounts can also have limits across their projects.
+
+## How usage tiers work
+
+For projects on current pricing, concurrency increases with the project's net settled lifetime Stripe payments:
+
+| Lifetime qualifying spend | Concurrent sessions |
+|---:|---:|
+| \$0 | 10 |
+| \$200 | 50 |
+| \$1,000 | 250 |
+| \$5,000 | 500 |
+| \$25,000 | 1,000 |
+
+Payments count for the project that received them. Refunds and disputed payments do not contribute to qualifying spend. Signup credits and other credit grants are not qualifying purchases. Funding through other billing arrangements may follow different rules.
+
+**Your higher concurrency allowance is preserved.** When a project participates in spend tiers, its limit takes the maximum of its applicable legacy-plan allowance, the current pricing floor, and its spend-tier allowance. An already-granted higher limit is not automatically lowered. For example, a legacy allowance of 250 remains 250 when the spend tier would grant 50.
+
+Some active legacy or externally billed projects follow a different billing path. Lapsed or cancelling legacy plans can transition onto current pricing while keeping their higher grant. Use `concurrentSessionLimit` and the project’s Billing page as the source of truth. If the tier ladder is absent or differs from your expectations, contact support with your project ID before making a purchase solely to increase concurrency.
+
+## Keep track of browser lifetime
+
+A V4 **session** is a conversation. A **run** is one turn in that conversation. A **browser** is the live Chrome instance used for website interaction.
+
+A browser can survive the run that created it and be reused by a later turn. A conversation can also have multiple browsers. Additional tabs in the same browser are not additional browser sessions.
+
+After all runs in a conversation are inactive, V4 browsers become eligible for cleanup after approximately 20 minutes without recent run activity. Cleanup runs periodically, so this is not an exact shutdown deadline. V4 agent browsers also have a four-hour hard timeout.
+
+If your application is finished with a browser, explicitly stop that browser rather than relying on idle cleanup. Only stop browser IDs your application owns and no longer needs. For a standalone browser, the stop request is:
+
+```bash
+curl --fail-with-body -X PATCH \
+  "https://api.browser-use.com/api/v4/browsers/$BROWSER_SESSION_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"stop"}'
+```
+
+Do not use this against a browser another active run or person still needs. Closing your local CDP connection is not a substitute for checking the cloud browser's lifecycle.
+
+If your workflow requires human interaction, deliver the live-view URL from `browser.ready` while the run/browser is active. A conversation remaining in history does not mean its live browser is still available.
+
+## Queue follow-ups within a conversation
+
+Only one V4 run can be active in a session. Submitting a direct follow-up while it is busy returns **409**.
+
+Choose the behavior you need:
+
+- Wait for the active run to finish, then submit the next turn.
+- Submit through the session message queue to process a later turn.
+- Intentionally interrupt the active run when you want to change its current work.
+
+The session message queue accepts up to **10 pending messages**. A full queue returns **429**. It is a queue for that conversation, not a project-wide batch queue or a reservation of browser capacity.
+
+Keep a large batch in your application's own job queue. Admit a bounded number of jobs and leave the rest pending there.
+
+## Budget HTTP requests separately
+
+The standard per-project request buckets are:
+
+| Requests | Default request budget |
+|---|---:|
+| Creates, lists, updates, deletes, event reads, and full run reads | 25 requests/second |
+| Selected individual status reads | `max(25, 2 × stored concurrency)` requests/second |
+
+The selected V4 polling endpoints include:
+
+- `GET /api/v4/runs/{run_id}/status`
+- `GET /api/v4/sessions/{session_id}`
+- `GET /api/v4/browsers/{browser_session_id}`
+
+`GET /api/v4/runs/{run_id}/events` and `GET /api/v4/runs/{run_id}` use the general bucket. Their budget does not automatically grow with your concurrency grant. Account overrides and other protections can differ from these defaults; use the response headers and error details when diagnosing throttling.
+
+If you only need the final result, use the SDK's status-based wait helper:
+
+```python
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+# run_id is the ID of a run your application already created.
+result = client.runs.wait_for_completion(run_id)
+print(result.status, result.result)
+```
+
+SDK 3.11.3 defaults to a two-second status interval and a four-hour client wait timeout. Reaching that timeout raises an exception locally; it does not cancel the server-side run. Inspect or cancel the existing run before deciding whether to submit replacement work.
+
+### When you need events
+
+Use the returned cursor to continue reading and process every page with `hasMore` before treating the event stream as caught up. After terminal status, drain the remaining event pages; do not exit solely because a separate status request completed.
+
+Set a request budget across all event streams in the project. For example, polling events once per second for 50 runs would generate about 50 event requests per second, exceeding the standard general bucket before counting any creates or other requests. Polling each every five seconds would average about 10 event requests per second; pagination and other traffic still need headroom.
+
+Spread poll times so that every worker does not send its request on the same clock tick. A per-project limiter in your application is more predictable than each worker independently retrying.
+
+## Diagnose errors before retrying
+
+| Response | Likely meaning | What to do |
+|---|---|---|
+| 429 with `error: "rate_limited"` | HTTP request budget exhausted | Honor `Retry-After`/`retry_after_seconds`; reduce or stagger requests. |
+| 429 with a concurrent-session message in `detail` | Active session allowance reached | Inspect capacity, stop unneeded browsers, and reduce admitted jobs. |
+| 429 with a queue-full message in `detail` | This conversation has 10 pending messages | Wait for its queue to drain or cancel an appropriate pending message. |
+| 409 with an active-run message | Conversation is already busy | Wait, queue, or intentionally interrupt. |
+| 402 with `detail.code: "api_key_monthly_spend_limit_reached"` | This key's monthly soft spending cap was reached | Check the cap and recorded spend in the current UTC month. |
+| Other 402 | May be insufficient project balance or another payment condition | Inspect the complete response and the API key's project. |
+
+The SDK retries some transient responses, including 429, but the default is only three retries. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
+
+API-key monthly spending caps are **soft limits**. They use a cached spend snapshot; already-running or simultaneous work can finish above the cap. They do not replace project balance management or per-run cost controls. BYOK provider charges also remain separate from Browser Use charges.
+
+## A practical batch-processing pattern
+
+1. Resolve the key's project, available balance, and current capacity.
+2. Keep jobs in a durable application queue and admit a bounded number of workers. Leave room for browsers used elsewhere in the project and additional browsers created by agents.
+3. Track job ID, session ID, run ID, and browser IDs separately.
+4. Use cheap status polling for result-only jobs; share one request budget across event streams and general API operations.
+5. Handle busy-session, queue, rate, capacity, and spending errors according to their cause.
+6. Record terminal outcomes, release unneeded browsers, and retry only when the job's previous outcome is understood.
+
+When contacting support, include the UTC time window, endpoint, status code, redacted response body, project ID, SDK version, run/session/browser IDs, and approximate request rate and concurrency. Do not send API keys, proxy passwords, or saved browser credentials.
+
+
+See also [Billing and credits](/cloud/guides/billing), [Sessions](/cloud/agent/sessions), and [Observability](/cloud/agent/observability).
