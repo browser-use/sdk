@@ -74,3 +74,14 @@ curl https://api.browser-use.com/api/v4/runs \
 
 The MP4 becomes available in the Dashboard after the browser stops. API runs
 default to recording off, and Zero Data Retention projects never record.
+
+For standalone browsers, use `enableRecording: true` in
+`POST /api/v4/browsers` (`enable_recording=True` in the Python SDK).
+For agent-created browsers, use `browserSettings.record: true` as above.
+These are different request shapes.
+
+After stopping a standalone browser, poll `GET /api/v4/browsers/{id}` for
+`recordingUrl`. The stop response and browser-list response do not contain a
+ready recording URL. Stop polling when `recordingAvailable` is false; the
+video cannot appear for that session. If the installed SDK does not expose
+that field, use the REST response and the current API reference.

@@ -1,6 +1,6 @@
 ---
 title: Stealth
-description: "Best stealth on the planet. We fork Chromium to give agents access to all websites."
+description: "Managed Chromium with stealth protections and proxy support."
 icon: mask
 ---
 
@@ -10,9 +10,9 @@ See [how we perform in the hardest stealth benchmark](https://browser-use.com/po
 
 Every cloud browser session runs in a hardened Chromium fork with stealth enabled by default — no configuration needed.
 
-- **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and other browser fingerprints are randomized per session to appear as a real user. Passes CreepJS, BrowserLeaks, and other fingerprint detectors.
+- **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and other browser fingerprints are randomized per session to appear as a real user. Fingerprint test results vary with browser version and the target site.
 - **Ad and cookie banner blocking** — Banners are dismissed automatically so the agent sees clean pages and executes faster.
-- **Cloudflare / anti-bot bypass** — Works on sites protected by Cloudflare, PerimeterX, and other bot detection services.
+- **Anti-bot protections** — Help with sites protected by Cloudflare, PerimeterX, and other detection services. Access to every site is not guaranteed.
 
 Cloud browsers also solve CAPTCHAs automatically.
 See [CAPTCHA handling](/cloud/browser/captcha-handling) for what to do when a
@@ -21,3 +21,7 @@ solver is still working or a site has a specific anti-bot issue.
 ## Residential proxies
 
 Residential proxies are enabled by default across 195+ countries. This makes browser sessions appear as real users from the target geography. See [Proxies](/cloud/browser/proxies) for details on geo-targeting and custom proxy configuration.
+
+Stealth is included in the managed browser. It is not a separate subscription
+upgrade you must buy to enable these protections. A target site can still
+reject a browser or require verification; see [troubleshooting](/cloud/guides/troubleshooting).

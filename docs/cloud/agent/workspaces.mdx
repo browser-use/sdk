@@ -4,8 +4,16 @@ description: "Persist files across V4 runs and conversations."
 icon: folder
 ---
 
-A **workspace** is a persistent filesystem shared by runs—even runs in
-different sessions. Use it for inputs, scripts, and generated files.
+A **workspace** stores files that can be restored into later V4 runs, including
+runs in a different session. Use it for inputs, scripts, and generated files.
+
+A session holds the conversation; a workspace holds files; a profile holds
+browser login state. Their IDs are different. Create and reuse workspaces
+through API V4. A V3 workspace ID is not a V4 workspace ID.
+
+Workspace files are synchronized to storage between runs. This is not a live
+shared filesystem between simultaneous sessions: finish one writer before
+starting another run that needs its changes.
 
 <img
   src="/cloud/images/v4-workspaces-light.svg"
@@ -28,12 +36,11 @@ from browser_use_sdk.v4 import BrowserUse
 
 client = BrowserUse()
 workspace = client.workspaces.create(name="research")
-uploaded = client.workspaces.upload(workspace.id, "people.csv")
+client.workspaces.upload(workspace.id, "people.csv")
 
 run = client.runs.create(
     "Find everyone in the CSV who works at Google",
     workspace_id=workspace.id,
-    attached_file_ids=[uploaded[0].id],
 )
 ```
 ```typescript TypeScript
@@ -43,7 +50,7 @@ const client = new BrowserUse();
 const workspace = await client.workspaces.create({
   name: "research",
 });
-const uploaded = await client.workspaces.upload(
+await client.workspaces.upload(
   workspace.id,
   "people.csv",
 );
@@ -52,19 +59,26 @@ const run = await client.runs.create({
   task: "Find everyone in the CSV who works at Google",
   model: "grok-4.5",
   workspaceId: workspace.id,
-  attachedFileIds: [uploaded[0].id],
 });
 ```
 </CodeGroup>
 
-Attachments are run-scoped. Reusing a workspace does not reattach every upload.
+V4 restores files uploaded to that workspace under `uploads/` when a run uses
+its `workspaceId`. You do not need to repeat their IDs in `attachedFileIds`.
+
+Staged attachments are different: attach their IDs when creating the run.
+Files attached to a session remain available to its follow-ups. An explicitly
+attached staged file takes precedence over a workspace upload with the same
+stored filename. For a new conversation that needs persistent files, pass the
+same `workspaceId`; reusing a workspace does not copy conversation history.
 
 ## Retrieve created files
 
-Ask the agent to save its output, then list the workspace:
+Ask the agent to save its output, wait for the run to finish, then list the workspace:
 
 <CodeGroup>
 ```python Python
+result = client.runs.wait_for_completion(run.id)
 files = client.workspaces.files(
     workspace.id,
     include_urls=True,
@@ -73,6 +87,7 @@ for file in files.files:
     print(file.path, file.url)
 ```
 ```typescript TypeScript
+const result = await client.runs.waitForCompletion(run.id);
 const files = await client.workspaces.files(
   workspace.id,
   { includeUrls: true },
@@ -86,3 +101,19 @@ for (const file of files.files) {
 Download URLs expire after 60 seconds. See the [workspace API
 reference](/cloud/api-v4/workspaces/list-workspace-files) for pagination and
 limits.
+
+## Storage and upload limits
+
+Check `GET /api/v4/workspaces/{workspace_id}/size` for `usedBytes` and
+`maxBytes`. The current V4 upload allowance is 950 MiB per workspace for every
+account, with 50 MiB per file. It leaves room for runtime files on the agent's
+1 GiB persistent disk. An upload quota is separate from the number of
+workspaces you can create, and from temporary disk used by a running agent.
+
+A 413 response means a file or workspace limit was exceeded. Remove unneeded
+files, split large files, or use a fresh workspace. Do not retry an unchanged
+oversized upload. Deleting a session, archiving a workspace, and deleting a
+workspace are different operations; archiving is not a file-deletion request.
+
+Download a file promptly or request a fresh URL when its link expires. A
+short-lived download URL does not mean the stored file expires after 60 seconds.
