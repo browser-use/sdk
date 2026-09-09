@@ -11,7 +11,7 @@ This tutorial builds a provider search tool for [Grow Therapy](https://www.growt
 A script that:
 1. Searches Grow Therapy's provider directory with filters (location, insurance, specialty)
 2. Extracts therapist profiles with ratings and availability
-3. Caches the search so you can sweep across geographies or specialties instantly
+3. Caches a successful search flow for reruns with different locations and specialties
 
 ---
 
@@ -82,11 +82,13 @@ const workspace = await client.workspaces.create({ name: "grow-therapy-search" }
 
 ## 3. Search for providers
 
+This tutorial uses **API V3** automatic script caching. Mark changing values with `@{{value}}`; plain `{{value}}` does not activate caching. Keep the rest of the task text and the workspace unchanged so later requests can find the same cached script. The first successful generation uses the agent and incurs normal usage charges.
+
 <CodeGroup>
 ```python Python
 result = await client.run(
-    "Go to growtherapy.com and search for therapists in {{New York}} "
-    "who specialize in {{anxiety}} and accept insurance. "
+    "Go to growtherapy.com and search for therapists in @{{New York}} "
+    "who specialize in @{{anxiety}} and accept insurance. "
     "Return the first 5 provider profiles as JSON.",
     workspace_id=str(workspace.id),
     output_schema=ProviderSearch,
@@ -101,8 +103,8 @@ for p in result.output.providers:
 ```
 ```typescript TypeScript
 const result = await client.run(
-  "Go to growtherapy.com and search for therapists in {{New York}} " +
-  "who specialize in {{anxiety}} and accept insurance. " +
+  "Go to growtherapy.com and search for therapists in @{{New York}} " +
+  "who specialize in @{{anxiety}} and accept insurance. " +
   "Return the first 5 provider profiles as JSON.",
   { workspaceId: workspace.id, schema: ProviderSearch },
 );
@@ -118,7 +120,7 @@ for (const p of result.output.providers) {
 
 ## 4. Sweep across locations and specialties
 
-After the first run caches the search flow, sweep across different parameters at $0 LLM cost:
+After a successful first run caches the search flow, change only the marked values. A successful cached script execution avoids agent LLM inference, but browser and network usage still apply. Cache misses, validation, and automatic repair can invoke the agent and incur LLM charges; a rerun is not a guarantee of zero LLM cost.
 
 <CodeGroup>
 ```python Python
@@ -128,8 +130,8 @@ specialties = ["depression", "trauma", "ADHD"]
 for location in locations:
     for specialty in specialties:
         result = await client.run(
-            f"Go to growtherapy.com and search for therapists in {{{{{location}}}}} "
-            f"who specialize in {{{{{specialty}}}}} and accept insurance. "
+            f"Go to growtherapy.com and search for therapists in @{{{{{location}}}}} "
+            f"who specialize in @{{{{{specialty}}}}} and accept insurance. "
             f"Return the first 5 provider profiles as JSON.",
             workspace_id=str(workspace.id),
             output_schema=ProviderSearch,
@@ -144,8 +146,8 @@ const specialties = ["depression", "trauma", "ADHD"];
 for (const location of locations) {
   for (const specialty of specialties) {
     const result = await client.run(
-      `Go to growtherapy.com and search for therapists in {{${location}}} ` +
-      `who specialize in {{${specialty}}} and accept insurance. ` +
+      `Go to growtherapy.com and search for therapists in @{{${location}}} ` +
+      `who specialize in @{{${specialty}}} and accept insurance. ` +
       `Return the first 5 provider profiles as JSON.`,
       { workspaceId: workspace.id, schema: ProviderSearch },
     );
@@ -161,12 +163,12 @@ for (const location of locations) {
 
 | Step | What happens | Cost |
 |------|-------------|------|
-| First search | Agent navigates Grow Therapy, caches the flow | ~$0.10 |
-| 12 cached sweeps (4 cities x 3 specialties) | Script reruns with new params | **$0 LLM each** |
-| Site layout change | The [saved script](/cloud/agent/scripts) can be repaired and retested | ~$0.10 |
+| First search or cache miss | Agent creates and validates the cached flow | Normal agent, browser, and network charges |
+| Successful cached execution | Script reruns with new parameters | No agent LLM inference for script execution; browser and network charges apply |
+| Validation or repair | Agent validates or repairs a flow that needs attention | LLM usage plus browser and network charges |
 
 <Info>
-Therapy platforms have dynamic UIs that can change frequently. A later agent run can repair and retest the [saved script](/cloud/agent/scripts) when the site changes.
+Therapy platforms have dynamic UIs that can change frequently. V3 can automatically repair a cached flow when it fails. For new V4 integrations, use [saved scripts](/cloud/agent/scripts); the V3 `@{{value}}` convention is specific to this tutorial’s API version.
 </Info>
 
 ## Next steps

@@ -25,8 +25,8 @@ history.last_action()             # Last action in history
 
 # Analysis methods
 history.final_result()            # Get the final extracted content (last step)
-history.is_done()                 # Check if agent completed successfully
-history.is_successful()           # Check if agent completed successfully (returns None if not done)
+history.is_done()                 # Check whether the agent emitted a done action
+history.is_successful()           # Agent-reported success (None if not done)
 history.has_errors()              # Check if any errors occurred
 history.model_thoughts()          # Get the agent's reasoning process (AgentBrain objects)
 history.action_results()          # Get all ActionResult objects from history
@@ -43,3 +43,7 @@ See all helper methods in the [AgentHistoryList source code](https://github.com/
 ## Structured Output
 
 For structured output, use the `output_model_schema` parameter with a Pydantic model. [Example](https://github.com/browser-use/browser-use/blob/main/examples/features/custom_output.py).
+
+`is_done()` does not imply success. `is_successful()` reports the agent's own
+assessment; verify important external outcomes, such as a submitted form or a
+completed purchase, against the destination system.

@@ -19,11 +19,11 @@ browser = Browser(
 )
 
 # Advanced: Configure cloud browser parameters
-# Using this settings can bypass any captcha protection on any website
+# Managed browsers include CAPTCHA handling; some sites may still block automation
 browser = Browser(
     cloud_profile_id='your-profile-id',  # Optional: specific browser profile
     cloud_proxy_country_code='us',  # Optional: proxy location (us, uk, fr, it, jp, au, de, fi, ca, in)
-    cloud_timeout=30,  # Optional: session timeout in minutes (MAX free: 15min, paid: 240min)
+    cloud_timeout=30,  # Optional: requested session timeout in minutes (up to 240)
 )
 
 # Or use a CDP URL from any cloud browser provider
@@ -45,7 +45,7 @@ agent = Agent(
 **Cloud Browser Parameters:**
 - `cloud_profile_id`: UUID of a browser profile (optional, uses default if not specified)
 - `cloud_proxy_country_code`: Country code for proxy location - supports: us, uk, fr, it, jp, au, de, fi, ca, in
-- `cloud_timeout`: Session timeout in minutes (free users: max 15 min, paid users: max 240 min)
+- `cloud_timeout`: Requested session timeout in minutes, up to 240. Credit balance and account eligibility still apply; this is not a promise of free usage for that duration.
 
 **Benefits:**
 - ✅ No local browser setup required

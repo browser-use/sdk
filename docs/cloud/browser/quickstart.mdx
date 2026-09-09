@@ -134,9 +134,11 @@ console.log(await page.title());
 </CodeGroup>
 
 Selenium cannot connect to a remote WebSocket CDP URL; use Playwright or
-Puppeteer. Stop the browser when you are done (see the warning above), and
-the session ends with a [live preview](/cloud/browser/live-preview) and
-recording you can open from the dashboard.
+Puppeteer. Use the [live preview](/cloud/browser/live-preview) while the browser
+is running, then stop it when you are done. Recording is off by default for API
+browsers. Set `enable_recording=True` / `enableRecording: true` when creating the browser if you
+need a recording. The video becomes available asynchronously after it stops;
+Zero Data Retention projects never record.
 
 <CardGroup cols={2}>
   <Card

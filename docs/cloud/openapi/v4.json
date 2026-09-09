@@ -45,8 +45,18 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Invalid request (bad session/workspace pairing or file path)."
+                    },
                     "402": {
-                        "description": "The project has no credits available."
+                        "description": "The project has no credits available, or the authenticating API key has reached its recorded monthly total-spend soft stop.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIKeySpendLimitError"
+                                }
+                            }
+                        }
                     },
                     "403": {
                         "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
@@ -56,9 +66,6 @@
                     },
                     "409": {
                         "description": "The session already has an active run."
-                    },
-                    "400": {
-                        "description": "Invalid request (bad session/workspace pairing or file path)."
                     },
                     "422": {
                         "description": "Validation Error",
@@ -645,6 +652,118 @@
                         }
                     }
                 }
+            },
+            "patch": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Update Session",
+                "description": "Rename a session.\n\n`session_title` is denormalized onto every run in the session (the session\nlist reads the latest run), so a rename writes them all in one UPDATE. Null\nclears the name and the UI falls back to the opening task \u2014 it does NOT\nre-run title generation, which only fills rows where the title IS NULL and\nso would silently overwrite the clear.",
+                "operationId": "update_session_sessions__session_id__patch",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SessionUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionInfo"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+                    },
+                    "404": {
+                        "description": "Run, session, workspace, or profile not found."
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Delete Session",
+                "description": "Delete a session: it disappears from the session lists and can no longer\nbe opened or continued.\n\nSoft delete (mirrors V2's `is_archived`): the runs, events and usage records\nstay in place so billing and analytics keep reconciling, and ZDR purge is the\nonly thing that ever destroys V4 content. Idempotent \u2014 deleting twice is a\nno-op 204.\n\nAn in-flight run is cancelled first, and pending queued messages are\ncancelled too; otherwise the drain would dispatch a follow-up run whose\n`session_archived_at` is NULL and resurrect the session. Cancel is forwarded\nto CP before anything is written (and outside the queue lock, per the\nenqueue path's ordering), so a CP failure (502) leaves the session visible\nrather than hiding a run that is still burning credits.",
+                "operationId": "delete_session_sessions__session_id__delete",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "403": {
+                        "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+                    },
+                    "404": {
+                        "description": "Run, session, workspace, or profile not found."
+                    },
+                    "502": {
+                        "description": "The request could not be forwarded to the control plane."
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/sessions/{session_id}/queue": {
@@ -709,6 +828,16 @@
                             }
                         }
                     },
+                    "402": {
+                        "description": "The project has no credits available, or the authenticating API key has reached its recorded monthly total-spend soft stop.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIKeySpendLimitError"
+                                }
+                            }
+                        }
+                    },
                     "403": {
                         "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
                     },
@@ -735,7 +864,7 @@
                     "Sessions"
                 ],
                 "summary": "List Session Queue",
-                "description": "List open messages, the latest handoff row, and all steering cutoffs.\n\nIncludes live dispatch claims so clients can restore an accepted steering\nhandoff after a refresh without briefly losing its waiting state. The latest\nconsumed interrupt bridges the primary-write/read-replica gap before its\nreplacement run appears; clients discard it once that run is visible. Compact\nper-source cutoffs preserve every historical interrupted transcript boundary\nwithout returning every historical steering message and its attachments.",
+                "description": "List open messages, recently delivered queued messages, and steering cutoffs.\n\nIncludes live dispatch claims so clients can restore an accepted queued\nmessage after a refresh without briefly losing its waiting state.\n\nConsumed QUEUE rows are returned too, capped at the most recent\n_DELIVERED_QUEUE_HISTORY, plus up to _AGENCY_DELIVERED_QUEUE_HISTORY compact\nAgency choice and generation receipts so inbox state survives refresh. A message absorbed mid-run is announced by a\n`queued_input_injected` event carrying only its input id, so the chat has no\nother source for the text to render. The cap bounds this response because\nclients poll it while a run is active; a session with more delivered\nfollow-ups than the cap renders its oldest injected bubbles without text.\n\nThe latest consumed interrupt bridges the primary-write/read-replica gap\nbefore its replacement run appears; clients discard it once that run is\nvisible. Compact per-source cutoffs preserve every historical interrupted\ntranscript boundary without returning every historical steering message and\nits attachments.",
                 "operationId": "list_session_queue_sessions__session_id__queue_get",
                 "security": [
                     {
@@ -899,6 +1028,294 @@
                     },
                     "409": {
                         "description": "The message is no longer pending and cannot be cancelled."
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{session_id}/feedback": {
+            "get": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get Session Feedback",
+                "description": "Every vote across the session in one query \u2014 the run view calls this\nonce per session on load. A session the caller doesn't own returns an\nempty list (not 404), matching what an unshared session with no votes\nreturns. Reads the PRIMARY, not the replica: this hydrates the thumbs the\nuser may have set seconds ago, and replica lag would render a just-cast\nvote as silently lost.",
+                "operationId": "get_session_feedback_sessions__session_id__feedback_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionFeedbackResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Set Session Feedback",
+                "description": "Upsert one chat item's thumbs vote; `feedback_type: null` clears it.",
+                "operationId": "set_session_feedback_sessions__session_id__feedback_post",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SessionFeedbackUpsertRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionFeedbackResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+                    },
+                    "404": {
+                        "description": "Run, session, workspace, or profile not found."
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{session_id}/share": {
+            "get": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get Session Share",
+                "description": "The session's share link (active or not); null if never shared.",
+                "operationId": "get_session_share_sessions__session_id__share_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SessionShareInfo"
+                                        },
+                                        {
+                                            "type": "null"
+                                        }
+                                    ],
+                                    "title": "Response Get Session Share Sessions  Session Id  Share Get"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Run, session, workspace, or profile not found."
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Create Session Share",
+                "description": "Enable sharing: reactivates the session's existing share (stable token,\nso a link that was toggled off keeps working when re-enabled) or creates\none on first use.",
+                "operationId": "create_session_share_sessions__session_id__share_post",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionShareInfo"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+                    },
+                    "404": {
+                        "description": "Run, session, workspace, or profile not found."
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Update Session Share",
+                "description": "Toggle the session's share link on/off.",
+                "operationId": "update_session_share_sessions__session_id__share_put",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SessionShareUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionShareInfo"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+                    },
+                    "404": {
+                        "description": "Run, session, workspace, or profile not found."
                     },
                     "422": {
                         "description": "Validation Error",
@@ -1412,6 +1829,601 @@
                 }
             }
         },
+        "/agentcard/wallets": {
+            "get": {
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "List Agentcard Wallets",
+                "description": "The project's active AgentCard wallets, newest first.\n\nRead-only: funding is admin-only during the beta. The UI uses this to offer\na wallet on the composer, which is how a run opts into spending \u2014 the id\nthen rides RunCreateRequest.agentcard_wallet_id and is validated again there\nagainst this same project.",
+                "operationId": "list_agentcard_wallets_agentcard_wallets_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AgentCardWalletListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/stripe-link": {
+            "get": {
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "Get Stripe Link Status",
+                "description": "The project's active Stripe Link wallet connection, if any.\n\nRead-only: connecting happens in the cloud UI. A run opts into paying with\nit by passing `connection_id` as RunCreateRequest.stripe_link_connection_id,\nwhich is validated again there against this same project.",
+                "operationId": "get_stripe_link_status_stripe_link_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StripeLinkStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/integrations": {
+            "get": {
+                "tags": [
+                    "Integrations"
+                ],
+                "summary": "List Integrations",
+                "description": "List available integrations with this project's connection status.\n\n`is_connected` is resolved per integration, so a client can render the whole\ncatalogue and the connected subset from this one call. `connected_only` is\nwhat a \"my integrations\" view reads \u2014 including on a restricted project,\nwhich cannot connect anything but can still remove what it already has.",
+                "operationId": "list_integrations_integrations_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Maximum number of results",
+                            "title": "Limit"
+                        },
+                        "description": "Maximum number of results"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Number of results to skip",
+                            "default": 0,
+                            "title": "Offset"
+                        },
+                        "description": "Number of results to skip"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by name, description or provider",
+                            "title": "Search"
+                        },
+                        "description": "Filter by name, description or provider"
+                    },
+                    {
+                        "name": "popular_only",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "description": "Only return popular integrations",
+                            "default": false,
+                            "title": "Popular Only"
+                        },
+                        "description": "Only return popular integrations"
+                    },
+                    {
+                        "name": "connected_only",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "description": "Only return integrations this project has connected",
+                            "default": false,
+                            "title": "Connected Only"
+                        },
+                        "description": "Only return integrations this project has connected"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IntegrationListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/categories": {
+            "get": {
+                "tags": [
+                    "Integrations"
+                ],
+                "summary": "List Categories",
+                "description": "Get all integration categories, for filtering the list above.",
+                "operationId": "list_categories_integrations_categories_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IntegrationCategoryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ]
+            }
+        },
+        "/integrations/{provider}/authorize": {
+            "post": {
+                "tags": [
+                    "Integrations"
+                ],
+                "summary": "Authorize Integration",
+                "description": "Get the OAuth redirect URL for connecting an integration.\n\nThe client opens the returned URL in a web auth session and polls\n`/integrations/{provider}/status` once the flow lands back on the callback\npath. The URL is Composio-hosted; no redirect URI is registered per client.",
+                "operationId": "authorize_integration_integrations__provider__authorize_post",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Provider"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthorizeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/{provider}/status": {
+            "get": {
+                "tags": [
+                    "Integrations"
+                ],
+                "summary": "Get Connection Status",
+                "description": "Check whether this project has connected a specific provider.\n\nPoll this after opening the authorize URL to learn when OAuth completed.",
+                "operationId": "get_connection_status_integrations__provider__status_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Provider"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConnectionStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/{provider}": {
+            "delete": {
+                "tags": [
+                    "Integrations"
+                ],
+                "summary": "Disconnect Integration",
+                "description": "Disconnect an integration for this project.\n\nDeliberately NOT gated like `authorize` above: a restricted project must\nstill be able to tear down a connection it already has.",
+                "operationId": "disconnect_integration_integrations__provider__delete",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Provider"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DisconnectResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/share/{share_token}": {
+            "get": {
+                "summary": "Get Shared Session",
+                "description": "Public transcript of a shared session (sensitive keys scrubbed).\n\nEvents come back in bounded pages: walk them by passing the previous\nresponse's `nextAfter` back as `since` until `hasMore` is false (the wire\nis camelCase \u2014 the Python fields are `next_after`/`has_more`). Run metadata\nrepeats on every page, so only `events` continues across pages.\nPaging exists because this is an unauthenticated read and the whole\ntranscript in one response could occupy the event loop for seconds,\nstarving the shared Redis client's auth and rate-limit calls of their\n50 ms deadline and silently failing them open.\n\nCounts a view per full fetch. `since` makes this a live-tail poll: the\nshare page repeats the request every few seconds while a run is unfinished,\nand each poll must stay cheap and must NOT inflate the view counter \u2014 a\nviewer idling on a running session would otherwise register a view every\n10 seconds (the counter's throttle window). Later pages of an initial load\ncarry a cursor too, so one load counts one view, not one per page.",
+                "operationId": "get_shared_session_share__share_token__get",
+                "parameters": [
+                    {
+                        "name": "share_token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 32,
+                            "maxLength": 32,
+                            "pattern": "^[A-Za-z0-9_-]{32}$",
+                            "title": "Share Token"
+                        }
+                    },
+                    {
+                        "name": "since",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Highest event id the viewer already has. Returns only newer events (run metadata is always complete) and does not count a view.",
+                            "title": "Since"
+                        },
+                        "description": "Highest event id the viewer already has. Returns only newer events (run metadata is always complete) and does not count a view."
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 250,
+                            "minimum": 1,
+                            "description": "Maximum events in this page. A page also closes at 1 MiB of event payload, so it can come back shorter. Read `hasMore`/`nextAfter` to page through the rest.",
+                            "default": 100,
+                            "title": "Limit"
+                        },
+                        "description": "Maximum events in this page. A page also closes at 1 MiB of event payload, so it can come back shorter. Read `hasMore`/`nextAfter` to page through the rest."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SharedSessionResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/share/{share_token}/files": {
+            "get": {
+                "summary": "List Shared Session Files",
+                "description": "Public listing of a shared session's workspace files. Same shape as the\nauthenticated workspace-files endpoint so the share page can reuse the\nsame components.\n\nScope is FORCED under `outputs/`: the worker contract promises the user\nthat only outputs/ files are deliverables, so working files the agent\nleft at the workspace root (notes, scripts, .env, uploads/) must never\nbecome public through a share link.",
+                "operationId": "list_shared_session_files_share__share_token__files_get",
+                "parameters": [
+                    {
+                        "name": "share_token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 32,
+                            "maxLength": 32,
+                            "pattern": "^[A-Za-z0-9_-]{32}$",
+                            "title": "Share Token"
+                        }
+                    },
+                    {
+                        "name": "prefix",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "",
+                            "title": "Prefix"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "default": 50,
+                            "title": "Limit"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Cursor"
+                        }
+                    },
+                    {
+                        "name": "includeUrls",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Includeurls"
+                        }
+                    },
+                    {
+                        "name": "contentDisposition",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "const": "attachment",
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Contentdisposition"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WorkspaceFileListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/share/{share_token}/recording": {
+            "get": {
+                "summary": "Get Shared Session Recording",
+                "description": "Presigned URL for the shared session's browser recording (mp4).\n\nRecording ONLY \u2014 the live-view URL is an interactive browser and is never\nexposed through a share. Null until the session's browser stops and the\nupload lands (same lag as GET /runs/{run_id}/recording). V4 keeps one\nbrowser across follow-ups, so the newest run with a browser session is\nthe session's recording.",
+                "operationId": "get_shared_session_recording_share__share_token__recording_get",
+                "parameters": [
+                    {
+                        "name": "share_token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 32,
+                            "maxLength": 32,
+                            "pattern": "^[A-Za-z0-9_-]{32}$",
+                            "title": "Share Token"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RunRecordingResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/browsers": {
             "get": {
                 "tags": [
@@ -1556,6 +2568,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/BrowserSessionItemView"
+                                }
+                            }
+                        }
+                    },
+                    "402": {
+                        "description": "Insufficient credits, or the API key reached its monthly spend limit.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIKeySpendLimitError"
                                 }
                             }
                         }
@@ -1937,7 +2959,7 @@
                         }
                     },
                     "402": {
-                        "description": "Subscription required for additional profiles",
+                        "description": "Profile limit reached; delete unused profiles to create new ones",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2128,6 +3150,126 @@
     },
     "components": {
         "schemas": {
+            "APIKeySpendLimitDetail": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "title": "Code",
+                        "default": "api_key_monthly_spend_limit_reached"
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "cap": {
+                        "type": "number",
+                        "title": "Cap"
+                    },
+                    "spent": {
+                        "type": "number",
+                        "title": "Spent"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message",
+                    "cap",
+                    "spent"
+                ],
+                "title": "APIKeySpendLimitDetail",
+                "description": "Machine-readable 402 detail shared by run and browser creation."
+            },
+            "APIKeySpendLimitError": {
+                "properties": {
+                    "detail": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/components/schemas/APIKeySpendLimitDetail"
+                            }
+                        ],
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "detail"
+                ],
+                "title": "APIKeySpendLimitError",
+                "description": "FastAPI wraps endpoint errors in a top-level ``detail`` field."
+            },
+            "AgentCardWalletListResponse": {
+                "properties": {
+                    "wallets": {
+                        "items": {
+                            "$ref": "#/components/schemas/AgentCardWalletSummary"
+                        },
+                        "type": "array",
+                        "title": "Wallets"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "wallets"
+                ],
+                "title": "AgentCardWalletListResponse"
+            },
+            "AgentCardWalletSummary": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "title": "Currency"
+                    },
+                    "availableCents": {
+                        "type": "integer",
+                        "title": "Availablecents"
+                    },
+                    "activeHoldCents": {
+                        "type": "integer",
+                        "title": "Activeholdcents"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "currency",
+                    "availableCents",
+                    "activeHoldCents"
+                ],
+                "title": "AgentCardWalletSummary",
+                "description": "A spendable project wallet as the composer needs to show it."
+            },
+            "AuthorizeResponse": {
+                "properties": {
+                    "redirect_url": {
+                        "type": "string",
+                        "title": "Redirect Url"
+                    },
+                    "provider": {
+                        "type": "string",
+                        "title": "Provider"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "redirect_url",
+                    "provider"
+                ],
+                "title": "AuthorizeResponse",
+                "description": "Response with OAuth redirect URL."
+            },
             "BrowserDownloadFile": {
                 "properties": {
                     "path": {
@@ -2493,6 +3635,12 @@
                         "title": "Recording URL",
                         "description": "Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response."
                     },
+                    "recordingAvailable": {
+                        "type": "boolean",
+                        "title": "Recording Available",
+                        "description": "False when a recording can never appear for this session: recording was disabled, or the browser stopped long enough ago that the upload is not coming. Only ever false from proof, so a failed recording lookup leaves it true. Clients polling for `recordingUrl` must stop when this is false.",
+                        "default": true
+                    },
                     "metadata": {
                         "additionalProperties": {
                             "type": "string"
@@ -2512,6 +3660,25 @@
                 ],
                 "title": "BrowserSessionView",
                 "description": "View model for representing a browser session."
+            },
+            "ConnectionStatusResponse": {
+                "properties": {
+                    "provider": {
+                        "type": "string",
+                        "title": "Provider"
+                    },
+                    "is_connected": {
+                        "type": "boolean",
+                        "title": "Is Connected"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "provider",
+                    "is_connected"
+                ],
+                "title": "ConnectionStatusResponse",
+                "description": "Response for connection status check."
             },
             "CreateBrowserSessionRequest": {
                 "properties": {
@@ -2540,6 +3707,21 @@
                         "title": "Proxy Country Code",
                         "description": "Country code for proxy location. Defaults to US. Set to null to disable proxy.",
                         "default": "us"
+                    },
+                    "metadata": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Metadata",
+                        "description": "Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history."
                     },
                     "timeout": {
                         "type": "integer",
@@ -2605,28 +3787,13 @@
                             }
                         ],
                         "title": "Custom Proxy",
-                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription."
+                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used."
                     },
                     "enableRecording": {
                         "type": "boolean",
                         "title": "Enable Recording",
                         "description": "If True, enables session recording. Defaults to False.",
                         "default": false
-                    },
-                    "metadata": {
-                        "anyOf": [
-                            {
-                                "additionalProperties": {
-                                    "type": "string"
-                                },
-                                "type": "object"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Metadata",
-                        "description": "Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history."
                     }
                 },
                 "type": "object",
@@ -2692,6 +3859,25 @@
                 "title": "CustomProxy",
                 "description": "Request model for creating a custom proxy."
             },
+            "DisconnectResponse": {
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "title": "Success"
+                    },
+                    "provider": {
+                        "type": "string",
+                        "title": "Provider"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "success",
+                    "provider"
+                ],
+                "title": "DisconnectResponse",
+                "description": "Response for disconnect action."
+            },
             "ExternalBrowserAttach": {
                 "properties": {
                     "cdpUrl": {
@@ -2745,7 +3931,6 @@
                     },
                     "value": {
                         "type": "string",
-                        "maxLength": 4096,
                         "minLength": 1,
                         "format": "password",
                         "title": "Value",
@@ -2773,6 +3958,111 @@
                 "type": "object",
                 "title": "InsufficientCreditsError",
                 "description": "Error response when there are insufficient credits"
+            },
+            "IntegrationCategoryResponse": {
+                "properties": {
+                    "categories": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Categories"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "categories"
+                ],
+                "title": "IntegrationCategoryResponse",
+                "description": "Response for integration categories."
+            },
+            "IntegrationListResponse": {
+                "properties": {
+                    "integrations": {
+                        "items": {
+                            "$ref": "#/components/schemas/IntegrationResponse"
+                        },
+                        "type": "array",
+                        "title": "Integrations"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "title": "Total"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "title": "Limit"
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "title": "Offset"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "integrations",
+                    "total",
+                    "limit",
+                    "offset"
+                ],
+                "title": "IntegrationListResponse",
+                "description": "Paginated response for integrations list."
+            },
+            "IntegrationResponse": {
+                "properties": {
+                    "provider": {
+                        "type": "string",
+                        "title": "Provider"
+                    },
+                    "display_name": {
+                        "type": "string",
+                        "title": "Display Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "icon_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Icon Url"
+                    },
+                    "category": {
+                        "type": "string",
+                        "title": "Category"
+                    },
+                    "is_connected": {
+                        "type": "boolean",
+                        "title": "Is Connected"
+                    },
+                    "auth_type": {
+                        "type": "string",
+                        "title": "Auth Type"
+                    },
+                    "is_popular": {
+                        "type": "boolean",
+                        "title": "Is Popular",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "provider",
+                    "display_name",
+                    "description",
+                    "icon_url",
+                    "category",
+                    "is_connected",
+                    "auth_type"
+                ],
+                "title": "IntegrationResponse",
+                "description": "Response for a single integration."
             },
             "OnePasswordSecretSource": {
                 "properties": {
@@ -3502,7 +4792,7 @@
                                 "type": "null"
                             }
                         ],
-                        "description": "Custom proxy for the browser. Overrides proxyCountryCode. Requires an active subscription. Never stored or inherited by follow-up runs; pass it on each run that should use it."
+                        "description": "Custom proxy for the browser. Overrides proxyCountryCode. Never stored or inherited by follow-up runs; pass it on each run that should use it."
                     },
                     "screenWidth": {
                         "anyOf": [
@@ -3574,6 +4864,7 @@
                             "claude-sonnet-5",
                             "gpt-5.5",
                             "gpt-5.6",
+                            "gpt-6-astra",
                             "gpt-5.6-sol",
                             "gpt-5.6-terra",
                             "gpt-5.6-luna",
@@ -3638,6 +4929,30 @@
                         "description": "If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.",
                         "default": false
                     },
+                    "agentcardWalletId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Agentcardwalletid"
+                    },
+                    "stripeLinkConnectionId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Stripelinkconnectionid"
+                    },
                     "attachedFileIds": {
                         "anyOf": [
                             {
@@ -3669,6 +4984,34 @@
                         ],
                         "title": "Secretbindings",
                         "description": "Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run."
+                    },
+                    "opVaultId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 64
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Opvaultid",
+                        "description": "A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed. Requires opVaultAllowedDomains."
+                    },
+                    "opVaultAllowedDomains": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Opvaultalloweddomains",
+                        "description": "Hosts every credential from opVaultId may be typed into, e.g. [\"amazon.com\"]."
                     },
                     "judge": {
                         "anyOf": [
@@ -3880,6 +5223,31 @@
                     "runs"
                 ],
                 "title": "RunListResponse"
+            },
+            "RunRecordingResponse": {
+                "properties": {
+                    "recordingUrl": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Recordingurl"
+                    },
+                    "available": {
+                        "type": "boolean",
+                        "title": "Available",
+                        "default": true
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "recordingUrl"
+                ],
+                "title": "RunRecordingResponse"
             },
             "RunStatusResponse": {
                 "properties": {
@@ -4100,6 +5468,78 @@
                 "title": "SecretBinding",
                 "description": "One credential this run may have typed into a browser field.\n\nThe value never reaches the agent. It is encrypted at rest, kept out of the\nworker payload, and typed straight into the focused field by the server when\nthe agent asks for the alias by name \u2014 and only while the page it is typing\ninto is on one of `allowedDomains`.\n\nRun-scoped: bindings die with the run, so a follow-up run that needs the same\ncredential must send it again."
             },
+            "SessionFeedbackItem": {
+                "properties": {
+                    "itemId": {
+                        "type": "string",
+                        "title": "Itemid"
+                    },
+                    "feedbackType": {
+                        "$ref": "#/components/schemas/UserFeedbackType"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "itemId",
+                    "feedbackType"
+                ],
+                "title": "SessionFeedbackItem"
+            },
+            "SessionFeedbackResponse": {
+                "properties": {
+                    "feedback": {
+                        "items": {
+                            "$ref": "#/components/schemas/SessionFeedbackItem"
+                        },
+                        "type": "array",
+                        "title": "Feedback"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "feedback"
+                ],
+                "title": "SessionFeedbackResponse",
+                "description": "Every vote across a session, in one request \u2014 the run view hydrates\nall its turns' thumb states from this once per session on load."
+            },
+            "SessionFeedbackUpsertRequest": {
+                "properties": {
+                    "itemId": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "pattern": "^e[1-9][0-9]{0,18}$",
+                        "title": "Itemid"
+                    },
+                    "feedbackType": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/UserFeedbackType"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "comment": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 2000
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Comment"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "itemId"
+                ],
+                "title": "SessionFeedbackUpsertRequest",
+                "description": "Set or clear thumbs feedback on one chat item of a session.\n\n`item_id` is the item's stable ref as the UI renders it (\"e123\" \u2014 the\noriginating event's DB id, globally unique across sessions).\n`feedback_type: null` clears the vote."
+            },
             "SessionInfo": {
                 "properties": {
                     "sessionId": {
@@ -4221,6 +5661,66 @@
                 "title": "SessionNotFoundError",
                 "description": "Error response when a session is not found"
             },
+            "SessionShareInfo": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "shareToken": {
+                        "type": "string",
+                        "title": "Sharetoken"
+                    },
+                    "sessionId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Sessionid"
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "title": "Isactive"
+                    },
+                    "viewCount": {
+                        "type": "integer",
+                        "title": "Viewcount"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat"
+                    },
+                    "shareUrl": {
+                        "type": "string",
+                        "title": "Shareurl"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "shareToken",
+                    "sessionId",
+                    "isActive",
+                    "viewCount",
+                    "createdAt",
+                    "shareUrl"
+                ],
+                "title": "SessionShareInfo",
+                "description": "A session's public share-link state (share modal reads/writes this)."
+            },
+            "SessionShareUpdateRequest": {
+                "properties": {
+                    "isActive": {
+                        "type": "boolean",
+                        "title": "Isactive"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "isActive"
+                ],
+                "title": "SessionShareUpdateRequest"
+            },
             "SessionTimeoutLimitExceededError": {
                 "properties": {
                     "detail": {
@@ -4232,6 +5732,173 @@
                 "type": "object",
                 "title": "SessionTimeoutLimitExceededError",
                 "description": "Error response when session timeout exceeds the maximum allowed limit"
+            },
+            "SessionUpdateRequest": {
+                "properties": {
+                    "title": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Title"
+                    }
+                },
+                "type": "object",
+                "title": "SessionUpdateRequest",
+                "description": "Rename a session. Null clears the user-set name, so the UI falls back to\nthe session's opening task."
+            },
+            "SharedRun": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "task": {
+                        "type": "string",
+                        "title": "Task"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat"
+                    },
+                    "model": {
+                        "type": "string",
+                        "title": "Model"
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    },
+                    "result": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Result"
+                    },
+                    "error": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Error"
+                    },
+                    "attachmentCount": {
+                        "type": "integer",
+                        "title": "Attachmentcount",
+                        "default": 0
+                    },
+                    "events": {
+                        "items": {
+                            "$ref": "#/components/schemas/RunEvent"
+                        },
+                        "type": "array",
+                        "title": "Events"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "task",
+                    "createdAt",
+                    "model",
+                    "status",
+                    "result",
+                    "error",
+                    "events"
+                ],
+                "title": "SharedRun",
+                "description": "One run of a publicly shared session \u2014 the read-only subset the share\npage needs to render a turn (no cost/token/browser internals)."
+            },
+            "SharedSessionResponse": {
+                "properties": {
+                    "sessionId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Sessionid"
+                    },
+                    "title": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Title"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat"
+                    },
+                    "viewCount": {
+                        "type": "integer",
+                        "title": "Viewcount"
+                    },
+                    "workspaceId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Workspaceid"
+                    },
+                    "runs": {
+                        "items": {
+                            "$ref": "#/components/schemas/SharedRun"
+                        },
+                        "type": "array",
+                        "title": "Runs"
+                    },
+                    "nextAfter": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nextafter"
+                    },
+                    "hasMore": {
+                        "type": "boolean",
+                        "title": "Hasmore",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "sessionId",
+                    "title",
+                    "createdAt",
+                    "viewCount",
+                    "workspaceId",
+                    "runs"
+                ],
+                "title": "SharedSessionResponse",
+                "description": "Public payload for GET /share/{token}: the session transcript with\nsensitive keys scrubbed. Files are listed via the separate\n/share/{token}/files endpoint so download URLs can be minted fresh."
             },
             "SteeringCutoff": {
                 "properties": {
@@ -4253,6 +5920,58 @@
                 ],
                 "title": "SteeringCutoff",
                 "description": "Earliest accepted steer for one interrupted source run.\n\nThe queue endpoint returns these compact boundaries separately from message\nrows so a remount can keep every interrupted transcript frozen without\nre-sending the full historical steering-message payload."
+            },
+            "StripeLinkStatusResponse": {
+                "properties": {
+                    "isConnected": {
+                        "type": "boolean",
+                        "title": "Isconnected"
+                    },
+                    "connectionId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Connectionid"
+                    },
+                    "linkEmail": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Linkemail"
+                    },
+                    "mode": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "test",
+                                    "live"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Mode"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "isConnected"
+                ],
+                "title": "StripeLinkStatusResponse",
+                "description": "The project's active Stripe Link connection, if any."
             },
             "TooManyConcurrentActiveSessionsError": {
                 "properties": {
@@ -4280,6 +5999,14 @@
                 ],
                 "title": "UpdateBrowserSessionRequest",
                 "description": "Request model for updating browser session state."
+            },
+            "UserFeedbackType": {
+                "type": "string",
+                "enum": [
+                    "up",
+                    "down"
+                ],
+                "title": "UserFeedbackType"
             },
             "ValidationError": {
                 "properties": {
