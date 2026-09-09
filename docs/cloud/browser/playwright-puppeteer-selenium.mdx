@@ -88,3 +88,19 @@ curl -X PATCH \
 See [Create browser session](/cloud/api-v4/browsers/create-browser-session) and
 [Update browser session](/cloud/api-v4/browsers/update-browser-session) for
 every browser setting and response field.
+
+## PDF rendering
+
+Standalone browser creation accepts `"pdfRendererEnabled": false` to disable
+Chrome's in-tab PDF viewer. PDFs are still saved to the browser session's
+download directory. This does not block PDF downloads or reduce their bytes to
+zero. The setting is not currently exposed in V4 agent `browserSettings`.
+
+## Profiles and browser contexts
+
+To reuse a saved login, supply `profileId` when creating the browser and use
+the existing browser context shown above. Creating a fresh incognito context
+with `new_context()` / `newContext()` does not inherit that profile's cookies.
+A profile is not a guarantee that the site's login remains valid, and cookie
+sync does not import saved passwords or promise a persistent HTTP disk cache.
+See [Sync local and cloud cookies](/cloud/guides/profile-sync).

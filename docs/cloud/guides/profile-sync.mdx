@@ -40,3 +40,13 @@ const run = await client.runs.create({
 
 The profile supplies cookies and local storage without putting credentials in
 the prompt. Re-sync when the site's login expires.
+
+A profile ID belongs to a project. Use an API key from that project, and do not
+substitute a workspace ID or conversation/session ID. Reusing a session may
+reuse its current browser; to apply a newly synced profile, create a fresh
+browser or conversation with that profile.
+
+Cookie sync does not import a password manager or guarantee that the target
+site accepts a moved login. Sites can expire cookies, bind sessions to a device
+or network, or require another verification step. Use a stable proxy location
+when the site's security policy depends on location.

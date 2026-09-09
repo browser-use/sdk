@@ -4,9 +4,12 @@ description: "Cloud browsers solve supported CAPTCHA challenges automatically."
 icon: shield-check
 ---
 
-Every Browser Use Cloud browser enables automatic CAPTCHA solving. This applies
-to API V4 Agent runs and standalone Cloud Browser sessions. There is no request
-field to turn on.
+Automatic CAPTCHA solving is enabled by default for API V4 Agent runs and
+standalone Cloud Browser sessions.
+
+For a standalone browser created with `POST /api/v4/browsers`, set
+`"solveCaptchas": false` to handle challenges yourself. This standalone-browser
+field is not currently part of V4 run `browserSettings`.
 
 The automatic solver handles **CAPTCHAs**. Cloudflare and other bot walls are handled by the browser's stealth layer and residential proxies, not by the CAPTCHA solver.
 
