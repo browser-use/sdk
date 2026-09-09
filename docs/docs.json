@@ -1152,22 +1152,6 @@
       "destination": "/cloud/quickstart"
     },
     {
-      "source": "/cloud/llms.txt",
-      "destination": "/llms.txt"
-    },
-    {
-      "source": "/cloud/llms-full.txt",
-      "destination": "/llms-full.txt"
-    },
-    {
-      "source": "/open-source/llms.txt",
-      "destination": "/llms.txt"
-    },
-    {
-      "source": "/open-source/llms-full.txt",
-      "destination": "/llms-full.txt"
-    },
-    {
       "source": "/cloud/bux/introduction",
       "destination": "/cloud/which-product"
     },

@@ -1,0 +1,8 @@
+# Browser Use Open Source documentation has moved
+
+> This compatibility index points to the current, automatically maintained documentation. Fetch the linked export before answering API, concurrency, or billing questions. This file intentionally contains no copied documentation.
+
+- [Current documentation index](https://docs.browser-use.com/llms.txt): Discover Cloud and Open Source pages and their API versions.
+- [Current full documentation](https://docs.browser-use.com/llms-full.txt): Read the complete current documentation and shared agent guidance.
+
+Use the Open Source sections for this product. Cloud SDK and Open Source library APIs are different.
