@@ -87,7 +87,26 @@ Keep a large batch in your application's own job queue. Admit a bounded number o
 
 ## Budget HTTP requests separately
 
-The standard per-project request buckets are:
+HTTP traffic passes through two separate limits: a shared per-IP edge limit
+and your project's application limit. Raising one does not raise the other.
+
+### Edge limits
+
+On September 9, 2026, the standard edge (WAF) ceilings increased:
+
+| Requests from one public source IP | Edge ceiling | Evaluation window |
+|---|---:|---:|
+| General API traffic | 1,000 requests/second | 300,000 requests over 300 seconds |
+| Selected individual status reads | 2,500 requests/second | 750,000 requests over 300 seconds |
+
+These are approximate rates evaluated over a five-minute window, not a strict
+per-second cap or a guaranteed burst allowance. Applications behind the same
+NAT or proxy share the IP's budget. Account-specific edge rules and certain
+special endpoints can have different limits.
+
+### Project limits
+
+The edge increase did **not** change the standard per-project application buckets:
 
 | Requests | Default request budget |
 |---|---:|
@@ -101,6 +120,24 @@ The selected V4 polling endpoints include:
 - `GET /api/v4/browsers/{browser_session_id}`
 
 `GET /api/v4/runs/{run_id}/events` and `GET /api/v4/runs/{run_id}` use the general bucket. Their budget does not automatically grow with your concurrency grant. Account overrides and other protections can differ from these defaults; use the response headers and error details when diagnosing throttling.
+
+For example, a project with 500 stored concurrent sessions and no request-rate
+override has a 1,000 RPS status-polling budget and a separate 25 RPS general
+budget. All API keys in that project share those budgets. Creating a new key
+does not create more request capacity.
+
+The project limiter counts requests in **five-second windows**. A 25 RPS
+budget therefore permits 125 requests per window. `X-RateLimit-Limit` reports
+that window allowance, not requests per second: a value of `125` does not mean
+125 RPS. `X-RateLimit-Remaining` is the window's remaining request count.
+`X-RateLimit-Reset` is a relative number of seconds, not a Unix timestamp.
+
+A project throttle includes `limit_rps` and `retry_after_seconds` in the JSON
+body and normally sends `Retry-After: 5`. An edge throttle can instead send
+`Retry-After: 300` without `limit_rps`. Honor the delay actually returned; a
+five-second retry loop is inappropriate for a five-minute edge throttle.
+Capture the response headers and body when asking support to identify which
+limit applied. A missing limit header is not a promise of unlimited traffic.
 
 If you only need the final result, use the SDK's status-based wait helper:
 
@@ -127,7 +164,8 @@ Spread poll times so that every worker does not send its request on the same clo
 
 | Response | Likely meaning | What to do |
 |---|---|---|
-| 429 with `error: "rate_limited"` | HTTP request budget exhausted | Honor `Retry-After`/`retry_after_seconds`; reduce or stagger requests. |
+| 429 with `error: "rate_limited"` and `limit_rps` | Project HTTP request budget exhausted | Honor `Retry-After`/`retry_after_seconds`; reduce or stagger requests across the project. |
+| 429 with `error: "rate_limited"`, no `limit_rps`, and `Retry-After: 300` | Edge request protection | Back off for the returned delay; check bursts and traffic sharing the same public IP. |
 | 429 with a concurrent-session message in `detail` | Active session allowance reached | Inspect capacity, stop unneeded browsers, and reduce admitted jobs. |
 | 429 with a queue-full message in `detail` | This conversation has 10 pending messages | Wait for its queue to drain or cancel an appropriate pending message. |
 | 409 with an active-run message | Conversation is already busy | Wait, queue, or intentionally interrupt. |
