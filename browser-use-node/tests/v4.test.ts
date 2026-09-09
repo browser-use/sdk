@@ -138,6 +138,31 @@ describe("v4 runs.waitForCompletion", () => {
 });
 
 describe("v4 runs.waitForEvent", () => {
+  it.each([
+    [undefined, 300_000, 5_000],
+    [500, 300_000, 500],
+    [undefined, 2_000, 2_000],
+  ])("paces event reads and bounds sleep by the remaining timeout (%s, %s)", async (interval, timeout, expected) => {
+    vi.useFakeTimers();
+    try {
+      const http = { get: vi.fn()
+        .mockResolvedValueOnce({ events: [], nextAfter: 7, hasMore: false })
+        .mockResolvedValueOnce({
+          events: [{ runId: RUN_ID, id: 8, ts: "2026-01-01T00:00:00Z", type: "browser.ready", data: {} }],
+          nextAfter: 8, hasMore: false,
+        }) };
+      const pending = new Runs(http as any).waitForEvent(RUN_ID, "browser.ready", { interval, timeout });
+      expect(http.get).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(expected - 1);
+      expect(http.get).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(1);
+      expect((await pending).id).toBe(8);
+      expect(http.get).toHaveBeenLastCalledWith(`/runs/${RUN_ID}/events`, { after: 7, limit: 100 });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("returns browser.ready before any terminal-status wait", async () => {
     const http = { get: vi.fn(async (_path: string, query?: Record<string, unknown>) =>
       query?.after === 1

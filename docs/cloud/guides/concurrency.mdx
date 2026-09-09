@@ -160,6 +160,17 @@ Set a request budget across all event streams in the project. For example, polli
 
 Spread poll times so that every worker does not send its request on the same clock tick. A per-project limiter in your application is more predictable than each worker independently retrying.
 
+For SDK event waits, set `wait_for_event(..., interval=5)` in Python or
+`waitForEvent(..., { interval: 5_000 })` in TypeScript. This also works on SDK
+3.11.3, whose event-wait default is one second. One hundred waits at a
+five-second interval average 20 event requests per second; creates, pagination,
+and other general requests still share the standard 25 RPS budget. Higher
+parallelism needs a larger interval or a shared request scheduler.
+
+The event-wait helper pauses between pages too. For an old run with a large
+event history, start from a known cursor or implement paginated reads within
+your shared request budget; a longer interval also makes backlog traversal slower.
+
 ## Diagnose errors before retrying
 
 | Response | Likely meaning | What to do |

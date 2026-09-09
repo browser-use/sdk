@@ -34,9 +34,9 @@ export interface RunEventsParams {
 }
 
 export interface WaitOptions {
-  /** Maximum time to wait in milliseconds. Default: 14_400_000 (4 hours). */
+  /** Maximum wait in milliseconds: completion defaults to 14_400_000, events to 300_000. */
   timeout?: number;
-  /** Polling interval in milliseconds. Default: 2_000. */
+  /** Polling interval in milliseconds: completion defaults to 2_000, events to 5_000. */
   interval?: number;
 }
 
@@ -71,14 +71,17 @@ export class Runs {
     );
   }
 
-  /** Poll events until the requested type appears (5-minute timeout, 1-second interval). */
+  /**
+   * Poll immediately, then every 5 seconds until the requested event appears (5-minute timeout).
+   * Event reads share the project's general request budget; tune interval across concurrent waits.
+   */
   async waitForEvent(
     runId: string,
     type: string,
     options?: WaitOptions & RunEventsParams,
   ): Promise<RunEvent> {
     const timeout = options?.timeout ?? 300_000;
-    const interval = options?.interval ?? 1_000;
+    const interval = options?.interval ?? 5_000;
     const deadline = Date.now() + timeout;
     let after = options?.after ?? null;
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import UUID
 
 import httpx
@@ -352,6 +353,40 @@ def test_wait_for_event_stops_when_run_ends_first() -> None:
         assert len(async_http.calls) == 1
 
     asyncio.run(run())
+
+
+@pytest.mark.parametrize("interval,timeout,expected", [(None, 300, 5), (0.5, 300, 0.5), (None, 2, 2)])
+@pytest.mark.parametrize("is_async", [False, True])
+def test_event_wait_cadence_and_timeout_bound(interval, timeout, expected, is_async) -> None:
+    pages = [
+        {"events": [], "nextAfter": 7, "hasMore": False},
+        {
+            "events": [{"runId": RUN_ID, "id": 8, "ts": "2026-01-01T00:00:00Z",
+                        "type": "browser.ready", "data": {}}],
+            "nextAfter": 8, "hasMore": False,
+        },
+    ]
+    options = {"timeout": timeout}
+    if interval is not None:
+        options["interval"] = interval
+    module = "browser_use_sdk.v4.resources.runs"
+    with patch(f"{module}.time.monotonic", return_value=0):
+        if is_async:
+            http = FakeAsyncHttp(pages)
+            sleep = AsyncMock()
+            with patch(f"{module}.asyncio.sleep", sleep):
+                event = asyncio.run(AsyncRuns(http).wait_for_event(  # type: ignore[arg-type]
+                    RUN_ID, "browser.ready", **options
+                ))
+            sleep.assert_awaited_once_with(expected)
+        else:
+            http = FakeSyncHttp(pages)
+            sleep = Mock()
+            with patch(f"{module}.time.sleep", sleep):
+                event = Runs(http).wait_for_event(RUN_ID, "browser.ready", **options)  # type: ignore[arg-type]
+            sleep.assert_called_once_with(expected)
+    assert event.id == 8
+    assert http.calls[-1][3] == {"after": 7, "limit": 100}
 
 
 # ---------------------------------------------------------------------------
