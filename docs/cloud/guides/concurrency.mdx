@@ -174,6 +174,11 @@ Spread poll times so that every worker does not send its request on the same clo
 
 The SDK retries some transient responses, including 429, but the default is only three retries. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
 
+SDK 3.11.3 errors expose the response status and body, but not response headers.
+Use `retry_after_seconds` when the body includes it. To diagnose an edge throttle
+or read its exact `Retry-After`, capture the raw HTTP response through your
+application's HTTP instrumentation or a REST client.
+
 API-key monthly spending caps are **soft limits**. They use a cached spend snapshot; already-running or simultaneous work can finish above the cap. They do not replace project balance management or per-run cost controls. BYOK provider charges also remain separate from Browser Use charges.
 
 ## A practical batch-processing pattern
