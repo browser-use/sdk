@@ -1291,7 +1291,51 @@ const run = await client.runs.create({
 
 ## Custom proxy
 
-Custom HTTP and SOCKS5 proxies are available on paid plans:
+Custom proxies are available to all accounts, including free and pay-as-you-go
+accounts. No subscription is required. Normal credit, spend, and concurrency
+limits still apply.
+
+The request format depends on what you are creating:
+
+| REST endpoint | Custom proxy field |
+| --- | --- |
+| `POST /api/v4/browsers` | Top-level `customProxy` |
+| `POST /api/v4/runs` | `browserSettings.customProxy` |
+
+`browser_settings` is the Python SDK keyword for agent runs. In REST JSON,
+the agent-run field is `browserSettings`.
+
+### Standalone browsers
+
+For a browser you control with Playwright, Puppeteer, or another CDP client,
+put `customProxy` directly in the request body:
+
+```bash curl
+curl https://api.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customProxy": {
+      "host": "proxy.example.com",
+      "port": 8080,
+      "username": "YOUR_PROXY_USERNAME",
+      "password": "YOUR_PROXY_PASSWORD"
+    }
+  }'
+```
+
+Replace the proxy details with yours. Omit both `username` and `password` if
+your proxy does not require authentication. Do not wrap these settings in
+`browserSettings` or `browser_settings` on `/api/v4/browsers`.
+
+Keep the returned browser ID and stop the browser with
+`PATCH /api/v4/browsers/{id}` and `{"action":"stop"}` when finished. See the
+[Create browser reference](https://docs.browser-use.com/cloud/api-v4/browsers/create-browser-session) and
+[Browser quickstart](https://docs.browser-use.com/cloud/browser/quickstart).
+
+### Agent runs
+
+For a hosted agent, pass the proxy in the run's browser settings:
 
 ```python Python
 run = client.runs.create(
