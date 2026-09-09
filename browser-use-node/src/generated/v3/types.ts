@@ -852,7 +852,7 @@ export interface components {
             solveCaptchas: boolean;
             /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are available on any active subscription.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
