@@ -139,7 +139,7 @@ describe("v4 runs.waitForCompletion", () => {
 
 describe("v4 runs.waitForEvent", () => {
   it.each([
-    [undefined, 300_000, 5_000],
+    [undefined, 300_000, 3_000],
     [500, 300_000, 500],
     [undefined, 2_000, 2_000],
   ])("paces event reads and bounds sleep by the remaining timeout (%s, %s)", async (interval, timeout, expected) => {

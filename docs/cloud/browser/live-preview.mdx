@@ -13,7 +13,7 @@ from browser_use_sdk.v4 import BrowserUse
 
 client = BrowserUse()
 run = client.runs.create("Find the top Hacker News story")
-ready = client.runs.wait_for_event(run.id, "browser.ready", interval=5)
+ready = client.runs.wait_for_event(run.id, "browser.ready", interval=3)
 print(ready.data["live_view_url"])
 ```
 ```typescript TypeScript
@@ -24,12 +24,12 @@ const run = await client.runs.create({
   task: "Find the top Hacker News story",
   model: "grok-4.5",
 });
-const ready = await client.runs.waitForEvent(run.id, "browser.ready", { interval: 5_000 });
+const ready = await client.runs.waitForEvent(run.id, "browser.ready", { interval: 3_000 });
 console.log(ready.data.live_view_url);
 ```
 </CodeGroup>
 
-These examples poll immediately, then every five seconds (Python uses seconds;
+These examples poll immediately, then every three seconds (Python uses seconds;
 TypeScript uses milliseconds). Setting the interval explicitly also reduces
 traffic on older SDK releases whose event default is one second. Event reads
 share the project's general request budget; [stagger concurrent
