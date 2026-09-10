@@ -355,7 +355,7 @@ def test_wait_for_event_stops_when_run_ends_first() -> None:
     asyncio.run(run())
 
 
-@pytest.mark.parametrize("interval,timeout,expected", [(None, 300, 5), (0.5, 300, 0.5), (None, 2, 2)])
+@pytest.mark.parametrize("interval,timeout,expected", [(None, 300, 3), (0.5, 300, 0.5), (None, 2, 2)])
 @pytest.mark.parametrize("is_async", [False, True])
 def test_event_wait_cadence_and_timeout_bound(interval, timeout, expected, is_async) -> None:
     pages = [

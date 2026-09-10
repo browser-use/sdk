@@ -193,11 +193,11 @@ class Runs:
         event_type: str,
         *,
         timeout: float = 300,
-        interval: float = 5,
+        interval: float = 3,
         after: int | None = None,
         limit: int = 100,
     ) -> RunEvent:
-        """Poll immediately, then every five seconds until ``event_type`` appears.
+        """Poll immediately, then every three seconds until ``event_type`` appears.
 
         Event reads share the project's general request budget. Set ``interval``
         in seconds to tune latency and traffic across concurrent waits.
@@ -367,11 +367,11 @@ class AsyncRuns:
         event_type: str,
         *,
         timeout: float = 300,
-        interval: float = 5,
+        interval: float = 3,
         after: int | None = None,
         limit: int = 100,
     ) -> RunEvent:
-        """Poll immediately, then every five seconds until ``event_type`` appears.
+        """Poll immediately, then every three seconds until ``event_type`` appears.
 
         Event reads share the project's general request budget. Set ``interval``
         in seconds to tune latency and traffic across concurrent waits.
