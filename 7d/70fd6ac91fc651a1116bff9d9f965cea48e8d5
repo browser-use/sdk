@@ -1,0 +1,23 @@
+docs/docs.json
+  s_12f2b9cbbe444b::t_3d39d184471fbd 1178
+docs/cloud/vibecoding.mdx
+  s_12f2b9cbbe444b::t_3d39d184471fbd 15-17
+docs/README.md
+  s_12f2b9cbbe444b::t_3d39d184471fbd 9,11-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7d70fd6ac91fc651a1116bff9d9f965cea48e8d5",
+  "prompts": {},
+  "sessions": {
+    "s_12f2b9cbbe444b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a083ec-8a8a-7353-ae56-415b95287710",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}

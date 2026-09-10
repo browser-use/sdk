@@ -1,0 +1,20 @@
+docs/cloud/agent/quickstart.mdx
+  s_86d24eaeebcb12::t_eb805c43e696e0 54-60
+  s_86d24eaeebcb12::t_9b28dab18f1eea 63-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "9aaeb59a7b6349b3f7834d5d0103f3f04cc34f6f",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}

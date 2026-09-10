@@ -1,0 +1,23 @@
+docs/cloud/which-product.mdx
+  s_86d24eaeebcb12::t_982a85b392047c 4,8,10-11,13,15,17,19,21,23,27
+docs/cloud/images/which-product-dark.svg
+  s_86d24eaeebcb12::t_1f1e359baba026 1-3,5-7,9-46
+docs/cloud/images/which-product-light.svg
+  s_86d24eaeebcb12::t_1f1e359baba026 1-3,5-7,9-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "aa594c5dbdfe9ce7ca8fa923f5ea992d7976a382",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}

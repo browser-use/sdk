@@ -1,0 +1,20 @@
+docs/cloud/browser/quickstart.mdx
+  s_86d24eaeebcb12::t_8b99540ad3d28e 37,39-43
+  s_86d24eaeebcb12::t_b231451cb0da17 49,53,63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "6a8e1614f3e8e0344c8078d9a5b7b4f428975ed1",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
