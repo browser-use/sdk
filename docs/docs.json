@@ -131,6 +131,7 @@
                       },
                       "cloud/tutorials/integrations/openclaw",
                       "cloud/tutorials/integrations/hermes-agent",
+                      "cloud/tutorials/integrations/vercel",
                       "cloud/guides/mcp-server",
                       "cloud/guides/webhooks",
                       "cloud/guides/x402",

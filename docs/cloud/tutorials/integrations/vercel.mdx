@@ -1,0 +1,107 @@
+---
+title: Vercel
+description: Install Browser Use from the Vercel Marketplace and call it from Next.js or a Vercel eve agent.
+---
+
+The [Browser Use integration](https://vercel.com/marketplace/browseruse) on the Vercel Marketplace gives a Vercel project a Browser Use account, billing through Vercel, and a `BROWSER_USE_API_KEY` environment variable. From there you run hosted browser agents or connect your own code to a cloud browser.
+
+## Install from the Marketplace
+
+**1. Install the integration**
+
+In the Vercel dashboard open **Integrations → Browse Marketplace**, choose **Browser Use**, and select **Install**. Pick a plan (start with **Free**) and connect the resource to the project that will call Browser Use.
+
+**2. Check the environment variable**
+
+Vercel adds `BROWSER_USE_API_KEY` to the connected project for production, preview, and development. Pull it into your local environment:
+
+```bash
+vercel env pull .env.local
+```
+
+**3. Open Browser Use**
+
+Select **Open in Browser Use** on the resource page. Vercel signs you in to [cloud.browser-use.com](https://cloud.browser-use.com) without a separate account, where you can watch runs, replay sessions, and manage the project.
+
+## Next.js
+
+**1. Install the SDK**
+
+```bash
+npm install browser-use-sdk@latest
+```
+
+**2. Add a route handler**
+
+The client reads `BROWSER_USE_API_KEY` from the environment. Keep it server-side: call Browser Use from a route handler or server action, never from the browser.
+
+```typescript app/api/research/route.ts
+import { BrowserUse } from "browser-use-sdk/v4";
+
+export const maxDuration = 300;
+
+export async function POST(request: Request) {
+  const { task } = await request.json();
+
+  const client = new BrowserUse();
+  const run = await client.runs.create({ task });
+  const result = await client.runs.waitForCompletion(run.id, {
+    timeout: 240_000,
+  });
+
+  return Response.json({ runId: run.id, result: result.result });
+}
+```
+
+**3. Call it**
+
+```bash
+curl -X POST http://localhost:3000/api/research \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Find the top Hacker News story and summarize it"}'
+```
+
+Runs can outlast a single Vercel function invocation. For anything longer than your function's `maxDuration`, return `run.id` right away and read progress from a second route with `client.runs.status(runId)` and `client.runs.events(runId)`. See [Observability](/cloud/agent/observability) for the event stream and [Structured output](/cloud/agent/structured-output) for returning JSON your app can validate.
+
+## Vercel eve agents
+
+Give an [eve](https://eve.dev) agent a cloud browser with the official package. It adds the `open_cloud_browser` and `stop_cloud_browser` tools plus a browsing skill, and your API key never leaves the app runtime.
+
+```bash
+npm install @browser_use/eve
+npx browser-use-eve add
+```
+
+With `BROWSER_USE_API_KEY` set, ask the agent to "open example.com and tell me the title". To start from a working app, deploy the [Browser Agent Template](https://github.com/browser-use/browser-agent-template): a Next.js chat UI, an eve agent, and a live browser panel in one codebase.
+
+## Bring your own automation
+
+If you already drive browsers with Puppeteer or Playwright, use the cloud browser without the hosted agent:
+
+```typescript
+import { BrowserUse } from "browser-use-sdk/v4";
+import puppeteer from "puppeteer-core";
+
+const client = new BrowserUse();
+const session = await client.browsers.create({ proxyCountryCode: "us" });
+try {
+  if (!session.cdpUrl) throw new Error("The browser did not return a CDP URL");
+  const browser = await puppeteer.connect({ browserWSEndpoint: session.cdpUrl });
+  try {
+    const context = browser.defaultBrowserContext();
+    const page = (await context.pages())[0] ?? await context.newPage();
+    await page.goto("https://example.com");
+    console.log(await page.title());
+  } finally {
+    await browser.disconnect();
+  }
+} finally {
+  await client.browsers.stop(session.id);
+}
+```
+
+See the [Browser Infrastructure quickstart](/cloud/browser/quickstart) for Playwright, Selenium, and curl.
+
+## Billing and limits
+
+Usage is billed through your Vercel account on the plan you picked at install time. Keys in one project share concurrency and credits; read [Concurrency and limits](/cloud/guides/concurrency) before running many tasks in parallel. Changing the plan in Vercel updates the Browser Use project automatically.
