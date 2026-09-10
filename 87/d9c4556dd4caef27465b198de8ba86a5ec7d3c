@@ -1,0 +1,20 @@
+docs/cloud/browser/live-preview.mdx
+  s_41308d41c513c9::t_5897e69b70071d 55-64,66-109
+  s_41308d41c513c9::t_52922cfded325f 65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "87d9c4556dd4caef27465b198de8ba86a5ec7d3c",
+  "prompts": {},
+  "sessions": {
+    "s_41308d41c513c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a088bb-88d3-7ed1-b331-528e71450111",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}
