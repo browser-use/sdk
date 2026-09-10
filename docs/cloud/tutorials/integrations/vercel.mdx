@@ -85,11 +85,16 @@ import puppeteer from "puppeteer-core";
 const client = new BrowserUse();
 const session = await client.browsers.create({ proxyCountryCode: "us" });
 try {
+  if (!session.cdpUrl) throw new Error("The browser did not return a CDP URL");
   const browser = await puppeteer.connect({ browserWSEndpoint: session.cdpUrl });
-  const page = (await browser.defaultBrowserContext().pages())[0];
-  await page.goto("https://example.com");
-  console.log(await page.title());
-  await browser.disconnect();
+  try {
+    const context = browser.defaultBrowserContext();
+    const page = (await context.pages())[0] ?? await context.newPage();
+    await page.goto("https://example.com");
+    console.log(await page.title());
+  } finally {
+    await browser.disconnect();
+  }
 } finally {
   await client.browsers.stop(session.id);
 }
