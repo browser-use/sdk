@@ -193,11 +193,15 @@ class Runs:
         event_type: str,
         *,
         timeout: float = 300,
-        interval: float = 1,
+        interval: float = 5,
         after: int | None = None,
         limit: int = 100,
     ) -> RunEvent:
-        """Poll run events until ``event_type`` appears."""
+        """Poll immediately, then every five seconds until ``event_type`` appears.
+
+        Event reads share the project's general request budget. Set ``interval``
+        in seconds to tune latency and traffic across concurrent waits.
+        """
         deadline = time.monotonic() + timeout
         while True:
             page = self.events(run_id, after=after, limit=limit)
@@ -363,11 +367,15 @@ class AsyncRuns:
         event_type: str,
         *,
         timeout: float = 300,
-        interval: float = 1,
+        interval: float = 5,
         after: int | None = None,
         limit: int = 100,
     ) -> RunEvent:
-        """Poll run events until ``event_type`` appears."""
+        """Poll immediately, then every five seconds until ``event_type`` appears.
+
+        Event reads share the project's general request budget. Set ``interval``
+        in seconds to tune latency and traffic across concurrent waits.
+        """
         deadline = time.monotonic() + timeout
         while True:
             page = await self.events(run_id, after=after, limit=limit)
