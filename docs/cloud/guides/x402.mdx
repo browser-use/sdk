@@ -9,6 +9,11 @@ description: "Pay for Browser Use Cloud with crypto (USDC on Base). ~30 seconds 
 
 x402 lets your code, or an autonomous AI agent, pay Browser Use Cloud directly with cryptocurrency. No account signup, no credit card, and no API key is needed. Your wallet is your identity.
 
+<Warning>
+  x402 currently supports the V2 and V3 APIs. It does not support API V4 yet.
+  Use a standard Browser Use API key for V4 runs.
+</Warning>
+
 <Note>
 
 **New to crypto?** Here's the gist:
@@ -120,6 +125,13 @@ const client = new BrowserUse(); // auto-detects from env
   Python x402 is async-only: use `AsyncBrowserUse`, not `BrowserUse`.
 </Note>
 
+<Note>
+  `x402_max_payment_usd` / `x402MaxPaymentUsd` is a hard ceiling, not a
+  spend trigger. The SDK rejects every payment option above it. A new paid
+  request to the x402 host still receives a payment challenge even when the
+  wallet project has unused Browser Use credit.
+</Note>
+
 ## Raw HTTP quickstart
 
 Use this if you're in a language we don't ship an SDK for (Go, Rust, Ruby, etc.), or if you want to use other x402 APIs from the same client library. Hit `https://x402.api.browser-use.com` directly with any [x402 client library](https://github.com/coinbase/x402#all-available-reference-sdks):
@@ -152,7 +164,9 @@ async def main():
 asyncio.run(main())
 ```
 
-`https://x402.api.browser-use.com` exposes the same routes as `https://api.browser-use.com`. It supports every `/api/v2/*` and `/api/v3/*` route, gated by an x402 challenge instead of API key auth.
+`https://x402.api.browser-use.com` supports every `/api/v2/*` and `/api/v3/*`
+route. It does not expose `/api/v4/*`. Paid requests are gated by an x402
+challenge instead of API key auth.
 
 ## What you need
 
@@ -166,10 +180,17 @@ You do **not** need ETH for gas. We use [EIP-3009](https://eips.ethereum.org/EIP
 
 ## Pricing and credits
 
-The SDK first authenticates requests with a free, single-use wallet signature. If
-the wallet project does not exist yet or has insufficient credits, the backend
-marks the response as requiring a top-up, and the SDK makes one x402 payment. The
-default SDK cap is `$1.00` USDC per payment.
+The x402 host challenges every new paid request. The SDK filters out payment
+options above `x402_max_payment_usd` / `x402MaxPaymentUsd`, signs one remaining
+option, and retries the request. The default SDK cap is `$1.00` USDC per
+payment. That payment becomes prepaid credit on the wallet's Browser Use
+project, then the request spends from the project's balance.
+
+Creating another session is another paid request, so it triggers another x402
+payment even when the project still has credit. Polling, reading messages,
+stopping, deleting, and sending a follow-up to a session created by that wallet
+are free when the request includes the exact session ID. The balance helper is
+also free because it uses a single-use wallet signature.
 
 <Warning>
   **Mid-task drain still terminates the task.** Browser Use sessions run on a
@@ -222,9 +243,14 @@ When the backend sees both a payment and a valid API key, the credit goes to the
 - Adding credits via crypto when you already have a regular Browser Use account
 - Multi-wallet setups funding one shared account
 
+Each paid request sent through the x402 host makes a new payment. After a
+top-up, use a normal `BrowserUse` client with the API key and the default
+`https://api.browser-use.com` host to spend the existing balance without making
+another x402 payment.
+
 ## Checking your credit balance
 
-When you sign up the normal way, Browser Use creates an **account** for you (we call it a "project") that holds your credits and runs your tasks, and you log into it with an API key. When you pay with **only a wallet** (no API key), there's no signup step — so the very first time you pay, Browser Use automatically creates one of these same accounts for you and ties it to your wallet. From then on it behaves exactly like a normal account. The only difference is how you prove it's yours: instead of an API key, you sign with your wallet.
+When you sign up the normal way, Browser Use creates an **account** for you (we call it a "project") that holds your credits and runs your tasks, and you log into it with an API key. When you pay with **only a wallet** (no API key), there's no signup step — so the very first time you pay, Browser Use automatically creates one of these same accounts for you and ties it to your wallet. The free wallet signature currently reads that project's balance. It does not replace API-key authentication for ordinary API requests.
 
 This balance is your **Browser Use credit balance** — the prepaid USD you've added to that account through x402 payments, minus what your tasks have spent.
 
@@ -280,17 +306,13 @@ The response contains:
 
 ## How it works
 
-Your code asks for something. If your Browser Use credit balance needs a top-up,
-the SDK authorizes up to your configured payment cap; otherwise it proceeds
-without moving wallet funds.
+Your code asks for something on the x402 host:
 
-A bit more detail:
-
-1. Your code makes a request (e.g. "run this task").
-2. The SDK signs a free, request-bound wallet authentication message.
-3. If the server explicitly requests a top-up, the SDK signs one capped payment and retries.
-4. Coinbase moves the USDC on-chain, and we add the same amount to your project's credit balance.
-5. Status polls use free wallet authentication while the task runs.
+1. The server returns an x402 challenge for a paid V2 or V3 route.
+2. The SDK removes every option above your configured payment cap.
+3. The SDK signs one remaining payment and retries the request.
+4. Coinbase moves the USDC on-chain, and Browser Use adds the same amount to your project's credit balance.
+5. The request runs against that project. Exact management requests for the resulting session ID are free.
 
 ## Wallet setup
 
@@ -344,7 +366,7 @@ register_exact_evm_client(
     EthAccountSigner(Account.from_key(key)),
     policies=[max_amount(1_000_000)],
 )
-client = AsyncBrowserUse(x402=x402, x402_private_key=key)
+client = AsyncBrowserUse(x402=x402)
 
 ```
 
@@ -360,13 +382,20 @@ x402.register("eip155:*", new ExactEvmScheme(privateKeyToAccount(key)));
 x402.registerPolicy((_version, requirements) =>
   requirements.filter(({ amount }) => BigInt(amount) <= 1_000_000n),
 );
-const client = new BrowserUse({ x402, x402PrivateKey: key });
+const client = new BrowserUse({ x402 });
 ```
 </CodeGroup>
 
 ## Troubleshooting
 
 <AccordionGroup>
+  <Accordion title="Why did a second task make another payment?">
+    Every new paid request to the x402 host gets a fresh payment challenge. A
+    wallet-keyed project's existing credit does not currently bypass that
+    challenge. Reuse the same session for free follow-ups, or use a normal API
+    key client after topping up an existing account.
+  </Accordion>
+
   <Accordion title="HTTP 402 keeps coming back, never settles">
     Two likely causes:
 
