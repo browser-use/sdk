@@ -52,6 +52,61 @@ The URL is hosted on `live.browser-use.com`. Add that origin to your
 Content Security Policy's `frame-src` directive when needed. Treat the URL as
 a credential: anyone with it can interact with the active browser.
 
+### Read-only embeds
+
+To let users watch without clicking, typing, or scrolling the remote page,
+make the iframe non-interactive in your application. This works with V4 today
+and provides the same UI-level restriction as the V2 dashboard's view-only mode.
+No API request parameter is needed.
+
+Use `ready.data.live_view_url` from the V4 `browser.ready` event above.
+For REST integrations, read that event from
+[`GET /api/v4/runs/{run_id}/events`](/cloud/api-v4/runs/get-run-events).
+Standalone [`POST /api/v4/browsers`](/cloud/api-v4/browsers/create-browser-session)
+responses return the URL as `liveUrl`.
+
+```html
+<div inert>
+  <iframe
+    src="{LIVE_VIEW_URL}"
+    title="Live browser preview"
+    tabindex="-1"
+    style="width: 100%; aspect-ratio: 16/9; border: 0; pointer-events: none;"
+    allow="autoplay"
+  ></iframe>
+</div>
+```
+
+The preview keeps streaming. The `inert` wrapper prevents focus and keyboard
+input, while `pointer-events: none` blocks pointer interaction with the iframe.
+Use a browser that supports `inert`. To allow human takeover, remove `inert`,
+`tabindex="-1"`, and `pointer-events: none` when your application enables control.
+
+<Note>
+  `ui=false` only hides the tabs and toolbar; it does not disable interaction.
+  View-only embeds are a UI restriction, not a server-enforced permission.
+  Anyone who opens the live URL directly or uses the underlying CDP URL can
+  still control the browser. Keep both URLs private.
+</Note>
+
+### Read-only URL option (staging)
+
+The staging viewer also supports `readOnly=true`. It blocks browser controls
+and page input while keeping connection and screencast Retry buttons usable:
+
+```javascript
+const previewUrl = new URL(liveViewUrl);
+previewUrl.searchParams.set("readOnly", "true");
+previewUrl.searchParams.set("ui", "false"); // Optional: hide tabs and toolbar.
+iframe.src = previewUrl.toString();
+```
+
+This option is not yet available on `live.browser-use.com`; use the iframe
+wrapper above in production. It is a viewer URL option, not a field in the
+browser or run creation request. Omitting it or setting it to `false` keeps
+the viewer interactive, and `/session/{id}` links preserve it when redirecting.
+Like the wrapper, it prevents UI input without changing CDP access permissions.
+
 ## Recording
 
 Enable recording when the run creates its browser:
