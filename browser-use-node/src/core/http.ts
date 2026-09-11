@@ -12,8 +12,16 @@ function retryDelay(response: Response, attempt: number): number | undefined {
       retryAfter = Number(value) * 1000;
     } else if (HTTP_DATE.test(value)) {
       // The obsolete asctime HTTP-date form is also UTC, never local time.
-      const date = Date.parse(value.endsWith(" GMT") ? value : `${value} GMT`);
-      if (Number.isFinite(date)) retryAfter = Math.max(0, date - Date.now());
+      const date = new Date(value.endsWith(" GMT") ? value : `${value} GMT`);
+      const [, first, second, third, fourth, fifth, sixth] = value.split(/[ ,:-]+/);
+      const [day, time] = value.endsWith(" GMT")
+        ? [Number(first), `${fourth}:${fifth}:${sixth}`]
+        : [Number(second), `${third}:${fourth}:${fifth}`];
+      // Date.parse rolls invalid days (February 30) and 24:00 into the next day.
+      // Reject that normalization, as Python's datetime parser does.
+      if (date.getUTCDate() === day && date.toUTCString().slice(17, 25) === time) {
+        retryAfter = Math.max(0, date.getTime() - Date.now());
+      }
     }
   }
   if (retryAfter !== undefined && retryAfter > 60_000) return undefined;
