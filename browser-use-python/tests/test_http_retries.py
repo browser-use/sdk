@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from types import SimpleNamespace
 from typing import Any
 
 import httpx
@@ -26,8 +27,8 @@ def _replay(
     max_retries: int = 3,
 ) -> Iterator[tuple[Any, list[float]]]:
     delays: list[float] = []
-    monkeypatch.setattr(http.random, "random", lambda: 0.5)
-    monkeypatch.setattr(http.time, "time", lambda: 0)
+    monkeypatch.setattr(http, "random", SimpleNamespace(random=lambda: 0.5))
+    monkeypatch.setattr(http, "time", SimpleNamespace(time=lambda: 0, sleep=delays.append))
     if is_async:
         async def sleep(delay: float) -> None:
             delays.append(delay)
@@ -37,7 +38,7 @@ def _replay(
         async_client._client = httpx.AsyncClient(
             base_url="https://api.example.com", transport=httpx.MockTransport(handler)
         )
-        monkeypatch.setattr(http.asyncio, "sleep", sleep)
+        monkeypatch.setattr(http, "asyncio", SimpleNamespace(sleep=sleep))
         try:
             yield async_client, delays
         finally:
@@ -48,7 +49,6 @@ def _replay(
         sync_client._client = httpx.Client(
             base_url="https://api.example.com", transport=httpx.MockTransport(handler)
         )
-        monkeypatch.setattr(http.time, "sleep", delays.append)
         try:
             yield sync_client, delays
         finally:
@@ -101,6 +101,10 @@ def test_persistent_failure_is_bounded_and_preserves_error(
 @pytest.mark.parametrize("header,expected", [
     ("5", 5.125),
     ("Thu, 01 Jan 1970 00:00:05 GMT", 5.125),
+    ("Thursday, 01-Jan-70 00:00:05 GMT", 5.125),
+    ("Thu Jan  1 00:00:05 1970", 5.125),
+    ("Thu, 01 Jan 1970 00:00:05", 1.125),
+    ("January 1, 1970 00:00:05", 1.125),
     ("Wed, 31 Dec 1969 23:59:59 GMT", 1.125),
     ("0", 1.125),
     ("60", 60),
@@ -140,6 +144,20 @@ def test_long_retry_after_returns_error_without_early_retry(
             _request(client, is_async, "POST")
         assert delays == []
     assert len(requests) == 1
+
+
+@pytest.mark.parametrize("is_async", [False, True])
+@pytest.mark.parametrize("header", [None, "0", "1"])
+def test_short_retry_after_does_not_extend_backoff_cap(
+    monkeypatch: pytest.MonkeyPatch, is_async: bool, header: str | None,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, json={"detail": "busy"}, headers={} if header is None else {"Retry-After": header})
+
+    with _replay(monkeypatch, is_async, handler, max_retries=5) as (client, delays):
+        with pytest.raises(BrowserUseError):
+            _request(client, is_async)
+        assert delays == [1.125, 2.125, 4.125, 8.125, 10.0]
 
 
 @pytest.mark.parametrize("is_async", [False, True])
@@ -242,7 +260,7 @@ def test_async_cancellation_during_retry_wait_stops_requests(monkeypatch: pytest
             waiting.set()
             await asyncio.Event().wait()
 
-        monkeypatch.setattr(http.asyncio, "sleep", sleep)
+        monkeypatch.setattr(http, "asyncio", SimpleNamespace(sleep=sleep))
         task = asyncio.create_task(client.request("GET", "/resource"))
         try:
             await waiting.wait()

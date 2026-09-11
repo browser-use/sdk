@@ -150,6 +150,10 @@ describe("HttpClient retries", () => {
   it.each([
     ["5", 5_000],
     ["Fri, 11 Sep 2026 00:00:05 GMT", 5_000],
+    ["Friday, 11-Sep-26 00:00:05 GMT", 5_000],
+    ["Fri Sep 11 00:00:05 2026", 5_000],
+    ["Fri, 11 Sep 2026 00:00:05", 1_000],
+    ["September 11, 2026 00:00:05", 1_000],
     ["60", 60_000],
     ["0", 1_000],
     ["Thu, 10 Sep 2026 23:59:59 GMT", 1_000],
@@ -190,13 +194,13 @@ describe("HttpClient retries", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it("caps exponential backoff including jitter at ten seconds", async () => {
+  it.each([undefined, "0", "1"])("caps exponential backoff with Retry-After %s including jitter at ten seconds", async (header) => {
     vi.mocked(Math.random).mockReturnValue(0.5);
     const times: number[] = [];
     const start = Date.now();
     const fetch = vi.fn<FetchLike>().mockImplementation(async () => {
       times.push(Date.now() - start);
-      return response(429);
+      return response(429, header);
     });
     const rejected = expect(client(fetch, 5).get("/browsers")).rejects.toMatchObject({ statusCode: 429 });
     await vi.runAllTimersAsync();

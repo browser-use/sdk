@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 import asyncio
 import random
+import re
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from enum import Enum
@@ -18,6 +19,11 @@ _RETRY_GET_STATUSES = {502, 503, 504}
 _DEFAULT_MAX_RETRIES = 3
 _BACKOFF_BASE = 0.5
 _MAX_RETRY_AFTER = 60.0
+_HTTP_DATE = re.compile(
+    r"(?:[A-Za-z]{3}, [0-9]{2} [A-Za-z]{3} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT"
+    r"|[A-Za-z]+, [0-9]{2}-[A-Za-z]{3}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT"
+    r"|[A-Za-z]{3} [A-Za-z]{3} [ 0-9][0-9] [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4})"
+)
 
 
 def _clean_json(data: Any) -> Any:
@@ -51,7 +57,7 @@ def _retry_delay(response: httpx.Response, attempt: int) -> float | None:
         try:
             if raw.isascii() and raw.isdigit():
                 retry_after = float(raw)
-            else:
+            elif _HTTP_DATE.fullmatch(raw):
                 date = parsedate_to_datetime(raw)
                 if date.tzinfo is None:
                     date = date.replace(tzinfo=timezone.utc)
@@ -62,7 +68,7 @@ def _retry_delay(response: httpx.Response, attempt: int) -> float | None:
         return None
     backoff = min(_BACKOFF_BASE * (2 ** min(attempt + 1, 5)), 10.0)
     # Positive jitter spreads clients without violating the server's minimum.
-    cap = _MAX_RETRY_AFTER if retry_after is not None else 10.0
+    cap = _MAX_RETRY_AFTER if retry_after is not None and retry_after > 10 else 10.0
     return min(cap, max(backoff, retry_after or 0.0) + random.random() * 0.25)
 
 

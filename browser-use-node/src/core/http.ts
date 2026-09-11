@@ -1,6 +1,8 @@
 import { BrowserUseError } from "./errors.js";
 import type { FetchLike } from "./x402.js";
 
+const HTTP_DATE = /^(?:[A-Za-z]{3}, [0-9]{2} [A-Za-z]{3} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT|[A-Za-z]+, [0-9]{2}-[A-Za-z]{3}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT|[A-Za-z]{3} [A-Za-z]{3} [ 0-9][0-9] [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4})$/;
+
 /** Never retry before Retry-After; surface long waits to the caller instead. */
 function retryDelay(response: Response, attempt: number): number | undefined {
   const value = response.headers.get("Retry-After")?.trim();
@@ -8,15 +10,16 @@ function retryDelay(response: Response, attempt: number): number | undefined {
   if (value) {
     if (/^\d+$/.test(value)) {
       retryAfter = Number(value) * 1000;
-    } else if (/^[A-Za-z]{3,9},? /.test(value)) {
-      const date = Date.parse(value);
+    } else if (HTTP_DATE.test(value)) {
+      // The obsolete asctime HTTP-date form is also UTC, never local time.
+      const date = Date.parse(value.endsWith(" GMT") ? value : `${value} GMT`);
       if (Number.isFinite(date)) retryAfter = Math.max(0, date - Date.now());
     }
   }
   if (retryAfter !== undefined && retryAfter > 60_000) return undefined;
 
   const backoff = Math.min(1000 * 2 ** attempt, 10_000);
-  const cap = retryAfter === undefined ? 10_000 : 60_000;
+  const cap = (retryAfter ?? 0) > 10_000 ? 60_000 : 10_000;
   return Math.min(Math.max(backoff, retryAfter ?? 0) + Math.random() * 250, cap);
 }
 
