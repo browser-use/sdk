@@ -60,7 +60,7 @@ task publish         # npm + pypi publish
 
 - **Every method with a request body MUST accept `**extra`** (Python) or spread extra fields (TS) for forward-compatibility. No exceptions.
 - **Both SDKs must stay in sync.** Same retry logic, same polling defaults (2s interval, 300s timeout), same terminal statuses, same backoff cap (10s). When changing behavior in one SDK, change both.
-- **Only retry HTTP 429.** Do not retry 5xx errors.
+- **Retry HTTP 429 for all methods, and 502/503/504 for GET only.** Do not retry other 5xx or transport failures. Honor `Retry-After` up to 60 seconds; surface longer waits instead of retrying early. Keep exponential backoff capped at 10 seconds, add up to 250ms of positive jitter within the delay cap, and preserve the configured retry count.
 - **Every public method needs a docstring** (Python) or JSDoc (TS). One-liner, imperative style.
 - **Re-export all user-facing types** from top-level `__init__.py` / `index.ts`. Users should never need to import from `generated/` directly.
 

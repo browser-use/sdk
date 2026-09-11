@@ -43,6 +43,16 @@ const result = await client.run("Find the top 3 trending repos on GitHub today")
 console.log(result.output);
 ```
 
+## Retries
+
+The SDK retries HTTP 429 for all methods and HTTP 502/503/504 for GET requests,
+up to three retries by default (`maxRetries: 0` disables retries). It does not
+retry other HTTP errors or transport failures. Retries use exponential backoff
+starting at one second, capped at ten seconds, with up to 250ms of positive jitter.
+A valid `Retry-After` can extend each wait to 60 seconds; longer waits surface the
+error immediately instead of retrying early. The `timeout` option remains a
+per-attempt timeout, so retry waits add to the total request duration.
+
 ## Docs
 
 [docs.browser-use.com](https://docs.browser-use.com)

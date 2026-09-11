@@ -1,6 +1,40 @@
 import { BrowserUseError } from "./errors.js";
 import type { FetchLike } from "./x402.js";
 
+/** Never retry before Retry-After; surface long waits to the caller instead. */
+function retryDelay(response: Response, attempt: number): number | undefined {
+  const value = response.headers.get("Retry-After")?.trim();
+  let retryAfter: number | undefined;
+  if (value) {
+    if (/^\d+$/.test(value)) {
+      retryAfter = Number(value) * 1000;
+    } else if (/^[A-Za-z]{3,9},? /.test(value)) {
+      const date = Date.parse(value);
+      if (Number.isFinite(date)) retryAfter = Math.max(0, date - Date.now());
+    }
+  }
+  if (retryAfter !== undefined && retryAfter > 60_000) return undefined;
+
+  const backoff = Math.min(1000 * 2 ** attempt, 10_000);
+  const cap = retryAfter === undefined ? 10_000 : 60_000;
+  return Math.min(Math.max(backoff, retryAfter ?? 0) + Math.random() * 250, cap);
+}
+
+async function sleep(delay: number, signal?: AbortSignal): Promise<void> {
+  signal?.throwIfAborted();
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", abort);
+      resolve();
+    }, delay);
+    const abort = () => {
+      clearTimeout(timer);
+      reject(signal?.reason);
+    };
+    signal?.addEventListener("abort", abort, { once: true });
+  });
+}
+
 export interface HttpClientOptions {
   apiKey: string;
   baseUrl: string;
@@ -76,10 +110,7 @@ export class HttpClient {
     }
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
-      if (attempt > 0) {
-        const delay = Math.min(1000 * 2 ** (attempt - 1), 10_000);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      }
+      options?.signal?.throwIfAborted();
 
       const controller = new AbortController();
       const timeoutId = options?.signal
@@ -107,11 +138,18 @@ export class HttpClient {
           return (await response.json()) as T;
         }
 
+        // GETs are safe to replay after a temporary upstream failure. Writes
+        // retain only the existing 429 retry: a 5xx may follow a successful write.
         const shouldRetry =
-          response.status === 429 &&
+          (response.status === 429 ||
+            (method.toUpperCase() === "GET" && [502, 503, 504].includes(response.status))) &&
           attempt < this.maxRetries;
+        const delay = shouldRetry ? retryDelay(response, attempt) : undefined;
 
-        if (shouldRetry) {
+        if (delay !== undefined) {
+          // Release the failed response before waiting or opening another request.
+          await response.body?.cancel().catch(() => {});
+          await sleep(delay, options?.signal);
           continue;
         }
 
