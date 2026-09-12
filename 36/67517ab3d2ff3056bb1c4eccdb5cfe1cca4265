@@ -1,0 +1,21 @@
+browser-use-python/src/browser_use_sdk/_core/http.py
+  s_16fcb750e9c456::t_50eeeaa2e2cfd8 5-7,17,20,40-66,124-128,189-193
+browser-use-python/README.md
+  s_16fcb750e9c456::t_9dd03435e6d667 32-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3667517ab3d2ff3056bb1c4eccdb5cfe1cca4265",
+  "prompts": {},
+  "sessions": {
+    "s_16fcb750e9c456": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08c3b-4210-78d0-9903-d35b90ef0c92",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}
