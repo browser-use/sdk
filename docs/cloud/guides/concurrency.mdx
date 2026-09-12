@@ -38,7 +38,7 @@ For projects on current pricing, concurrency increases with the project's net se
 | Lifetime qualifying spend | Concurrent sessions |
 |---:|---:|
 | \$0 | 10 |
-| \$200 | 50 |
+| \$100 | 50 |
 | \$1,000 | 250 |
 | \$5,000 | 500 |
 | \$25,000 | 1,000 |
@@ -81,7 +81,7 @@ Choose the behavior you need:
 - Submit through the session message queue to process a later turn.
 - Intentionally interrupt the active run when you want to change its current work.
 
-The session message queue accepts up to **10 pending messages**. A full queue returns **429**. It is a queue for that conversation, not a project-wide batch queue or a reservation of browser capacity.
+The session message queue accepts up to **20 pending messages**. A full queue returns **429**. It is a queue for that conversation, not a project-wide batch queue or a reservation of browser capacity.
 
 Keep a large batch in your application's own job queue. Admit a bounded number of jobs and leave the rest pending there.
 
@@ -110,7 +110,7 @@ The edge increase did **not** change the standard per-project application bucket
 
 | Requests | Default request budget |
 |---|---:|
-| Creates, lists, updates, deletes, event reads, and full run reads | 25 requests/second |
+| Creates, lists, updates, deletes, event reads, and full run reads | 100 requests/second |
 | Selected individual status reads | `max(25, 2 × stored concurrency)` requests/second |
 
 The selected V4 polling endpoints include:
@@ -122,14 +122,14 @@ The selected V4 polling endpoints include:
 `GET /api/v4/runs/{run_id}/events` and `GET /api/v4/runs/{run_id}` use the general bucket. Their budget does not automatically grow with your concurrency grant. Account overrides and other protections can differ from these defaults; use the response headers and error details when diagnosing throttling.
 
 For example, a project with 500 stored concurrent sessions and no request-rate
-override has a 1,000 RPS status-polling budget and a separate 25 RPS general
+override has a 1,000 RPS status-polling budget and a separate 100 RPS general
 budget. All API keys in that project share those budgets. Creating a new key
 does not create more request capacity.
 
-The project limiter counts requests in **five-second windows**. A 25 RPS
-budget therefore permits 125 requests per window. `X-RateLimit-Limit` reports
-that window allowance, not requests per second: a value of `125` does not mean
-125 RPS. `X-RateLimit-Remaining` is the window's remaining request count.
+The project limiter counts requests in **five-second windows**. A 100 RPS
+budget therefore permits 500 requests per window. `X-RateLimit-Limit` reports
+that window allowance, not requests per second: a value of `500` does not mean
+500 RPS. `X-RateLimit-Remaining` is the window's remaining request count.
 `X-RateLimit-Reset` is a relative number of seconds, not a Unix timestamp.
 
 A project throttle includes `limit_rps` and `retry_after_seconds` in the JSON
@@ -163,8 +163,8 @@ Spread poll times so that every worker does not send its request on the same clo
 For SDK event waits, set `wait_for_event(..., interval=3)` in Python or
 `waitForEvent(..., { interval: 3_000 })` in TypeScript. This also works on SDK
 3.11.3, whose event-wait default is one second. One hundred waits at a
-three-second interval average about 33 event requests per second, exceeding
-the standard 25 RPS general budget. For that workload, explicitly use a
+three-second interval average about 33 event requests per second, a third of
+the standard 100 RPS general budget; three hundred such waits would exceed it. At that scale use a
 five-second interval (20 event requests per second) or a shared request
 scheduler, leaving headroom for creates, pagination, and other general calls.
 
@@ -179,7 +179,7 @@ your shared request budget; a longer interval also makes backlog traversal slowe
 | 429 with `error: "rate_limited"` and `limit_rps` | Project HTTP request budget exhausted | Honor `Retry-After`/`retry_after_seconds`; reduce or stagger requests across the project. |
 | 429 with `error: "rate_limited"`, no `limit_rps`, and `Retry-After: 300` | Edge request protection | Back off for the returned delay; check bursts and traffic sharing the same public IP. |
 | 429 with a concurrent-session message in `detail` | Active session allowance reached | Inspect capacity, stop unneeded browsers, and reduce admitted jobs. |
-| 429 with a queue-full message in `detail` | This conversation has 10 pending messages | Wait for its queue to drain or cancel an appropriate pending message. |
+| 429 with a queue-full message in `detail` | This conversation has 20 pending messages | Wait for its queue to drain or cancel an appropriate pending message. |
 | 409 with an active-run message | Conversation is already busy | Wait, queue, or intentionally interrupt. |
 | 402 with `detail.code: "api_key_monthly_spend_limit_reached"` | This key's monthly soft spending cap was reached | Check the cap and recorded spend in the current UTC month. |
 | Other 402 | May be insufficient project balance or another payment condition | Inspect the complete response and the API key's project. |
