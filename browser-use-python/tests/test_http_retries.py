@@ -28,7 +28,7 @@ def _replay(
 ) -> Iterator[tuple[Any, list[float]]]:
     delays: list[float] = []
     monkeypatch.setattr(http, "random", SimpleNamespace(random=lambda: 0.5))
-    monkeypatch.setattr(http, "time", SimpleNamespace(time=lambda: 0, sleep=delays.append))
+    monkeypatch.setattr(http, "time", SimpleNamespace(sleep=delays.append))
     if is_async:
         async def sleep(delay: float) -> None:
             delays.append(delay)
@@ -100,18 +100,14 @@ def test_persistent_failure_is_bounded_and_preserves_error(
 @pytest.mark.parametrize("is_async", [False, True])
 @pytest.mark.parametrize("header,expected", [
     ("5", 5.125),
-    ("Thu, 01 Jan 1970 00:00:05 GMT", 5.125),
-    ("Thursday, 01-Jan-70 00:00:05 GMT", 5.125),
-    ("Thu Jan  1 00:00:05 1970", 5.125),
-    ("Thu, 01 Jan 1970 00:00:05", 1.125),
-    ("January 1, 1970 00:00:05", 1.125),
-    ("Wed, 31 Dec 1969 23:59:59 GMT", 1.125),
+    (" 5 ", 5.125),
     ("0", 1.125),
-    ("60", 60),
+    ("10", 10),
+    ("", 1.125),
     ("-1", 1.125),
     ("1.5", 1.125),
     ("NaN", 1.125),
-    ("not a date", 1.125),
+    ("Thu, 01 Jan 1970 00:00:05 GMT", 1.125),
 ])
 def test_retry_after_and_jitter(
     monkeypatch: pytest.MonkeyPatch, is_async: bool, header: str, expected: float,
@@ -129,7 +125,7 @@ def test_retry_after_and_jitter(
 
 
 @pytest.mark.parametrize("is_async", [False, True])
-@pytest.mark.parametrize("header", ["61", "9" * 400, "Thu, 01 Jan 1970 00:01:01 GMT"])
+@pytest.mark.parametrize("header", ["11", "60", "9" * 400])
 def test_long_retry_after_returns_error_without_early_retry(
     monkeypatch: pytest.MonkeyPatch, is_async: bool, header: str,
 ) -> None:

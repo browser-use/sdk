@@ -29,13 +29,6 @@ This is the current **Browser Use Agents** interface. Browser Infrastructure's
 browser-management resource currently lives in the explicit `browser_use_sdk.v3`
 namespace; see the [browser quickstart](https://docs.browser-use.com/cloud/browser/quickstart).
 
-HTTP 429 responses and GET responses with status 502, 503, or 504 are retried
-up to three times. Retries use exponential backoff with jitter and honor
-`Retry-After` values up to 60 seconds. Longer server delays surface the original
-error immediately instead of retrying too early. Other failures, including
-POST 5xx responses and transport errors, are not automatically retried. The
-client's `timeout` applies to each HTTP attempt; retry waits add to elapsed time.
-
 ## v3 Bring Your Own LLM Key
 
 Add your provider API key in Browser Use project settings, then enable BYOK for v3 agent runs:

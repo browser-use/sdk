@@ -1,34 +1,17 @@
 import { BrowserUseError } from "./errors.js";
 import type { FetchLike } from "./x402.js";
 
-const HTTP_DATE = /^(?:[A-Za-z]{3}, [0-9]{2} [A-Za-z]{3} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT|[A-Za-z]+, [0-9]{2}-[A-Za-z]{3}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT|[A-Za-z]{3} [A-Za-z]{3} [ 0-9][0-9] [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4})$/;
+const MAX_RETRY_DELAY = 10_000;
 
-/** Never retry before Retry-After; surface long waits to the caller instead. */
+/** Honor Cloud's integer-second Retry-After; other formats use normal backoff. */
 function retryDelay(response: Response, attempt: number): number | undefined {
   const value = response.headers.get("Retry-After")?.trim();
-  let retryAfter: number | undefined;
-  if (value) {
-    if (/^\d+$/.test(value)) {
-      retryAfter = Number(value) * 1000;
-    } else if (HTTP_DATE.test(value)) {
-      // The obsolete asctime HTTP-date form is also UTC, never local time.
-      const date = new Date(value.endsWith(" GMT") ? value : `${value} GMT`);
-      const [, first, second, third, fourth, fifth, sixth] = value.split(/[ ,:-]+/);
-      const [day, time] = value.endsWith(" GMT")
-        ? [Number(first), `${fourth}:${fifth}:${sixth}`]
-        : [Number(second), `${third}:${fourth}:${fifth}`];
-      // Date.parse rolls invalid days (February 30) and 24:00 into the next day.
-      // Reject that normalization, as Python's datetime parser does.
-      if (date.getUTCDate() === day && date.toUTCString().slice(17, 25) === time) {
-        retryAfter = Math.max(0, date.getTime() - Date.now());
-      }
-    }
-  }
-  if (retryAfter !== undefined && retryAfter > 60_000) return undefined;
+  const retryAfter = value && /^\d+$/.test(value) ? Number(value) * 1000 : undefined;
+  // Timeout remains per attempt; preserve the existing ten-second delay cap.
+  if (retryAfter !== undefined && retryAfter > MAX_RETRY_DELAY) return undefined;
 
-  const backoff = Math.min(1000 * 2 ** attempt, 10_000);
-  const cap = (retryAfter ?? 0) > 10_000 ? 60_000 : 10_000;
-  return Math.min(Math.max(backoff, retryAfter ?? 0) + Math.random() * 250, cap);
+  const backoff = Math.min(1000 * 2 ** attempt, MAX_RETRY_DELAY);
+  return Math.min(Math.max(backoff, retryAfter ?? 0) + Math.random() * 250, MAX_RETRY_DELAY);
 }
 
 async function sleep(delay: number, signal?: AbortSignal): Promise<void> {

@@ -65,7 +65,6 @@ function response(status: number, retryAfter?: string): Response {
 describe("HttpClient retries", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-09-11T00:00:00Z"));
     vi.spyOn(Math, "random").mockReturnValue(0);
   });
 
@@ -149,18 +148,15 @@ describe("HttpClient retries", () => {
 
   it.each([
     ["5", 5_000],
-    ["Fri, 11 Sep 2026 00:00:05 GMT", 5_000],
-    ["Friday, 11-Sep-26 00:00:05 GMT", 5_000],
-    ["Fri Sep 11 00:00:05 2026", 5_000],
-    ["Fri, 11 Sep 2026 00:00:05", 1_000],
-    ["September 11, 2026 00:00:05", 1_000],
-    ["60", 60_000],
+    [" 5 ", 5_000],
+    ["10", 10_000],
     ["0", 1_000],
-    ["Thu, 10 Sep 2026 23:59:59 GMT", 1_000],
+    ["", 1_000],
     ["garbage", 1_000],
     ["-1", 1_000],
     ["1.5", 1_000],
-  ])("handles Retry-After %s without retrying early", async (header, delay) => {
+    ["Fri, 11 Sep 2026 00:00:05 GMT", 1_000],
+  ])("uses numeric Retry-After %s or falls back to normal backoff", async (header, delay) => {
     const fetch = vi.fn<FetchLike>()
       .mockResolvedValueOnce(response(429, header as string))
       .mockResolvedValueOnce(new Response("{}"));
@@ -172,41 +168,7 @@ describe("HttpClient retries", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it.each([
-    ["Mon, 30 Feb 2026 00:00:05 GMT", "2026-03-02T00:00:00Z"],
-    ["Tue, 31 Feb 2026 00:00:05 GMT", "2026-03-03T00:00:00Z"],
-    ["Monday, 30-Feb-26 00:00:05 GMT", "2026-03-02T00:00:00Z"],
-    ["Mon Feb 30 00:00:05 2026", "2026-03-02T00:00:00Z"],
-    ["Sun, 29 Feb 2026 00:00:05 GMT", "2026-03-01T00:00:00Z"],
-    ["Sun, 31 Apr 2026 00:00:05 GMT", "2026-05-01T00:00:00Z"],
-    ["Fri, 11 Sep 2026 24:00:00 GMT", "2026-09-11T23:59:55Z"],
-  ])("ignores invalid calendar date %s rather than normalizing it", async (header, now) => {
-    vi.setSystemTime(new Date(now));
-    const fetch = vi.fn<FetchLike>()
-      .mockResolvedValueOnce(response(429, header))
-      .mockResolvedValueOnce(new Response("{}"));
-    const pending = client(fetch).post("/browsers", {});
-    await vi.advanceTimersByTimeAsync(999);
-    expect(fetch).toHaveBeenCalledOnce();
-    await vi.advanceTimersByTimeAsync(1);
-    await pending;
-    expect(fetch).toHaveBeenCalledTimes(2);
-  });
-
-  it("honors a valid leap day", async () => {
-    vi.setSystemTime(new Date("2028-02-29T00:00:00Z"));
-    const fetch = vi.fn<FetchLike>()
-      .mockResolvedValueOnce(response(429, "Tue, 29 Feb 2028 00:00:05 GMT"))
-      .mockResolvedValueOnce(new Response("{}"));
-    const pending = client(fetch).post("/browsers", {});
-    await vi.advanceTimersByTimeAsync(4_999);
-    expect(fetch).toHaveBeenCalledOnce();
-    await vi.advanceTimersByTimeAsync(1);
-    await pending;
-    expect(fetch).toHaveBeenCalledTimes(2);
-  });
-
-  it.each(["61", "Fri, 11 Sep 2026 00:01:01 GMT", "9".repeat(400)])(
+  it.each(["11", "60", "9".repeat(400)])(
     "surfaces Retry-After %s immediately when the wait exceeds the bound", async (header) => {
       const fetch = vi.fn<FetchLike>().mockImplementation(async () => response(429, header));
       await expect(client(fetch).post("/browsers", {})).rejects.toMatchObject({ statusCode: 429 });
@@ -265,13 +227,13 @@ describe("HttpClient retries", () => {
 
   it("aborts during backoff without sending another request or leaving a timer", async () => {
     const controller = new AbortController();
-    const fetch = vi.fn<FetchLike>().mockImplementation(async () => response(503, "60"));
+    const fetch = vi.fn<FetchLike>().mockImplementation(async () => response(503, "10"));
     const pending = client(fetch).request("GET", "/browsers", { signal: controller.signal });
     const rejected = expect(pending).rejects.toMatchObject({ name: "AbortError" });
     await vi.advanceTimersByTimeAsync(100);
     controller.abort();
     await rejected;
-    await vi.advanceTimersByTimeAsync(60_000);
+    await vi.advanceTimersByTimeAsync(10_000);
     expect(fetch).toHaveBeenCalledOnce();
     expect(vi.getTimerCount()).toBe(0);
   });
