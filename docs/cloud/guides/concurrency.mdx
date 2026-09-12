@@ -38,7 +38,7 @@ For projects on current pricing, concurrency increases with the project's net se
 | Lifetime qualifying spend | Concurrent sessions |
 |---:|---:|
 | \$0 | 10 |
-| \$200 | 50 |
+| \$100 | 50 |
 | \$1,000 | 250 |
 | \$5,000 | 500 |
 | \$25,000 | 1,000 |
@@ -81,7 +81,7 @@ Choose the behavior you need:
 - Submit through the session message queue to process a later turn.
 - Intentionally interrupt the active run when you want to change its current work.
 
-The session message queue accepts up to **10 pending messages**. A full queue returns **429**. It is a queue for that conversation, not a project-wide batch queue or a reservation of browser capacity.
+The session message queue accepts up to **20 pending messages**. A full queue returns **429**. It is a queue for that conversation, not a project-wide batch queue or a reservation of browser capacity.
 
 Keep a large batch in your application's own job queue. Admit a bounded number of jobs and leave the rest pending there.
 
@@ -179,7 +179,7 @@ your shared request budget; a longer interval also makes backlog traversal slowe
 | 429 with `error: "rate_limited"` and `limit_rps` | Project HTTP request budget exhausted | Honor `Retry-After`/`retry_after_seconds`; reduce or stagger requests across the project. |
 | 429 with `error: "rate_limited"`, no `limit_rps`, and `Retry-After: 300` | Edge request protection | Back off for the returned delay; check bursts and traffic sharing the same public IP. |
 | 429 with a concurrent-session message in `detail` | Active session allowance reached | Inspect capacity, stop unneeded browsers, and reduce admitted jobs. |
-| 429 with a queue-full message in `detail` | This conversation has 10 pending messages | Wait for its queue to drain or cancel an appropriate pending message. |
+| 429 with a queue-full message in `detail` | This conversation has 20 pending messages | Wait for its queue to drain or cancel an appropriate pending message. |
 | 409 with an active-run message | Conversation is already busy | Wait, queue, or intentionally interrupt. |
 | 402 with `detail.code: "api_key_monthly_spend_limit_reached"` | This key's monthly soft spending cap was reached | Check the cap and recorded spend in the current UTC month. |
 | Other 402 | May be insufficient project balance or another payment condition | Inspect the complete response and the API key's project. |
