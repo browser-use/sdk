@@ -106,11 +106,11 @@ special endpoints can have different limits.
 
 ### Project limits
 
-The edge increase did **not** change the standard per-project application buckets:
+The standard per-project application buckets both scale with your stored concurrency grant. The general bucket is capped at 100 RPS; higher general budgets are account overrides:
 
 | Requests | Default request budget |
 |---|---:|
-| Creates, lists, updates, deletes, event reads, and full run reads | 25 requests/second |
+| Creates, lists, updates, deletes, event reads, and full run reads | `max(25, 2 × stored concurrency)` requests/second, capped at 100 |
 | Selected individual status reads | `max(25, 2 × stored concurrency)` requests/second |
 
 The selected V4 polling endpoints include:
@@ -119,11 +119,12 @@ The selected V4 polling endpoints include:
 - `GET /api/v4/sessions/{session_id}`
 - `GET /api/v4/browsers/{browser_session_id}`
 
-`GET /api/v4/runs/{run_id}/events` and `GET /api/v4/runs/{run_id}` use the general bucket. Their budget does not automatically grow with your concurrency grant. Account overrides and other protections can differ from these defaults; use the response headers and error details when diagnosing throttling.
+`GET /api/v4/runs/{run_id}/events` and `GET /api/v4/runs/{run_id}` use the general bucket, which shares the poll bucket's formula up to its 100 RPS cap and is counted separately. Account overrides and other protections can differ from these defaults; use the response headers and error details when diagnosing throttling.
 
 For example, a project with 500 stored concurrent sessions and no request-rate
-override has a 1,000 RPS status-polling budget and a separate 25 RPS general
-budget. All API keys in that project share those budgets. Creating a new key
+override has a 1,000 RPS status-polling budget and a separate 100 RPS general
+budget. A free or Tier 0 project (10 concurrent sessions) sits on the 25 RPS floor
+of both. All API keys in that project share those budgets. Creating a new key
 does not create more request capacity.
 
 The project limiter counts requests in **five-second windows**. A 25 RPS
@@ -164,7 +165,7 @@ For SDK event waits, set `wait_for_event(..., interval=3)` in Python or
 `waitForEvent(..., { interval: 3_000 })` in TypeScript. This also works on SDK
 3.11.3, whose event-wait default is one second. One hundred waits at a
 three-second interval average about 33 event requests per second, exceeding
-the standard 25 RPS general budget. For that workload, explicitly use a
+the 25 RPS general floor of a Tier 0 project. For that workload, explicitly use a
 five-second interval (20 event requests per second) or a shared request
 scheduler, leaving headroom for creates, pagination, and other general calls.
 
