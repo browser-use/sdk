@@ -48,6 +48,9 @@ Events cover run lifecycle, model calls, browser readiness, tool activity,
 artifacts, and completion. See [Get run events](/cloud/api-v4/runs/get-run-events)
 for the complete response shape.
 
+For browser HTTP request metadata, attach your own live CDP observer with
+[Capture browser network events](/cloud/agent/network-capture).
+
 This two-second interval is an example for one stream, not a safe default for
 an unbounded batch. Event reads share the project's general request bucket.
 Use a shared rate limiter and stagger polling across runs. Keep the cursor
