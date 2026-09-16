@@ -1,0 +1,196 @@
+---
+title: EU deployment
+description: "Run agents and browsers in Frankfurt with a regional API key and shared billing."
+icon: globe
+---
+
+Browser Use's EU deployment runs agents and browsers in Frankfurt, Germany.
+It uses the same Cloud codebase and V4 API as the US deployment, with separate
+workload storage and a smaller set of supported features.
+
+Use your existing account and project. Create an EU API key and point your
+client at the EU endpoint. You do not need to bring your own model key:
+managed **GPT-5.6 Luna** and **GPT-5.6 Sol** are available.
+
+| | EU | US |
+| --- | --- | --- |
+| Dashboard | [cloud.eu.browser-use.com](https://cloud.eu.browser-use.com) | [cloud.browser-use.com](https://cloud.browser-use.com) |
+| V4 API base URL | `https://api.eu.browser-use.com/api/v4` | `https://api.browser-use.com/api/v4` |
+| API key | Create in the EU dashboard | Create in the US dashboard |
+| Account and billing | Shared account, project membership and credit balance | Shared account, project membership and credit balance |
+| Runs, sessions, files and profiles | Separate EU resources | Separate US resources |
+
+## Start in the dashboard
+
+1. Open the [EU dashboard](https://cloud.eu.browser-use.com) and sign in with
+   your existing account. You can also use **Configuration → Organization →
+   EU deployment → Switch to EU deployment** in the US dashboard.
+2. Select your project. The same project's credit balance funds US and EU usage.
+3. Start an agent with Luna or Sol, or open **Browsers** to launch a browser.
+4. For API access, create a key in the EU dashboard's **API Keys** section.
+
+Each dashboard has its own sign-in session, so switching may ask you to sign
+in again. Switching does not move or copy your existing US profiles,
+workspaces, files, sessions or running browsers. Create those resources again
+in EU if needed; use the IDs returned by the EU API.
+
+## Send an agent through the API
+
+Set an EU key in your application environment. Keep it on your server:
+
+```bash
+export BROWSER_USE_API_KEY="your_eu_api_key"
+```
+
+Install or upgrade `browser-use-sdk` for Python or TypeScript. Use the explicit
+**V4 import** and set the base URL, including `/api/v4`:
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+with BrowserUse(base_url="https://api.eu.browser-use.com/api/v4") as client:
+    run = client.runs.create(
+        "Open https://example.com and report the page heading.",
+        model="gpt-5.6-luna",
+        browser_settings={"proxyCountryCode": "de"},
+    )
+    result = client.runs.wait_for_completion(run.id)
+    print(result.status, result.result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse({
+  baseUrl: "https://api.eu.browser-use.com/api/v4",
+});
+const run = await client.runs.create({
+  task: "Open https://example.com and report the page heading.",
+  model: "gpt-5.6-luna",
+  browserSettings: { proxyCountryCode: "de" },
+});
+const result = await client.runs.waitForCompletion(run.id);
+console.log(result.status, result.result);
+```
+```bash curl
+curl --fail-with-body https://api.eu.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Open https://example.com and report the page heading.",
+    "model": "gpt-5.6-luna",
+    "browserSettings": {"proxyCountryCode": "de"}
+  }'
+```
+</CodeGroup>
+
+The REST call returns a run ID. Poll `GET /api/v4/runs/{id}/status` on the same
+EU host until its status is `completed`, `failed` or `cancelled`, then read
+`GET /api/v4/runs/{id}` for the result. To use Sol,
+set `model` to `gpt-5.6-sol`. Luna is the default when the model is omitted.
+
+The normal [session](/cloud/agent/sessions),
+[workspace](/cloud/agent/workspaces) and
+[event](/cloud/agent/observability) APIs work with the EU base URL. A client
+wait timeout does not cancel a run; use the cancellation API when appropriate.
+
+## Use a browser with your own automation
+
+Create a browser on the EU endpoint, then connect Playwright or Puppeteer to
+the returned `cdpUrl`:
+
+```bash
+curl --fail-with-body https://api.eu.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"proxyCountryCode":"de"}'
+```
+
+Follow the [browser connection guide](/cloud/browser/playwright-puppeteer-selenium)
+using your EU key and base URL. Stop the browser when finished:
+
+```bash
+curl --fail-with-body -X PATCH \
+  "https://api.eu.browser-use.com/api/v4/browsers/YOUR_BROWSER_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"stop"}'
+```
+
+Disconnecting CDP does not stop the cloud browser. When you run your own
+automation, any page content your code reads also reaches the machine running
+that code. Run that client in Europe if your requirements include its location.
+
+## What stays in the EU
+
+| Data or processing | Location and boundary |
+| --- | --- |
+| Agent execution and cloud browsers | Frankfurt AWS infrastructure. |
+| Prompts, run history, screenshots, recordings, workspace uploads/downloads and saved browser profiles | EU database/object storage when retained. Profiles include saved browser state such as cookies. |
+| Regional API keys and stored model keys | Regional EU storage. US API keys do not authenticate EU API requests. |
+| Managed Luna/Sol model requests | OpenRouter's EU gateway, restricted to Azure EU with provider fallback disabled and zero-data-retention routing required. |
+| Enabled application and browser-host logs | Frankfurt CloudWatch/host journals, forwarded to Datadog EU. Operational logs may contain identifiers, URLs or error details. |
+
+### What is shared or can leave the EU
+
+**Account administration and billing remain shared in the US.** This includes
+identity, project membership, payments, credit balances and usage accounting.
+An EU project is not a separate billing account.
+
+**AWS security audit metadata currently also reaches the US.** CloudTrail can
+record object filenames/paths, source IPs, timestamps, AWS identities and
+project/session/profile identifiers in the shared US audit destination. The
+inspected object-access records did not contain file bodies, screenshots or
+prompts. Filenames themselves can contain sensitive information, so avoid
+putting personal data in them. This deployment is not an all-metadata-EU-only
+offering.
+
+**External destinations follow their own locations and policies.** Browsers
+can visit websites outside Europe. Your client receives API results and
+downloads wherever it runs. A European proxy exit does not establish the
+location of a website or all of a proxy provider's processing. You are
+responsible for choosing suitable destinations, custom proxies and model
+providers when bringing your own key. A customer OpenAI key uses the direct
+OpenAI route, not the managed Azure EU route.
+
+The dashboard uses Vercel and shared authentication. Its global edge and
+vendor metadata processing should not be treated as an EU-only boundary. For
+strict requirements, assess the API path and these exceptions with your
+security team before sending sensitive data.
+
+## Differences from the US deployment
+
+- **Agents use V4.** Legacy V2/V3 agent endpoints are unavailable and return an
+  error rather than sending work to the US. Browser/profile endpoints under
+  `/api/v2`, `/api/v3` and `/api/v4` are supported; the version number alone
+  does not determine availability. Use V4 for new integrations.
+- **Managed models are Luna and Sol.** Other supported OpenAI models require
+  a stored OpenAI key in the EU project. Anthropic, Gemini, DeepSeek and GLM
+  agent models are unavailable on this deployment.
+- **Marketplace and Vercel-managed billing projects are unavailable.** Use a
+  project billed directly through Browser Use.
+- **Managed proxy countries must be EU member states.** New browsers default
+  to Germany (`de`); `us`, `gb` and `ch` are not accepted. Setting
+  `proxyCountryCode` to `null` disables the managed proxy. Standalone browser
+  custom proxies are unavailable; V4 agent custom proxies are customer-managed.
+- **Automatic CAPTCHA solving and browser response caching are disabled.**
+- **Some optional agent features are unavailable**, including AgentMail,
+  connected integrations, external browser attachment, payment tools,
+  schedules, webhooks, 1Password/secret bindings, judge evaluation and the hosted web-search tool.
+  The browser can still navigate to search websites.
+- **HIPAA/Bedrock-only projects are not supported in EU.** Project retention
+  policies are separate from region selection. Switching regions does not
+  enable zero data retention, erase previous US data, or establish HIPAA
+  compliance. Contact support for a retention or compliance assessment.
+
+## If a request fails
+
+For `401`, check that you created the key in the EU dashboard and sent it to
+`api.eu.browser-use.com` using `X-Browser-Use-API-Key` without a Bearer prefix.
+For `404`, check whether you are calling a legacy agent endpoint or using a
+resource ID from the other region. For `422`, read the response: it can identify
+an unsupported model, feature or proxy country. EU errors do not automatically
+retry the workload in the US.
+
+Include the region, endpoint, run/browser ID and error message when contacting
+support. Do not include API keys, cookies or sensitive task content.
