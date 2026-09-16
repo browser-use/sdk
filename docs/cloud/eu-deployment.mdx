@@ -107,7 +107,10 @@ curl --fail-with-body https://api.eu.browser-use.com/api/v4/browsers \
 ```
 
 Follow the [browser connection guide](/cloud/browser/playwright-puppeteer-selenium)
-using your EU key and base URL. Stop the browser when finished:
+for connecting to the returned `cdpUrl`. That guide's API examples default to
+the US: replace **every** `api.browser-use.com` host with
+`api.eu.browser-use.com`, use your EU API key, and keep the API version path.
+Stop the browser on the EU endpoint when finished:
 
 ```bash
 curl --fail-with-body -X PATCH \
