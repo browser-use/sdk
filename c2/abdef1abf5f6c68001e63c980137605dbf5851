@@ -1,0 +1,20 @@
+docs/open-source/customize/integrations/mcp-server.mdx
+  s_86d24eaeebcb12::t_c077ea90464b30 6,112,213
+  s_86d24eaeebcb12::t_ec5e0d2692e78f 212
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "c2abdef1abf5f6c68001e63c980137605dbf5851",
+  "prompts": {},
+  "sessions": {
+    "s_86d24eaeebcb12": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a005bc-1d17-73c3-b1f5-38259988bc61",
+        "model": "gpt-6-astra"
+      },
+      "human_author": null
+    }
+  }
+}

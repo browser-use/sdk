@@ -1,0 +1,29 @@
+browser-use-node/src/v3/resources/sessions.ts
+  8b32926737e36c24 23-26,28-31,35-42
+browser-use-python/tests/test_v3_byok.py
+  8b32926737e36c24 1-93
+browser-use-python/README.md
+  8b32926737e36c24 32-40
+browser-use-node/src/v3/client.ts
+  8b32926737e36c24 27-43,59-97,103
+docs/docs.json
+  a1ceca3353097ab7 22
+  b8f228789a73bf7a 21,23-27,29
+  e7cab0bf585c0427 28
+browser-use-node/src/v3.ts
+  8b32926737e36c24 21
+browser-use-node/tests/v3-byok.test.ts
+  8b32926737e36c24 1-29
+browser-use-python/src/browser_use_sdk/v3/client.py
+  8b32926737e36c24 49-51,53-57,71,81,84,87-88,90-91,93-94,96-98,109,112,115-116,118-119,121-122,124-126,136,139,142-143,145-146,148-149,151-153,164,167,170-171,173-174,176-177,179-181,215,221-222,225-226,228-229,231-233,245,248,251-252,254-255,257-258,260-262,301,307-308,311-312,314-315,317-319,336-344,352-354,356-376,381
+browser-use-node/README.md
+  8b32926737e36c24 34-41
+browser-use-python/src/browser_use_sdk/v3/resources/sessions.py
+  8b32926737e36c24 21-26,28,35,38,41-42,46,48-49,51-53,62-63,74-77,84-85,88-91,94-102,194-199,201,208,211,214-215,219,221-222,224-226,235-236,247-250,257-258,261-264,267-273
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b0c7c6905553fb1f1badc7c02fc302a2f6a4d629",
+  "prompts": {}
+}

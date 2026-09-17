@@ -1,0 +1,30 @@
+browser-use-node/tests/v4.test.ts
+  s_12f2b9cbbe444b::t_eeb0f90a82ff53 141-165
+docs/cloud/guides/concurrency.mdx
+  s_12f2b9cbbe444b::t_a25022ea1686ca 170-173
+  s_12f2b9cbbe444b::t_419707fde39200 163-169
+docs/cloud/browser/live-preview.mdx
+  s_12f2b9cbbe444b::t_419707fde39200 16,27,32-36
+browser-use-python/tests/test_v4.py
+  s_12f2b9cbbe444b::t_eeb0f90a82ff53 8,358-389
+browser-use-python/src/browser_use_sdk/v4/resources/runs.py
+  s_12f2b9cbbe444b::t_419707fde39200 196,200-204,370,374-378
+browser-use-node/src/v4/resources/runs.ts
+  s_12f2b9cbbe444b::t_419707fde39200 37,39,74-77,84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2aaf9d37872ba631e2c1eded837ef47ed2101cf2",
+  "prompts": {},
+  "sessions": {
+    "s_12f2b9cbbe444b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a083ec-8a8a-7353-ae56-415b95287710",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}

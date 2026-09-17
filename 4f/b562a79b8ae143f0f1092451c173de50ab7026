@@ -1,0 +1,29 @@
+browser-use-python/src/browser_use_sdk/_core/http.py
+  s_16fcb750e9c456::t_74f4d89babc824 6,46,48
+  s_16fcb750e9c456::t_35a39e21bb7f6b 19,49-50,52,54
+browser-use-node/src/core/http.ts
+  s_16fcb750e9c456::t_74f4d89babc824 6,9
+  s_16fcb750e9c456::t_35a39e21bb7f6b 4,10-11,13-14
+browser-use-node/tests/http.test.ts
+  s_16fcb750e9c456::t_35a39e21bb7f6b 152,154,158-159,171,230,236
+browser-use-python/tests/test_http_retries.py
+  s_16fcb750e9c456::t_35a39e21bb7f6b 105-106,110,128
+CLAUDE.md
+  s_16fcb750e9c456::t_35a39e21bb7f6b 63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "4fb562a79b8ae143f0f1092451c173de50ab7026",
+  "prompts": {},
+  "sessions": {
+    "s_16fcb750e9c456": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08c3b-4210-78d0-9903-d35b90ef0c92",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "MagMueller <mamagnus00@gmail.com>"
+    }
+  }
+}
