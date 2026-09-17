@@ -5,7 +5,9 @@ icon: hand
 ---
 
 Use a human checkpoint for approvals, authentication, payments, or review.
-After a run stops, get its `live_view_url` from the `browser.ready` event:
+Get its `live_view_url` with the SDK's event-wait helper, which follows event
+cursors instead of searching only the first page. Wait for the run to stop at
+the checkpoint before letting a person interact:
 
 <CodeGroup>
 ```python Python
@@ -15,16 +17,11 @@ client = BrowserUse()
 run = client.runs.create(
     "Open the login page and stop for human review"
 )
-run = client.runs.wait_for_completion(run.id)
-
-events = client.runs.events(run.id, limit=100)
-ready = next(
-    event for event in events.events
-    if event.type == "browser.ready"
-)
+ready = client.runs.wait_for_event(run.id, "browser.ready")
+client.runs.wait_for_completion(run.id)
 print(ready.data["live_view_url"])
 
-# After the human finishes:
+input("Press Enter after finishing the human step...")
 next_run = client.runs.create(
     "Continue from the current page",
     session_id=run.session_id,
@@ -32,30 +29,31 @@ next_run = client.runs.create(
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v4";
+import * as readline from "node:readline/promises";
 
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Open the login page and stop for human review",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
 });
+const ready = await client.runs.waitForEvent(run.id, "browser.ready");
 await client.runs.waitForCompletion(run.id);
+console.log(ready.data.live_view_url);
 
-const events = await client.runs.events(run.id, {
-  limit: 100,
-});
-const ready = events.events.find(
-  (event) => event.type === "browser.ready",
-);
-console.log(ready?.data.live_view_url);
-
-// After the human finishes:
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+await rl.question("Press Enter after finishing the human step...");
+rl.close();
 const nextRun = await client.runs.create({
   task: "Continue from the current page",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   sessionId: run.sessionId,
 });
 ```
 </CodeGroup>
 
 The same session preserves the conversation and workspace and reuses the live
-browser while it is available. Treat live-view URLs as credentials.
+browser while it is available. Complete the human step before that browser
+expires. In a web app, replace the terminal prompt with an explicit Continue
+control. Treat live-view URLs as credentials.
