@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 import asyncio
+import random
 from datetime import datetime
 from enum import Enum
 from typing import Any
@@ -12,9 +13,10 @@ from pydantic import BaseModel
 
 from .errors import BrowserUseError
 
-_RETRY_STATUSES = {429}
+_RETRY_GET_STATUSES = {502, 503, 504}
 _DEFAULT_MAX_RETRIES = 3
 _BACKOFF_BASE = 0.5
+_MAX_RETRY_DELAY = 10.0
 
 
 def _clean_json(data: Any) -> Any:
@@ -34,8 +36,22 @@ def _clean_json(data: Any) -> Any:
     return data
 
 
-def _should_retry(status_code: int) -> bool:
-    return status_code in _RETRY_STATUSES
+def _should_retry(method: str, status_code: int) -> bool:
+    return status_code == 429 or (
+        method.upper() == "GET" and status_code in _RETRY_GET_STATUSES
+    )
+
+
+def _retry_delay(response: httpx.Response, attempt: int) -> float | None:
+    """Honor Cloud's integer-second Retry-After; other formats use normal backoff."""
+    raw = response.headers.get("Retry-After", "").strip()
+    retry_after = float(raw) if raw.isascii() and raw.isdigit() else None
+    # Timeout remains per attempt; preserve the existing ten-second delay cap.
+    if retry_after is not None and retry_after > _MAX_RETRY_DELAY:
+        return None
+    backoff = min(_BACKOFF_BASE * (2 ** min(attempt + 1, 5)), _MAX_RETRY_DELAY)
+    # Positive jitter spreads clients without violating the server's minimum.
+    return min(_MAX_RETRY_DELAY, max(backoff, retry_after or 0.0) + random.random() * 0.25)
 
 
 def _raise_for_status(response: httpx.Response) -> None:
@@ -89,14 +105,15 @@ class SyncHttpClient:
         json = _clean_json(json) if json is not None else None
         cleaned_params = _clean_params(params)
         for attempt in range(self._max_retries + 1):
-            if attempt > 0:
-                time.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
             response = self._client.request(
                 method, path, json=json, params=cleaned_params, headers=headers
             )
 
-            if _should_retry(response.status_code) and attempt < self._max_retries:
-                continue
+            if _should_retry(method, response.status_code) and attempt < self._max_retries:
+                delay = _retry_delay(response, attempt)
+                if delay is not None:
+                    time.sleep(delay)
+                    continue
 
             _raise_for_status(response)
             if response.status_code == 204:
@@ -153,14 +170,15 @@ class AsyncHttpClient:
         json = _clean_json(json) if json is not None else None
         cleaned_params = _clean_params(params)
         for attempt in range(self._max_retries + 1):
-            if attempt > 0:
-                await asyncio.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
             response = await self._client.request(
                 method, path, json=json, params=cleaned_params, headers=headers
             )
 
-            if _should_retry(response.status_code) and attempt < self._max_retries:
-                continue
+            if _should_retry(method, response.status_code) and attempt < self._max_retries:
+                delay = _retry_delay(response, attempt)
+                if delay is not None:
+                    await asyncio.sleep(delay)
+                    continue
 
             _raise_for_status(response)
             if response.status_code == 204:
