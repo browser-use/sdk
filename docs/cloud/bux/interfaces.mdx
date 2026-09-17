@@ -1,0 +1,28 @@
+---
+title: "Interfaces"
+icon: "signal"
+---
+
+The interfaces we ship pre-built are simple: set up a [Telegram bot](#telegram) once and text it from your phone, open the [web terminal](#web-terminal) hosted in our cloud, or [SSH](#ssh) in from your local terminal like any other cloud machine. All three share the same context, so switching mid-task does not lose state.
+
+Because it is a cloud computer, you can wire up any other interface on top: Slack, Discord, or anything you need. The [`bux`](https://github.com/browser-use/bux) repo is open source, so if your bridge would help others, send a PR.
+
+## Telegram
+
+The primary interface for most users. After you link a bot during [setup](/cloud/bux/quickstart), every message you send becomes a prompt, and the agent's replies (text and screenshots) come back in the same chat.
+
+In our Telegram setup, you can have a forum where each topic is its own Claude Code or Codex session. That way you can run several sessions in parallel and context does not get mixed up.
+
+## Web terminal
+
+On [cloud.browser-use.com/bux](https://cloud.browser-use.com/bux) you can access the terminal of your cloud computer. This is useful for making fundamental changes or working from your laptop. You can of course also use Claude Code in the normal setup there. It's also handy to reach your cloud computer's terminal from the smartphone.
+
+<Frame>
+  <img src="/cloud/bux/images/web-terminal.png" alt="The cloud.browser-use.com/bux web terminal. Claude Code running inside the BUX VM, with session info and SSH access in the sidebar." />
+</Frame>
+
+
+## SSH
+
+If wanted, you can also SSH into your BUX from your local terminal. The SSH endpoint is shown in the dashboard once your VM is running.
+
