@@ -107,10 +107,48 @@ pip install "imageio[ffmpeg]" numpy
 - `record_video_dir`: Directory to save video recordings as `.mp4` files
 - `record_video_size` (default: `ViewportSize`): The frame size (width, height) of the video recording.
 - `record_video_framerate` (default: `30`): The framerate to use for the video recording.
-- `record_har_path`: Path to save network trace files as `.har` format
+- `record_har_path`: Path to save an HTTPS network log in HAR format. The file is written when the browser session stops; plain HTTP requests are not recorded.
 - `traces_dir`: Directory to save complete trace files for debugging
 - `record_har_content` (default: `'embed'`): HAR content mode (`'omit'`, `'embed'`, `'attach'`)
 - `record_har_mode` (default: `'full'`): HAR recording mode (`'full'`, `'minimal'`)
+
+### Record an HTTPS network log
+
+After the [local browser setup](/open-source/quickstart), this example records a page visit without an agent, model call, or Cloud API key. It uses a new output directory for each run.
+
+```python
+import asyncio
+from pathlib import Path
+from tempfile import mkdtemp
+
+from browser_use import Browser
+
+
+async def main():
+	har_path = Path(mkdtemp(prefix='browser-use-har-')) / 'network.har'
+	browser = Browser(
+		headless=True,
+		record_har_path=har_path,
+		record_har_content='omit',
+	)
+	try:
+		await browser.start()
+		page = await browser.get_current_page()
+		assert page is not None
+		await page.goto('https://docs.browser-use.com')
+	finally:
+		await browser.kill()  # Flush the HAR before reading it.
+	print(f'Network log: {har_path}')
+
+
+asyncio.run(main())
+```
+
+For an agent run, pass the same browser to `Agent(browser=browser, ...)` and keep the cleanup in `finally`. Recording starts when this browser session connects; it does not recover earlier traffic. A file from an HTTP-only visit can contain zero entries.
+
+<Warning>
+`record_har_content='omit'` leaves out request and response bodies, but does not redact URLs, query strings, or headers. Treat HAR files as sensitive and inspect/redact them before sharing. The default `'embed'` mode also saves captured bodies.
+</Warning>
 
 ## Advanced Options
 
