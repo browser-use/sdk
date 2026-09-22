@@ -45,6 +45,11 @@ print(result.output)
 
 [docs.browser-use.com](https://docs.browser-use.com)
 
+For a reference parent-agent adapter with structured question/reply handoffs,
+steering receipts, and replayable result callbacks, see the
+[subagent mailbox pilot](examples/SUBAGENT_MAILBOX.md). This is an opt-in example,
+not a hosted mailbox service or a native parent-runtime integration.
+
 ## License
 
 MIT
