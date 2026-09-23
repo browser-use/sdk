@@ -577,6 +577,16 @@
       "destination": "/open-source/customize/agent/output-format"
     },
     {
+      "source": "/customize/output-format",
+      "destination": "/open-source/customize/agent/output-format",
+      "permanent": true
+    },
+    {
+      "source": "/customize/agent/output",
+      "destination": "/open-source/customize/agent/output-format",
+      "permanent": true
+    },
+    {
       "source": "/customize/agent/all-parameters",
       "destination": "/open-source/customize/agent/all-parameters"
     },
@@ -593,8 +603,23 @@
       "destination": "/open-source/customize/browser/real-browser"
     },
     {
+      "source": "/customize/real-browser",
+      "destination": "/open-source/customize/browser/real-browser",
+      "permanent": true
+    },
+    {
       "source": "/customize/browser/remote",
       "destination": "/open-source/customize/browser/remote"
+    },
+    {
+      "source": "/customize/browser-remote",
+      "destination": "/open-source/customize/browser/remote",
+      "permanent": true
+    },
+    {
+      "source": "/customize/browser/remote-browser",
+      "destination": "/open-source/customize/browser/remote",
+      "permanent": true
     },
     {
       "source": "/customize/browser/all-parameters",
@@ -683,6 +708,11 @@
     {
       "source": "/examples/templates/sensitive-data",
       "destination": "/open-source/examples/templates/sensitive-data"
+    },
+    {
+      "source": "/customize/sensitive-data",
+      "destination": "/open-source/examples/templates/sensitive-data",
+      "permanent": true
     },
     {
       "source": "/examples/templates/secure",
