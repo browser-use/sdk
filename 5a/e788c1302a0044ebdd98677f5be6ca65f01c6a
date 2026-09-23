@@ -1,0 +1,25 @@
+docs/cloud/agent/models.mdx
+  s_8a8ff80acc28ab::t_0876c0a3c9e42e 8-18,24-25,31-32,36-37,41-42
+docs/cloud/agent/thinking-levels.mdx
+  s_8a8ff80acc28ab::t_08762796e3b69f 13,24,30-35,45-47
+docs/cloud/faq.mdx
+  s_8a8ff80acc28ab::t_f3a17059738b09 9-10
+docs/open-source/supported-models.mdx
+  s_8a8ff80acc28ab::t_03be6195cbcc45 62-64,149-151,219-221,281-283,329-331,352-354,469-471,492-494,515-517,538-540,561-563
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5ae788c1302a0044ebdd98677f5be6ca65f01c6a",
+  "prompts": {},
+  "sessions": {
+    "s_8a8ff80acc28ab": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0cee3-552d-7283-a7a1-d8aa7f97e058",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}
