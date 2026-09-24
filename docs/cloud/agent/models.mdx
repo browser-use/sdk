@@ -17,6 +17,40 @@ Compare models on your own tasks before switching production traffic.
 See [Thinking levels](/cloud/agent/thinking-levels) for reasoning controls
 and defaults, which differ by model.
 
+## Choose a setting
+
+Our starting points from the 60-task BU_Bench_v2 evaluation:
+
+| Priority | Model | Reasoning effort | Why |
+| --- | --- | --- | --- |
+| Low cost | `gpt-6-luna` | `medium` | Start here when model cost matters most. |
+| Balance cost and quality | `gpt-6-sol` | `medium` | Higher findings quality than Luna on this task set, at a higher recorded cost. |
+| Highest observed score | `gpt-6-astra` | `medium` | Highest score in the compared runs; a much higher recorded cost. |
+
+For more quality from Luna, try `xhigh`. It scored higher than medium, with
+more recorded cost and longer average runs. These are starting points, not
+per-task guarantees. Astra used a different historical build. See the
+[benchmark evidence and limitations](https://browser-use.com/custom-models#model-guide).
+Recorded evaluation costs are not Cloud prices; use the
+[current token rates](https://browser-use.com/pricing#model-rates) for billing.
+
+Set `modelParams.reasoning.effort` explicitly. GPT-6 Sol and Astra default
+to `xhigh`, so just changing the model name does not reproduce the recommended
+`medium` setting. GPT-6 Luna defaults to `medium`.
+
+```json Example: Sol with the evaluated reasoning setting
+{
+  "task": "Compare three project-management tools",
+  "model": "gpt-6-sol",
+  "modelParams": {"reasoning": {"effort": "medium"}}
+}
+```
+
+Test a representative workload before switching production traffic. Keep
+GPT-5.6 Luna if you need the existing default or your project cannot use the
+newer models. Recommendations do not override region, compliance or free-tier
+restrictions.
+
 ## All supported V4 model IDs
 
 The V4 request schema accepts the following model IDs. The Cloud dashboard may
