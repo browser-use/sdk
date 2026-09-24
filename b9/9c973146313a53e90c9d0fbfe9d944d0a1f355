@@ -1,0 +1,21 @@
+docs/cloud/agent/models.mdx
+  s_8a8ff80acc28ab::t_406b9791171e79 20-53
+docs/cloud/faq.mdx
+  s_8a8ff80acc28ab::t_6a6ab6b0170144 9-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b99c973146313a53e90c9d0fbfe9d944d0a1f355",
+  "prompts": {},
+  "sessions": {
+    "s_8a8ff80acc28ab": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0cee3-552d-7283-a7a1-d8aa7f97e058",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}
