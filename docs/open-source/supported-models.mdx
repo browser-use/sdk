@@ -59,7 +59,9 @@ Since May 20, 2026, `bu-1-0` is priced the same as `bu-2-0`:
 | Cached tokens | \$0.06 |
 | Output tokens | \$3.50 |
 
-### Google Gemini [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gemini.py) {#google-gemini}
+<span id="google-gemini" />
+
+### Google Gemini [example](https://github.com/browser-use/browser-use/blob/main/examples/models/gemini.py)
 
 [Available models](https://ai.google.dev/api/models). Also supports Gemma models and Vertex AI via `ChatGoogle(model="...", vertexai=True)`.
 
@@ -144,7 +146,9 @@ And add the variable:
 ANTHROPIC_API_KEY=
 ```
 
-### Azure OpenAI [example](https://github.com/browser-use/browser-use/blob/main/examples/models/azure_openai.py) {#azure-openai}
+<span id="azure-openai" />
+
+### Azure OpenAI [example](https://github.com/browser-use/browser-use/blob/main/examples/models/azure_openai.py)
 
 [Available models](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure)
 
@@ -212,7 +216,9 @@ The `use_responses_api` parameter accepts:
 - `True`: Force use of the Responses API
 - `False`: Force use of the Chat Completions API
 
-### AWS Bedrock [example](https://github.com/browser-use/browser-use/blob/main/examples/models/aws.py) {#aws-bedrock}
+<span id="aws-bedrock" />
+
+### AWS Bedrock [example](https://github.com/browser-use/browser-use/blob/main/examples/models/aws.py)
 
 [Available models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html). AWS Bedrock provides access to multiple model providers through a single API. We support both a general AWS Bedrock client and provider-specific convenience classes. Install with `pip install "browser-use[aws]"`.
 
@@ -272,7 +278,9 @@ You can also use AWS profiles or IAM roles instead of environment variables. The
 - Session tokens for temporary credentials
 - AWS SSO authentication (`aws_sso_auth=True`)
 
-## Vercel AI Gateway [example](https://github.com/browser-use/browser-use/blob/main/examples/models/vercel_ai_gateway.py) {#vercel}
+<span id="vercel" />
+
+## Vercel AI Gateway [example](https://github.com/browser-use/browser-use/blob/main/examples/models/vercel_ai_gateway.py)
 
 [Available models](https://vercel.com/ai-gateway/models). Vercel AI Gateway provides an OpenAI-compatible API endpoint that acts as a proxy to various AI providers, with features like rate limiting, caching, and monitoring.
 
@@ -318,7 +326,9 @@ Required environment variables:
 VERCEL_API_KEY=
 ```
 
-## Groq [example](https://github.com/browser-use/browser-use/blob/main/examples/models/llama4-groq.py) {#groq}
+<span id="groq" />
+
+## Groq [example](https://github.com/browser-use/browser-use/blob/main/examples/models/llama4-groq.py)
 
 [Available models](https://console.groq.com/docs/models)
 
@@ -339,7 +349,9 @@ Required environment variables:
 GROQ_API_KEY=
 ```
 
-## Oracle Cloud Infrastructure (OCI) [example](https://github.com/browser-use/browser-use/blob/main/examples/models/oci_models.py) {#oci}
+<span id="oci" />
+
+## Oracle Cloud Infrastructure (OCI) [example](https://github.com/browser-use/browser-use/blob/main/examples/models/oci_models.py)
 
 [Available models](https://docs.oracle.com/en-us/iaas/Content/generative-ai/imported-models.htm). OCI provides access to various generative AI models including Meta Llama, Cohere, and other providers through their Generative AI service. Install with `pip install "browser-use[oci]"`.
 
@@ -454,7 +466,9 @@ Required environment variables:
 MODELSCOPE_API_KEY=
 ```
 
-## DeepSeek [example](https://github.com/browser-use/browser-use/blob/main/examples/models/deepseek-chat.py) {#deepseek}
+<span id="deepseek" />
+
+## DeepSeek [example](https://github.com/browser-use/browser-use/blob/main/examples/models/deepseek-chat.py)
 
 [Available models](https://api-docs.deepseek.com/quick_start/pricing)
 
@@ -475,7 +489,9 @@ Required environment variables:
 DEEPSEEK_API_KEY=
 ```
 
-## Mistral [example](https://github.com/browser-use/browser-use/blob/main/examples/models/mistral.py) {#mistral}
+<span id="mistral" />
+
+## Mistral [example](https://github.com/browser-use/browser-use/blob/main/examples/models/mistral.py)
 
 [Available models](https://docs.mistral.ai/getting-started/models/models_overview/)
 
@@ -496,7 +512,9 @@ Required environment variables:
 MISTRAL_API_KEY=
 ```
 
-## Cerebras [example](https://github.com/browser-use/browser-use/blob/main/examples/models/cerebras_example.py) {#cerebras}
+<span id="cerebras" />
+
+## Cerebras [example](https://github.com/browser-use/browser-use/blob/main/examples/models/cerebras_example.py)
 
 [Available models](https://inference-docs.cerebras.ai/models/overview)
 
@@ -517,7 +535,9 @@ Required environment variables:
 CEREBRAS_API_KEY=
 ```
 
-## OpenRouter [example](https://github.com/browser-use/browser-use/blob/main/examples/models/openrouter.py) {#openrouter}
+<span id="openrouter" />
+
+## OpenRouter [example](https://github.com/browser-use/browser-use/blob/main/examples/models/openrouter.py)
 
 [Available models](https://openrouter.ai/models). Access 300\+ models from any provider through a single API.
 
@@ -538,7 +558,9 @@ Required environment variables:
 OPENROUTER_API_KEY=
 ```
 
-## LiteLLM {#litellm}
+<span id="litellm" />
+
+## LiteLLM
 
 Requires separate install (`pip install litellm`). Supports any [LiteLLM model string](https://docs.litellm.ai/docs/providers) — useful when you need a provider not covered by the native integrations above.
 
