@@ -898,7 +898,7 @@ def test_structured_output_create_wire_schema(is_async, schema):
 @pytest.mark.parametrize("wait", [False, True])
 @pytest.mark.parametrize("output", [{"name": "Ada", "nested": [1, None, True]}, [1, "a"], "Ada", 0, False, None])
 def test_structured_output_get_and_wait_preserve_json(is_async, wait, output):
-    summary = {**_run_summary("completed"), "output": output}
+    summary = {**_run_summary("completed"), "output": output, "outputSchema": _OUTPUT_SCHEMA}
     responses = [{"status": "completed"}, summary] if wait else [summary]
     if is_async:
         http = FakeAsyncHttp(responses)
@@ -909,6 +909,7 @@ def test_structured_output_get_and_wait_preserve_json(is_async, wait, output):
         runs = Runs(http)
         result = runs.wait_for_completion(RUN_ID) if wait else runs.get(RUN_ID)
     assert result.output == output
+    assert result.output_schema == _OUTPUT_SCHEMA
     assert type(result.output) is type(output)
     assert result.result == "done"
     assert [call[1] for call in http.calls] == (

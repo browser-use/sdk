@@ -50,3 +50,29 @@ console.log(result.output);
 ## License
 
 MIT
+
+## V4 structured output
+
+Pass a JSON Schema object as `outputSchema` to `runs.create`, then read `output`
+from `runs.get` or `runs.waitForCompletion`. `result` remains the text answer and
+`outputSchema` echoes the requested schema. Omit `outputSchema` (or pass `null`)
+for an unstructured run. The output type is `unknown`; validate it before use.
+
+```typescript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const created = await client.runs.create({
+  task: "Open https://example.com and return its page title.",
+  outputSchema: {
+    type: "object",
+    properties: { title: { type: "string" } },
+    required: ["title"],
+  },
+});
+const run = await client.runs.waitForCompletion(created.id);
+console.log(run.status, run.output);
+```
+
+For Zod, convert with `z.toJSONSchema(schema)` and validate with
+`schema.parse(run.output)`. See the [complete example](examples/v4-structured-output.ts).

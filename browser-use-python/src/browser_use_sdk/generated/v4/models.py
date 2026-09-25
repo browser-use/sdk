@@ -828,6 +828,10 @@ class RunSummary(BaseModel):
     total_cost_usd: str = Field(..., alias='totalCostUsd', title='Totalcostusd')
     created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
     updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
+    output: Any = Field(None, title='Output')
+    output_schema: Dict[str, Any] | None = Field(
+        None, alias='outputSchema', title='Outputschema'
+    )
 
 
 class SecretBinding(BaseModel):
@@ -1271,6 +1275,12 @@ class RunCreateRequest(BaseModel):
     judge: RunJudgeSettings | None = None
     max_cost_usd: MaxCostUsd | MaxCostUsd1 | None = Field(
         None, alias='maxCostUsd', title='Maxcostusd'
+    )
+    output_schema: Dict[str, Any] | None = Field(
+        None,
+        alias='outputSchema',
+        description='Optional JSON Schema for the final output (API runs only).',
+        title='Outputschema',
     )
 
 
