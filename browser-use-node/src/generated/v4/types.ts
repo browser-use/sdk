@@ -1274,6 +1274,13 @@ export interface components {
             judge?: components["schemas"]["RunJudgeSettings"] | null;
             /** Maxcostusd */
             maxCostUsd?: number | string | null;
+            /**
+             * Outputschema
+             * @description Optional JSON Schema for the final output (API runs only).
+             */
+            outputSchema?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** RunCreateResponse */
         RunCreateResponse: {
@@ -1427,6 +1434,12 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+            /** Output */
+            output?: unknown | null;
+            /** Outputschema */
+            outputSchema?: {
+                [key: string]: unknown;
+            } | null;
         };
         /**
          * SecretBinding

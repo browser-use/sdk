@@ -864,3 +864,72 @@ def test_async_workspaces_upload_short_presign_raises(tmp_path: Path) -> None:
             await workspaces.upload(WORKSPACE_ID, f)
 
     asyncio.run(run())
+
+
+_OUTPUT_SCHEMA = {
+    "type": "object",
+    "properties": {"name": {"type": "string"}},
+    "required": ["name"],
+    "additionalProperties": False,
+}
+
+
+@pytest.mark.parametrize("is_async", [False, True])
+@pytest.mark.parametrize("schema", [_OUTPUT_SCHEMA, {}, None])
+def test_structured_output_create_wire_schema(is_async, schema):
+    response = {
+        "id": RUN_ID, "status": "queued", "model": "gpt-6-luna",
+        "sessionId": SESSION_ID, "workspaceId": WORKSPACE_ID,
+        "eventsUrl": f"https://api.browser-use.com/api/v4/runs/{RUN_ID}/events",
+    }
+    expected = {"task": "Extract name", "futureOption": True}
+    if schema is not None:
+        expected["outputSchema"] = schema
+    if is_async:
+        http = FakeAsyncHttp([response])
+        asyncio.run(AsyncRuns(http).create("Extract name", output_schema=schema, futureOption=True))
+    else:
+        http = FakeSyncHttp([response])
+        Runs(http).create("Extract name", output_schema=schema, futureOption=True)
+    assert http.calls == [("POST", "/runs", expected, None)]
+
+
+@pytest.mark.parametrize("is_async", [False, True])
+@pytest.mark.parametrize("wait", [False, True])
+@pytest.mark.parametrize("output", [{"name": "Ada", "nested": [1, None, True]}, [1, "a"], "Ada", 0, False, None])
+def test_structured_output_get_and_wait_preserve_json(is_async, wait, output):
+    summary = {**_run_summary("completed"), "output": output, "outputSchema": _OUTPUT_SCHEMA}
+    responses = [{"status": "completed"}, summary] if wait else [summary]
+    if is_async:
+        http = FakeAsyncHttp(responses)
+        runs = AsyncRuns(http)
+        result = asyncio.run(runs.wait_for_completion(RUN_ID) if wait else runs.get(RUN_ID))
+    else:
+        http = FakeSyncHttp(responses)
+        runs = Runs(http)
+        result = runs.wait_for_completion(RUN_ID) if wait else runs.get(RUN_ID)
+    assert result.output == output
+    assert result.output_schema == _OUTPUT_SCHEMA
+    assert type(result.output) is type(output)
+    assert result.result == "done"
+    assert [call[1] for call in http.calls] == (
+        [f"/runs/{RUN_ID}/status", f"/runs/{RUN_ID}"] if wait else [f"/runs/{RUN_ID}"]
+    )
+
+
+@pytest.mark.parametrize("is_async", [False, True])
+def test_structured_output_absent_is_backward_compatible(is_async):
+    if is_async:
+        result = asyncio.run(AsyncRuns(FakeAsyncHttp([_run_summary("completed")])).get(RUN_ID))
+    else:
+        result = Runs(FakeSyncHttp([_run_summary("completed")])).get(RUN_ID)
+    assert result.output is None
+    assert result.result == "done"
+
+
+def test_structured_output_generated_request_alias():
+    from browser_use_sdk.v4 import RunCreateRequest
+
+    request = RunCreateRequest.model_validate({"task": "Extract", "outputSchema": _OUTPUT_SCHEMA})
+    assert request.output_schema == _OUTPUT_SCHEMA
+    assert request.model_dump(by_alias=True, exclude_none=True)["outputSchema"] == _OUTPUT_SCHEMA

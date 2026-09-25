@@ -40,6 +40,7 @@ def _build_create_body(
     task: str,
     model: str | None,
     model_params: dict[str, Any] | None,
+    output_schema: dict[str, Any] | None,
     session_id: str | UUID | None,
     workspace_id: str | UUID | None,
     browser_settings: RunBrowserSettings | dict[str, Any] | None,
@@ -55,6 +56,8 @@ def _build_create_body(
         body["model"] = model
     if model_params is not None:
         body["modelParams"] = model_params
+    if output_schema is not None:
+        body["outputSchema"] = output_schema
     if session_id is not None:
         body["sessionId"] = str(session_id)
     if workspace_id is not None:
@@ -113,6 +116,7 @@ class Runs:
         *,
         model: str | None = None,
         model_params: dict[str, Any] | None = None,
+        output_schema: dict[str, Any] | None = None,
         session_id: str | UUID | None = None,
         workspace_id: str | UUID | None = None,
         browser_settings: RunBrowserSettings | dict[str, Any] | None = None,
@@ -128,6 +132,7 @@ class Runs:
             task,
             model,
             model_params,
+            output_schema,
             session_id,
             workspace_id,
             browser_settings,
@@ -301,6 +306,7 @@ class AsyncRuns:
         *,
         model: str | None = None,
         model_params: dict[str, Any] | None = None,
+        output_schema: dict[str, Any] | None = None,
         session_id: str | UUID | None = None,
         workspace_id: str | UUID | None = None,
         browser_settings: RunBrowserSettings | dict[str, Any] | None = None,
@@ -316,6 +322,7 @@ class AsyncRuns:
             task,
             model,
             model_params,
+            output_schema,
             session_id,
             workspace_id,
             browser_settings,

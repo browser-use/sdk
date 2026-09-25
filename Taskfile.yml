@@ -68,6 +68,7 @@ tasks:
       - |
         datamodel-codegen \
           --input {{.OPENAPI_V4}} \
+          --set-default-enum-member \
           --input-file-type openapi \
           --output {{.PY_SDK}}/src/browser_use_sdk/generated/v4/models.py \
           --output-model-type pydantic_v2.BaseModel \

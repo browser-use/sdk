@@ -604,3 +604,49 @@ describe("v4 workspaces", () => {
     });
   });
 });
+
+// A runtime passthrough is insufficient: these keys must also be public types.
+// Run with vitest --typecheck to guard the generated API surface.
+describe("v4 structured output", () => {
+  const outputSchema = {
+    type: "object",
+    properties: { name: { type: "string" } },
+    required: ["name"],
+    additionalProperties: false,
+  };
+
+  it.each([outputSchema, {}, null, undefined])("passes the optional JSON schema unchanged (%j)", async (schema) => {
+    const http = { post: vi.fn(async () => ({ id: RUN_ID, status: "queued" })) };
+    const runs = new Runs(http as any);
+    const body: import("../src/v4.js").RunCreateBody = { task: "Extract name", outputSchema: schema };
+    await runs.create(body);
+    expect(http.post).toHaveBeenCalledWith("/runs", body);
+  });
+
+  it.each([{ name: "Ada", nested: [1, null, true] }, [1, "a"], "Ada", 0, false, null])(
+    "preserves JSON output through get and wait (%j)", async (output) => {
+      const summary = { ...runSummary("completed"), output, outputSchema };
+      const http = { get: vi.fn(async (path: string) => path.endsWith("/status") ? { status: "completed" } : summary) };
+      const runs = new Runs(http as any);
+      const fetched = await runs.get(RUN_ID);
+      const waited = await runs.waitForCompletion(RUN_ID);
+      expect(fetched.output).toEqual(output);
+      expect(waited.output).toEqual(output);
+      expect(waited.outputSchema).toEqual(outputSchema);
+      expect(waited.result).toBe("done");
+      expect(http.get.mock.calls.map(([path]) => path)).toEqual([
+        `/runs/${RUN_ID}`, `/runs/${RUN_ID}/status`, `/runs/${RUN_ID}`,
+      ]);
+    },
+  );
+
+  it("keeps an unstructured request and result unchanged", async () => {
+    const http = { post: vi.fn(async () => ({ id: RUN_ID })), get: vi.fn(async () => runSummary("completed")) };
+    const runs = new Runs(http as any);
+    await runs.create({ task: "Find pricing" });
+    expect(http.post).toHaveBeenCalledWith("/runs", { task: "Find pricing" });
+    const result = await runs.get(RUN_ID);
+    expect(result.output).toBeUndefined();
+    expect(result.result).toBe("done");
+  });
+});
