@@ -2,6 +2,7 @@ import { z } from "zod";
 import { HttpClient } from "../core/http.js";
 import {
   X402_BASE_URL_DEFAULT_V2,
+  applyX402MaxPaymentUsd,
   type X402Client,
   wrapFetchWithX402,
   x402ClientFromPrivateKey,
@@ -29,6 +30,11 @@ export interface BrowserUseOptions {
   x402?: X402Client;
   /** EVM wallet private key for x402 mode (also reads `BROWSER_USE_X402_PRIVATE_KEY`). */
   x402PrivateKey?: string;
+  /**
+   * Reject x402 payment requirements above this USD amount. Defaults to $1
+   * when the SDK builds the x402 client from a private key.
+   */
+  x402MaxPaymentUsd?: number;
 }
 
 export type RunTaskOptions = Partial<Omit<CreateTaskBody, "task">> &
@@ -55,7 +61,14 @@ export class BrowserUse {
       // backend credits the API key's project instead of one keyed to the wallet.
       const topupKey = options.apiKey ?? process.env.BROWSER_USE_API_KEY ?? "";
       const fetchPromise = (async () => {
-        const x402Client = options.x402 ?? (await x402ClientFromPrivateKey(x402PrivateKey!));
+        const x402Client = options.x402
+          ? options.x402MaxPaymentUsd === undefined
+            ? options.x402
+            : applyX402MaxPaymentUsd(options.x402, options.x402MaxPaymentUsd)
+          : await x402ClientFromPrivateKey(
+              x402PrivateKey!,
+              options.x402MaxPaymentUsd ?? 1,
+            );
         return wrapFetchWithX402(globalThis.fetch, x402Client);
       })();
       // Suppress unhandled-rejection warnings if the user constructs the client

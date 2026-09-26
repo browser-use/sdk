@@ -20,11 +20,56 @@ export const X402_BASE_URL_DEFAULT = "https://x402.api.browser-use.com/api/v3";
 export const X402_BASE_URL_DEFAULT_V2 = "https://x402.api.browser-use.com/api/v2";
 export const X402_BALANCE_BASE_URL_DEFAULT = "https://api.browser-use.com/api/v3";
 
+const USDC_ATOMIC_UNITS_PER_DOLLAR = 1_000_000;
+
 export interface X402WalletBalance {
   wallet: string;
   project_id: string;
   total_credits_usd: number;
   additional_credits_usd: number;
+}
+
+function paymentAmount(requirement: unknown): bigint | null {
+  if (!requirement || typeof requirement !== "object") return null;
+  const fields = requirement as Record<string, unknown>;
+  const amount = fields.amount ?? fields.maxAmountRequired;
+  if (typeof amount !== "string" && typeof amount !== "number" && typeof amount !== "bigint") {
+    return null;
+  }
+  try {
+    return BigInt(amount);
+  } catch {
+    return null;
+  }
+}
+
+function maxPaymentAtomicUnits(maxPaymentUsd: number): bigint {
+  if (!Number.isFinite(maxPaymentUsd) || maxPaymentUsd <= 0) {
+    throw new RangeError("x402MaxPaymentUsd must be a positive finite number.");
+  }
+  const atomicUnits = Math.floor(maxPaymentUsd * USDC_ATOMIC_UNITS_PER_DOLLAR);
+  if (!Number.isSafeInteger(atomicUnits) || atomicUnits < 1) {
+    throw new RangeError("x402MaxPaymentUsd must resolve to at least one USDC atomic unit.");
+  }
+  return BigInt(atomicUnits);
+}
+
+/** Add a hard USD ceiling to an x402 client. */
+export function applyX402MaxPaymentUsd(
+  client: X402Client,
+  maxPaymentUsd: number,
+): X402Client {
+  if (typeof client?.registerPolicy !== "function") {
+    throw new TypeError("The supplied x402 client does not support payment policies.");
+  }
+  const maxAtomicUnits = maxPaymentAtomicUnits(maxPaymentUsd);
+  client.registerPolicy((_version: number, requirements: unknown[]) =>
+    requirements.filter((requirement) => {
+      const amount = paymentAmount(requirement);
+      return amount !== null && amount <= maxAtomicUnits;
+    }),
+  );
+  return client;
 }
 
 function buildWalletAuthMessage(address: string, issuedAt: string, nonce: string): string {
@@ -83,6 +128,7 @@ const MISSING_X402 =
 /** Build a ready-to-use x402 client from an EVM private key (`0x...`). */
 export async function x402ClientFromPrivateKey(
   privateKey: `0x${string}` | string,
+  maxPaymentUsd = 1,
 ): Promise<X402Client> {
   let viem;
   let fetchPkg;
@@ -102,7 +148,7 @@ export async function x402ClientFromPrivateKey(
   const signer = viem.privateKeyToAccount(key as `0x${string}`);
   const client = new fetchPkg.x402Client();
   client.register("eip155:*", new evmPkg.ExactEvmScheme(signer));
-  return client;
+  return applyX402MaxPaymentUsd(client, maxPaymentUsd);
 }
 
 /** Wrap a fetch with x402 payment handling. */
