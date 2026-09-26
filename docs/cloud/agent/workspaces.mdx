@@ -57,7 +57,8 @@ await client.workspaces.upload(
 
 const run = await client.runs.create({
   task: "Find everyone in the CSV who works at Google",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   workspaceId: workspace.id,
 });
 ```

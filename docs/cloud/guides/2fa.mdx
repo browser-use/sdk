@@ -21,7 +21,8 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Download my latest invoice",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   browserSettings: {
     profileId: "YOUR_PROFILE_ID",
     proxyCountryCode: "us",
@@ -43,7 +44,10 @@ the code. Then continue with the same session:
 first = client.runs.create(
     "Open the login page and stop at the 2FA prompt",
 )
+ready = client.runs.wait_for_event(first.id, "browser.ready")
 client.runs.wait_for_completion(first.id)
+print(ready.data["live_view_url"])
+input("Press Enter after entering the 2FA code...")
 
 next_run = client.runs.create(
     "Continue after login and download the invoice",
@@ -53,13 +57,20 @@ next_run = client.runs.create(
 ```typescript TypeScript
 const first = await client.runs.create({
   task: "Open the login page and stop at the 2FA prompt",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
 });
+const ready = await client.runs.waitForEvent(first.id, "browser.ready");
 await client.runs.waitForCompletion(first.id);
+console.log(ready.data.live_view_url);
+await new Promise((resolve) => {
+  process.stdin.once("data", resolve);
+});
 
 const nextRun = await client.runs.create({
   task: "Continue after login and download the invoice",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   sessionId: first.sessionId,
 });
 ```
