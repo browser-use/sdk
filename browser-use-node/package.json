@@ -1,6 +1,6 @@
 {
   "name": "browser-use-sdk",
-  "version": "3.11.3",
+  "version": "3.12.0",
   "description": "Official TypeScript SDK for the Browser Use API",
   "repository": {
     "type": "git",

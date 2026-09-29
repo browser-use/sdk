@@ -139,6 +139,21 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/sessions/{session_id}/queue"): ("sessions", "queue"),
     ("get", "/sessions/{session_id}/queue/{message_id}"): ("sessions", "get_message"),
     ("delete", "/sessions/{session_id}/queue/{message_id}"): ("sessions", "remove_message"),
+    ("patch", "/sessions/{session_id}"): ("sessions", "update"),
+    ("delete", "/sessions/{session_id}"): ("sessions", "delete"),
+    ("get", "/sessions/{session_id}/cost"): ("sessions", "cost"),
+    ("get", "/sessions/{session_id}/share"): ("sessions", "get_share"),
+    ("post", "/sessions/{session_id}/share"): ("sessions", "create_share"),
+    ("put", "/sessions/{session_id}/share"): ("sessions", "update_share"),
+    # integrations
+    ("get", "/integrations"): ("integrations", "list"),
+    ("get", "/integrations/categories"): ("integrations", "categories"),
+    ("post", "/integrations/{provider}/authorize"): ("integrations", "authorize"),
+    ("get", "/integrations/{provider}/status"): ("integrations", "status"),
+    ("delete", "/integrations/{provider}"): ("integrations", "disconnect"),
+    # wallets
+    ("get", "/agentcard/wallets"): ("wallets", "agentcard"),
+    ("get", "/stripe-link"): ("wallets", "stripe_link"),
     # workspaces
     ("post", "/workspaces"): ("workspaces", "create"),
     ("get", "/workspaces/{workspace_id}"): ("workspaces", "get"),
@@ -309,12 +324,14 @@ class TestV4Coverage:
         assert not missing, f"Unmapped v4 endpoints: {missing}"
 
     def test_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v4.resources import runs, sessions, workspaces
+        from browser_use_sdk.v4.resources import integrations, runs, sessions, wallets, workspaces
 
         resource_classes = {
             "runs": runs.Runs,
             "sessions": sessions.Sessions,
             "workspaces": workspaces.Workspaces,
+            "integrations": integrations.Integrations,
+            "wallets": wallets.Wallets,
         }
         for (_, _), (resource_attr, method_name) in _V4_MAP.items():
             cls = resource_classes[resource_attr]
@@ -323,12 +340,14 @@ class TestV4Coverage:
             )
 
     def test_async_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v4.resources import runs, sessions, workspaces
+        from browser_use_sdk.v4.resources import integrations, runs, sessions, wallets, workspaces
 
         async_classes = {
             "runs": runs.AsyncRuns,
             "sessions": sessions.AsyncSessions,
             "workspaces": workspaces.AsyncWorkspaces,
+            "integrations": integrations.AsyncIntegrations,
+            "wallets": wallets.AsyncWallets,
         }
         for (_, _), (resource_attr, method_name) in _V4_MAP.items():
             cls = async_classes[resource_attr]

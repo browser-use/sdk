@@ -3781,7 +3781,7 @@
                         "type": "string",
                         "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                         "title": "Proxyusedmb",
-                        "description": "Proxy bandwidth used in megabytes.",
+                        "description": "Proxy bandwidth used in megabytes, across the session and its browsers.",
                         "default": "0"
                     },
                     "llmCostUsd": {
@@ -3795,7 +3795,7 @@
                         "type": "string",
                         "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
                         "title": "Proxycostusd",
-                        "description": "Cost of proxy bandwidth in USD.",
+                        "description": "Cost of proxy bandwidth in USD, across the session and its browsers.",
                         "default": "0"
                     },
                     "browserCostUsd": {

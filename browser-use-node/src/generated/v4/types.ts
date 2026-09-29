@@ -178,11 +178,11 @@ export interface paths {
         put?: never;
         /**
          * Purge Session
-         * @description Immediately purge all data for a V4 session (ZDR projects only).
+         * @description Purge V4 session data; return 202 while active work or uploads defer deletion.
          *
          *     Redacts DB records and deletes S3 objects (bcode state, workspace files,
          *     recordings, downloads, staging uploads) for every run in the session. Same
-         *     cleanup the ZDR cron performs, but on-demand and with no grace period. V4
+         *     cleanup the ZDR cron performs, but on-demand; outstanding upload grants defer physical deletion. V4
          *     analog of the V2 POST /sessions/{id}/purge. Surfaces shared with a still-live
          *     sibling run are deferred by the same guards the cron uses.
          */
@@ -210,6 +210,65 @@ export interface paths {
         get: operations["get_session_sessions__session_id__get"];
         put?: never;
         post?: never;
+        /**
+         * Delete Session
+         * @description Delete a session: it disappears from the session lists and can no longer
+         *     be opened or continued.
+         *
+         *     Soft delete (mirrors V2's `is_archived`): the runs, events and usage records
+         *     stay in place so billing and analytics keep reconciling, and ZDR purge is the
+         *     only thing that ever destroys V4 content. Idempotent — deleting twice is a
+         *     no-op 204.
+         *
+         *     An in-flight run is cancelled first, and pending queued messages are
+         *     cancelled too; otherwise the drain would dispatch a follow-up run whose
+         *     `session_archived_at` is NULL and resurrect the session. Cancel is forwarded
+         *     to CP before anything is written (and outside the queue lock, per the
+         *     enqueue path's ordering), so a CP failure (502) leaves the session visible
+         *     rather than hiding a run that is still burning credits.
+         */
+        delete: operations["delete_session_sessions__session_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Session
+         * @description Rename a session.
+         *
+         *     `session_title` is denormalized onto every run in the session (the session
+         *     list reads the latest run), so a rename writes them all in one UPDATE. Null
+         *     clears the name and the UI falls back to the opening task — it does NOT
+         *     re-run title generation, which only fills rows where the title IS NULL and
+         *     so would silently overwrite the clear.
+         */
+        patch: operations["update_session_sessions__session_id__patch"];
+        trace?: never;
+    };
+    "/sessions/{session_id}/cost": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Session Cost
+         * @description Everything this session has cost so far, split by source.
+         *
+         *     A run's `total_cost_usd` is its LLM (and web-search) charge only. Browser
+         *     time and proxy bandwidth are metered against the session's browser, which
+         *     outlives any one run — so this is the endpoint for the session's full cost.
+         *
+         *     These are recorded usage costs, not an invoice total: promotional waivers
+         *     and credits are applied downstream in billing, so a session run under a
+         *     promotion can report cost here that was never charged.
+         *
+         *     Costs keep moving after a run reports `finished`: LLM calls settle up to
+         *     about 90 seconds later, and the browser accrues time and proxy traffic
+         *     until it stops.
+         */
+        get: operations["get_session_cost_sessions__session_id__cost_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -225,14 +284,24 @@ export interface paths {
         };
         /**
          * List Session Queue
-         * @description List open messages, the latest handoff row, and all steering cutoffs.
+         * @description List open messages, recently delivered queued messages, and steering cutoffs.
          *
-         *     Includes live dispatch claims so clients can restore an accepted steering
-         *     handoff after a refresh without briefly losing its waiting state. The latest
-         *     consumed interrupt bridges the primary-write/read-replica gap before its
-         *     replacement run appears; clients discard it once that run is visible. Compact
-         *     per-source cutoffs preserve every historical interrupted transcript boundary
-         *     without returning every historical steering message and its attachments.
+         *     Includes live dispatch claims so clients can restore an accepted queued
+         *     message after a refresh without briefly losing its waiting state.
+         *
+         *     Consumed QUEUE rows are returned too, capped at the most recent
+         *     _DELIVERED_QUEUE_HISTORY, plus up to _AGENCY_DELIVERED_QUEUE_HISTORY compact
+         *     Agency choice and generation receipts so inbox state survives refresh. A message absorbed mid-run is announced by a
+         *     `queued_input_injected` event carrying only its input id, so the chat has no
+         *     other source for the text to render. The cap bounds this response because
+         *     clients poll it while a run is active; a session with more delivered
+         *     follow-ups than the cap renders its oldest injected bubbles without text.
+         *
+         *     The latest consumed interrupt bridges the primary-write/read-replica gap
+         *     before its replacement run appears; clients discard it once that run is
+         *     visible. Compact per-source cutoffs preserve every historical interrupted
+         *     transcript boundary without returning every historical steering message and
+         *     its attachments.
          */
         get: operations["list_session_queue_sessions__session_id__queue_get"];
         put?: never;
@@ -270,6 +339,36 @@ export interface paths {
          * @description Remove a still-pending queued message; 409 once the drain has claimed it.
          */
         delete: operations["cancel_queued_message_sessions__session_id__queue__message_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{session_id}/share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Session Share
+         * @description The session's share link (active or not); null if never shared.
+         */
+        get: operations["get_session_share_sessions__session_id__share_get"];
+        /**
+         * Update Session Share
+         * @description Toggle the session's share link on/off.
+         */
+        put: operations["update_session_share_sessions__session_id__share_put"];
+        /**
+         * Create Session Share
+         * @description Enable sharing: reactivates the session's existing share (stable token,
+         *     so a link that was toggled off keeps working when re-enabled) or creates
+         *     one on first use.
+         */
+        post: operations["create_session_share_sessions__session_id__share_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -382,6 +481,169 @@ export interface paths {
          * @description Delete one exact path from a workspace and remove matching upload metadata.
          */
         delete: operations["delete_workspace_file_workspaces__workspace_id__files_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agentcard/wallets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Agentcard Wallets
+         * @description The project's active AgentCard wallets, newest first.
+         *
+         *     Read-only: funding is admin-only during the beta. The UI uses this to offer
+         *     a wallet on the composer, which is how a run opts into spending — the id
+         *     then rides RunCreateRequest.agentcard_wallet_id and is validated again there
+         *     against this same project.
+         */
+        get: operations["list_agentcard_wallets_agentcard_wallets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stripe-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Stripe Link Status
+         * @description The project's active Stripe Link wallet connection, if any.
+         *
+         *     Read-only: connecting happens in the cloud UI. A run opts into paying with
+         *     it by passing `connection_id` as RunCreateRequest.stripe_link_connection_id,
+         *     which is validated again there against this same project.
+         */
+        get: operations["get_stripe_link_status_stripe_link_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Integrations
+         * @description List available integrations with this project's connection status.
+         *
+         *     `is_connected` is resolved per integration, so a client can render the whole
+         *     catalogue and the connected subset from this one call. `connected_only` is
+         *     what a "my integrations" view reads — including on a restricted project,
+         *     which cannot connect anything but can still remove what it already has.
+         */
+        get: operations["list_integrations_integrations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Categories
+         * @description Get all integration categories, for filtering the list above.
+         */
+        get: operations["list_categories_integrations_categories_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/{provider}/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Authorize Integration
+         * @description Get the OAuth redirect URL for connecting an integration.
+         *
+         *     The client opens the returned URL in a web auth session and polls
+         *     `/integrations/{provider}/status` once the flow lands back on the callback
+         *     path. The URL is Composio-hosted; no redirect URI is registered per client.
+         */
+        post: operations["authorize_integration_integrations__provider__authorize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/{provider}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Connection Status
+         * @description Check whether this project has connected a specific provider.
+         *
+         *     Poll this after opening the authorize URL to learn when OAuth completed.
+         */
+        get: operations["get_connection_status_integrations__provider__status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/integrations/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Disconnect Integration
+         * @description Disconnect an integration for this project.
+         *
+         *     Deliberately NOT gated like `authorize` above: a restricted project must
+         *     still be able to tear down a connection it already has.
+         */
+        delete: operations["disconnect_integration_integrations__provider__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -551,6 +813,65 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * APIKeySpendLimitDetail
+         * @description Machine-readable 402 detail shared by run and browser creation.
+         */
+        APIKeySpendLimitDetail: {
+            /**
+             * Code
+             * @default api_key_monthly_spend_limit_reached
+             */
+            code: string;
+            /** Message */
+            message: string;
+            /** Cap */
+            cap: number;
+            /** Spent */
+            spent: number;
+        };
+        /**
+         * APIKeySpendLimitError
+         * @description FastAPI wraps endpoint errors in a top-level ``detail`` field.
+         */
+        APIKeySpendLimitError: {
+            /** Detail */
+            detail: string | components["schemas"]["APIKeySpendLimitDetail"];
+        };
+        /** AgentCardWalletListResponse */
+        AgentCardWalletListResponse: {
+            /** Wallets */
+            wallets: components["schemas"]["AgentCardWalletSummary"][];
+        };
+        /**
+         * AgentCardWalletSummary
+         * @description A spendable project wallet as the composer needs to show it.
+         */
+        AgentCardWalletSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Currency */
+            currency: string;
+            /** Availablecents */
+            availableCents: number;
+            /** Activeholdcents */
+            activeHoldCents: number;
+        };
+        /**
+         * AuthorizeResponse
+         * @description Response with OAuth redirect URL.
+         */
+        AuthorizeResponse: {
+            /** Redirect Url */
+            redirect_url: string;
+            /** Provider */
+            provider: string;
+        };
         /**
          * BrowserDownloadFile
          * @description A single file the browser downloaded during the session.
@@ -797,6 +1118,12 @@ export interface components {
              */
             recordingUrl?: string | null;
             /**
+             * Recording Available
+             * @description False when a recording can never appear for this session: recording was disabled, or the browser stopped long enough ago that the upload is not coming. Only ever false from proof, so a failed recording lookup leaves it true. Clients polling for `recordingUrl` must stop when this is false.
+             * @default true
+             */
+            recordingAvailable: boolean;
+            /**
              * Metadata
              * @description Caller-supplied labels set when the browser was created.
              * @default {}
@@ -804,6 +1131,16 @@ export interface components {
             metadata: {
                 [key: string]: string;
             };
+        };
+        /**
+         * ConnectionStatusResponse
+         * @description Response for connection status check.
+         */
+        ConnectionStatusResponse: {
+            /** Provider */
+            provider: string;
+            /** Is Connected */
+            is_connected: boolean;
         };
         /**
          * CreateBrowserSessionRequest
@@ -821,6 +1158,13 @@ export interface components {
              * @default us
              */
             proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
+            /**
+             * Metadata
+             * @description Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history.
+             */
+            metadata?: {
+                [key: string]: string;
+            } | null;
             /**
              * Timeout
              * @description The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.
@@ -866,13 +1210,6 @@ export interface components {
              * @default false
              */
             enableRecording: boolean;
-            /**
-             * Metadata
-             * @description Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history.
-             */
-            metadata?: {
-                [key: string]: string;
-            } | null;
         };
         /**
          * CustomProxy
@@ -905,6 +1242,16 @@ export interface components {
              * @default false
              */
             ignoreCertErrors: boolean;
+        };
+        /**
+         * DisconnectResponse
+         * @description Response for disconnect action.
+         */
+        DisconnectResponse: {
+            /** Success */
+            success: boolean;
+            /** Provider */
+            provider: string;
         };
         /**
          * ExternalBrowserAttach
@@ -952,6 +1299,53 @@ export interface components {
              * @default Insufficient credits
              */
             detail: string;
+        };
+        /**
+         * IntegrationCategoryResponse
+         * @description Response for integration categories.
+         */
+        IntegrationCategoryResponse: {
+            /** Categories */
+            categories: string[];
+        };
+        /**
+         * IntegrationListResponse
+         * @description Paginated response for integrations list.
+         */
+        IntegrationListResponse: {
+            /** Integrations */
+            integrations: components["schemas"]["IntegrationResponse"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
+        /**
+         * IntegrationResponse
+         * @description Response for a single integration.
+         */
+        IntegrationResponse: {
+            /** Provider */
+            provider: string;
+            /** Display Name */
+            display_name: string;
+            /** Description */
+            description: string;
+            /** Icon Url */
+            icon_url: string | null;
+            /** Category */
+            category: string;
+            /** Is Connected */
+            is_connected: boolean;
+            /** Auth Type */
+            auth_type: string;
+            /**
+             * Is Popular
+             * @default false
+             */
+            is_popular: boolean;
         };
         /**
          * OnePasswordSecretSource
@@ -1231,6 +1625,11 @@ export interface components {
              */
             screenHeight?: number | null;
             /**
+             * Allowresizing
+             * @description Let you or the agent resize the browser window over CDP. Resizing makes the browser easier to detect. API runs default to off. Follow-up runs inherit the value of the previous browser. The value applies only when the run starts a new browser.
+             */
+            allowResizing?: boolean | null;
+            /**
              * Record
              * @description Record the browser session to an mp4, retrievable via GET /browsers/{id} once the browser stops. API runs default to off; pass true to enable. Like other browser settings, this only applies when a new browser is provisioned: a follow-up that reuses the session's live browser keeps that browser's recording state. Ignored (always off) for Zero Data Retention projects.
              */
@@ -1241,11 +1640,19 @@ export interface components {
             /** Task */
             task: string;
             /**
+             * Outputschema
+             * @description Optional JSON Schema for the final output (API runs only).
+             */
+            outputSchema?: {
+                [key: string]: unknown;
+            } | null;
+            /**
              * Model
+             * @description bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.
              * @default gpt-5.6-luna
              * @enum {string}
              */
-            model: "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "deepseek-v4-flash-vision" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-fable-5" | "claude-sonnet-5" | "gpt-5.5" | "gpt-5.6" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash";
+            model: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "deepseek-v4-flash-vision" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
             /**
              * Modelparams
              * @description Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-5.6-luna defaults to {"reasoning": {"effort": "xhigh"}}); passing {} opts out of that default and leaves the provider's own defaults in place.
@@ -1264,6 +1671,10 @@ export interface components {
              * @default false
              */
             agentmail: boolean;
+            /** Agentcardwalletid */
+            agentcardWalletId?: string | null;
+            /** Stripelinkconnectionid */
+            stripeLinkConnectionId?: string | null;
             /** Attachedfileids */
             attachedFileIds?: string[] | null;
             /**
@@ -1271,16 +1682,19 @@ export interface components {
              * @description Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run.
              */
             secretBindings?: components["schemas"]["SecretBinding"][] | null;
+            /**
+             * Opvaultid
+             * @description A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.
+             */
+            opVaultId?: string | null;
+            /**
+             * Opvaultalloweddomains
+             * @description Hosts every credential from opVaultId may be typed into, e.g. ["amazon.com"]. Omit to derive each item's hosts from its own 1Password website entries; items with no website are then skipped and reported in skippedVaultItems. A host covers its subdomains, so 1Password's ExactDomain autofill setting is not honored either way.
+             */
+            opVaultAllowedDomains?: string[] | null;
             judge?: components["schemas"]["RunJudgeSettings"] | null;
             /** Maxcostusd */
             maxCostUsd?: number | string | null;
-            /**
-             * Outputschema
-             * @description Optional JSON Schema for the final output (API runs only).
-             */
-            outputSchema?: {
-                [key: string]: unknown;
-            } | null;
         };
         /** RunCreateResponse */
         RunCreateResponse: {
@@ -1310,6 +1724,11 @@ export interface components {
             eventsUrl: string;
             /** Missingfileids */
             missingFileIds?: string[];
+            /**
+             * Skippedvaultitems
+             * @description Titles of opVaultId items that hold a credential but no 1Password website, so deriving their domains left them with nowhere to be typed. The run still starts without them; add a website to the item or pass opVaultAllowedDomains.
+             */
+            skippedVaultItems?: string[];
         };
         /** RunEvent */
         RunEvent: {
@@ -1394,6 +1813,10 @@ export interface components {
             title: string | null;
             /** Model */
             model: string;
+            /** Modelparams */
+            modelParams?: {
+                [key: string]: unknown;
+            } | null;
             /** Contextlimit */
             contextLimit: number;
             /**
@@ -1403,6 +1826,12 @@ export interface components {
             status: "queued" | "dispatching" | "running" | "completed" | "failed" | "cancelled";
             /** Result */
             result: string | null;
+            /** Output */
+            output?: unknown | null;
+            /** Outputschema */
+            outputSchema?: {
+                [key: string]: unknown;
+            } | null;
             /** Error */
             error: string | null;
             /**
@@ -1434,12 +1863,6 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
-            /** Output */
-            output?: unknown | null;
-            /** Outputschema */
-            outputSchema?: {
-                [key: string]: unknown;
-            } | null;
         };
         /**
          * SecretBinding
@@ -1466,6 +1889,41 @@ export interface components {
              * @description Hosts the secret may be typed into, e.g. ["github.com"]. A host covers its subdomains. Bare hostnames only — no scheme, port, path, or wildcard.
              */
             allowedDomains: string[];
+        };
+        /**
+         * SessionCostResponse
+         * @description Everything a session cost, split by what it was spent on.
+         *
+         *     Recorded usage, not an invoice total — promotional waivers and credits are
+         *     applied downstream in billing.
+         *
+         *     Browser time and proxy bandwidth are metered against the session's browser,
+         *     which outlives any single run, so they have no per-run number — only
+         *     `RunSummary.total_cost_usd`, the LLM (and web search) charge, does.
+         *
+         *     All amounts are fixed-6-decimal strings for the same reason as
+         *     `RunSummary.total_cost_usd`: JS clients lose precision on float.
+         */
+        SessionCostResponse: {
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Numruns */
+            numRuns: number;
+            /** Llmcostusd */
+            llmCostUsd: string;
+            /** Searchcostusd */
+            searchCostUsd: string;
+            /** Browsercostusd */
+            browserCostUsd: string;
+            /** Proxycostusd */
+            proxyCostUsd: string;
+            /** Proxyusedmb */
+            proxyUsedMb: string;
+            /** Totalcostusd */
+            totalCostUsd: string;
         };
         /**
          * SessionInfo
@@ -1540,6 +1998,40 @@ export interface components {
             detail: string;
         };
         /**
+         * SessionShareInfo
+         * @description A session's public share-link state (share modal reads/writes this).
+         */
+        SessionShareInfo: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Sharetoken */
+            shareToken: string;
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Isactive */
+            isActive: boolean;
+            /** Viewcount */
+            viewCount: number;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Shareurl */
+            shareUrl: string;
+        };
+        /** SessionShareUpdateRequest */
+        SessionShareUpdateRequest: {
+            /** Isactive */
+            isActive: boolean;
+        };
+        /**
          * SessionTimeoutLimitExceededError
          * @description Error response when session timeout exceeds the maximum allowed limit
          */
@@ -1549,6 +2041,15 @@ export interface components {
              * @default Maximum session timeout is 4 hours (240 minutes).
              */
             detail: string;
+        };
+        /**
+         * SessionUpdateRequest
+         * @description Rename a session. Null clears the user-set name, so the UI falls back to
+         *     the session's opening task.
+         */
+        SessionUpdateRequest: {
+            /** Title */
+            title?: string | null;
         };
         /**
          * SteeringCutoff
@@ -1569,6 +2070,20 @@ export interface components {
              * Format: date-time
              */
             createdAt: string;
+        };
+        /**
+         * StripeLinkStatusResponse
+         * @description The project's active Stripe Link connection, if any.
+         */
+        StripeLinkStatusResponse: {
+            /** Isconnected */
+            isConnected: boolean;
+            /** Connectionid */
+            connectionId?: string | null;
+            /** Linkemail */
+            linkEmail?: string | null;
+            /** Mode */
+            mode?: ("test" | "live") | null;
         };
         /**
          * TooManyConcurrentActiveSessionsError
@@ -1841,12 +2356,14 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description The project has no credits available. */
+            /** @description The project has no credits available, or the authenticating API key has reached its recorded monthly total-spend soft stop. */
             402: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["APIKeySpendLimitError"];
+                };
             };
             /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
             403: {
@@ -1877,6 +2394,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description The project is at its concurrent-session limit. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2175,6 +2699,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Purge pending active work or outstanding uploads. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Successful Response */
             204: {
                 headers: {
@@ -2225,6 +2756,150 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionInfo"];
+                };
+            };
+            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Run, session, workspace, or profile not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_session_sessions__session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Run, session, workspace, or profile not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The request could not be forwarded to the control plane. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_session_sessions__session_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionInfo"];
+                };
+            };
+            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Run, session, workspace, or profile not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_cost_sessions__session_id__cost_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionCostResponse"];
                 };
             };
             /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
@@ -2321,6 +2996,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QueuedMessage"];
+                };
+            };
+            /** @description The project has no credits available, or the authenticating API key has reached its recorded monthly total-spend soft stop. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIKeySpendLimitError"];
                 };
             };
             /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
@@ -2438,6 +3122,138 @@ export interface operations {
             };
             /** @description The message is no longer pending and cannot be cancelled. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_share_sessions__session_id__share_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionShareInfo"] | null;
+                };
+            };
+            /** @description Run, session, workspace, or profile not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_session_share_sessions__session_id__share_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionShareUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionShareInfo"];
+                };
+            };
+            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Run, session, workspace, or profile not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_session_share_sessions__session_id__share_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionShareInfo"];
+                };
+            };
+            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Run, session, workspace, or profile not found. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2794,6 +3610,226 @@ export interface operations {
             };
         };
     };
+    list_agentcard_wallets_agentcard_wallets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentCardWalletListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_stripe_link_status_stripe_link_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeLinkStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_integrations_integrations_get: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of results */
+                limit?: number | null;
+                /** @description Number of results to skip */
+                offset?: number;
+                /** @description Filter by name, description or provider */
+                search?: string | null;
+                /** @description Only return popular integrations */
+                popular_only?: boolean;
+                /** @description Only return integrations this project has connected */
+                connected_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_categories_integrations_categories_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationCategoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    authorize_integration_integrations__provider__authorize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthorizeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_connection_status_integrations__provider__status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectionStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disconnect_integration_integrations__provider__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisconnectResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_browser_sessions_browsers_get: {
         parameters: {
             query?: {
@@ -2850,6 +3886,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BrowserSessionItemView"];
+                };
+            };
+            /** @description Insufficient credits, or the API key reached its monthly spend limit. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIKeySpendLimitError"];
                 };
             };
             /** @description Session timeout limit exceeded (maximum 4 hours) */
@@ -3073,7 +4118,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProfileView"];
                 };
             };
-            /** @description Subscription required for additional profiles */
+            /** @description Profile limit reached; delete unused profiles to create new ones */
             402: {
                 headers: {
                     [name: string]: unknown;
