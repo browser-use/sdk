@@ -35,7 +35,9 @@ curl https://api.browser-use.com/api/v4/runs \
   -d '{"task":"Find the top Hacker News story","model":"bu-ultrafast"}'
 ```
 
-Replace `bu-ultrafast` with `bu-fast` for more reasoning. Use REST if your installed SDK's model types do not yet include these aliases; upgrade when a released SDK includes them. They are not V2/V3 aliases or local `ChatBrowserUse` model IDs. Omitting `model` does not select either mode.
+Replace `bu-ultrafast` with `bu-fast` for more reasoning. These presets do not accept `modelParams`; projects without access receive a 422 response with a waitlist link.
+
+Use REST if your installed SDK's model types do not yet include these aliases; upgrade when a released SDK includes them. They are not V2/V3 aliases or local `ChatBrowserUse` model IDs. Omitting `model` does not select either mode.
 
 ## Provider models
 
