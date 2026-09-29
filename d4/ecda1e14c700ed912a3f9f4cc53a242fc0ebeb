@@ -1,0 +1,99 @@
+docs/cloud/agent/models.mdx
+  s_cafdfaabed1c36::t_5d27fafc570aaa 50-54
+browser-use-node/src/v4/resources/wallets.ts
+  s_cafdfaabed1c36::t_9fe22085ba7cf8 1-19
+browser-use-node/src/v4/resources/integrations.ts
+  s_cafdfaabed1c36::t_43c88259c2e247 1-51
+browser-use-python/src/browser_use_sdk/v4/resources/wallets.py
+  s_cafdfaabed1c36::t_ac0f99922f7d3f 1-38
+browser-use-node/src/v4.ts
+  s_cafdfaabed1c36::t_2e8131b0e1bff3 27
+  s_cafdfaabed1c36::t_977378ecd88e7c 24-26
+  s_f6c204a6bb9860::t_cdd0bfd1816f5b 23,58-78,96-98
+browser-use-python/tests/test_v4_surface.py
+  s_cafdfaabed1c36::t_9b4c764384939d 1-197
+  s_cafdfaabed1c36::t_b9966ba3f20a8b 198-205
+browser-use-node/src/core/http.ts
+  s_cafdfaabed1c36::t_2dba77654d61de 165-168
+browser-use-node/src/v4/resources/sessions.ts
+  s_cafdfaabed1c36::t_030521a6b50bf2 9-12
+  s_cafdfaabed1c36::t_d88155f6147828 42-71
+browser-use-python/src/browser_use_sdk/v4/resources/integrations.py
+  s_cafdfaabed1c36::t_96ca1edbf6382a 1-116
+browser-use-node/tests/v4-models.test-d.ts
+  s_cafdfaabed1c36::t_89482a47beb378 1-13
+browser-use-node/tests/v4-surface.test.ts
+  s_cafdfaabed1c36::t_f7c61af8d17375 1-145
+browser-use-node/package.json
+  s_cafdfaabed1c36::t_01d6dab85454f4 3
+browser-use-node/src/generated/v2/types.ts
+  s_cafdfaabed1c36::t_b8ad36456a9d20 717-741,780,783-792,810-814,1363,3925,4116-4124
+browser-use-node/src/generated/v3/types.ts
+  s_cafdfaabed1c36::t_2b132794b0d4ee 434-458,497,500-509,527-531,1307,1551,1563,2066-2074,2296
+browser-use-node/src/generated/v4/types.ts
+  s_cafdfaabed1c36::t_a885df167061bf 181,185,213-271,287,289-304,347-376,489-651,816-874,1120-1125,1135-1144,1161-1167,1246-1255,1303-1349,1627-1631,1642-1648,1651,1655,1674-1677,1685-1694,1727-1731,1816-1819,1829-1834,1893-1927,2000-2033,2045-2053,2074-2087,2359,2364-2366,2398-2404,2702-2708,2786,2798,2802,2827-2833,2836,2839,2847,2857,2885,2902,2930,2947,2975,2978-2983,2988,2998-3020,3022,3033-3039,3042,3047-3048,3052,3060,3088,3093-3094,3106,3109-3110,3114,3116-3121,3123-3124,3141,3146,3150,3158,3179,3184,3188-3192,3200,3203-3209,3228,3230,3233,3245,3273,3275-3572,3613-3832,3891-3899,4121
+browser-use-node/src/v4/client.ts
+  s_cafdfaabed1c36::t_c13b0bf853f74d 3,6,20,23,43,46
+browser-use-node/tests/vibe.test.ts
+  s_cafdfaabed1c36::t_837dc5bc27540d 173-189
+browser-use-python/pyproject.toml
+  s_cafdfaabed1c36::t_8b33098b9ffbf8 7
+browser-use-python/src/browser_use_sdk/generated/v2/models.py
+  s_cafdfaabed1c36::t_38acafdf38d6ce 13-23,1388,1391-1402,1415-1420,1738
+browser-use-python/src/browser_use_sdk/generated/v3/models.py
+  s_cafdfaabed1c36::t_9ad94ec059f41d 13-23,956,959-970,983-988,1215,1435,1449
+browser-use-python/src/browser_use_sdk/generated/v4/models.py
+  s_cafdfaabed1c36::t_4f15f234e4d4dc 21-46,167-172,180-184,250-254,283-297,769-774,783-785,796,801-803,811-821,856-861,898-900,904-907,942,948-958,980-993,1000-1007,1013-1024,1175-1178,1292-1296,1350-1356,1386,1396-1406,1421-1426,1436-1447
+browser-use-python/src/browser_use_sdk/v4/__init__.py
+  s_cafdfaabed1c36::t_700bf486f4ca39 5-9,13,15,17-19,39,42-44,48,90-107
+browser-use-python/src/browser_use_sdk/v4/client.py
+  s_cafdfaabed1c36::t_e8c17f77d899e7 7,10,42,45,85,88
+browser-use-python/src/browser_use_sdk/v4/resources/__init__.py
+  s_cafdfaabed1c36::t_8c8fb24e0a91e2 2,5,11-12,17-18
+browser-use-python/src/browser_use_sdk/v4/resources/runs.py
+  s_cafdfaabed1c36::t_d7f467094df7c7 11,42,53-56,61,110-117,130,141-144,161-164,328,339-342,359-362
+browser-use-python/src/browser_use_sdk/v4/resources/sessions.py
+  s_cafdfaabed1c36::t_6dace963d0b4b6 5,10,13,67-115,192-240
+browser-use-python/tests/test_vibe.py
+  s_cafdfaabed1c36::t_d4a3423c2348db 142-156,327,333-334,343,349-350
+docs/cloud/openapi/v3.json
+  s_cafdfaabed1c36::t_d21d4a71a46d4d 3784,3798
+docs/cloud/openapi/v4.json
+  s_cafdfaabed1c36::t_41b194511ab60a 70-72,563,586-588,775-829,2149,2151-2157,2159-2162,2164,2170-2173,2179-2180,2182,2185,2190,2192-2193,2197,2203-2204,2208,2214,2220,2224,4547-4558,4584-4596,4600-4602,4613,4619-4620,4627-4629,4632,4735,4755,4770,4850-4857,5039-5050,5078-5098,5227,5243,5245,5247-5248,5250-5254,5256,5258-5260,5262-5276,5281-5291
+docs/openapi/v2.json
+  s_cafdfaabed1c36::t_32e846c60d3209 7323
+docs/openapi/v3.json
+  s_cafdfaabed1c36::t_90abe8b18b5cf7 3784,3798,4167
+docs/openapi/v4.json
+  s_cafdfaabed1c36::t_0df6820f9a76de 70-72,563,586-588,775-829,2149,2151-2157,2159-2162,2164,2170-2173,2179-2180,2182,2185,2190,2192-2193,2197,2203-2204,2208,2214,2220,2224,4547-4558,4584-4596,4600-4602,4613,4619-4620,4627-4629,4632,4735,4755,4770,4850-4857,5039-5050,5078-5098,5227,5243,5245,5247-5248,5250-5254,5256,5258-5260,5262-5276,5281-5291,5935
+snapshots/v2.json
+  s_cafdfaabed1c36::t_3f09f2378d82ef 1460,1796-1805,3319-3368,3413-3423,3442-3454,3468-3469,4348,7323
+snapshots/v3.json
+  s_cafdfaabed1c36::t_83d5238e443fa3 530-539,917,1725-1774,1819-1829,1848-1860,1874-1875,3344,3784,3798,4167
+snapshots/v4.json
+  s_cafdfaabed1c36::t_c495f465d01ec8 48-50,52-59,70-71,563,586-588,661-827,892-901,928,1106-1107,1109,1111-1127,1129-1130,1137-1145,1150-1152,1163-1164,1167,1169-1171,1179,1185,1195,1217-1218,1220-1403,1696-2083,2099-2101,2104,2106-2108,2116,2121,2126-2134,2297-2306,2684,2875-2994,3360-3365,3386-3404,3433-3447,3584-3602,3684-3788,4536-4550,4556-4557,4584-4596,4600-4602,4613,4618-4620,4627-4629,4632,4688-4711,4735,4744-4771,4850-4857,5039-5050,5078-5098,5227,5243-5292,5414-5473,5486-5504,5526-5577,5935
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d4ecda1e14c700ed912a3f9f4cc53a242fc0ebeb",
+  "prompts": {},
+  "sessions": {
+    "s_cafdfaabed1c36": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c3724c29-3783-4440-b876-0e2d1e24e545",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    },
+    "s_f6c204a6bb9860": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-ae92e88c816a833d9",
+        "model": "unknown"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}
