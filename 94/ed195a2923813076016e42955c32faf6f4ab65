@@ -1,0 +1,47 @@
+docs/cloud/legacy/agent.mdx
+  s_d394f711720c51::t_150e740df510f7 9-10
+docs/cloud/quickstart.mdx
+  s_d394f711720c51::t_150e740df510f7 20-21
+docs/cloud/faq.mdx
+  s_d394f711720c51::t_150e740df510f7 9-11,17-21,121,129
+README.md
+  s_d394f711720c51::t_150e740df510f7 10-13
+docs/cloud/agent/quickstart.mdx
+  s_d394f711720c51::t_150e740df510f7 3,7-9
+  s_d394f711720c51::t_db4e635b972929 10
+docs/cloud/agent/models.mdx
+  s_d394f711720c51::t_150e740df510f7 3,7-8,10-24,28-42,47,61,64,66
+  s_d394f711720c51::t_275d9b76323e60 9,25-27
+docs/cloud/which-product.mdx
+  s_d394f711720c51::t_150e740df510f7 27-28
+docs/cloud/guides/billing.mdx
+  s_d394f711720c51::t_150e740df510f7 10-19
+browser-use-python/README.md
+  s_d394f711720c51::t_150e740df510f7 5-6
+docs/docs.json
+  s_d394f711720c51::t_1348f9e3c45b54 1184-1185
+docs/open-source/supported-models.mdx
+  s_d394f711720c51::t_34fe127a7f21c9 62,147,215,275,321,342,457,478,499,520,541
+browser-use-node/README.md
+  s_d394f711720c51::t_150e740df510f7 5-6
+docs/cloud/choosing-an-agent.mdx
+  s_d394f711720c51::t_a0328bb4e31bea 15,83,98
+  s_d394f711720c51::t_1348f9e3c45b54 3,7,9-13,16-25,75,81,92,96
+  s_d394f711720c51::t_81603f6ad4a351 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "94ed195a2923813076016e42955c32faf6f4ab65",
+  "prompts": {},
+  "sessions": {
+    "s_d394f711720c51": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ee80-a0fd-7822-8caa-bfac8d83ed93",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}
