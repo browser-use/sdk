@@ -290,7 +290,7 @@ wheels = [
 
 [[package]]
 name = "browser-use-sdk"
-version = "3.11.3"
+version = "3.12.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },

@@ -17,6 +17,7 @@ from ..generated.v4.models import (
     IntegrationCategoryResponse,
     IntegrationListResponse,
     IntegrationResponse,
+    Mode1 as StripeLinkMode,
     Model as RunModel,
     OnePasswordSecretSource,
     ProxyCountryCode,
@@ -102,6 +103,7 @@ __all__ = [
     "AgentCardWalletListResponse",
     "AgentCardWalletSummary",
     "StripeLinkStatusResponse",
+    "StripeLinkMode",
     # Errors
     "APIKeySpendLimitDetail",
     "APIKeySpendLimitError",
