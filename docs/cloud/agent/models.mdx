@@ -1,15 +1,50 @@
 ---
 title: Models
-description: "Choose a V4 model and understand its token pricing."
+description: "Choose BU Ultrafast, BU Fast, or a V4 provider model and understand task costs."
 icon: microchip
 ---
 
-Omit `model` to use **GPT-5.6 Luna**, or pass a model ID when creating a run.
+## BU Ultrafast and BU Fast
+
+**Browser tasks for a fraction of a cent.** BU Ultrafast measured **\$0.00214 median per URL check**, with **8/8 correct** in a small staging test. LLM + browser included; browsers stopped after each run. Actual cost varies; network traffic is billed separately. [Methodology and pricing](https://browser-use.com/pricing#task-cost-methodology).
+
+- **BU Ultrafast** (`bu-ultrafast`): quick browser interactions.
+- **BU Fast** (`bu-fast`): more reasoning at low token prices.
+
+Both are hosted API V4 modes in **early access**, enabled per project. [Join early access](https://browser-use.com/ultrafast). Projects with access can use signup credits; EU and Bedrock-only routes are not supported.
+
+### Token rates
+
+Customer rates in USD per 1 million tokens, including the service fee:
+
+| Mode | Fresh input | Cached input | Cache write | Output |
+| --- | ---: | ---: | ---: | ---: |
+| BU Ultrafast | \$0.24 | \$0.024 | \$0.30 | \$1.20 |
+| BU Fast | \$0.12 | \$0.012 | \$0.15 | \$0.60 |
+
+For a call exceeding 272,000 prompt + cache-write tokens, input and cache rates are 2× and output is 1.5×.
+
+Token rates are not fixed task prices. Browser time, network traffic, and optional search or CAPTCHA services can add charges. A run's `totalCostUsd` does not include separately recorded browser and proxy charges. See [billing](/cloud/guides/billing#what-does-a-task-cost).
+
+### Select a mode
+
+```bash
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Find the top Hacker News story","model":"bu-ultrafast"}'
+```
+
+Replace `bu-ultrafast` with `bu-fast` for more reasoning. Use REST if your installed SDK's model types do not yet include these aliases; upgrade when a released SDK includes them. They are not V2/V3 aliases or local `ChatBrowserUse` model IDs. Omitting `model` does not select either mode.
+
+## Provider models
+
+Pass a provider model ID when creating a run, or omit `model` to use the API's default. Availability depends on your route and account.
 The following Browser Use-hosted models have published token pricing:
 
 | Model | API string | Input | Cache read | Output | BYOK |
 | ----- | ---------- | ----: | ---------: | -----: | ---- |
-| GPT-5.6 Luna (recommended) | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
+| GPT-5.6 Luna | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
 | Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
 | Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
 | GPT-5.6 Sol | `gpt-5.6-sol` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
@@ -23,14 +58,12 @@ See [Thinking levels](/cloud/agent/thinking-levels) for V4 `modelParams` and
 the normalized `thinkingLevel` values available in V2 and V3.
 
 <Tip>
-  We recommend **GPT-5.6 Luna** for most tasks. It combines near-Opus benchmark
-  performance with the lowest token price and fastest median response time in
-  current V4 production traffic.
+  Start with **BU Ultrafast** for quick interactions or **BU Fast** for more reasoning if your project has early access. Otherwise, choose an available provider model for your task and budget.
 </Tip>
 
-## All supported V4 model IDs
+## Provider model IDs in the published SDK schema
 
-The V4 request schema accepts the following model IDs. The Cloud dashboard may
+The published SDK schema lists the following provider model IDs. REST and the Cloud dashboard can expose newer choices before an SDK release. The Cloud dashboard may
 show a smaller curated set; availability can also depend on your account's
 rollout and configured provider key. An accepted ID does not guarantee access
 to every upstream provider. Experimental models are not recommended as a

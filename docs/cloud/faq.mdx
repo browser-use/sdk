@@ -6,13 +6,19 @@ icon: circle-question
 
 ## Which model should I use?
 
-- **GPT-5.6 Luna** (`gpt-5.6-luna`, recommended) — the best balance of accuracy, speed, and price for most tasks.
+- **BU Ultrafast** (`bu-ultrafast`) — quick browser interactions, in early access.
+- **BU Fast** (`bu-fast`) — more reasoning at low token prices, in early access.
+- **GPT-5.6 Luna** (`gpt-5.6-luna`) — a provider-model option where available.
 - **Claude Opus 5** (`claude-opus-5`) — maximum intelligence for difficult, long-horizon work.
 - **Grok 4.5** (`grok-4.5`) — a strong general-purpose alternative.
 - **GPT-5.6 Sol** (`gpt-5.6-sol`) — a higher-cost OpenAI option for complex tasks.
 - **MiniMax M3** (`minimax-m3`) — inexpensive for simple and high-volume tasks.
 
-See [Models](/cloud/agent/models) for the complete V4 picker and pricing.
+BU modes require project access. [Request early access](https://browser-use.com/ultrafast). See [Models](/cloud/agent/models) for rates, availability, and REST examples when SDK types lag.
+
+## How cheap is a completed task?
+
+BU Ultrafast measured **\$0.00214 median per URL check**, with **8/8 correct** in a small staging test. LLM + browser included; browsers stopped after each run. Actual cost varies with tokens, browser time, and optional services; network traffic is billed separately. This is a measured example, not a fixed task tariff. [Methodology](https://browser-use.com/pricing#task-cost-methodology) · [Billing](/cloud/guides/billing#what-does-a-task-cost).
 
 ## How do I get the live browser URL?
 
@@ -112,7 +118,7 @@ the [run summary](/cloud/api-v4/runs/get-run) for `judgement`.
 
 ## V2 or V4 — which should I use?
 
-Use **V4** for difficult tasks where accuracy matters. It supports:
+Use **V4** for new hosted-agent integrations. Choose a mode or model for your task and budget. It supports:
 
 - Run-focused API with a cheap status polling endpoint
 - Conversation sessions with follow-ups
@@ -120,8 +126,7 @@ Use **V4** for difficult tasks where accuracy matters. It supports:
 - Incremental events for custom UIs and monitoring
 - Per-run cost totals, cost caps, and optional judgement
 
-Use **V2** when tasks are simple and your priority is very low cost and
-predictable speed. Its accuracy is substantially lower.
+Keep **V2** for existing integrations. Its legacy per-step pricing does not describe BU Ultrafast or BU Fast, which run on V4. See [Choosing an agent](/cloud/choosing-an-agent).
 
 See Browser Use at #1 on the
 [Odysseys benchmark](https://odysseysbench.com/leaderboard).
