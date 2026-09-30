@@ -9,13 +9,9 @@ Use the [pricing page](https://browser-use.com/pricing) for current model, brows
 
 ## What does a task cost?
 
-**Browser tasks for a fraction of a cent.** BU Ultrafast recorded **\$0.00214 median per URL check**, with **8/8 correct** in a small staging test. This included recorded LLM + stopped-browser usage; each browser was explicitly stopped after its run. Actual cost varies; network traffic is billed separately. [Test methodology](https://browser-use.com/pricing#task-cost-methodology).
+Pay for tokens, browser time, network, and optional services. [BU mode rates](/cloud/agent/models) include the service fee; [measured task costs](https://browser-use.com/pricing#task-cost-methodology) are examples, not fixed tariffs.
 
-BU Fast adds more reasoning at low token prices. Both modes are in early access, enabled per project. See [mode rates and access](/cloud/agent/models).
-
-Your total depends on model tokens, browser time, network traffic, and optional services such as search or CAPTCHA solving. The published BU mode token rates already include the service fee. Token rates are not fixed task prices.
-
-The run's `totalCostUsd` is not an all-in task bill: browser and proxy charges are recorded separately. Check the session's usage after stopping the browser; metering can arrive late, so this is not a final invoice. Browser time starts at \$0.02/hour with a one-minute minimum; leaving a browser idle adds cost. The initial \$0.08 browser hold is a reservation, not the final charge.
+`totalCostUsd` includes LLM/search, with browser/proxy charges recorded separately. Stop the browser and check session usage; late metering can change it. Browser time starts at \$0.02/hour, one-minute minimum. The initial \$0.08 hold is a reservation.
 
 ## Which credits does my API key use?
 

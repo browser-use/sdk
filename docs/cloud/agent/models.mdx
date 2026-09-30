@@ -6,12 +6,12 @@ icon: microchip
 
 ## BU Ultrafast and BU Fast
 
-**Browser tasks for a fraction of a cent.** BU Ultrafast recorded **\$0.00214 median per URL check**, with **8/8 correct** in a small staging test. LLM + browser included; browsers stopped after each run. Actual cost varies; network traffic is billed separately. [Methodology and pricing](https://browser-use.com/pricing#task-cost-methodology).
+**Browser tasks for a fraction of a cent.** BU Ultrafast: **\$0.00214 median recorded cost per URL check**, **8/8 correct on staging**. [Pricing and methodology](https://browser-use.com/pricing#task-cost-methodology).
 
 - **BU Ultrafast** (`bu-ultrafast`): quick browser interactions.
 - **BU Fast** (`bu-fast`): more reasoning at low token prices.
 
-Both are hosted API V4 modes in **early access**, enabled per project. [Join early access](https://browser-use.com/ultrafast). Projects with access can use signup credits; EU and Bedrock-only routes are not supported.
+API V4, **early access** per project. [Request access](https://browser-use.com/ultrafast); signup credits work once enabled. EU and Bedrock-only routes are unsupported.
 
 ### Token rates
 
@@ -24,7 +24,7 @@ Customer rates in USD per 1 million tokens, including the service fee:
 
 For a call exceeding 272,000 prompt + cache-write tokens, input and cache rates are 2× and output is 1.5×.
 
-Token rates are not fixed task prices. Browser time, network traffic, and optional search or CAPTCHA services can add charges. A run's `totalCostUsd` does not include separately recorded browser and proxy charges. See [billing](/cloud/guides/billing#what-does-a-task-cost).
+Browser, network, and optional services add charges. See [task billing](/cloud/guides/billing#what-does-a-task-cost).
 
 ### Select a mode
 
@@ -35,9 +35,9 @@ curl https://api.browser-use.com/api/v4/runs \
   -d '{"task":"Find the top Hacker News story","model":"bu-ultrafast"}'
 ```
 
-Replace `bu-ultrafast` with `bu-fast` for more reasoning. These presets do not accept `modelParams`; projects without access receive a 422 response with a waitlist link.
+Use `bu-fast` for more reasoning. Presets reject `modelParams`; projects without access receive 422 with a waitlist link.
 
-Use REST if your installed SDK's model types do not yet include these aliases; upgrade when a released SDK includes them. They are not V2/V3 aliases or local `ChatBrowserUse` model IDs. Omitting `model` does not select either mode.
+Use REST while SDK types lag. These are V4 presets, separate from local `ChatBrowserUse`; omitting `model` selects neither.
 
 ## Provider models
 
@@ -58,10 +58,6 @@ proxyless/BYOP) are charged separately. See [full pricing](https://browser-use.c
 
 See [Thinking levels](/cloud/agent/thinking-levels) for V4 `modelParams` and
 the normalized `thinkingLevel` values available in V2 and V3.
-
-<Tip>
-  Start with **BU Ultrafast** for quick interactions or **BU Fast** for more reasoning if your project has early access. Otherwise, choose an available provider model for your task and budget.
-</Tip>
 
 ## Provider model IDs in the published SDK schema
 
