@@ -572,4 +572,6 @@ class TestClientInit:
         assert hasattr(client, "runs")
         assert hasattr(client, "sessions")
         assert hasattr(client, "workspaces")
+        assert hasattr(client, "integrations")
+        assert hasattr(client, "wallets")
         client.close()
