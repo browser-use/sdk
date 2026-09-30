@@ -1,0 +1,41 @@
+docs/cloud/agent/quickstart.mdx
+  s_d394f711720c51::t_bff89b3ba46e7f 7
+docs/docs.json
+  s_d394f711720c51::t_36886b173ed719 1184-1185
+docs/cloud/agent/models.mdx
+  s_d394f711720c51::t_bff89b3ba46e7f 9,14,27,38,40
+docs/cloud/which-product.mdx
+  s_d394f711720c51::t_bff89b3ba46e7f 27
+browser-use-python/README.md
+  s_d394f711720c51::t_bff89b3ba46e7f 5
+browser-use-node/README.md
+  s_d394f711720c51::t_bff89b3ba46e7f 5
+README.md
+  s_d394f711720c51::t_bff89b3ba46e7f 10,12
+docs/cloud/legacy/agent.mdx
+  s_d394f711720c51::t_bff89b3ba46e7f 9
+docs/cloud/choosing-an-agent.mdx
+  s_d394f711720c51::t_36886b173ed719 7,9-13,15,17,19,95-96
+docs/cloud/quickstart.mdx
+  s_d394f711720c51::t_bff89b3ba46e7f 20
+docs/cloud/guides/billing.mdx
+  s_d394f711720c51::t_bff89b3ba46e7f 12,14
+docs/cloud/faq.mdx
+  s_d394f711720c51::t_bff89b3ba46e7f 17,21,129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4164d5cff1d4e229b96f145244b9aa02b0cdf3ca",
+  "prompts": {},
+  "sessions": {
+    "s_d394f711720c51": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ee80-a0fd-7822-8caa-bfac8d83ed93",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}
