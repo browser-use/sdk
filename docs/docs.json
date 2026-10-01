@@ -290,9 +290,10 @@
                 ]
               },
               {
-                "group": "Integration",
+                "group": "Integrations",
                 "icon": "plug",
                 "pages": [
+                  "open-source/customize/integrations/anthropic",
                   "open-source/customize/integrations/mcp-server"
                 ]
               },
