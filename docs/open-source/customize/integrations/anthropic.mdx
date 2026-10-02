@@ -150,10 +150,10 @@ Enabling `file_upload` or `javascript_exec` requires a confirmation callback. Th
 The example below asks for approval when Claude uploads a file or runs page JavaScript. It approves other browser actions automatically. The callback can use a terminal prompt, a review screen in your app, or your own approval service.
 
 <Frame>
-  <img className="w-full" src="/open-source/images/anthropic/confirmation-callback.svg" alt="A file upload passes enabled-action and file-policy checks, then reaches the application confirmation callback. Approval executes this action. A declined answer or callback error prevents execution. Browser confirmation does not cover Bash." />
+  <img className="w-full" src="/open-source/images/anthropic/approval-gate.svg" alt="Claude sends an action request to the confirmation callback. Allow executes the action; decline or error runs no action. Each approval covers one action. File upload and page JavaScript are off until enabled, and Bash has a separate execution policy." />
 </Frame>
 
-[Open full-size diagram](/open-source/images/anthropic/confirmation-callback.svg)
+[Open full-size diagram](/open-source/images/anthropic/approval-gate.svg) · [See the file-upload sequence](/open-source/images/anthropic/confirmation-callback.svg)
 
 ```python
 import asyncio
