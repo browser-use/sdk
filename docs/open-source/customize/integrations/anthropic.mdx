@@ -18,7 +18,9 @@ Give Claude a browser through the Anthropic Python SDK. Browser Use provides the
 
 Read the first three Hacker News posts and save their titles, links, points, and comment counts as Markdown and JSON. The task needs no account and keeps the browser on Hacker News. Bash writes the files to `outputs/`.
 
-Use Python 3.11 or newer. Install the packages and local Chromium:
+Use Python 3.11 or newer on Linux or macOS with `/bin/bash`. On Windows, run this example inside WSL. Bash executes on the SDK host even when the browser runs in Cloud.
+
+Install the packages and local Chromium:
 
 ```bash
 uv init --python 3.12
@@ -36,7 +38,10 @@ export ANTHROPIC_MODEL=your-model
 Save the following as `run_browser.py`. The commented Cloud option uses a key from [Browser Use Cloud](https://cloud.browser-use.com/new-api-key).
 
 ```python
-"""Build a Hacker News reading list with Anthropic and Browser Use."""
+"""Build a Hacker News reading list with Anthropic and Browser Use.
+
+Requires Linux/macOS with /bin/bash, or WSL on Windows.
+"""
 
 import asyncio
 import os
