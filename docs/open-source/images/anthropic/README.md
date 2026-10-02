@@ -1,10 +1,11 @@
 # Anthropic integration diagrams
 
-Three diagrams, each with a light and dark SVG and an editable Excalidraw scene. The scenes embed logo assets, so they remain self-contained when opened in Excalidraw. SVG exports include accessible titles and descriptions. Keep the visible explanations in the MDX page alongside the diagrams.
+`architecture.svg` introduces the integration. `tool-sequence.svg` follows a browser call and a Bash call through the tool runner. Both have an editable Excalidraw scene with embedded logo assets and SVG exports with accessible titles and descriptions. The warm background is part of each illustration and works in either docs theme. Keep the text explanations in the MDX page alongside the diagrams.
 
 Sources:
-- Anthropic mark: inline navigation SVG from https://www.anthropic.com/ retrieved 2026-10-01. Original geometry retained; light/dark foreground follows the surrounding text color.
-- Browser Use wordmark: this repository's docs/logo/light.svg and docs/logo/dark.svg at d76a854818dec1d8ec418484043731c9ed76c77b. Original paths and aspect ratio retained.
-- Diagram layout: follows the existing docs/cloud/images/*.excalidraw and matching light/dark SVG convention.
 
-Bash is shown with the Browser Use tools. It still executes on the SDK host. The 31-action count refers to browser actions only.
+- Anthropic mark: navigation SVG from https://www.anthropic.com/, retrieved 2026-10-01. Original geometry retained.
+- Browser Use wordmark: this repository's `docs/logo/light.svg` at d76a854818dec1d8ec418484043731c9ed76c77b. Original paths and aspect ratio retained.
+- Editable format follows the existing `docs/cloud/images/*.excalidraw` convention.
+
+Bash is shown with the Browser Use tools. It executes on the SDK host. The 31-action count refers to browser actions only.
