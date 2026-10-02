@@ -10,7 +10,7 @@ Browser Use exposes reasoning controls in two forms:
 - **API V3 and V2** use the provider-neutral `thinkingLevel` field with
   `disabled`, `low`, `medium`, or `high`.
 
-See [Models](/cloud/agent/models) for the complete V4 model list, recommended
+See [Models](/cloud/agent/models) for the complete V4 model list, default
 model, token pricing, and BYOK routes.
 
 ## API V4 model parameters
@@ -21,11 +21,18 @@ field names and accepted values therefore differ by model family.
 | Model strings | Path | Accepted values |
 | --- | --- | --- |
 | `gpt-6-astra` | `reasoning.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
+| `gpt-6-sol`, `gpt-6-luna` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
 | `gpt-5.5` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh` |
 | `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
 | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-sonnet-5` | `output_config.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
 | Same Claude models | `thinking.type` | `adaptive`, `disabled` |
 | Same Claude models | `thinking.display` | `omitted`, `summarized` |
+| `claude-opus-5-5` | `output_config.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
+| `claude-opus-5-5` | `thinking.type` | `adaptive` |
+| `claude-opus-5-5` | `thinking.display` | `omitted`, `summarized` |
+| `deepseek-v4.1-flash` | `thinking.type` | `enabled`, `disabled` |
+| `deepseek-v4.1-flash` | `reasoning_effort` | `low`, `high`, `max` |
+| `mimo-v2.6-pro`, `mimo-v2.6-flash` | `thinking.type` | `enabled`, `disabled` |
 | `gemini-3-flash`, `gemini-3.5-flash`, `gemini-3.6-flash` | `thinkingConfig.thinkingLevel` | `minimal`, `low`, `medium`, `high` |
 | `gemini-3.1-pro` | `thinkingConfig.thinkingLevel` | `low`, `medium`, `high` |
 
@@ -35,7 +42,9 @@ do not currently accept V4 `modelParams`.
 
 <Note>
   Omitting `modelParams` applies Browser Use's defaults for that V4 model. For
-  example, `gpt-5.6-luna` and `gpt-6-astra` default to `reasoning.effort: xhigh`.
+  example, `gpt-5.6-luna`, `gpt-6-astra`, and `gpt-6-sol` default to
+  `reasoning.effort: xhigh`; `gpt-6-luna` defaults to `medium`.
+  `deepseek-v4.1-flash` and the MiMo models default to `thinking.type: disabled`.
   Astra does not accept `none` or `minimal`. Send an empty
   object (`"modelParams": {}`) to opt out and use the provider's defaults.
 </Note>
