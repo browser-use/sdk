@@ -40,7 +40,9 @@ export ANTHROPIC_MODEL=your-model
 
 ## Quickstart
 
-This example reads the first three Hacker News posts and saves their titles, links, points, and comment counts as Markdown and JSON in `outputs/`. It needs no account and stays on Hacker News.
+This example enables all 31 browser actions plus Bash, including page JavaScript, file uploads, console logs, and network logs. JavaScript and uploads ask for approval before each call.
+
+It reads the first three Hacker News posts and saves their titles, links, points, and comment counts as Markdown and JSON in `outputs/`. It needs no account and stays on Hacker News.
 
 Save the following as `run_browser.py`:
 
@@ -55,6 +57,7 @@ import os
 from pathlib import Path
 
 from anthropic import AsyncAnthropic
+from anthropic.tools.browser import ConfirmContext, LocalFilePolicy  # pyright: ignore[reportMissingImports]
 
 from browser_use.integrations.anthropic import Bash, BrowserUse
 
@@ -73,11 +76,29 @@ configured output directory; write deliverables there. Remote browser paths are 
 Verify outputs and report blocked work honestly."""
 
 
+async def confirm(context: ConfirmContext) -> bool:
+	if context.member not in {'file_upload', 'javascript_exec'}:
+		return True
+	details = context.input.model_dump_json(exclude_none=True)
+	answer = await asyncio.to_thread(
+		input,
+		f'Action: {context.member}\nPage: {context.tab_url}\n{details}\nAllow this action? [y/N] ',
+	)
+	return answer.strip().lower() == 'y'
+
+
 async def main() -> None:
-	driver = BrowserUse()
-	# Remote option: get a key at https://cloud.browser-use.com/new-api-key
-	# Set BROWSER_USE_API_KEY, then replace the line above with:
-	# driver = BrowserUse(use_cloud=True)
+	# Set BROWSER_USE_API_KEY and add use_cloud=True below for a Cloud browser.
+	driver = BrowserUse(
+		configs={
+			'javascript_exec': {'enabled': True},
+			'file_upload': {'enabled': True},
+			'read_console': {'enabled': True},
+			'read_network': {'enabled': True},
+		},
+		confirm=confirm,
+		file_policy=LocalFilePolicy(upload_roots=[Path('uploads'), Path('outputs')]),
+	)
 	bash = Bash(output_dir=Path('outputs'))
 
 	async with driver, AsyncAnthropic() as client:
@@ -109,7 +130,7 @@ The system prompt is part of your application. Adapt it to your task.
 
 ## Choose a browser
 
-To run the browser in Browser Use Cloud, create a key at [Browser Use Cloud](https://cloud.browser-use.com/new-api-key), set `BROWSER_USE_API_KEY`, and construct the driver with `BrowserUse(use_cloud=True)`. Local Chromium is not needed in this mode. Bash still runs on the SDK host.
+To run the browser in Browser Use Cloud, create a key at [Browser Use Cloud](https://cloud.browser-use.com/new-api-key), set `BROWSER_USE_API_KEY`, and add `use_cloud=True` to the quickstart’s existing `BrowserUse(...)` call. Keep its `configs` and `confirm` arguments. For remote uploads, replace the local `file_policy` with the staged-document policy and resolver in [Uploads to a remote browser](#uploads-to-a-remote-browser). Local Chromium is not needed in this mode. Bash still runs on the SDK host.
 
 `BrowserUse` supports three browser configurations:
 
@@ -141,7 +162,20 @@ Claude calls structured actions such as `navigate`, `read_page`, and `left_click
   - Diagnostics: `read_console`, `read_network`, `javascript_exec`.
 </Accordion>
 
-`file_upload`, `javascript_exec`, `read_console`, and `read_network` are disabled by default. Enable only the actions your task needs. `javascript_exec` runs JavaScript inside the page.
+The quickstart enables all 31 browser actions plus Bash. A bare `BrowserUse()` follows Anthropic's defaults: 27 actions enabled, with `javascript_exec`, `file_upload`, `read_console`, and `read_network` off. The quickstart turns those four on with `configs`:
+
+```python
+configs={
+    'javascript_exec': {'enabled': True},
+    'file_upload': {'enabled': True},
+    'read_console': {'enabled': True},
+    'read_network': {'enabled': True},
+}
+```
+
+Your application supplies the tools to Claude through `tools=[driver, bash]`. The SDK sends the browser toolset and its `configs` to Anthropic, and Claude chooses calls from the enabled actions. Disabled actions are withheld from Claude and rejected by the SDK if requested. Registering `driver` alone does not include Bash. `javascript_exec` runs JavaScript inside the page; Bash runs commands on the SDK host.
+
+To opt out, set an action's `enabled` value to `False` in the `configs` passed to `BrowserUse(...)`. To remove Bash, use `tools=[driver]` and update the task and system prompt so they do not request shell commands.
 
 ## Approvals
 
@@ -150,7 +184,7 @@ Enabling `file_upload` or `javascript_exec` requires a confirmation callback. Th
 The example below asks for approval when Claude uploads a file or runs page JavaScript. It approves other browser actions automatically. The callback can use a terminal prompt, a review screen in your app, or your own approval service.
 
 <Frame>
-  <img className="w-full" src="/open-source/images/anthropic/approval-gate.svg" alt="Claude sends an action request to the confirmation callback. Allow executes the action; decline or error runs no action. Each approval covers one action. File upload and page JavaScript are off until enabled, and Bash has a separate execution policy." />
+  <img className="w-full" src="/open-source/images/anthropic/approval-gate.svg" alt="Claude requests an action. The confirmation callback either allows the driver to execute it or declines it. A callback error also prevents execution. The action output, refusal, or error returns to Claude; approval covers one action." />
 </Frame>
 
 [Open full-size diagram](/open-source/images/anthropic/approval-gate.svg) · [See the file-upload sequence](/open-source/images/anthropic/confirmation-callback.svg)
@@ -180,7 +214,7 @@ driver = BrowserUse(
         'javascript_exec': {'enabled': True},
     },
     confirm=confirm,
-    file_policy=LocalFilePolicy(upload_roots=[Path('uploads')]),
+    file_policy=LocalFilePolicy(upload_roots=[Path('uploads'), Path('outputs')]),
 )
 ```
 
@@ -199,7 +233,7 @@ Allow this action? [y/N]
 | User presses Enter or enters another answer | Returns `False`; the action does not execute. |
 | The prompt or approval service raises an exception | The action does not execute; the SDK reports an error. |
 
-Approval applies to this action only. Later calls pass through the callback again. The file allowlist still restricts uploads to `uploads/` in this local-browser example.
+Approval applies to this action only. Later calls pass through the callback again. The file allowlist restricts local uploads to `uploads/` and `outputs/`, so files written by Bash can also be approved for upload. Remote browsers require staging on the browser host, as described below.
 
 This callback prompts for upload and JavaScript and approves all other browser actions. Add checks for actions with side effects, such as sending a message, submitting a purchase, or deleting a record.
 
