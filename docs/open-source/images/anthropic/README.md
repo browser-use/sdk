@@ -9,3 +9,5 @@ Sources:
 - Editable format follows the existing `docs/cloud/images/*.excalidraw` convention.
 
 Bash is shown with the Browser Use tools. It executes on the SDK host. The 31-action count refers to browser actions only.
+
+`confirmation-callback.svg` follows a single file upload through validation, approval, and execution or refusal. `files-between-hosts.svg` separates application-supplied byte transfers from document IDs, file paths, and download notifications. Their editable Excalidraw scenes accompany the SVGs. Bash remains in the Browser Use integration; browser confirmation does not apply to Bash.
