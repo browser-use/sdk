@@ -130,7 +130,7 @@ The system prompt is part of your application. Adapt it to your task.
 
 ## Choose a browser
 
-To run the browser in Browser Use Cloud, create a key at [Browser Use Cloud](https://cloud.browser-use.com/new-api-key), set `BROWSER_USE_API_KEY`, and add `use_cloud=True` to the quickstart’s existing `BrowserUse(...)` call. Keep its `configs`, `confirm`, and `file_policy` arguments. Local Chromium is not needed in this mode. Bash still runs on the SDK host.
+To run the browser in Browser Use Cloud, create a key at [Browser Use Cloud](https://cloud.browser-use.com/new-api-key), set `BROWSER_USE_API_KEY`, and add `use_cloud=True` to the quickstart’s existing `BrowserUse(...)` call. Keep its `configs` and `confirm` arguments. For remote uploads, replace the local `file_policy` with the staged-document policy and resolver in [Uploads to a remote browser](#uploads-to-a-remote-browser). Local Chromium is not needed in this mode. Bash still runs on the SDK host.
 
 `BrowserUse` supports three browser configurations:
 
