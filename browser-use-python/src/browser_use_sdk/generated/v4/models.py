@@ -18,6 +18,32 @@ from pydantic import (
 )
 
 
+class APIKeySpendLimitDetail(BaseModel):
+    code: str | None = Field('api_key_monthly_spend_limit_reached', title='Code')
+    message: str = Field(..., title='Message')
+    cap: float = Field(..., title='Cap')
+    spent: float = Field(..., title='Spent')
+
+
+class APIKeySpendLimitError(BaseModel):
+    detail: str | APIKeySpendLimitDetail = Field(..., title='Detail')
+
+
+class AgentCardWalletSummary(BaseModel):
+    id: UUID = Field(..., title='Id')
+    name: str = Field(..., title='Name')
+    currency: str = Field(..., title='Currency')
+    available_cents: int = Field(..., alias='availableCents', title='Availablecents')
+    active_hold_cents: int = Field(
+        ..., alias='activeHoldCents', title='Activeholdcents'
+    )
+
+
+class AuthorizeResponse(BaseModel):
+    redirect_url: str = Field(..., title='Redirect Url')
+    provider: str = Field(..., title='Provider')
+
+
 class BrowserDownloadFile(BaseModel):
     path: str = Field(
         ...,
@@ -138,11 +164,22 @@ class BrowserSessionView(BaseModel):
         description='Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.',
         title='Recording URL',
     )
+    recording_available: bool | None = Field(
+        True,
+        alias='recordingAvailable',
+        description='False when a recording can never appear for this session: recording was disabled, or the browser stopped long enough ago that the upload is not coming. Only ever false from proof, so a failed recording lookup leaves it true. Clients polling for `recordingUrl` must stop when this is false.',
+        title='Recording Available',
+    )
     metadata: Dict[str, str] | None = Field(
         {},
         description='Caller-supplied labels set when the browser was created.',
         title='Metadata',
     )
+
+
+class ConnectionStatusResponse(BaseModel):
+    provider: str = Field(..., title='Provider')
+    is_connected: bool = Field(..., title='Is Connected')
 
 
 class BrowserScreenWidth(RootModel[int]):
@@ -210,6 +247,11 @@ class CustomProxy(BaseModel):
     )
 
 
+class DisconnectResponse(BaseModel):
+    success: bool = Field(..., title='Success')
+    provider: str = Field(..., title='Provider')
+
+
 class LiveViewUrl(RootModel[AnyUrl]):
     root: AnyUrl = Field(..., title='Liveviewurl')
 
@@ -229,7 +271,6 @@ class InlineSecretSource(BaseModel):
     value: SecretStr = Field(
         ...,
         description='The secret itself. Limited to 4096 bytes once encoded for encryption; non-ASCII characters cost more than one byte each.',
-        max_length=4096,
         min_length=1,
         title='Value',
     )
@@ -237,6 +278,21 @@ class InlineSecretSource(BaseModel):
 
 class InsufficientCreditsError(BaseModel):
     detail: str | None = Field('Insufficient credits', title='Detail')
+
+
+class IntegrationCategoryResponse(BaseModel):
+    categories: List[str] = Field(..., title='Categories')
+
+
+class IntegrationResponse(BaseModel):
+    provider: str = Field(..., title='Provider')
+    display_name: str = Field(..., title='Display Name')
+    description: str = Field(..., title='Description')
+    icon_url: str | None = Field(..., title='Icon Url')
+    category: str = Field(..., title='Category')
+    is_connected: bool = Field(..., title='Is Connected')
+    auth_type: str = Field(..., title='Auth Type')
+    is_popular: bool | None = Field(False, title='Is Popular')
 
 
 class OnePasswordSecretSource(BaseModel):
@@ -710,6 +766,12 @@ class RunBrowserSettings(BaseModel):
         description='Custom screen height in pixels for the browser.',
         title='Screenheight',
     )
+    allow_resizing: bool | None = Field(
+        None,
+        alias='allowResizing',
+        description='Let you or the agent resize the browser window over CDP. Resizing makes the browser easier to detect. API runs default to off. Follow-up runs inherit the value of the previous browser. The value applies only when the run starts a new browser.',
+        title='Allowresizing',
+    )
     record: bool | None = Field(
         None,
         description="Record the browser session to an mp4, retrievable via GET /browsers/{id} once the browser stops. API runs default to off; pass true to enable. Like other browser settings, this only applies when a new browser is provisioned: a follow-up that reuses the session's live browser keeps that browser's recording state. Ignored (always off) for Zero Data Retention projects.",
@@ -718,6 +780,9 @@ class RunBrowserSettings(BaseModel):
 
 
 class Model(Enum):
+    mimo_v2_6_pro = 'mimo-v2.6-pro'
+    mimo_v2_6_flash = 'mimo-v2.6-flash'
+    deepseek_v4_1_flash = 'deepseek-v4.1-flash'
     glm_5_2 = 'glm-5.2'
     grok_4_5 = 'grok-4.5'
     grok_4_6 = 'grok-4.6'
@@ -728,10 +793,14 @@ class Model(Enum):
     claude_opus_4_7 = 'claude-opus-4.7'
     claude_opus_4_8 = 'claude-opus-4.8'
     claude_opus_5 = 'claude-opus-5'
+    claude_opus_5_5 = 'claude-opus-5-5'
     claude_fable_5 = 'claude-fable-5'
     claude_sonnet_5 = 'claude-sonnet-5'
     gpt_5_5 = 'gpt-5.5'
     gpt_5_6 = 'gpt-5.6'
+    gpt_6_astra = 'gpt-6-astra'
+    gpt_6_sol = 'gpt-6-sol'
+    gpt_6_luna = 'gpt-6-luna'
     gpt_5_6_sol = 'gpt-5.6-sol'
     gpt_5_6_terra = 'gpt-5.6-terra'
     gpt_5_6_luna = 'gpt-5.6-luna'
@@ -739,6 +808,17 @@ class Model(Enum):
     gemini_3_5_flash = 'gemini-3.5-flash'
     gemini_3_1_pro = 'gemini-3.1-pro'
     gemini_3_flash = 'gemini-3-flash'
+    bu_ultrafast = 'bu-ultrafast'
+    bu_fast = 'bu-fast'
+
+
+class OpVaultId(RootModel[str]):
+    root: str = Field(
+        ...,
+        description="A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.",
+        max_length=64,
+        title='Opvaultid',
+    )
 
 
 class MaxCostUsd(RootModel[float]):
@@ -772,6 +852,12 @@ class RunCreateResponse(BaseModel):
     events_url: str = Field(..., alias='eventsUrl', title='Eventsurl')
     missing_file_ids: List[UUID] | None = Field(
         None, alias='missingFileIds', title='Missingfileids'
+    )
+    skipped_vault_items: List[str] | None = Field(
+        None,
+        alias='skippedVaultItems',
+        description='Titles of opVaultId items that hold a credential but no 1Password website, so deriving their domains left them with nowhere to be typed. The run still starts without them; add a website to the item or pass opVaultAllowedDomains.',
+        title='Skippedvaultitems',
     )
 
 
@@ -809,9 +895,16 @@ class RunSummary(BaseModel):
     task: str = Field(..., title='Task')
     title: str | None = Field(..., title='Title')
     model: str = Field(..., title='Model')
+    model_params: Dict[str, Any] | None = Field(
+        None, alias='modelParams', title='Modelparams'
+    )
     context_limit: int = Field(..., alias='contextLimit', title='Contextlimit')
     status: Status2 = Field(..., title='Status')
     result: str | None = Field(..., title='Result')
+    output: Any = Field(None, title='Output')
+    output_schema: Dict[str, Any] | None = Field(
+        None, alias='outputSchema', title='Outputschema'
+    )
     error: str | None = Field(..., title='Error')
     session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
     workspace_id: UUID | None = Field(..., alias='workspaceId', title='Workspaceid')
@@ -828,10 +921,6 @@ class RunSummary(BaseModel):
     total_cost_usd: str = Field(..., alias='totalCostUsd', title='Totalcostusd')
     created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
     updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
-    output: Any = Field(None, title='Output')
-    output_schema: Dict[str, Any] | None = Field(
-        None, alias='outputSchema', title='Outputschema'
-    )
 
 
 class SecretBinding(BaseModel):
@@ -850,10 +939,21 @@ class SecretBinding(BaseModel):
         ...,
         alias='allowedDomains',
         description='Hosts the secret may be typed into, e.g. ["github.com"]. A host covers its subdomains. Bare hostnames only — no scheme, port, path, or wildcard.',
-        max_length=10,
+        max_length=20,
         min_length=1,
         title='Alloweddomains',
     )
+
+
+class SessionCostResponse(BaseModel):
+    session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
+    num_runs: int = Field(..., alias='numRuns', title='Numruns')
+    llm_cost_usd: str = Field(..., alias='llmCostUsd', title='Llmcostusd')
+    search_cost_usd: str = Field(..., alias='searchCostUsd', title='Searchcostusd')
+    browser_cost_usd: str = Field(..., alias='browserCostUsd', title='Browsercostusd')
+    proxy_cost_usd: str = Field(..., alias='proxyCostUsd', title='Proxycostusd')
+    proxy_used_mb: str = Field(..., alias='proxyUsedMb', title='Proxyusedmb')
+    total_cost_usd: str = Field(..., alias='totalCostUsd', title='Totalcostusd')
 
 
 class SessionInfo(BaseModel):
@@ -877,15 +977,49 @@ class SessionNotFoundError(BaseModel):
     detail: str | None = Field('Session not found', title='Detail')
 
 
+class SessionShareInfo(BaseModel):
+    id: UUID = Field(..., title='Id')
+    share_token: str = Field(..., alias='shareToken', title='Sharetoken')
+    session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
+    is_active: bool = Field(..., alias='isActive', title='Isactive')
+    view_count: int = Field(..., alias='viewCount', title='Viewcount')
+    created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
+    share_url: str = Field(..., alias='shareUrl', title='Shareurl')
+
+
+class SessionShareUpdateRequest(BaseModel):
+    is_active: bool = Field(..., alias='isActive', title='Isactive')
+
+
 class SessionTimeoutLimitExceededError(BaseModel):
     detail: str | None = Field(
         'Maximum session timeout is 4 hours (240 minutes).', title='Detail'
     )
 
 
+class Title(RootModel[str]):
+    root: str = Field(..., max_length=255, title='Title')
+
+
+class SessionUpdateRequest(BaseModel):
+    title: Title | None = Field(None, title='Title')
+
+
 class SteeringCutoff(BaseModel):
     source_run_id: UUID = Field(..., alias='sourceRunId', title='Sourcerunid')
     created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
+
+
+class Mode1(Enum):
+    test = 'test'
+    live = 'live'
+
+
+class StripeLinkStatusResponse(BaseModel):
+    is_connected: bool = Field(..., alias='isConnected', title='Isconnected')
+    connection_id: UUID | None = Field(None, alias='connectionId', title='Connectionid')
+    link_email: str | None = Field(None, alias='linkEmail', title='Linkemail')
+    mode: Mode1 | None = Field(None, title='Mode')
 
 
 class TooManyConcurrentActiveSessionsError(BaseModel):
@@ -1038,6 +1172,10 @@ class WorkspaceUpdateRequest(BaseModel):
     name: Name2 | None = Field(None, title='Name')
 
 
+class AgentCardWalletListResponse(BaseModel):
+    wallets: List[AgentCardWalletSummary] = Field(..., title='Wallets')
+
+
 class BrowserSessionItemView(BaseModel):
     model_config = ConfigDict(
         regex_engine="python-re",
@@ -1151,6 +1289,11 @@ class CreateBrowserSessionRequest(BaseModel):
         description='Country code for proxy location. Defaults to US. Set to null to disable proxy.',
         title='Proxy Country Code',
     )
+    metadata: Dict[str, str] | None = Field(
+        None,
+        description='Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history.',
+        title='Metadata',
+    )
     timeout: int | None = Field(
         60,
         description='The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.',
@@ -1198,15 +1341,17 @@ class CreateBrowserSessionRequest(BaseModel):
         description='If True, enables session recording. Defaults to False.',
         title='Enable Recording',
     )
-    metadata: Dict[str, str] | None = Field(
-        None,
-        description='Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history.',
-        title='Metadata',
-    )
 
 
 class HTTPValidationError(BaseModel):
     detail: List[ValidationError] | None = Field(None, title='Detail')
+
+
+class IntegrationListResponse(BaseModel):
+    integrations: List[IntegrationResponse] = Field(..., title='Integrations')
+    total: int = Field(..., title='Total')
+    limit: int = Field(..., title='Limit')
+    offset: int = Field(..., title='Offset')
 
 
 class ProfileListResponse(BaseModel):
@@ -1238,7 +1383,7 @@ class SecretBindings(RootModel[List[SecretBinding]]):
     root: List[SecretBinding] = Field(
         ...,
         description='Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run.',
-        max_length=10,
+        max_length=20,
         title='Secretbindings',
     )
 
@@ -1248,7 +1393,17 @@ class RunCreateRequest(BaseModel):
         extra='forbid',
     )
     task: str = Field(..., min_length=1, title='Task')
-    model: Model | None = Field(Model.gpt_5_6_luna, title='Model')
+    output_schema: Dict[str, Any] | None = Field(
+        None,
+        alias='outputSchema',
+        description='Optional JSON Schema for the final output (API runs only).',
+        title='Outputschema',
+    )
+    model: Model | None = Field(
+        Model.gpt_5_6_luna,
+        description='bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.',
+        title='Model',
+    )
     model_params: Dict[str, Any] | None = Field(
         None,
         alias='modelParams',
@@ -1263,6 +1418,12 @@ class RunCreateRequest(BaseModel):
         description='If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.',
         title='Agentmail',
     )
+    agentcard_wallet_id: UUID | None = Field(
+        None, alias='agentcardWalletId', title='Agentcardwalletid'
+    )
+    stripe_link_connection_id: UUID | None = Field(
+        None, alias='stripeLinkConnectionId', title='Stripelinkconnectionid'
+    )
     attached_file_ids: AttachedFileIds | None = Field(
         None, alias='attachedFileIds', title='Attachedfileids'
     )
@@ -1272,15 +1433,21 @@ class RunCreateRequest(BaseModel):
         description='Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run.',
         title='Secretbindings',
     )
+    op_vault_id: OpVaultId | None = Field(
+        None,
+        alias='opVaultId',
+        description="A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.",
+        title='Opvaultid',
+    )
+    op_vault_allowed_domains: List[str] | None = Field(
+        None,
+        alias='opVaultAllowedDomains',
+        description='Hosts every credential from opVaultId may be typed into, e.g. ["amazon.com"]. Omit to derive each item\'s hosts from its own 1Password website entries; items with no website are then skipped and reported in skippedVaultItems. A host covers its subdomains, so 1Password\'s ExactDomain autofill setting is not honored either way.',
+        title='Opvaultalloweddomains',
+    )
     judge: RunJudgeSettings | None = None
     max_cost_usd: MaxCostUsd | MaxCostUsd1 | None = Field(
         None, alias='maxCostUsd', title='Maxcostusd'
-    )
-    output_schema: Dict[str, Any] | None = Field(
-        None,
-        alias='outputSchema',
-        description='Optional JSON Schema for the final output (API runs only).',
-        title='Outputschema',
     )
 
 

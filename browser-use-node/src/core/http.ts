@@ -162,6 +162,10 @@ export class HttpClient {
     return this.request<T>("PATCH", path, { body, query });
   }
 
+  put<T>(path: string, body?: unknown, query?: Record<string, unknown>): Promise<T> {
+    return this.request<T>("PUT", path, { body, query });
+  }
+
   delete<T>(path: string, query?: Record<string, unknown>): Promise<T> {
     return this.request<T>("DELETE", path, { query });
   }

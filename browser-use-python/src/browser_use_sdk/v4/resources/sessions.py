@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
     QueuedMessage,
     QueueListResponse,
+    SessionCostResponse,
     SessionInfo,
     SessionListResponse,
+    SessionShareInfo,
 )
 
 if TYPE_CHECKING:
@@ -60,6 +63,55 @@ class Sessions:
     def purge(self, session_id: str | UUID) -> None:
         """Immediately purge all data for a session on a ZDR-enabled project."""
         self._http.request("POST", f"/sessions/{session_id}/purge")
+
+    def update(
+        self,
+        session_id: str | UUID,
+        *,
+        title: str | None = _UNSET,  # type: ignore[assignment]
+        **extra: Any,
+    ) -> SessionInfo:
+        """Rename a session; pass ``title=None`` to clear its name."""
+        body: dict[str, Any] = {}
+        if title is not _UNSET:
+            body["title"] = title
+        body.update(extra)
+        return SessionInfo.model_validate(
+            self._http.request("PATCH", f"/sessions/{session_id}", json=body)
+        )
+
+    def delete(self, session_id: str | UUID) -> None:
+        """Delete a session, cancelling its active run and pending messages."""
+        self._http.request("DELETE", f"/sessions/{session_id}")
+
+    def cost(self, session_id: str | UUID) -> SessionCostResponse:
+        """Get what the session has cost so far: LLM, search, browser and proxy."""
+        return SessionCostResponse.model_validate(
+            self._http.request("GET", f"/sessions/{session_id}/cost")
+        )
+
+    def get_share(self, session_id: str | UUID) -> SessionShareInfo | None:
+        """Get the session's public share link, or None if it was never shared."""
+        data = self._http.request("GET", f"/sessions/{session_id}/share")
+        return None if data is None else SessionShareInfo.model_validate(data)
+
+    def create_share(self, session_id: str | UUID) -> SessionShareInfo:
+        """Enable a public share link for the session, reusing its token if one exists."""
+        return SessionShareInfo.model_validate(
+            self._http.request("POST", f"/sessions/{session_id}/share")
+        )
+
+    def update_share(
+        self, session_id: str | UUID, *, is_active: bool, **extra: Any
+    ) -> SessionShareInfo:
+        """Turn the session's public share link on or off."""
+        return SessionShareInfo.model_validate(
+            self._http.request(
+                "PUT",
+                f"/sessions/{session_id}/share",
+                json={"isActive": is_active, **extra},
+            )
+        )
 
     def send_message(
         self,
@@ -136,6 +188,55 @@ class AsyncSessions:
     async def purge(self, session_id: str | UUID) -> None:
         """Immediately purge all data for a session on a ZDR-enabled project."""
         await self._http.request("POST", f"/sessions/{session_id}/purge")
+
+    async def update(
+        self,
+        session_id: str | UUID,
+        *,
+        title: str | None = _UNSET,  # type: ignore[assignment]
+        **extra: Any,
+    ) -> SessionInfo:
+        """Rename a session; pass ``title=None`` to clear its name."""
+        body: dict[str, Any] = {}
+        if title is not _UNSET:
+            body["title"] = title
+        body.update(extra)
+        return SessionInfo.model_validate(
+            await self._http.request("PATCH", f"/sessions/{session_id}", json=body)
+        )
+
+    async def delete(self, session_id: str | UUID) -> None:
+        """Delete a session, cancelling its active run and pending messages."""
+        await self._http.request("DELETE", f"/sessions/{session_id}")
+
+    async def cost(self, session_id: str | UUID) -> SessionCostResponse:
+        """Get what the session has cost so far: LLM, search, browser and proxy."""
+        return SessionCostResponse.model_validate(
+            await self._http.request("GET", f"/sessions/{session_id}/cost")
+        )
+
+    async def get_share(self, session_id: str | UUID) -> SessionShareInfo | None:
+        """Get the session's public share link, or None if it was never shared."""
+        data = await self._http.request("GET", f"/sessions/{session_id}/share")
+        return None if data is None else SessionShareInfo.model_validate(data)
+
+    async def create_share(self, session_id: str | UUID) -> SessionShareInfo:
+        """Enable a public share link for the session, reusing its token if one exists."""
+        return SessionShareInfo.model_validate(
+            await self._http.request("POST", f"/sessions/{session_id}/share")
+        )
+
+    async def update_share(
+        self, session_id: str | UUID, *, is_active: bool, **extra: Any
+    ) -> SessionShareInfo:
+        """Turn the session's public share link on or off."""
+        return SessionShareInfo.model_validate(
+            await self._http.request(
+                "PUT",
+                f"/sessions/{session_id}/share",
+                json={"isActive": is_active, **extra},
+            )
+        )
 
     async def send_message(
         self,
