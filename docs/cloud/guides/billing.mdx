@@ -48,11 +48,17 @@ A Claude consumer subscription is not an Anthropic API key. BYOK means a support
 
 ## Proxy and browser charges
 
+The browser-time estimate is not the total session price: network usage is billed separately, including with a custom proxy. Managed residential proxy traffic and direct/custom-proxy egress have different rates. Use the [pricing page](https://browser-use.com/pricing) for current rates and your project's billing terms for legacy pricing.
+
+For example, at a browser rate of \$0.02/hour billed by the minute, 12 minutes 13 seconds rounds to 13 billable minutes (about \$0.00433). At \$0.20/GB, 74.13 MB of direct/custom-proxy traffic adds about \$0.01448 (74.13 / 1024 × 0.20). The combined \$0.01881 rounds to **\$0.02** in a two-decimal display; this does not mean browser time alone cost two cents.
+
 A [custom proxy](/cloud/browser/proxies) replaces the Browser Use managed proxy. Your proxy provider bills its own usage, and Browser Use browser/network charges still apply. Disabling the managed proxy also leaves browser and direct network usage billable.
 
 Run completion does not necessarily stop the browser. A browser may remain available for the next turn. When your application no longer needs it, explicitly stop the owned browser with `PATCH /api/v4/browsers/{id}` and `{"action":"stop"}`. Disconnecting Playwright/CDP or closing the SDK client is not the cloud stop operation. See [browser lifetime](/cloud/guides/concurrency#keep-track-of-browser-lifetime).
 
 ## Auto recharge
+
+Auto recharge requires a saved payment method. If it is not visible in Billing, first save a payment method through a manual credit purchase. Select the project that should receive the credits.
 
 Auto recharge has two separate settings:
 

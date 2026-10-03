@@ -43,11 +43,17 @@ For projects on current pricing, concurrency increases with the project's net se
 | \$5,000 | 500 |
 | \$25,000 | 1,000 |
 
+Before any qualifying payment, the current spend-tier baseline is 10 concurrent sessions, subject to account-specific free-tier restrictions. A top-up raises concurrency only when cumulative qualifying payments cross a tier threshold; a small first purchase does not automatically grant 50 sessions.
+
 Payments count for the project that received them. Refunds and disputed payments do not contribute to qualifying spend. Signup credits and other credit grants are not qualifying purchases. Funding through other billing arrangements may follow different rules.
 
 **Your higher concurrency allowance is preserved.** When a project participates in spend tiers, its limit takes the maximum of its applicable legacy-plan allowance, the current pricing floor, and its spend-tier allowance. An already-granted higher limit is not automatically lowered. For example, a legacy allowance of 250 remains 250 when the spend tier would grant 50.
 
 Some active legacy or externally billed projects follow a different billing path. Lapsed or cancelling legacy plans can transition onto current pricing while keeping their higher grant. Use `concurrentSessionLimit` and the project’s Billing page as the source of truth. If the tier ladder is absent or differs from your expectations, contact support with your project ID before making a purchase solely to increase concurrency.
+
+## Profile quotas are separate
+
+Stored browser profiles, simultaneous browser sessions, HTTP request rates and credit balance have separate limits. A profile-count limit is not a concurrency limit. Read the full error before adding credits: a top-up does not raise the profile-count ceiling or an API key's monthly spending cap. For an unexpected `Profile limit reached` response, send support the project ID, endpoint, timestamp and exact response; do not send the API key.
 
 ## Keep track of browser lifetime
 
