@@ -133,8 +133,15 @@ curl https://api.browser-use.com/api/v4/runs \
 ```
 </CodeGroup>
 
-The MP4 becomes available in the Dashboard after the browser stops. API runs
-default to recording off, and Zero Data Retention projects never record.
+The MP4 becomes available in the Dashboard after the browser stops. After a run
+completes, its browser can stay active for follow-ups; finishing the run alone
+does not finalize the video. Once you no longer need the browser, stop it with
+`PATCH /api/v4/browsers/{id}` and `{"action":"stop"}`, then allow time for upload
+and processing.
+
+API runs default to recording off. Zero Data Retention (ZDR) projects never
+record, even if recording was requested; stopping the browser cannot produce
+a recording when ZDR is active.
 
 For standalone browsers, use `enableRecording: true` in
 `POST /api/v4/browsers` (`enable_recording=True` in the Python SDK).
