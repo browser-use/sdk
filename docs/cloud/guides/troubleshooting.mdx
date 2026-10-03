@@ -45,6 +45,13 @@ A site can also challenge a fresh browser even if it accepts an existing
 logged-in browser. Reuse an appropriate [profile](/cloud/guides/profile-sync),
 and compare the actual proxy configuration before changing the agent prompt.
 
+## A checkout secret is refused
+
+The payment field may be inside a provider's iframe. For `domain_not_allowed`,
+add that intended provider's hostname to the secret binding's `allowedDomains`
+and resend the binding in a follow-up run. For `target_not_editable`, check
+field focus and readiness instead. See [checkout and payment frames](/cloud/guides/secrets#checkout-and-payment-frames).
+
 ## The browser is idle, but usage or a concurrency slot remains
 
 A completed agent run can leave its browser available for follow-ups. Closing
@@ -77,12 +84,16 @@ clicking or refreshing a challenge. See [proxies](/cloud/browser/proxies) and
 
 ## What should I send support?
 
+If you hit an issue you cannot explain, email contact@browser-use.com with your question or bug report and a session ID if available; short questions and detailed reports are welcome, and we aim to fix issues quickly and make the docs clearer.
+
+The details below help us investigate, but you do not need all of them to ask.
+
 Include the API version and endpoint, run/session/browser/workspace IDs that
 apply, the project ID, timestamp with time zone, SDK version, and the complete
 redacted error response. State what you expected and what actually happened.
 For billing, include the payment reference and selected project; for a file
 problem, include the filename, size, and the operation that failed.
 
-Do not send API keys, passwords, custom-proxy credentials, session cookies,
+Do not send API keys, passwords, card details, custom-proxy credentials, session cookies,
 or active CDP/live-view URLs. A screenshot alone often omits the identifier
 needed to trace a request.
