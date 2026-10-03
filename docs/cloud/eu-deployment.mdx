@@ -10,7 +10,7 @@ workload storage and a smaller set of supported features.
 
 Use your existing account and project. Create an EU API key and point your
 client at the EU endpoint. You do not need to bring your own model key:
-managed **GPT-5.6 Luna** and **GPT-5.6 Sol** are available.
+managed **GPT-6 Luna**, **GPT-5.6 Luna** and **GPT-5.6 Sol** are available.
 
 | | EU | US |
 | --- | --- | --- |
@@ -52,7 +52,6 @@ from browser_use_sdk.v4 import BrowserUse
 with BrowserUse(base_url="https://api.eu.browser-use.com/api/v4") as client:
     run = client.runs.create(
         "Open https://example.com and report the page heading.",
-        model="gpt-5.6-luna",
         browser_settings={"proxyCountryCode": "de"},
     )
     result = client.runs.wait_for_completion(run.id)
@@ -66,7 +65,6 @@ const client = new BrowserUse({
 });
 const run = await client.runs.create({
   task: "Open https://example.com and report the page heading.",
-  model: "gpt-5.6-luna",
   browserSettings: { proxyCountryCode: "de" },
 });
 const result = await client.runs.waitForCompletion(run.id);
@@ -78,7 +76,6 @@ curl --fail-with-body https://api.eu.browser-use.com/api/v4/runs \
   -H "Content-Type: application/json" \
   -d '{
     "task": "Open https://example.com and report the page heading.",
-    "model": "gpt-5.6-luna",
     "browserSettings": {"proxyCountryCode": "de"}
   }'
 ```
@@ -87,7 +84,8 @@ curl --fail-with-body https://api.eu.browser-use.com/api/v4/runs \
 The REST call returns a run ID. Poll `GET /api/v4/runs/{id}/status` on the same
 EU host until its status is `completed`, `failed` or `cancelled`, then read
 `GET /api/v4/runs/{id}` for the result. To use Sol,
-set `model` to `gpt-5.6-sol`. Luna is the default when the model is omitted.
+set `model` to `gpt-5.6-sol`. Omitting both `model` and `modelParams` uses
+GPT-6 Luna with High reasoning. Explicit GPT-5.6 Luna and Sol selections remain supported.
 
 The normal [session](/cloud/agent/sessions),
 [workspace](/cloud/agent/workspaces) and
