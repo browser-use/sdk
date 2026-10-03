@@ -20,6 +20,7 @@ field names and accepted values therefore differ by model family.
 
 | Model strings | Path | Accepted values |
 | --- | --- | --- |
+| `gpt-6-luna` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
 | `gpt-6-astra` | `reasoning.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
 | `gpt-5.5` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh` |
 | `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
@@ -34,8 +35,9 @@ field names and accepted values therefore differ by model family.
 do not currently accept V4 `modelParams`.
 
 <Note>
-  Omitting `modelParams` applies Browser Use's defaults for that V4 model. For
-  example, `gpt-5.6-luna` and `gpt-6-astra` default to `reasoning.effort: xhigh`.
+  Omitting both `model` and `modelParams` uses `gpt-6-luna` with
+  `reasoning.effort: high`. For an explicit model, omitting `modelParams` applies
+  that model's defaults; `gpt-5.6-luna` and `gpt-6-astra` use `reasoning.effort: xhigh`.
   Astra does not accept `none` or `minimal`. Send an empty
   object (`"modelParams": {}`) to opt out and use the provider's defaults.
 </Note>

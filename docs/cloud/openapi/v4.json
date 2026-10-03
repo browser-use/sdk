@@ -4865,14 +4865,14 @@
                             "gpt-5.5",
                             "gpt-5.6",
                             "gpt-6-astra",
+                            "gpt-6-luna",
                             "gpt-5.6-sol",
                             "gpt-5.6-terra",
                             "gpt-5.6-luna",
                             "gemini-3.6-flash",
                             "gemini-3.5-flash",
                             "gemini-3.1-pro",
-                            "gemini-3-flash",
-                            "gpt-6-luna"
+                            "gemini-3-flash"
                         ],
                         "title": "Model",
                         "default": "gpt-6-luna"
