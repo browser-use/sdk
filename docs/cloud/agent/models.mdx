@@ -4,12 +4,12 @@ description: "Choose a V4 model and understand its token pricing."
 icon: microchip
 ---
 
-Omit `model` and `modelParams` to use **GPT-6 Luna with High reasoning**, or pass explicit settings when creating a run. EU and Bedrock-only projects retain their compatible defaults.
+Omit `model` and `modelParams` to use **GPT-6 Luna with High reasoning**, or pass explicit settings when creating a run. EU uses the same task default through its regional provider route; Bedrock-only projects retain their compatible default.
 The following Browser Use-hosted models have published token pricing:
 
 | Model | API string | Input | Cache read | Output | BYOK |
 | ----- | ---------- | ----: | ---------: | -----: | ---- |
-| GPT-5.6 Luna (recommended) | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
+| GPT-5.6 Luna | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
 | Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
 | Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
 | GPT-5.6 Sol | `gpt-5.6-sol` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
@@ -23,9 +23,8 @@ See [Thinking levels](/cloud/agent/thinking-levels) for V4 `modelParams` and
 the normalized `thinkingLevel` values available in V2 and V3.
 
 <Tip>
-  We recommend **GPT-5.6 Luna** for most tasks. It combines near-Opus benchmark
-  performance with the lowest token price and fastest median response time in
-  current V4 production traffic.
+  Use **GPT-6 Luna with High reasoning** for the default V4 configuration.
+  Omit both `model` and `modelParams` to let the API apply it.
 </Tip>
 
 ## All supported V4 model IDs
@@ -40,7 +39,7 @@ from the dashboard picker.
 | Provider | Model IDs | BYOK provider |
 | --- | --- | --- |
 | Anthropic | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-fable-5`, `claude-sonnet-5` | Anthropic |
-| OpenAI | `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-astra` | OpenAI |
+| OpenAI | `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-astra`, `gpt-6-luna` | OpenAI |
 | Google | `gemini-3-flash`, `gemini-3.1-pro`, `gemini-3.5-flash`, `gemini-3.6-flash` | Google |
 | xAI | `grok-4.5`, `grok-4.6` | — |
 | Z.ai | `glm-5.2`, `glm-5.3-flash` | — |
@@ -51,6 +50,10 @@ from the dashboard picker.
 See [Thinking levels](/cloud/agent/thinking-levels) for the reasoning controls
 accepted by each model. Not every model accepts `modelParams`.
 
+If your installed TypeScript SDK does not yet list `gpt-6-luna`, omit both
+`model` and `modelParams` as below to use the API default, or use REST to select
+that model explicitly. The API model catalog can advance before SDK type releases.
+
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
@@ -58,7 +61,6 @@ from browser_use_sdk.v4 import BrowserUse
 client = BrowserUse()
 run = client.runs.create(
     "Compare three project-management tools",
-    model="gpt-5.6-luna",
 )
 ```
 ```typescript TypeScript
@@ -67,14 +69,13 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Compare three project-management tools",
-  model: "gpt-5.6-luna",
 });
 ```
 ```bash curl
 curl https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task":"Compare three PM tools","model":"gpt-5.6-luna"}'
+  -d '{"task":"Compare three PM tools"}'
 ```
 </CodeGroup>
 
