@@ -656,7 +656,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Extensions */
+        /**
+         * List Extensions
+         * @description List the extensions uploaded to this project.
+         */
         get: operations["list_extensions_extensions_get"];
         put?: never;
         /**
@@ -677,7 +680,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Extension */
+        /**
+         * Get Extension
+         * @description Get an uploaded extension by its ID.
+         */
         get: operations["get_extension_extensions__extension_id__get"];
         put?: never;
         post?: never;
@@ -4013,7 +4019,7 @@ export interface operations {
                     "application/json": components["schemas"]["ExtensionView"];
                 };
             };
-            /** @description Extensions are not enabled for this project */
+            /** @description Extensions are not available for Zero Data Retention projects */
             403: {
                 headers: {
                     [name: string]: unknown;

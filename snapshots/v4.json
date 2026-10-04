@@ -2174,7 +2174,7 @@
             }
           },
           "403": {
-            "description": "Extensions are not enabled for this project"
+            "description": "Extensions are not available for Zero Data Retention projects"
           },
           "413": {
             "description": "The upload is larger than 100 MiB"
@@ -2211,6 +2211,7 @@
           "Extensions"
         ],
         "summary": "List Extensions",
+        "description": "List the extensions uploaded to this project.",
         "operationId": "list_extensions_extensions_get",
         "security": [
           {
@@ -2272,6 +2273,7 @@
           "Extensions"
         ],
         "summary": "Get Extension",
+        "description": "Get an uploaded extension by its ID.",
         "operationId": "get_extension_extensions__extension_id__get",
         "security": [
           {
