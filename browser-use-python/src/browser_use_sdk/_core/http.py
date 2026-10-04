@@ -85,6 +85,7 @@ class SyncHttpClient:
         json: Any = None,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        files: dict[str, Any] | None = None,
     ) -> Any:
         json = _clean_json(json) if json is not None else None
         cleaned_params = _clean_params(params)
@@ -92,7 +93,7 @@ class SyncHttpClient:
             if attempt > 0:
                 time.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
             response = self._client.request(
-                method, path, json=json, params=cleaned_params, headers=headers
+                method, path, json=json, params=cleaned_params, headers=headers, files=files
             )
 
             if _should_retry(response.status_code) and attempt < self._max_retries:
@@ -149,6 +150,7 @@ class AsyncHttpClient:
         json: Any = None,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        files: dict[str, Any] | None = None,
     ) -> Any:
         json = _clean_json(json) if json is not None else None
         cleaned_params = _clean_params(params)
@@ -156,7 +158,7 @@ class AsyncHttpClient:
             if attempt > 0:
                 await asyncio.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
             response = await self._client.request(
-                method, path, json=json, params=cleaned_params, headers=headers
+                method, path, json=json, params=cleaned_params, headers=headers, files=files
             )
 
             if _should_retry(response.status_code) and attempt < self._max_retries:

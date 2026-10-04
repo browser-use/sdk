@@ -12,71 +12,92 @@ browser is ready, so the first page you open already runs them.
   Zero Data Retention projects cannot use extensions.
 </Note>
 
-The examples use the REST API. Python and TypeScript SDK methods follow in the
-next SDK release.
-
 ## Upload an extension
 
 Upload a ZIP file with `manifest.json` at its root. You can unzip an extension
 from the Chrome Web Store and upload the result as it is.
 
-```bash
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+extension = client.extensions.create("ublock-origin-lite.zip")
+print(extension.id, extension.name, extension.version)
+```
+```typescript TypeScript
+import { readFile } from "node:fs/promises";
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const extension = await client.extensions.create(
+  await readFile("ublock-origin-lite.zip"),
+);
+console.log(extension.id, extension.name, extension.version);
+```
+```bash curl
 curl https://api.browser-use.com/api/v4/extensions \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -F file=@ublock-origin-lite.zip
 ```
+</CodeGroup>
 
-The response contains the extension `id`, `name`, `version`, and `createdAt`:
-
-```json
-{
-  "id": "c4898718-c881-4c37-a4be-68591428d0aa",
-  "name": "uBlock Origin Lite",
-  "version": "2026.930.1227",
-  "createdAt": "2026-10-04T07:43:43.507141Z"
-}
-```
-
+The response contains the extension `id`, `name`, `version`, and `createdAt`.
 Keep the `id`: you use it to load the extension into a browser.
 
 ## Use extensions in a browser
 
 Pass up to 3 extension IDs when you create a browser:
 
-```bash
+<CodeGroup>
+```python Python
+browser = client.browsers.create(extension_ids=[extension.id])
+for installed in browser.extensions:
+    print(installed.id, installed.runtime_id, installed.version)
+```
+```typescript TypeScript
+const browser = await client.browsers.create({ extensionIds: [extension.id] });
+for (const installed of browser.extensions ?? []) {
+  console.log(installed.id, installed.runtimeId, installed.version);
+}
+```
+```bash curl
 curl https://api.browser-use.com/api/v4/browsers \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"extensionIds": ["c4898718-c881-4c37-a4be-68591428d0aa"]}'
+  -d '{"extensionIds": ["<extension-id>"]}'
 ```
+</CodeGroup>
 
-The browser response lists the installed extensions:
-
-```json
-{
-  "extensions": [
-    {
-      "id": "c4898718-c881-4c37-a4be-68591428d0aa",
-      "runtimeId": "pdjhigdaakohcmhgmncheecmgphkandg",
-      "version": "2026.930.1227"
-    }
-  ]
-}
-```
-
-`runtimeId` is the Chrome extension ID. The extension's pages are available at
-`chrome-extension://<runtimeId>/`, for example to open its options page from
-Playwright or Puppeteer.
+Each installed extension has a `runtimeId`, the Chrome extension ID. Its pages
+are available at `chrome-extension://<runtimeId>/`, for example to open an
+extension's options page from Playwright or Puppeteer.
 
 ## List and delete extensions
 
-```bash
+<CodeGroup>
+```python Python
+for item in client.extensions.list().items:
+    print(item.id, item.name)
+
+client.extensions.delete(extension.id)
+```
+```typescript TypeScript
+const { items } = await client.extensions.list();
+for (const item of items) {
+  console.log(item.id, item.name);
+}
+
+await client.extensions.delete(extension.id);
+```
+```bash curl
 curl https://api.browser-use.com/api/v4/extensions \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
 
 curl -X DELETE https://api.browser-use.com/api/v4/extensions/<extension-id> \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
 ```
+</CodeGroup>
 
 Deleting an extension removes its files permanently. Browsers that are already
 running keep the extension until they stop. New browsers cannot use the deleted

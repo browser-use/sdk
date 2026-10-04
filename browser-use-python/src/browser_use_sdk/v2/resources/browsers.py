@@ -27,6 +27,7 @@ def _build_create_body(
     solve_captchas: bool | None = None,
     custom_proxy: CustomProxy | None = None,
     enable_recording: bool | None = None,
+    extension_ids: list[str] | None = None,
     **extra: Any,
 ) -> dict[str, Any]:
     if metadata is not None and len(metadata) > 10:
@@ -55,6 +56,8 @@ def _build_create_body(
         body["customProxy"] = custom_proxy.model_dump(by_alias=True, exclude_none=True)
     if enable_recording is not None:
         body["enableRecording"] = enable_recording
+    if extension_ids is not None:
+        body["extensionIds"] = extension_ids
     body.update(extra)
     return body
 
@@ -77,6 +80,7 @@ class Browsers:
         solve_captchas: bool | None = None,
         custom_proxy: CustomProxy | None = None,
         enable_recording: bool | None = None,
+        extension_ids: list[str] | None = None,
         **extra: Any,
     ) -> BrowserSessionItemView:
         """Create a new standalone browser session."""
@@ -92,6 +96,7 @@ class Browsers:
             solve_captchas=solve_captchas,
             custom_proxy=custom_proxy,
             enable_recording=enable_recording,
+            extension_ids=extension_ids,
             **extra,
         )
         return BrowserSessionItemView.model_validate(
@@ -179,6 +184,7 @@ class AsyncBrowsers:
         solve_captchas: bool | None = None,
         custom_proxy: CustomProxy | None = None,
         enable_recording: bool | None = None,
+        extension_ids: list[str] | None = None,
         **extra: Any,
     ) -> BrowserSessionItemView:
         """Create a new standalone browser session."""
@@ -194,6 +200,7 @@ class AsyncBrowsers:
             solve_captchas=solve_captchas,
             custom_proxy=custom_proxy,
             enable_recording=enable_recording,
+            extension_ids=extension_ids,
             **extra,
         )
         return BrowserSessionItemView.model_validate(

@@ -2,10 +2,13 @@ from .client import AsyncBrowserUse, BrowserUse
 from .._core.errors import BrowserUseError
 
 from ..generated.v4.models import (
+    BrowserExtensionView,
     BrowserSessionItemView,
     BrowserSessionStatus,
     BrowserSessionView,
     CustomProxy,
+    ExtensionListResponse,
+    ExtensionView,
     InlineSecretSource,
     Model as RunModel,
     OnePasswordSecretSource,
@@ -65,6 +68,7 @@ __all__ = [
     "SecretBinding",
     "SecretBindings",
     # Session models
+    "BrowserExtensionView",
     "BrowserSessionItemView",
     "BrowserSessionView",
     "SessionInfo",
@@ -72,6 +76,9 @@ __all__ = [
     "QueueMessageRequest",
     "QueuedMessage",
     "QueueListResponse",
+    # Extension models
+    "ExtensionView",
+    "ExtensionListResponse",
     # Workspace models
     "WorkspaceInfo",
     "WorkspaceCreateRequest",
