@@ -99,6 +99,7 @@
                       "cloud/browser/stealth",
                       "cloud/browser/captcha-handling",
                       "cloud/browser/proxies",
+                      "cloud/browser/extensions",
                       "cloud/browser/live-preview",
                       "cloud/browser/playwright-puppeteer-selenium",
                       {

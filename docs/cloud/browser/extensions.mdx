@@ -1,0 +1,101 @@
+---
+title: Extensions
+description: "Upload Chrome extensions once and load them into API V4 browsers."
+icon: puzzle-piece
+---
+
+Upload a Chrome extension to your project once. Then load up to 3 uploaded
+extensions into any browser you create. The extensions are installed before the
+browser is ready, so the first page you open already runs them.
+
+<Note>
+  Zero Data Retention projects cannot use extensions.
+</Note>
+
+The examples use the REST API. Python and TypeScript SDK methods follow in the
+next SDK release.
+
+## Upload an extension
+
+Upload a ZIP file with `manifest.json` at its root. You can unzip an extension
+from the Chrome Web Store and upload the result as it is.
+
+```bash
+curl https://api.browser-use.com/api/v4/extensions \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -F file=@ublock-origin-lite.zip
+```
+
+The response contains the extension `id`, `name`, `version`, and `createdAt`:
+
+```json
+{
+  "id": "c4898718-c881-4c37-a4be-68591428d0aa",
+  "name": "uBlock Origin Lite",
+  "version": "2026.930.1227",
+  "createdAt": "2026-10-04T07:43:43.507141Z"
+}
+```
+
+Keep the `id`: you use it to load the extension into a browser.
+
+## Use extensions in a browser
+
+Pass up to 3 extension IDs when you create a browser:
+
+```bash
+curl https://api.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"extensionIds": ["c4898718-c881-4c37-a4be-68591428d0aa"]}'
+```
+
+The browser response lists the installed extensions:
+
+```json
+{
+  "extensions": [
+    {
+      "id": "c4898718-c881-4c37-a4be-68591428d0aa",
+      "runtimeId": "pdjhigdaakohcmhgmncheecmgphkandg",
+      "version": "2026.930.1227"
+    }
+  ]
+}
+```
+
+`runtimeId` is the Chrome extension ID. The extension's pages are available at
+`chrome-extension://<runtimeId>/`, for example to open its options page from
+Playwright or Puppeteer.
+
+## List and delete extensions
+
+```bash
+curl https://api.browser-use.com/api/v4/extensions \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+
+curl -X DELETE https://api.browser-use.com/api/v4/extensions/<extension-id> \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+Deleting an extension removes its files permanently. Browsers that are already
+running keep the extension until they stop. New browsers cannot use the deleted
+ID.
+
+## Limits
+
+| Limit | Value |
+| --- | --- |
+| Manifest version | Manifest V3 only |
+| File | A ZIP archive, not a `.crx` file |
+| ZIP size | 100 MiB |
+| Size after unzipping | 256 MiB |
+| Files in the ZIP | 10,000 |
+| Extensions per project | 100 |
+| Extensions per browser | 3 |
+
+The upload refuses an extension that sets `key` in `manifest.json`, or that
+requests the `debugger`, `proxy`, `processes`, `dns`, `experimental`, or any
+`enterprise.*` permission. The error response names the problem, for example
+`{"detail": {"code": "prohibited_permission", "message": "The debugger
+permission is not allowed."}}`.

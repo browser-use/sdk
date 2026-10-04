@@ -67,6 +67,9 @@
                     "409": {
                         "description": "The session already has an active run."
                     },
+                    "429": {
+                        "description": "The project is at its concurrent-session limit."
+                    },
                     "422": {
                         "description": "Validation Error",
                         "content": {
@@ -376,6 +379,9 @@
                     "502": {
                         "description": "The request could not be forwarded to the control plane."
                     },
+                    "503": {
+                        "description": "The run is finishing; retry the cancel after Retry-After seconds."
+                    },
                     "422": {
                         "description": "Validation Error",
                         "content": {
@@ -557,7 +563,7 @@
                     "Sessions"
                 ],
                 "summary": "Purge Session",
-                "description": "Immediately purge all data for a V4 session (ZDR projects only).\n\nRedacts DB records and deletes S3 objects (bcode state, workspace files,\nrecordings, downloads, staging uploads) for every run in the session. Same\ncleanup the ZDR cron performs, but on-demand and with no grace period. V4\nanalog of the V2 POST /sessions/{id}/purge. Surfaces shared with a still-live\nsibling run are deferred by the same guards the cron uses.",
+                "description": "Purge V4 session data; return 202 while active work or uploads defer deletion.\n\nRedacts DB records and deletes S3 objects (bcode state, workspace files,\nrecordings, downloads, staging uploads) for every run in the session. Same\ncleanup the ZDR cron performs, but on-demand; outstanding upload grants defer physical deletion. V4\nanalog of the V2 POST /sessions/{id}/purge. Surfaces shared with a still-live\nsibling run are deferred by the same guards the cron uses.",
                 "operationId": "purge_session_sessions__session_id__purge_post",
                 "security": [
                     {
@@ -579,6 +585,9 @@
                 "responses": {
                     "204": {
                         "description": "Successful Response"
+                    },
+                    "202": {
+                        "description": "Purge pending active work or outstanding uploads."
                     },
                     "403": {
                         "description": "Project is not ZDR-enabled."
@@ -752,6 +761,64 @@
                     },
                     "502": {
                         "description": "The request could not be forwarded to the control plane."
+                    },
+                    "503": {
+                        "description": "The run is finishing; retry the cancel after Retry-After seconds."
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{session_id}/cost": {
+            "get": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get Session Cost",
+                "description": "Everything this session has cost so far, split by source.\n\nA run's `total_cost_usd` is its LLM (and web-search) charge only. Browser\ntime and proxy bandwidth are metered against the session's browser, which\noutlives any one run \u2014 so this is the endpoint for the session's full cost.\n\nThese are recorded usage costs, not an invoice total: promotional waivers\nand credits are applied downstream in billing, so a session run under a\npromotion can report cost here that was never charged.\n\nCosts keep moving after a run reports `finished`: LLM calls settle up to\nabout 90 seconds later, and the browser accrues time and proxy traffic\nuntil it stops.",
+                "operationId": "get_session_cost_sessions__session_id__cost_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionCostResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+                    },
+                    "404": {
+                        "description": "Run, session, workspace, or profile not found."
                     },
                     "422": {
                         "description": "Validation Error",
@@ -1028,118 +1095,6 @@
                     },
                     "409": {
                         "description": "The message is no longer pending and cannot be cancelled."
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/sessions/{session_id}/feedback": {
-            "get": {
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Get Session Feedback",
-                "description": "Every vote across the session in one query \u2014 the run view calls this\nonce per session on load. A session the caller doesn't own returns an\nempty list (not 404), matching what an unshared session with no votes\nreturns. Reads the PRIMARY, not the replica: this hydrates the thumbs the\nuser may have set seconds ago, and replica lag would render a just-cast\nvote as silently lost.",
-                "operationId": "get_session_feedback_sessions__session_id__feedback_get",
-                "security": [
-                    {
-                        "APIKeyHeader": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "session_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "title": "Session Id"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SessionFeedbackResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Set Session Feedback",
-                "description": "Upsert one chat item's thumbs vote; `feedback_type: null` clears it.",
-                "operationId": "set_session_feedback_sessions__session_id__feedback_post",
-                "security": [
-                    {
-                        "APIKeyHeader": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "session_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "title": "Session Id"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SessionFeedbackUpsertRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SessionFeedbackResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
-                    },
-                    "404": {
-                        "description": "Run, session, workspace, or profile not found."
                     },
                     "422": {
                         "description": "Validation Error",
@@ -2197,163 +2152,97 @@
                 }
             }
         },
-        "/share/{share_token}": {
-            "get": {
-                "summary": "Get Shared Session",
-                "description": "Public transcript of a shared session (sensitive keys scrubbed).\n\nEvents come back in bounded pages: walk them by passing the previous\nresponse's `nextAfter` back as `since` until `hasMore` is false (the wire\nis camelCase \u2014 the Python fields are `next_after`/`has_more`). Run metadata\nrepeats on every page, so only `events` continues across pages.\nPaging exists because this is an unauthenticated read and the whole\ntranscript in one response could occupy the event loop for seconds,\nstarving the shared Redis client's auth and rate-limit calls of their\n50 ms deadline and silently failing them open.\n\nCounts a view per full fetch. `since` makes this a live-tail poll: the\nshare page repeats the request every few seconds while a run is unfinished,\nand each poll must stay cheap and must NOT inflate the view counter \u2014 a\nviewer idling on a running session would otherwise register a view every\n10 seconds (the counter's throttle window). Later pages of an initial load\ncarry a cursor too, so one load counts one view, not one per page.",
-                "operationId": "get_shared_session_share__share_token__get",
-                "parameters": [
+        "/extensions": {
+            "post": {
+                "tags": [
+                    "Extensions"
+                ],
+                "summary": "Upload Extension",
+                "description": "Upload a Manifest V3 extension as a ZIP file with manifest.json at its root.",
+                "operationId": "upload_extension_extensions_post",
+                "security": [
                     {
-                        "name": "share_token",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "minLength": 32,
-                            "maxLength": 32,
-                            "pattern": "^[A-Za-z0-9_-]{32}$",
-                            "title": "Share Token"
-                        }
-                    },
-                    {
-                        "name": "since",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "integer",
-                                    "minimum": 0
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "Highest event id the viewer already has. Returns only newer events (run metadata is always complete) and does not count a view.",
-                            "title": "Since"
-                        },
-                        "description": "Highest event id the viewer already has. Returns only newer events (run metadata is always complete) and does not count a view."
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "maximum": 250,
-                            "minimum": 1,
-                            "description": "Maximum events in this page. A page also closes at 1 MiB of event payload, so it can come back shorter. Read `hasMore`/`nextAfter` to page through the rest.",
-                            "default": 100,
-                            "title": "Limit"
-                        },
-                        "description": "Maximum events in this page. A page also closes at 1 MiB of event payload, so it can come back shorter. Read `hasMore`/`nextAfter` to page through the rest."
+                        "APIKeyHeader": []
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/SharedSessionResponse"
+                                    "$ref": "#/components/schemas/ExtensionView"
                                 }
                             }
                         }
                     },
+                    "403": {
+                        "description": "Extensions are not available for Zero Data Retention projects"
+                    },
+                    "413": {
+                        "description": "The upload is larger than 100 MiB"
+                    },
                     "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
+                        "description": "The extension is invalid or the project has 100 extensions"
+                    },
+                    "503": {
+                        "description": "The extension could not be stored"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        },
-        "/share/{share_token}/files": {
+            },
             "get": {
-                "summary": "List Shared Session Files",
-                "description": "Public listing of a shared session's workspace files. Same shape as the\nauthenticated workspace-files endpoint so the share page can reuse the\nsame components.\n\nScope is FORCED under `outputs/`: the worker contract promises the user\nthat only outputs/ files are deliverables, so working files the agent\nleft at the workspace root (notes, scripts, .env, uploads/) must never\nbecome public through a share link.",
-                "operationId": "list_shared_session_files_share__share_token__files_get",
+                "tags": [
+                    "Extensions"
+                ],
+                "summary": "List Extensions",
+                "description": "List the extensions uploaded to this project.",
+                "operationId": "list_extensions_extensions_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
                 "parameters": [
                     {
-                        "name": "share_token",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "minLength": 32,
-                            "maxLength": 32,
-                            "pattern": "^[A-Za-z0-9_-]{32}$",
-                            "title": "Share Token"
-                        }
-                    },
-                    {
-                        "name": "prefix",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "default": "",
-                            "title": "Prefix"
-                        }
-                    },
-                    {
-                        "name": "limit",
+                        "name": "pageSize",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "integer",
                             "maximum": 100,
                             "minimum": 1,
-                            "default": 50,
-                            "title": "Limit"
+                            "default": 10,
+                            "title": "Pagesize"
                         }
                     },
                     {
-                        "name": "cursor",
+                        "name": "pageNumber",
                         "in": "query",
                         "required": false,
                         "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "string"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "title": "Cursor"
-                        }
-                    },
-                    {
-                        "name": "includeUrls",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean",
-                            "default": false,
-                            "title": "Includeurls"
-                        }
-                    },
-                    {
-                        "name": "contentDisposition",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "const": "attachment",
-                                    "type": "string"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "title": "Contentdisposition"
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1,
+                            "title": "Pagenumber"
                         }
                     }
                 ],
@@ -2363,7 +2252,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/WorkspaceFileListResponse"
+                                    "$ref": "#/components/schemas/ExtensionListResponse"
                                 }
                             }
                         }
@@ -2381,22 +2270,28 @@
                 }
             }
         },
-        "/share/{share_token}/recording": {
+        "/extensions/{extension_id}": {
             "get": {
-                "summary": "Get Shared Session Recording",
-                "description": "Presigned URL for the shared session's browser recording (mp4).\n\nRecording ONLY \u2014 the live-view URL is an interactive browser and is never\nexposed through a share. Null until the session's browser stops and the\nupload lands (same lag as GET /runs/{run_id}/recording). V4 keeps one\nbrowser across follow-ups, so the newest run with a browser session is\nthe session's recording.",
-                "operationId": "get_shared_session_recording_share__share_token__recording_get",
+                "tags": [
+                    "Extensions"
+                ],
+                "summary": "Get Extension",
+                "description": "Get an uploaded extension by its ID.",
+                "operationId": "get_extension_extensions__extension_id__get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
                 "parameters": [
                     {
-                        "name": "share_token",
+                        "name": "extension_id",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "minLength": 32,
-                            "maxLength": 32,
-                            "pattern": "^[A-Za-z0-9_-]{32}$",
-                            "title": "Share Token"
+                            "format": "uuid",
+                            "title": "Extension Id"
                         }
                     }
                 ],
@@ -2406,10 +2301,59 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/RunRecordingResponse"
+                                    "$ref": "#/components/schemas/ExtensionView"
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Extension not found"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Extensions"
+                ],
+                "summary": "Delete Extension",
+                "description": "Permanently delete an extension without affecting running browsers.",
+                "operationId": "delete_extension_extensions__extension_id__delete",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "extension_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Extension Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "404": {
+                        "description": "Extension not found"
+                    },
+                    "503": {
+                        "description": "The extension could not be deleted"
                     },
                     "422": {
                         "description": "Validation Error",
@@ -2583,7 +2527,7 @@
                         }
                     },
                     "403": {
-                        "description": "Session timeout limit exceeded (maximum 4 hours)",
+                        "description": "Session timeout limit exceeded (maximum 4 hours), or extensions are not available to this project",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2593,7 +2537,7 @@
                         }
                     },
                     "404": {
-                        "description": "Profile not found",
+                        "description": "Profile or extension not found",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3346,6 +3290,34 @@
                 "title": "BrowserDownloadListResponse",
                 "description": "Paginated list of browser downloads with optional presigned URLs."
             },
+            "BrowserExtensionView": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "ID",
+                        "description": "Extension ID from POST /api/v4/extensions"
+                    },
+                    "runtimeId": {
+                        "type": "string",
+                        "title": "Runtime ID",
+                        "description": "Chromium extension ID, as in chrome-extension://{runtimeId}/"
+                    },
+                    "version": {
+                        "type": "string",
+                        "title": "Version",
+                        "description": "Version from the extension manifest"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "runtimeId",
+                    "version"
+                ],
+                "title": "BrowserExtensionView",
+                "description": "An extension installed in a browser session."
+            },
             "BrowserSessionItemView": {
                 "properties": {
                     "id": {
@@ -3462,6 +3434,15 @@
                         "title": "Metadata",
                         "description": "Caller-supplied labels set when the browser was created.",
                         "default": {}
+                    },
+                    "extensions": {
+                        "items": {
+                            "$ref": "#/components/schemas/BrowserExtensionView"
+                        },
+                        "type": "array",
+                        "title": "Extensions",
+                        "description": "Extensions installed in the browser, in the order of `extensionIds`.",
+                        "default": []
                     }
                 },
                 "type": "object",
@@ -3649,6 +3630,15 @@
                         "title": "Metadata",
                         "description": "Caller-supplied labels set when the browser was created.",
                         "default": {}
+                    },
+                    "extensions": {
+                        "items": {
+                            "$ref": "#/components/schemas/BrowserExtensionView"
+                        },
+                        "type": "array",
+                        "title": "Extensions",
+                        "description": "Extensions installed in the browser, in the order of `extensionIds`.",
+                        "default": []
                     }
                 },
                 "type": "object",
@@ -3794,6 +3784,17 @@
                         "title": "Enable Recording",
                         "description": "If True, enables session recording. Defaults to False.",
                         "default": false
+                    },
+                    "extensionIds": {
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "type": "array",
+                        "maxItems": 3,
+                        "title": "Extension IDs",
+                        "description": "Up to 3 ready extensions from POST /api/v4/extensions to install before the browser starts.",
+                        "default": []
                     }
                 },
                 "type": "object",
@@ -3877,6 +3878,70 @@
                 ],
                 "title": "DisconnectResponse",
                 "description": "Response for disconnect action."
+            },
+            "ExtensionListResponse": {
+                "properties": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/ExtensionView"
+                        },
+                        "type": "array",
+                        "title": "Items"
+                    },
+                    "totalItems": {
+                        "type": "integer",
+                        "title": "Total Items",
+                        "description": "Total number of items in the list"
+                    },
+                    "pageNumber": {
+                        "type": "integer",
+                        "title": "Page Number",
+                        "description": "Page number"
+                    },
+                    "pageSize": {
+                        "type": "integer",
+                        "title": "Page Size",
+                        "description": "Number of items per page"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "items",
+                    "totalItems",
+                    "pageNumber",
+                    "pageSize"
+                ],
+                "title": "ExtensionListResponse"
+            },
+            "ExtensionView": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "version": {
+                        "type": "string",
+                        "title": "Version"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "version",
+                    "createdAt"
+                ],
+                "title": "ExtensionView"
             },
             "ExternalBrowserAttach": {
                 "properties": {
@@ -4822,6 +4887,18 @@
                         "title": "Screenheight",
                         "description": "Custom screen height in pixels for the browser."
                     },
+                    "allowResizing": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Allowresizing",
+                        "description": "Let you or the agent resize the browser window over CDP. Resizing makes the browser easier to detect. API runs default to off. Follow-up runs inherit the value of the previous browser. The value applies only when the run starts a new browser."
+                    },
                     "record": {
                         "anyOf": [
                             {
@@ -4847,9 +4924,25 @@
                         "minLength": 1,
                         "title": "Task"
                     },
+                    "outputSchema": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Outputschema",
+                        "description": "Optional JSON Schema for the final output (API runs only)."
+                    },
                     "model": {
                         "type": "string",
                         "enum": [
+                            "mimo-v2.6-pro",
+                            "mimo-v2.6-flash",
+                            "deepseek-v4.1-flash",
                             "glm-5.2",
                             "grok-4.5",
                             "grok-4.6",
@@ -4860,11 +4953,14 @@
                             "claude-opus-4.7",
                             "claude-opus-4.8",
                             "claude-opus-5",
+                            "claude-opus-5-5",
                             "claude-fable-5",
                             "claude-sonnet-5",
                             "gpt-5.5",
                             "gpt-5.6",
                             "gpt-6-astra",
+                            "gpt-6-sol",
+                            "gpt-6.1-sol",
                             "gpt-6-luna",
                             "gpt-5.6-sol",
                             "gpt-5.6-terra",
@@ -4872,9 +4968,12 @@
                             "gemini-3.6-flash",
                             "gemini-3.5-flash",
                             "gemini-3.1-pro",
-                            "gemini-3-flash"
+                            "gemini-3-flash",
+                            "bu-ultrafast",
+                            "bu-fast"
                         ],
                         "title": "Model",
+                        "description": "bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.",
                         "default": "gpt-6-luna"
                     },
                     "modelParams": {
@@ -4977,7 +5076,7 @@
                                     "$ref": "#/components/schemas/SecretBinding"
                                 },
                                 "type": "array",
-                                "maxItems": 10
+                                "maxItems": 20
                             },
                             {
                                 "type": "null"
@@ -4997,7 +5096,7 @@
                             }
                         ],
                         "title": "Opvaultid",
-                        "description": "A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed. Requires opVaultAllowedDomains."
+                        "description": "A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed."
                     },
                     "opVaultAllowedDomains": {
                         "anyOf": [
@@ -5012,7 +5111,7 @@
                             }
                         ],
                         "title": "Opvaultalloweddomains",
-                        "description": "Hosts every credential from opVaultId may be typed into, e.g. [\"amazon.com\"]."
+                        "description": "Hosts every credential from opVaultId may be typed into, e.g. [\"amazon.com\"]. Omit to derive each item's hosts from its own 1Password website entries; items with no website are then skipped and reported in skippedVaultItems. A host covers its subdomains, so 1Password's ExactDomain autofill setting is not honored either way."
                     },
                     "judge": {
                         "anyOf": [
@@ -5039,19 +5138,6 @@
                             }
                         ],
                         "title": "Maxcostusd"
-                    },
-                    "outputSchema": {
-                        "anyOf": [
-                            {
-                                "additionalProperties": true,
-                                "type": "object"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Outputschema",
-                        "description": "Optional JSON Schema for the final output (API runs only)."
                     }
                 },
                 "additionalProperties": false,
@@ -5105,6 +5191,14 @@
                         },
                         "type": "array",
                         "title": "Missingfileids"
+                    },
+                    "skippedVaultItems": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Skippedvaultitems",
+                        "description": "Titles of opVaultId items that hold a credential but no 1Password website, so deriving their domains left them with nowhere to be typed. The run still starts without them; add a website to the item or pass opVaultAllowedDomains."
                     }
                 },
                 "type": "object",
@@ -5238,31 +5332,6 @@
                 ],
                 "title": "RunListResponse"
             },
-            "RunRecordingResponse": {
-                "properties": {
-                    "recordingUrl": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Recordingurl"
-                    },
-                    "available": {
-                        "type": "boolean",
-                        "title": "Available",
-                        "default": true
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "recordingUrl"
-                ],
-                "title": "RunRecordingResponse"
-            },
             "RunStatusResponse": {
                 "properties": {
                     "status": {
@@ -5311,6 +5380,18 @@
                         "type": "string",
                         "title": "Model"
                     },
+                    "modelParams": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Modelparams"
+                    },
                     "contextLimit": {
                         "type": "integer",
                         "title": "Contextlimit"
@@ -5337,6 +5418,27 @@
                             }
                         ],
                         "title": "Result"
+                    },
+                    "output": {
+                        "anyOf": [
+                            {},
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Output"
+                    },
+                    "outputSchema": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Outputschema"
                     },
                     "error": {
                         "anyOf": [
@@ -5414,27 +5516,6 @@
                         "type": "string",
                         "format": "date-time",
                         "title": "Updatedat"
-                    },
-                    "output": {
-                        "anyOf": [
-                            {},
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Output"
-                    },
-                    "outputSchema": {
-                        "anyOf": [
-                            {
-                                "additionalProperties": true,
-                                "type": "object"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Outputschema"
                     }
                 },
                 "type": "object",
@@ -5487,7 +5568,7 @@
                             "type": "string"
                         },
                         "type": "array",
-                        "maxItems": 10,
+                        "maxItems": 20,
                         "minItems": 1,
                         "title": "Alloweddomains",
                         "description": "Hosts the secret may be typed into, e.g. [\"github.com\"]. A host covers its subdomains. Bare hostnames only \u2014 no scheme, port, path, or wildcard."
@@ -5503,77 +5584,55 @@
                 "title": "SecretBinding",
                 "description": "One credential this run may have typed into a browser field.\n\nThe value never reaches the agent. It is encrypted at rest, kept out of the\nworker payload, and typed straight into the focused field by the server when\nthe agent asks for the alias by name \u2014 and only while the page it is typing\ninto is on one of `allowedDomains`.\n\nRun-scoped: bindings die with the run, so a follow-up run that needs the same\ncredential must send it again."
             },
-            "SessionFeedbackItem": {
+            "SessionCostResponse": {
                 "properties": {
-                    "itemId": {
+                    "sessionId": {
                         "type": "string",
-                        "title": "Itemid"
+                        "format": "uuid",
+                        "title": "Sessionid"
                     },
-                    "feedbackType": {
-                        "$ref": "#/components/schemas/UserFeedbackType"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "itemId",
-                    "feedbackType"
-                ],
-                "title": "SessionFeedbackItem"
-            },
-            "SessionFeedbackResponse": {
-                "properties": {
-                    "feedback": {
-                        "items": {
-                            "$ref": "#/components/schemas/SessionFeedbackItem"
-                        },
-                        "type": "array",
-                        "title": "Feedback"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "feedback"
-                ],
-                "title": "SessionFeedbackResponse",
-                "description": "Every vote across a session, in one request \u2014 the run view hydrates\nall its turns' thumb states from this once per session on load."
-            },
-            "SessionFeedbackUpsertRequest": {
-                "properties": {
-                    "itemId": {
+                    "numRuns": {
+                        "type": "integer",
+                        "title": "Numruns"
+                    },
+                    "llmCostUsd": {
                         "type": "string",
-                        "maxLength": 20,
-                        "pattern": "^e[1-9][0-9]{0,18}$",
-                        "title": "Itemid"
+                        "title": "Llmcostusd"
                     },
-                    "feedbackType": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/UserFeedbackType"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
+                    "searchCostUsd": {
+                        "type": "string",
+                        "title": "Searchcostusd"
                     },
-                    "comment": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "maxLength": 2000
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Comment"
+                    "browserCostUsd": {
+                        "type": "string",
+                        "title": "Browsercostusd"
+                    },
+                    "proxyCostUsd": {
+                        "type": "string",
+                        "title": "Proxycostusd"
+                    },
+                    "proxyUsedMb": {
+                        "type": "string",
+                        "title": "Proxyusedmb"
+                    },
+                    "totalCostUsd": {
+                        "type": "string",
+                        "title": "Totalcostusd"
                     }
                 },
                 "type": "object",
                 "required": [
-                    "itemId"
+                    "sessionId",
+                    "numRuns",
+                    "llmCostUsd",
+                    "searchCostUsd",
+                    "browserCostUsd",
+                    "proxyCostUsd",
+                    "proxyUsedMb",
+                    "totalCostUsd"
                 ],
-                "title": "SessionFeedbackUpsertRequest",
-                "description": "Set or clear thumbs feedback on one chat item of a session.\n\n`item_id` is the item's stable ref as the UI renders it (\"e123\" \u2014 the\noriginating event's DB id, globally unique across sessions).\n`feedback_type: null` clears the vote."
+                "title": "SessionCostResponse",
+                "description": "Everything a session cost, split by what it was spent on.\n\nRecorded usage, not an invoice total \u2014 promotional waivers and credits are\napplied downstream in billing.\n\nBrowser time and proxy bandwidth are metered against the session's browser,\nwhich outlives any single run, so they have no per-run number \u2014 only\n`RunSummary.total_cost_usd`, the LLM (and web search) charge, does.\n\nAll amounts are fixed-6-decimal strings for the same reason as\n`RunSummary.total_cost_usd`: JS clients lose precision on float."
             },
             "SessionInfo": {
                 "properties": {
@@ -5787,154 +5846,6 @@
                 "title": "SessionUpdateRequest",
                 "description": "Rename a session. Null clears the user-set name, so the UI falls back to\nthe session's opening task."
             },
-            "SharedRun": {
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "title": "Id"
-                    },
-                    "task": {
-                        "type": "string",
-                        "title": "Task"
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "title": "Createdat"
-                    },
-                    "model": {
-                        "type": "string",
-                        "title": "Model"
-                    },
-                    "status": {
-                        "type": "string",
-                        "title": "Status"
-                    },
-                    "result": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Result"
-                    },
-                    "error": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Error"
-                    },
-                    "attachmentCount": {
-                        "type": "integer",
-                        "title": "Attachmentcount",
-                        "default": 0
-                    },
-                    "events": {
-                        "items": {
-                            "$ref": "#/components/schemas/RunEvent"
-                        },
-                        "type": "array",
-                        "title": "Events"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "id",
-                    "task",
-                    "createdAt",
-                    "model",
-                    "status",
-                    "result",
-                    "error",
-                    "events"
-                ],
-                "title": "SharedRun",
-                "description": "One run of a publicly shared session \u2014 the read-only subset the share\npage needs to render a turn (no cost/token/browser internals)."
-            },
-            "SharedSessionResponse": {
-                "properties": {
-                    "sessionId": {
-                        "type": "string",
-                        "format": "uuid",
-                        "title": "Sessionid"
-                    },
-                    "title": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Title"
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "title": "Createdat"
-                    },
-                    "viewCount": {
-                        "type": "integer",
-                        "title": "Viewcount"
-                    },
-                    "workspaceId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "format": "uuid"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Workspaceid"
-                    },
-                    "runs": {
-                        "items": {
-                            "$ref": "#/components/schemas/SharedRun"
-                        },
-                        "type": "array",
-                        "title": "Runs"
-                    },
-                    "nextAfter": {
-                        "anyOf": [
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Nextafter"
-                    },
-                    "hasMore": {
-                        "type": "boolean",
-                        "title": "Hasmore",
-                        "default": false
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "sessionId",
-                    "title",
-                    "createdAt",
-                    "viewCount",
-                    "workspaceId",
-                    "runs"
-                ],
-                "title": "SharedSessionResponse",
-                "description": "Public payload for GET /share/{token}: the session transcript with\nsensitive keys scrubbed. Files are listed via the separate\n/share/{token}/files endpoint so download URLs can be minted fresh."
-            },
             "SteeringCutoff": {
                 "properties": {
                     "sourceRunId": {
@@ -6034,14 +5945,6 @@
                 ],
                 "title": "UpdateBrowserSessionRequest",
                 "description": "Request model for updating browser session state."
-            },
-            "UserFeedbackType": {
-                "type": "string",
-                "enum": [
-                    "up",
-                    "down"
-                ],
-                "title": "UserFeedbackType"
             },
             "ValidationError": {
                 "properties": {

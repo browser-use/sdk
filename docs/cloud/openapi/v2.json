@@ -1804,7 +1804,7 @@
                         }
                     },
                     "403": {
-                        "description": "Session timeout limit exceeded (maximum 4 hours)",
+                        "description": "Session timeout limit exceeded (maximum 4 hours), or extensions are not available to this project",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1814,7 +1814,7 @@
                         }
                     },
                     "404": {
-                        "description": "Profile not found",
+                        "description": "Profile or extension not found",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3549,6 +3549,34 @@
                 "title": "BrowserDownloadListResponse",
                 "description": "Paginated list of browser downloads with optional presigned URLs."
             },
+            "BrowserExtensionView": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "ID",
+                        "description": "Extension ID from POST /api/v4/extensions"
+                    },
+                    "runtimeId": {
+                        "type": "string",
+                        "title": "Runtime ID",
+                        "description": "Chromium extension ID, as in chrome-extension://{runtimeId}/"
+                    },
+                    "version": {
+                        "type": "string",
+                        "title": "Version",
+                        "description": "Version from the extension manifest"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "runtimeId",
+                    "version"
+                ],
+                "title": "BrowserExtensionView",
+                "description": "An extension installed in a browser session."
+            },
             "BrowserSessionItemView": {
                 "properties": {
                     "id": {
@@ -3665,6 +3693,15 @@
                         "title": "Metadata",
                         "description": "Caller-supplied labels set when the browser was created.",
                         "default": {}
+                    },
+                    "extensions": {
+                        "items": {
+                            "$ref": "#/components/schemas/BrowserExtensionView"
+                        },
+                        "type": "array",
+                        "title": "Extensions",
+                        "description": "Extensions installed in the browser, in the order of `extensionIds`.",
+                        "default": []
                     }
                 },
                 "type": "object",
@@ -3852,6 +3889,15 @@
                         "title": "Metadata",
                         "description": "Caller-supplied labels set when the browser was created.",
                         "default": {}
+                    },
+                    "extensions": {
+                        "items": {
+                            "$ref": "#/components/schemas/BrowserExtensionView"
+                        },
+                        "type": "array",
+                        "title": "Extensions",
+                        "description": "Extensions installed in the browser, in the order of `extensionIds`.",
+                        "default": []
                     }
                 },
                 "type": "object",
@@ -4014,6 +4060,17 @@
                         "title": "Enable Recording",
                         "description": "If True, enables session recording. Defaults to False.",
                         "default": false
+                    },
+                    "extensionIds": {
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "type": "array",
+                        "maxItems": 3,
+                        "title": "Extension IDs",
+                        "description": "Up to 3 ready extensions from POST /api/v4/extensions to install before the browser starts.",
+                        "default": []
                     }
                 },
                 "type": "object",
