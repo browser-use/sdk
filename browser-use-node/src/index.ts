@@ -32,6 +32,7 @@ export type AccountView = S["AccountView"];
 export type BrowserDownloadFile = S["BrowserDownloadFile"];
 export type BrowserDownloadListResponse = S["BrowserDownloadListResponse"];
 export type BrowserSessionItemView = S["BrowserSessionItemView"];
+export type BrowserExtensionView = S["BrowserExtensionView"];
 export type BrowserSessionListResponse = S["BrowserSessionListResponse"];
 export type BrowserSessionView = S["BrowserSessionView"];
 export type CreateSkillResponse = S["CreateSkillResponse"];

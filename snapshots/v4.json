@@ -45,8 +45,18 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid request (bad session/workspace pairing or file path)."
+          },
           "402": {
-            "description": "The project has no credits available."
+            "description": "The project has no credits available, or the authenticating API key has reached its recorded monthly total-spend soft stop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIKeySpendLimitError"
+                }
+              }
+            }
           },
           "403": {
             "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
@@ -57,8 +67,8 @@
           "409": {
             "description": "The session already has an active run."
           },
-          "400": {
-            "description": "Invalid request (bad session/workspace pairing or file path)."
+          "429": {
+            "description": "The project is at its concurrent-session limit."
           },
           "422": {
             "description": "Validation Error",
@@ -369,6 +379,9 @@
           "502": {
             "description": "The request could not be forwarded to the control plane."
           },
+          "503": {
+            "description": "The run is finishing; retry the cancel after Retry-After seconds."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -550,7 +563,7 @@
           "Sessions"
         ],
         "summary": "Purge Session",
-        "description": "Immediately purge all data for a V4 session (ZDR projects only).\n\nRedacts DB records and deletes S3 objects (bcode state, workspace files,\nrecordings, downloads, staging uploads) for every run in the session. Same\ncleanup the ZDR cron performs, but on-demand and with no grace period. V4\nanalog of the V2 POST /sessions/{id}/purge. Surfaces shared with a still-live\nsibling run are deferred by the same guards the cron uses.",
+        "description": "Purge V4 session data; return 202 while active work or uploads defer deletion.\n\nRedacts DB records and deletes S3 objects (bcode state, workspace files,\nrecordings, downloads, staging uploads) for every run in the session. Same\ncleanup the ZDR cron performs, but on-demand; outstanding upload grants defer physical deletion. V4\nanalog of the V2 POST /sessions/{id}/purge. Surfaces shared with a still-live\nsibling run are deferred by the same guards the cron uses.",
         "operationId": "purge_session_sessions__session_id__purge_post",
         "security": [
           {
@@ -572,6 +585,9 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "202": {
+            "description": "Purge pending active work or outstanding uploads."
           },
           "403": {
             "description": "Project is not ZDR-enabled."
@@ -624,6 +640,173 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SessionInfo"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+          },
+          "404": {
+            "description": "Run, session, workspace, or profile not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Update Session",
+        "description": "Rename a session.\n\n`session_title` is denormalized onto every run in the session (the session\nlist reads the latest run), so a rename writes them all in one UPDATE. Null\nclears the name and the UI falls back to the opening task \u2014 it does NOT\nre-run title generation, which only fills rows where the title IS NULL and\nso would silently overwrite the clear.",
+        "operationId": "update_session_sessions__session_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionInfo"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+          },
+          "404": {
+            "description": "Run, session, workspace, or profile not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Delete Session",
+        "description": "Delete a session: it disappears from the session lists and can no longer\nbe opened or continued.\n\nSoft delete (mirrors V2's `is_archived`): the runs, events and usage records\nstay in place so billing and analytics keep reconciling, and ZDR purge is the\nonly thing that ever destroys V4 content. Idempotent \u2014 deleting twice is a\nno-op 204.\n\nAn in-flight run is cancelled first, and pending queued messages are\ncancelled too; otherwise the drain would dispatch a follow-up run whose\n`session_archived_at` is NULL and resurrect the session. Cancel is forwarded\nto CP before anything is written (and outside the queue lock, per the\nenqueue path's ordering), so a CP failure (502) leaves the session visible\nrather than hiding a run that is still burning credits.",
+        "operationId": "delete_session_sessions__session_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+          },
+          "404": {
+            "description": "Run, session, workspace, or profile not found."
+          },
+          "502": {
+            "description": "The request could not be forwarded to the control plane."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}/cost": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get Session Cost",
+        "description": "Everything this session has cost so far, split by source.\n\nA run's `total_cost_usd` is its LLM (and web-search) charge only. Browser\ntime and proxy bandwidth are metered against the session's browser, which\noutlives any one run \u2014 so this is the endpoint for the session's full cost.\n\nThese are recorded usage costs, not an invoice total: promotional waivers\nand credits are applied downstream in billing, so a session run under a\npromotion can report cost here that was never charged.\n\nCosts keep moving after a run reports `finished`: LLM calls settle up to\nabout 90 seconds later, and the browser accrues time and proxy traffic\nuntil it stops.",
+        "operationId": "get_session_cost_sessions__session_id__cost_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionCostResponse"
                 }
               }
             }
@@ -709,6 +892,16 @@
               }
             }
           },
+          "402": {
+            "description": "The project has no credits available, or the authenticating API key has reached its recorded monthly total-spend soft stop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIKeySpendLimitError"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
           },
@@ -735,7 +928,7 @@
           "Sessions"
         ],
         "summary": "List Session Queue",
-        "description": "List open messages, the latest handoff row, and all steering cutoffs.\n\nIncludes live dispatch claims so clients can restore an accepted steering\nhandoff after a refresh without briefly losing its waiting state. The latest\nconsumed interrupt bridges the primary-write/read-replica gap before its\nreplacement run appears; clients discard it once that run is visible. Compact\nper-source cutoffs preserve every historical interrupted transcript boundary\nwithout returning every historical steering message and its attachments.",
+        "description": "List open messages, recently delivered queued messages, and steering cutoffs.\n\nIncludes live dispatch claims so clients can restore an accepted queued\nmessage after a refresh without briefly losing its waiting state.\n\nConsumed QUEUE rows are returned too, capped at the most recent\n_DELIVERED_QUEUE_HISTORY, plus up to _AGENCY_DELIVERED_QUEUE_HISTORY compact\nAgency choice and generation receipts so inbox state survives refresh. A message absorbed mid-run is announced by a\n`queued_input_injected` event carrying only its input id, so the chat has no\nother source for the text to render. The cap bounds this response because\nclients poll it while a run is active; a session with more delivered\nfollow-ups than the cap renders its oldest injected bubbles without text.\n\nThe latest consumed interrupt bridges the primary-write/read-replica gap\nbefore its replacement run appears; clients discard it once that run is\nvisible. Compact per-source cutoffs preserve every historical interrupted\ntranscript boundary without returning every historical steering message and\nits attachments.",
         "operationId": "list_session_queue_sessions__session_id__queue_get",
         "security": [
           {
@@ -899,6 +1092,182 @@
           },
           "409": {
             "description": "The message is no longer pending and cannot be cancelled."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}/share": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get Session Share",
+        "description": "The session's share link (active or not); null if never shared.",
+        "operationId": "get_session_share_sessions__session_id__share_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessionShareInfo"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Session Share Sessions  Session Id  Share Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run, session, workspace, or profile not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Create Session Share",
+        "description": "Enable sharing: reactivates the session's existing share (stable token,\nso a link that was toggled off keeps working when re-enabled) or creates\none on first use.",
+        "operationId": "create_session_share_sessions__session_id__share_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionShareInfo"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+          },
+          "404": {
+            "description": "Run, session, workspace, or profile not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Update Session Share",
+        "description": "Toggle the session's share link on/off.",
+        "operationId": "update_session_share_sessions__session_id__share_put",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionShareUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionShareInfo"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+          },
+          "404": {
+            "description": "Run, session, workspace, or profile not found."
           },
           "422": {
             "description": "Validation Error",
@@ -1412,6 +1781,588 @@
         }
       }
     },
+    "/agentcard/wallets": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "List Agentcard Wallets",
+        "description": "The project's active AgentCard wallets, newest first.\n\nRead-only: funding is admin-only during the beta. The UI uses this to offer\na wallet on the composer, which is how a run opts into spending \u2014 the id\nthen rides RunCreateRequest.agentcard_wallet_id and is validated again there\nagainst this same project.",
+        "operationId": "list_agentcard_wallets_agentcard_wallets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentCardWalletListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/stripe-link": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Get Stripe Link Status",
+        "description": "The project's active Stripe Link wallet connection, if any.\n\nRead-only: connecting happens in the cloud UI. A run opts into paying with\nit by passing `connection_id` as RunCreateRequest.stripe_link_connection_id,\nwhich is validated again there against this same project.",
+        "operationId": "get_stripe_link_status_stripe_link_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeLinkStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/integrations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "List Integrations",
+        "description": "List available integrations with this project's connection status.\n\n`is_connected` is resolved per integration, so a client can render the whole\ncatalogue and the connected subset from this one call. `connected_only` is\nwhat a \"my integrations\" view reads \u2014 including on a restricted project,\nwhich cannot connect anything but can still remove what it already has.",
+        "operationId": "list_integrations_integrations_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum number of results",
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by name, description or provider",
+              "title": "Search"
+            },
+            "description": "Filter by name, description or provider"
+          },
+          {
+            "name": "popular_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only return popular integrations",
+              "default": false,
+              "title": "Popular Only"
+            },
+            "description": "Only return popular integrations"
+          },
+          {
+            "name": "connected_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only return integrations this project has connected",
+              "default": false,
+              "title": "Connected Only"
+            },
+            "description": "Only return integrations this project has connected"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/categories": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "List Categories",
+        "description": "Get all integration categories, for filtering the list above.",
+        "operationId": "list_categories_integrations_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationCategoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/integrations/{provider}/authorize": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Authorize Integration",
+        "description": "Get the OAuth redirect URL for connecting an integration.\n\nThe client opens the returned URL in a web auth session and polls\n`/integrations/{provider}/status` once the flow lands back on the callback\npath. The URL is Composio-hosted; no redirect URI is registered per client.",
+        "operationId": "authorize_integration_integrations__provider__authorize_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/{provider}/status": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Get Connection Status",
+        "description": "Check whether this project has connected a specific provider.\n\nPoll this after opening the authorize URL to learn when OAuth completed.",
+        "operationId": "get_connection_status_integrations__provider__status_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/{provider}": {
+      "delete": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Disconnect Integration",
+        "description": "Disconnect an integration for this project.\n\nDeliberately NOT gated like `authorize` above: a restricted project must\nstill be able to tear down a connection it already has.",
+        "operationId": "disconnect_integration_integrations__provider__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisconnectResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/extensions": {
+      "post": {
+        "tags": [
+          "Extensions"
+        ],
+        "summary": "Upload Extension",
+        "description": "Upload a Manifest V3 extension as a ZIP file with manifest.json at its root.",
+        "operationId": "upload_extension_extensions_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtensionView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Extensions are not enabled for this project"
+          },
+          "413": {
+            "description": "The upload is larger than 100 MiB"
+          },
+          "422": {
+            "description": "The extension is invalid or the project has 100 extensions"
+          },
+          "503": {
+            "description": "The extension could not be stored"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Extensions"
+        ],
+        "summary": "List Extensions",
+        "operationId": "list_extensions_extensions_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtensionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/extensions/{extension_id}": {
+      "get": {
+        "tags": [
+          "Extensions"
+        ],
+        "summary": "Get Extension",
+        "operationId": "get_extension_extensions__extension_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "extension_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Extension Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtensionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Extension not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Extensions"
+        ],
+        "summary": "Delete Extension",
+        "description": "Permanently delete an extension without affecting running browsers.",
+        "operationId": "delete_extension_extensions__extension_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "extension_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Extension Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Extension not found"
+          },
+          "503": {
+            "description": "The extension could not be deleted"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/browsers": {
       "get": {
         "tags": [
@@ -1560,8 +2511,18 @@
               }
             }
           },
+          "402": {
+            "description": "Insufficient credits, or the API key reached its monthly spend limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIKeySpendLimitError"
+                }
+              }
+            }
+          },
           "403": {
-            "description": "Session timeout limit exceeded (maximum 4 hours)",
+            "description": "Session timeout limit exceeded (maximum 4 hours), or extensions are not available to this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -1571,7 +2532,7 @@
             }
           },
           "404": {
-            "description": "Profile not found",
+            "description": "Profile or extension not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1937,7 +2898,7 @@
             }
           },
           "402": {
-            "description": "Subscription required for additional profiles",
+            "description": "Profile limit reached; delete unused profiles to create new ones",
             "content": {
               "application/json": {
                 "schema": {
@@ -2128,6 +3089,126 @@
   },
   "components": {
     "schemas": {
+      "APIKeySpendLimitDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "default": "api_key_monthly_spend_limit_reached"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "cap": {
+            "type": "number",
+            "title": "Cap"
+          },
+          "spent": {
+            "type": "number",
+            "title": "Spent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "cap",
+          "spent"
+        ],
+        "title": "APIKeySpendLimitDetail",
+        "description": "Machine-readable 402 detail shared by run and browser creation."
+      },
+      "APIKeySpendLimitError": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/components/schemas/APIKeySpendLimitDetail"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "APIKeySpendLimitError",
+        "description": "FastAPI wraps endpoint errors in a top-level ``detail`` field."
+      },
+      "AgentCardWalletListResponse": {
+        "properties": {
+          "wallets": {
+            "items": {
+              "$ref": "#/components/schemas/AgentCardWalletSummary"
+            },
+            "type": "array",
+            "title": "Wallets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "wallets"
+        ],
+        "title": "AgentCardWalletListResponse"
+      },
+      "AgentCardWalletSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "availableCents": {
+            "type": "integer",
+            "title": "Availablecents"
+          },
+          "activeHoldCents": {
+            "type": "integer",
+            "title": "Activeholdcents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "currency",
+          "availableCents",
+          "activeHoldCents"
+        ],
+        "title": "AgentCardWalletSummary",
+        "description": "A spendable project wallet as the composer needs to show it."
+      },
+      "AuthorizeResponse": {
+        "properties": {
+          "redirect_url": {
+            "type": "string",
+            "title": "Redirect Url"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          }
+        },
+        "type": "object",
+        "required": [
+          "redirect_url",
+          "provider"
+        ],
+        "title": "AuthorizeResponse",
+        "description": "Response with OAuth redirect URL."
+      },
       "BrowserDownloadFile": {
         "properties": {
           "path": {
@@ -2203,6 +3284,34 @@
         ],
         "title": "BrowserDownloadListResponse",
         "description": "Paginated list of browser downloads with optional presigned URLs."
+      },
+      "BrowserExtensionView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "ID",
+            "description": "Extension ID from POST /api/v4/extensions"
+          },
+          "runtimeId": {
+            "type": "string",
+            "title": "Runtime ID",
+            "description": "Chromium extension ID, as in chrome-extension://{runtimeId}/"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "Version from the extension manifest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "runtimeId",
+          "version"
+        ],
+        "title": "BrowserExtensionView",
+        "description": "An extension installed in a browser session."
       },
       "BrowserSessionItemView": {
         "properties": {
@@ -2320,6 +3429,15 @@
             "title": "Metadata",
             "description": "Caller-supplied labels set when the browser was created.",
             "default": {}
+          },
+          "extensions": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserExtensionView"
+            },
+            "type": "array",
+            "title": "Extensions",
+            "description": "Extensions installed in the browser, in the order of `extensionIds`.",
+            "default": []
           }
         },
         "type": "object",
@@ -2493,6 +3611,12 @@
             "title": "Recording URL",
             "description": "Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response."
           },
+          "recordingAvailable": {
+            "type": "boolean",
+            "title": "Recording Available",
+            "description": "False when a recording can never appear for this session: recording was disabled, or the browser stopped long enough ago that the upload is not coming. Only ever false from proof, so a failed recording lookup leaves it true. Clients polling for `recordingUrl` must stop when this is false.",
+            "default": true
+          },
           "metadata": {
             "additionalProperties": {
               "type": "string"
@@ -2501,6 +3625,15 @@
             "title": "Metadata",
             "description": "Caller-supplied labels set when the browser was created.",
             "default": {}
+          },
+          "extensions": {
+            "items": {
+              "$ref": "#/components/schemas/BrowserExtensionView"
+            },
+            "type": "array",
+            "title": "Extensions",
+            "description": "Extensions installed in the browser, in the order of `extensionIds`.",
+            "default": []
           }
         },
         "type": "object",
@@ -2512,6 +3645,25 @@
         ],
         "title": "BrowserSessionView",
         "description": "View model for representing a browser session."
+      },
+      "ConnectionStatusResponse": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "is_connected": {
+            "type": "boolean",
+            "title": "Is Connected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "is_connected"
+        ],
+        "title": "ConnectionStatusResponse",
+        "description": "Response for connection status check."
       },
       "CreateBrowserSessionRequest": {
         "properties": {
@@ -2540,6 +3692,21 @@
             "title": "Proxy Country Code",
             "description": "Country code for proxy location. Defaults to US. Set to null to disable proxy.",
             "default": "us"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history."
           },
           "timeout": {
             "type": "integer",
@@ -2613,20 +3780,16 @@
             "description": "If True, enables session recording. Defaults to False.",
             "default": false
           },
-          "metadata": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Metadata",
-            "description": "Labels for this browser. Up to 10 key-value pairs. Filterable on the browsers list and in the dashboard history."
+          "extensionIds": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Extension IDs",
+            "description": "Up to 3 ready extensions from POST /api/v4/extensions to install before the browser starts.",
+            "default": []
           }
         },
         "type": "object",
@@ -2692,6 +3855,89 @@
         "title": "CustomProxy",
         "description": "Request model for creating a custom proxy."
       },
+      "DisconnectResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "provider"
+        ],
+        "title": "DisconnectResponse",
+        "description": "Response for disconnect action."
+      },
+      "ExtensionListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExtensionView"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total number of items in the list"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number",
+            "description": "Page number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "ExtensionListResponse"
+      },
+      "ExtensionView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "version",
+          "createdAt"
+        ],
+        "title": "ExtensionView"
+      },
       "ExternalBrowserAttach": {
         "properties": {
           "cdpUrl": {
@@ -2745,7 +3991,6 @@
           },
           "value": {
             "type": "string",
-            "maxLength": 4096,
             "minLength": 1,
             "format": "password",
             "title": "Value",
@@ -2773,6 +4018,111 @@
         "type": "object",
         "title": "InsufficientCreditsError",
         "description": "Error response when there are insufficient credits"
+      },
+      "IntegrationCategoryResponse": {
+        "properties": {
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "categories"
+        ],
+        "title": "IntegrationCategoryResponse",
+        "description": "Response for integration categories."
+      },
+      "IntegrationListResponse": {
+        "properties": {
+          "integrations": {
+            "items": {
+              "$ref": "#/components/schemas/IntegrationResponse"
+            },
+            "type": "array",
+            "title": "Integrations"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "integrations",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "IntegrationListResponse",
+        "description": "Paginated response for integrations list."
+      },
+      "IntegrationResponse": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "is_connected": {
+            "type": "boolean",
+            "title": "Is Connected"
+          },
+          "auth_type": {
+            "type": "string",
+            "title": "Auth Type"
+          },
+          "is_popular": {
+            "type": "boolean",
+            "title": "Is Popular",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "display_name",
+          "description",
+          "icon_url",
+          "category",
+          "is_connected",
+          "auth_type"
+        ],
+        "title": "IntegrationResponse",
+        "description": "Response for a single integration."
       },
       "OnePasswordSecretSource": {
         "properties": {
@@ -3532,6 +4882,18 @@
             "title": "Screenheight",
             "description": "Custom screen height in pixels for the browser."
           },
+          "allowResizing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowresizing",
+            "description": "Let you or the agent resize the browser window over CDP. Resizing makes the browser easier to detect. API runs default to off. Follow-up runs inherit the value of the previous browser. The value applies only when the run starts a new browser."
+          },
           "record": {
             "anyOf": [
               {
@@ -3557,9 +4919,25 @@
             "minLength": 1,
             "title": "Task"
           },
+          "outputSchema": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputschema",
+            "description": "Optional JSON Schema for the final output (API runs only)."
+          },
           "model": {
             "type": "string",
             "enum": [
+              "mimo-v2.6-pro",
+              "mimo-v2.6-flash",
+              "deepseek-v4.1-flash",
               "glm-5.2",
               "grok-4.5",
               "grok-4.6",
@@ -3570,19 +4948,27 @@
               "claude-opus-4.7",
               "claude-opus-4.8",
               "claude-opus-5",
+              "claude-opus-5-5",
               "claude-fable-5",
               "claude-sonnet-5",
               "gpt-5.5",
               "gpt-5.6",
+              "gpt-6-astra",
+              "gpt-6-sol",
+              "gpt-6.1-sol",
+              "gpt-6-luna",
               "gpt-5.6-sol",
               "gpt-5.6-terra",
               "gpt-5.6-luna",
               "gemini-3.6-flash",
               "gemini-3.5-flash",
               "gemini-3.1-pro",
-              "gemini-3-flash"
+              "gemini-3-flash",
+              "bu-ultrafast",
+              "bu-fast"
             ],
             "title": "Model",
+            "description": "bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.",
             "default": "gpt-5.6-luna"
           },
           "modelParams": {
@@ -3638,6 +5024,30 @@
             "description": "If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.",
             "default": false
           },
+          "agentcardWalletId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agentcardwalletid"
+          },
+          "stripeLinkConnectionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stripelinkconnectionid"
+          },
           "attachedFileIds": {
             "anyOf": [
               {
@@ -3661,7 +5071,7 @@
                   "$ref": "#/components/schemas/SecretBinding"
                 },
                 "type": "array",
-                "maxItems": 10
+                "maxItems": 20
               },
               {
                 "type": "null"
@@ -3669,6 +5079,34 @@
             ],
             "title": "Secretbindings",
             "description": "Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run."
+          },
+          "opVaultId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opvaultid",
+            "description": "A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed."
+          },
+          "opVaultAllowedDomains": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opvaultalloweddomains",
+            "description": "Hosts every credential from opVaultId may be typed into, e.g. [\"amazon.com\"]. Omit to derive each item's hosts from its own 1Password website entries; items with no website are then skipped and reported in skippedVaultItems. A host covers its subdomains, so 1Password's ExactDomain autofill setting is not honored either way."
           },
           "judge": {
             "anyOf": [
@@ -3695,19 +5133,6 @@
               }
             ],
             "title": "Maxcostusd"
-          },
-          "outputSchema": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Outputschema",
-            "description": "Optional JSON Schema for the final output (API runs only)."
           }
         },
         "additionalProperties": false,
@@ -3761,6 +5186,14 @@
             },
             "type": "array",
             "title": "Missingfileids"
+          },
+          "skippedVaultItems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Skippedvaultitems",
+            "description": "Titles of opVaultId items that hold a credential but no 1Password website, so deriving their domains left them with nowhere to be typed. The run still starts without them; add a website to the item or pass opVaultAllowedDomains."
           }
         },
         "type": "object",
@@ -3942,6 +5375,18 @@
             "type": "string",
             "title": "Model"
           },
+          "modelParams": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelparams"
+          },
           "contextLimit": {
             "type": "integer",
             "title": "Contextlimit"
@@ -3968,6 +5413,27 @@
               }
             ],
             "title": "Result"
+          },
+          "output": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output"
+          },
+          "outputSchema": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputschema"
           },
           "error": {
             "anyOf": [
@@ -4045,27 +5511,6 @@
             "type": "string",
             "format": "date-time",
             "title": "Updatedat"
-          },
-          "output": {
-            "anyOf": [
-              {},
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Output"
-          },
-          "outputSchema": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Outputschema"
           }
         },
         "type": "object",
@@ -4118,7 +5563,7 @@
               "type": "string"
             },
             "type": "array",
-            "maxItems": 10,
+            "maxItems": 20,
             "minItems": 1,
             "title": "Alloweddomains",
             "description": "Hosts the secret may be typed into, e.g. [\"github.com\"]. A host covers its subdomains. Bare hostnames only \u2014 no scheme, port, path, or wildcard."
@@ -4133,6 +5578,56 @@
         ],
         "title": "SecretBinding",
         "description": "One credential this run may have typed into a browser field.\n\nThe value never reaches the agent. It is encrypted at rest, kept out of the\nworker payload, and typed straight into the focused field by the server when\nthe agent asks for the alias by name \u2014 and only while the page it is typing\ninto is on one of `allowedDomains`.\n\nRun-scoped: bindings die with the run, so a follow-up run that needs the same\ncredential must send it again."
+      },
+      "SessionCostResponse": {
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid"
+          },
+          "numRuns": {
+            "type": "integer",
+            "title": "Numruns"
+          },
+          "llmCostUsd": {
+            "type": "string",
+            "title": "Llmcostusd"
+          },
+          "searchCostUsd": {
+            "type": "string",
+            "title": "Searchcostusd"
+          },
+          "browserCostUsd": {
+            "type": "string",
+            "title": "Browsercostusd"
+          },
+          "proxyCostUsd": {
+            "type": "string",
+            "title": "Proxycostusd"
+          },
+          "proxyUsedMb": {
+            "type": "string",
+            "title": "Proxyusedmb"
+          },
+          "totalCostUsd": {
+            "type": "string",
+            "title": "Totalcostusd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sessionId",
+          "numRuns",
+          "llmCostUsd",
+          "searchCostUsd",
+          "browserCostUsd",
+          "proxyCostUsd",
+          "proxyUsedMb",
+          "totalCostUsd"
+        ],
+        "title": "SessionCostResponse",
+        "description": "Everything a session cost, split by what it was spent on.\n\nRecorded usage, not an invoice total \u2014 promotional waivers and credits are\napplied downstream in billing.\n\nBrowser time and proxy bandwidth are metered against the session's browser,\nwhich outlives any single run, so they have no per-run number \u2014 only\n`RunSummary.total_cost_usd`, the LLM (and web search) charge, does.\n\nAll amounts are fixed-6-decimal strings for the same reason as\n`RunSummary.total_cost_usd`: JS clients lose precision on float."
       },
       "SessionInfo": {
         "properties": {
@@ -4255,6 +5750,66 @@
         "title": "SessionNotFoundError",
         "description": "Error response when a session is not found"
       },
+      "SessionShareInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "shareToken": {
+            "type": "string",
+            "title": "Sharetoken"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid"
+          },
+          "isActive": {
+            "type": "boolean",
+            "title": "Isactive"
+          },
+          "viewCount": {
+            "type": "integer",
+            "title": "Viewcount"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "shareUrl": {
+            "type": "string",
+            "title": "Shareurl"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "shareToken",
+          "sessionId",
+          "isActive",
+          "viewCount",
+          "createdAt",
+          "shareUrl"
+        ],
+        "title": "SessionShareInfo",
+        "description": "A session's public share-link state (share modal reads/writes this)."
+      },
+      "SessionShareUpdateRequest": {
+        "properties": {
+          "isActive": {
+            "type": "boolean",
+            "title": "Isactive"
+          }
+        },
+        "type": "object",
+        "required": [
+          "isActive"
+        ],
+        "title": "SessionShareUpdateRequest"
+      },
       "SessionTimeoutLimitExceededError": {
         "properties": {
           "detail": {
@@ -4266,6 +5821,25 @@
         "type": "object",
         "title": "SessionTimeoutLimitExceededError",
         "description": "Error response when session timeout exceeds the maximum allowed limit"
+      },
+      "SessionUpdateRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "title": "SessionUpdateRequest",
+        "description": "Rename a session. Null clears the user-set name, so the UI falls back to\nthe session's opening task."
       },
       "SteeringCutoff": {
         "properties": {
@@ -4287,6 +5861,58 @@
         ],
         "title": "SteeringCutoff",
         "description": "Earliest accepted steer for one interrupted source run.\n\nThe queue endpoint returns these compact boundaries separately from message\nrows so a remount can keep every interrupted transcript frozen without\nre-sending the full historical steering-message payload."
+      },
+      "StripeLinkStatusResponse": {
+        "properties": {
+          "isConnected": {
+            "type": "boolean",
+            "title": "Isconnected"
+          },
+          "connectionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connectionid"
+          },
+          "linkEmail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linkemail"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "test",
+                  "live"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "isConnected"
+        ],
+        "title": "StripeLinkStatusResponse",
+        "description": "The project's active Stripe Link connection, if any."
       },
       "TooManyConcurrentActiveSessionsError": {
         "properties": {

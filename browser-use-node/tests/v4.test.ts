@@ -3,7 +3,9 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { HttpClient } from "../src/core/http.js";
 import { Browsers } from "../src/v4/resources/browsers.js";
+import { Extensions } from "../src/v4/resources/extensions.js";
 import { Runs } from "../src/v4/resources/runs.js";
 import { Sessions } from "../src/v4/resources/sessions.js";
 import { Workspaces } from "../src/v4/resources/workspaces.js";
@@ -11,6 +13,7 @@ import { Workspaces } from "../src/v4/resources/workspaces.js";
 const RUN_ID = "00000000-0000-0000-0000-000000000001";
 const SESSION_ID = "00000000-0000-0000-0000-000000000002";
 const WORKSPACE_ID = "00000000-0000-0000-0000-000000000010";
+const EXTENSION_ID = "00000000-0000-0000-0000-000000000020";
 
 function runSummary(status: string) {
   return {
@@ -52,12 +55,14 @@ describe("v4 browsers", () => {
       proxyCountryCode: "us",
       pdfRendererEnabled: false,
       solveCaptchas: false,
+      extensionIds: [EXTENSION_ID],
     });
 
     expect(http.post).toHaveBeenCalledWith("/browsers", {
       proxyCountryCode: "us",
       pdfRendererEnabled: false,
       solveCaptchas: false,
+      extensionIds: [EXTENSION_ID],
     });
     expect(browser.cdpUrl).toContain("devtools/browser/test");
   });
@@ -602,6 +607,66 @@ describe("v4 workspaces", () => {
         /At least one file path is required/,
       );
     });
+  });
+});
+
+describe("v4 extensions", () => {
+  const extension = {
+    id: EXTENSION_ID,
+    name: "Demo",
+    version: "1.0",
+    createdAt: "2026-01-01T00:00:00Z",
+  };
+  const zipBytes = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 1, 2, 3]);
+
+  function zipPath(): string {
+    const path = join(mkdtempSync(join(tmpdir(), "bu-v4-ext-")), "demo.zip");
+    writeFileSync(path, zipBytes);
+    return path;
+  }
+
+  it.each([
+    ["a file path", () => zipPath()],
+    ["bytes", () => zipBytes],
+    ["a Blob", () => new Blob([zipBytes])],
+  ])("uploads %s as the multipart file part", async (_kind, makeFile) => {
+    let request: { url: string; init?: RequestInit } | undefined;
+    const http = new HttpClient({
+      apiKey: "test",
+      baseUrl: "https://api.example.com",
+      fetch: async (input, init) => {
+        request = { url: String(input), init };
+        return new Response(JSON.stringify(extension), {
+          status: 201,
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    });
+
+    const created = await new Extensions(http).create(makeFile());
+
+    expect(request?.url).toBe("https://api.example.com/extensions");
+    expect(request?.init?.method).toBe("POST");
+    expect(new Headers(request?.init?.headers).get("Content-Type")).toBeNull();
+    const file = (request?.init?.body as FormData).get("file") as Blob;
+    expect(new Uint8Array(await file.arrayBuffer())).toEqual(zipBytes);
+    expect(created.id).toBe(EXTENSION_ID);
+  });
+
+  it("lists, gets, and deletes extensions", async () => {
+    const http = {
+      get: vi.fn(async () => extension),
+      delete: vi.fn(async () => undefined),
+    };
+    const extensions = new Extensions(http as any);
+
+    await extensions.list({ pageSize: 20, pageNumber: 2 });
+    await extensions.get(EXTENSION_ID);
+    await extensions.delete(EXTENSION_ID);
+
+    expect(http.get).toHaveBeenNthCalledWith(1, "/extensions", { pageSize: 20, pageNumber: 2 });
+    expect(http.get).toHaveBeenNthCalledWith(2, `/extensions/${EXTENSION_ID}`);
+    expect(http.delete).toHaveBeenCalledWith(`/extensions/${EXTENSION_ID}`);
   });
 });
 

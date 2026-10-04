@@ -43,6 +43,7 @@ def test_browser_metadata_create_and_list(browser_cls: type[Any]) -> None:
         metadata={"team": "sdk", "env": "test"},
         pdf_renderer_enabled=False,
         solve_captchas=False,
+        extension_ids=["00000000-0000-0000-0000-000000000020"],
     )
     browsers.list(metadata=["team", "env=test"])
 
@@ -51,6 +52,7 @@ def test_browser_metadata_create_and_list(browser_cls: type[Any]) -> None:
         "metadata": {"team": "sdk", "env": "test"},
         "pdfRendererEnabled": False,
         "solveCaptchas": False,
+        "extensionIds": ["00000000-0000-0000-0000-000000000020"],
     }
     assert http.calls[1][3] == {
         "pageSize": None,
