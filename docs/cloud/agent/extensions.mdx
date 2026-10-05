@@ -1,0 +1,56 @@
+---
+title: Extensions
+description: "Load uploaded Chrome extensions into the browsers of agent runs."
+icon: puzzle-piece
+---
+
+An agent run can load up to 3 Chrome extensions from your project. Each browser
+of the run loads them before the agent uses it.
+
+<Note>
+  Zero Data Retention projects cannot use extensions.
+</Note>
+
+First upload the extensions and keep their IDs. The browser
+[Extensions](/cloud/browser/extensions) guide shows how.
+
+## Start a run with extensions
+
+Pass the extension IDs in `browserSettings`:
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+run = client.runs.create(
+    "List the top 3 headlines on bbc.com",
+    browser_settings={"extensionIds": ["<extension-id>"]},
+)
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"List the top 3 headlines on bbc.com",
+       "browserSettings":{"extensionIds":["<extension-id>"]}}'
+```
+</CodeGroup>
+
+In Python, `browser_settings` takes the REST field name `extensionIds`. The
+TypeScript SDK adds `extensionIds` in the next SDK release.
+
+The agent is not told which extensions the browser has. If the agent must use
+an extension, name the extension in the task.
+
+## Follow-up runs
+
+The first run of a [session](/cloud/agent/sessions) sets the extensions of the
+session. Every browser that the session starts loads the same extensions.
+
+Leave out `extensionIds` in follow-up runs. They keep the extensions of the
+session. A follow-up run that passes a different list gets a `400` response.
+
+If you delete an extension, browsers that the session starts later do not load
+it. The session continues without it. Follow-up runs that pass `extensionIds`
+must leave out the deleted ID.
