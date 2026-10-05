@@ -4910,12 +4910,22 @@
             ],
             "title": "Record",
             "description": "Record the browser session to an mp4, retrievable via GET /browsers/{id} once the browser stops. API runs default to off; pass true to enable. Like other browser settings, this only applies when a new browser is provisioned: a follow-up that reuses the session's live browser keeps that browser's recording state. Ignored (always off) for Zero Data Retention projects."
+          },
+          "extensionIds": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Extensionids",
+            "description": "Up to 3 ready extensions from POST /api/v4/extensions to install in every browser of the session. Follow-up runs inherit the session's extensions; passing a different set returns 400. After you delete an extension, omit extensionIds or pass the reduced set; later browsers skip deleted extensions. The agent is not told about installed extensions, so name any extension pages in the task."
           }
         },
         "additionalProperties": false,
         "type": "object",
         "title": "RunBrowserSettings",
-        "description": "Browser config, owned by the browser row (never the run). Follow-ups:\nomitted fields inherit the session's prior browser; explicit values apply\nonly to newly provisioned browsers (a live browser is reused as-is).\nProfile is the exception: a different profile \u2192 400; an explicit value\nmismatching the live browser's profile (incl. null vs a profiled browser)\ndeclines reuse and provisions fresh. A live browser already matching the\nrequested profile is reused."
+        "description": "Browser config, owned by the browser row (never the run). Follow-ups:\nomitted fields inherit the session's prior browser; explicit values apply\nonly to newly provisioned browsers (a live browser is reused as-is).\nProfile is the exception: a different profile \u2192 400; an explicit value\nmismatching the live browser's profile (incl. null vs a profiled browser)\ndeclines reuse and provisions fresh. A live browser already matching the\nrequested profile is reused. Extensions are session-wide: follow-ups\ninherit them, and a different set \u2192 400 (see extensionIds)."
       },
       "RunCreateRequest": {
         "properties": {
