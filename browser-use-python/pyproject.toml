@@ -37,7 +37,7 @@ x402 = [
     "x402[evm]==2.17.0; python_version >= '3.10'",
     # Security pin on a transitive dep (x402[evm] -> web3 -> requests -> urllib3).
     # Published in the extra so it reaches consumers, not just this repo's lockfile.
-    "urllib3==2.7.0; python_version >= '3.10'",  # CVE-2026-44431, CVE-2026-44432
+    "urllib3==2.8.0; python_version >= '3.10'",  # CVE-2026-44431, CVE-2026-44432
     # Security pin on a transitive dep (x402[evm] -> web3 -> aiohttp).
     # CVE-2026-34993, CVE-2026-47265, CVE-2026-54273, CVE-2026-54274,
     # CVE-2026-54276, CVE-2026-54277, CVE-2026-54278
