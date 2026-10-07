@@ -25,17 +25,28 @@ You need Python 3.11 or newer on Linux or macOS with `/bin/bash`. On Windows, ru
 
 ```bash
 uv init --python 3.12
-uv add browser-use anthropic
+uv add "browser-use>=0.13.11" "anthropic>=1,<2"
 uvx browser-use install
 ```
 
 `uvx browser-use install` installs local Chromium. You can skip it if you only use Browser Use Cloud.
 
-Set your Anthropic API key:
+Create an Anthropic API key in the [Claude Console](https://platform.claude.com/settings/keys), then export it in the terminal where you run the script. This key is required for every browser mode:
 
 ```bash
 export ANTHROPIC_API_KEY=your-key
 ```
+
+
+Before running the example, check that the installed SDK exposes the browser toolset:
+
+```bash
+uv run python -c "from anthropic.tools.browser import LocalFilePolicy; from browser_use.integrations.toolsets_for_claude import Bash, BrowserUse; print('Browser toolset imports OK')"
+```
+
+Browser Use 0.13.11 or newer includes this integration. The Anthropic 1.x version range alone does not guarantee browser-toolset support: you need the compatible release from Anthropic. If the check reports that `anthropic.tools.browser` is missing, follow Anthropic's browser-toolset release instructions before continuing. Reinstalling Browser Use or adding a Cloud key cannot supply that SDK module.
+
+A local browser only needs `ANTHROPIC_API_KEY`; it does not require a Browser Use Cloud key. Keep both keys exported when using Cloud: Anthropic runs Claude, while Browser Use provisions the browser. The shell `export` commands above apply to the current terminal; this script does not load a `.env` file automatically.
 
 ## Quickstart
 
@@ -107,6 +118,12 @@ The system prompt is part of your application. Adapt it to your task.
 ## Choose a browser
 
 To run the browser in Browser Use Cloud, create a key at [Browser Use Cloud](https://cloud.browser-use.com/new-api-key), set `BROWSER_USE_API_KEY`, and uncomment `use_cloud=True` in the quickstart’s `BrowserUse(...)` call. Keep its `configs` and `confirm` arguments. For remote uploads, replace the local `file_policy` with the staged-document policy and resolver in [Uploads to a remote browser](#uploads-to-a-remote-browser). Local Chromium is not needed in this mode. Bash still runs on the SDK host.
+
+Keep `ANTHROPIC_API_KEY` set for Claude and export the additional Cloud key in the same terminal:
+
+```bash
+export BROWSER_USE_API_KEY=your-cloud-key
+```
 
 `BrowserUse` supports three browser configurations:
 
