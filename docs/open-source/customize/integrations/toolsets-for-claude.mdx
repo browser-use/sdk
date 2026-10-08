@@ -18,6 +18,8 @@ Browser Use toolsets for Claude is maintained by Browser Use and is compatible w
 ## Installation
 
 <Note>
+  Anthropic 1.12.0 includes the public browser toolset. Browser Use 0.13.11 was built against the preview SDK and is not compatible with these public types; a Browser Use compatibility update is pending. Do not use 0.13.11 for the public SDK quickstart below.
+
   This integration requires a Browser Use version containing `browser_use.integrations.toolsets_for_claude` and an Anthropic SDK version containing `anthropic.tools.browser` and `client.beta.messages.tool_runner`. If either import is unavailable, your installed package version does not support this example. Check Anthropic's browser-toolset release instructions for SDK availability.
 </Note>
 
@@ -25,7 +27,7 @@ You need Python 3.11 or newer on Linux or macOS with `/bin/bash`. On Windows, ru
 
 ```bash
 uv init --python 3.12
-uv add "browser-use>=0.13.11" "anthropic>=1,<2"
+uv add "browser-use>=0.13.11" "anthropic>=1.12,<2"
 uvx browser-use install
 ```
 
@@ -41,10 +43,10 @@ export ANTHROPIC_API_KEY=your-key
 Before running the example, check that the installed SDK exposes the browser toolset:
 
 ```bash
-uv run python -c "from anthropic.tools.browser import LocalFilePolicy; from browser_use.integrations.toolsets_for_claude import Bash, BrowserUse; print('Browser toolset imports OK')"
+uv run python -c "from anthropic.tools.browser import BetaLocalFilePolicy; from browser_use.integrations.toolsets_for_claude import Bash, BrowserUse; print('Browser toolset imports OK')"
 ```
 
-Browser Use 0.13.11 or newer includes this integration. The Anthropic 1.x version range alone does not guarantee browser-toolset support: you need the compatible release from Anthropic. If the check reports that `anthropic.tools.browser` is missing, follow Anthropic's browser-toolset release instructions before continuing. Reinstalling Browser Use or adding a Cloud key cannot supply that SDK module.
+Anthropic 1.12.0 introduces `anthropic.tools.browser`; older releases do not include it. Browser Use 0.13.11 still imports preview-only type names, so it fails this check even with Anthropic 1.12.0. Wait for the Browser Use compatibility update before running the example. A Cloud API key cannot fix a package import error.
 
 A local browser only needs `ANTHROPIC_API_KEY`; it does not require a Browser Use Cloud key. Keep both keys exported when using Cloud: Anthropic runs Claude, while Browser Use provisions the browser. The shell `export` commands above apply to the current terminal; this script does not load a `.env` file automatically.
 
@@ -64,7 +66,7 @@ import asyncio
 from pathlib import Path
 
 from anthropic import AsyncAnthropic
-from anthropic.tools.browser import LocalFilePolicy  # pyright: ignore[reportMissingImports]
+from anthropic.tools.browser import BetaLocalFilePolicy  # pyright: ignore[reportMissingImports]
 
 from browser_use.integrations.toolsets_for_claude import Bash, BrowserUse
 
@@ -84,7 +86,7 @@ async def main() -> None:
 			'read_network': {'enabled': True},
 		},
 		confirm=lambda _: True,  # Run without approval prompts.
-		file_policy=LocalFilePolicy(upload_roots=[Path('uploads'), Path('outputs')]),
+		file_policy=BetaLocalFilePolicy(upload_roots=[Path('uploads'), Path('outputs')]),
 	)
 	bash = Bash(output_dir=Path('outputs'))
 
@@ -187,7 +189,7 @@ For a remote upload, your application must first copy the file's bytes to the br
 The transfer step is separate from the driver. The code below begins after `report.pdf` is already on the browser host:
 
 ```python
-from anthropic.tools.browser import LocalFilePolicy
+from anthropic.tools.browser import BetaLocalFilePolicy
 from browser_use.integrations.toolsets_for_claude import BrowserUse
 
 # session is an already connected remote BrowserSession.
@@ -198,7 +200,7 @@ driver = BrowserUse(
     session,
     configs={'file_upload': {'enabled': True}},
     confirm=lambda _: True,
-    file_policy=LocalFilePolicy(upload_document_ids=remote_paths.keys()),
+    file_policy=BetaLocalFilePolicy(upload_document_ids=remote_paths.keys()),
     document_resolver=lambda document_id: remote_paths[document_id],
 )
 ```
@@ -227,11 +229,11 @@ The quickstart uses `confirm=lambda _: True` to approve browser actions automati
 import asyncio
 from pathlib import Path
 
-from anthropic.tools.browser import ConfirmContext, LocalFilePolicy
+from anthropic.tools.browser import BetaConfirmContext, BetaLocalFilePolicy
 from browser_use.integrations.toolsets_for_claude import BrowserUse
 
 
-async def confirm(context: ConfirmContext) -> bool:
+async def confirm(context: BetaConfirmContext) -> bool:
     if context.member not in {'file_upload', 'javascript_exec'}:
         return True
     details = context.input.model_dump_json(exclude_none=True)
@@ -248,7 +250,7 @@ driver = BrowserUse(
         'javascript_exec': {'enabled': True},
     },
     confirm=confirm,
-    file_policy=LocalFilePolicy(upload_roots=[Path('uploads'), Path('outputs')]),
+    file_policy=BetaLocalFilePolicy(upload_roots=[Path('uploads'), Path('outputs')]),
 )
 ```
 
