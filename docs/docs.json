@@ -132,6 +132,7 @@
                           "cloud/tutorials/integrations/claude-managed-agents"
                         ]
                       },
+                      "cloud/tutorials/integrations/agentcard",
                       "cloud/tutorials/integrations/openclaw",
                       "cloud/tutorials/integrations/hermes-agent",
                       "cloud/tutorials/integrations/vercel",
@@ -1182,6 +1183,10 @@
     {
       "source": "/open-source/customize/integrations/anthropic",
       "destination": "/open-source/customize/integrations/toolsets-for-claude"
+    },
+    {
+      "source": "/integrations/agentcard",
+      "destination": "/cloud/tutorials/integrations/agentcard"
     }
   ],
   "description": "Documentation for Browser Use Cloud Agent and Browser APIs, and the separate open-source Python library.",
