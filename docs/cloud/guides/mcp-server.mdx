@@ -9,23 +9,38 @@ https://api.browser-use.com/v3/mcp
 
 Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
 
+Use the standard `Authorization: Bearer YOUR_API_KEY` header. The legacy
+`x-browser-use-api-key` header remains supported for existing integrations.
+Treat your API key as a secret; do not commit it to your repository.
+
 ## Claude Code
 
 ```bash
-claude mcp add -t http -H "x-browser-use-api-key: YOUR_API_KEY" browser-use https://api.browser-use.com/v3/mcp
+claude mcp add -t http -H "Authorization: Bearer YOUR_API_KEY" browser-use https://api.browser-use.com/v3/mcp
 ```
 
 ## Claude Desktop
 
 Add to `claude_desktop_config.json`:
 
+This local bridge requires Node.js and converts Claude Desktop's stdio transport
+to the remote HTTP endpoint. Native remote connectors are configured separately
+in Claude's connector settings, not in this file.
+
 ```json
 {
   "mcpServers": {
     "browser-use": {
-      "url": "https://api.browser-use.com/v3/mcp",
-      "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://api.browser-use.com/v3/mcp",
+        "--header",
+        "Authorization: Bearer ${BROWSER_USE_API_KEY}"
+      ],
+      "env": {
+        "BROWSER_USE_API_KEY": "YOUR_API_KEY"
       }
     }
   }
@@ -42,7 +57,7 @@ Add to `.cursor/mcp.json`:
     "browser-use": {
       "url": "https://api.browser-use.com/v3/mcp",
       "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
+        "Authorization": "Bearer YOUR_API_KEY"
       }
     }
   }
@@ -59,7 +74,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
     "browser-use": {
       "serverUrl": "https://api.browser-use.com/v3/mcp",
       "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
+        "Authorization": "Bearer YOUR_API_KEY"
       }
     }
   }
