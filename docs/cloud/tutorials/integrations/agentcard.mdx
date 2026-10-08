@@ -42,22 +42,34 @@ const vault = new VaultClient({
 await vault.syncRegistry();
 
 const session = await bu.browsers.create({ proxyCountryCode: 'us' });
-if (!session.cdpUrl) throw new Error('Browser has no CDP URL');
-const browser = await chromium.connectOverCDP(session.cdpUrl);
-const context = browser.contexts()[0];
-if (!context) throw new Error('Browser has no context');
-const page = context.pages()[0] ?? (await context.newPage());
+let browser: Awaited<ReturnType<typeof chromium.connectOverCDP>> | undefined;
+try {
+  if (!session.cdpUrl) throw new Error('Browser has no CDP URL');
+  browser = await chromium.connectOverCDP(session.cdpUrl);
+  const context = browser.contexts()[0];
+  if (!context) throw new Error('Browser has no context');
+  const page = context.pages()[0] ?? (await context.newPage());
 
-const checkout = await attachToPlaywright(page, {
-  vault,
-  user: process.env.AGENTCARD_USER_ID!,
-  merchant: 'shop.agentcard.sh',
-  amount: 583, // Example only: supply the actual checkout total in cents.
-  currency: 'usd',
-  onApprovalUrl: (url) => sendToUser(url),
-});
+  const checkout = await attachToPlaywright(page, {
+    vault,
+    user: process.env.AGENTCARD_USER_ID!,
+    merchant: 'shop.agentcard.sh',
+    amount: 583, // Example only: supply the actual checkout total in cents.
+    currency: 'usd',
+    onApprovalUrl: (url) => sendToUser(url),
+  });
 
-await page.goto('https://shop.agentcard.sh');
+  await page.goto('https://shop.agentcard.sh');
+
+} catch (error) {
+  // No agent has started yet, so a setup failure can release this browser.
+  try {
+    await browser?.close();
+  } finally {
+    await bu.browsers.stop(session.id);
+  }
+  throw error;
+}
 // Start your agent only after attachToPlaywright has completed.
 ```
 
@@ -91,8 +103,11 @@ User approval is not proof that the merchant created an order. Verify the mercha
 `keep_alive=True` leaves the browser available after the Python agent finishes. Once the order is confirmed and no follow-up is needed, stop the owned browser from your Node app:
 
 ```ts
-await bu.browsers.stop(session.id);
-await browser.close(); // Disconnect the Playwright client.
+try {
+  await browser?.close(); // Disconnect the Playwright client.
+} finally {
+  await bu.browsers.stop(session.id);
+}
 ```
 
 Stop the browser on setup failure or abandonment too, once you have established that no payment or user action is pending. Closing the Playwright connection alone does not stop billing for the cloud browser.
