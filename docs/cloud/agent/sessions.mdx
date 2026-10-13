@@ -56,6 +56,15 @@ Omit the session ID for a new conversation. Pass only a [workspace
 ID](/cloud/agent/workspaces) when you want a fresh conversation that keeps the
 same files.
 
+## Keep the browser open between runs
+
+A finished session's browser stops after 2 idle minutes, and a later follow-up
+gets a fresh browser without the old tabs. Set `browserSettings.keepAliveMinutes`
+(2-30) on the run to keep it open longer; follow-ups inherit the value, and
+`null` restores the default. Each project keeps at most 10 idle browsers open
+this way; the rest stop after 2 minutes. Kept minutes are billed as normal
+browser time. Free-tier and Zero Data Retention projects always use 2 minutes.
+
 ## Follow up while a run is busy
 
 Use the session queue to send the next instruction without interrupting the
