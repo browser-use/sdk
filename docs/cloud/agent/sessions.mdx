@@ -61,10 +61,9 @@ same files.
 A finished session's browser stops after 120 idle seconds, and a later
 follow-up gets a fresh browser without the old tabs. Set `keepAlive` (seconds,
 120-14400) on the run to keep it open longer; follow-ups inherit the value, a
-new value changes it, and `null` restores the default. While its browser is
-kept open, the session counts toward your concurrent-session limit, and the
-time is billed as normal browser time. Free-tier and Zero Data Retention
-projects always use 120 seconds.
+new value changes it, and `null` restores the default. Kept time is billed as
+normal browser time. Free-tier and Zero Data Retention projects always use 120
+seconds.
 
 ## Follow up while a run is busy
 
