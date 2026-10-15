@@ -6,7 +6,7 @@ description: "Let a V4 agent run pay with one-time cards from your Link wallet. 
 [Link](https://link.com) is Stripe's wallet. Connect it to your Browser Use project and a run can buy things for you: each purchase gets a one-time card, your real card is never shared with the agent, and nothing is charged until you approve it in the Link app.
 
 <Note>
-  Stripe Link is in beta. If the Integrations page in the Cloud dashboard does not show **Link**, it is not available for your project yet.
+  If the Integrations page in the Cloud dashboard does not show **Link**, it is not available for your project yet.
 </Note>
 
 <Warning>
@@ -58,6 +58,7 @@ connection_id = os.environ["CONNECTION_ID"]  # from GET /stripe-link
 with BrowserUse() as client:
     run = client.runs.create(
         "Buy a 12oz bag of whole-bean coffee from example-shop.com",
+        # Not a typed SDK parameter yet; extra keyword arguments are sent as-is in the request body.
         stripeLinkConnectionId=connection_id,
     )
 ```
