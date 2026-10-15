@@ -1,4 +1,4 @@
-"""FIG 1.1 browser-profile, paper-technical style (matches core.py).
+"""FIG 1.1 browser-profile, paper-technical style.
 
 Run: python3 -I scripts/diagrams/browser-profile.py   (writes docs/cloud/images/browser-profile-{light,dark}[-mobile].svg)
 Simplified: page text already says cookies/localStorage and one profile per user, so no legend, badges or leaders.
@@ -7,150 +7,16 @@ same profileId (docs/cloud/guides/authentication.mdx, playwright-puppeteer-selen
 {name,userId} in openapi/v4.json; S3 prefix browser-profiles/projects/{project}/profiles/{id} in
 backend/common/services/browser/service.py).
 """
-import math, pathlib, re
+import math, pathlib, sys
 
-OUT = pathlib.Path(__file__).resolve().parents[2] / "docs" / "cloud" / "images"
-C, S = math.cos(math.radians(30)), 0.5
-SANS = "Geist, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
-MONO = "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
-NS = 'vector-effect="non-scaling-stroke"'
-RJ = 'stroke-linejoin="round" stroke-linecap="round"'
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from core import C, S, NS, RJ, THEMES, Doc, P, pts, m_top, m_front  # noqa: E402
 
-THEMES = {
-    "light": dict(
-        paper="#FBFAF7", border="#E6E2D9", ink="#1B1A17", ink2="#5F5B53", ink3="#9A958A",
-        hair="#C9C3B6", faint="#ECE8DF", dot="#DDD8CD", fill="#FFFFFF", fill2="#F4F1EA",
-        orange="#FE750E", otext="#C4530A", osoft="#FFE6D2", grain=0.05, glow=.35,
-    ),
-    "dark": dict(
-        paper="#111113", border="#26262B", ink="#EDEDEF", ink2="#A1A1AA", ink3="#6B6B74",
-        hair="#3D3D45", faint="#1E1E22", dot="#232328", fill="#151518", fill2="#1A1A1E",
-        orange="#FE750E", otext="#FF8A3D", osoft="#3A2214", grain=0.07, glow=.5,
-    ),
-}
 
 TITLE = "Log in once, then start later browsers already logged in"
-DESC = ("Browser 1 logs in. When it stops, its state is saved to the profile. "
-        "Browsers 2 and 3 start with the same profileId, load that state and begin logged in.")
+DESC = ("All three browsers start with the same profileId. Browser 1 logs in, and its state is saved to the profile when it stops. "
+        "Browsers 2 and 3 load that state and begin logged in.")
 PID = "profileId"
-
-
-# ---------------------------------------------------------------- core (same as paper-technical/core.py)
-def tw(s, size, mono=False, weight=400):
-    """Conservative text width (wider fallback fonts like SF/Helvetica)."""
-    if mono:
-        return len(s) * size * 0.61
-    w = 0
-    for ch in s:
-        if ch in "il.,:;'|!()[]{} ":
-            w += 0.30
-        elif ch in "mwMW@":
-            w += 0.86
-        elif ch.isupper() or ch.isdigit():
-            w += 0.66
-        else:
-            w += 0.55
-    return w * size * (1.04 if weight >= 600 else 1.0)
-
-
-def esc(s):
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
-
-
-def P(x, y, z=0, o=(0, 0)):
-    return (o[0] + (x - y) * C, o[1] + (x + y) * S - z)
-
-
-def pts(ps):
-    return " ".join(f"{x:.1f},{y:.1f}" for x, y in ps)
-
-
-def m_top(o, z=0):
-    return f"matrix({C:.4f},{S},{-C:.4f},{S},{o[0]:.1f},{o[1] - z:.1f})"
-
-
-def m_front(o, y=0):
-    ox, oy = P(0, y, 0, o)
-    return f"matrix({C:.4f},{S},0,1,{ox:.1f},{oy:.1f})"
-
-
-class Doc:
-    def __init__(self, w, h, title, desc, t):
-        self.w, self.h, self.t = w, h, t
-        self.title, self.desc = title, desc
-        self.defs, self.body, self.css = [], [], []
-        self.boxes = []  # text boxes for overlap checks
-
-    def add(self, s):
-        self.body.append(s)
-
-    def text(self, x, y, s, size=12, fill=None, weight=400, mono=False, anchor="start", ls=None, cls=None, track=True):
-        fam = "m" if mono else "s"
-        a = f' text-anchor="{anchor}"' if anchor != "start" else ""
-        w = f' font-weight="{weight}"' if weight != 400 else ""
-        l = f' letter-spacing="{ls}"' if ls else ""
-        c = f' class="{fam} {cls}"' if cls else f' class="{fam}"'
-        self.add(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill or self.t["ink"]}"{w}{a}{l}{c}>{esc(s)}</text>')
-        if track:
-            wd = tw(s, size, mono, weight)
-            x0 = {"start": x, "middle": x - wd / 2, "end": x - wd}[anchor]
-            self.boxes.append((s, x0, y - size * 0.78, x0 + wd, y + size * 0.22))
-            mg = (34 if self.w > 400 else 24) - 0.5
-            assert x0 >= mg and x0 + wd <= self.w - mg, ("margin", s, x0, x0 + wd)
-
-    def paper(self, fig, tag):
-        t = self.t
-        w, h = self.w, self.h
-        self.defs.append(
-            f'<pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">'
-            f'<circle cx="8" cy="8" r="0.7" fill="{t["dot"]}"/></pattern>'
-            f'<filter id="grain" x="0" y="0" width="100%" height="100%">'
-            f'<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch"/>'
-            f'<feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 {t["grain"]} 0"/></filter>'
-            f'<clipPath id="card"><rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14"/></clipPath>'
-        )
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="{t["paper"]}"/>')
-        self.add(f'<g clip-path="url(#card)"><rect width="{w}" height="{h}" fill="url(#dots)"/>'
-                 f'<rect width="{w}" height="{h}" filter="url(#grain)"/></g>')
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="none" stroke="{t["border"]}"/>')
-        for (x, y) in ((20, 20), (w - 20, 20), (20, h - 20), (w - 20, h - 20)):
-            self.add(f'<path d="M{x - 5} {y}h10M{x} {y - 5}v10" stroke="{t["hair"]}" stroke-width="0.75"/>')
-        self.text(34, 24.5, fig, 10, t["ink3"], mono=True, ls="0.08em", track=False)
-        self.text(w - 34, 24.5, tag, 10, t["ink3"], mono=True, anchor="end", ls="0.08em", track=False)
-
-    def badge(self, x, y, n, accent=False):
-        t = self.t
-        if accent:
-            self.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="8.5" fill="{t["orange"]}"/>')
-            self.text(x, y + 3.6, str(n), 10, "#FFFFFF", 600, mono=True, anchor="middle", track=False)
-        else:
-            self.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="8.5" fill="{t["paper"]}" stroke="{t["ink2"]}" stroke-width="0.9"/>')
-            self.text(x, y + 3.6, str(n), 10, t["ink"], 600, mono=True, anchor="middle", track=False)
-
-    def check_overlaps(self):
-        b = self.boxes
-        for i in range(len(b)):
-            for j in range(i + 1, len(b)):
-                s1, a0, a1, a2, a3 = b[i]
-                s2, b0, b1, b2, b3 = b[j]
-                if a0 < b2 and b0 < a2 and a1 < b3 and b1 < a3:
-                    raise AssertionError(("text overlap", s1, s2))
-
-    def save(self, name):
-        self.check_overlaps()
-        css = f".s{{font-family:{SANS}}}.m{{font-family:{MONO}}}text{{font-kerning:normal}}" + "".join(self.css)
-        svg = (
-            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" width="{self.w}" height="{self.h}" '
-            f'role="img" aria-labelledby="t d" fill="none">'
-            f'<title id="t">{esc(self.title)}</title><desc id="d">{esc(self.desc)}</desc>'
-            f'<style>{css}</style><defs>{"".join(self.defs)}</defs>{"".join(self.body)}</svg>'
-        )
-        svg = re.sub(r"\n\s*", "", svg)
-        p = OUT / f"{name}.svg"
-        p.write_text(svg)
-        kb = len(svg.encode()) / 1024
-        assert kb < 60, (name, kb)
-        print(f"{name}.svg {kb:.1f} KB  {self.w}x{self.h}")
 
 
 # ---------------------------------------------------------------- figure parts
@@ -332,7 +198,7 @@ def build(theme):
     ob2 = (ob2x, p2y + WH2 / 2)
     ob3 = (ob2x, p3y + WH2 / 2)
     H = round(P(WW2, 0, 0, ob3)[1] + 32)
-    d = Doc(W, H, TITLE, DESC, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 1.1", "CLOUD BROWSER / PROFILE")
     defs(d)
     ink, ink3, ot = t["ink"], t["ink3"], t["otext"]
@@ -356,10 +222,12 @@ def build(theme):
 
     ly = st["bottom"] + 26
     d.text(P(WW1 / 2, 0, 0, ob1)[0], b1["bottom"] + 28, "Browser 1", 13, ink, 600, anchor="middle")
+    d.text(P(WW1 / 2, 0, 0, ob1)[0], b1["bottom"] + 45, PID, 11, ink3, mono=True, anchor="middle")
     d.text(cx, ly, "Profile", 13, ink, 600, anchor="middle")
     d.text(cx, ly + 17, PID, 11, ink3, mono=True, anchor="middle")
     for b, name in ((b2, "Browser 2"), (b3, "Browser 3")):
         d.text(b["right"] + 14, b["port_l"][1] + 16, name, 13, ink, 600)
+        d.text(b["right"] + 14, b["port_l"][1] + 33, PID, 11, ink3, mono=True)
     assert ly + 17 + 26 <= H, (ly, H)
     d.save(f"browser-profile-{theme}")
 
@@ -384,8 +252,8 @@ def build_mobile(theme):
     obs = [(x - WW2 * C / 2, ob_y - WW2 / 2 * S) for x in xs]
     win_tops = [P(WW2 / 2, 0, WH2, ob) for ob in obs]
     ly = ob_y + WW2 / 2 * S + 24  # window bottom + 24
-    H = round(ly + 32)
-    d = Doc(W, H, TITLE, DESC, t)
+    H = round(ly + 48)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 1.1", "PROFILE")
     defs(d)
     ink, ink3, ot = t["ink"], t["ink3"], t["otext"]
@@ -409,8 +277,10 @@ def build_mobile(theme):
     d.add(f'<circle cx="{front[0]:.1f}" cy="{y_bus:.1f}" r="2.2" fill="{t["orange"]}"/>')
 
     d.text(b1["right"] + 16, b1["port_r"][1] + 4, "Browser 1", 12.5, ink, 600)
+    d.text(b1["right"] + 16, b1["port_r"][1] + 20, PID, 11, ink3, mono=True)
     for b, name in zip(bs, ("Browser 2", "Browser 3")):
         d.text((b["left"] + b["right"]) / 2, ly, name, 12.5, ink, 600, anchor="middle")
+        d.text((b["left"] + b["right"]) / 2, ly + 16, PID, 11, ink3, mono=True, anchor="middle")
     assert bs[0]["bottom"] < ly - 14, (bs[0]["bottom"], ly)
     d.save(f"browser-profile-{theme}-mobile")
 

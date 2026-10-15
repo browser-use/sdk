@@ -371,7 +371,7 @@ tasks:
   docs:diagrams:
     desc: Regenerate docs/cloud/images diagram SVGs from scripts/diagrams (stdlib Python, deterministic)
     cmds:
-      - for f in scripts/diagrams/*.py; do python3 -I "$f"; done
+      - for f in scripts/diagrams/*.py; do [ "$f" = scripts/diagrams/core.py ] || python3 -I "$f" || exit 1; done
 
   docs:dev:
     desc: Start Mintlify docs dev server using the checked-in public reference

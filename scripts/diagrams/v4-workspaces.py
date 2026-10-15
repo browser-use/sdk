@@ -1,62 +1,11 @@
 """FIG 3.0 V4 workspaces, paper-technical style.
 
 Run: python3 -I scripts/diagrams/v4-workspaces.py   (writes docs/cloud/images/v4-workspaces-{light,dark}[-mobile].svg)
-Self-contained: the shared paper-technical primitives are inlined so other figures can't break this one.
 """
-import math, pathlib, re
+import pathlib, sys
 
-OUT = pathlib.Path(__file__).resolve().parents[2] / "docs" / "cloud" / "images"
-C, S = math.cos(math.radians(30)), 0.5
-SANS = "Geist, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
-MONO = "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
-NS = 'vector-effect="non-scaling-stroke"'
-RJ = 'stroke-linejoin="round" stroke-linecap="round"'
-
-THEMES = {
-    "light": dict(
-        paper="#FBFAF7", border="#E6E2D9", ink="#1B1A17", ink2="#5F5B53", ink3="#9A958A",
-        hair="#C9C3B6", faint="#ECE8DF", dot="#DDD8CD", fill="#FFFFFF", fill2="#F4F1EA",
-        orange="#FE750E", otext="#C4530A", osoft="#FFE6D2", grain=0.05, glow=.35,
-    ),
-    "dark": dict(
-        paper="#111113", border="#26262B", ink="#EDEDEF", ink2="#A1A1AA", ink3="#6B6B74",
-        hair="#3D3D45", faint="#1E1E22", dot="#232328", fill="#151518", fill2="#1A1A1E",
-        orange="#FE750E", otext="#FF8A3D", osoft="#3A2214", grain=0.07, glow=.5,
-    ),
-}
-
-
-def tw(s, size, mono=False, weight=400):
-    """Conservative text width (wider fallback fonts like SF/Helvetica)."""
-    if mono:
-        return len(s) * size * 0.61
-    w = 0
-    for ch in s:
-        if ch in "il.,:;'|!()[]{} ":
-            w += 0.30
-        elif ch in "mwMW@":
-            w += 0.86
-        elif ch.isupper() or ch.isdigit():
-            w += 0.66
-        else:
-            w += 0.55
-    return w * size * (1.04 if weight >= 600 else 1.0)
-
-
-def esc(s):
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
-
-
-def P(x, y, z=0, o=(0, 0)):
-    return (o[0] + (x - y) * C, o[1] + (x + y) * S - z)
-
-
-def pts(ps):
-    return " ".join(f"{x:.1f},{y:.1f}" for x, y in ps)
-
-
-def m_top(o, z=0):      # local (u,v) -> plane z = const
-    return f"matrix({C:.4f},{S},{-C:.4f},{S},{o[0]:.1f},{o[1] - z:.1f})"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from core import C, S, NS, RJ, THEMES, Doc, tw, P, pts, m_top  # noqa: E402
 
 
 def m_front(ob):        # local (u,w) -> plane y = const, faces lower-left; u runs down-right
@@ -70,86 +19,6 @@ def m_side(ob):         # local (u,w) -> plane x = const, faces lower-right; u r
 def apply(m, u, w):
     a, b, c, d, e, f = m
     return (a * u + c * w + e, b * u + d * w + f)
-
-
-class Doc:
-    def __init__(self, w, h, title, desc, t):
-        self.w, self.h, self.t = w, h, t
-        self.title, self.desc = title, desc
-        self.defs, self.body, self.css = [], [], []
-        self.boxes = []
-
-    def add(self, s):
-        self.body.append(s)
-
-    def text(self, x, y, s, size=12, fill=None, weight=400, mono=False, anchor="start", ls=None, cls=None, box=True):
-        fam = "m" if mono else "s"
-        a = f' text-anchor="{anchor}"' if anchor != "start" else ""
-        w = f' font-weight="{weight}"' if weight != 400 else ""
-        l = f' letter-spacing="{ls}"' if ls else ""
-        c = f' class="{fam} {cls}"' if cls else f' class="{fam}"'
-        self.add(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill or self.t["ink"]}"{w}{a}{l}{c}>{esc(s)}</text>')
-        if box:
-            wd = tw(s, size, mono, weight)
-            x0 = x - (wd if anchor == "end" else wd / 2 if anchor == "middle" else 0)
-            self.boxes.append((s, x0, y - size * 0.75, x0 + wd, y + size * 0.22))
-
-    def paper(self, fig, tag, m=20):
-        t = self.t
-        self.m = 30 if m == 20 else 24
-        w, h = self.w, self.h
-        self.defs.append(
-            f'<pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">'
-            f'<circle cx="8" cy="8" r="0.7" fill="{t["dot"]}"/></pattern>'
-            f'<filter id="grain" x="0" y="0" width="100%" height="100%">'
-            f'<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch"/>'
-            f'<feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 {t["grain"]} 0"/></filter>'
-            f'<clipPath id="card"><rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14"/></clipPath>'
-        )
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="{t["paper"]}"/>')
-        self.add(f'<g clip-path="url(#card)"><rect width="{w}" height="{h}" fill="url(#dots)"/>'
-                 f'<rect width="{w}" height="{h}" filter="url(#grain)"/></g>')
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="none" stroke="{t["border"]}"/>')
-        for (x, y) in ((m, m), (w - m, m), (m, h - m), (w - m, h - m)):
-            self.add(f'<path d="M{x - 5} {y}h10M{x} {y - 5}v10" stroke="{t["hair"]}" stroke-width="0.75"/>')
-        hx = 34 if m == 20 else 28
-        self.text(hx, 24.5, fig, 10, t["ink3"], mono=True, ls="0.08em", box=False)
-        self.text(w - hx, 24.5, tag, 10, t["ink3"], mono=True, anchor="end", ls="0.08em", box=False)
-
-    def badge(self, x, y, n, accent=False):
-        t = self.t
-        if accent:
-            self.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="8.5" fill="{t["orange"]}"/>')
-            self.text(x, y + 3.6, str(n), 10, "#FFFFFF", 600, mono=True, anchor="middle", box=False)
-        else:
-            self.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="8.5" fill="{t["paper"]}" stroke="{t["ink2"]}" stroke-width="0.9"/>')
-            self.text(x, y + 3.6, str(n), 10, t["ink"], 600, mono=True, anchor="middle", box=False)
-        self.boxes.append((f"badge{n}", x - 8.5, y - 8.5, x + 8.5, y + 8.5))
-
-    def check_overlaps(self):
-        b = self.boxes
-        for i in range(len(b)):
-            for j in range(i + 1, len(b)):
-                p, q = b[i], b[j]
-                if p[1] < q[3] and q[1] < p[3] and p[2] < q[4] and q[2] < p[4]:
-                    raise AssertionError(f"overlap: {p[0]!r} x {q[0]!r}")
-        for s, x0, y0, x1, y1 in b:
-            assert self.m <= x0 and x1 <= self.w - self.m and y1 <= self.h - 26, (s, x0, x1, y1)
-
-    def save(self, name):
-        css = (f".s{{font-family:{SANS}}}.m{{font-family:{MONO}}}text{{font-kerning:normal}}" + "".join(self.css))
-        svg = (
-            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" width="{self.w}" height="{self.h}" '
-            f'role="img" aria-labelledby="t d" fill="none">'
-            f'<title id="t">{esc(self.title)}</title><desc id="d">{esc(self.desc)}</desc>'
-            f'<style>{css}</style><defs>{"".join(self.defs)}</defs>{"".join(self.body)}</svg>'
-        )
-        svg = re.sub(r"\n\s*", "", svg)
-        p = OUT / f"{name}.svg"
-        p.write_text(svg)
-        kb = len(svg.encode()) / 1024
-        assert kb < 60, (name, kb)
-        print(f"{p} {kb:.1f} KB")
 
 
 # ---------------------------------------------------------------- figure
@@ -363,8 +232,7 @@ def workspace(d, o, sxy, sz, K, SP):
 def build(theme):
     t = THEMES[theme]
     W = 720
-    d = Doc(W, 1000, TITLE, DESC, t)
-    d.m = 30
+    d = Doc(W, 1000, t, TITLE, DESC)
     defs(d)  # the paper is drawn last (height is known only then) and moved under everything
     ink, ot = t["ink"], t["otext"]
 
@@ -400,7 +268,6 @@ def build(theme):
     n0 = len(d.body)
     d.paper("FIG 3.0", "V4 WORKSPACE / FILES")
     d.body = d.body[n0:] + d.body[:n0]
-    d.check_overlaps()
     d.save(f"v4-workspaces-{theme}")
 
 
@@ -427,8 +294,7 @@ def build_mobile(theme):
     """Code on top, the workspace slab under it, sessions A and B hang below on vertical cables."""
     t = THEMES[theme]
     W = 360
-    d = Doc(W, 1000, TITLE, DESC, t)
-    d.m = 24
+    d = Doc(W, 1000, t, TITLE, DESC)
     defs(d)  # the paper is drawn last (height is known only then) and moved under everything
     ink, ot = t["ink"], t["otext"]
 
@@ -481,7 +347,6 @@ def build_mobile(theme):
     n0 = len(d.body)
     d.paper("FIG 3.0", "V4 WORKSPACE", m=16)
     d.body = d.body[n0:] + d.body[:n0]
-    d.check_overlaps()
     d.save(f"v4-workspaces-{theme}-mobile")
 
 

@@ -1,144 +1,32 @@
-"""FIG 1.0 browser-cdp, paper-technical style. Self-contained.
+"""FIG 1.0 browser-cdp, paper-technical style.
 
 Run: python3 -I scripts/diagrams/browser-cdp.py   (writes docs/cloud/images/browser-cdp-{light,dark}[-mobile].svg)
 
 Projection: oblique. Readable faces stay upright (real <text>), depth recedes up-right at 30 deg.
 """
-import math, pathlib, re
+import math, pathlib, sys
 
-OUT = pathlib.Path(__file__).resolve().parents[2] / "docs" / "cloud" / "images"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from core import THEMES, Doc, tw, esc  # noqa: E402
+
 C30, S30 = math.cos(math.radians(30)), 0.5
-SANS = "Geist, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
-MONO = "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
 
-THEMES = {
-    "light": dict(
-        paper="#FBFAF7", border="#E6E2D9", ink="#1B1A17", ink2="#5F5B53", ink3="#9A958A",
-        hair="#C9C3B6", faint="#ECE8DF", dot="#DDD8CD", fill="#FFFFFF", fill2="#F4F1EA",
-        orange="#FE750E", otext="#C4530A", osoft="#FFE6D2", grain=0.05, glow=0.35,
-    ),
-    "dark": dict(
-        paper="#111113", border="#26262B", ink="#EDEDEF", ink2="#A1A1AA", ink3="#6B6B74",
-        hair="#3D3D45", faint="#1E1E22", dot="#232328", fill="#151518", fill2="#1A1A1E",
-        orange="#FE750E", otext="#FF8A3D", osoft="#3A2214", grain=0.07, glow=0.5,
-    ),
-}
 
 TITLE = "Create a cloud browser, connect over CDP, stop it"
 DESC = ("Your code calls client.browsers.create() on the API in Browser Use Cloud, which provisions a live cloud browser. "
-        "Your code connects to that browser over CDP with connect_over_cdp(b.cdp_url), shown in orange, "
-        "and the browser loads sites on the web. client.browsers.stop(b.id) stops it through the same API.")
+        "Your code connects to that browser over CDP with connect_over_cdp(session.cdp_url), shown in orange, "
+        "and the browser loads sites on the web. client.browsers.stop(session.id) stops it through the same API.")
 CODE = [  # (step, text, accent)
-    (1, "b = client.browsers.create()", False),
-    (2, "connect_over_cdp(b.cdp_url)", True),
-    (3, "client.browsers.stop(b.id)", False),
+    (1, "session = client.browsers.create()", False),
+    (2, "connect_over_cdp(session.cdp_url)", True),
+    (3, "client.browsers.stop(session.id)", False),
 ]
 LOOP = 10  # seconds, SMIL story loop
-
-
-def tw(s, size, mono=False, weight=400):
-    """Conservative text width (wider fallback fonts like SF/Helvetica)."""
-    if mono:
-        return len(s) * size * 0.61
-    w = 0
-    for ch in s:
-        if ch in "il.,:;'|!()[]{} ":
-            w += 0.30
-        elif ch in "mwMW@":
-            w += 0.86
-        elif ch.isupper() or ch.isdigit():
-            w += 0.66
-        else:
-            w += 0.55
-    return w * size * (1.04 if weight >= 600 else 1.0)
-
-
-def esc(s):
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
 def D(k):
     """Oblique depth offset for depth k."""
     return (k * C30, -k * S30)
-
-
-class Doc:
-    def __init__(self, w, h, t, theme):
-        self.w, self.h, self.t, self.theme = w, h, t, theme
-        self.defs, self.body, self.css = [], [], []
-        self.boxes = []  # (x0, y0, x1, y1, label) for overlap checks
-
-    def add(self, s):
-        self.body.append(s)
-
-    def text(self, x, y, s, size=12, fill=None, weight=400, mono=False, anchor="start", ls=None, cls=None, extra="", box=True):
-        fam = "m" if mono else "s"
-        a = f' text-anchor="{anchor}"' if anchor != "start" else ""
-        w = f' font-weight="{weight}"' if weight != 400 else ""
-        l = f' letter-spacing="{ls}"' if ls else ""
-        c = f' class="{fam} {cls}"' if cls else f' class="{fam}"'
-        self.add(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill or self.t["ink"]}"{w}{a}{l}{c}{extra}>{esc(s)}</text>')
-        if box:
-            wd = tw(s, size, mono, weight) + (len(s) * size * 0.08 if ls else 0)
-            x0 = x - wd / 2 if anchor == "middle" else (x - wd if anchor == "end" else x)
-            self.boxes.append((x0, y - size * 0.78, x0 + wd, y + size * 0.22, s))
-        return x
-
-    def paper(self, fig, tag, m=20):
-        t, w, h = self.t, self.w, self.h
-        self.defs.append(
-            f'<pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">'
-            f'<circle cx="8" cy="8" r="0.7" fill="{t["dot"]}"/></pattern>'
-            f'<filter id="grain" x="0" y="0" width="100%" height="100%">'
-            f'<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch"/>'
-            f'<feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 {t["grain"]} 0"/></filter>'
-            f'<clipPath id="card"><rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14"/></clipPath>'
-        )
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="{t["paper"]}"/>')
-        self.add(f'<g clip-path="url(#card)"><rect width="{w}" height="{h}" fill="url(#dots)"/>'
-                 f'<rect width="{w}" height="{h}" filter="url(#grain)"/></g>')
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="none" stroke="{t["border"]}"/>')
-        for (x, y) in ((m, m), (w - m, m), (m, h - m), (w - m, h - m)):
-            self.add(f'<path d="M{x - 5} {y}h10M{x} {y - 5}v10" stroke="{t["hair"]}" stroke-width="0.75"/>')
-        hx = m + 14 if m == 20 else m + 12
-        self.text(hx, 24.5, fig, 10, t["ink3"], mono=True, ls="0.08em", box=False)
-        self.text(w - hx, 24.5, tag, 10, t["ink3"], mono=True, anchor="end", ls="0.08em", box=False)
-
-    def badge(self, x, y, n, accent=False, cls=""):
-        t = self.t
-        c = f' class="{cls}"' if cls else ""
-        if accent:
-            self.add(f'<g{c}><circle cx="{x:.1f}" cy="{y:.1f}" r="8.5" fill="{t["orange"]}"/>')
-        else:
-            self.add(f'<g{c}><circle cx="{x:.1f}" cy="{y:.1f}" r="8.5" fill="{t["paper"]}" stroke="{t["ink2"]}" stroke-width="0.9"/>')
-        self.text(x, y + 3.6, str(n), 10, "#FFFFFF" if accent else t["ink"], 600, mono=True, anchor="middle", box=False)
-        self.add("</g>")
-        self.boxes.append((x - 8.5, y - 8.5, x + 8.5, y + 8.5, f"badge{n}"))
-
-    def save(self, name):
-        css = (f".s{{font-family:{SANS}}}.m{{font-family:{MONO}}}text{{font-kerning:normal}}" + "".join(self.css))
-        svg = (
-            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" width="{self.w}" height="{self.h}" '
-            f'role="img" aria-labelledby="t d" fill="none">'
-            f'<title id="t">{esc(TITLE)}</title><desc id="d">{esc(DESC)}</desc>'
-            f'<style>{css}</style><defs>{"".join(self.defs)}</defs>{"".join(self.body)}</svg>'
-        )
-        svg = re.sub(r"\n\s*", "", svg)
-        p = OUT / f"{name}.svg"
-        p.write_text(svg)
-        kb = len(svg.encode()) / 1024
-        assert kb < 60, (name, kb)
-        # every label must sit inside the card margins and not collide with another label
-        for b in self.boxes:
-            assert b[0] >= 20 and b[2] <= self.w - 20, ("outside", b)
-        bs = [b for b in self.boxes]
-        for i in range(len(bs)):
-            for j in range(i + 1, len(bs)):
-                a, b = bs[i], bs[j]
-                if a[0] < b[2] - 0.5 and b[0] < a[2] - 0.5 and a[1] < b[3] - 0.5 and b[1] < a[3] - 0.5:
-                    if not (a[4].startswith("badge") and b[4].startswith("badge")):
-                        raise AssertionError(("overlap", a, b))
-        print(f"{name}.svg {kb:.1f} KB")
 
 
 # ---------------------------------------------------------------- shared defs + css
@@ -424,13 +312,13 @@ def provisions(d, x, y0, y1):
 def build(theme):
     t = THEMES[theme]
     W, H = 720, 300
-    d = Doc(W, H, t, theme)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 1.0", "CLOUD BROWSER / CDP")
     defs(d)
     ink, ink2 = t["ink"], t["ink2"]
 
     # --- your code
-    cc = code_card(d, 40, 136, 214, lh=22, ghosts=False, gutter=False, bands={0: "b1", 2: "b3"})
+    cc = code_card(d, 40, 136, 252, lh=22, ghosts=False, gutter=False, bands={0: "b1", 2: "b3"})
     yc = cc["lines"][1]                     # the connect_over_cdp line drives the cable
     code_port = (cc["x"] + cc["w"] + 4, yc)
 
@@ -496,12 +384,12 @@ def build_mobile(theme):
     gy1 = gy0 + 192
     ly = gy1 + 26
     H = ly + 26
-    d = Doc(W, H, t, theme)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 1.0", "CDP", m=16)
     defs(d)
     ink, ink2 = t["ink"], t["ink2"]
 
-    cc = code_card(d, 24, cy0, 214, lh=22, ghosts=False, gutter=False, bands={0: "b1", 2: "b3"})
+    cc = code_card(d, 24, cy0, 252, lh=22, ghosts=False, gutter=False, bands={0: "b1", 2: "b3"})
     assert cc["y"] + cc["h"] == cbot
     d.text(24, 54, "Your code", 12.5, ink, 600)
 
@@ -554,7 +442,6 @@ def build_mobile(theme):
 
 
 if __name__ == "__main__":
-    OUT.mkdir(exist_ok=True)
     for th in ("light", "dark"):
         build(th)
         build_mobile(th)

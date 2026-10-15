@@ -1,17 +1,14 @@
 """FIG 2.0 V4 sessions, simplified. Run: python3 -I scripts/diagrams/v4-sessions.py (writes docs/cloud/images/v4-sessions-*.svg)."""
 import math, pathlib, sys
-HERE = pathlib.Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
-import core  # noqa
-from core import THEMES, Doc, tw, esc, P, pts, m_top, m_front, C, S  # noqa
-core.OUT = HERE.parents[1] / "docs" / "cloud" / "images"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from core import C, S, THEMES, Doc, tw, esc, P, pts, m_top, m_front  # noqa: E402
 
 TITLE = "One session ID holds runs, one conversation, one workspace and a reusable browser"
 DESC = ("Four runs share one session ID. The conversation grows by one turn per run and the workspace keeps its files. "
-        "Back-to-back runs reuse the same live browser. After the last run the browser idles for 120 s, then stops; "
-        "keepAlive can extend that up to 4 h. A later run keeps the conversation and files and gets a new browser.")
+        "Back-to-back runs reuse the same live browser. After the last run the browser idles for 120 s, then stops. "
+        "A later run keeps the conversation and files and gets a new browser.")
 
-# keepAlive log ruler: x = R0 + L * ln(1 + t/TAU) / ln(1 + 14400/TAU)
+# log time ruler for the idle window: x = R0 + L * ln(1 + t/TAU) / ln(1 + 14400/TAU)
 TAU = 17.0
 
 
@@ -161,7 +158,7 @@ def turn_marks(d, xs, ys, w, h):
 def build(theme):
     t = THEMES[theme]
     W, H = 720, 300
-    d = Doc(W, H, TITLE, DESC, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 2.0", "V4 SESSION / LIFECYCLE")
     defs_common(d, t, W, H)
     ink, ink2, ink3, org, ot, faint = t["ink"], t["ink2"], t["ink3"], t["orange"], t["otext"], t["faint"]
@@ -170,7 +167,7 @@ def build(theme):
     RUNS = [(1, 174, 244), (2, 262, 348), (3, 352, 422), (5, 606, 680)]
     live_end = RUNS[2][2]
     R0, L = live_end, 158
-    IDLE_END, KMAX = kx(120, R0, L), kx(14400, R0, L)
+    IDLE_END = kx(120, R0, L)
     BREAK = 594
     a4 = RUNS[3][1]
     ys, yr, yc, yw, yb = 62, 110, 156, 198, 242
@@ -243,13 +240,6 @@ def build(theme):
     d.add(f'<rect class="idl" x="{live_end}" y="{yb - 5}" width="{IDLE_END - live_end:.1f}" height="10" fill="{org}" fill-opacity="0"/>')
     d.css.append(kf_on("idl", pp(live_end), pp(IDLE_END)).replace("fill-opacity:1", "fill-opacity:.22"))
     d.add(f'<line x1="{live_end}" y1="{yb}" x2="{IDLE_END:.1f}" y2="{yb}" stroke="{org}" stroke-width="1.2"/>')
-    # keepAlive ghost: how far the idle window can be pushed
-    d.add(f'<line x1="{IDLE_END + 7:.1f}" y1="{yb}" x2="{KMAX:.1f}" y2="{yb}" stroke="{org}" stroke-opacity=".55" stroke-width="1.6" '
-          f'stroke-dasharray="1 3.5" stroke-linecap="round"/>')
-    d.add(f'<path d="M{KMAX:.1f} {yb - 4}v8" stroke="{org}" stroke-opacity=".55" stroke-width="1.2"/>')
-    ka = "keepAlive up to 4 h"
-    assert KMAX - tw(ka, 11, mono=True) > IDLE_END - 20 and KMAX + 10 < a4, KMAX
-    d.text(KMAX, yb + 20, ka, 11, ink2, mono=True, anchor="end")
     # stop mark
     d.add(f'<path d="M{IDLE_END - 5:.1f} {yb - 5}l10 10M{IDLE_END + 5:.1f} {yb - 5}l-10 10" stroke="{ink}" stroke-width="1.6" stroke-linecap="round"/>')
     # idle dimension above
@@ -289,7 +279,7 @@ def build_mobile(theme):
     """360 px, 1:1. Time runs down: four lanes as columns, annotations on the right."""
     t = THEMES[theme]
     W, H = 360, 500
-    d = Doc(W, H, TITLE, DESC, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 2.0", "V4 SESSION")
     defs_common(d, t, W, H, vertical=True)
     ink, ink2, ink3, org, ot, faint = t["ink"], t["ink2"], t["ink3"], t["orange"], t["otext"], t["faint"]
@@ -345,8 +335,6 @@ def build_mobile(theme):
         d.add(f'<circle cx="{XB}" cy="{ya}" r="2.3" fill="{t["paper"]}" stroke="{org}" stroke-width="1.2"/>')
     d.add(f'<rect x="{XB - 5}" y="{live_end}" width="10" height="{STOP - live_end}" fill="url(#hatch)"/>')
     d.add(f'<line x1="{XB}" y1="{live_end}" x2="{XB}" y2="{STOP}" stroke="{org}" stroke-width="1.2"/>')
-    d.add(f'<line x1="{XB}" y1="{STOP + 7}" x2="{XB}" y2="{BRK - 12}" stroke="{org}" stroke-opacity=".55" stroke-width="1.6" stroke-dasharray="1 3.5" stroke-linecap="round"/>')
-    d.add(f'<path d="M{XB - 4} {BRK - 12}h8" stroke="{org}" stroke-opacity=".55" stroke-width="1.2"/>')
     d.add(f'<path d="M{XB - 5} {STOP - 5}l10 10M{XB + 5} {STOP - 5}l-10 10" stroke="{ink}" stroke-width="1.6" stroke-linecap="round"/>')
     d.add(f'<rect x="{XB - 1.5}" y="{a4}" width="3" height="{YEND - a4}" rx="1.5" fill="url(#fade)"/>')
     d.add(f'<circle cx="{XB}" cy="{a4}" r="4" fill="{t["paper"]}" stroke="{org}" stroke-width="1.6"/>')
@@ -354,12 +342,9 @@ def build_mobile(theme):
     for x in (XC, XW, XB):
         d.add(f'<path d="M{x - 6} {BRK - 3}l12 -5M{x - 6} {BRK + 8}l12 -5" stroke="{ink3}" stroke-width="1"/>')
 
-    # annotations: idle bracket, keepAlive, new browser
+    # annotations: idle bracket, new browser
     d.add(f'<path d="M{XA - 4} {live_end}h8M{XA - 4} {STOP}h8M{XA} {live_end}V{STOP}" stroke="{ot}" stroke-width="1"/>')
     d.text(XA + 12, (live_end + STOP) / 2 + 4, "idle 120 s", 11, ot, 600, mono=True)
-    ka = "keepAlive up to 4 h"
-    assert XA + 12 + tw(ka, 11, mono=True) <= W - 24
-    d.text(XA + 12, (STOP + BRK - 12) / 2 + 4, ka, 11, ink2, mono=True)
     d.text(XA + 12, a4 + 4, "new browser", 11, ot, mono=True)
     assert YEND + 4 <= H - 20
 

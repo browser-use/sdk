@@ -1,72 +1,22 @@
 """FIG 0.1 V4 agent overview, paper-technical style.
 
 Run: python3 -I scripts/diagrams/v4-agent-overview.py   (writes docs/cloud/images/v4-agent-overview-{light,dark}[-mobile].svg)
-Self-contained copy of the paper-technical primitives so this file renders on its own.
 """
-import math, pathlib, re
+import math, pathlib, sys
 
-OUT = pathlib.Path(__file__).resolve().parents[2] / "docs" / "cloud" / "images"
-C, S = math.cos(math.radians(30)), 0.5
-SANS = "Geist, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
-MONO = "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
-NS = 'vector-effect="non-scaling-stroke"'
-RJ = 'stroke-linejoin="round" stroke-linecap="round"'
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from core import C, S, NS, RJ, THEMES, Doc, tw, P, pts, m_top  # noqa: E402
+
 LOOP = 12  # seconds
 MOB_PO, MOB_GAP = 246, 44  # mobile: platform origin y, gap from platform to sheet tops
 # follow-up run: POST leaves the task at T_GO, lands (run queued) at T_LAND, starts running at T_RUN (% of loop)
 T_GO, T_LAND, T_RUN = 76, 90, 95
 
-THEMES = {
-    "light": dict(
-        paper="#FBFAF7", border="#E6E2D9", ink="#1B1A17", ink2="#5F5B53", ink3="#9A958A",
-        hair="#C9C3B6", faint="#ECE8DF", dot="#DDD8CD", fill="#FFFFFF", fill2="#F4F1EA",
-        orange="#FE750E", otext="#C4530A", osoft="#FFE6D2", grain=0.05, glow=.35,
-    ),
-    "dark": dict(
-        paper="#111113", border="#26262B", ink="#EDEDEF", ink2="#A1A1AA", ink3="#6B6B74",
-        hair="#3D3D45", faint="#1E1E22", dot="#232328", fill="#151518", fill2="#1A1A1E",
-        orange="#FE750E", otext="#FF8A3D", osoft="#3A2214", grain=0.07, glow=.5,
-    ),
-}
 
 TITLE = "A task sent to POST /api/v4/runs starts a run inside a session; the run reads and writes a workspace"
 DESC = ("The task is sent with POST /api/v4/runs and starts a run. "
         "The run executes inside a session, which holds the conversation and the live browser. "
         "The run reads and writes files in a workspace.")
-
-
-# ---------------------------------------------------------------- primitives
-def tw(s, size, mono=False, weight=400):
-    """Conservative text width (wider fallback fonts like SF/Helvetica)."""
-    if mono:
-        return len(s) * size * 0.61
-    w = 0
-    for ch in s:
-        if ch in "il.,:;'|!()[]{} ":
-            w += 0.30
-        elif ch in "mwMW@":
-            w += 0.86
-        elif ch.isupper() or ch.isdigit():
-            w += 0.66
-        else:
-            w += 0.55
-    return w * size * (1.04 if weight >= 600 else 1.0)
-
-
-def esc(s):
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
-
-
-def P(x, y, z=0, o=(0, 0)):
-    return (o[0] + (x - y) * C, o[1] + (x + y) * S - z)
-
-
-def pts(ps):
-    return " ".join(f"{x:.1f},{y:.1f}" for x, y in ps)
-
-
-def m_top(o, z=0):      # local (u,v) -> plane z = const
-    return f"matrix({C:.4f},{S},{-C:.4f},{S},{o[0]:.1f},{o[1] - z:.1f})"
 
 
 def m_front(o, y=0, z=0):  # local (u,w) -> plane y = const, u along +x, w down
@@ -77,74 +27,6 @@ def m_front(o, y=0, z=0):  # local (u,w) -> plane y = const, u along +x, w down
 def m_side(o, x, y0, z=0):  # local (u,w) -> plane x = const, u along -y from y0 (not mirrored), w down
     ox, oy = P(x, y0, z, o)
     return f"matrix({C:.4f},{-S},0,1,{ox:.1f},{oy:.1f})"
-
-
-class Doc:
-    def __init__(self, w, h, t):
-        self.w, self.h, self.t = w, h, t
-        self.defs, self.body, self.css = [], [], []
-        self.boxes = []  # text extents for overlap checks
-
-    def add(self, s):
-        self.body.append(s)
-
-    def text(self, x, y, s, size=12, fill=None, weight=400, mono=False, anchor="start", ls=None, cls=None, extra=""):
-        fam = "m" if mono else "s"
-        a = f' text-anchor="{anchor}"' if anchor != "start" else ""
-        w = f' font-weight="{weight}"' if weight != 400 else ""
-        l = f' letter-spacing="{ls}"' if ls else ""
-        c = f' class="{fam} {cls}"' if cls else f' class="{fam}"'
-        self.add(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill or self.t["ink"]}"{w}{a}{l}{c}{extra}>{esc(s)}</text>')
-        wd = tw(s, size, mono, weight)
-        x0 = x - (wd / 2 if anchor == "middle" else wd if anchor == "end" else 0)
-        assert x0 >= 22 and x0 + wd <= self.w - 22, ("text off card", s, x0, x0 + wd)
-        if not cls or "anim" not in cls:
-            self.boxes.append((s, x0, y - size * 0.78, x0 + wd, y + size * 0.22))
-
-    def paper(self, fig, tag, m=20):
-        t = self.t
-        w, h = self.w, self.h
-        self.defs.append(
-            f'<pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">'
-            f'<circle cx="8" cy="8" r="0.7" fill="{t["dot"]}"/></pattern>'
-            f'<filter id="grain" x="0" y="0" width="100%" height="100%">'
-            f'<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch"/>'
-            f'<feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 {t["grain"]} 0"/></filter>'
-            f'<clipPath id="card"><rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14"/></clipPath>'
-        )
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="{t["paper"]}"/>')
-        self.add(f'<g clip-path="url(#card)"><rect width="{w}" height="{h}" fill="url(#dots)"/>'
-                 f'<rect width="{w}" height="{h}" filter="url(#grain)"/></g>')
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="none" stroke="{t["border"]}"/>')
-        for (x, y) in ((m, m), (w - m, m), (m, h - m), (w - m, h - m)):
-            self.add(f'<path d="M{x - 5} {y}h10M{x} {y - 5}v10" stroke="{t["hair"]}" stroke-width="0.75"/>')
-        lx = 34 if m == 20 else 38
-        self.text(lx, 24.5, fig, 10, t["ink3"], mono=True, ls="0.08em")
-        self.text(w - lx, 24.5, tag, 10, t["ink3"], mono=True, anchor="end", ls="0.08em")
-
-    def check_overlaps(self):
-        bs = [b for b in self.boxes]
-        for i in range(len(bs)):
-            for j in range(i + 1, len(bs)):
-                a, b = bs[i], bs[j]
-                if a[1] < b[3] and b[1] < a[3] and a[2] < b[4] and b[2] < a[4]:
-                    raise AssertionError(("text overlap", a, b))
-
-    def save(self, name):
-        self.check_overlaps()
-        css = (f".s{{font-family:{SANS}}}.m{{font-family:{MONO}}}text{{font-kerning:normal}}" + "".join(self.css))
-        svg = (
-            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" width="{self.w}" height="{self.h}" '
-            f'role="img" aria-labelledby="t d" fill="none">'
-            f'<title id="t">{esc(TITLE)}</title><desc id="d">{esc(DESC)}</desc>'
-            f'<style>{css}</style><defs>{"".join(self.defs)}</defs>{"".join(self.body)}</svg>'
-        )
-        svg = re.sub(r"\n\s*", "", svg)
-        p = OUT / f"{name}.svg"
-        p.write_text(svg)
-        kb = len(svg.encode()) / 1024
-        assert kb < 60, (name, kb)
-        print(f"{p} {kb:.1f} KB")
 
 
 def kf(name, stops):
@@ -212,10 +94,9 @@ def browser_window(d, o, x0, y, z, WW, WH, ghosts=2, gap=12, side=False):
             for k in range(3):
                 g.append(f'<circle cx="{7 + k * 5.5}" cy="{-WH + 6.5}" r="1.6" fill="{ink3}"/>')
             g.append(f'<rect x="26" y="{-WH + 3.5}" width="{WW - 56}" height="6" rx="3" stroke="{hair}" stroke-width="0.8" {NS}/>')
-            # LIVE pill
+            # live pill
             g.append(f'<rect x="{WW - 25}" y="{-WH + 3}" width="20" height="7" rx="3.5" fill="{org}" fill-opacity=".12" stroke="{org}" stroke-width="0.7" {NS}/>')
             g.append(f'<circle class="live" cx="{WW - 21}" cy="{-WH + 6.5}" r="1.4" fill="{org}"/>')
-            g.append(f'<text x="{WW - 18}" y="{-WH + 8.6}" font-size="5" font-weight="600" class="m" fill="{t["otext"]}" aria-hidden="true">LIVE</text>')
             # page wireframe: HN-ish list
             g.append(f'<rect x="7" y="{-WH + 19}" width="34" height="5" rx="1" fill="{ink3}" fill-opacity=".55"/>')
             for k, L in enumerate((WW - 22, WW - 34, WW - 28, WW - 40)):
@@ -390,7 +271,7 @@ def callout(d, a, x, y, label, anchor):
 def build(theme):
     t = THEMES[theme]
     W, H = 720, 344
-    d = Doc(W, H, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 0.1", "V4 AGENT / OVERVIEW")
     defs(d)
     anim_common(d)
@@ -482,7 +363,7 @@ def build_mobile(theme, H=1200):
     """360 wide, drawn 1:1: task on top, one vertical spine task -> run -> workspace."""
     t = THEMES[theme]
     W = 360
-    d = Doc(W, H, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 0.1", "V4 AGENT")
     defs(d)
     anim_common(d)

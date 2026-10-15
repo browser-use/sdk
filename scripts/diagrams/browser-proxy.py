@@ -1,4 +1,4 @@
-"""FIG 1.2 browser-proxy (paper-technical). Self-contained: run `python3 -I scripts/diagrams/browser-proxy.py`.
+"""FIG 1.2 browser-proxy (paper-technical). Run: python3 -I scripts/diagrams/browser-proxy.py
 
 Writes docs/cloud/images/browser-proxy-{light,dark}[-mobile].svg (simplified cut: no legend, no badges;
 the page text explains the override and re-send rules).
@@ -8,27 +8,13 @@ customProxy is not inherited by a new browser (proxies.mdx). No country count is
 v4/browser_countries.json lists 248 codes, some of them not countries.
 The cloud browser is the screen-flat window of FIG 1.0 (browser-cdp.py windows()); proxies and globe stay iso.
 """
-import math, pathlib, re
+import math, pathlib, sys
 
-OUT = pathlib.Path(__file__).resolve().parents[2] / "docs" / "cloud" / "images"
-C, S = math.cos(math.radians(30)), 0.5
-SANS = "Geist, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
-MONO = "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
-NS = 'vector-effect="non-scaling-stroke"'
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from core import C, S, NS, THEMES, Doc, tw, P, pts, m_front, m_side  # noqa: E402
+
 JR = 'stroke-linejoin="round" stroke-linecap="round"'
 
-THEMES = {
-    "light": dict(
-        paper="#FBFAF7", border="#E6E2D9", ink="#1B1A17", ink2="#5F5B53", ink3="#9A958A",
-        hair="#C9C3B6", faint="#ECE8DF", dot="#DDD8CD", fill="#FFFFFF", fill2="#F4F1EA",
-        orange="#FE750E", otext="#C4530A", osoft="#FFE6D2", grain=0.05, glow=.35,
-    ),
-    "dark": dict(
-        paper="#111113", border="#26262B", ink="#EDEDEF", ink2="#A1A1AA", ink3="#6B6B74",
-        hair="#3D3D45", faint="#1E1E22", dot="#232328", fill="#151518", fill2="#1A1A1E",
-        orange="#FE750E", otext="#FF8A3D", osoft="#3A2214", grain=0.07, glow=.5,
-    ),
-}
 
 FIG, TAG, TAG_M = "FIG 1.2", "CLOUD BROWSER / PROXY", "CLOUD BROWSER / PROXY"
 TITLE = "Three proxy routes from a cloud browser to a website"
@@ -45,121 +31,9 @@ LANES = [  # (name, key API, accent)
 COUNTRIES = ["US", "DE", "JP", "BR"]  # example proxyCountryCode values; US is the static frame
 
 
-def tw(s, size, mono=False, weight=400):
-    """Conservative text width (wider fallback fonts like SF/Helvetica)."""
-    if mono:
-        return len(s) * size * 0.61
-    w = 0
-    for ch in s:
-        if ch in "il.,:;'|!()[]{} ":
-            w += 0.30
-        elif ch in "mwMW@":
-            w += 0.86
-        elif ch.isupper() or ch.isdigit():
-            w += 0.66
-        else:
-            w += 0.55
-    return w * size * (1.04 if weight >= 600 else 1.0)
-
-
-def esc(s):
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
-
-
-def P(x, y, z=0, o=(0, 0)):
-    return (o[0] + (x - y) * C, o[1] + (x + y) * S - z)
-
-
 def D(k):
     """Oblique depth offset (screen-flat objects recede up-right at 30 deg)."""
     return (k * C, -k * S)
-
-
-def pts(ps):
-    return " ".join(f"{x:.1f},{y:.1f}" for x, y in ps)
-
-
-def m_front(o, y=0):  # local (u, w) -> plane y = const; u along x, w = -z
-    ox, oy = P(0, y, 0, o)
-    return f"matrix({C:.4f},{S},0,1,{ox:.1f},{oy:.1f})"
-
-
-def m_side(o, x=0):  # local (v, w) -> plane x = const; v along y, w = -z
-    ox, oy = P(x, 0, 0, o)
-    return f"matrix({-C:.4f},{S},0,1,{ox:.1f},{oy:.1f})"
-
-
-class Doc:
-    def __init__(self, w, h, t):
-        self.w, self.h, self.t = w, h, t
-        self.defs, self.body, self.css = [], [], []
-        self.boxes = []  # label boxes for the margin + overlap asserts
-
-    def add(self, s):
-        self.body.append(s)
-
-    def text(self, x, y, s, size=12, fill=None, weight=400, mono=False, anchor="start", ls=None, extra="", box=True):
-        a = f' text-anchor="{anchor}"' if anchor != "start" else ""
-        w = f' font-weight="{weight}"' if weight != 400 else ""
-        l = f' letter-spacing="{ls}"' if ls else ""
-        self.add(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill or self.t["ink"]}"{w}{a}{l} '
-                 f'class="{"m" if mono else "s"}"{extra}>{esc(s)}</text>')
-        if box:
-            wd = tw(s, size, mono, weight) + (len(s) * size * 0.08 if ls else 0)
-            x0 = x - wd / 2 if anchor == "middle" else (x - wd if anchor == "end" else x)
-            self.boxes.append((x0, y - size * 0.78, x0 + wd, y + size * 0.22, s))
-
-    def paper(self, fig, tag, m=20):
-        t, w, h = self.t, self.w, self.h
-        self.defs.append(
-            f'<pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">'
-            f'<circle cx="8" cy="8" r="0.7" fill="{t["dot"]}"/></pattern>'
-            f'<filter id="grain" x="0" y="0" width="100%" height="100%">'
-            f'<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch"/>'
-            f'<feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 {t["grain"]} 0"/></filter>'
-            f'<clipPath id="card"><rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14"/></clipPath>')
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="{t["paper"]}"/>')
-        self.add(f'<g clip-path="url(#card)"><rect width="{w}" height="{h}" fill="url(#dots)"/>'
-                 f'<rect width="{w}" height="{h}" filter="url(#grain)"/></g>')
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="none" stroke="{t["border"]}"/>')
-        for (x, y) in ((m, m), (w - m, m), (m, h - m), (w - m, h - m)):
-            self.add(f'<path d="M{x - 5} {y}h10M{x} {y - 5}v10" stroke="{t["hair"]}" stroke-width="0.75"/>')
-        hx = m + 14 if m == 20 else m + 12
-        self.text(hx, 24.5, fig, 10, t["ink3"], mono=True, ls="0.08em", box=False)
-        self.text(w - hx, 24.5, tag, 10, t["ink3"], mono=True, anchor="end", ls="0.08em", box=False)
-
-    def badge(self, x, y, n, accent=False):
-        t = self.t
-        if accent:
-            self.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="8.5" fill="{t["orange"]}"/>')
-        else:
-            self.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="8.5" fill="{t["paper"]}" stroke="{t["ink2"]}" stroke-width="0.9"/>')
-        self.text(x, y + 3.6, str(n), 10, "#FFFFFF" if accent else t["ink"], 600, mono=True, anchor="middle", box=False)
-        self.boxes.append((x - 8.5, y - 8.5, x + 8.5, y + 8.5, f"badge{n}"))
-
-    def save(self, name, margin=20):
-        css = f".s{{font-family:{SANS}}}.m{{font-family:{MONO}}}text{{font-kerning:normal}}" + "".join(self.css)
-        svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" width="{self.w}" height="{self.h}" '
-               f'role="img" aria-labelledby="t d" fill="none">'
-               f'<title id="t">{esc(TITLE)}</title><desc id="d">{esc(DESC)}</desc>'
-               f'<style>{css}</style><defs>{"".join(self.defs)}</defs>{"".join(self.body)}</svg>')
-        svg = re.sub(r"\n\s*", "", svg)
-        # every mono label except header / badge digits is >= 11 px
-        for m in re.finditer(r'font-size="([\d.]+)"[^>]*class="m"', svg):
-            assert float(m.group(1)) in (10,) or float(m.group(1)) >= 11, m.group(0)
-        for b in self.boxes:
-            assert b[0] >= margin and b[2] <= self.w - margin, ("outside", b)
-        bs = self.boxes
-        for i in range(len(bs)):
-            for j in range(i + 1, len(bs)):
-                a, b = bs[i], bs[j]
-                if a[0] < b[2] - 0.5 and b[0] < a[2] - 0.5 and a[1] < b[3] - 0.5 and b[1] < a[3] - 0.5:
-                    raise AssertionError(("overlap", a, b))
-        p = OUT / f"{name}.svg"
-        p.write_text(svg)
-        kb = len(svg.encode()) / 1024
-        assert kb < 60, (name, kb)
-        print(f"{p} {kb:.1f} KB")
 
 
 def defs(d):
@@ -389,7 +263,7 @@ def build(theme):
     t = THEMES[theme]
     W, H = 720, 344
     Yc, L1, L3 = 196, 100, 292
-    d = Doc(W, H, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper(FIG, TAG)
     defs(d)
     ink, ink2, ink3, org = t["ink"], t["ink2"], t["ink3"], t["orange"]
@@ -480,7 +354,7 @@ def build_mobile(theme):
     """Vertical metro map: browser on top, three lanes as rows, one bus per lane down to the website."""
     t = THEMES[theme]
     W, H = 360, 640
-    d = Doc(W, H, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper(FIG, TAG_M, m=16)
     defs(d)
     ink, ink2, ink3, org = t["ink"], t["ink2"], t["ink3"], t["orange"]
@@ -564,7 +438,7 @@ def build_mobile(theme):
     cy = gy + R + 28
     d.text(gx, cy, "Website", 13, ink, 600, anchor="middle")
     assert cy + 24 <= H, (cy, H)
-    d.save(f"browser-proxy-{theme}-mobile", margin=16)
+    d.save(f"browser-proxy-{theme}-mobile")
 
 
 if __name__ == "__main__":
