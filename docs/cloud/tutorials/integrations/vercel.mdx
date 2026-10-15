@@ -63,6 +63,8 @@ curl -X POST http://localhost:3000/api/research \
 
 Runs can outlast a single Vercel function invocation. For anything longer than your function's `maxDuration`, return `run.id` right away and read progress from a second route with `client.runs.status(runId)` and `client.runs.events(runId)`. See [Observability](/cloud/agent/observability) for the event stream and [Structured output](/cloud/agent/structured-output) for returning JSON your app can validate.
 
+To give an AI SDK agent a browser as a tool, use [`browserUse()` from `browser-use-sdk/ai-sdk`](/cloud/tutorials/integrations/ai-sdk).
+
 ## Vercel eve agents
 
 Give an [eve](https://eve.dev) agent a cloud browser with the official package. It adds the `open_cloud_browser` and `stop_cloud_browser` tools plus a browsing skill, and your API key never leaves the app runtime.
