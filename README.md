@@ -7,6 +7,10 @@
 
 Official SDKs for [Browser Use Cloud](https://browser-use.com).
 
+**Browser tasks for a fraction of a cent.** BU Ultrafast: **$0.00214 median recorded cost per URL check**, **8/8 correct on staging**. [Pricing and methodology](https://browser-use.com/pricing#task-cost-methodology).
+
+BU Fast adds more reasoning. [API V4 modes](https://docs.browser-use.com/cloud/agent/models) · [Request early access](https://browser-use.com/ultrafast).
+
 - **Browser Use Agents:** use the explicit V4 interface to give an agent a task
   and receive its completed result.
 - **Browser Infrastructure:** use the explicit V4 SDK browser resource, or the
