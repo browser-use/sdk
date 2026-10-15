@@ -7,6 +7,8 @@ description: Give Anthropic's Claude Managed Agents a stealth cloud browser via 
 
 The sandbox only ships a bare headless Chromium for Playwright: no stealth, no proxies, no CAPTCHA handling. So the agent starts a named Browser Use Cloud browser and drives it with `browser-use <<'PY'` Python snippets.
 
+Create the environment, vault, and agent below in the [Claude Console](https://platform.claude.com/docs/en/managed-agents/onboarding) and save their IDs as `ENVIRONMENT_ID`, `VAULT_ID`, and `AGENT_ID`.
+
 ## 1. Create an environment
 
 Pre-install the CLI so it's ready at session start (no runtime install).
@@ -75,13 +77,13 @@ tools:
 Create a session that uses the agent, the environment, and the vault.
 
 ```bash
-SESSION_ID=$(curl -sS https://api.anthropic.com/v1/sessions \
+SESSION_ID=$(curl -sS --fail-with-body https://api.anthropic.com/v1/sessions \
   -H "x-api-key: $ANTHROPIC_API_KEY" \
   -H "anthropic-version: 2023-06-01" \
   -H "anthropic-beta: managed-agents-2026-04-01" \
   -H "content-type: application/json" \
   -d '{"agent":"'"$AGENT_ID"'","environment_id":"'"$ENVIRONMENT_ID"'",
-       "vault_ids":["'"$VAULT_ID"'"]}' | jq -r .id)
+       "vault_ids":["'"$VAULT_ID"'"]}' | jq -er .id)
 ```
 
 The Console only observes; kick the agent off with a `user.message` event.
@@ -99,6 +101,8 @@ curl -sS "https://api.anthropic.com/v1/sessions/$SESSION_ID/events" \
 ## 5. Watch it run
 
 The agent starts a named cloud browser, runs Python helper snippets through `browser-use`, then returns the result. The browser shows up in [cloud.browser-use.com](https://cloud.browser-use.com) with a **Live View**. For an mp4 recording, have the agent call `start_remote_daemon("managed", enableRecording=True)`.
+
+If a session ends before the agent runs `stop_remote_daemon`, the browser keeps running until its timeout (60 minutes by default). Stop it from the dashboard, or pass a shorter `timeout=` in minutes to `start_remote_daemon`.
 
 <Tip>
   Always use a cloud browser. The sandbox's bundled Chromium has no stealth,
