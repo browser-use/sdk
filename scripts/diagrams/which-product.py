@@ -329,7 +329,7 @@ def build(theme):
     d.text(RX0 + 10, R2 - 12, "Local browser", 13, ink, 600)
 
     profile_sync(d, HX, l_top - 4, c_bot + 6)
-    d.text(HX + 10, (l_top - 4 + c_bot + 6) / 2 + 4, "profile sync", 11, ink3, mono=True)
+    d.text(HX + 10, (l_top - 4 + c_bot + 6) / 2 + 4, "profile sync", 11, ink2, mono=True)
 
     # drops: hosted agent -> cloud only; your agent or code -> cloud or local
     cable(d, (COLS[0], DROP_Y0), (COLS[0], R1), cls="pkd")
@@ -377,7 +377,7 @@ def build_mobile(theme):
     for x, col in ((XC, org), (XL, ink2)):
         d.add(f'<path d="M{x - 5} {RT}h10" stroke="{col}" stroke-width="1"/>')
 
-    groups = {0: ("RUN BY BROWSER USE", ot), 1: ("RUN BY YOU", ink3)}
+    groups = {0: ("RUN BY BROWSER USE", ot), 1: ("RUN BY YOU", ink2)}
     for k, name in enumerate(NAMES):
         top = ROWS[k]
         if k in groups:
@@ -413,7 +413,7 @@ def build_mobile(theme):
     d.text(LX, H1 - 9, "Cloud browser", 12.5, ink, 600)
     d.text(LX, H2 - 9, "Local browser", 12.5, ink, 600)
     profile_sync(d, 50, l_top - 3, c_bot + 5)
-    d.text(60, (l_top - 3 + c_bot + 5) / 2 + 4, "profile sync", 11, ink3, mono=True)
+    d.text(60, (l_top - 3 + c_bot + 5) / 2 + 4, "profile sync", 11, ink2, mono=True)
 
     yls = [r + 82 for r in ROWS]
     story(d, [([(TX, yls[0]), (XC, yls[0]), (XC, H1), (LE, H1)], True),

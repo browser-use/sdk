@@ -174,7 +174,7 @@ def code_window(d, cx, cy, cw):
     d.add(f'<line x1="{cx:.1f}" y1="{cy + CB}" x2="{cx + cw:.1f}" y2="{cy + CB}" stroke="{t["faint"]}" stroke-width="1"/>')
     for k in range(3):
         d.add(f'<circle cx="{cx + 12 + k * 7}" cy="{cy + CB / 2}" r="2" fill="{t["hair"]}"/>')
-    d.text(cx + 40, cy + 14, "your code", 11, t["ink3"], mono=True, ls="0.04em")
+    d.text(cx + 40, cy + 14, "your code", 11, t["ink2"], mono=True, ls="0.04em")
     for i, f in enumerate(rows):
         y = cy + CB + 10 + i * 11
         d.add(f'<line x1="{cx + 12:.1f}" y1="{y}" x2="{cx + 16:.1f}" y2="{y}" stroke="{t["hair"]}" stroke-width="2.4" stroke-linecap="round"/>')

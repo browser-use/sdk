@@ -117,7 +117,7 @@ def cloud_group(d, gx0, gy0, gx1, gy1):
                   f'<rect x="{gx1 - 18 - tgw:.1f}" y="{gy0 - 8}" width="{tgw + 12:.1f}" height="16" fill="#000"/></mask>')
     d.add(f'<rect x="{gx0}" y="{gy0}" width="{gx1 - gx0}" height="{gy1 - gy0}" rx="10" mask="url(#gm)" '
           f'stroke="{t["hair"]}" stroke-width="0.9" stroke-dasharray="3 4"/>')
-    d.text(gx1 - 12 - tgw, gy0 + 4, tag, 11, t["ink3"], mono=True, ls="0.08em")
+    d.text(gx1 - 12 - tgw, gy0 + 4, tag, 11, t["ink2"], mono=True, ls="0.08em")
 
 
 def windows(d, x, y, w, h, step=10, url="example.com", live_w=46):

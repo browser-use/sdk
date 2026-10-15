@@ -201,7 +201,7 @@ def build(theme):
     d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 1.1", "CLOUD BROWSER / PROFILE")
     defs(d)
-    ink, ink3, ot = t["ink"], t["ink3"], t["otext"]
+    ink, ink2, ot = t["ink"], t["ink2"], t["otext"]
 
     st = profile_stack(d, o, s, sz)
 
@@ -222,12 +222,12 @@ def build(theme):
 
     ly = st["bottom"] + 26
     d.text(P(WW1 / 2, 0, 0, ob1)[0], b1["bottom"] + 28, "Browser 1", 13, ink, 600, anchor="middle")
-    d.text(P(WW1 / 2, 0, 0, ob1)[0], b1["bottom"] + 45, PID, 11, ink3, mono=True, anchor="middle")
+    d.text(P(WW1 / 2, 0, 0, ob1)[0], b1["bottom"] + 45, PID, 11, ink2, mono=True, anchor="middle")
     d.text(cx, ly, "Profile", 13, ink, 600, anchor="middle")
-    d.text(cx, ly + 17, PID, 11, ink3, mono=True, anchor="middle")
+    d.text(cx, ly + 17, PID, 11, ink2, mono=True, anchor="middle")
     for b, name in ((b2, "Browser 2"), (b3, "Browser 3")):
         d.text(b["right"] + 14, b["port_l"][1] + 16, name, 13, ink, 600)
-        d.text(b["right"] + 14, b["port_l"][1] + 33, PID, 11, ink3, mono=True)
+        d.text(b["right"] + 14, b["port_l"][1] + 33, PID, 11, ink2, mono=True)
     assert ly + 17 + 26 <= H, (ly, H)
     d.save(f"browser-profile-{theme}")
 
@@ -256,13 +256,13 @@ def build_mobile(theme):
     d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 1.1", "PROFILE")
     defs(d)
-    ink, ink3, ot = t["ink"], t["ink3"], t["otext"]
+    ink, ink2, ot = t["ink"], t["ink2"], t["otext"]
 
     st = profile_stack(d, o, s, sz, lv)
     px = cxs + s * C + 18
     py = P(s, 0, lv[1], o)[1]
     d.text(px, py, "Profile", 12.5, ink, 600)
-    d.text(px, py + 16, PID, 11, ink3, mono=True)
+    d.text(px, py + 16, PID, 11, ink2, mono=True)
 
     key_path(d, f"M{front[0]:.1f} {front[1] + 6:.1f} V{win_tops[0][1] - 9:.1f}", cls="load")
     key_path(d, rpath([(front[0], y_bus), (win_tops[1][0], y_bus), (win_tops[1][0], win_tops[1][1] - 9)], 12), cls="load")
@@ -277,10 +277,10 @@ def build_mobile(theme):
     d.add(f'<circle cx="{front[0]:.1f}" cy="{y_bus:.1f}" r="2.2" fill="{t["orange"]}"/>')
 
     d.text(b1["right"] + 16, b1["port_r"][1] + 4, "Browser 1", 12.5, ink, 600)
-    d.text(b1["right"] + 16, b1["port_r"][1] + 20, PID, 11, ink3, mono=True)
+    d.text(b1["right"] + 16, b1["port_r"][1] + 20, PID, 11, ink2, mono=True)
     for b, name in zip(bs, ("Browser 2", "Browser 3")):
         d.text((b["left"] + b["right"]) / 2, ly, name, 12.5, ink, 600, anchor="middle")
-        d.text((b["left"] + b["right"]) / 2, ly + 16, PID, 11, ink3, mono=True, anchor="middle")
+        d.text((b["left"] + b["right"]) / 2, ly + 16, PID, 11, ink2, mono=True, anchor="middle")
     assert bs[0]["bottom"] < ly - 14, (bs[0]["bottom"], ly)
     d.save(f"browser-profile-{theme}-mobile")
 

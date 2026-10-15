@@ -15,7 +15,7 @@ THEMES = {
     "light": dict(
         paper="#FBFAF7", border="#E6E2D9", ink="#1B1A17", ink2="#5F5B53", ink3="#9A958A",
         hair="#C9C3B6", faint="#ECE8DF", dot="#DDD8CD", fill="#FFFFFF", fill2="#F4F1EA",
-        orange="#FE750E", otext="#C4530A", osoft="#FFE6D2", grain=0.05, glow=.35,
+        orange="#FE750E", otext="#B84D09", osoft="#FFE6D2", grain=0.05, glow=.35,
     ),
     "dark": dict(
         paper="#111113", border="#26262B", ink="#EDEDEF", ink2="#A1A1AA", ink3="#6B6B74",
@@ -40,6 +40,16 @@ def tw(s, size, mono=False, weight=400):
         else:
             w += 0.55
     return w * size * (1.04 if weight >= 600 else 1.0)
+
+
+def contrast(a, b):
+    """WCAG contrast ratio of two #RRGGBB colors."""
+    def lum(h):
+        c = [int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+        c = [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in c]
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    hi, lo = sorted((lum(a), lum(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
 
 
 def esc(s):
@@ -110,13 +120,16 @@ class Doc:
         for (x, y) in ((m, m), (w - m, m), (m, h - m), (w - m, h - m)):
             self.add(f'<path d="M{x - 5} {y}h10M{x} {y - 5}v10" stroke="{t["hair"]}" stroke-width="0.75"/>')
         hx = 34 if m == 20 else m + 12
-        self.text(hx, 24.5, fig, 10, t["ink3"], mono=True, ls="0.08em", box=False)
-        self.text(w - hx, 24.5, tag, 10, t["ink3"], mono=True, anchor="end", ls="0.08em", box=False)
+        self.text(hx, 24.5, fig, 10, t["ink2"], mono=True, ls="0.08em", box=False)
+        self.text(w - hx, 24.5, tag, 10, t["ink2"], mono=True, anchor="end", ls="0.08em", box=False)
 
     def check(self, svg):
         # only the two header labels may be under 11 px
         small = [v for v in re.findall(r'font-size="([\d.]+)"', svg) if float(v) < 11]
         assert small == ["10", "10"], ("text under 11 px", small)
+        for tag in re.findall(r"<text\b[^>]*>", svg):
+            f = re.search(r' fill="(#[0-9A-Fa-f]{6})"', tag)
+            assert f and contrast(f[1], self.t["paper"]) >= 4.5, ("text below WCAG AA 4.5:1 on paper", tag)
         m, b = self.margin, self.boxes
         for x0, y0, x1, y1, s in b:
             assert x0 >= m and x1 <= self.w - m and y1 <= self.h - m, ("outside the marks", s, x0, x1, y1)

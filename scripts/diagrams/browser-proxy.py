@@ -337,7 +337,7 @@ def build(theme):
     lx = nb_right[0] + 14
     for y, (name, sub, acc) in zip((L1, Yc, L3), LANES):
         d.text(lx, y - 10, name, 13, ink, 600)
-        d.text(lx, y + 19, sub, 11, t["otext"] if acc else ink3, mono=True)
+        d.text(lx, y + 19, sub, 11, t["otext"] if acc else ink2, mono=True)
         # lane 3 drops below the globe, so its subline may run past the curve start
         assert lx + max(tw(name, 13, weight=600), tw(sub, 11, mono=True) if y != L3 else 0) < 562, name
         assert lx + tw(sub, 11, mono=True) < gx, sub
@@ -432,7 +432,7 @@ def build_mobile(theme):
     for (n, (name, sub, acc)) in zip((1, 2, 3), LANES):
         y = rows[n]
         d.text(lx, y - 10, name, 13, ink, 600)
-        d.text(lx, y + 19, sub, 11, t["otext"] if acc else ink3, mono=True)
+        d.text(lx, y + 19, sub, 11, t["otext"] if acc else ink2, mono=True)
         assert lx + max(tw(name, 13, weight=600), tw(sub, 11, mono=True)) < bus[3] - 4, name
 
     cy = gy + R + 28
