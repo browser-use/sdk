@@ -24,6 +24,7 @@ function fakeClient(status: () => Promise<{ status: string }>) {
         sessionId: SESSION_ID,
         status: s,
         result: s === "completed" ? "Top story: Show HN" : null,
+        output: s === "completed" ? { rank: 0, isShowHN: false } : null,
         error: s === "failed" ? "Site blocked" : null,
       };
     }),
@@ -78,6 +79,7 @@ describe("ai-sdk browserUse tool", () => {
       sessionId: SESSION_ID,
       status: "completed",
       result: "Top story: Show HN",
+      output: { rank: 0, isShowHN: false },
       error: null,
     });
     expect(result.text).toBe("The top story is Show HN.");

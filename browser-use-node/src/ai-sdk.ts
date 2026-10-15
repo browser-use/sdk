@@ -30,6 +30,8 @@ export interface BrowserUseToolOutput {
   sessionId: string;
   status: "completed" | "failed" | "cancelled";
   result: string | null;
+  /** Parsed structured output when runOptions.outputSchema is set, else null. */
+  output: unknown;
   error: string | null;
 }
 
@@ -104,6 +106,7 @@ export function browserUse(options: BrowserUseToolOptions = {}) {
           sessionId: run.sessionId,
           status: run.status as BrowserUseToolOutput["status"],
           result: run.result,
+          output: run.output ?? null,
           error: run.error,
         };
       } catch (error) {
