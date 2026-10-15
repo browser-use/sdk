@@ -743,7 +743,11 @@
     },
     {
       "source": "/development/n8n-integration",
-      "destination": "/open-source/development/n8n-integration"
+      "destination": "/cloud/tutorials/integrations/n8n"
+    },
+    {
+      "source": "/open-source/development/n8n-integration",
+      "destination": "/cloud/tutorials/integrations/n8n"
     },
     {
       "source": "/development/roadmap",
