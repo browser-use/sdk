@@ -16,6 +16,7 @@ export { BrowserUseError } from "./core/errors.js";
 export { Runs } from "./v4/resources/runs.js";
 export type {
   RunCreateBody,
+  RunModel,
   RunListParams,
   RunEventsParams,
   WaitOptions,
@@ -113,9 +114,6 @@ export type WorkspaceFileUploadResponseItem = S["WorkspaceFileUploadResponseItem
 // Enums / string unions
 export type ProxyCountryCode = S["ProxyCountryCode"];
 export type CustomProxy = S["CustomProxy"];
-
-/** Agent model accepted by `runs.create`, including the `bu-ultrafast` and `bu-fast` presets. */
-export type RunModel = NonNullable<S["RunCreateRequest"]["model"]>;
 
 /** Run status — terminal values are completed | failed | cancelled. */
 export type RunStatus = S["RunStatusResponse"]["status"];

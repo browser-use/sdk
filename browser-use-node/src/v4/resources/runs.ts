@@ -10,9 +10,15 @@ type RunEventsResponse = components["schemas"]["RunEventsResponse"];
 type RunEvent = components["schemas"]["RunEvent"];
 type RunAttachmentsResponse = components["schemas"]["RunAttachmentsResponse"];
 
+/** Known V4 model ids; `RunCreateBody.model` also accepts ids added after this release. */
+export type RunModel = RunCreateRequest["model"];
+
 // agenticAutofillGrantId is gated per project and stays untyped, matching the Python SDK.
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
-  Partial<Omit<RunCreateRequest, "task" | "agenticAutofillGrantId">>;
+  Partial<Omit<RunCreateRequest, "task" | "model" | "agenticAutofillGrantId">> & {
+    // `string & {}` keeps autocomplete for known ids without rejecting new ones.
+    model?: RunModel | (string & {});
+  };
 
 /** Terminal run statuses — closed enum in the v4 spec. */
 const TERMINAL_STATUSES = new Set(["completed", "failed", "cancelled"]);
