@@ -14,13 +14,13 @@ and tests the script. Every later run sends a new request to the live page.
 
 <img
   src="/cloud/images/v4-scripts-light.svg"
-  alt="A first agent run saves and tests script.py and a README in a workspace; later runs reuse the script and repair it only when necessary"
+  alt="A first agent run opens news.ycombinator.com, then writes and tests scripts/extract_top_stories.py and a README in a workspace. Later runs pass workspace_id, so each one gets a new conversation and a new browser with the same files. Every run sends a fresh request to the live page and prints JSON with fetched_at and source_sha256. If the script breaks, the run repairs it in the workspace."
   noZoom
   className="block dark:hidden"
 />
 <img
   src="/cloud/images/v4-scripts-dark.svg"
-  alt="A first agent run saves and tests script.py and a README in a workspace; later runs reuse the script and repair it only when necessary"
+  alt="A first agent run opens news.ycombinator.com, then writes and tests scripts/extract_top_stories.py and a README in a workspace. Later runs pass workspace_id, so each one gets a new conversation and a new browser with the same files. Every run sends a fresh request to the live page and prints JSON with fetched_at and source_sha256. If the script breaks, the run repairs it in the workspace."
   noZoom
   className="hidden dark:block"
 />

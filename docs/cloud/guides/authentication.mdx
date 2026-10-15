@@ -8,18 +8,14 @@ A profile persists cookies, local storage, and login state across browsers.
 Log in once, save the profile, then reuse it to start future browsers already
 logged in.
 
-<img
-  src="/cloud/images/browser-profile-light.svg"
-  alt="One login saved as a profile and reused by multiple future browsers"
-  noZoom
-  className="block dark:hidden"
-/>
-<img
-  src="/cloud/images/browser-profile-dark.svg"
-  alt="One login saved as a profile and reused by multiple future browsers"
-  noZoom
-  className="hidden dark:block"
-/>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/browser-profile-light-mobile.svg" />
+  <img src="/cloud/images/browser-profile-light.svg" alt="Browser 1 logs in using a profileId. When it stops, its cookies and localStorage are saved to the profile. Browsers 2 and 3 start with the same profileId, load that state and begin logged in." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/browser-profile-dark-mobile.svg" />
+  <img src="/cloud/images/browser-profile-dark.svg" alt="Browser 1 logs in using a profileId. When it stops, its cookies and localStorage are saved to the profile. Browsers 2 and 3 start with the same profileId, load that state and begin logged in." noZoom />
+</picture>
 
 Create or select one under [Dashboard → Profiles](https://cloud.browser-use.com/settings?tab=profiles),
 then pass its ID in V4 browser settings:

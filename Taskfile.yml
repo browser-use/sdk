@@ -368,6 +368,11 @@ tasks:
       - python3 -m json.tool --indent 4 snapshots/v3.json docs/cloud/openapi/v3.json
       - python3 -m json.tool --indent 4 snapshots/v4.json docs/cloud/openapi/v4.json
 
+  docs:diagrams:
+    desc: Regenerate docs/cloud/images diagram SVGs from scripts/diagrams (stdlib Python, deterministic)
+    cmds:
+      - for f in scripts/diagrams/*.py; do python3 -I "$f"; done
+
   docs:dev:
     desc: Start Mintlify docs dev server using the checked-in public reference
     dir: docs
