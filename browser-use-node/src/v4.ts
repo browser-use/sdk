@@ -20,6 +20,11 @@ export type { SendMessageOptions, SessionListParams } from "./v4/resources/sessi
 export { Workspaces } from "./v4/resources/workspaces.js";
 export type { WorkspaceFilesParams } from "./v4/resources/workspaces.js";
 
+export { Integrations } from "./v4/resources/integrations.js";
+export type { IntegrationListParams } from "./v4/resources/integrations.js";
+
+export { Wallets } from "./v4/resources/wallets.js";
+
 export type { components as V4Types } from "./generated/v4/types.js";
 
 // Re-export user-facing schema types so users never need to import from generated/.
@@ -50,6 +55,27 @@ export type SessionListResponse = S["SessionListResponse"];
 export type QueueMessageRequest = S["QueueMessageRequest"];
 export type QueuedMessage = S["QueuedMessage"];
 export type QueueListResponse = S["QueueListResponse"];
+export type SessionUpdateRequest = S["SessionUpdateRequest"];
+export type SessionCostResponse = S["SessionCostResponse"];
+export type SessionShareInfo = S["SessionShareInfo"];
+export type SessionShareUpdateRequest = S["SessionShareUpdateRequest"];
+
+// Integration models
+export type IntegrationListResponse = S["IntegrationListResponse"];
+export type IntegrationResponse = S["IntegrationResponse"];
+export type IntegrationCategoryResponse = S["IntegrationCategoryResponse"];
+export type AuthorizeResponse = S["AuthorizeResponse"];
+export type ConnectionStatusResponse = S["ConnectionStatusResponse"];
+export type DisconnectResponse = S["DisconnectResponse"];
+
+// Wallet models
+export type AgentCardWalletListResponse = S["AgentCardWalletListResponse"];
+export type AgentCardWalletSummary = S["AgentCardWalletSummary"];
+export type StripeLinkStatusResponse = S["StripeLinkStatusResponse"];
+
+// Errors
+export type APIKeySpendLimitDetail = S["APIKeySpendLimitDetail"];
+export type APIKeySpendLimitError = S["APIKeySpendLimitError"];
 
 // Workspace models
 export type WorkspaceInfo = S["WorkspaceInfo"];
@@ -66,6 +92,9 @@ export type WorkspaceFileUploadResponseItem = S["WorkspaceFileUploadResponseItem
 // Enums / string unions
 export type ProxyCountryCode = S["ProxyCountryCode"];
 export type CustomProxy = S["CustomProxy"];
+
+/** Agent model accepted by `runs.create`, including the `bu-ultrafast` and `bu-fast` presets. */
+export type RunModel = NonNullable<S["RunCreateRequest"]["model"]>;
 
 /** Run status — terminal values are completed | failed | cancelled. */
 export type RunStatus = S["RunStatusResponse"]["status"];

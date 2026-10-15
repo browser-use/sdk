@@ -170,6 +170,23 @@ function v4EndpointToSdkMethod(
   if (method === "get" && path === "/sessions/{session_id}/queue") return { resource: "sessions", method: "queue" };
   if (method === "get" && path === "/sessions/{session_id}/queue/{message_id}") return { resource: "sessions", method: "getMessage" };
   if (method === "delete" && path === "/sessions/{session_id}/queue/{message_id}") return { resource: "sessions", method: "removeMessage" };
+  if (method === "patch" && path === "/sessions/{session_id}") return { resource: "sessions", method: "update" };
+  if (method === "delete" && path === "/sessions/{session_id}") return { resource: "sessions", method: "delete" };
+  if (method === "get" && path === "/sessions/{session_id}/cost") return { resource: "sessions", method: "cost" };
+  if (method === "get" && path === "/sessions/{session_id}/share") return { resource: "sessions", method: "getShare" };
+  if (method === "post" && path === "/sessions/{session_id}/share") return { resource: "sessions", method: "createShare" };
+  if (method === "put" && path === "/sessions/{session_id}/share") return { resource: "sessions", method: "updateShare" };
+
+  // Integrations
+  if (method === "get" && path === "/integrations") return { resource: "integrations", method: "list" };
+  if (method === "get" && path === "/integrations/categories") return { resource: "integrations", method: "categories" };
+  if (method === "post" && path === "/integrations/{provider}/authorize") return { resource: "integrations", method: "authorize" };
+  if (method === "get" && path === "/integrations/{provider}/status") return { resource: "integrations", method: "status" };
+  if (method === "delete" && path === "/integrations/{provider}") return { resource: "integrations", method: "disconnect" };
+
+  // Wallets
+  if (method === "get" && path === "/agentcard/wallets") return { resource: "wallets", method: "agentcard" };
+  if (method === "get" && path === "/stripe-link") return { resource: "wallets", method: "stripeLink" };
 
   // Workspaces
   if (method === "post" && path === "/workspaces") return { resource: "workspaces", method: "create" };

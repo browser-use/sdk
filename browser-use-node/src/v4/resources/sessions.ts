@@ -6,6 +6,10 @@ type SessionListResponse = components["schemas"]["SessionListResponse"];
 type QueueMessageRequest = components["schemas"]["QueueMessageRequest"];
 type QueuedMessage = components["schemas"]["QueuedMessage"];
 type QueueListResponse = components["schemas"]["QueueListResponse"];
+type SessionUpdateRequest = components["schemas"]["SessionUpdateRequest"];
+type SessionCostResponse = components["schemas"]["SessionCostResponse"];
+type SessionShareInfo = components["schemas"]["SessionShareInfo"];
+type SessionShareUpdateRequest = components["schemas"]["SessionShareUpdateRequest"];
 
 export interface SessionListParams {
   cursor?: string | null;
@@ -33,6 +37,36 @@ export class Sessions {
   /** Immediately purge all data for a session on a ZDR-enabled project. */
   purge(sessionId: string): Promise<void> {
     return this.http.post<void>(`/sessions/${sessionId}/purge`);
+  }
+
+  /** Rename a session; pass `title: null` to clear its name. */
+  update(sessionId: string, body: SessionUpdateRequest): Promise<SessionInfo> {
+    return this.http.patch<SessionInfo>(`/sessions/${sessionId}`, body);
+  }
+
+  /** Delete a session, cancelling its active run and pending messages. */
+  delete(sessionId: string): Promise<void> {
+    return this.http.delete<void>(`/sessions/${sessionId}`);
+  }
+
+  /** Get what the session has cost so far: LLM, search, browser and proxy. */
+  cost(sessionId: string): Promise<SessionCostResponse> {
+    return this.http.get<SessionCostResponse>(`/sessions/${sessionId}/cost`);
+  }
+
+  /** Get the session's public share link, or null if it was never shared. */
+  getShare(sessionId: string): Promise<SessionShareInfo | null> {
+    return this.http.get<SessionShareInfo | null>(`/sessions/${sessionId}/share`);
+  }
+
+  /** Enable a public share link for the session, reusing its token if one exists. */
+  createShare(sessionId: string): Promise<SessionShareInfo> {
+    return this.http.post<SessionShareInfo>(`/sessions/${sessionId}/share`);
+  }
+
+  /** Turn the session's public share link on or off. */
+  updateShare(sessionId: string, body: SessionShareUpdateRequest): Promise<SessionShareInfo> {
+    return this.http.put<SessionShareInfo>(`/sessions/${sessionId}/share`, body);
   }
 
   /**

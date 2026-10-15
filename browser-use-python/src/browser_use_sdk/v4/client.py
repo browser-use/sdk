@@ -4,8 +4,10 @@ import os
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
 from .resources.browsers import AsyncBrowsers, Browsers
+from .resources.integrations import AsyncIntegrations, Integrations
 from .resources.runs import AsyncRuns, Runs
 from .resources.sessions import AsyncSessions, Sessions
+from .resources.wallets import AsyncWallets, Wallets
 from .resources.workspaces import AsyncWorkspaces, Workspaces
 
 _V4_BASE_URL = "https://api.browser-use.com/api/v4"
@@ -37,8 +39,10 @@ class BrowserUse:
             timeout=timeout,
         )
         self.browsers = Browsers(self._http)
+        self.integrations = Integrations(self._http)
         self.runs = Runs(self._http)
         self.sessions = Sessions(self._http)
+        self.wallets = Wallets(self._http)
         self.workspaces = Workspaces(self._http)
 
     def close(self) -> None:
@@ -78,8 +82,10 @@ class AsyncBrowserUse:
             timeout=timeout,
         )
         self.browsers = AsyncBrowsers(self._http)
+        self.integrations = AsyncIntegrations(self._http)
         self.runs = AsyncRuns(self._http)
         self.sessions = AsyncSessions(self._http)
+        self.wallets = AsyncWallets(self._http)
         self.workspaces = AsyncWorkspaces(self._http)
 
     async def close(self) -> None:
