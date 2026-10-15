@@ -1,32 +1,30 @@
 /**
  * Stealth mode — use proxies for geo-specific browsing.
  *
- * Every session gets a residential proxy. You can choose the country.
- * Without a session, tasks auto-create one with a US proxy.
+ * Every run's browser gets a residential proxy. You can choose the country;
+ * the default is US.
  */
 import "dotenv/config";
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 async function main() {
   const client = new BrowserUse();
 
-  // Auto-session (US proxy by default)
-  const usOutput = await client.run(
-    "Go to whatismyipaddress.com and tell me my location",
-  );
-  console.log("US proxy:", usOutput);
+  // Default proxy (US)
+  const us = await client.runs.create({
+    task: "Go to whatismyipaddress.com and tell me my location",
+  });
+  console.log("US proxy:", (await client.runs.waitForCompletion(us.id)).result);
 
   // Custom proxy — Germany
-  const deSession = await client.sessions.create({
-    proxyCountryCode: "de",
+  const de = await client.runs.create({
+    task: "Go to whatismyipaddress.com and tell me my location",
+    browserSettings: { proxyCountryCode: "de" },
   });
-  const deOutput = await client.run(
-    "Go to whatismyipaddress.com and tell me my location",
-    { sessionId: deSession.id },
-  );
-  console.log("DE proxy:", deOutput);
+  console.log("DE proxy:", (await client.runs.waitForCompletion(de.id)).result);
 
-  await client.sessions.stop(deSession.id);
+  await client.browsers.stop(us.sessionId);
+  await client.browsers.stop(de.sessionId);
 }
 
 main();

@@ -1,10 +1,10 @@
 /**
- * Profiles — persist browser state (cookies, logins) across sessions.
+ * Profiles — persist browser state (cookies, logins) across runs.
  *
  * Create a profile once, then reuse it. Login state carries over.
  */
 import "dotenv/config";
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v4";
 
 async function main() {
   const client = new BrowserUse();
@@ -13,22 +13,23 @@ async function main() {
   const profile = await client.profiles.create({ name: "My LinkedIn Profile" });
   console.log("Profile created:", profile.id);
 
-  // First session: log in (profile saves the cookies)
-  const session1 = await client.sessions.create({ profileId: profile.id });
-  await client.run("Go to linkedin.com and log in with my credentials", {
-    sessionId: session1.id,
+  // First run: log in (profile saves the cookies)
+  const login = await client.runs.create({
+    task: "Go to linkedin.com and log in with my credentials",
+    browserSettings: { profileId: profile.id },
   });
-  await client.sessions.stop(session1.id);
+  await client.runs.waitForCompletion(login.id);
+  await client.browsers.stop(login.sessionId);
 
-  // Later session: already logged in from saved profile
-  const session2 = await client.sessions.create({ profileId: profile.id });
-  const output = await client.run(
-    "Go to my LinkedIn profile and get my connection count",
-    { sessionId: session2.id },
-  );
-  console.log("Result:", output);
+  // Later run: already logged in from saved profile
+  const check = await client.runs.create({
+    task: "Go to my LinkedIn profile and get my connection count",
+    browserSettings: { profileId: profile.id },
+  });
+  const result = await client.runs.waitForCompletion(check.id);
+  console.log("Result:", result.result);
 
-  await client.sessions.stop(session2.id);
+  await client.browsers.stop(check.sessionId);
 
   // List all profiles
   const profiles = await client.profiles.list();
