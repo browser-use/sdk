@@ -189,20 +189,13 @@ was never shared. Zero Data Retention projects cannot share sessions.
 
 ### Purge data (Zero Data Retention projects)
 
-<CodeGroup>
-```python Python
-client.sessions.purge(session_id)
-```
-```typescript TypeScript
-await client.sessions.purge(sessionId);
-```
-```bash curl
+```bash
 curl -X POST "https://api.browser-use.com/api/v4/sessions/$SESSION_ID/purge" \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
 ```
-</CodeGroup>
 
 Purge erases the session's run content, workspace files, recordings, and
 downloads. It returns `204` when done, or `202` with `Retry-After: 60` while
 active work or uploads delay deletion; call it again after that delay. Projects
-without Zero Data Retention get `403`.
+without Zero Data Retention get `403`. The SDK `sessions.purge` helpers do not
+handle the `202` yet, so use the HTTP call to know when deletion finished.
