@@ -56,7 +56,7 @@ export interface BrowserUseToolOptions extends Omit<BrowserUseOptions, "timeout"
  * import { browserUse } from "browser-use-sdk/ai-sdk";
  *
  * const { text } = await generateText({
- *   model: "openai/gpt-5.6",
+ *   model: "openai/gpt-5.6-luna",
  *   tools: { browserUse: browserUse() },
  *   stopWhen: isStepCount(5),
  *   prompt: "Open news.ycombinator.com and summarize the top 3 stories.",
