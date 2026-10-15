@@ -1,16 +1,16 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "aspen",
+  "theme": "luma",
   "name": "Browser Use",
   "colors": {
-    "primary": "#FE750E",
-    "light": "#FE750E",
-    "dark": "#FE750E"
+    "primary": "#0F1011",
+    "light": "#F7F8F8",
+    "dark": "#0F1011"
   },
   "background": {
     "color": {
       "light": "#FFFFFF",
-      "dark": "#09090B"
+      "dark": "#08090A"
     }
   },
   "favicon": "/favicon.svg",
@@ -29,7 +29,13 @@
     ]
   },
   "fonts": {
-    "family": "Geist"
+    "family": "Inter"
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs",
+    "codeblocks": {
+      "theme": "css-variables"
+    }
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -55,8 +61,8 @@
         "product": "Cloud",
         "icon": "cloud",
         "color": {
-          "light": "#FE750E",
-          "dark": "#FE750E"
+          "light": "#0F1011",
+          "dark": "#F7F8F8"
         },
         "tabs": [
           {
@@ -241,8 +247,8 @@
         "product": "Open Source",
         "icon": "code",
         "color": {
-          "light": "#2563EB",
-          "dark": "#2563EB"
+          "light": "#0F1011",
+          "dark": "#F7F8F8"
         },
         "groups": [
           {
