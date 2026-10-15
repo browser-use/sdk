@@ -34,6 +34,9 @@ field names and accepted values therefore differ by model family.
 `deepseek-v4-flash-vision`, `kimi-k3`, `minimax-m3`, and `claude-fable-5`
 do not currently accept V4 `modelParams`.
 
+The early-access [BU Ultrafast and BU Fast](/cloud/agent/models#bu-ultrafast-and-bu-fast)
+presets (`bu-ultrafast`, `bu-fast`) fix their own reasoning and reject `modelParams` with 422.
+
 <Note>
   Omitting both `model` and `modelParams` uses `gpt-6-luna` with
   `reasoning.effort: high`. For an explicit model, omitting `modelParams` applies
