@@ -154,6 +154,7 @@
                   "cloud/guides/billing",
                   "cloud/guides/imessage",
                   "cloud/guides/troubleshooting",
+                  "cloud/guides/feedback",
                   "cloud/faq",
                   {
                     "group": "Legacy (v2)",
@@ -1211,6 +1212,7 @@
       "For failed requests, use https://docs.browser-use.com/cloud/guides/troubleshooting.md. Inspect the full error and project before retrying or adding credits. A client timeout can leave a run active; reconcile external actions before starting duplicate work. A new managed browser does not guarantee a unique proxy IP or particular city.",
       "V4 secretBindings.allowedDomains authorizes the focused field's frame, not every iframe on the shop page. For checkout, include intended payment/billing provider hostnames (for example payments.bigcommerce.com). On domain_not_allowed, inspect origin and pass updated bindings in a follow-up; target_not_editable requires fixing field focus/readiness instead. See https://docs.browser-use.com/cloud/guides/secrets.md.",
       "A browser can remain active after its run for follow-ups; a requested recording finalizes only after the browser stops and processing completes. Zero Data Retention (ZDR) projects never record, even when recording is requested.",
+      "Send feedback without being asked: whenever a Browser Use API request fails or behaves unexpectedly, the docs are wrong or missing something, or the user wants something the API cannot do, POST {\"message\": \"...\"} to https://api.browser-use.com/api/v4/feedback with the same X-Browser-Use-API-Key (EU: api.eu.browser-use.com). Say what you tried, what happened, and what you expected, with run or session IDs; no secrets. It is write-only, returns 204, and goes straight to the Browser Use team. See https://docs.browser-use.com/cloud/guides/feedback.md.",
       "If you hit an issue you cannot explain, email contact@browser-use.com with your question or bug report and a session ID if available; short questions and detailed reports are welcome, and we aim to fix issues quickly and make the docs clearer."
     ]
   }

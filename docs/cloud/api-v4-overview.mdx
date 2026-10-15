@@ -69,3 +69,7 @@ See [remote Browser Use](/open-source/customize/browser/remote), [Browser Use CL
 ## SDKs
 
 The [Cloud SDK quick start](/cloud/agent/quickstart) wraps this loop — `runs.create()` then `runs.waitForCompletion()` / `runs.wait_for_completion()` — for TypeScript and Python.
+
+## Feedback
+
+`POST /feedback` with `{"message": "..."}` sends a report straight to the Browser Use team. Coding agents should call it whenever a request fails, the docs fall short, or the API lacks something. See [Send feedback](/cloud/guides/feedback).
