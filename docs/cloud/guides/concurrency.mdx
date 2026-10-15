@@ -195,7 +195,7 @@ your shared request budget; a longer interval also makes backlog traversal slowe
 | 402 with `detail.code: "api_key_monthly_spend_limit_reached"` | This key's monthly soft spending cap was reached | Check the cap and recorded spend in the current UTC month. |
 | Other 402 | May be insufficient project balance or another payment condition | Inspect the complete response and the API key's project. |
 
-The SDK retries some transient responses, including 429, but the default is only three retries. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
+The SDK retries only HTTP 429, three times by default; it does not retry 5xx responses or network errors. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
 
 SDK 3.11.3 errors expose the response status and body, but not response headers.
 Use `retry_after_seconds` when the body includes it. To diagnose an edge throttle

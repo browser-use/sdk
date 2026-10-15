@@ -91,9 +91,9 @@ Use a browser that supports `inert`. To allow human takeover, remove `inert`,
   still control the browser. Keep both URLs private.
 </Note>
 
-### Read-only URL option (staging)
+### Read-only URL option
 
-The staging viewer also supports `readOnly=true`. It blocks browser controls
+The live viewer supports `readOnly=true`. It blocks browser controls
 and page input while keeping connection and screencast Retry buttons usable:
 
 ```javascript
@@ -103,9 +103,8 @@ previewUrl.searchParams.set("ui", "false"); // Optional: hide tabs and toolbar.
 iframe.src = previewUrl.toString();
 ```
 
-This option is not yet available on `live.browser-use.com`; use the iframe
-wrapper above in production. It is a viewer URL option, not a field in the
-browser or run creation request. Omitting it or setting it to `false` keeps
+It is a viewer URL option, not a field in the browser or run creation request.
+Omitting it or setting it to `false` keeps
 the viewer interactive, and `/session/{id}` links preserve it when redirecting.
 Like the wrapper, it prevents UI input without changing CDP access permissions.
 
