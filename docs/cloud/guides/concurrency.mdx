@@ -63,7 +63,7 @@ A browser can survive the run that created it and be reused by a later turn. A c
 
 After every run in a session has finished, its V4 agent browsers stop about 2 minutes after the last run activity. Cleanup runs every minute, so expect 2-3 minutes. A follow-up sent later gets a fresh browser with the session's settings and profile, but not the old tabs or page state. V4 agent browsers also have a four-hour hard timeout.
 
-To keep the browser open longer for a follow-up or a human, set [`keepAlive`](/cloud/agent/sessions#keep-the-browser-open-between-runs) (integer seconds, 120-14400) on the run. Follow-ups inherit it, a new value changes it, and `null` restores 120 seconds. Free-tier, Zero Data Retention and Agentic Autofill runs always use 120 seconds.
+To keep the browser open longer for a follow-up or a human, set [`keepAlive`](/cloud/agent/sessions#keep-the-browser-open-between-runs) (integer seconds, 120-14400) on the run. Follow-ups inherit it, a new value changes it, and `null` restores 120 seconds. Free-tier and Zero Data Retention runs always use 120 seconds.
 
 A V4 session takes one concurrency slot only while it has a queued or running run. An idle V4 agent browser, including one held open by `keepAlive`, takes no slot, but its time is billed as browser time until it stops. A standalone browser holds a slot until it stops.
 

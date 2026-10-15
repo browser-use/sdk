@@ -88,8 +88,8 @@ curl https://api.browser-use.com/api/v4/runs \
 The SDKs do not type `keepAlive` yet: Python sends it as an extra keyword
 argument, and TypeScript needs the cast. Unlike the boolean `keepAlive` in
 V2/V3, V4 takes seconds and rejects `true` with 422. Kept time is billed as
-browser time but takes no concurrency slot. Free-tier, Zero Data Retention and
-Agentic Autofill runs always use 120 seconds.
+browser time but takes no concurrency slot. Free-tier and Zero Data Retention
+runs always use 120 seconds.
 
 ## Follow up while a run is busy
 
