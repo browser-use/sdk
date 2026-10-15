@@ -23,8 +23,11 @@ async function main() {
   });
   console.log("DE proxy:", (await client.runs.waitForCompletion(de.id)).result);
 
-  await client.browsers.stop(us.sessionId);
-  await client.browsers.stop(de.sessionId);
+  // sessionId is the agent session; each of its browsers has its own id.
+  for (const run of [us, de]) {
+    const browsers = await client.browsers.list({ agentSessionId: run.sessionId, filterBy: "active" });
+    for (const b of browsers.items) await client.browsers.stop(b.id);
+  }
 }
 
 main();

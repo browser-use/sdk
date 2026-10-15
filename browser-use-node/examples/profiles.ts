@@ -19,7 +19,9 @@ async function main() {
     browserSettings: { profileId: profile.id },
   });
   await client.runs.waitForCompletion(login.id);
-  await client.browsers.stop(login.sessionId);
+  // Stopping the browser saves the profile. sessionId is the agent session, not a browser id.
+  const loginBrowsers = await client.browsers.list({ agentSessionId: login.sessionId, filterBy: "active" });
+  for (const b of loginBrowsers.items) await client.browsers.stop(b.id);
 
   // Later run: already logged in from saved profile
   const check = await client.runs.create({
@@ -29,7 +31,8 @@ async function main() {
   const result = await client.runs.waitForCompletion(check.id);
   console.log("Result:", result.result);
 
-  await client.browsers.stop(check.sessionId);
+  const checkBrowsers = await client.browsers.list({ agentSessionId: check.sessionId, filterBy: "active" });
+  for (const b of checkBrowsers.items) await client.browsers.stop(b.id);
 
   // List all profiles
   const profiles = await client.profiles.list();

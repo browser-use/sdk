@@ -21,7 +21,9 @@ async function main() {
   const result = await client.runs.waitForCompletion(run.id);
   console.log(result.result);
 
-  await client.browsers.stop(run.sessionId);
+  // sessionId is the agent session; each of its browsers has its own id.
+  const browsers = await client.browsers.list({ agentSessionId: run.sessionId, filterBy: "active" });
+  for (const b of browsers.items) await client.browsers.stop(b.id);
 }
 
 main();

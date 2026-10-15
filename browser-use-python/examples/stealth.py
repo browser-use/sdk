@@ -25,8 +25,13 @@ async def main():
         de = await client.runs.create(TASK, browser_settings={"proxyCountryCode": "de"})
         print(f"DE proxy: {(await client.runs.wait_for_completion(de.id)).result}")
 
-        await client.browsers.stop(us.session_id)
-        await client.browsers.stop(de.session_id)
+        # session_id is the agent session; each of its browsers has its own id.
+        for run in (us, de):
+            browsers = await client.browsers.list(
+                agent_session_id=run.session_id, filter_by="active"
+            )
+            for b in browsers.items:
+                await client.browsers.stop(b.id)
 
 
 asyncio.run(main())

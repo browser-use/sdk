@@ -5,6 +5,7 @@ Authentication -- use profiles to stay logged in across runs.
 2. Log in once in a run with that profile
 3. Future runs with the same profile are already logged in
 """
+
 import asyncio
 
 from dotenv import load_dotenv
@@ -25,7 +26,12 @@ async def main():
         result = await client.runs.wait_for_completion(run.id)
         print(result.result)
 
-        await client.browsers.stop(run.session_id)
+        # session_id is the agent session; each of its browsers has its own id.
+        browsers = await client.browsers.list(
+            agent_session_id=run.session_id, filter_by="active"
+        )
+        for b in browsers.items:
+            await client.browsers.stop(b.id)
 
 
 asyncio.run(main())

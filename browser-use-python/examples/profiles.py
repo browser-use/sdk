@@ -3,6 +3,7 @@ Profiles -- persist browser state (cookies, logins) across runs.
 
 Create a profile once, then reuse it. Login state carries over.
 """
+
 import asyncio
 
 from dotenv import load_dotenv
@@ -24,7 +25,12 @@ async def main():
             browser_settings=settings,
         )
         await client.runs.wait_for_completion(login.id)
-        await client.browsers.stop(login.session_id)
+        # Stopping the browser saves the profile. session_id is the agent session, not a browser id.
+        browsers = await client.browsers.list(
+            agent_session_id=login.session_id, filter_by="active"
+        )
+        for b in browsers.items:
+            await client.browsers.stop(b.id)
 
         # Later run: already logged in from saved profile
         check = await client.runs.create(
@@ -34,7 +40,11 @@ async def main():
         result = await client.runs.wait_for_completion(check.id)
         print(f"Result: {result.result}")
 
-        await client.browsers.stop(check.session_id)
+        browsers = await client.browsers.list(
+            agent_session_id=check.session_id, filter_by="active"
+        )
+        for b in browsers.items:
+            await client.browsers.stop(b.id)
 
         # List all profiles
         profiles = await client.profiles.list()
