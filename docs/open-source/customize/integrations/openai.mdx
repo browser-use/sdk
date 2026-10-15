@@ -6,27 +6,25 @@ sidebarTitle: "OpenAI"
 ---
 
 Use Browser Use Cloud as the remote browser for OpenAI models.
-Choose either connection:
+Start with the library driver and a remote Cloud browser.
+The separate Playwright example provides another connection:
 
 | Connection | Browser actions | Dependencies |
 | --- | --- | --- |
-| Remote browser example | Playwright | OpenAI SDK, Browser Use Cloud SDK, Playwright |
 | Library driver | Browser Use Actor | Browser Use with the `openai-tools` extra |
+| Remote browser example | Playwright | OpenAI SDK, Browser Use Cloud SDK, Playwright |
 
 The OpenAI SDK defines the tools and runs the model loop.
 Browser Use supplies the remote browser.
 The library driver also supplies browser actions.
 
-## Remote browsers with Playwright
+## Browser Use library driver
 
-This path uses the Cloud SDK without the open-source Browser Use agent.
-You do not need local Chromium.
-
-Create a separate environment:
+Install Browser Use with the OpenAI tools extra:
 
 ```bash
 uv venv --python 3.12
-uv pip install --python .venv/bin/python openai==3.31.0 browser-use-sdk==3.11.3 playwright==1.63.0
+uv pip install --python .venv/bin/python "browser-use[openai-tools]>=0.13.12"
 ```
 
 Set your keys and model:
@@ -39,37 +37,6 @@ export OPENAI_MODEL=your-model
 
 Get your [Browser Use API key](https://cloud.browser-use.com/new-api-key).
 Choose an OpenAI model that supports Responses function tools.
-
-Download both files from the [remote browser example](https://github.com/browser-use/sdk/tree/main/examples/openai):
-
-- `browser_use_driver.py`
-- `browser_use_responses.py`
-
-Keep the files together and run:
-
-```bash
-.venv/bin/python browser_use_responses.py
-```
-
-The example creates a dedicated Cloud browser and connects through Chrome DevTools Protocol (CDP).
-It gives the model two tools: navigation and page-text reading.
-It permits navigation only within example.com.
-It closes the connection and stops its browser after the run.
-
-Both providers charge for their respective services.
-The example prints the model answer after the driver reads the page.
-Check the page result and browser cleanup separately.
-
-## Browser Use library driver
-
-Install Browser Use with the OpenAI tools extra:
-
-```bash
-uv venv --python 3.12
-uv pip install --python .venv/bin/python "browser-use[openai-tools]>=0.13.12"
-```
-
-Keep the same API keys and model settings.
 OpenAI 3.x uses `httpx2` for custom HTTP clients.
 Use OpenAI's `DefaultAsyncHttpxClient` when configuring a custom client.
 The following example uses a remote browser:
@@ -129,6 +96,49 @@ The driver creates and closes its own browser.
 You can also pass an already connected `BrowserSession`.
 The caller keeps responsibility for that borrowed session.
 Use `BrowserUse()` for a local browser after installing Chromium with `uvx browser-use install`.
+
+## Remote browsers with Playwright
+
+This path uses the Cloud SDK without the open-source Browser Use agent.
+You do not need local Chromium.
+
+Create a separate environment:
+
+```bash
+uv venv --python 3.12
+uv pip install --python .venv/bin/python openai==3.31.0 browser-use-sdk==3.11.3 playwright==1.63.0
+```
+
+Set your keys and model:
+
+```bash
+export BROWSER_USE_API_KEY=your-browser-use-key
+export OPENAI_API_KEY=your-openai-key
+export OPENAI_MODEL=your-model
+```
+
+Get your [Browser Use API key](https://cloud.browser-use.com/new-api-key).
+Choose an OpenAI model that supports Responses function tools.
+
+Download both files from the [remote browser example](https://github.com/browser-use/sdk/tree/main/examples/openai):
+
+- `browser_use_driver.py`
+- `browser_use_responses.py`
+
+Keep the files together and run:
+
+```bash
+.venv/bin/python browser_use_responses.py
+```
+
+The example creates a dedicated Cloud browser and connects through Chrome DevTools Protocol (CDP).
+It gives the model two tools: navigation and page-text reading.
+It permits navigation only within example.com.
+It closes the connection and stops its browser after the run.
+
+Both providers charge for their respective services.
+The example prints the model answer after the driver reads the page.
+Check the page result and browser cleanup separately.
 
 ## Available actions
 
