@@ -152,39 +152,14 @@ class Doc:
         print(f"{p} {kb:.1f} KB")
 
 
-def note(d, x, y, n, head, code, accent=False, width=210):
-    t = d.t
-    d.badge(x + 8.5, y - 4, n, accent)
-    assert tw(head, 12.5, weight=500) <= width - 26, head
-    assert tw(code, 11, mono=True) <= width - 26, code
-    d.text(x + 26, y, head, 12.5, t["ink"], 500)
-    d.text(x + 26, y + 18, code, 11, t["otext"] if accent else t["ink2"], mono=True)
-
-
 # ---------------------------------------------------------------- figure
 
 TITLE = "One workspace keeps files across sessions"
-DESC = ("Your code uploads people.csv into the workspace's uploads folder. "
-        "A run in session A gets the workspace files at run start, writes script.py and output.json, "
-        "and they are saved to the workspace when the run ends. "
-        "A later run in session B, with its own conversation, passes the same workspaceId and gets "
-        "people.csv, script.py and output.json restored at run start. "
-        "Your code lists the files with download URLs that expire after 60 seconds. "
-        "Files sync between runs, not live: finish one writer before starting a run that needs its changes. "
-        "Limits: 950 MiB per workspace, 50 MiB per upload.")
-CODE = [
-    ('client.workspaces.upload(ws.id, "people.csv")', "up"),
-    ("client.runs.create(task, workspace_id=ws.id)", "run"),
-    ("client.workspaces.files(ws.id, include_urls=True)", "dl"),
-]
-NOTES = [  # badge (None = legend row), head, code, accent
-    (1, "Upload inputs", "kept under uploads/", False),
-    (2, "Run 1 writes files", "saved when the run ends", True),
-    (3, "Any later run gets them", "pass the same workspaceId", True),
-    (4, "Download results", "signed URL lives 60 s", False),
-    (None, "Synced, not live", "finish one writer first", False),
-    (None, "Limits", "950 MiB · 50 MiB per upload", False),
-]
+DESC = ("Your code uploads people.csv to a workspace. "
+        "A run in session A writes output.json, saved to the workspace when the run ends. "
+        "A later run in session B gets both files restored at start. "
+        "Your code downloads output.json.")
+FILES = (("people.csv", "csv", None), ("output.json", "json", "neu"))
 LOOP = 12
 
 
@@ -321,96 +296,88 @@ def cable(d, a, b, key, rtl_top=True):
         d.add(f'<circle cx="{p[0]:.1f}" cy="{p[1]:.1f}" r="3.2" fill="{t["paper"]}" stroke="{org}" stroke-width="1.4"/>')
 
 
-def connectors(d, tops, y0, labels):
-    """Upload (code -> people.csv) and download (output.json -> code) arrows, badges 1 and 4.
-    Packets are drawn after the badges and use a short dash period so a dash always shows."""
+def code_window(d, cx, cy, cw):
+    """'your code' window with wireframe code lines (the page shows the real code next to it)."""
+    t = d.t
+    CB, rows = 20, (0.58, 0.80, 0.70)
+    ch = CB + 10 + len(rows) * 11
+    d.add(f'<rect x="{cx:.1f}" y="{cy}" width="{cw}" height="{ch}" rx="7" fill="{t["fill"]}" stroke="{t["ink2"]}" stroke-width="0.9"/>')
+    d.add(f'<line x1="{cx:.1f}" y1="{cy + CB}" x2="{cx + cw:.1f}" y2="{cy + CB}" stroke="{t["faint"]}" stroke-width="1"/>')
+    for k in range(3):
+        d.add(f'<circle cx="{cx + 12 + k * 7}" cy="{cy + CB / 2}" r="2" fill="{t["hair"]}"/>')
+    d.text(cx + 40, cy + 14, "your code", 11, t["ink3"], mono=True, ls="0.04em")
+    for i, f in enumerate(rows):
+        y = cy + CB + 10 + i * 11
+        d.add(f'<line x1="{cx + 12:.1f}" y1="{y}" x2="{cx + 16:.1f}" y2="{y}" stroke="{t["hair"]}" stroke-width="2.4" stroke-linecap="round"/>')
+        d.add(f'<line x1="{cx + 26:.1f}" y1="{y}" x2="{cx + 26 + (cw - 40) * f:.1f}" y2="{y}" '
+              f'stroke="{t["ink3"] if i == 1 else t["hair"]}" stroke-width="2.4" stroke-linecap="round"/>')
+    return cy + ch
+
+
+def connectors(d, tops, y0, sides):
+    """upload (code -> people.csv) and download (output.json -> code) arrows with travelling packets."""
     t = d.t
     lines = []
-    for (name, up), (lab, side), n in zip((("people.csv", False), ("output.json", True)), labels, (1, 4)):
+    for (name, up, lab), side in zip((("people.csv", False, "upload"), ("output.json", True, "download")), sides):
         (tl, tr) = tops[name]
         x, yt = (tl[0] + tr[0]) / 2, (tl[1] + tr[1]) / 2 - 7
         ya, yb, cls = (yt, y0, "pdlv") if up else (y0, yt, "pupv")
-        d.add(f'<line x1="{x:.1f}" y1="{ya:.1f}" x2="{x:.1f}" y2="{yb:.1f}" stroke="{t["ink2"]}" stroke-width="1" marker-end="url(#ah)"/>')
         sgn = 1 if yb > ya else -1
-        my = (y0 + yt) / 2
-        # two runs that skip the badge, so packets never strike through its digit
-        for p0, p1 in ((ya + 2 * sgn, my - 12 * sgn), (my + 12 * sgn, yb - 8 * sgn)):
-            assert (p1 - p0) * sgn >= 14, (name, p0, p1)
-            lines.append(f'<line class="{cls}" x1="{x:.1f}" y1="{p0:.1f}" x2="{x:.1f}" y2="{p1:.1f}" '
-                         f'stroke="{t["ink"]}" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="6 10"/>')
-        d.badge(x, my, n)
+        d.add(f'<line x1="{x:.1f}" y1="{ya:.1f}" x2="{x:.1f}" y2="{yb:.1f}" stroke="{t["ink2"]}" stroke-width="1" marker-end="url(#ah)"/>')
+        lines.append(f'<line class="{cls}" x1="{x:.1f}" y1="{ya + 2 * sgn:.1f}" x2="{x:.1f}" y2="{yb - 8 * sgn:.1f}" '
+                     f'stroke="{t["ink"]}" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="6 10"/>')
+        my = (y0 + yt) / 2 + 4
         if side == "left":
-            d.text(x - 15, my + 4, lab, 11, t["ink2"], mono=True, anchor="end")
+            d.text(x - 10, my, lab, 11, t["ink2"], mono=True, anchor="end")
         else:
-            d.text(x + 15, my + 4, lab, 11, t["ink2"], mono=True)
+            d.text(x + 10, my, lab, 11, t["ink2"], mono=True)
     for ln in lines:
         d.add(ln)
 
 
-def legend_mark(d, x, y):
-    """Badge-sized hollow square: marks legend rows that have no step number."""
-    d.add(f'<rect x="{x + 3.5:.1f}" y="{y - 9:.1f}" width="10" height="10" rx="1.5" stroke="{d.t["ink3"]}" stroke-width="0.9" stroke-dasharray="2 1.6"/>')
-
-
-def build(theme):
-    t = THEMES[theme]
-    W, H = 720, 538
-    d = Doc(W, H, TITLE, DESC, t)
-    d.paper("FIG 3.0", "V4 WORKSPACE / FILES")
-    defs(d)
-    ink, ink2, ink3, org, ot = t["ink"], t["ink2"], t["ink3"], t["orange"], t["otext"]
-
-    # ---- your code: readable listing
-    fs, lh = 11, 17
-    CW = round(28 + max(tw(s, fs, mono=True) for s, _ in CODE) + 16)
-    CX, CY, CB = (W - CW) / 2, 40, 20
-    CH = CB + len(CODE) * lh + 6
-    d.add(f'<rect x="{CX:.1f}" y="{CY}" width="{CW}" height="{CH}" rx="7" fill="{t["fill"]}" stroke="{ink2}" stroke-width="0.9"/>')
-    d.add(f'<line x1="{CX:.1f}" y1="{CY + CB}" x2="{CX + CW:.1f}" y2="{CY + CB}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k in range(3):
-        d.add(f'<circle cx="{CX + 12 + k * 7}" cy="{CY + CB / 2}" r="2" fill="{t["hair"]}"/>')
-    d.text(CX + 40, CY + 13.5, "your code", 10, ink3, mono=True, ls="0.04em", box=False)
-    d.text(CX + CW - 12, CY + 13.5, "python", 10, ink3, mono=True, anchor="end", box=False)
-    for i, (s, role) in enumerate(CODE):
-        y = CY + CB + 13 + i * lh
-        d.text(CX + 12, y, str(i + 1), fs, t["hair"], mono=True, box=False)
-        d.text(CX + 28, y, s, fs, ot if role == "run" else ink, 600 if role == "run" else 400, mono=True, box=False)
-    code_bottom = CY + CH
-
-    # ---- workspace slab with three files
-    YC = 270
-    sxy, sz = 164, 10
-    o = (W / 2, YC - sxy / 2 + sz / 2)
+def workspace(d, o, sxy, sz, K, SP):
+    """Slab with the uploads/ tray and two upright files. Returns file top edges."""
+    t = d.t
     slab(d, o, sxy, sxy, sz, under=2)
-    # tray lip + engraved quota gauge on the empty front of the top face
     g = [f'<g transform="{m_top(o, sz)}">',
          f'<rect x="7" y="7" width="{sxy - 14}" height="{sxy - 14}" rx="3" stroke="{t["hair"]}" stroke-width="0.8" {NS}/>']
-    gu, gv, cells, cw = 84, sxy - 17, 8, 6
-    for k in range(cells):
-        used = k < 3
-        g.append(f'<rect x="{gu + k * (cw + 2.2):.1f}" y="{gv}" width="{cw}" height="7" rx="1" '
-                 f'fill="{t["ink3"] if used else "none"}" fill-opacity="{.55 if used else 0}" stroke="{t["hair"]}" stroke-width="0.8" {NS}/>')
     g.append("</g>")
     d.add("".join(g))
     FW, FH = 36, 46
-    K, SP = 110, 76   # x + y = K puts the files on one screen row, SP px apart
     tops = {}
-    for k, (name, kind, cls) in enumerate((("people.csv", "csv", None), ("script.py", "py", "neu"), ("output.json", "json", "neu"))):
-        dxy = (k - 1) * SP / C - FW / 2
+    for k, (name, kind, cls) in enumerate(FILES):
+        dxy = (k - .5) * SP / C - FW / 2
         fx, fy = (K + dxy) / 2, (K - dxy) / 2
-        assert 0 <= fx and fx + FW <= sxy and 0 <= fy <= sxy, (name, fx, fy)
+        assert 3 <= fx and fx + FW <= sxy and 0 <= fy <= sxy - 6, (name, fx, fy)
         ob = P(fx, fy, sz, o)
         mat = (C, S, 0, 1, ob[0], ob[1])
         if k == 0:  # uploads/ tray under people.csv
             tray = [P(fx - 3, fy - 16, sz, o), P(fx + FW + 3, fy - 16, sz, o), P(fx + FW + 3, fy + 6, sz, o), P(fx - 3, fy + 6, sz, o)]
-            d.add(f'<polygon points="{pts(tray)}" fill="{t["fill2"]}" stroke="{ink3}" stroke-width="0.8" stroke-dasharray="2 2.5" {RJ}/>')
+            d.add(f'<polygon points="{pts(tray)}" fill="{t["fill2"]}" stroke="{t["ink3"]}" stroke-width="0.8" stroke-dasharray="2 2.5" {RJ}/>')
         file_card(d, m_front(ob), FW, FH, kind, cls)
         tops[name] = (apply(mat, 0, -FH), apply(mat, FW, -FH))
-        cx = apply(mat, FW / 2, 0)[0]
-        by = apply(mat, FW, 0)[1]
-        d.text(cx, by + 17, name, 11, ink, mono=True, anchor="middle")
+        d.text(apply(mat, FW / 2, 0)[0], apply(mat, FW, 0)[1] + 17, name, 11, t["ink"], mono=True, anchor="middle")
+    return tops
 
-    # ---- sessions: A on the front plane, B mirrored on the side plane, ports level with the slab corners
+
+def build(theme):
+    t = THEMES[theme]
+    W = 720
+    d = Doc(W, 1000, TITLE, DESC, t)
+    d.m = 30
+    defs(d)  # the paper is drawn last (height is known only then) and moved under everything
+    ink, ot = t["ink"], t["otext"]
+
+    CW = 240
+    code_bottom = code_window(d, (W - CW) / 2, 44, CW)
+
+    sxy, sz = 164, 10
+    YC = code_bottom + 128
+    o = (W / 2, YC - sxy / 2 + sz / 2)
+    tops = workspace(d, o, sxy, sz, 110, 100)
+    connectors(d, tops, code_bottom + 6, ("left", "right"))
+
+    # sessions: A on the front plane, B mirrored on the side plane, ports level with the slab corners
     WW, WH, gap = 80, 68, 13
     obA = (38, YC - WW * S + WH / 2)
     session_window(d, m_front(obA), m_front((obA[0] + gap * C, obA[1] - gap * S)), WW, WH, "A", "runA")
@@ -418,69 +385,26 @@ def build(theme):
     obB = (W - 38 - WW * C, YC + WH / 2)
     session_window(d, m_side(obB), m_side((obB[0] - gap * C, obB[1] - gap * S)), WW, WH, "B", "runB")
     portB = (obB[0], YC)
-    # RUNNING pills: only shown while that run is live in the animation
-    lab = "RUNNING"
-    pw, py = 22 + tw(lab, 11, mono=True) + 10, YC - 100
-    for x0, cls in ((34, "runA"), (W - 34 - pw, "runB")):
-        d.add(f'<rect class="{cls}" x="{x0:.1f}" y="{py - 10}" width="{pw:.1f}" height="20" rx="10" fill="{t["osoft"]}" stroke="{org}" stroke-width="0.9"/>')
-        d.add(f'<circle class="{cls}" cx="{x0 + 12:.1f}" cy="{py}" r="3" fill="{org}"/>')
-        d.add(f'<text class="m {cls}" x="{x0 + 22:.1f}" y="{py + 3.8:.1f}" font-size="11" font-weight="600" fill="{ot}" letter-spacing="0.04em">{lab}</text>')
-        d.boxes.append((lab + cls, x0, py - 10, x0 + pw, py + 10))
     wl, wr = P(0, sxy, sz / 2, o), P(sxy, 0, sz / 2, o)
     assert abs(wl[1] - YC) < .01 and abs(wr[1] - YC) < .01
-
     cable(d, (portA[0] + 4, YC), (wl[0] - 4, YC), ("prAl", "psAr"))
     cable(d, (wr[0] + 4, YC), (portB[0] - 4, YC), ("prBr", "psBl"))
     mA, mB = (portA[0] + wl[0]) / 2, (wr[0] + portB[0]) / 2
-    d.badge(mA, YC, 2, accent=True)
-    d.badge(mB, YC, 3, accent=True)
     d.text(mA, YC - 16, "saved at run end", 11.5, ot, 600, anchor="middle")
     d.text(mB, YC - 16, "restored at start", 11.5, ot, 600, anchor="middle")
-    d.text(mA + 5, YC + 26, "run 1 → files", 11, ot, mono=True, anchor="middle")
-    d.text(mB - 5, YC + 26, "files → run 2", 11, ot, mono=True, anchor="middle")
 
-    # ---- code <-> workspace connectors with travelling packets
-    connectors(d, tops, code_bottom + 6, (("upload", "left"), ("files + url", "right")))
-
-    # ---- labels under objects
-    ly = P(sxy, sxy, 0, o)[1] + 28
-    for x, anchor, name, sub in ((34, "start", "Session A", "run 1 · own history"),
-                                 (W / 2, "middle", "Workspace", "persists across sessions"),
-                                 (W - 34, "end", "Session B", "run 2 · own history")):
-        d.text(x, ly, name, 13, ink, 600, anchor=anchor)
-        d.text(x, ly + 17, sub, 11, ink3, mono=True, anchor=anchor)
-
-    # ---- notes: 3 columns, steps 1-4 then two legend rows
-    ny = ly + 34
-    d.add(f'<line x1="34" y1="{ny}" x2="{W - 34}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    colw = (W - 68) / 3
-    order = [0, 1, 2, 3, 4, 5]
-    for slot, k in enumerate(order):
-        n, h_, c_, acc = NOTES[k]
-        x, y = 34 + (slot % 3) * colw, ny + 28 + (slot // 3) * 44
-        if n is None:
-            legend_mark(d, x, y)
-            assert tw(h_, 12.5, weight=500) <= colw - 32 and tw(c_, 11, mono=True) <= colw - 32, (h_, c_)
-            d.text(x + 26, y, h_, 12.5, ink, 500)
-            d.text(x + 26, y + 18, c_, 11, ink2, mono=True)
-        else:
-            note(d, x, y, n, h_, c_, acc, width=colw - 6)
-    bottom = ny + 28 + 44 + 18
-    assert bottom + 26 <= H, (bottom, H)
+    sy, ly = YC + WH / 2 + WW * S / 2 + 26, P(sxy, sxy, 0, o)[1] + 26   # sessions under their windows, workspace under the slab
+    for x, y, anchor, name in ((34, sy, "start", "Session A"), (W / 2, ly, "middle", "Workspace"), (W - 34, sy, "end", "Session B")):
+        d.text(x, y, name, 13, ink, 600, anchor=anchor)
+    d.h = int(ly + 34)
+    n0 = len(d.body)
+    d.paper("FIG 3.0", "V4 WORKSPACE / FILES")
+    d.body = d.body[n0:] + d.body[:n0]
     d.check_overlaps()
     d.save(f"v4-workspaces-{theme}")
 
 
 # ---------------------------------------------------------------- mobile (360, drawn 1:1)
-
-CODE_M = [  # (text, role, line number or None for a wrapped continuation)
-    ("client.workspaces.upload(", "up", 1),
-    ('    ws.id, "people.csv")', "up", None),
-    ("client.runs.create(task,", "run", 2),
-    ("    workspace_id=ws.id)", "run", None),
-    ("client.workspaces.files(", "dl", 3),
-    ("    ws.id, include_urls=True)", "dl", None),
-]
 
 
 def vcable(d, x, y0, y1, key):
@@ -502,63 +426,22 @@ def vcable(d, x, y0, y1, key):
 def build_mobile(theme):
     """Code on top, the workspace slab under it, sessions A and B hang below on vertical cables."""
     t = THEMES[theme]
-    W, H = 360, 1000
-    d = Doc(W, H, TITLE, DESC, t)
+    W = 360
+    d = Doc(W, 1000, TITLE, DESC, t)
     d.m = 24
     defs(d)  # the paper is drawn last (height is known only then) and moved under everything
-    ink, ink2, ink3, ot = t["ink"], t["ink2"], t["ink3"], t["otext"]
+    ink, ot = t["ink"], t["otext"]
 
-    # ---- your code, wrapped listing
-    fs, lh = 11, 17
-    CX, CY, CW, CB = 24, 44, W - 48, 20
-    CH = CB + len(CODE_M) * lh + 8
-    assert 28 + max(tw(s_, fs, mono=True) for s_, _, _ in CODE_M) + 12 <= CW
-    d.add(f'<rect x="{CX}" y="{CY}" width="{CW}" height="{CH}" rx="7" fill="{t["fill"]}" stroke="{ink2}" stroke-width="0.9"/>')
-    d.add(f'<line x1="{CX}" y1="{CY + CB}" x2="{CX + CW}" y2="{CY + CB}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k in range(3):
-        d.add(f'<circle cx="{CX + 12 + k * 7}" cy="{CY + CB / 2}" r="2" fill="{t["hair"]}"/>')
-    d.text(CX + 40, CY + 13.5, "your code", 10, ink3, mono=True, ls="0.04em", box=False)
-    d.text(CX + CW - 12, CY + 13.5, "python", 10, ink3, mono=True, anchor="end", box=False)
-    for i, (s_, role, n) in enumerate(CODE_M):
-        y = CY + CB + 14 + i * lh
-        if n:
-            d.text(CX + 12, y, str(n), fs, t["hair"], mono=True, box=False)
-        ind = len(s_) - len(s_.lstrip())  # SVG collapses leading spaces: indent by x instead
-        d.text(CX + 28 + ind * fs * 0.6, y, s_.lstrip(), fs, ot if role == "run" else ink, 600 if role == "run" else 400, mono=True, box=False)
-    code_bottom = CY + CH
+    CW = 200
+    code_bottom = code_window(d, (W - CW) / 2, 44, CW)
 
-    # ---- workspace slab with three files
     sxy, sz = 164, 10
-    FW, FH, K, SP = 36, 46, 114, 76
     YC = code_bottom + 6 + 66 + 76
     o = (W / 2, YC - sxy / 2 + sz / 2)
-    slab(d, o, sxy, sxy, sz, under=2)
-    g = [f'<g transform="{m_top(o, sz)}">',
-         f'<rect x="7" y="7" width="{sxy - 14}" height="{sxy - 14}" rx="3" stroke="{t["hair"]}" stroke-width="0.8" {NS}/>']
-    gu, gv, cw = 84, sxy - 17, 6
-    for k in range(8):
-        used = k < 3
-        g.append(f'<rect x="{gu + k * (cw + 2.2):.1f}" y="{gv}" width="{cw}" height="7" rx="1" '
-                 f'fill="{t["ink3"] if used else "none"}" fill-opacity="{.55 if used else 0}" stroke="{t["hair"]}" stroke-width="0.8" {NS}/>')
-    g.append("</g>")
-    d.add("".join(g))
-    tops = {}
-    for k, (name, kind, cls) in enumerate((("people.csv", "csv", None), ("script.py", "py", "neu"), ("output.json", "json", "neu"))):
-        dxy = (k - 1) * SP / C - FW / 2
-        fx, fy = (K + dxy) / 2, (K - dxy) / 2
-        assert 3 <= fx and fx + FW <= sxy and 0 <= fy <= sxy - 6, (name, fx, fy)
-        ob = P(fx, fy, sz, o)
-        mat = (C, S, 0, 1, ob[0], ob[1])
-        if k == 0:
-            tray = [P(fx - 3, fy - 16, sz, o), P(fx + FW + 3, fy - 16, sz, o), P(fx + FW + 3, fy + 6, sz, o), P(fx - 3, fy + 6, sz, o)]
-            d.add(f'<polygon points="{pts(tray)}" fill="{t["fill2"]}" stroke="{ink3}" stroke-width="0.8" stroke-dasharray="2 2.5" {RJ}/>')
-        file_card(d, m_front(ob), FW, FH, kind, cls)
-        tops[name] = (apply(mat, 0, -FH), apply(mat, FW, -FH))
-        d.text(apply(mat, FW / 2, 0)[0], apply(mat, FW, 0)[1] + 17, name, 11, ink, mono=True, anchor="middle")
-    connectors(d, tops, code_bottom + 6, (("upload", "left"), ("files + url", "left")))
+    tops = workspace(d, o, sxy, sz, 114, 100)
+    connectors(d, tops, code_bottom + 6, ("left", "right"))
 
-    # ---- sessions: A (front plane) under the left face, B (side plane) under the right face.
-    # Cables drop straight from the faces into each window's top edge; labels sit outboard.
+    # sessions: A (front plane) under the left face, B (side plane) under the right face
     WW, WH, gap = 80, 68, 13
     ww, rise = WW * C, WW * S
     xa, xb = W / 2 - 70, W / 2 + 70
@@ -570,16 +453,13 @@ def build_mobile(theme):
 
     ya0 = face_y(xa, "A")
     assert abs(ya0 - face_y(xb, "B")) < .01 and o[0] - sxy * C < xa
-    # workspace label centred under the slab, between the cables
-    wy = o[1] + sxy + 24 + 20
-    sub = "kept between runs"
-    subw = tw(sub, 11, mono=True)
+    wy = o[1] + sxy + 34   # hugs the slab shadow (lowest dashed edge at +14 below the corner)
+    ww_ = tw("Workspace", 13, weight=600)
     d.text(W / 2, wy, "Workspace", 13, ink, 600, anchor="middle")
-    d.text(W / 2, wy + 17, sub, 11, ink3, mono=True, anchor="middle")
-    assert xa + 8 < W / 2 - subw / 2 and W / 2 + subw / 2 < xb - 8
-    # A's ghost top edge must clear the sub-label where they share x
-    xl_ = W / 2 - subw / 2 - 4
-    yA0 = (wy + 17 + 10) + WH + gap * S - (xl_ - xA0 - gap * C) * S / C
+    assert xa + 8 < W / 2 - ww_ / 2 and W / 2 + ww_ / 2 < xb - 8
+    # A's ghost top edge must clear the label where they share x
+    xl_ = W / 2 - ww_ / 2 - 4
+    yA0 = (wy + 10) + WH + gap * S - (xl_ - xA0 - gap * C) * S / C
     yB0 = yA0 + rise          # B bottom-left sits lower so both bounding boxes are level
     portA, portB = yA0 - WH + rise / 2, yB0 - WH - rise / 2
     assert abs(portA - portB) < .01
@@ -588,34 +468,16 @@ def build_mobile(theme):
     vcable(d, xa, ya0, portA - 4, ("prAr", "psAl"))
     vcable(d, xb, ya0, portB - 4, ("prBr", "psBl"))
 
-    # cable badges on the cables, short orange labels outboard
-    by = (ya0 + portA) / 2 - 6
-    d.badge(xa, by, 2, accent=True)
-    d.badge(xb, by, 3, accent=True)
-    d.text(xa - 15, by + 4, "saved", 11.5, ot, 600, anchor="end")
-    d.text(xa - 15, by + 20, "at run end", 11, ot, mono=True, anchor="end")
-    d.text(xb + 15, by + 4, "restored", 11.5, ot, 600)
-    d.text(xb + 15, by + 20, "at start", 11, ot, mono=True)
+    by = (ya0 + portA) / 2 - 4
+    d.text(xa - 12, by, "saved", 11.5, ot, 600, anchor="end")
+    d.text(xa - 12, by + 16, "at run end", 11.5, ot, 600, anchor="end")
+    d.text(xb + 12, by, "restored", 11.5, ot, 600)
+    d.text(xb + 12, by + 16, "at start", 11.5, ot, 600)
 
     ly = yB0 + 28
-    for x, name, sub_ in ((xa, "Session A", "run 1 · own history"), (xb, "Session B", "run 2 · own history")):
+    for x, name in ((xa, "Session A"), (xb, "Session B")):
         d.text(x, ly, name, 13, ink, 600, anchor="middle")
-        d.text(x, ly + 17, sub_, 11, ink3, mono=True, anchor="middle")
-
-    # ---- notes, one column
-    ny = ly + 40
-    d.add(f'<line x1="24" y1="{ny}" x2="{W - 24}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k, (n, h_, c_, acc) in enumerate(NOTES):
-        y = ny + 28 + k * 42
-        if n is None:
-            legend_mark(d, 24, y)
-            d.text(24 + 26, y, h_, 12.5, ink, 500)
-            d.text(24 + 26, y + 18, c_, 11, ink2, mono=True)
-        else:
-            note(d, 24, y, n, h_, c_, acc, width=W - 48)
-    bottom = ny + 28 + (len(NOTES) - 1) * 42 + 18
-    assert bottom + 32 <= H, bottom
-    d.h = int(bottom + 32)
+    d.h = int(ly + 32)
     n0 = len(d.body)
     d.paper("FIG 3.0", "V4 WORKSPACE", m=16)
     d.body = d.body[n0:] + d.body[:n0]

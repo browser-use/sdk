@@ -12,6 +12,7 @@ MONO = "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
 NS = 'vector-effect="non-scaling-stroke"'
 RJ = 'stroke-linejoin="round" stroke-linecap="round"'
 LOOP = 12  # seconds
+MOB_PO, MOB_GAP = 246, 44  # mobile: platform origin y, gap from platform to sheet tops
 # follow-up run: POST leaves the task at T_GO, lands (run queued) at T_LAND, starts running at T_RUN (% of loop)
 T_GO, T_LAND, T_RUN = 76, 90, 95
 
@@ -28,19 +29,10 @@ THEMES = {
     ),
 }
 
-TITLE = "A task starts a run inside a session, and the run reads and writes a persistent workspace"
-DESC = ("1: POST /api/v4/runs sends the task and returns id, sessionId and workspaceId. "
-        "2: the run executes inside a session, which holds the conversation and the live browser; "
-        "send sessionId with a later task to continue it. "
-        "3: the run reads and writes files in a workspace; files persist after the run and "
-        "a later task sent with workspaceId reuses them, also in a new conversation. "
-        "4: poll GET /api/v4/runs/{id}/status until the run is completed, then read its result.")
-NOTES = [
-    (1, "Send a task, get ids back", "POST /api/v4/runs", True),
-    (2, "Session: conversation + live browser", "POST {task, sessionId} continues it", False),
-    (3, "Workspace: files outlive the run", "POST {task, workspaceId} reuses files", False),
-    (4, "Wait for the result", "poll GET /api/v4/runs/{id}/status", False),
-]
+TITLE = "A task sent to POST /api/v4/runs starts a run inside a session; the run reads and writes a workspace"
+DESC = ("The task is sent with POST /api/v4/runs and starts a run. "
+        "The run executes inside a session, which holds the conversation and the live browser. "
+        "The run reads and writes files in a workspace.")
 
 
 # ---------------------------------------------------------------- primitives
@@ -130,15 +122,6 @@ class Doc:
         self.text(lx, 24.5, fig, 10, t["ink3"], mono=True, ls="0.08em")
         self.text(w - lx, 24.5, tag, 10, t["ink3"], mono=True, anchor="end", ls="0.08em")
 
-    def badge(self, x, y, n, accent=False):
-        t = self.t
-        if accent:
-            self.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="8.5" fill="{t["orange"]}"/>')
-            self.text(x, y + 3.6, str(n), 10, "#FFFFFF", 600, mono=True, anchor="middle", cls="b")
-        else:
-            self.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="8.5" fill="{t["paper"]}" stroke="{t["ink2"]}" stroke-width="0.9"/>')
-            self.text(x, y + 3.6, str(n), 10, t["ink"], 600, mono=True, anchor="middle", cls="b")
-
     def check_overlaps(self):
         bs = [b for b in self.boxes]
         for i in range(len(bs)):
@@ -162,15 +145,6 @@ class Doc:
         kb = len(svg.encode()) / 1024
         assert kb < 60, (name, kb)
         print(f"{p} {kb:.1f} KB")
-
-
-def note(d, x, y, n, head, code, accent=False, width=210):
-    t = d.t
-    d.badge(x + 8.5, y - 4, n, accent)
-    assert tw(head, 12.5, weight=500) <= width - 26, head
-    assert tw(code, 11, mono=True) <= width - 26, code
-    d.text(x + 26, y, head, 12.5, t["ink"], 500)
-    d.text(x + 26, y + 18, code, 11, t["otext"] if accent else t["ink2"], mono=True)
 
 
 def kf(name, stops):
@@ -368,30 +342,6 @@ def travel(d, cls, path, t0, t1, loop=LOOP):
     motion(d, f".{cls}{{animation:{cls} {loop}s linear infinite}}")
 
 
-def status_chip(d, x, y):
-    """Run status pill; the static frame says running, motion cycles running -> completed -> queued."""
-    t = d.t
-    w = 8 + 7 + 7 + tw("completed", 11, mono=True) + 10
-    d.add(f'<rect x="{x:.1f}" y="{y - 10:.1f}" width="{w:.1f}" height="20" rx="10" fill="{t["fill"]}" stroke="{t["ink2"]}" stroke-width="0.9"/>')
-    cx, ty = x + 13, y + 3.9
-    states = [("running", t["ink"], t["ink"]), ("completed", t["ink2"], t["ink2"]), ("queued", t["ink3"], t["ink3"])]
-    for i, (s, dc, tc) in enumerate(states):
-        op = "" if i == 0 else ' fill-opacity="0"'
-        if i == 2:
-            d.add(f'<circle class="st{i}" cx="{cx}" cy="{y}" r="2.8" fill="{t["fill"]}" stroke="{dc}" stroke-width="1.2" fill-opacity="0" stroke-opacity="0"/>')
-        else:
-            d.add(f'<circle class="st{i}" cx="{cx}" cy="{y}" r="3.2" fill="{dc}"{op}/>')
-        d.text(cx + 9, ty, s, 11, tc, 500 if i == 0 else 400, mono=True, cls=f"anim st{i}", extra=op)
-    d.css.append(
-        kf("st0", [("0%,49.5%", "fill-opacity:1;stroke-opacity:1"), (f"50%,{T_RUN - .5}%", "fill-opacity:0;stroke-opacity:0"), (f"{T_RUN}%,100%", "fill-opacity:1;stroke-opacity:1")])
-        + kf("st1", [("0%,49.5%", "fill-opacity:0"), (f"50%,{T_LAND - .5}%", "fill-opacity:1"), (f"{T_LAND}%,100%", "fill-opacity:0")])
-        + kf("st2", [(f"0%,{T_LAND - .5}%", "fill-opacity:0;stroke-opacity:0"), (f"{T_LAND}%,{T_RUN - .5}%", "fill-opacity:1;stroke-opacity:1"), (f"{T_RUN}%,100%", "fill-opacity:0;stroke-opacity:0")])
-    )
-    motion(d, "".join(f".st{i}{{animation:st{i} {LOOP}s linear infinite}}" for i in range(3)))
-    d.boxes.append(("chip", x, y - 10, x + w, y + 10))
-    return w
-
-
 def ring_anim(d):
     """Progress ring: fills while running, stays full while completed, blank while the follow-up is queued."""
     d.css.append(kf("ring", [("0%", "stroke-dasharray:30 82;stroke-opacity:1"), (f"49%,{T_LAND - .1}%", "stroke-dasharray:82 82;stroke-opacity:1"),
@@ -399,11 +349,14 @@ def ring_anim(d):
                              ("100%", "stroke-dasharray:30 82;stroke-opacity:1")]))
 
 
-def chip_leader(d, x, y0, a):
-    """Hairline from the status pill down to a point on the run cube's top edge; paper underlay keeps crossings legible."""
+def run_name(d, x, y, a):
+    """'Run' left of x, elbow hairline down to point a on the cube's top edge; paper underlay keeps crossings legible."""
     t = d.t
-    d.add(f'<path d="M{x:.1f} {y0:.1f} V{a[1] - 2.5:.1f}" stroke="{t["paper"]}" stroke-width="3.5"/>')
-    d.add(f'<path d="M{x:.1f} {y0:.1f} V{a[1] - 2.5:.1f}" stroke="{t["ink3"]}" stroke-width="0.8"/>')
+    x0 = x - 8
+    d.text(x0 - 5, y + 4.5, "Run", 13, t["ink"], 600, anchor="end")
+    path = f"M{x0:.1f} {y:.1f} H{x - 4:.1f} Q{x:.1f} {y:.1f} {x:.1f} {y + 4:.1f} V{a[1] - 2.5:.1f}"
+    d.add(f'<path d="{path}" stroke="{t["paper"]}" stroke-width="3.5"/>')
+    d.add(f'<path d="{path}" stroke="{t["ink3"]}" stroke-width="0.8"/>')
     d.add(f'<circle cx="{a[0]:.1f}" cy="{a[1]:.1f}" r="2" fill="{t["paper"]}" stroke="{t["ink2"]}" stroke-width="1"/>')
 
 
@@ -436,7 +389,7 @@ def callout(d, a, x, y, label, anchor):
 
 def build(theme):
     t = THEMES[theme]
-    W, H = 720, 458
+    W, H = 720, 344
     d = Doc(W, H, t)
     d.paper("FIG 0.1", "V4 AGENT / OVERVIEW")
     defs(d)
@@ -488,8 +441,7 @@ def build(theme):
     d.add(f'<path d="M{xa:.1f} {yl:.1f} H{xb:.1f}" stroke="{ink2}" stroke-width="1" marker-start="url(#ah)" marker-end="url(#ah)"/>')
     d.add(f'<circle cx="{port[0]:.1f}" cy="{yl:.1f}" r="2.6" fill="{t["paper"]}" stroke="{ink2}" stroke-width="1"/>')
     m3 = (corner[0] + xb) / 2 + 4
-    d.badge(m3, yl, 3)
-    d.text(m3, yl - 16, "read · write", 11, ink2, mono=True, anchor="middle")
+    d.text(m3, yl - 12, "read · write", 11, ink2, mono=True, anchor="middle")
     for cls, a, b, t0, t1 in (("wr", xa + 4, xb - 6, 6, 20), ("rd", xb - 6, xa + 4, 28, 42)):
         d.add(f'<rect class="{cls}" x="-3.5" y="-3.5" width="7" height="7" rx="1" fill="{t["fill"]}" stroke="{ink2}" stroke-width="1" '
               f'fill-opacity="0" stroke-opacity="0"/>')
@@ -500,22 +452,15 @@ def build(theme):
     kp = key_path(d, task_top, YK, run_top[0], yr_end)
     lx = task_top[0] + 14
     d.text(lx, YK - 10, "POST /api/v4/runs", 11, ink, mono=True)
-    d.text(lx, YK + 20, "← id, sessionId, workspaceId", 11, ink2, mono=True)
-    d.badge(task_top[0], (YK + task_top[1]) / 2 + 4, 1, accent=True)
     d.add(f'<circle class="go" r="5" fill="{org}" stroke="{t["paper"]}" stroke-width="2" fill-opacity="0" stroke-opacity="0"/>')
     travel(d, "go", kp, T_GO, T_LAND)
     d.add(f'<circle class="back" r="4" fill="{t["paper"]}" stroke="{org}" stroke-width="2" fill-opacity="0" stroke-opacity="0"/>')
     travel(d, "back", kp[::-1], 50, 66)
 
-    # --- (4) run status, hung off the descent
-    cw = 8 + 7 + 7 + tw("completed", 11, mono=True) + 10
+    # --- run name, hung off the descent
     cy = YK + 44
-    chip_x = run_top[0] - 14 - cw
-    status_chip(d, chip_x, cy)
-    d.text(chip_x - 10, cy + 4.2, "Run", 13, ink, 600, anchor="end")
-    d.badge(chip_x - 10 - tw("Run", 13, weight=600) - 16, cy, 4)
-    lx_ = chip_x + cw - 4
-    chip_leader(d, lx_, cy + 10, P(0, (run_top[0] - lx_) / C, rh, ro))
+    lx_ = run_top[0] - 18
+    run_name(d, lx_, cy, P(0, (run_top[0] - lx_) / C, rh, ro))
     ring_anim(d)
     # workspace sheets nudge when a write lands (output.json) and when a read leaves (people.csv)
     d.css.append(kf("bump2", [("0%,19.5%", "transform:translate(0,0)"), ("21.5%", "transform:translate(0,-4px)"), ("25%,100%", "transform:translate(0,0)")])
@@ -523,21 +468,13 @@ def build(theme):
     motion(d, f".ring{{animation:ring {LOOP}s linear infinite}}.f2{{animation:bump2 {LOOP}s ease-out infinite}}"
               f".f0{{animation:bump0 {LOOP}s ease-out infinite}}")
 
-    # --- labels row
+    # --- names row
     ly = 302
-    plat_cx = P(PX / 2, PY / 2, 0, po)[0]
-    for x, name, sub in ((P(tsx / 2, tsy / 2, 0, to)[0], "Task", "runs.create(task)"),
-                         (plat_cx, "Session", "one or more runs"),
-                         (P(WX / 2, WY / 2, 0, wo)[0], "Workspace", "files persist")):
+    for x, name in ((P(tsx / 2, tsy / 2, 0, to)[0], "Task"),
+                    (P(PX / 2, PY / 2, 0, po)[0], "Session"),
+                    (P(WX / 2, WY / 2, 0, wo)[0], "Workspace")):
         d.text(x, ly, name, 13, ink, 600, anchor="middle")
-        d.text(x, ly + 17, sub, 11, ink3, mono=True, anchor="middle")
-    d.badge(plat_cx + tw("Session", 13, weight=600) / 2 + 16, ly - 4.5, 2)
-
-    ny = ly + 38
-    d.add(f'<line x1="34" y1="{ny}" x2="{W - 34}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k, (n, h_, c_, acc) in enumerate(NOTES):
-        note(d, 34 if k % 2 == 0 else W / 2 + 8, ny + 30 + (k // 2) * 44, n, h_, c_, acc, width=320)
-    assert ny + 30 + 44 + 18 + 26 <= H, (ny, H)
+    assert ly + 42 <= H, (ly, H)
     return d
 
 
@@ -557,13 +494,12 @@ def build_mobile(theme, H=1200):
     tsx, tsy, tsz, _ = task_slab(d, to, under=0)
     A = P(tsx, tsy, 0, to)
     XK = A[0]
-    d.text(24, 82, "Task", 13, ink, 600)
-    d.text(24, 99, "runs.create(task)", 11, ink3, mono=True)
+    d.text(24, 92, "Task", 13, ink, 600)
 
     # session platform; run near its right corner, under the spine
     PX, PY, PZ = 150, 104, 7
     rx0, ry0, rs, rh = 78, 18, 40, 30
-    po = (XK - (rx0 - ry0) * C, 268 + PZ)
+    po = (XK - (rx0 - ry0) * C, MOB_PO + PZ)
     slab(d, po, PX, PY, PZ, under=2)
     g = [f'<g transform="{m_top(po, PZ)}">']
     for u in range(21, PX - 4, 21):
@@ -593,26 +529,19 @@ def build_mobile(theme, H=1200):
     d.add(f'<rect x="{XK - 3:.1f}" y="{A[1] + 12:.1f}" width="6" height="{YT - A[1] - 24:.1f}" rx="3" fill="{org}" '
           f'fill-opacity="{t["glow"]}" filter="url(#glow)"/>')
     d.add(f'<path d="M{XK:.1f} {A[1] + 2:.1f} V{YT:.1f}" stroke="{org}" stroke-width="3" stroke-linecap="round" marker-end="url(#ao)"/>')
-    d.badge(XK, A[1] + 26, 1, accent=True)
-    d.text(24, 154, "POST /api/v4/runs", 11, ink, mono=True)
-    d.text(24, 172, "← id, sessionId, workspaceId", 11, ink2, mono=True)
+    d.text(XK - 14, A[1] + 26, "POST /api/v4/runs", 11, ink, mono=True, anchor="end")
     kp = [(XK, A[1] + 2), (XK, YT)]
     d.add(f'<circle class="go" r="5" fill="{org}" stroke="{t["paper"]}" stroke-width="2" fill-opacity="0" stroke-opacity="0"/>')
     travel(d, "go", kp, T_GO + 2, T_LAND)
     d.add(f'<circle class="back" r="4" fill="{t["paper"]}" stroke="{org}" stroke-width="2" fill-opacity="0" stroke-opacity="0"/>')
     travel(d, "back", kp[::-1], 50, 64)
 
-    # (4) run status
-    cw = 8 + 7 + 7 + tw("completed", 11, mono=True) + 10
-    cy = 204
-    chip_x = XK - 12 - cw
-    status_chip(d, chip_x, cy)
-    d.text(chip_x - 10, cy + 4.2, "Run", 13, ink, 600, anchor="end")
-    d.badge(chip_x - 10 - tw("Run", 13, weight=600) - 16, cy, 4)
-    assert P(14, 16, PZ + 56, po)[1] > cy + 14, "browser hits the status chip"
-    lx_ = chip_x + cw - 4
-    assert lx_ > P(14, 16, 0, po)[0] + 12, "chip leader hits the browser"
-    chip_leader(d, lx_, cy + 10, P(0, (run_top[0] - lx_) / C, rh, ro))
+    # run name, hung off the spine
+    cy = A[1] + 56
+    lx_ = XK - 18
+    assert P(14, 16, PZ + 56, po)[1] > cy + 12, "browser hits the run name"
+    assert lx_ > P(14, 16, 0, po)[0] + 12, "run leader hits the browser"
+    run_name(d, lx_, cy, P(0, (run_top[0] - lx_) / C, rh, ro))
     ring_anim(d)
     d.css.append(kf("bump2", [("0%,19.5%", "transform:translate(0,0)"), ("21.5%", "transform:translate(0,-4px)"), ("25%,100%", "transform:translate(0,0)")])
                  + kf("bump0", [("0%,25%", "transform:translate(0,0)"), ("27%", "transform:translate(0,-4px)"), ("30%,100%", "transform:translate(0,0)")]))
@@ -622,13 +551,11 @@ def build_mobile(theme, H=1200):
     # session label, under the platform's left corner
     sy_ = po[1] + 116
     d.text(24, sy_, "Session", 13, ink, 600)
-    d.badge(24 + tw("Session", 13, weight=600) + 14, sy_ - 4.5, 2)
-    d.text(24, sy_ + 17, "one or more runs", 11, ink3, mono=True)
 
     # workspace under the spine, right-aligned to the margin
     WX, WY, WZ = 84, 58, 6
     wl = W - 24 - (WX + WY) * C
-    wtop_want = P(PX, PY, 0, po)[1] + 72
+    wtop_want = P(PX, PY, 0, po)[1] + MOB_GAP
     wo = (wl + WY * C, 0)
     # top of the sheet silhouettes where the spine meets them (sheets live on planes x = 16, 40, 64)
     def sheet_top(wo):
@@ -650,21 +577,15 @@ def build_mobile(theme, H=1200):
     ya, yb = run_foot[1] + 8, wtop - 8
     d.add(f'<path d="M{XK:.1f} {ya:.1f} V{yb:.1f}" stroke="{ink2}" stroke-width="1" marker-start="url(#ah)" marker-end="url(#ah)"/>')
     m3 = (P(PX, PY, -22, po)[1] + yb) / 2
-    d.badge(XK, m3, 3)
-    d.text(XK - 16, m3 + 4, "read · write", 11, ink2, mono=True, anchor="end")
+    d.text(XK - 12, m3 + 4, "read · write", 11, ink2, mono=True, anchor="end")
     for cls, a, b, t0, t1 in (("wr", ya + 4, yb - 6, 6, 20), ("rd", yb - 6, ya + 4, 28, 42)):
         d.add(f'<rect class="{cls}" x="-3.5" y="-3.5" width="7" height="7" rx="1" fill="{t["fill"]}" stroke="{ink2}" stroke-width="1" '
               f'fill-opacity="0" stroke-opacity="0"/>')
         travel(d, cls, [(XK, a), (XK, b)], t0, t1)
     wy_ = P(0, WY, 0, wo)[1] + 4
     d.text(24, wy_, "Workspace", 13, ink, 600)
-    d.text(24, wy_ + 17, "files persist", 11, ink3, mono=True)
 
-    ny = P(WX, WY, -22, wo)[1] + 22
-    d.add(f'<line x1="24" y1="{ny:.1f}" x2="{W - 24}" y2="{ny:.1f}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k, (n, h_, c_, acc) in enumerate(NOTES):
-        note(d, 24, ny + 30 + k * 42, n, h_, c_, acc, width=W - 48)
-    need = ny + 30 + 3 * 42 + 18 + 30
+    need = P(WX, WY, -22, wo)[1] + 26
     d.h_need = need
     assert need <= H, (need, H)
     return d

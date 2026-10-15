@@ -1,6 +1,7 @@
 """FIG 1.2 browser-proxy (paper-technical). Self-contained: run `python3 -I scripts/diagrams/browser-proxy.py`.
 
-Writes docs/cloud/images/browser-proxy-{light,dark}[-mobile].svg.
+Writes docs/cloud/images/browser-proxy-{light,dark}[-mobile].svg (simplified cut: no legend, no badges;
+the page text explains the override and re-send rules).
 Facts checked against cloud source: default country "us" (control-plane v4/browser_settings.go:48),
 no country -> PROXYLESS=true, customProxy sets CUSTOM_PROXY_* (browserprovider/service.go:61-87),
 customProxy is not inherited by a new browser (proxies.mdx). No country count is claimed:
@@ -29,24 +30,17 @@ THEMES = {
     ),
 }
 
-FIG, TAG, TAG_M = "FIG 1.2", "CLOUD BROWSER / PROXY", "PROXY"
-TITLE = "How a cloud browser reaches websites through a proxy"
-DESC = ("The cloud browser sends its traffic down one of three routes to the website. "
-        "1, the default: a US residential proxy, proxyCountryCode \"us\", or another country code such as \"de\"; "
-        "the website sees a residential IP in that country, not your server. "
-        "2: your own proxy, customProxy with host and port; the website sees your proxy's IP. "
-        "3: proxyCountryCode null turns the proxy off; the website sees the browser's own IP. "
-        "4: customProxy overrides proxyCountryCode and must be passed again when a follow-up starts a new browser.")
-NOTES = [
-    (1, "Residential, on by default", 'proxyCountryCode: "us" · or "de", "jp", …', True),
-    (2, "Bring your own proxy", "customProxy: { host, port, … }", False),
-    (3, "Turn the proxy off", "proxyCountryCode: null", False),
-    (4, "Custom proxy overrides country", "re-send it when a new browser starts", False),
-]
-LANES = [  # (name, what the website sees, accent)
-    ("Residential proxy", "residential IP", True),
-    ("Your proxy", "your proxy's IP", False),
-    ("No proxy", "browser's own IP", False),
+FIG, TAG, TAG_M = "FIG 1.2", "CLOUD BROWSER / PROXY", "CLOUD BROWSER / PROXY"
+TITLE = "Three proxy routes from a cloud browser to a website"
+DESC = ("A cloud browser reaches a website by one of three routes. "
+        "The default, highlighted, goes through a residential proxy whose country is set by proxyCountryCode, "
+        "for example US, DE, JP or BR. "
+        "customProxy routes through your own proxy server. "
+        "proxyCountryCode null connects directly, with no proxy.")
+LANES = [  # (name, key API, accent)
+    ("Residential proxy", "proxyCountryCode", True),
+    ("Your proxy", "customProxy", False),
+    ("No proxy", "proxyCountryCode: null", False),
 ]
 COUNTRIES = ["US", "DE", "JP", "BR"]  # example proxyCountryCode values; US is the static frame
 
@@ -166,15 +160,6 @@ class Doc:
         kb = len(svg.encode()) / 1024
         assert kb < 60, (name, kb)
         print(f"{p} {kb:.1f} KB")
-
-
-def note(d, x, y, n, head, code, accent=False, width=210):
-    t = d.t
-    d.badge(x + 8.5, y - 4, n, accent)
-    assert tw(head, 12.5, weight=500) <= width - 26, head
-    assert tw(code, 11, mono=True) <= width - 26, code
-    d.text(x + 26, y, head, 12.5, t["ink"], 500)
-    d.text(x + 26, y + 18, code, 11, t["otext"] if accent else t["ink2"], mono=True)
 
 
 def defs(d):
@@ -402,7 +387,7 @@ def exit_point(d, hx, hy):
 
 def build(theme):
     t = THEMES[theme]
-    W, H = 720, 456
+    W, H = 720, 344
     Yc, L1, L3 = 196, 100, 292
     d = Doc(W, H, t)
     d.paper(FIG, TAG)
@@ -471,33 +456,21 @@ def build(theme):
     rx, ry = nb["roof"]
     country_tag(d, rx, ry, rx + 30, ry - 12)
 
-    # badges on the lanes they explain
     b_x = (x_turn + nb_left[0] - 6) / 2
-    d.badge(b_x, L1, 1, accent=True)
-    d.text(b_x, L1 - 15, "default", 11.5, t["otext"], 600, anchor="middle")
-    d.badge((x_turn + sv_left[0] - 6) / 2, Yc, 2)
-    d.badge(b_x, L3, 3)
+    d.text(b_x, L1 - 10, "default", 11.5, t["otext"], 600, anchor="middle")
 
     # lane labels (name above the outgoing line, what the site sees below)
     lx = nb_right[0] + 14
     for y, (name, sub, acc) in zip((L1, Yc, L3), LANES):
         d.text(lx, y - 10, name, 13, ink, 600)
         d.text(lx, y + 19, sub, 11, t["otext"] if acc else ink3, mono=True)
-        assert lx + max(tw(name, 13, weight=600), tw(sub, 11, mono=True)) < 562, name
-    d.badge(lx + tw("Your proxy", 13, weight=600) + 14, Yc - 14.5, 4)
+        # lane 3 drops below the globe, so its subline may run past the curve start
+        assert lx + max(tw(name, 13, weight=600), tw(sub, 11, mono=True) if y != L3 else 0) < 562, name
+        assert lx + tw(sub, 11, mono=True) < gx, sub
 
-    # object captions
-    ly = by + bh + 30
-    d.text(bx_label, ly, "Cloud browser", 13, ink, 600, anchor="middle")
-    d.text(bx_label, ly + 17, "/browsers · /runs", 11, ink3, mono=True, anchor="middle")
-    d.text(gx, ly + 4, "Website", 13, ink, 600, anchor="middle")
-    d.text(gx, ly + 21, "sees the exit IP", 11, ink3, mono=True, anchor="middle")
-
-    ny = ly + 60
-    d.add(f'<line x1="34" y1="{ny}" x2="{W - 34}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k, (n, h_, c_, acc) in enumerate(NOTES):
-        note(d, 34 if k % 2 == 0 else W / 2 + 8, ny + 30 + (k // 2) * 44, n, h_, c_, acc, width=320)
-    assert ny + 30 + 44 + 18 + 24 <= H, (ny, H)
+    # website caption (the header already names the cloud browser)
+    d.text(gx, gy + R + 28, "Website", 13, ink, 600, anchor="middle")
+    assert max(b[3] for b in d.boxes) + 24 <= H, (max(b[3] for b in d.boxes), H)
     d.save(f"browser-proxy-{theme}")
 
 
@@ -506,17 +479,15 @@ def build(theme):
 def build_mobile(theme):
     """Vertical metro map: browser on top, three lanes as rows, one bus per lane down to the website."""
     t = THEMES[theme]
-    W, H = 360, 852
+    W, H = 360, 640
     d = Doc(W, H, t)
     d.paper(FIG, TAG_M, m=16)
     defs(d)
     ink, ink2, ink3, org = t["ink"], t["ink2"], t["ink3"], t["orange"]
 
-    # cloud browser + caption to its right
+    # cloud browser (named by the header)
     bx, by, bw, bh = 24, 64, 150, 100
     windows(d, bx, by, bw, bh)
-    d.text(204, 108, "Cloud browser", 13, ink, 600)
-    d.text(204, 125, "/browsers · /runs", 11, ink3, mono=True)
 
     # trunk: port on the window's bottom edge -> switch -> three parallel tracks (lane 1 innermost)
     PX, SY = 41, by + bh + 20
@@ -524,8 +495,8 @@ def build_mobile(theme):
     R1, R2, R3 = 268, 366, 452
     rows = {1: R1, 2: R2, 3: R3}
     cr = 8
-    obj_cx, half = 128, 50 * C
-    bus = {3: 306, 2: 314, 1: 322}
+    obj_cx, half = 112, 50 * C  # badges gone: short branch, room for the lane-3 subline
+    bus = {3: 318, 2: 326, 1: 334}
     gx, gy, R = 150, 540, 42
     hit = {3: gy - 24, 2: gy, 1: gy + 24}
 
@@ -579,30 +550,20 @@ def build_mobile(theme):
     rx, ry = nb["roof"]
     country_tag(d, rx, ry, rx + 26, ry - 14)
 
-    # badges on the short branch before each object
-    bxb = (TX[1] + cr + obj_cx - half - 6) / 2 + 1
-    for n in (1, 2, 3):
-        d.badge(bxb, rows[n], n, accent=n == 1)
+    # "default" rides the orange lane-1 track (the branch is too short now)
+    d.text(TX[1] + 10, SY + 30, "default", 11.5, t["otext"], 600)
 
     # lane labels
-    lx = 186
+    lx = 166
     for (n, (name, sub, acc)) in zip((1, 2, 3), LANES):
         y = rows[n]
         d.text(lx, y - 10, name, 13, ink, 600)
         d.text(lx, y + 19, sub, 11, t["otext"] if acc else ink3, mono=True)
         assert lx + max(tw(name, 13, weight=600), tw(sub, 11, mono=True)) < bus[3] - 4, name
-    d.badge(lx + tw("Your proxy", 13, weight=600) + 14, R2 - 14.5, 4)
 
-    # website caption
     cy = gy + R + 28
     d.text(gx, cy, "Website", 13, ink, 600, anchor="middle")
-    d.text(gx, cy + 17, "sees the exit IP", 11, ink3, mono=True, anchor="middle")
-
-    ny = cy + 44
-    d.add(f'<line x1="24" y1="{ny}" x2="{W - 24}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k, (n, h_, c_, acc) in enumerate(NOTES):
-        note(d, 24, ny + 30 + k * 42, n, h_, c_, acc, width=312)
-    assert ny + 30 + 3 * 42 + 18 + 24 <= H, (ny + 30 + 3 * 42 + 18 + 24, H)
+    assert cy + 24 <= H, (cy, H)
     d.save(f"browser-proxy-{theme}-mobile", margin=16)
 
 

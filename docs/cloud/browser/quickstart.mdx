@@ -10,11 +10,11 @@ Every browser includes stealth, proxies, live preview, and recording. Its
 
 <picture className="block dark:hidden">
   <source media="(max-width: 600px)" srcSet="/cloud/images/browser-cdp-light-mobile.svg" />
-  <img src="/cloud/images/browser-cdp-light.svg" alt='Fig 1.0, Cloud browser over CDP. Your code (main.py: b = client.browsers.create(), connect_over_cdp(b.cdp_url), page.goto, client.browsers.stop(b.id)) calls (1) POST /api/v4/browsers on the Browser Use Cloud API and gets back 201 { id, cdpUrl, liveUrl }. The API provisions a live cloud browser (stealth, proxy, live view). (2) Your code connects to it over a CDP WebSocket (Page.navigate out, Page.loadEventFired back), shown in orange. (3) The browser reaches any site on the web through a proxy. (4) Stop it with PATCH /browsers/{id} {"action":"stop"}. Note: closing the CDP connection leaves the browser running, so stop it with step 4.' noZoom />
+  <img src="/cloud/images/browser-cdp-light.svg" alt="Fig 1.0: your code creates a cloud browser through the Browser Use Cloud API with client.browsers.create(). It then connects to the browser over CDP with connect_over_cdp(b.cdp_url) to browse the web, and stops it through the same API with client.browsers.stop(b.id)." noZoom />
 </picture>
 <picture className="hidden dark:block">
   <source media="(max-width: 600px)" srcSet="/cloud/images/browser-cdp-dark-mobile.svg" />
-  <img src="/cloud/images/browser-cdp-dark.svg" alt='Fig 1.0, Cloud browser over CDP. Your code (main.py: b = client.browsers.create(), connect_over_cdp(b.cdp_url), page.goto, client.browsers.stop(b.id)) calls (1) POST /api/v4/browsers on the Browser Use Cloud API and gets back 201 { id, cdpUrl, liveUrl }. The API provisions a live cloud browser (stealth, proxy, live view). (2) Your code connects to it over a CDP WebSocket (Page.navigate out, Page.loadEventFired back), shown in orange. (3) The browser reaches any site on the web through a proxy. (4) Stop it with PATCH /browsers/{id} {"action":"stop"}. Note: closing the CDP connection leaves the browser running, so stop it with step 4.' noZoom />
+  <img src="/cloud/images/browser-cdp-dark.svg" alt="Fig 1.0: your code creates a cloud browser through the Browser Use Cloud API with client.browsers.create(). It then connects to the browser over CDP with connect_over_cdp(b.cdp_url) to browse the web, and stops it through the same API with client.browsers.stop(b.id)." noZoom />
 </picture>
 
 Get an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) and

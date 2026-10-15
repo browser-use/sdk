@@ -2,7 +2,7 @@
 
 Self-contained (primitives copied from core.py so sibling
 generators cannot clobber a shared module). Run: python3 -I scripts/diagrams/v4-scripts.py [--nofont]
-Writes docs/cloud/images/v4-scripts-{light,dark}.svg (--nofont: ./fb-*.svg).
+Writes docs/cloud/images/v4-scripts-{light,dark}[-mobile].svg (--nofont: ./fb-*.svg).
 """
 import math, pathlib, re, sys
 
@@ -31,12 +31,9 @@ THEMES = {
 }
 
 TITLE = "Teach a task once, rerun the saved script later"
-DESC = ("1: the first run opens news.ycombinator.com in a new browser, then writes and tests "
-        "scripts/extract_top_stories.py and scripts/README.md in a workspace, with proof/run-1.json and proof/run-2.json. "
-        "2: a later run passes workspace_id: a new conversation and a new browser with the same saved files. "
-        "3: every run executes the script, which sends a fresh request to the live page and prints JSON with "
-        "fetched_at, source_sha256 and five stories. fetched_at changes every run; source_sha256 changes only when the page does. "
-        "4: if the script fails or the output is malformed, the run inspects the live page and repairs the saved script.")
+DESC = ("A first run explores the site in a browser, then writes and tests extract_top_stories.py in a workspace. "
+        "Later runs pass workspace_id to reuse that file; every later run sends a fresh request to the live site, "
+        "and repairs the script in the workspace if it broke.")
 
 
 def tw(s, size, mono=False, weight=400):
@@ -156,15 +153,6 @@ class Doc:
         print(f"{p} {kb:.1f} KB")
 
 
-def note(d, x, y, n, head, code, accent=False, width=210):
-    t = d.t
-    d.badge(x + 8.5, y - 4, n, accent)
-    assert tw(head, 12.5, weight=500) <= width - 26, head
-    assert tw(code, 11, mono=True) <= width - 26, code
-    d.text(x + 26, y, head, 12.5, t["ink"], 500)
-    d.text(x + 26, y + 18, code, 11, t["otext"] if accent else t["ink2"], mono=True)
-
-
 # ---------------------------------------------------------------- objects
 
 def slab(d, o, sx, sy, sz, under=0, cls=""):
@@ -255,25 +243,77 @@ def cable(d, a, b):
 
 # ---------------------------------------------------------------- figure
 
-RUNS = [  # later runs: label, fetched_at, source_sha256 (same page -> same hash)
-    ("run 2", "09:00:02Z", "9f2c…41e0"),
-    ("run 3", "10:00:01Z", "9f2c…41e0"),
-    ("run 4", "11:00:03Z", "3b71…c08a"),
-]
-LOOP = 7.5  # s, one phase per later run
+LOOP = 7.5  # s, one phase per later-run plate
+FILE = "extract_top_stories.py"
 
 
-def build(theme, H=600):
-    t = THEMES[theme]
-    W = 720
-    d = Doc(W, H, t)
+def workspace(d, X, T, k=1.0):
+    """Workspace slab centred on x = X with its top vertex at y = T; four file tiles, the .py one lit."""
+    t = d.t
+    org, hair, ink3 = t["orange"], t["hair"], t["ink3"]
+    sx, sy, sz = 108 * k, 76 * k, 10
+    o = (X - (sx - sy) * C / 2, T + sz)
+    slab(d, o, sx, sy, sz, under=1)
+    g = [f'<g transform="{m_top(o, sz)} scale({k})">']
+    for u, v, hot in ((10, 9, True), (62, 9, False), (10, 43, False), (62, 43, False)):
+        tw_, th_ = 46, 28
+        fill = f' fill="{t["osoft"]}"' if hot else ""
+        g.append(f'<path d="M{u} {v} h{tw_ - 8} l8 8 v{th_ - 8} h{-tw_} z" stroke="{org if hot else hair}" stroke-width="{1.1 if hot else .8}"{fill} {NS} {RJ}/>')
+        g.append(f'<path d="M{u + tw_ - 8} {v} v8 h8" stroke="{org if hot else hair}" stroke-width=".8" {NS} {RJ}/>')
+        for j in range(2):
+            g.append(f'<line x1="{u + 6}" y1="{v + 12 + j * 6}" x2="{u + 6 + (24 if j else 32)}" y2="{v + 12 + j * 6}" '
+                     f'stroke="{org if hot else hair}" stroke-opacity="{.7 if hot else 1}" stroke-width=".8" {NS}/>')
+    d.add("".join(g) + "</g>")
+    for j in range(3):
+        px, py = P(sx, (14 + j * 9) * k, sz / 2, o)
+        d.add(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="1.3" fill="{ink3}"/>')
+    return dict(left=P(0, sy, sz / 2, o), right=P(sx, 0, sz / 2, o), top=T,
+                mid=(P(sx, sy, sz, o)[1] + T) / 2, bottom=P(sx, sy, -11, o)[1],
+                tile=P((10 + 23) * k, (9 + 14) * k, sz, o))
+
+
+def plates(d, X, T, k=1.0):
+    """Later runs: three stacked plates centred on x = X, top vertex at y = T; the orange tint steps through them."""
+    t = d.t
+    org, hair, ink3 = t["orange"], t["hair"], t["ink3"]
+    psx, psy, psz, pgap = 92 * k, 62 * k, 5, 15 * k
+    po = (X - (psx - psy) * C / 2, T + psz + 2 * pgap)
+    for i in range(3):
+        oz = (po[0], po[1] - i * pgap)
+        f = slab(d, oz, psx, psy, psz)
+        ov = "".join(f'<polygon points="{pts(face)}" />' for face in (f["right"], f["left"], f["top"]))
+        on = i == 0
+        d.add(f'<g class="pl{i}" fill="{t["osoft"]}" stroke="{org}" stroke-width="1.1" {RJ} '
+              f'fill-opacity="{1 if on else 0}" stroke-opacity="{1 if on else 0}">{ov}</g>')
+        g = [f'<g transform="{m_top(oz, psz)} scale({k})">']
+        g.append(f'<path d="M14 14 l6 5 l-6 5" stroke="{ink3}" stroke-width=".9" {NS} {RJ}/>')
+        g.append(f'<line x1="24" y1="24" x2="40" y2="24" stroke="{ink3}" stroke-width=".9" {NS}/>')
+        for j in range(3):
+            g.append(f'<line x1="14" y1="{34 + j * 7}" x2="{14 + (62, 48, 56)[j]}" y2="{34 + j * 7}" stroke="{hair}" stroke-width=".8" {NS}/>')
+        d.add("".join(g) + "</g>")
+    n = 3
+    for i in range(n):
+        a, b = 100 * i / n, 100 * (i + 1) / n
+        if i == 0:
+            kf = f"0%,{b - 1.5:.1f}%{{fill-opacity:1;stroke-opacity:1}}{b:.1f}%,100%{{fill-opacity:0;stroke-opacity:0}}"
+        elif i == n - 1:
+            kf = (f"0%,{a:.1f}%{{fill-opacity:0;stroke-opacity:0}}{a + 1.5:.1f}%,98.5%{{fill-opacity:1;stroke-opacity:1}}"
+                  f"100%{{fill-opacity:0;stroke-opacity:0}}")
+        else:
+            kf = (f"0%,{a:.1f}%{{fill-opacity:0;stroke-opacity:0}}{a + 1.5:.1f}%,{b - 1.5:.1f}%{{fill-opacity:1;stroke-opacity:1}}"
+                  f"{b:.1f}%,100%{{fill-opacity:0;stroke-opacity:0}}")
+        d.css.append(f"@keyframes pl{i}{{{kf}}}"
+                     f"@media (prefers-reduced-motion:no-preference){{.pl{i}{{animation:pl{i} {LOOP}s linear infinite}}}}")
+    return dict(left=P(0, psy, psz / 2, po), mid_right=P(psx, 0, psz / 2, (po[0], po[1] - pgap)),
+                bottom=P(psx, psy, 0, po)[1])
+
+
+def setup(d, W, H):
+    t = d.t
     d.paper("FIG 5.0", "V4 AGENT / RERUNNABLE SCRIPT")
-    ink, ink2, ink3, hair, org, ot = t["ink"], t["ink2"], t["ink3"], t["hair"], t["orange"], t["otext"]
     d.defs.append(
         f'<marker id="ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-        f'<path d="M1 1.5 L9 5 L1 8.5" stroke="{ink2}" stroke-width="1.3" fill="none" {RJ}/></marker>'
-        f'<marker id="ao" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
-        f'<path d="M1 1.5 L9 5 L1 8.5" stroke="{org}" stroke-width="1.3" fill="none" {RJ}/></marker>'
+        f'<path d="M1 1.5 L9 5 L1 8.5" stroke="{t["ink2"]}" stroke-width="1.3" fill="none" {RJ}/></marker>'
         f'<filter id="glow" filterUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><feGaussianBlur stdDeviation="4"/></filter>'
     )
     d.css.append(
@@ -283,209 +323,120 @@ def build(theme, H=600):
         ".pkd{animation:fd 1.2s linear infinite}.cur{animation:cur 6s ease-in-out infinite}}"
     )
 
-    XL, XM = 122, 352            # left / middle column centres
-    CX0, CX1 = 494, 686          # right column cards
-    YA, YB = 112, 312            # row centres
 
-    # ---- row A, left: first run (three browser windows)
+def key_and_repair(d, xk, xr, y0, y1):
+    """Orange workspace_id key path down at xk, dashed repair arrow back up at xr."""
+    t = d.t
+    org = t["orange"]
+    d.add(f'<rect x="{xk - 3}" y="{y0 + 4:.1f}" width="6" height="{y1 - y0 - 8:.1f}" rx="3" fill="{org}" fill-opacity="{t["glow"]}" filter="url(#glow)"/>')
+    d.add(f'<path d="M{xk} {y0:.1f} V{y1 - 2:.1f}" stroke="{org}" stroke-width="3" stroke-linecap="round"/>')
+    d.add(f'<path d="M{xk - 5} {y1 - 8:.1f} l5 6 l5 -6" stroke="{org}" stroke-width="1.6" {RJ}/>')
+    d.add(f'<path class="pkd" d="M{xk} {y0 + 4:.1f} V{y1 - 10:.1f}" stroke="{t["paper"]}" stroke-width="1.6" stroke-dasharray="3 13" stroke-linecap="round"/>')
+    d.add(f'<path d="M{xr} {y1 - 4:.1f} V{y0 + 4:.1f}" stroke="{t["ink2"]}" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#ah)"/>')
+
+
+def windows_at(d, X, T):
+    """First-run windows centred on x = X with their top at y = T. Returns (right x, bottom y)."""
     WW, WH, gap = 84, 66, 12
-    span_w = (WW + 2 * gap) * C
-    ob = (XL - span_w / 2, YA + (WH + 2 * gap * S - WW * S) / 2 + 4)
+    ob = (X - (WW + 2 * gap) * C / 2, T + gap + WH)
     run1_windows(d, ob, WW, WH, gap)
-    r1_right = P(WW, -2 * gap, 0, ob)[0]
-    r1_bottom = P(WW, 0, 0, ob)[1]
-    r1_top = P(0, -2 * gap, WH, ob)[1]
+    return P(WW, -2 * gap, 0, ob)[0], P(WW, 0, 0, ob)[1]
 
-    # ---- row A, middle: workspace slab with four file tiles
-    sx, sy, sz = 108, 76, 10
-    o = (XM - (sx - sy) * C / 2, YA - ((sx + sy) * S - sz) / 2 - 6)
-    slab(d, o, sx, sy, sz, under=1)
-    tiles = [("py", 10, 9, True), ("md", 62, 9, False), ("json", 10, 43, False), ("json", 62, 43, False)]
-    g = [f'<g transform="{m_top(o, sz)}">']
-    for name, u, v, hot in tiles:
-        tw_, th_ = 46, 28
-        fill = f' fill="{t["osoft"]}"' if hot else ""
-        g.append(f'<path d="M{u} {v} h{tw_ - 8} l8 8 v{th_ - 8} h{-tw_} z" stroke="{org if hot else hair}" stroke-width="{1.1 if hot else .8}"{fill} {NS} {RJ}/>')
-        g.append(f'<path d="M{u + tw_ - 8} {v} v8 h8" stroke="{org if hot else hair}" stroke-width=".8" {NS} {RJ}/>')
-        for k in range(2):
-            g.append(f'<line x1="{u + 6}" y1="{v + 12 + k * 6}" x2="{u + 6 + (24 if k else 32)}" y2="{v + 12 + k * 6}" '
-                     f'stroke="{org if hot else hair}" stroke-opacity="{.7 if hot else 1}" stroke-width=".8" {NS}/>')
-    d.add("".join(g) + "</g>")
-    # status dots on the right face: persistent storage
-    for k in range(3):
-        px, py = P(sx, 14 + k * 9, sz / 2, o)
-        d.add(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="1.3" fill="{ink3}"/>')
-    ws_left = P(0, sy, sz / 2, o)
-    ws_right = P(sx, 0, sz / 2, o)
-    ws_bottom_y = P(sx, sy, -11, o)[1]
-    script_tile = P(10 + 23, 9 + 14, sz, o)   # centre of the .py tile
 
-    # ---- row A, right: the workspace card (readable tree) = the workspace's label
-    cy0, cy1 = 46, 46 + 54 + 5 * 16 + 14
-    d.add(f'<rect x="{CX0}" y="{cy0}" width="{CX1 - CX0}" height="{cy1 - cy0}" rx="8" fill="{t["fill"]}" stroke="{ink2}" stroke-width="0.9"/>')
-    d.text(CX0 + 14, cy0 + 22, "Workspace", 13, ink, 600)
-    d.text(CX1 - 14, cy0 + 22, "live-hn-data", 11, ink3, mono=True, anchor="end")
-    d.add(f'<line x1="{CX0}" y1="{cy0 + 34}" x2="{CX1}" y2="{cy0 + 34}" stroke="{t["faint"]}" stroke-width="1"/>')
-    tree = [("scripts/", ink2, 0), ("extract_top_stories.py", ot, 1), ("README.md", ink, 1),
-            ("proof/", ink2, 0), ("run-1.json", ink, 1), ("run-2.json", ink, 1)]
-    ty0 = cy0 + 54
-    for k, (s_, col, ind) in enumerate(tree):
-        yy = ty0 + k * 16
-        tx = CX0 + 14 + ind * 16
-        d.text(tx, yy, s_, 11, col, 600 if col == ot else 400, mono=True)
-        assert tx + tw(s_, 11, mono=True) <= CX1 - 8, s_
-        if ind:  # tree branch: vertical from the folder, tick into the file
-            d.add(f'<path d="M{CX0 + 18} {yy - 16 + 3} V{yy - 4}h8" stroke="{hair}" stroke-width="1"/>')
-    script_row = (CX0 + 14 + 16, ty0 + 16 - 4)
-    # leader: .py tile -> its row in the card
-    d.add(f'<path d="M{script_tile[0] + 10:.1f} {script_tile[1]:.1f} C{script_tile[0] + 60:.1f} {script_tile[1] - 30:.1f} '
-          f'{CX0 - 40} {script_row[1]:.1f} {CX0 - 3} {script_row[1]:.1f}" stroke="{hair}" stroke-width="1" stroke-dasharray="1 3" stroke-linecap="round"/>')
-    d.add(f'<circle cx="{script_tile[0] + 10:.1f}" cy="{script_tile[1]:.1f}" r="2" fill="{org}"/>')
+def build(theme, H=400):
+    """Desktop 720: first run -> workspace on top, later runs <-> live site below."""
+    t = THEMES[theme]
+    W = 720
+    d = Doc(W, H, t)
+    setup(d, W, H)
+    ink, ink2, ot, hair = t["ink"], t["ink2"], t["otext"], t["hair"]
+    XL, XM, LX = 150, 380, 486
 
-    # ---- (1) write + test: first run -> workspace
-    x1a, x1b = r1_right + 8, ws_left[0] - 8
-    y1 = ws_left[1]
+    r1_right, r1_bottom = windows_at(d, XL, 52)
+    ws = workspace(d, XM, 62)
+    x1a, x1b, y1 = r1_right + 10, ws["left"][0] - 10, ws["left"][1]
     d.add(f'<path d="M{x1a:.1f} {y1:.1f} H{x1b:.1f}" stroke="{ink2}" stroke-width="1" marker-end="url(#ah)"/>')
-    m1 = (x1a + x1b) / 2
-    d.badge(m1, y1, 1)
-    d.text(m1, y1 - 15, "write + test", 11, ink, mono=True, anchor="middle")
+    d.text((x1a + x1b) / 2, y1 - 12, "write + test", 11, ink, mono=True, anchor="middle")
+    d.text(XL, r1_bottom + 26, "First run", 13, ink, 600, anchor="middle")
+    wy = ws["mid"] - 4
+    d.text(LX, wy, "Workspace", 13, ink, 600)
+    d.text(LX, wy + 18, FILE, 11, ot, mono=True)
 
-    # ---- row B, middle: later runs as a stack of plates
-    psx, psy, psz, pgap = 92, 62, 5, 15
-    po = (XM - (psx - psy) * C / 2, YB - ((psx + psy) * S) / 2 + 6)
-    plate_faces = []
-    for i in range(3):
-        oz = (po[0], po[1] - i * pgap)
-        f = slab(d, oz, psx, psy, psz)
-        # orange tint overlay on the three faces, lit while this run is the current one
-        ov = "".join(f'<polygon points="{pts(face)}" />' for face in (f["right"], f["left"], f["top"]))
-        on = i == 0
-        d.add(f'<g class="pl{i}" fill="{t["osoft"]}" stroke="{org}" stroke-width="1.1" {RJ} '
-              f'fill-opacity="{1 if on else 0}" stroke-opacity="{1 if on else 0}">{ov}</g>')
-        # a tiny terminal glyph on each plate's top face
-        g = [f'<g transform="{m_top(oz, psz)}">']
-        g.append(f'<path d="M14 14 l6 5 l-6 5" stroke="{ink3}" stroke-width=".9" {NS} {RJ}/>')
-        g.append(f'<line x1="24" y1="24" x2="40" y2="24" stroke="{ink3}" stroke-width=".9" {NS}/>')
-        for k in range(3):
-            g.append(f'<line x1="14" y1="{34 + k * 7}" x2="{14 + (62, 48, 56)[k]}" y2="{34 + k * 7}" stroke="{hair}" stroke-width=".8" {NS}/>')
-        d.add("".join(g) + "</g>")
-        plate_faces.append(oz)
-    top_o = (po[0], po[1] - 2 * pgap)
-    pl_apex = P(0, 0, psz, top_o)
-    pl_left = P(0, psy, psz / 2, po)
-    pl_right_x = P(psx, 0, 0, po)[0]
-    pl_bottom = P(psx, psy, 0, po)[1]
-    # run labels at each plate's right corner
-    for i, (lab, _, _) in enumerate(RUNS):
-        rx, ry = P(psx, 0, psz / 2, plate_faces[i])
-        d.add(f'<path d="M{rx + 4:.1f} {ry:.1f} h10" stroke="{hair}" stroke-width="1"/>')
-        d.text(rx + 18, ry + 4, lab, 11, ink2, 600, mono=True, cls=f"rl{i}")
-
-    # ---- (2) workspace_id: workspace -> later runs (key path) and (4) repair back up
-    xk = XM - 14
-    yk0, yk1 = ws_bottom_y + 6, pl_apex[1] - 2
-    d.add(f'<rect x="{xk - 3}" y="{yk0 + 4:.1f}" width="6" height="{yk1 - yk0 - 8:.1f}" rx="3" fill="{org}" fill-opacity="{t["glow"]}" filter="url(#glow)"/>')
-    d.add(f'<path d="M{xk} {yk0:.1f} V{yk1 - 2:.1f}" stroke="{org}" stroke-width="3" stroke-linecap="round"/>')
-    d.add(f'<path d="M{xk - 5} {yk1 - 8:.1f} l5 6 l5 -6" stroke="{org}" stroke-width="1.6" {RJ}/>')
-    d.add(f'<path class="pkd" d="M{xk} {yk0 + 4:.1f} V{yk1 - 10:.1f}" stroke="{t["paper"]}" stroke-width="1.6" stroke-dasharray="3 13" stroke-linecap="round"/>')
+    pt = ws["bottom"] + 68
+    pl = plates(d, XM, pt)
+    xk, xr = XM - 14, XM + 22
+    yk0, yk1 = ws["bottom"] + 6, pt - 2
+    key_and_repair(d, xk, xr, yk0, yk1)
     mk = (yk0 + yk1) / 2
-    d.badge(xk, mk, 2, accent=True)
-    d.text(xk - 16, mk + 4, "workspace_id", 11, ot, 600, mono=True, anchor="end")
-    xr = XM + 22
-    d.add(f'<path d="M{xr} {yk1 - 4:.1f} V{yk0 + 4:.1f}" stroke="{ink2}" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#ah)"/>')
-    d.badge(xr, mk, 4)
-    d.text(xr + 16, mk + 4, "repair if broken", 11, ink2, mono=True)
+    d.text(xk - 12, mk + 4, "workspace_id", 11, ot, 600, mono=True, anchor="end")
+    d.text(xr + 10, mk + 4, "repair", 11, ink2, mono=True)
+    mx, my = pl["mid_right"]
+    d.add(f'<path d="M{mx + 6:.1f} {my:.1f} H{LX - 10}" stroke="{hair}" stroke-width="1"/>')
+    d.text(LX, my + 4.5, "Later runs", 13, ink, 600)
 
-    # ---- row B, left: the live site
-    gx, gy, R = XL, YB + 2, 40
+    gx, R = XL, 40
+    gy = pl["left"][1]
     globe(d, gx, gy, R)
-
-    # ---- (3) fresh request every run: later runs <-> live site (key path cable)
-    ca, cb = (gx + R + 6, pl_left[1]), (pl_left[0] - 6, pl_left[1])
+    ca, cb = (gx + R + 8, gy), (pl["left"][0] - 8, gy)
     cable(d, ca, cb)
-    m3 = (ca[0] + cb[0]) / 2
-    d.badge(m3, pl_left[1], 3, accent=True)
-    d.text(m3, pl_left[1] - 16, "fresh GET", 11.5, ot, 600, anchor="middle")
-    d.text(m3, pl_left[1] + 25, "every run", 11, ink3, mono=True, anchor="middle")
+    d.text((ca[0] + cb[0]) / 2, gy - 14, "fresh request", 11.5, ot, 600, anchor="middle")
+    d.text(gx, gy + R + 24, "Live site", 13, ink, 600, anchor="middle")
 
-    # ---- row B, right: what every run prints (values cycle with the lit plate)
-    jy0, jy1 = YB - 54, YB + 45
-    d.add(f'<rect x="{CX0}" y="{jy0}" width="{CX1 - CX0}" height="{jy1 - jy0}" rx="8" fill="{t["fill"]}" stroke="{ink2}" stroke-width="0.9"/>')
-    d.text(CX0 + 14, jy0 + 22, "Prints JSON", 13, ink, 600)
-    d.text(CX1 - 14, jy0 + 22, "stdout", 11, ink3, mono=True, anchor="end")
-    d.add(f'<line x1="{CX0}" y1="{jy0 + 34}" x2="{CX1}" y2="{jy0 + 34}" stroke="{t["faint"]}" stroke-width="1"/>')
-    kx, vx = CX0 + 14, CX0 + 14 + tw("source_sha256 ", 11, mono=True)
-    rows = [("fetched_at", 1), ("source_sha256", 2), ("stories", None)]
-    ry0 = jy0 + 54
-    for k, (key, idx) in enumerate(rows):
-        yy = ry0 + k * 17
-        d.text(kx, yy, key, 11, ink3, mono=True)
-        if idx is None:
-            val = "news.ycomb…/" if key == "source_url" else "[ 5 ]"
-            d.text(vx, yy, val, 11, ink, mono=True)
-        else:
-            for i, run in enumerate(RUNS):
-                on = i == 0
-                d.text(vx, yy, run[idx], 11, ot if idx == 1 else ink, 600 if idx == 1 else 400, mono=True,
-                       cls=f"v{i}", extra=f' fill-opacity="{1 if on else 0}"', check=(i == 0))
-                assert vx + tw(run[idx], 11, mono=True) <= CX1 - 8
-    # leader: top plate -> card
-    lx0 = P(psx, 0, psz / 2, plate_faces[2])
-    lxs = lx0[0] + 18 + tw("run 4", 11, mono=True) + 8
-    d.add(f'<path d="M{lxs:.1f} {lx0[1]:.1f} H{CX0 - 4}" stroke="{ink2}" stroke-width="1" marker-end="url(#ah)"/>')
-
-    # cycle: one phase per later run; tint, run label and printed values switch together
-    n = len(RUNS)
-    for i in range(n):
-        a, b = 100 * i / n, 100 * (i + 1) / n
-        if i == 0:
-            kf = f"0%,{b - 1.5:.1f}%{{fill-opacity:1;stroke-opacity:1}}{b:.1f}%,100%{{fill-opacity:0;stroke-opacity:0}}"
-            kv = f"0%,{b - 1.5:.1f}%{{fill-opacity:1}}{b:.1f}%,100%{{fill-opacity:0}}"
-        else:
-            kf = (f"0%,{a:.1f}%{{fill-opacity:0;stroke-opacity:0}}{a + 1.5:.1f}%,{b - 1.5:.1f}%{{fill-opacity:1;stroke-opacity:1}}"
-                  f"{min(b, 100):.1f}%,100%{{fill-opacity:{1 if i == n - 1 else 0};stroke-opacity:{1 if i == n - 1 else 0}}}")
-            kv = (f"0%,{a:.1f}%{{fill-opacity:0}}{a + 1.5:.1f}%,{b - 1.5:.1f}%{{fill-opacity:1}}"
-                  f"{min(b, 100):.1f}%,100%{{fill-opacity:{1 if i == n - 1 else 0}}}")
-        if i == n - 1:  # last phase fades out right at the loop end so phase 0 picks up cleanly
-            kf = (f"0%,{a:.1f}%{{fill-opacity:0;stroke-opacity:0}}{a + 1.5:.1f}%,98.5%{{fill-opacity:1;stroke-opacity:1}}"
-                  f"100%{{fill-opacity:0;stroke-opacity:0}}")
-            kv = f"0%,{a:.1f}%{{fill-opacity:0}}{a + 1.5:.1f}%,98.5%{{fill-opacity:1}}100%{{fill-opacity:0}}"
-        d.css.append(f"@keyframes pl{i}{{{kf}}}@keyframes v{i}{{{kv}}}"
-                     f"@keyframes rl{i}{{0%,{a:.1f}%{{fill:{ink2}}}{a + 1.5:.1f}%,{b - 1.5:.1f}%{{fill:{ot}}}{b:.1f}%,100%{{fill:{ink2}}}}}")
-        d.css.append(f"@media (prefers-reduced-motion:no-preference){{.pl{i}{{animation:pl{i} {LOOP}s linear infinite}}"
-                     f".v{i}{{animation:v{i} {LOOP}s linear infinite}}.rl{i}{{animation:rl{i} {LOOP}s linear infinite}}}}")
-    d.css.append(f".rl0{{fill:{ot}}}")
-
-    # ---- object labels
-    ly = max(r1_bottom, 0) + 28
-    d.text(XL, ly, "First run", 13, ink, 600, anchor="middle")
-    d.text(XL, ly + 17, "explores · writes · tests", 11, ink3, mono=True, anchor="middle")
-    lb = round(max(gy + R, pl_bottom, jy1) + 26)
-    d.text(XL, lb, "Live site", 13, ink, 600, anchor="middle")
-    d.text(XL, lb + 17, "news.ycombinator.com", 11, ink3, mono=True, anchor="middle")
-    d.text(XM, lb, "Later runs", 13, ink, 600, anchor="middle")
-    d.text(XM, lb + 17, "new chat · new browser", 11, ink3, mono=True, anchor="middle")
-    d.text((CX0 + CX1) / 2, lb, "Live, not cached", 13, ink, 600, anchor="middle")
-    d.text((CX0 + CX1) / 2, lb + 17, "same page → same hash", 11, ink3, mono=True, anchor="middle")
-
-    # ---- notes
-    ny = lb + 42
-    d.add(f'<line x1="34" y1="{ny}" x2="{W - 34}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    notes = [
-        (1, "Teach it once", "runs.create(task, workspace_id=…)", False),
-        (2, "Rerun with the same files", "workspace_id · no session_id", True),
-        (3, "Live data on every run", "fetched_at · source_sha256", False),
-        (4, "Self-heal when the site changes", "inspect live page → fix script", False),
-    ]
-    for k, (n_, h_, c_, acc) in enumerate(notes):
-        note(d, 34 if k % 2 == 0 else W / 2 + 8, ny + 30 + (k // 2) * 44, n_, h_, c_, acc, width=320)
-    need = ny + 30 + 44 + 18 + 22
-    if H != need:  # height follows the layout: second pass at the exact size
+    need = round(max(gy + R + 24, pl["bottom"]) + 30)
+    if H != need:
         return build(theme, need)
-    print("layout:", dict(r1_top=round(r1_top), r1_bottom=round(r1_bottom), ws_bottom=round(ws_bottom_y),
-                          pl_apex=round(pl_apex[1]), lb=lb, ny=ny, H_needed=ny + 30 + 44 + 18 + 22))
     d.save(f"v4-scripts-{theme}")
+
+
+def build_mobile(theme, H=700):
+    """Mobile 360: one column of objects, each name to its right."""
+    t = THEMES[theme]
+    W = 360
+    d = Doc(W, H, t)
+    setup(d, W, H)
+    ink, ink2, ot, hair = t["ink"], t["ink2"], t["otext"], t["hair"]
+    X, LX = 96, 178
+
+    r1_top = 50
+    _, r1_bottom = windows_at(d, X, r1_top)
+    d.text(LX, (r1_top + r1_bottom) / 2 + 4, "First run", 13, ink, 600)
+
+    ws_top = r1_bottom + 44
+    d.add(f'<path d="M{X} {r1_bottom + 6:.1f} V{ws_top - 6:.1f}" stroke="{ink2}" stroke-width="1" marker-end="url(#ah)"/>')
+    d.text(X + 12, (r1_bottom + ws_top) / 2 + 4, "write + test", 11, ink, mono=True)
+    ws = workspace(d, X, ws_top, k=0.82)
+    wy = ws["mid"] - 4
+    d.text(LX, wy, "Workspace", 13, ink, 600)
+    d.text(LX, wy + 18, FILE, 11, ot, mono=True)
+
+    pt = ws["bottom"] + 64
+    pl = plates(d, X, pt, k=0.85)
+    xk, xr = X - 12, X + 12
+    yk0, yk1 = ws["bottom"] + 6, pt - 2
+    key_and_repair(d, xk, xr, yk0, yk1)
+    mk = (yk0 + yk1) / 2
+    d.text(X + 26, mk - 3, "workspace_id", 11, ot, 600, mono=True)
+    d.text(X + 26, mk + 14, "repair", 11, ink2, mono=True)
+    mx, my = pl["mid_right"]
+    d.add(f'<path d="M{mx + 6:.1f} {my:.1f} H{LX - 10}" stroke="{hair}" stroke-width="1"/>')
+    d.text(LX, my + 4.5, "Later runs", 13, ink, 600)
+
+    R = 36
+    c0 = pl["bottom"] + 8
+    gy = c0 + 52 + R
+    n0 = len(d.body)
+    cable(d, (X, c0), (X + gy - R - 8 - c0, c0))
+    d.body[n0:] = [f'<g transform="rotate(90 {X} {c0:.1f})">' + "".join(d.body[n0:]) + "</g>"]
+    d.text(X + 16, (c0 + gy - R) / 2 + 4, "fresh request", 11.5, ot, 600)
+    globe(d, X, gy, R)
+    d.text(LX, gy + 4.5, "Live site", 13, ink, 600)
+
+    need = round(gy + R + 30)
+    if H != need:
+        return build_mobile(theme, need)
+    d.save(f"v4-scripts-{theme}-mobile")
 
 
 for th in ("light", "dark"):
     build(th)
+    build_mobile(th)

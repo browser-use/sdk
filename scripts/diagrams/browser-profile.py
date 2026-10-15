@@ -1,6 +1,7 @@
 """FIG 1.1 browser-profile, paper-technical style (matches core.py).
 
 Run: python3 -I scripts/diagrams/browser-profile.py   (writes docs/cloud/images/browser-profile-{light,dark}[-mobile].svg)
+Simplified: page text already says cookies/localStorage and one profile per user, so no legend, badges or leaders.
 Facts: profile = cookies + localStorage, saved when the browser stops, loaded by later browsers that pass the
 same profileId (docs/cloud/guides/authentication.mdx, playwright-puppeteer-selenium.mdx; POST /api/v4/profiles
 {name,userId} in openapi/v4.json; S3 prefix browser-profiles/projects/{project}/profiles/{id} in
@@ -29,17 +30,9 @@ THEMES = {
 }
 
 TITLE = "Log in once, then start later browsers already logged in"
-DESC = ("1: create one profile per end user with POST /api/v4/profiles. "
-        "2: Browser 1 starts with that profileId and logs in once. "
-        "3: when Browser 1 stops, its cookies and localStorage are saved to the profile. "
-        "4: Browsers 2 and 3 start with the same profileId and load that state, so they begin logged in.")
-NOTES = [
-    (1, "One profile per end user", "POST /api/v4/profiles {userId}", False),
-    (2, "Start a browser with it, log in", "browserSettings.profileId", False),
-    (3, "Saved when the browser stops", "cookies · localStorage", True),
-    (4, "Later browsers start logged in", "same profileId, any session", False),
-]
-PID = "profileId 8f3a…"
+DESC = ("Browser 1 logs in. When it stops, its state is saved to the profile. "
+        "Browsers 2 and 3 start with the same profileId, load that state and begin logged in.")
+PID = "profileId"
 
 
 # ---------------------------------------------------------------- core (same as paper-technical/core.py)
@@ -158,15 +151,6 @@ class Doc:
         kb = len(svg.encode()) / 1024
         assert kb < 60, (name, kb)
         print(f"{name}.svg {kb:.1f} KB  {self.w}x{self.h}")
-
-
-def note(d, x, y, n, head, code, accent=False, width=210):
-    t = d.t
-    d.badge(x + 8.5, y - 4, n, accent)
-    assert tw(head, 12.5, weight=500) <= width - 26, head
-    assert tw(code, 11, mono=True) <= width - 26, code
-    d.text(x + 26, y, head, 12.5, t["ink"], 500)
-    d.text(x + 26, y + 18, code, 11, t["otext"] if accent else t["ink2"], mono=True)
 
 
 # ---------------------------------------------------------------- figure parts
@@ -322,23 +306,15 @@ def key_path(d, dpath, arrow=True, cls="flow"):
     d.add(f'<path class="{cls}" d="{dpath}" stroke="{t["fill"]}" stroke-width="1.3" stroke-dasharray="2.5 13.5" stroke-linecap="round"/>')
 
 
-def leader(d, x0, y, x1, label, size=11, color=None):
-    t = d.t
-    d.add(f'<circle cx="{x0:.1f}" cy="{y:.1f}" r="1.6" fill="{t["ink2"]}"/>')
-    d.add(f'<line x1="{x0 + 3:.1f}" y1="{y:.1f}" x2="{x1:.1f}" y2="{y:.1f}" stroke="{t["ink3"]}" stroke-width="0.8" stroke-dasharray="1 2.5"/>')
-    d.text(x1 + 5, y + 3.8, label, size, color or t["ink2"], mono=True)
-
-
 # ---------------------------------------------------------------- desktop
+def dot(d, x, y):
+    d.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3.2" fill="{d.t["paper"]}" stroke="{d.t["orange"]}" stroke-width="1.4"/>')
+
+
 def build(theme):
     t = THEMES[theme]
-    W, H = 720, 462
-    d = Doc(W, H, TITLE, DESC, t)
-    d.paper("FIG 1.1", "CLOUD BROWSER / PROFILE")
-    defs(d)
-    ink, ink3, ot = t["ink"], t["ink3"], t["otext"]
-
-    YC = 166
+    W = 720
+    YC = 160
     s, sz = 62, 7
     cx = 290
     o = (cx, YC - 5.5)
@@ -351,133 +327,91 @@ def build(theme):
     FX = 458
     WW2, WH2 = 86, 58
     ob2x = FX + 24
-    gapy = 58
+    gapy = 56
     p2y, p3y = y_load - gapy, y_load + gapy
     ob2 = (ob2x, p2y + WH2 / 2)
     ob3 = (ob2x, p3y + WH2 / 2)
+    H = round(P(WW2, 0, 0, ob3)[1] + 32)
+    d = Doc(W, H, TITLE, DESC, t)
+    d.paper("FIG 1.1", "CLOUD BROWSER / PROFILE")
+    defs(d)
+    ink, ink3, ot = t["ink"], t["ink3"], t["otext"]
 
     st = profile_stack(d, o, s, sz)
-    lx = cx + s * C + 6
-    leader(d, lx, P(s, 0, 47.5, o)[1], lx + 16, "cookies")
-    leader(d, lx, P(s, 0, 25.5, o)[1], lx + 16, "localStorage")
 
     key_path(d, f"M{port1[0] + 6:.1f} {port1[1]:.1f} H{st_left[0] - 9:.1f}")
-    ms = (port1[0] + st_left[0]) / 2
-    d.badge(ms, y_save, 3, accent=True)
-    d.text(ms, y_save - 15, "saved on stop", 11.5, ot, 600, anchor="middle")
+    d.text((port1[0] + st_left[0]) / 2, y_save - 13, "saved on stop", 11.5, ot, 600, anchor="middle")
 
     start = (st_right_base[0] + 6, y_load)
     for py in (p2y, p3y):
         key_path(d, rpath([start, (FX, y_load), (FX, py), (ob2x - 9, py)], 12), cls="load")
-    d.badge(FX, y_load, 4)
-    d.text(FX - 16, y_load + 21, "loads at start", 11.5, ot, 600, anchor="end")
+    d.add(f'<circle cx="{FX}" cy="{y_load:.1f}" r="2.2" fill="{t["orange"]}"/>')
+    d.text(FX - 14, y_load + 20, "loads at start", 11.5, ot, 600, anchor="end")
 
     b1 = window(d, ob1, WW1, WH1, "login")
     b2 = window(d, ob2, WW2, WH2, "account")
     b3 = window(d, ob3, WW2, WH2, "account", ring_cls="ring2")
     for (x, y) in (port1, b2["port_l"], b3["port_l"], (st_left[0], y_save), start):
-        d.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3.2" fill="{t["paper"]}" stroke="{t["orange"]}" stroke-width="1.4"/>')
+        dot(d, x, y)
 
-    ly = max(b1["bottom"], st["bottom"]) + 28
-    b1x = P(WW1 / 2, 0, 0, ob1)[0]
-    d.text(b1x, ly, "Browser 1", 13, ink, 600, anchor="middle")
-    d.badge(b1x + tw("Browser 1", 13, weight=600) / 2 + 16, ly - 4.5, 2)
-    d.text(b1x, ly + 17, "logs in once", 11, ink3, mono=True, anchor="middle")
+    ly = st["bottom"] + 26
+    d.text(P(WW1 / 2, 0, 0, ob1)[0], b1["bottom"] + 28, "Browser 1", 13, ink, 600, anchor="middle")
     d.text(cx, ly, "Profile", 13, ink, 600, anchor="middle")
-    d.badge(cx + tw("Profile", 13, weight=600) / 2 + 16, ly - 4.5, 1)
     d.text(cx, ly + 17, PID, 11, ink3, mono=True, anchor="middle")
     for b, name in ((b2, "Browser 2"), (b3, "Browser 3")):
-        x = b["right"] + 14
-        yy = b["port_l"][1] + 12
-        d.text(x, yy, name, 13, ink, 600)
-        d.text(x, yy + 17, "starts logged in", 11, ink3, mono=True)
-
-    # NOTE fills the free bottom-left corner, beside browser 3
-    fy = ly + 17 + 34
-    d.add(f'<line x1="34" y1="{fy - 16}" x2="{b3["left"] - 30:.1f}" y2="{fy - 16}" stroke="{t["faint"]}" stroke-width="1" stroke-dasharray="2 3"/>')
-    d.text(34, fy, "NOTE", 10, ink3, 600, mono=True, ls="0.08em", track=False)
-    d.text(72, fy, "use the browser's default context;", 11, ink3, mono=True)
-    d.text(72, fy + 16, "newContext() starts without the profile", 11, ink3, mono=True)
-    assert 72 + tw("newContext() starts without the profile", 11, True) < b3["left"] - 20
-
-    ny = max(fy + 16, b3["bottom"]) + 26
-    d.add(f'<line x1="34" y1="{ny}" x2="{W - 34}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k, (n, h_, c_, acc) in enumerate(NOTES):
-        note(d, 34 if k % 2 == 0 else W / 2 + 8, ny + 30 + (k // 2) * 44, n, h_, c_, acc, width=320)
-    end = ny + 30 + 44 + 18
-    print("desktop needs H >=", end + 26)
-    assert end + 26 <= H, (end, H)
+        d.text(b["right"] + 14, b["port_l"][1] + 16, name, 13, ink, 600)
+    assert ly + 17 + 26 <= H, (ly, H)
     d.save(f"browser-profile-{theme}")
 
 
 # ---------------------------------------------------------------- mobile (360, drawn 1:1)
 def build_mobile(theme):
     t = THEMES[theme]
-    W, H = 360, 753
+    W = 360
+    s, sz, lv = 54, 6, (0, 19, 38)
+    cxs = 100
+    WW1, WH1 = 96, 72
+    ob1 = (34, 126)
+    u = (cxs - ob1[0]) / C
+    b1_port = P(u, 0, 0, ob1)
+    o = (cxs, b1_port[1] + 56 + lv[-1] + sz)
+    apex = P(0, 0, lv[-1] + sz, o)
+    front = P(s, s, 0, o)
+    WW2, WH2 = 84, 58
+    y_bus = front[1] + 24
+    xs = (front[0], front[0] + 160)
+    ob_y = y_bus + 28 + WH2 + WW2 / 2 * S
+    obs = [(x - WW2 * C / 2, ob_y - WW2 / 2 * S) for x in xs]
+    win_tops = [P(WW2 / 2, 0, WH2, ob) for ob in obs]
+    ly = ob_y + WW2 / 2 * S + 24  # window bottom + 24
+    H = round(ly + 32)
     d = Doc(W, H, TITLE, DESC, t)
     d.paper("FIG 1.1", "PROFILE")
     defs(d)
     ink, ink3, ot = t["ink"], t["ink3"], t["otext"]
 
-    s, sz, lv = 54, 6, (0, 19, 38)
-    cxs = 100
-    WW1, WH1 = 96, 72
-    ob1 = (34, 132)
-    u = (cxs - ob1[0]) / C
-    b1_port = P(u, 0, 0, ob1)
-    o = (cxs, b1_port[1] + 66 + lv[-1] + sz)
-    apex = P(0, 0, lv[-1] + sz, o)
-    front = P(s, s, 0, o)
-
     st = profile_stack(d, o, s, sz, lv)
-    lx = cxs + s * C + 6
-    leader(d, lx, P(s, 0, lv[2] + 3, o)[1], lx + 14, "cookies")
-    leader(d, lx, P(s, 0, lv[1] + 3, o)[1], lx + 14, "localStorage")
+    px = cxs + s * C + 18
+    py = P(s, 0, lv[1], o)[1]
+    d.text(px, py, "Profile", 12.5, ink, 600)
+    d.text(px, py + 16, PID, 11, ink3, mono=True)
 
-    WW2, WH2 = 84, 58
-    y_bus = front[1] + 26
-    xs = (front[0], front[0] + 160)
-    ob_y = y_bus + 28 + WH2 + WW2 / 2 * S
-    obs = [(x - WW2 * C / 2, ob_y - WW2 / 2 * S) for x in xs]
-    win_tops = [P(WW2 / 2, 0, WH2, ob) for ob in obs]
     key_path(d, f"M{front[0]:.1f} {front[1] + 6:.1f} V{win_tops[0][1] - 9:.1f}", cls="load")
     key_path(d, rpath([(front[0], y_bus), (win_tops[1][0], y_bus), (win_tops[1][0], win_tops[1][1] - 9)], 12), cls="load")
     key_path(d, f"M{cxs:.1f} {b1_port[1] + 6:.1f} V{apex[1] - 9:.1f}")
     b1 = window(d, ob1, WW1, WH1, "login")
-    my = (b1_port[1] + apex[1]) / 2
-    d.badge(cxs, my, 3, accent=True)
-    d.text(cxs + 16, my + 4, "saved on stop", 11.5, ot, 600)
-    mb = (front[0] + win_tops[1][0]) / 2
-    d.badge(mb, y_bus, 4)
-    d.text(mb, y_bus + 24, "loads at start", 11.5, ot, 600, anchor="middle")
+    d.text(cxs + 12, (b1_port[1] + apex[1]) / 2 + 4, "saved on stop", 11.5, ot, 600)
+    d.text((front[0] + win_tops[1][0]) / 2, y_bus + 22, "loads at start", 11.5, ot, 600, anchor="middle")
 
     bs = [window(d, ob, WW2, WH2, "account", ring_cls="" if i == 0 else "ring2") for i, ob in enumerate(obs)]
     for (x, y) in [(cxs, b1_port[1]), front] + win_tops:
-        d.add(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3.2" fill="{t["paper"]}" stroke="{t["orange"]}" stroke-width="1.4"/>')
+        dot(d, x, y)
     d.add(f'<circle cx="{front[0]:.1f}" cy="{y_bus:.1f}" r="2.2" fill="{t["orange"]}"/>')
 
-    bx = b1["right"] + 16
-    by = b1["port_r"][1] - 2
-    d.text(bx, by, "Browser 1", 12.5, ink, 600)
-    d.badge(bx + tw("Browser 1", 12.5, weight=600) + 14, by - 4.5, 2)
-    d.text(bx, by + 16, "logs in once", 11, ink3, mono=True)
-    py = P(s, 0, 0, o)[1] + 20
-    d.text(W - 24, py, "Profile", 12.5, ink, 600, anchor="end")
-    d.badge(W - 24 - tw("Profile", 12.5, weight=600) - 14, py - 4.5, 1)
-    d.text(W - 24, py + 16, PID, 11, ink3, mono=True, anchor="end")
-    ly = bs[0]["bottom"] + 24
+    d.text(b1["right"] + 16, b1["port_r"][1] + 4, "Browser 1", 12.5, ink, 600)
     for b, name in zip(bs, ("Browser 2", "Browser 3")):
-        x = (b["left"] + b["right"]) / 2
-        d.text(x, ly, name, 12.5, ink, 600, anchor="middle")
-        d.text(x, ly + 16, "starts logged in", 11, ink3, mono=True, anchor="middle")
-
-    ny = ly + 16 + 26
-    d.add(f'<line x1="24" y1="{ny}" x2="{W - 24}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k, (n, h_, c_, acc) in enumerate(NOTES):
-        note(d, 24, ny + 30 + k * 42, n, h_, c_, acc, width=W - 48)
-    end = ny + 30 + 3 * 42 + 18
-    print("mobile needs H >=", end + 24)
-    assert end + 24 <= H, (end, H)
+        d.text((b["left"] + b["right"]) / 2, ly, name, 12.5, ink, 600, anchor="middle")
+    assert bs[0]["bottom"] < ly - 14, (bs[0]["bottom"], ly)
     d.save(f"browser-profile-{theme}-mobile")
 
 

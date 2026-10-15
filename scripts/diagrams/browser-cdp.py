@@ -24,28 +24,16 @@ THEMES = {
     ),
 }
 
-TITLE = "Create a cloud browser, then drive it over CDP"
-DESC = ("Step 1: your code calls POST /api/v4/browsers on the Browser Use API and gets back 201 with an id, "
-        "a cdpUrl and a liveUrl. Step 2: Playwright or Puppeteer connects to the cdpUrl over a CDP WebSocket; "
-        "commands such as Page.navigate go to the cloud browser and events such as Page.loadEventFired come back. "
-        "Step 3: the cloud browser, a stealth Chrome with a proxy and a live view, loads the web page. "
-        "Step 4: stop it with PATCH /api/v4/browsers/{id} and action stop. "
-        "Closing the CDP connection leaves the browser running.")
+TITLE = "Create a cloud browser, connect over CDP, stop it"
+DESC = ("Your code calls client.browsers.create() on the API in Browser Use Cloud, which provisions a live cloud browser. "
+        "Your code connects to that browser over CDP with connect_over_cdp(b.cdp_url), shown in orange, "
+        "and the browser loads sites on the web. client.browsers.stop(b.id) stops it through the same API.")
 CODE = [  # (step, text, accent)
     (1, "b = client.browsers.create()", False),
     (2, "connect_over_cdp(b.cdp_url)", True),
-    (3, 'page.goto("https://…")', False),
-    (4, "client.browsers.stop(b.id)", False),
+    (3, "client.browsers.stop(b.id)", False),
 ]
-NOTES = [
-    (1, "Create a browser", "POST /api/v4/browsers", False),
-    (2, "Connect over CDP", "chromium.connect_over_cdp(cdp_url)", True),
-    (3, "It browses through a proxy", 'proxy_country_code="us"', False),
-    (4, "Stop it when done", 'PATCH /browsers/{id} {"action":"stop"}', False),
-]
-NOTE_LINE = "closing the CDP connection leaves the browser running; stop it with step 4"
-NOTE_LINE_M = ["closing the CDP connection leaves the", "browser running; stop it with step 4"]
-LOOP = 9  # seconds, SMIL story loop
+LOOP = 10  # seconds, SMIL story loop
 
 
 def tw(s, size, mono=False, weight=400):
@@ -209,10 +197,9 @@ def code_card(d, x, y, w, scale=1.0, lh=22, fs=11, ghosts=True, gutter=True, ban
     d.add(f'<line x1="{x}" y1="{y + head}" x2="{x + w}" y2="{y + head}" stroke="{t["hair"]}" stroke-width="0.8"/>')
     for k in range(3):
         d.add(f'<circle cx="{x + 12 + k * 7}" cy="{y + head / 2}" r="2" fill="{t["hair"]}"/>')
-    d.text(x + w - 10, y + head / 2 + 3.8, "main.py", 11, t["ink3"], mono=True, anchor="end")
     centers = []
     gx = x + 16
-    cx = x + 34
+    cx = x + (34 if gutter else 16)
     for i, (n, s, acc) in enumerate(CODE):
         by = y + head + 12 + 11 + i * lh
         cy = by - 4
@@ -270,7 +257,10 @@ def windows(d, x, y, w, h, step=10, url="example.com", live_w=46):
     d.add(f'<rect x="{x + 7}" y="{uy}" width="{w - 14}" height="17" rx="8.5" fill="{t["fill2"]}" stroke="{hair}" stroke-width="0.8"/>')
     lx, ly = x + 16, uy + 8.5
     d.add(f'<path d="M{lx - 2.6} {ly - 0.5}h5.2v4.2h-5.2zM{lx - 1.6} {ly - 0.5}v-1.6a1.6 1.6 0 0 1 3.2 0v1.6" stroke="{ink3}" stroke-width="0.9"/>')
-    d.text(x + 24, uy + 12.3, url, 11, ink2, mono=True)
+    if url:
+        d.text(x + 24, uy + 12.3, url, 11, ink2, mono=True)
+    else:  # wordless address: a short hairline stands in for the URL
+        d.add(f'<line x1="{x + 24}" y1="{ly:.1f}" x2="{x + 24 + (w - 14) * 0.4:.1f}" y2="{ly:.1f}" stroke="{hair}" stroke-width="1.4" stroke-linecap="round"/>')
     # page wireframe: heading, copy lines, two cards (one being clicked)
     py = uy + 26
     d.add(f'<rect x="{x + 10}" y="{py}" width="54" height="6" rx="1.5" fill="{ink3}" fill-opacity=".5"/>')
@@ -408,35 +398,39 @@ def story_dot(d, path_id, t0, t1, color, r=3.4, reverse=False, label=None, ring=
     d.add(f'<g class="story" opacity="0">{vis}{mot}{inner}</g>')
 
 
-def story(d, ink, ink2, t):
-    """Ordered story, 9 s loop: POST out, cdpUrl back, CDP command, page load via proxy, CDP event back."""
-    o, ot = t["orange"], t["otext"]
+def story(d, t):
+    """Ordered story, 10 s loop: create out, cdpUrl back, CDP command, page load, CDP event back, stop out."""
+    o = t["orange"]
     story_dot(d, "p1", 0.3, 1.4, t["ink2"])
     story_dot(d, "p1", 1.6, 2.7, o, reverse=True)
     story_dot(d, "p2", 3.0, 4.0, o, r=4.2, ring=True)
     story_dot(d, "p3", 4.1, 4.8, t["ink2"], ring=True)
     story_dot(d, "p3", 5.0, 5.7, t["ink2"], reverse=True, ring=True)
     story_dot(d, "p2", 5.9, 6.9, o, r=4.2, reverse=True, ring=True)
-    hl(d, "h1", 0.2, 1.5, ink, ot)
-    hl(d, "h2", 1.5, 2.8, ink2, ot)
-    hl(d, "h3", 2.9, 4.1, ink, ot)
-    hl(d, "h4", 5.8, 7.0, ink2, ot)
+    story_dot(d, "p1", 7.4, 8.5, t["ink2"])
     hl(d, "b1", 0.2, 2.8, 0, 1, prop="fill-opacity")
-    hl(d, "b3", 2.9, 7.0, 0, 1, prop="fill-opacity")
+    hl(d, "b3", 7.3, 8.6, 0, 1, prop="fill-opacity")
+
+
+def provisions(d, x, y0, y1):
+    """Dotted API -> browser drop."""
+    ink3 = d.t["ink3"]
+    d.add(f'<line x1="{x}" y1="{y0}" x2="{x}" y2="{y1}" stroke="{ink3}" stroke-width="1" stroke-dasharray="1 3.5" stroke-linecap="round"/>')
+    d.add(f'<path d="M{x - 3} {y1 - 4} L{x} {y1} L{x + 3} {y1 - 4}" stroke="{ink3}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>')
 
 
 # ---------------------------------------------------------------- desktop
 
 def build(theme):
     t = THEMES[theme]
-    W, H = 720, 444
+    W, H = 720, 300
     d = Doc(W, H, t, theme)
     d.paper("FIG 1.0", "CLOUD BROWSER / CDP")
     defs(d)
-    ink, ink2, ink3 = t["ink"], t["ink2"], t["ink3"]
+    ink, ink2 = t["ink"], t["ink2"]
 
     # --- your code
-    cc = code_card(d, 34, 118, 232, lh=20, ghosts=False, bands={0: "b1", 2: "b3"})
+    cc = code_card(d, 40, 136, 214, lh=22, ghosts=False, gutter=False, bands={0: "b1", 2: "b3"})
     yc = cc["lines"][1]                     # the connect_over_cdp line drives the cable
     code_port = (cc["x"] + cc["w"] + 4, yc)
 
@@ -444,190 +438,123 @@ def build(theme):
     gx0, gy0, gx1, gy1 = 404, 56, 612, 252
     cloud_group(d, gx0, gy0, gx1, gy1)
 
-    # --- API plate stack (top-left of the group) + label
+    # --- API plate stack (top-left of the group) + name
     api = api_slab(d, 414, 80, w=36, h=5, k=26)
-    ax = api["right"] + 7
-    d.text(ax, 90, "API", 13, ink, 600)
-    d.badge(ax + tw("API", 13, weight=600) + 13, 85.5, 4)
-    d.text(ax, 105, "api.browser-use.com", 11, ink3, mono=True)
+    d.text(api["right"] + 8, 97, "API", 13, ink, 600)
 
     # --- browser windows
     bx, by, bw, bh = 420, 140, 136, 100
-    win = windows(d, bx, by, bw, bh, step=9, live_w=48)
+    assert by + 12 < yc < by + bh - 12
+    win = windows(d, bx, by, bw, bh, step=9, url="", live_w=48)
     browser_port = (bx, yc)
+    provisions(d, 430, api["bottom"][1] + 5, by - 3)
 
-    # provisions: API -> browser
-    px = 430
-    y_p0, y_p1 = api["bottom"][1] + 5, by - 3
-    d.add(f'<line x1="{px}" y1="{y_p0}" x2="{px}" y2="{y_p1}" stroke="{ink3}" stroke-width="1" stroke-dasharray="1 3.5" stroke-linecap="round"/>')
-    d.add(f'<path d="M{px - 3} {y_p1 - 4} L{px} {y_p1} L{px + 3} {y_p1 - 4}" stroke="{ink3}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>')
-    d.text(px + 8, 122, "provisions", 11, ink3, mono=True)
-
-    # --- (1) create: code top -> API, request/response
-    x0 = 56
+    # --- create / stop: code top <-> API
+    x0 = 62
     yA = api["left"][1]
     ya0 = cc["y"] - 6
     path1 = f"M{x0} {ya0} V{yA + 10} Q{x0} {yA} {x0 + 10} {yA} H{api['left'][0] - 6}"
     d.defs.append(f'<path id="p1" d="M{x0} {ya0 + 2} V{yA + 10} Q{x0} {yA} {x0 + 10} {yA} H{api["left"][0] - 2}"/>')
     d.add(f'<path d="{path1}" stroke="{ink2}" stroke-width="1" marker-start="url(#ah)" marker-end="url(#ah)"/>')
-    d.text(70, yA - 24, "POST /api/v4/browsers", 11, ink, mono=True, cls="h1")
-    d.text(70, yA - 8, "← 201 { id, cdpUrl, liveUrl }", 11, ink2, mono=True, cls="h2")
-    d.badge(gx0 - 34, yA, 1)
 
-    # --- (2) CDP cable
+    # --- CDP cable
     cable(d, code_port, browser_port)
     d.defs.append(f'<path id="p2" d="M{code_port[0]} {yc} H{browser_port[0]}"/>')
     mid = (code_port[0] + browser_port[0]) / 2
-    d.badge(mid, yc, 2, accent=True)
-    d.text(mid, yc - 15, "CDP · WebSocket", 11.5, t["otext"], 600, anchor="middle")
-    lx = code_port[0] + 5
-    d.text(lx, yc + 26, "→ Page.navigate", 11, ink, mono=True, cls="h3")
-    d.text(lx, yc + 42, "← Page.loadEventFired", 11, ink2, mono=True, cls="h4")
-    assert lx + tw("← Page.loadEventFired", 11, mono=True) <= bx - 2
+    d.text(mid, yc - 14, "CDP", 12.5, t["otext"], 600, anchor="middle")
 
-    # --- web globe + (3) proxy
+    # --- web globe
     gx, gy, R = 660, yc, 30
     globe(d, gx, gy, R)
     x3a, x3b = win["right"] + 5, gx - R - 6
     d.add(f'<path d="M{x3a:.1f} {yc} H{x3b:.1f}" stroke="{ink2}" stroke-width="1" marker-end="url(#ah)"/>')
     d.defs.append(f'<path id="p3" d="M{bx + bw} {yc} H{gx - R}"/>')
-    m3 = (x3a + gx1) / 2 - 2
-    d.badge(m3, yc, 3)
-    d.text(m3, yc - 15, "proxy", 11, ink3, mono=True, anchor="middle")
 
-    # --- labels row
-    ly = 270
+    # --- names
+    ly = 276
     d.text(cc["x"] + cc["w"] / 2, ly, "Your code", 13, ink, 600, anchor="middle")
-    d.text(cc["x"] + cc["w"] / 2, ly + 17, "Playwright · Puppeteer", 11, ink3, mono=True, anchor="middle")
-    bcx = bx + bw / 2 + 8
-    d.text(bcx, ly, "Cloud browser", 13, ink, 600, anchor="middle")
-    chips(d, bcx, ly + 16, ["stealth", "proxy", "live view"])
+    d.text(bx + bw / 2 + 8, ly, "Cloud browser", 13, ink, 600, anchor="middle")
     d.text(gx, ly, "Web", 13, ink, 600, anchor="middle")
-    d.text(gx, ly + 17, "any site", 11, ink3, mono=True, anchor="middle")
+    assert ly + 20 <= H
 
-    # --- story packets (SMIL, ordered): POST out, cdpUrl back, CDP command, page load, event back
-    story(d, ink, ink2, t)
-
-    # --- legend strip: 2 columns x 2 rows
-    ny = 306
-    d.add(f'<line x1="34" y1="{ny}" x2="{W - 34}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k, (n, h_, c_, acc) in enumerate(NOTES):
-        note(d, 34 if k % 2 == 0 else W / 2 + 8, ny + 28 + (k // 2) * 42, n, h_, c_, acc, width=320)
-    fy = ny + 28 + 42 + 18 + 26
-    d.text(34, fy, "NOTE", 11, t["otext"], 600, mono=True, ls="0.08em")
-    d.text(34 + 52, fy, NOTE_LINE, 11, ink2, mono=True)
-    assert fy + 24 <= H, (fy, H)
+    story(d, t)
     d.save(f"browser-cdp-{theme}")
-
-
-def note(d, x, y, n, head, code, accent=False, width=210):
-    t = d.t
-    d.badge(x + 8.5, y - 4, n, accent)
-    assert tw(head, 12.5, weight=500) <= width - 26, head
-    assert tw(code, 11, mono=True) <= width - 26, code
-    d.text(x + 26, y, head, 12.5, t["ink"], 500)
-    d.text(x + 26, y + 18, code, 11, t["otext"] if accent else t["ink2"], mono=True)
 
 
 # ---------------------------------------------------------------- mobile (360, drawn 1:1)
 
 def build_mobile(theme):
     """360 wide, drawn 1:1. Code on top; the CDP cable drops down the left spine into the cloud browser,
-    POST drops down a second spine into the API; the web sits beside the browser."""
+    create/stop drops down a right spine into the API; the web sits beside the browser."""
     t = THEMES[theme]
-    W, H = 360, 800
+    W = 360
+    # layout first, so the card height follows the content
+    cy0 = 70
+    cbot = cy0 + 22 + 12 + 22 * len(CODE) - 4
+    gx0, gx1 = 24, 262
+    gy0 = cbot + 56
+    gy1 = gy0 + 192
+    ly = gy1 + 26
+    H = ly + 26
     d = Doc(W, H, t, theme)
     d.paper("FIG 1.0", "CDP", m=16)
     defs(d)
-    ink, ink2, ink3 = t["ink"], t["ink2"], t["ink3"]
+    ink, ink2 = t["ink"], t["ink2"]
 
-    # code
-    cc = code_card(d, 24, 70, 238, lh=20, ghosts=False, bands={0: "b1", 2: "b3"})
+    cc = code_card(d, 24, cy0, 214, lh=22, ghosts=False, gutter=False, bands={0: "b1", 2: "b3"})
+    assert cc["y"] + cc["h"] == cbot
     d.text(24, 54, "Your code", 12.5, ink, 600)
-    d.text(W - 24, 54, "Playwright · Puppeteer", 11, ink3, mono=True, anchor="end")
-    cbot = cc["y"] + cc["h"]
 
-    # Browser Use Cloud group
-    gx0, gy0, gx1, gy1 = 24, 302, 262, 494
     cloud_group(d, gx0, gy0, gx1, gy1)
 
-    # API stack (right of the group) + label left of it
-    api = api_slab(d, 196, 338, w=36, h=5, k=26)
-    d.text(186, 345, "API", 13, ink, 600, anchor="end")
-    d.badge(186 - tw("API", 13, weight=600) - 13, 340.5, 4)
-    d.text(186, 361, "/api/v4", 11, ink3, mono=True, anchor="end")
+    # API stack (right of the group) + name left of it
+    api = api_slab(d, 196, gy0 + 36, w=36, h=5, k=26)
+    d.text(186, gy0 + 47, "API", 13, ink, 600, anchor="end")
 
     # browser windows
-    bx, by, bw, bh = 40, 382, 136, 100
-    win = windows(d, bx, by, bw, bh, step=7, live_w=48)
+    bx, by, bw, bh = 40, gy0 + 80, 136, 100
+    win = windows(d, bx, by, bw, bh, step=7, url="", live_w=48)
 
-    # (2) CDP cable: down the left spine from the code card into the browser
+    # CDP cable: down the left spine from the code card into the browser
     XC = 64
     a, b = (XC, cbot + 4), (XC, by - 1)
     cable(d, a, b, vertical=True)
     d.defs.append(f'<path id="p2" d="M{XC} {a[1]} V{b[1]}"/>')
-    my = cbot + 46
-    d.badge(XC, my, 2, accent=True)
-    d.text(XC + 18, my - 14, "CDP · WebSocket", 11.5, t["otext"], 600)
-    d.text(XC + 18, my + 8, "→ Page.navigate", 11, ink, mono=True, cls="h3")
-    d.text(XC + 18, my + 24, "← Page.loadEventFired", 11, ink2, mono=True, cls="h4")
-    # API label must clear the cable glow
-    assert 186 - tw("API", 13, weight=600) - 22 > XC + 8
+    d.text(XC + 14, cbot + 34, "CDP", 12.5, t["otext"], 600)
+    assert 186 - tw("API", 13, weight=600) - 8 > XC + 8
 
-    # (1) POST: second spine from the code card's right face into the API stack
+    # create / stop: right spine from the code card into the API stack
     XP = W - 34
     yl = cc["lines"][0]
-    top_api = api["top"] + 6
-    path1 = f"M{cc['x'] + cc['w'] + 10} {yl} H{XP - 10} Q{XP} {yl} {XP} {yl + 10} V{api['left'][1] - 10} Q{XP} {api['left'][1]} {XP - 10} {api['left'][1]} H{api['right'] + 6}"
+    yA = api["left"][1]
+    path1 = f"M{cc['x'] + cc['w'] + 10} {yl} H{XP - 10} Q{XP} {yl} {XP} {yl + 10} V{yA - 10} Q{XP} {yA} {XP - 10} {yA} H{api['right'] + 6}"
     d.defs.append(f'<path id="p1" d="{path1}"/>')
     d.add(f'<path d="{path1}" stroke="{ink2}" stroke-width="1" marker-start="url(#ah)" marker-end="url(#ah)"/>')
-    pmy = cbot + 88
-    d.badge(XP, pmy - 30, 1)
-    d.text(XP - 12, pmy, "POST /api/v4/browsers", 11, ink, mono=True, anchor="end", cls="h1")
-    d.text(XP - 12, pmy + 16, "← 201 { id, cdpUrl, liveUrl }", 11, ink2, mono=True, anchor="end", cls="h2")
-    assert XP - 12 - tw("← 201 { id, cdpUrl, liveUrl }", 11, mono=True) > gx0
 
     # provisions: API -> browser
     px0 = api["bottom"][0]
     yb = api["bottom"][1] + 6
     yh = by + 22
     xr = win["right"] + 1  # chevron tip touches the back window's right edge
-    d.add(f'<path d="M{px0} {yb} V{yh} H{xr + 1}" stroke="{ink3}" stroke-width="1" stroke-dasharray="1 3.5" stroke-linecap="round"/>')
-    d.add(f'<path d="M{xr + 4} {yh - 3} L{xr} {yh} L{xr + 4} {yh + 3}" stroke="{ink3}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>')
-    d.text(px0 + 8, yb + 16, "provisions", 11, ink3, mono=True)
+    d.add(f'<path d="M{px0} {yb} V{yh} H{xr + 1}" stroke="{t["ink3"]}" stroke-width="1" stroke-dasharray="1 3.5" stroke-linecap="round"/>')
+    d.add(f'<path d="M{xr + 4} {yh - 3} L{xr} {yh} L{xr + 4} {yh + 3}" stroke="{t["ink3"]}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>')
 
-    # web + (3) proxy: from the browser's right side to a globe outside the group
+    # web: from the browser's right side to a globe outside the group
     gx, gy, R = 306, by + 58, 24
+    assert gy - R > yA + 8
     globe(d, gx, gy, R)
-    yw = gy
-    d.add(f'<path d="M{bx + bw + 6} {yw} H{gx - R - 6}" stroke="{ink2}" stroke-width="1" marker-end="url(#ah)"/>')
-    d.defs.append(f'<path id="p3" d="M{bx + bw} {yw} H{gx - R}"/>')
-    m3 = (gx1 + gx - R) / 2 - 4
-    d.badge(gx1 - 18, yw, 3)
-    d.text(gx, gy + R + 22, "Web", 12.5, ink, 600, anchor="middle")
-    d.text(gx, gy + R + 38, "any site", 11, ink3, mono=True, anchor="middle")
+    d.add(f'<path d="M{bx + bw + 6} {gy} H{gx - R - 6}" stroke="{ink2}" stroke-width="1" marker-end="url(#ah)"/>')
+    d.defs.append(f'<path id="p3" d="M{bx + bw} {gy} H{gx - R}"/>')
+    d.text(gx, gy + R + 24, "Web", 12.5, ink, 600, anchor="middle")
 
-    # cloud browser label + chips under the group
-    ly = gy1 + 24
     d.text(24, ly, "Cloud browser", 12.5, ink, 600)
-    chips(d, 24, ly + 18, ["stealth", "proxy", "live view"], anchor="start")
 
-    story(d, ink, ink2, t)
-
-    # legend: one column
-    ny = ly + 44
-    d.add(f'<line x1="24" y1="{ny}" x2="{W - 24}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    for k, (n, h_, c_, acc) in enumerate(NOTES):
-        note(d, 24, ny + 28 + k * 42, n, h_, c_, acc, width=W - 48)
-    fy = ny + 28 + 3 * 42 + 18 + 28
-    d.text(24, fy, "NOTE", 11, t["otext"], 600, mono=True, ls="0.08em")
-    for i, line in enumerate(NOTE_LINE_M):
-        d.text(24 + 46, fy + i * 16, line, 11, ink2, mono=True)
-    assert fy + 16 + 22 <= H, (fy, H)
+    story(d, t)
     d.save(f"browser-cdp-{theme}-mobile")
 
 
 if __name__ == "__main__":
+    OUT.mkdir(exist_ok=True)
     for th in ("light", "dark"):
         build(th)
         build_mobile(th)

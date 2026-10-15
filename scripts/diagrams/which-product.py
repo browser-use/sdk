@@ -26,20 +26,9 @@ THEMES = {
 }
 
 TITLE = "Which Browser Use do I need?"
-DESC = ("Choose who runs the agent, then choose a browser. "
-        "1: the fully hosted V4 agent runs in Browser Use Cloud with a cloud browser included; send POST /api/v4/runs and get the result and files back. "
-        "2: the Browser Use CLI lets your existing agent, such as Claude Code, Codex or Hermes, drive your local Chrome by default, "
-        "or a cloud browser after browser-use auth login. "
-        "3: the open-source Python library runs the agent in your own code with a local browser, or a cloud browser with Browser(use_cloud=True). "
-        "4: the Browser API gives you only a cloud browser to drive over CDP. "
-        "5: Profile Sync copies selected cookies from your local Chrome into a cloud profile when you run it.")
-NOTES = [
-    (1, "Fully hosted cloud", "POST /api/v4/runs", True),
-    (2, "CLI for your agent", "uv tool install browser-use", False),
-    (3, "Open-source Python", "uv pip install browser-use", False),
-    (4, "Need only a browser?", "Browser API over CDP", False),
-    (5, "Logins in the cloud", "Profile Sync, on demand", False),
-]
+DESC = ("Run by Browser Use: the V4 agent uses a cloud browser and nothing on your machine. "
+        "Run by you: the Browser Use CLI and the Python library each use a cloud browser or your local browser. "
+        "Profile sync copies logins from the local browser to the cloud browser.")
 
 
 # ---------------------------------------------------------------- primitives
@@ -163,15 +152,6 @@ class Doc:
         print(f"{p} {kb:.1f} KB")
 
 
-def note(d, x, y, n, head, code, accent=False, width=210):
-    t = d.t
-    d.badge(x + 8.5, y - 4, n, accent)
-    assert tw(head, 12.5, weight=500) <= width - 26, head
-    assert tw(code, 11, mono=True) <= width - 26, code
-    d.text(x + 26, y, head, 12.5, t["ink"], 500)
-    d.text(x + 26, y + 18, code, 11, t["otext"] if accent else t["ink2"], mono=True)
-
-
 # ---------------------------------------------------------------- shared defs + motion
 def defs(d):
     t = d.t
@@ -263,8 +243,7 @@ def terminal(d, cx, bottom, WW=86, WH=56):
     # prompt chevron + command, then output hairlines
     y0 = -WH + 23
     g.append(f'<path d="M7 {y0 - 4} l4 3 l-4 3" stroke="{org}" stroke-width="1.1" {RJ} {NS}/>')
-    g.append(f'<text x="15" y="{y0 + 2}" font-size="6.6" class="m" fill="{ink2}" aria-hidden="true">browser-use</text>')
-    assert 15 + tw("browser-use", 6.6, mono=True) < WW - 6
+    g.append(f'<line x1="15" y1="{y0 - 1}" x2="{min(54, WW - 14)}" y2="{y0 - 1}" stroke="{ink2}" stroke-width="1.1" {NS}/>')
     for k, L in enumerate((58, 44, 66)):
         g.append(f'<line x1="7" y1="{y0 + 9 + k * 5.5}" x2="{7 + L}" y2="{y0 + 9 + k * 5.5}" stroke="{hair}" stroke-width="0.9" {NS}/>')
     g.append(f'<path d="M7 {-13} l4 3 l-4 3" stroke="{ink3}" stroke-width="1.1" {RJ} {NS}/>')
@@ -273,19 +252,16 @@ def terminal(d, cx, bottom, WW=86, WH=56):
     return ob[1] - WH  # top y
 
 
-def code_slab(d, cx, bottom, sx=92, sy=62, sz=9):
-    """Your Python: a slab with the agent code printed on it (decorative, aria-hidden)."""
+def code_slab(d, cx, bottom, sx=92, sy=46, sz=9):
+    """Your Python: a slab with three code hairlines on top, the last (use_cloud) in orange."""
     t = d.t
     o = origin_for(cx, bottom - 12, sx, sy)
     slab(d, o, sx, sy, sz, under=1)
-    code = [("agent = Agent(", 0), ("  task, llm,", 0), ("  browser=Browser(", 0),
-            ("    use_cloud=True", 1), ("))", 0), ("await agent.run()", 0)]
-    fs = min(6, (sx - 14) / (19 * 0.61))
-    g = [f'<g transform="{m_top(o, sz)}" aria-hidden="true">']
-    for i, (s, hot) in enumerate(code):
-        fw = ' font-weight="600"' if hot else ""
-        g.append(f'<text x="11" y="{11.5 + i * fs * 1.43:.1f}" font-size="{fs:.2f}" class="m" fill="{t["orange"] if hot else t["ink2"]}"{fw}>{esc(s)}</text>')
-        assert 11 + tw(s, fs, mono=True) < sx - 2, s
+    g = [f'<g transform="{m_top(o, sz)}">']
+    step = (sy - 20) / 2
+    for i, (x0, L, hot) in enumerate(((11, sx - 30, 0), (17, sx - 40, 0), (17, sx - 34, 1))):
+        col, w = (t["orange"], 1.4) if hot else (t["hair"], 1.0)
+        g.append(f'<line x1="{x0}" y1="{10 + i * step:.1f}" x2="{x0 + L}" y2="{10 + i * step:.1f}" stroke="{col}" stroke-width="{w}" stroke-linecap="round" {NS}/>')
     g.append(f'<line x1="5" y1="6" x2="5" y2="{sy - 6}" stroke="{t["hair"]}" stroke-width="0.8" {NS}/></g>')
     d.add("".join(g))
     return P(0, 0, sz, o)[1]
@@ -430,152 +406,106 @@ def name_glow(d, x, y, w, k, phases, dur=12, n=5):
     d.add(f'<rect class="ng{k}" x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="24" rx="12" fill="{t["osoft"]}" fill-opacity="0"/>')
 
 
-def legend(d, x, y):
-    """Colour key: orange = Browser Use Cloud, ink = your machine."""
-    t = d.t
-    d.add(f'<line x1="{x}" y1="{y}" x2="{x + 22}" y2="{y}" stroke="{t["orange"]}" stroke-width="3" stroke-linecap="round"/>')
-    d.text(x + 30, y + 4, "in Browser Use Cloud", 11, t["ink2"], mono=True)
-    y2 = y + 20
-    d.add(f'<line x1="{x}" y1="{y2}" x2="{x + 22}" y2="{y2}" stroke="{t["ink2"]}" stroke-width="1"/>')
-    d.text(x + 30, y2 + 4, "on your machine", 11, t["ink2"], mono=True)
+def no_local(d, x, y):
+    """X on the local rail: the hosted agent never touches your machine."""
+    d.add(f'<path d="M{x - 3.5} {y - 3.5}l7 7M{x + 3.5} {y - 3.5}l-7 7" stroke="{d.t["ink3"]}" stroke-width="1.2" stroke-linecap="round"/>')
+
+
+def bracket(d, a, b, y, lab, tc, lc):
+    """Who runs it: a dimension bracket over the product columns."""
+    lw = tw(lab, 11.5, weight=600) + 16
+    m = (a + b) / 2
+    d.add(f'<path d="M{a} {y - 4}v8M{b} {y - 4}v8" stroke="{lc}" stroke-width="1"/>')
+    d.add(f'<path d="M{a} {y}H{m - lw / 2:.1f}M{m + lw / 2:.1f} {y}H{b}" stroke="{lc}" stroke-width="1"/>')
+    d.text(m, y + 4, lab, 11.5, tc, 600, anchor="middle")
+
+
+NAMES = ["V4 agent", "Browser Use CLI", "Python library"]
+PHASES = [[0], [1, 2], [3, 4]]
 
 
 # ---------------------------------------------------------------- desktop 720
 def build(theme):
     t = THEMES[theme]
-    W, H = 720, 530
+    W = 720
+    COLS = [264, 430, 592]
+    OBJ_BOTTOM = 168
+    NAME_Y = OBJ_BOTTOM + 26
+    DROP_Y0 = NAME_Y + 14
+    R1, R2 = 254, 352           # cloud rail, local rail
+    HX, RX0, RX1 = 66, 108, 620  # head centre x, rails start, rails end
+    H = R2 + 70
     d = Doc(W, H, t)
     d.paper("FIG 0.0", "WHICH PRODUCT / AGENT × BROWSER")
     defs(d)
     ink, ink2, ink3, org, ot = t["ink"], t["ink2"], t["ink3"], t["orange"], t["otext"]
 
-    COLS = [255, 412, 569]
-    OBJ_BOTTOM = 166
-    NAME_Y = OBJ_BOTTOM + 26
-    DROP_Y0 = NAME_Y + 30
-    R1, R2 = 264, 368            # cloud rail, local rail
-    HX = 66                      # head objects centre x
-    RX0 = 108                    # rails start
-    RX1 = 640                    # rails end
-
-    # ---- step 1: who runs the agent
     yb = 47
-    # matrix corner: the two questions the page asks, in reading order
-    d.text(34, 100, "STEP 1", 10, ink3, mono=True, ls="0.08em")
-    d.text(34, 121, "Who runs", 15, ink, 600)
-    d.text(34, 140, "the agent?", 15, ink, 600)
-    d.add(f'<path d="M34 156H{COLS[0] - 66}" stroke="{ink3}" stroke-width="1" stroke-dasharray="1 3.5" stroke-linecap="round" marker-end="url(#ah3)"/>')
-    segs = ((COLS[0] - 66, COLS[0] + 66, "Browser Use", ot, org),
-            (COLS[1] - 66, COLS[2] + 76, "You, with your own agent or code", ink, ink2))
-    for a, b, lab, tc, lc in segs:
-        lw = tw(lab, 11.5, weight=600) + 16
-        m = (a + b) / 2
-        d.add(f'<path d="M{a} {yb - 4}v8M{b} {yb - 4}v8" stroke="{lc}" stroke-width="1"/>')
-        d.add(f'<path d="M{a} {yb}H{m - lw / 2:.1f}M{m + lw / 2:.1f} {yb}H{b}" stroke="{lc}" stroke-width="1"/>')
-        d.text(m, yb + 4, lab, 11.5, tc, 600, anchor="middle")
+    bracket(d, COLS[0] - 88, COLS[0] + 88, yb, "Run by Browser Use", ot, org)
+    bracket(d, COLS[1] - 66, COLS[2] + 66, yb, "Run by you", ink, ink2)
 
-    # ---- product objects
     tops = [agent_stack(d, COLS[0], OBJ_BOTTOM - 14),
             terminal(d, COLS[1], OBJ_BOTTOM),
             code_slab(d, COLS[2], OBJ_BOTTOM)]
     assert min(tops) > yb + 12, tops
-    prods = [("V4 agent", "hosted agent + browser"),
-             ("Browser Use CLI", "Claude Code · Codex"),
-             ("Python library", "Agent(task, llm)")]
-    for k, (x, (name, sub)) in enumerate(zip(COLS, prods)):
+    for k, (x, name) in enumerate(zip(COLS, NAMES)):
         nw = tw(name, 13, weight=600)
-        name_glow(d, x - nw / 2 - 12, NAME_Y - 16.5, nw + 52, k, [[0], [1, 2], [3, 4]][k])
+        name_glow(d, x - nw / 2 - 14, NAME_Y - 16.5, nw + 28, k, PHASES[k])
         d.text(x, NAME_Y, name, 13, ink, 600, anchor="middle")
-        d.badge(x + tw(name, 13, weight=600) / 2 + 16, NAME_Y - 4.5, k + 1, accent=k == 0)
-        d.text(x, NAME_Y + 17, sub, 11, ink3, mono=True, anchor="middle")
 
-    # ---- step 2: which browser (heads on the left, rails run under the columns)
-    d.text(34, R1 - 66, "STEP 2", 10, ink3, mono=True, ls="0.08em")
-    d.text(34, R1 - 46, "Which browser?", 15, ink, 600)
+    # browser heads on the left; rails run under the product columns
     c_top, c_bot = cloud_windows(d, HX, R1 - 8)
     l_top, l_bot = chrome_window(d, HX, R2 + 4)
-    assert c_top > R1 - 56, c_top
-
-    # rails: cloud (orange cable, packets flow toward the head) and local (ink)
+    assert l_bot + 12 < H - 20, l_bot
     cable(d, (RX1, R1), (RX0, R1), cls="pkl")
     d.add(f'<circle cx="{RX0:.1f}" cy="{R1}" r="3.2" fill="{t["paper"]}" stroke="{org}" stroke-width="1.4"/>')
     ink_line(d, (RX1, R2), (RX0, R2), cls="pkl")
     d.add(f'<circle cx="{RX0:.1f}" cy="{R2}" r="3.2" fill="{t["paper"]}" stroke="{ink2}" stroke-width="1.2"/>')
-    for y, col in ((R1, org), (R2, ink2)):   # end ticks
+    for y, col in ((R1, org), (R2, ink2)):
         d.add(f'<path d="M{RX1} {y - 5}v10" stroke="{col}" stroke-width="1"/>')
-
-    # head labels sit on the rail start
     d.text(RX0 + 10, R1 - 12, "Cloud browser", 13, ink, 600)
-    d.text(RX0 + 10, R1 + 20, "Browser API · CDP", 11, ink3, mono=True)
-    d.badge(RX0 + 10 + tw("Cloud browser", 13, weight=600) + 14, R1 - 16.5, 4)
     d.text(RX0 + 10, R2 - 12, "Local browser", 13, ink, 600)
-    d.text(RX0 + 10, R2 + 20, "Chrome · Chromium", 11, ink3, mono=True)
 
-    # profile sync: local -> cloud, explicit
     profile_sync(d, HX, l_top - 4, c_bot + 6)
-    ym = (l_top - 4 + c_bot + 6) / 2
-    d.badge(HX, ym, 5)
-    d.text(HX + 14, ym + 4, "profile sync", 11, ink3, mono=True)
+    d.text(HX + 10, (l_top - 4 + c_bot + 6) / 2 + 4, "profile sync", 11, ink3, mono=True)
 
-    # ---- drops from each product to the rails it can use
-    # 1: hosted agent -> cloud only (key path)
+    # drops: hosted agent -> cloud only; your agent or code -> cloud or local
     cable(d, (COLS[0], DROP_Y0), (COLS[0], R1), cls="pkd")
     junction(d, COLS[0], R1, True)
-    d.text(COLS[0] + 12, R1 + 20, "included", 11, ot, mono=True)
-    d.text(COLS[0] + 12, R2 + 20, "nothing runs locally", 11, ink3, mono=True)
-    d.add(f'<path d="M{COLS[0] - 3.5} {R2 - 3.5}l7 7M{COLS[0] + 3.5} {R2 - 3.5}l-7 7" stroke="{ink3}" stroke-width="1.2" stroke-linecap="round"/>')
-    # 2 + 3: your agent -> cloud or local
-    labs = {1: ("auth login", "your tabs + logins"), 2: ("use_cloud=True", "Browser()")}
-    for k in (1, 2):
-        x = COLS[k]
+    no_local(d, COLS[0], R2)
+    for x in COLS[1:]:
         ink_line(d, (x, DROP_Y0), (x, R2), cls="pkd")
         junction(d, x, R1, True)
         junction(d, x, R2, False)
-        lc, ll = labs[k]
-        d.text(x + 12, R1 + 20, lc, 11, ink2, mono=True)
-        d.text(x + 12, R2 + 20, ll, 11, ink2, mono=True)
 
     story(d, [([(COLS[0], DROP_Y0), (COLS[0], R1), (RX0, R1)], True),
               ([(COLS[1], DROP_Y0), (COLS[1], R2), (RX0, R2)], False),
               ([(COLS[1], DROP_Y0), (COLS[1], R1), (RX0, R1)], True),
               ([(COLS[2], DROP_Y0), (COLS[2], R2), (RX0, R2)], False),
               ([(COLS[2], DROP_Y0), (COLS[2], R1), (RX0, R1)], True)])
-
-    # ---- notes
-    ny = R2 + 46
-    d.add(f'<line x1="34" y1="{ny}" x2="{W - 34}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    colw = (W - 68) / 3
-    for k, (n, h_, c_, acc) in enumerate(NOTES):
-        note(d, 34 + (k % 3) * colw, ny + 30 + (k // 3) * 44, n, h_, c_, acc, width=colw - 6)
-    legend(d, 34 + 2 * colw + 2, ny + 30 + 44 - 8)
-    assert ny + 30 + 44 + 18 + 24 <= H, (ny, H)
     d.save(f"which-product-{theme}")
 
 
 # ---------------------------------------------------------------- mobile 360
 def build_mobile(theme):
-    """360 px, 1:1, stripped down. Step 1 rows on top; the two rails drop down the right into the step 2 heads."""
+    """360 px, 1:1. Product rows on top; the two rails drop down the right into the browser heads."""
     t = THEMES[theme]
-    W, H = 360, 764
+    W = 360
+    XC, XL = 280, 320            # cloud rail x, local rail x
+    CLR = XC - 3 - 2             # row content must end left of the cloud rail's outer rail
+    TX = 136                     # row text x
+    ROWS = [40, 158, 266]        # row tops
+    RT = ROWS[0] + 46            # rails start
+    H1 = ROWS[2] + 152           # cloud head centre
+    H2 = H1 + 98                 # local head centre
+    LX = 96                      # head label x
+    H = H2 + 70
     d = Doc(W, H, t)
     d.paper("FIG 0.0", "WHICH PRODUCT")
     defs(d)
     ink, ink2, ink3, org, ot = t["ink"], t["ink2"], t["ink3"], t["orange"], t["otext"]
-    XC, XL = 280, 320            # cloud rail x, local rail x
-    CLR = XC - 3 - 2              # row content must end left of the cloud rail's outer rail
-    RT = 100                     # rails start
-    TX = 136                     # row text x
-    ROWS = [104, 236, 344]       # row tops
-    H1, H2 = 548, 646            # head centres
-    LX = 96                      # head label x
 
-    d.text(24, 54, "STEP 1", 10, ink3, mono=True, ls="0.08em")
-    d.text(24, 75, "Who runs the agent?", 15, ink, 600)
-    d.text(XC, RT - 8, "cloud", 11, ot, mono=True, anchor="middle")
-    d.text(XL, RT - 8, "local", 11, ink2, mono=True, anchor="middle")
-
-    LE = LX + tw("Browser API · CDP", 11, mono=True) + 10
-    # rails: down the right edge, then left into their heads
+    LE = LX + tw("Cloud browser", 12.5, weight=600) + 16
     cable(d, (XC, H1), (XC, RT), cls="pkl")
     cable(d, (LE, H1), (XC, H1), cls="pkl")
     ink_line(d, (XL, H2), (XL, RT), cls="pkl")
@@ -586,71 +516,54 @@ def build_mobile(theme):
         d.add(f'<path d="M{x - 5} {RT}h10" stroke="{col}" stroke-width="1"/>')
 
     groups = {0: ("RUN BY BROWSER USE", ot), 1: ("RUN BY YOU", ink3)}
-    prods = [("V4 agent", "hosted agent", "included"),
-             ("Browser Use CLI", "Claude Code · Codex", "auth login"),
-             ("Python library", "Agent(task, llm)", "use_cloud=True")]
-    for k, (name, sub, lab) in enumerate(prods):
+    for k, name in enumerate(NAMES):
         top = ROWS[k]
         if k in groups:
             g, tc = groups[k]
-            d.text(TX, top + 22, g, 10, tc, mono=True, ls="0.08em")
-            assert TX + tw(g, 10, mono=True) * 1.12 < CLR, g
+            d.text(TX, top + 34, g, 11, tc, mono=True, ls="0.08em")
+            assert TX + tw(g, 11, mono=True) * 1.12 < CLR, g
         if k == 0:
             agent_stack(d, 72, top + 82, s=38, sz=8, gap=5)
         elif k == 1:
             terminal(d, 70, top + 92, WW=70, WH=46)
         else:
-            code_slab(d, 78, top + 100, sx=72, sy=56, sz=8)
-        ny_ = top + 52
+            code_slab(d, 78, top + 96, sx=72, sy=40, sz=8)
+        ny_ = top + 60
         nw = tw(name, 13, weight=600)
-        gw = min(nw + 46, CLR - (TX - 10))       # lit pill must not cover the cable
-        name_glow(d, TX - 10, ny_ - 16.5, gw, k, [[0], [1, 2], [3, 4]][k])
-        assert TX + nw + 13 + 8.5 + 2 < XC - 3, ("badge on cable", name)
-        assert TX + max(tw(sub, 11, mono=True), tw(lab, 11, mono=True) + 2) < CLR, (sub, lab)
+        name_glow(d, TX - 10, ny_ - 16.5, min(nw + 22, CLR - (TX - 10)), k, PHASES[k])
+        assert TX + nw < CLR, name
         d.text(TX, ny_, name, 13, ink, 600)
-        d.badge(TX + tw(name, 13, weight=600) + 13, ny_ - 4.5, k + 1, accent=k == 0)
-        d.text(TX, ny_ + 17, sub, 11, ink3, mono=True)
-        yl = top + 86
+        yl = top + 82
         if k == 0:
             cable(d, (TX, yl), (XC, yl), cls="pkl")
             d.add(f'<circle cx="{TX}" cy="{yl}" r="3.2" fill="{t["paper"]}" stroke="{org}" stroke-width="1.4"/>')
             junction(d, XC, yl, True)
-            d.add(f'<path d="M{XL - 3.5} {yl - 3.5}l7 7M{XL + 3.5} {yl - 3.5}l-7 7" stroke="{ink3}" stroke-width="1.2" stroke-linecap="round"/>')
+            no_local(d, XL, yl)
         else:
             ink_line(d, (TX, yl), (XL, yl), cls="pkl")
             d.add(f'<circle cx="{TX}" cy="{yl}" r="3.2" fill="{t["paper"]}" stroke="{ink2}" stroke-width="1.2"/>')
             junction(d, XC, yl, True)
             junction(d, XL, yl, False)
-        d.text(TX + 2, yl + 19, lab, 11, ot if k == 0 else ink2, mono=True)
 
-    # ---- step 2: heads
-    d.text(24, H1 - 66, "STEP 2", 10, ink3, mono=True, ls="0.08em")
-    d.text(24, H1 - 45, "Which browser?", 15, ink, 600)
     c_top, c_bot = cloud_windows(d, 50, H1 - 8)
     l_top, l_bot = chrome_window(d, 50, H2 + 4)
+    assert l_bot + 12 < H - 20, l_bot
     d.text(LX, H1 - 9, "Cloud browser", 12.5, ink, 600)
-    d.text(LX, H1 + 18, "Browser API · CDP", 11, ink3, mono=True)
-    d.badge(LX + tw("Cloud browser", 12.5, weight=600) + 13, H1 - 13.5, 4)
     d.text(LX, H2 - 9, "Local browser", 12.5, ink, 600)
-    d.text(LX, H2 + 18, "Chrome · Chromium", 11, ink3, mono=True)
     profile_sync(d, 50, l_top - 3, c_bot + 5)
-    ym = (l_top - 3 + c_bot + 5) / 2
-    d.badge(50, ym, 5)
-    d.text(64, ym + 4, "profile sync", 11, ink3, mono=True)
+    d.text(60, (l_top - 3 + c_bot + 5) / 2 + 4, "profile sync", 11, ink3, mono=True)
 
-    yls = [r + 86 for r in ROWS]
+    yls = [r + 82 for r in ROWS]
     story(d, [([(TX, yls[0]), (XC, yls[0]), (XC, H1), (LE, H1)], True),
               ([(TX, yls[1]), (XL, yls[1]), (XL, H2), (LE, H2)], False),
               ([(TX, yls[1]), (XC, yls[1]), (XC, H1), (LE, H1)], True),
               ([(TX, yls[2]), (XL, yls[2]), (XL, H2), (LE, H2)], False),
               ([(TX, yls[2]), (XC, yls[2]), (XC, H1), (LE, H1)], True)])
-    ny = H2 + 40
-    d.add(f'<line x1="24" y1="{ny}" x2="{W - 24}" y2="{ny}" stroke="{t["faint"]}" stroke-width="1"/>')
-    legend(d, 24, ny + 22)
-    assert ny + 22 + 20 + 36 <= H, (ny, H)
     d.save(f"which-product-{theme}-mobile")
 
 
 for th in ("light", "dark"):
     build(th)
     build_mobile(th)
+
+

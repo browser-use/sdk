@@ -10,11 +10,11 @@ unless you pass an existing session ID.
 
 <picture className="block dark:hidden">
   <source media="(max-width: 600px)" srcSet="/cloud/images/v4-sessions-light-mobile.svg" />
-  <img src="/cloud/images/v4-sessions-light.svg" alt="One session ID holding four runs on a timeline. Runs 1 to 3 run back to back. Run 3 was queued while run 2 was busy and starts when run 2 ends. The conversation grows by one turn per run, the workspace keeps its files, and the same live browser is reused. After the last run, the browser idles for 120 s and then stops. keepAlive can extend that idle time up to 14400 s (4 h). A later run 4 keeps the prior turns and files and gets a new browser." noZoom />
+  <img src="/cloud/images/v4-sessions-light.svg" alt="One session ID holding four runs: the conversation gains a turn per run and the workspace keeps its files, while back-to-back runs reuse one live browser. That browser stops after 120 s idle (keepAlive extends this up to 4 h), so a later run gets a new browser but keeps the conversation and files." noZoom />
 </picture>
 <picture className="hidden dark:block">
   <source media="(max-width: 600px)" srcSet="/cloud/images/v4-sessions-dark-mobile.svg" />
-  <img src="/cloud/images/v4-sessions-dark.svg" alt="One session ID holding four runs on a timeline. Runs 1 to 3 run back to back. Run 3 was queued while run 2 was busy and starts when run 2 ends. The conversation grows by one turn per run, the workspace keeps its files, and the same live browser is reused. After the last run, the browser idles for 120 s and then stops. keepAlive can extend that idle time up to 14400 s (4 h). A later run 4 keeps the prior turns and files and gets a new browser." noZoom />
+  <img src="/cloud/images/v4-sessions-dark.svg" alt="One session ID holding four runs: the conversation gains a turn per run and the workspace keeps its files, while back-to-back runs reuse one live browser. That browser stops after 120 s idle (keepAlive extends this up to 4 h), so a later run gets a new browser but keeps the conversation and files." noZoom />
 </picture>
 
 Pass `session_id` / `sessionId` to continue:
