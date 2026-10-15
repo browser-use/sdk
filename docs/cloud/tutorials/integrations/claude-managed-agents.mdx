@@ -7,7 +7,7 @@ description: Give Anthropic's Claude Managed Agents a stealth cloud browser via 
 
 The sandbox only ships a bare headless Chromium for Playwright: no stealth, no proxies, no CAPTCHA handling. So the agent starts a named Browser Use Cloud browser and drives it with `browser-use <<'PY'` Python snippets.
 
-Create the environment, vault, and agent below in the [Claude Console](https://platform.claude.com/docs/en/managed-agents/onboarding), or save the YAML blocks as `environments/browser-env.yaml` and `agents/browser-agent.yaml` and run [`ant apply`](https://platform.claude.com/docs/en/cli-sdks-libraries/cli/apply) on each, which prints the ID. Save the IDs as `ENVIRONMENT_ID`, `VAULT_ID`, and `AGENT_ID`.
+Create the vault and its credential in the [Claude Console](https://platform.claude.com/docs/en/managed-agents/onboarding). Create the environment and agent there too, or save their YAML blocks as `environments/browser-env.yaml` and `agents/browser-agent.yaml` and run [`ant apply`](https://platform.claude.com/docs/en/cli-sdks-libraries/cli/apply) on each, which prints the ID. Save the IDs as `ENVIRONMENT_ID`, `VAULT_ID`, and `AGENT_ID`.
 
 ## 1. Create an environment
 
