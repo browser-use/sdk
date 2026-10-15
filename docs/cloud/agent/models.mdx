@@ -1,10 +1,68 @@
 ---
 title: Models
-description: "Choose a V4 model and understand its token pricing."
+description: "Choose BU Ultrafast, BU Fast, or a V4 provider model and understand task costs."
 icon: microchip
 ---
 
-Omit `model` and `modelParams` to use **GPT-6 Luna with High reasoning**, or pass explicit settings when creating a run. EU uses the same task default through its regional provider route; Bedrock-only projects retain their compatible default.
+## BU Ultrafast and BU Fast
+
+**Browser tasks for a fraction of a cent.** BU Ultrafast: **\$0.00214 median recorded LLM + browser usage per URL check**; **8/8 correct in staging**. [Pricing and methodology](https://browser-use.com/pricing#task-cost-methodology).
+
+- **BU Ultrafast** (`bu-ultrafast`): quick browser interactions.
+- **BU Fast** (`bu-fast`): more reasoning at low token prices.
+
+API V4, **early access** per project. [Request access](https://browser-use.com/ultrafast); signup credits work once enabled. EU is unsupported. Projects pinned to Bedrock run BU Ultrafast without the priority tier.
+
+### Token rates
+
+Customer rates in USD per 1 million tokens, including the service fee:
+
+| Mode | Fresh input | Cached input | Cache write | Output |
+| --- | ---: | ---: | ---: | ---: |
+| BU Ultrafast | \$0.24 | \$0.024 | \$0.30 | \$1.20 |
+| BU Fast | \$0.12 | \$0.012 | \$0.15 | \$0.60 |
+
+For a call exceeding 272,000 prompt + cache-write tokens, input and cache rates are 2× and output is 1.5×.
+
+Browser, network, and optional services add charges. See [task billing](/cloud/guides/billing#what-does-a-task-cost).
+
+### Select a mode
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+with BrowserUse() as client:
+    run = client.runs.create("Find the top Hacker News story", model="bu-ultrafast")
+    result = client.runs.wait_for_completion(run.id)
+    print(result.result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const run = await client.runs.create({
+  task: "Find the top Hacker News story",
+  model: "bu-ultrafast" as any, // SDK types do not list BU modes yet
+});
+const result = await client.runs.waitForCompletion(run.id);
+console.log(result.result);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Find the top Hacker News story","model":"bu-ultrafast"}'
+```
+</CodeGroup>
+
+Use `bu-fast` for more reasoning. Presets reject `modelParams`; projects without access receive 422 with a waitlist link.
+
+These are V4 presets, separate from local `ChatBrowserUse`; omitting `model` selects neither.
+
+## Provider models
+
+Omit `model` and `modelParams` to use **GPT-6 Luna with High reasoning**, or pass a provider model ID when creating a run. EU uses the same task default through its regional provider route; Bedrock-only projects retain their compatible default. Availability depends on your route and account.
 The following Browser Use-hosted models have published token pricing:
 
 | Model | API string | Input | Cache read | Output | BYOK |
@@ -22,14 +80,9 @@ proxyless/BYOP) are charged separately. See [full pricing](https://browser-use.c
 See [Thinking levels](/cloud/agent/thinking-levels) for V4 `modelParams` and
 the normalized `thinkingLevel` values available in V2 and V3.
 
-<Tip>
-  Use **GPT-6 Luna with High reasoning** for the default V4 configuration.
-  Omit both `model` and `modelParams` to let the API apply it.
-</Tip>
+## Provider model IDs in the published SDK schema
 
-## All supported V4 model IDs
-
-The V4 request schema accepts the following model IDs. The Cloud dashboard may
+The published SDK schema lists the following provider model IDs. REST and the Cloud dashboard can expose newer choices before an SDK release. The Cloud dashboard may
 show a smaller curated set; availability can also depend on your account's
 rollout and configured provider key. An accepted ID does not guarantee access
 to every upstream provider. Experimental models are not recommended as a

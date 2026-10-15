@@ -8,6 +8,10 @@ A US residential proxy is enabled by default. The browser's traffic passes
 through that residential IP before reaching the website, so the website sees
 the proxy's location—not your server's.
 
+Exception: a new session on [BU Ultrafast or BU Fast](/cloud/agent/models#bu-ultrafast-and-bu-fast)
+starts without a proxy for speed. Set `browserSettings.proxyCountryCode` (for
+example `"us"`) to force one.
+
 <img
   src="/cloud/images/browser-proxy-light.svg"
   alt="A cloud browser routing its traffic through a residential proxy before reaching a website"

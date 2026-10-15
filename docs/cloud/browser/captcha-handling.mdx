@@ -5,7 +5,8 @@ icon: shield-check
 ---
 
 Automatic CAPTCHA solving is enabled by default for API V4 Agent runs and
-standalone Cloud Browser sessions.
+standalone Cloud Browser sessions. [BU Ultrafast and BU Fast](/cloud/agent/models#bu-ultrafast-and-bu-fast)
+runs skip the always-on solver for speed; the agent starts it when it meets a CAPTCHA.
 
 For a standalone browser created with `POST /api/v4/browsers`, set
 `"solveCaptchas": false` to handle challenges yourself. This standalone-browser

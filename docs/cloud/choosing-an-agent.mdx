@@ -1,12 +1,24 @@
 ---
 title: Choosing an Agent
-description: "Compare Browser Use Cloud agents on accuracy, speed and price, and pick the right one for your task."
+description: "Choose BU Ultrafast, BU Fast, or a provider model on API V4; keep older APIs for existing integrations."
 icon: scale-balanced
 ---
 
-Browser Use Cloud offers three agents that can complete your tasks. Use V4 when accuracy matters most, V3 when speed and cost matter most, and V2 only for older integrations.
+Use **API V4** for new integrations; keep V2/V3 for existing ones.
 
-## At a glance
+| Mode | Choose it for |
+| --- | --- |
+| **BU Ultrafast** (`bu-ultrafast`) | Quick browser interactions |
+| **BU Fast** (`bu-fast`) | More reasoning at low token prices |
+| **V4 provider models** | Your preferred model and reasoning settings |
+
+BU modes require [early access](https://browser-use.com/ultrafast). [Rates, measured task costs, and examples](/cloud/agent/models).
+
+<Accordion title="Historical V2/V3/V4 comparison">
+
+These older model/harness results predate BU Ultrafast and BU Fast and do not describe their prices or performance.
+
+### Earlier comparison at a glance
 
 |                        | V4 Agent                 | V3 Agent                             | V2 Agent                          |
 | ---------------------- | ------------------------ | ------------------------------------ | --------------------------------- |
@@ -56,15 +68,15 @@ Our first-generation agent remains available for compatibility. It is based on o
 
 Starting something new? Use V4 instead; it's far more accurate.
 
-## V4 completes the hardest tasks
+### Earlier hard-task results
 
 V4 completed 76% of difficult, real-world browser tasks — nine points ahead of V3 and twenty-two ahead of V2.
 
 ![Browser Use Cloud success rate on hard web tasks: V2 Agent 54.25%, V3 Agent 67.25%, V4 Agent 76.47%](/cloud/images/agent-accuracy.png)
 
-## Typical tasks cost \$0.70–\$1.64
+### Historical Opus task costs: \$0.70–\$1.64
 
-Measured with the same model — Claude Opus 4.7 — across the last 30 days of production usage, the typical customer's successful task costs \$0.70 on V2, \$0.87 on V3, and \$1.64 on V4, taking about 1, 2, and 5 minutes respectively. V4 costs more per task because customers use it for more complex work, and V2's tasks run shortest only because it gets the simplest ones. On identical hard tasks, V3 is the fastest agent (about 6 minutes, versus about 10 for V2 and V4).
+In the earlier 30-day production snapshot, using Claude Opus 4.7, the median customer's successful task cost \$0.70 on V2, \$0.87 on V3, and \$1.64 on V4, taking about 1, 2, and 5 minutes respectively. These were different customer task cohorts, not matched tasks. In the earlier matched hard-task benchmark, V3 was fastest (about 6 minutes, versus about 10 for V2 and V4).
 
 |               | V2 Agent | V3 Agent | V4 Agent |
 | ------------- | -------- | -------- | -------- |
@@ -73,10 +85,12 @@ Measured with the same model — Claude Opus 4.7 — across the last 30 days of 
 
 ![What a task costs with Claude Opus 4.7 from real usage: V2 \$0.70, V3 \$0.87, V4 \$1.64 per successful task](/cloud/images/agent-real-cost.png)
 
-## Comparing accuracy, speed, and cost
+### Earlier accuracy, speed, and cost comparison
 
 ![Comparing agent accuracy, speed, and cost: V4 is most accurate at \$1.64 per task, V3 is fastest at \$0.87, V2 is cheapest at \$0.70 but least accurate](/cloud/images/agent-comparison.png)
 
-## How we measured this
+### How the earlier comparison was measured
 
-In July 2026, we ran each agent four times on Internal Bench Hard: 106 difficult tasks on real websites. Every run used Claude Opus 4.8, and the same independent judge scored each result. We left out tasks blocked by websites' anti-bot measures. The speed and cost figures are averages; simpler tasks usually run faster and cost less. Real-world cost and speed figures are the median customer's successful task with Claude Opus 4.7 over the last 30 days of production, our own testing excluded.
+In July 2026, we ran each agent four times on Internal Bench Hard: 106 difficult tasks on real websites. Every run used Claude Opus 4.8, and the same independent judge scored each result. We left out tasks blocked by websites' anti-bot measures. Benchmark speed and cost figures are averages. The separate production figures describe the median customer's successful task with Claude Opus 4.7 in the earlier 30-day snapshot, excluding our own testing; this page does not record that snapshot's exact dates.
+
+</Accordion>
