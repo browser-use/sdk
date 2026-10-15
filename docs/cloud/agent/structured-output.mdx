@@ -76,6 +76,5 @@ application as well, as the examples do.
 
 - API-key runs only. Runs started from the dashboard return `422`.
 - JSON Schema 2020-12 unless the schema sets another `$schema`.
-- At most 64 KiB, 64 nesting levels, and 4096 schema nodes.
-- `$ref` must point inside the schema (`#/...`). Ultrafast runs also reject
-  recursive references.
+- At most 64 KiB, 64 nesting levels, and about 4,000 values (every key's value and array item counts).
+- `$ref` must point inside the schema (`#/...`).
