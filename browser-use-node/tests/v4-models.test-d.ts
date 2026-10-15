@@ -6,3 +6,8 @@ test("known V4 models autocomplete and newer model ids still compile", () => {
   const future: RunCreateBody = { task: "Find pricing", model: "model-from-next-month" };
   void future;
 });
+
+test("browserSettings fields with server defaults stay optional", () => {
+  const profileOnly: RunCreateBody = { task: "Check my orders", browserSettings: { profileId: "p" } };
+  void profileOnly;
+});

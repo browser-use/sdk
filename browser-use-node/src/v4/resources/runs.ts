@@ -15,9 +15,13 @@ export type RunModel = RunCreateRequest["model"];
 
 // agenticAutofillGrantId is gated per project and stays untyped, matching the Python SDK.
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
-  Partial<Omit<RunCreateRequest, "task" | "model" | "agenticAutofillGrantId">> & {
+  Partial<
+    Omit<RunCreateRequest, "task" | "model" | "browserSettings" | "agenticAutofillGrantId">
+  > & {
     // `string & {}` keeps autocomplete for known ids without rejecting new ones.
     model?: RunModel | (string & {});
+    // Generated types mark defaulted fields (proxyCountryCode) required; the server fills them.
+    browserSettings?: Partial<RunCreateRequest["browserSettings"] & {}> | null;
   };
 
 /** Terminal run statuses — closed enum in the v4 spec. */
