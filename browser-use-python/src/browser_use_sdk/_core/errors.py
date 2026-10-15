@@ -11,7 +11,7 @@ class BrowserUseError(Exception):
         status_code: int,
         message: str,
         detail: Any = None,
-        retry_after: float | None = None,
+        retry_after: int | None = None,
     ) -> None:
         self.status_code = status_code
         self.message = message
@@ -28,7 +28,7 @@ class APIKeySpendLimitError(BrowserUseError):
         status_code: int,
         message: str,
         detail: Any = None,
-        retry_after: float | None = None,
+        retry_after: int | None = None,
         *,
         code: str,
         cap: float | None,

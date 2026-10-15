@@ -61,7 +61,7 @@ def _raise_for_status(response: httpx.Response) -> None:
         import json
         message = json.dumps(raw)
     header = response.headers.get("Retry-After", "").strip()
-    retry_after = float(header) if header.isascii() and header.isdigit() else None
+    retry_after = int(header) if header.isascii() and header.isdigit() else None
     if response.status_code == 402 and fields.get("code") == _SPEND_LIMIT_CODE:
         raise APIKeySpendLimitError(
             response.status_code,
