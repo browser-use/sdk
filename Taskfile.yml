@@ -369,7 +369,7 @@ tasks:
       - python3 -m json.tool --indent 4 snapshots/v4.json docs/cloud/openapi/v4.json
 
   docs:diagrams:
-    desc: Regenerate docs/cloud/images diagram SVGs from scripts/diagrams (stdlib Python, deterministic)
+    desc: Regenerate docs/cloud/images and docs/open-source/images diagram SVGs from scripts/diagrams (stdlib Python, deterministic)
     cmds:
       - for f in scripts/diagrams/*.py; do [ "$f" = scripts/diagrams/core.py ] || python3 -I "$f" || exit 1; done
 
