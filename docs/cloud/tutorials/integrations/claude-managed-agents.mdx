@@ -7,7 +7,7 @@ description: Give Anthropic's Claude Managed Agents a stealth cloud browser via 
 
 The sandbox only ships a bare headless Chromium for Playwright: no stealth, no proxies, no CAPTCHA handling. So the agent starts a named Browser Use Cloud browser and drives it with `browser-use <<'PY'` Python snippets.
 
-Create the environment, vault, and agent below in the [Claude Console](https://platform.claude.com/docs/en/managed-agents/onboarding), or save each YAML block to a file and run [`ant apply`](https://platform.claude.com/docs/en/cli-sdks-libraries/cli/apply), which prints the ID. Save the IDs as `ENVIRONMENT_ID`, `VAULT_ID`, and `AGENT_ID`.
+Create the environment, vault, and agent below in the [Claude Console](https://platform.claude.com/docs/en/managed-agents/onboarding), or save the YAML blocks as `environments/browser-env.yaml` and `agents/browser-agent.yaml` and run [`ant apply`](https://platform.claude.com/docs/en/cli-sdks-libraries/cli/apply) on each, which prints the ID. Save the IDs as `ENVIRONMENT_ID`, `VAULT_ID`, and `AGENT_ID`.
 
 ## 1. Create an environment
 
@@ -103,9 +103,3 @@ curl -sS "https://api.anthropic.com/v1/sessions/$SESSION_ID/events" \
 The agent starts a named cloud browser, runs Python helper snippets through `browser-use`, then returns the result. The browser shows up in [cloud.browser-use.com](https://cloud.browser-use.com) with a **Live View**. For an mp4 recording, have the agent call `start_remote_daemon("managed", enableRecording=True)`.
 
 If a session ends before the agent runs `stop_remote_daemon`, the browser keeps running until its timeout (60 minutes by default). Stop it from the dashboard, or pass a shorter `timeout=` in minutes to `start_remote_daemon`.
-
-<Tip>
-  Always use a cloud browser. The sandbox's bundled Chromium has no stealth,
-  proxies, or CAPTCHA handling. Cloud mode gives you stealth, residential
-  proxies, live view, and recording.
-</Tip>
