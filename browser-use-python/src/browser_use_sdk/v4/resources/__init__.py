@@ -1,5 +1,6 @@
 from .browsers import AsyncBrowsers, Browsers
 from .integrations import AsyncIntegrations, Integrations
+from .profiles import AsyncProfiles, Profiles
 from .runs import AsyncRuns, Runs
 from .sessions import AsyncSessions, Sessions
 from .wallets import AsyncWallets, Wallets
@@ -10,6 +11,8 @@ __all__ = [
     "AsyncBrowsers",
     "Integrations",
     "AsyncIntegrations",
+    "Profiles",
+    "AsyncProfiles",
     "Runs",
     "AsyncRuns",
     "Sessions",

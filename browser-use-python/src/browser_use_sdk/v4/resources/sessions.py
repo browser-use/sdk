@@ -7,6 +7,7 @@ from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
     QueuedMessage,
     QueueListResponse,
+    SessionCostCapResponse,
     SessionCostResponse,
     SessionInfo,
     SessionListResponse,
@@ -88,6 +89,18 @@ class Sessions:
         """Get what the session has cost so far: LLM, search, browser and proxy."""
         return SessionCostResponse.model_validate(
             self._http.request("GET", f"/sessions/{session_id}/cost")
+        )
+
+    def update_cost_cap(
+        self, session_id: str | UUID, *, max_cost_usd: float | str, **extra: Any
+    ) -> SessionCostCapResponse:
+        """Change the USD spend cap of the session's active run."""
+        return SessionCostCapResponse.model_validate(
+            self._http.request(
+                "PATCH",
+                f"/sessions/{session_id}/cost-cap",
+                json={"maxCostUsd": max_cost_usd, **extra},
+            )
         )
 
     def get_share(self, session_id: str | UUID) -> SessionShareInfo | None:
@@ -213,6 +226,18 @@ class AsyncSessions:
         """Get what the session has cost so far: LLM, search, browser and proxy."""
         return SessionCostResponse.model_validate(
             await self._http.request("GET", f"/sessions/{session_id}/cost")
+        )
+
+    async def update_cost_cap(
+        self, session_id: str | UUID, *, max_cost_usd: float | str, **extra: Any
+    ) -> SessionCostCapResponse:
+        """Change the USD spend cap of the session's active run."""
+        return SessionCostCapResponse.model_validate(
+            await self._http.request(
+                "PATCH",
+                f"/sessions/{session_id}/cost-cap",
+                json={"maxCostUsd": max_cost_usd, **extra},
+            )
         )
 
     async def get_share(self, session_id: str | UUID) -> SessionShareInfo | None:

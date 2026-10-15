@@ -8,6 +8,8 @@ type QueuedMessage = components["schemas"]["QueuedMessage"];
 type QueueListResponse = components["schemas"]["QueueListResponse"];
 type SessionUpdateRequest = components["schemas"]["SessionUpdateRequest"];
 type SessionCostResponse = components["schemas"]["SessionCostResponse"];
+type SessionCostCapRequest = components["schemas"]["SessionCostCapRequest"];
+type SessionCostCapResponse = components["schemas"]["SessionCostCapResponse"];
 type SessionShareInfo = components["schemas"]["SessionShareInfo"];
 type SessionShareUpdateRequest = components["schemas"]["SessionShareUpdateRequest"];
 
@@ -52,6 +54,11 @@ export class Sessions {
   /** Get what the session has cost so far: LLM, search, browser and proxy. */
   cost(sessionId: string): Promise<SessionCostResponse> {
     return this.http.get<SessionCostResponse>(`/sessions/${sessionId}/cost`);
+  }
+
+  /** Change the USD spend cap of the session's active run. */
+  updateCostCap(sessionId: string, body: SessionCostCapRequest): Promise<SessionCostCapResponse> {
+    return this.http.patch<SessionCostCapResponse>(`/sessions/${sessionId}/cost-cap`, body);
   }
 
   /** Get the session's public share link, or null if it was never shared. */

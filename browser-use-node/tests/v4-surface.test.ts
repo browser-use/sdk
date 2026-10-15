@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 
 import { HttpClient } from "../src/core/http.js";
 import { Integrations } from "../src/v4/resources/integrations.js";
+import { Profiles } from "../src/v4/resources/profiles.js";
 import { Sessions } from "../src/v4/resources/sessions.js";
 
 const SESSION_ID = "00000000-0000-0000-0000-000000000002";
@@ -23,6 +24,20 @@ it.each([
     method: "PATCH",
     url: `/sessions/${SESSION_ID}`,
     body: '{"title":null}',
+  },
+  {
+    name: "profiles.list passes camelCase query params",
+    call: (http: HttpClient) => new Profiles(http).list({ pageSize: 5, pageNumber: 2 }),
+    method: "GET",
+    url: "/profiles?pageSize=5&pageNumber=2",
+    body: undefined,
+  },
+  {
+    name: "sessions.updateCostCap patches the cost-cap path",
+    call: (http: HttpClient) => new Sessions(http).updateCostCap(SESSION_ID, { maxCostUsd: "2.50" }),
+    method: "PATCH",
+    url: `/sessions/${SESSION_ID}/cost-cap`,
+    body: '{"maxCostUsd":"2.50"}',
   },
   {
     name: "sessions.updateShare uses PUT",

@@ -4,6 +4,7 @@ import asyncio
 import time
 from typing import TYPE_CHECKING, Any
 
+from ..._core import _UNSET
 from ..._core.errors import BrowserUseError
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
@@ -54,6 +55,7 @@ def _build_create_body(
     op_vault_allowed_domains: list[str] | None,
     agentcard_wallet_id: str | UUID | None,
     stripe_link_connection_id: str | UUID | None,
+    keep_alive: int | None,
     extra: dict[str, Any],
 ) -> dict[str, Any]:
     body: dict[str, Any] = {"task": task}
@@ -115,6 +117,8 @@ def _build_create_body(
         body["agentcardWalletId"] = str(agentcard_wallet_id)
     if stripe_link_connection_id is not None:
         body["stripeLinkConnectionId"] = str(stripe_link_connection_id)
+    if keep_alive is not _UNSET:
+        body["keepAlive"] = keep_alive
     body.update(extra)
     return body
 
@@ -142,6 +146,7 @@ class Runs:
         op_vault_allowed_domains: list[str] | None = None,
         agentcard_wallet_id: str | UUID | None = None,
         stripe_link_connection_id: str | UUID | None = None,
+        keep_alive: int | None = _UNSET,  # type: ignore[assignment]
         **extra: Any,
     ) -> RunCreateResponse:
         """Create a run (a new session, or a follow-up turn when session_id is set)."""
@@ -162,6 +167,7 @@ class Runs:
             op_vault_allowed_domains,
             agentcard_wallet_id,
             stripe_link_connection_id,
+            keep_alive,
             extra,
         )
         return RunCreateResponse.model_validate(
@@ -340,6 +346,7 @@ class AsyncRuns:
         op_vault_allowed_domains: list[str] | None = None,
         agentcard_wallet_id: str | UUID | None = None,
         stripe_link_connection_id: str | UUID | None = None,
+        keep_alive: int | None = _UNSET,  # type: ignore[assignment]
         **extra: Any,
     ) -> RunCreateResponse:
         """Create a run (a new session, or a follow-up turn when session_id is set)."""
@@ -360,6 +367,7 @@ class AsyncRuns:
             op_vault_allowed_domains,
             agentcard_wallet_id,
             stripe_link_connection_id,
+            keep_alive,
             extra,
         )
         return RunCreateResponse.model_validate(

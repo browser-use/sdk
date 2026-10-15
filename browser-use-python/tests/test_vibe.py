@@ -122,7 +122,27 @@ _V3_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("post", "/workspaces/{workspace_id}/files/upload"): ("workspaces", "upload_files"),
 }
 
+# Extensions are added by sdk#309.
+_V4_UNMAPPED = {
+    ("post", "/extensions"),
+    ("get", "/extensions"),
+    ("get", "/extensions/{extension_id}"),
+    ("delete", "/extensions/{extension_id}"),
+}
+
 _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
+    # browsers
+    ("post", "/browsers"): ("browsers", "create"),
+    ("get", "/browsers"): ("browsers", "list"),
+    ("get", "/browsers/{session_id}"): ("browsers", "get"),
+    ("patch", "/browsers/{session_id}"): ("browsers", "stop"),
+    ("get", "/browsers/{session_id}/downloads"): ("browsers", "downloads"),
+    # profiles
+    ("post", "/profiles"): ("profiles", "create"),
+    ("get", "/profiles"): ("profiles", "list"),
+    ("get", "/profiles/{profile_id}"): ("profiles", "get"),
+    ("patch", "/profiles/{profile_id}"): ("profiles", "update"),
+    ("delete", "/profiles/{profile_id}"): ("profiles", "delete"),
     # runs
     ("post", "/runs"): ("runs", "create"),
     ("get", "/runs"): ("runs", "list"),
@@ -142,6 +162,7 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("patch", "/sessions/{session_id}"): ("sessions", "update"),
     ("delete", "/sessions/{session_id}"): ("sessions", "delete"),
     ("get", "/sessions/{session_id}/cost"): ("sessions", "cost"),
+    ("patch", "/sessions/{session_id}/cost-cap"): ("sessions", "update_cost_cap"),
     ("get", "/sessions/{session_id}/share"): ("sessions", "get_share"),
     ("post", "/sessions/{session_id}/share"): ("sessions", "create_share"),
     ("put", "/sessions/{session_id}/share"): ("sessions", "update_share"),
@@ -315,18 +336,25 @@ class TestV4Coverage:
         self.spec = _load_spec(_V4_SPEC)
 
     def test_all_spec_endpoints_mapped(self) -> None:
-        spec_eps = _spec_endpoints(self.spec)
-        # /browsers and /profiles mount the same handlers as v3 — use the v3
-        # namespace for those. Not duplicated in the v4 SDK surface.
-        spec_eps = {ep for ep in spec_eps if not (ep[1].startswith("/browsers") or ep[1].startswith("/profiles"))}
+        spec_eps = _spec_endpoints(self.spec) - _V4_UNMAPPED
         mapped = set(_V4_MAP.keys())
         missing = spec_eps - mapped
         assert not missing, f"Unmapped v4 endpoints: {missing}"
 
     def test_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v4.resources import integrations, runs, sessions, wallets, workspaces
+        from browser_use_sdk.v4.resources import (
+            browsers,
+            integrations,
+            profiles,
+            runs,
+            sessions,
+            wallets,
+            workspaces,
+        )
 
         resource_classes = {
+            "browsers": browsers.Browsers,
+            "profiles": profiles.Profiles,
             "runs": runs.Runs,
             "sessions": sessions.Sessions,
             "workspaces": workspaces.Workspaces,
@@ -340,9 +368,19 @@ class TestV4Coverage:
             )
 
     def test_async_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v4.resources import integrations, runs, sessions, wallets, workspaces
+        from browser_use_sdk.v4.resources import (
+            browsers,
+            integrations,
+            profiles,
+            runs,
+            sessions,
+            wallets,
+            workspaces,
+        )
 
         async_classes = {
+            "browsers": browsers.AsyncBrowsers,
+            "profiles": profiles.AsyncProfiles,
             "runs": runs.AsyncRuns,
             "sessions": sessions.AsyncSessions,
             "workspaces": workspaces.AsyncWorkspaces,
@@ -574,4 +612,5 @@ class TestClientInit:
         assert hasattr(client, "workspaces")
         assert hasattr(client, "integrations")
         assert hasattr(client, "wallets")
+        assert hasattr(client, "profiles")
         client.close()

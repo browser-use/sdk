@@ -153,6 +153,20 @@ function v4EndpointToSdkMethod(
 ): { resource: string; method: string } | null {
   const { method, path } = ep;
 
+  // Browsers
+  if (method === "post" && path === "/browsers") return { resource: "browsers", method: "create" };
+  if (method === "get" && path === "/browsers") return { resource: "browsers", method: "list" };
+  if (method === "get" && path === "/browsers/{session_id}") return { resource: "browsers", method: "get" };
+  if (method === "patch" && path === "/browsers/{session_id}") return { resource: "browsers", method: "stop" };
+  if (method === "get" && path === "/browsers/{session_id}/downloads") return { resource: "browsers", method: "downloads" };
+
+  // Profiles
+  if (method === "post" && path === "/profiles") return { resource: "profiles", method: "create" };
+  if (method === "get" && path === "/profiles") return { resource: "profiles", method: "list" };
+  if (method === "get" && path === "/profiles/{profile_id}") return { resource: "profiles", method: "get" };
+  if (method === "patch" && path === "/profiles/{profile_id}") return { resource: "profiles", method: "update" };
+  if (method === "delete" && path === "/profiles/{profile_id}") return { resource: "profiles", method: "delete" };
+
   // Runs
   if (method === "post" && path === "/runs") return { resource: "runs", method: "create" };
   if (method === "get" && path === "/runs") return { resource: "runs", method: "list" };
@@ -173,6 +187,7 @@ function v4EndpointToSdkMethod(
   if (method === "patch" && path === "/sessions/{session_id}") return { resource: "sessions", method: "update" };
   if (method === "delete" && path === "/sessions/{session_id}") return { resource: "sessions", method: "delete" };
   if (method === "get" && path === "/sessions/{session_id}/cost") return { resource: "sessions", method: "cost" };
+  if (method === "patch" && path === "/sessions/{session_id}/cost-cap") return { resource: "sessions", method: "updateCostCap" };
   if (method === "get" && path === "/sessions/{session_id}/share") return { resource: "sessions", method: "getShare" };
   if (method === "post" && path === "/sessions/{session_id}/share") return { resource: "sessions", method: "createShare" };
   if (method === "put" && path === "/sessions/{session_id}/share") return { resource: "sessions", method: "updateShare" };
@@ -240,10 +255,8 @@ describe("V4 SDK coverage", () => {
 
   const client = new BrowserUseV4({ apiKey: "test" });
 
-  // /browsers and /profiles mount the same handlers as v3 — use the v3
-  // namespace for those. Not duplicated in the v4 SDK surface.
-  const v4SkippedPaths = (path: string) =>
-    path.startsWith("/browsers") || path.startsWith("/profiles");
+  // Extensions are added by sdk#309.
+  const v4SkippedPaths = (path: string) => path.startsWith("/extensions");
 
   it("should map every v4 endpoint to a known SDK method", () => {
     const unmapped: string[] = [];

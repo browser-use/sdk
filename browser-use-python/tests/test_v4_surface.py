@@ -8,6 +8,7 @@ import pytest
 
 from browser_use_sdk.v4 import RunModel
 from browser_use_sdk.v4.resources.integrations import Integrations
+from browser_use_sdk.v4.resources.profiles import Profiles
 from browser_use_sdk.v4.resources.runs import Runs
 from browser_use_sdk.v4.resources.sessions import Sessions
 
@@ -59,6 +60,7 @@ CASES: list[Any] = [
             stripe_link_connection_id=LINK_ID,
             op_vault_id="vault",
             op_vault_allowed_domains=["amazon.com"],
+            keep_alive=None,
         ),
         _RUN,
         (
@@ -71,6 +73,7 @@ CASES: list[Any] = [
                 "opVaultAllowedDomains": ["amazon.com"],
                 "agentcardWalletId": WALLET_ID,
                 "stripeLinkConnectionId": LINK_ID,
+                "keepAlive": None,
             },
             None,
         ),
@@ -108,6 +111,22 @@ CASES: list[Any] = [
         ("GET", f"/sessions/{SESSION_ID}/share", None, None),
         None,
         id="sessions.get_share returns None for a never-shared session",
+    ),
+    pytest.param(
+        Sessions,
+        lambda s: s.update_cost_cap(SESSION_ID, max_cost_usd="2.50"),
+        {"sessionId": SESSION_ID, "maxCostUsd": "2.50"},
+        ("PATCH", f"/sessions/{SESSION_ID}/cost-cap", {"maxCostUsd": "2.50"}, None),
+        _ANY,
+        id="sessions.update_cost_cap camelCases max_cost_usd",
+    ),
+    pytest.param(
+        Profiles,
+        lambda p: p.list(page_size=5, page_number=2),
+        {"items": [], "totalItems": 0, "pageNumber": 2, "pageSize": 5},
+        ("GET", "/profiles", None, {"query": None, "pageSize": 5, "pageNumber": 2}),
+        _ANY,
+        id="profiles.list passes the API's camelCase query names",
     ),
     pytest.param(
         Integrations,

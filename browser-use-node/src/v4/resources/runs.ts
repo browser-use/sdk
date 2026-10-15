@@ -10,8 +10,9 @@ type RunEventsResponse = components["schemas"]["RunEventsResponse"];
 type RunEvent = components["schemas"]["RunEvent"];
 type RunAttachmentsResponse = components["schemas"]["RunAttachmentsResponse"];
 
+// agenticAutofillGrantId is gated per project and stays untyped, matching the Python SDK.
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
-  Partial<Omit<RunCreateRequest, "task">>;
+  Partial<Omit<RunCreateRequest, "task" | "agenticAutofillGrantId">>;
 
 /** Terminal run statuses — closed enum in the v4 spec. */
 const TERMINAL_STATUSES = new Set(["completed", "failed", "cancelled"]);
