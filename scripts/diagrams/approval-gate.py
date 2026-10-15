@@ -116,7 +116,7 @@ def orange_path(d, path, theme):
 def build(theme):
     t = THEMES[theme]
     W, H = 720, 312
-    d = Doc(W, H, TITLE, DESC, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper(FIG, TAG)
     defs(d)
     ink, ink2, ink3, ot = t["ink"], t["ink2"], t["ink3"], t["otext"]
@@ -132,7 +132,7 @@ def build(theme):
     d.add(f'<line x1="{XC + 44}" y1="{Y}" x2="{XG - 34}" y2="{Y}" stroke="{ink2}" stroke-width="1" marker-end="url(#ah)"/>')
     tokens(d, (176, 198, 220), Y)
     lab = "each browser action"
-    d.text((XC + 44 + XG - 34) / 2, Y + 22, lab, 11, ink3, mono=True, anchor="middle")
+    d.text((XC + 44 + XG - 34) / 2, Y + 22, lab, 11, ink2, mono=True, anchor="middle")
     assert tw(lab, 11, mono=True) < XG - XC - 60, lab
 
     obj_gate(d, XG, Y)
@@ -167,7 +167,7 @@ def build_mobile(theme):
     """360 px, 1:1. Flow runs down; outcomes side by side; the return bus climbs the left edge."""
     t = THEMES[theme]
     W, H = 360, 452
-    d = Doc(W, H, TITLE, DESC, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper(FIG, "APPROVALS")
     defs(d)
     ink, ink2, ink3, ot = t["ink"], t["ink2"], t["ink3"], t["otext"]
@@ -180,7 +180,7 @@ def build_mobile(theme):
     d.text(X + 50, YC + 4, "Claude", 12.5, ink, 600)
     d.add(f'<line x1="{X}" y1="{YC + 28}" x2="{X}" y2="{YG - 40}" stroke="{ink2}" stroke-width="1" marker-end="url(#ah)"/>')
     tokens(d, (130, 148, 166), X - 3.5, vertical=True)
-    d.text(X + 18, 152, "each browser action", 11, ink3, mono=True)
+    d.text(X + 18, 152, "each browser action", 11, ink2, mono=True)
     assert X + 18 + tw("each browser action", 11, mono=True) < W - 24
 
     obj_gate(d, X, YG)

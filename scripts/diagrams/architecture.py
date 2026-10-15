@@ -1,138 +1,18 @@
 """FIG 6.0 architecture: Claude <-> Anthropic SDK tool runner <-> Browser Use (browser actions + Bash).
 
 Run: python3 -I scripts/diagrams/architecture.py   (writes docs/open-source/images/anthropic/architecture-{light,dark}[-mobile].svg)
-Self-contained copy of the paper-technical primitives (same as which-product.py) so other figures' edits cannot break it.
 """
-import math, pathlib, re
-
-OUT = pathlib.Path(__file__).resolve().parents[2] / "docs" / "open-source" / "images" / "anthropic"
-C, S = math.cos(math.radians(30)), 0.5
-SANS = "Geist, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
-MONO = "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
-NS = 'vector-effect="non-scaling-stroke"'
-RJ = 'stroke-linejoin="round" stroke-linecap="round"'
-
-THEMES = {
-    "light": dict(
-        paper="#FBFAF7", border="#E6E2D9", ink="#1B1A17", ink2="#5F5B53", ink3="#9A958A",
-        hair="#C9C3B6", faint="#ECE8DF", dot="#DDD8CD", fill="#FFFFFF", fill2="#F4F1EA",
-        orange="#FE750E", otext="#C4530A", osoft="#FFE6D2", grain=0.05, glow=.35,
-    ),
-    "dark": dict(
-        paper="#111113", border="#26262B", ink="#EDEDEF", ink2="#A1A1AA", ink3="#6B6B74",
-        hair="#3D3D45", faint="#1E1E22", dot="#232328", fill="#151518", fill2="#1A1A1E",
-        orange="#FE750E", otext="#FF8A3D", osoft="#3A2214", grain=0.07, glow=.5,
-    ),
-}
+import math, pathlib, sys
+HERE = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import core  # noqa
+from core import THEMES, Doc, tw, P, pts, m_top, m_front, C, S, NS, RJ  # noqa
+core.OUT = HERE.parents[1] / "docs" / "open-source" / "images" / "anthropic"
 
 TITLE = "Browser Use toolsets for Claude"
 DESC = ("Claude sends tool calls to the Anthropic SDK tool runner, which passes each one to Browser Use "
         "and returns the result to Claude. Browser Use provides browser actions on a local, Cloud, "
         "or existing CDP browser, and Bash, which runs on the SDK host.")
-
-
-# ---------------------------------------------------------------- primitives
-def tw(s, size, mono=False, weight=400):
-    """Conservative text width (wider fallback fonts like SF/Helvetica)."""
-    if mono:
-        return len(s) * size * 0.61
-    w = 0
-    for ch in s:
-        if ch in "il.,:;'|!()[]{} ":
-            w += 0.30
-        elif ch in "mwMW@":
-            w += 0.86
-        elif ch.isupper() or ch.isdigit():
-            w += 0.66
-        else:
-            w += 0.55
-    return w * size * (1.04 if weight >= 600 else 1.0)
-
-
-def esc(s):
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
-
-
-def P(x, y, z=0, o=(0, 0)):
-    return (o[0] + (x - y) * C, o[1] + (x + y) * S - z)
-
-
-def pts(ps):
-    return " ".join(f"{x:.1f},{y:.1f}" for x, y in ps)
-
-
-def m_top(o, z=0):      # local (u,v) -> plane z = const
-    return f"matrix({C:.4f},{S},{-C:.4f},{S},{o[0]:.1f},{o[1] - z:.1f})"
-
-
-def m_front(o, y=0):    # local (u,w) -> plane y = const, w = -z
-    ox, oy = P(0, y, 0, o)
-    return f"matrix({C:.4f},{S},0,1,{ox:.1f},{oy:.1f})"
-
-
-class Doc:
-    def __init__(self, w, h, t):
-        self.w, self.h, self.t = w, h, t
-        self.defs, self.body, self.css = [], [], []
-        self.boxes = []
-
-    def add(self, s):
-        self.body.append(s)
-
-    def text(self, x, y, s, size=12, fill=None, weight=400, mono=False, anchor="start", ls=None):
-        fam = "m" if mono else "s"
-        a = f' text-anchor="{anchor}"' if anchor != "start" else ""
-        w = f' font-weight="{weight}"' if weight != 400 else ""
-        l = f' letter-spacing="{ls}"' if ls else ""
-        self.add(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill or self.t["ink"]}"{w}{a}{l} class="{fam}">{esc(s)}</text>')
-        wd = tw(s, size, mono, weight) * (1.12 if ls else 1)
-        x0 = x - wd if anchor == "end" else x - wd / 2 if anchor == "middle" else x
-        assert x0 >= 22 and x0 + wd <= self.w - 22, ("off card", s, x0, x0 + wd)
-        self.boxes.append((x0, y - size * 0.78, x0 + wd, y + size * 0.22, s))
-        return x0, x0 + wd
-
-    def check_overlaps(self):
-        b = self.boxes
-        for i in range(len(b)):
-            for j in range(i + 1, len(b)):
-                p, q = b[i], b[j]
-                if p[0] < q[2] and q[0] < p[2] and p[1] < q[3] and q[1] < p[3]:
-                    raise AssertionError(("text overlap", p[4], q[4]))
-
-    def paper(self, fig, tag):
-        t, w, h = self.t, self.w, self.h
-        self.defs.append(
-            f'<pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">'
-            f'<circle cx="8" cy="8" r="0.7" fill="{t["dot"]}"/></pattern>'
-            f'<filter id="grain" x="0" y="0" width="100%" height="100%">'
-            f'<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch"/>'
-            f'<feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 {t["grain"]} 0"/></filter>'
-            f'<clipPath id="card"><rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14"/></clipPath>'
-        )
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="{t["paper"]}"/>')
-        self.add(f'<g clip-path="url(#card)"><rect width="{w}" height="{h}" fill="url(#dots)"/>'
-                 f'<rect width="{w}" height="{h}" filter="url(#grain)"/></g>')
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="none" stroke="{t["border"]}"/>')
-        for (x, y) in ((20, 20), (w - 20, 20), (20, h - 20), (w - 20, h - 20)):
-            self.add(f'<path d="M{x - 5} {y}h10M{x} {y - 5}v10" stroke="{t["hair"]}" stroke-width="0.75"/>')
-        self.text(34, 24.5, fig, 10, t["ink3"], mono=True, ls="0.08em")
-        self.text(w - 34, 24.5, tag, 10, t["ink3"], mono=True, anchor="end", ls="0.08em")
-
-    def save(self, name):
-        self.check_overlaps()
-        css = f".s{{font-family:{SANS}}}.m{{font-family:{MONO}}}text{{font-kerning:normal}}" + "".join(self.css)
-        svg = (
-            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" width="{self.w}" height="{self.h}" '
-            f'role="img" aria-labelledby="t d" fill="none">'
-            f'<title id="t">{esc(TITLE)}</title><desc id="d">{esc(DESC)}</desc>'
-            f'<style>{css}</style><defs>{"".join(self.defs)}</defs>{"".join(self.body)}</svg>'
-        )
-        svg = re.sub(r"\n\s*", "", svg)
-        p = OUT / f"{name}.svg"
-        p.write_text(svg)
-        kb = len(svg.encode()) / 1024
-        assert kb < 60, (name, kb)
-        print(f"{p} {kb:.1f} KB")
 
 
 def defs(d):
@@ -320,7 +200,7 @@ def group(d, x0, y0, x1, y1, label, lx, size=11.5):
 def build(theme):
     t = THEMES[theme]
     W, H = 720, 292
-    d = Doc(W, H, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 6.0", "TOOLSETS FOR CLAUDE / ARCHITECTURE")
     defs(d)
     ink, ink2, ink3 = t["ink"], t["ink2"], t["ink3"]
@@ -331,7 +211,7 @@ def build(theme):
     NY = BOT + 24
     d.text(108, NY, "Claude", 13, ink, 600, anchor="middle")
     d.text(296, NY, "Anthropic SDK", 13, ink, 600, anchor="middle")
-    d.text(296, NY + 17, "tool_runner", 11, ink3, mono=True, anchor="middle")
+    d.text(296, NY + 17, "tool_runner", 11, ink2, mono=True, anchor="middle")
 
     # Claude <-> tool runner
     a, b = cxr + 8, sxl - 8
@@ -348,9 +228,9 @@ def build(theme):
     (bx, by), _ = browser_windows(d, OX, R1)
     (tx, ty), _ = terminal(d, OX, R2)
     d.text(TX, R1 - 2, "Browser actions", 13, ink, 600)
-    d.text(TX, R1 + 15, "local · Cloud · CDP", 11, ink3, mono=True)
+    d.text(TX, R1 + 15, "local · Cloud · CDP", 11, ink2, mono=True)
     d.text(TX, R2 - 2, "Bash", 13, ink, 600)
-    d.text(TX, R2 + 15, "SDK host", 11, ink3, mono=True)
+    d.text(TX, R2 + 15, "SDK host", 11, ink2, mono=True)
 
     JX = GX0 + 26
     path_cable(d, [(sxr + 6, sym), (JX, sym)])
@@ -369,7 +249,7 @@ def build_mobile(theme):
     """360 px, 1:1. Claude and the SDK side by side; Browser Use stacked below, objects right, names left."""
     t = THEMES[theme]
     W, H = 360, 404
-    d = Doc(W, H, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 6.0", "ARCHITECTURE")
     defs(d)
     ink, ink2, ink3 = t["ink"], t["ink2"], t["ink3"]
@@ -381,7 +261,7 @@ def build_mobile(theme):
     NY = BOT + 22
     d.text(76, NY, "Claude", 13, ink, 600, anchor="middle")
     d.text(270, NY, "Anthropic SDK", 13, ink, 600, anchor="middle")
-    d.text(270, NY + 17, "tool_runner", 11, ink3, mono=True, anchor="middle")
+    d.text(270, NY + 17, "tool_runner", 11, ink2, mono=True, anchor="middle")
     a, b = cxr + 8, sxl - 8
     arrow(d, (a, cym - 7), (b, cym - 7))
     arrow(d, (b, cym + 7), (a, cym + 7))
@@ -395,9 +275,9 @@ def build_mobile(theme):
     _, (bx, by) = browser_windows(d, OX, R1)
     _, (tx, ty) = terminal(d, OX, R2)
     d.text(LX, R1 - 2, "Browser actions", 13, ink, 600)
-    d.text(LX, R1 + 15, "local · Cloud · CDP", 11, ink3, mono=True)
+    d.text(LX, R1 + 15, "local · Cloud · CDP", 11, ink2, mono=True)
     d.text(LX, R2 - 2, "Bash", 13, ink, 600)
-    d.text(LX, R2 + 15, "SDK host", 11, ink3, mono=True)
+    d.text(LX, R2 + 15, "SDK host", 11, ink2, mono=True)
 
     # trunk leaves the SDK slab's right corner, runs down the right edge, feeds both objects from the right
     JX = 322

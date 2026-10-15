@@ -1,4 +1,4 @@
-"""Shared paper-technical primitives for the docs/cloud/images figures.
+"""Shared paper-technical primitives for the docs/cloud and docs/open-source figures.
 
 Not a generator: every other file here imports it. Regenerate all figures with `task docs:diagrams`.
 """

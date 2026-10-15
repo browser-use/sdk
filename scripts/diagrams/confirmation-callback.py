@@ -139,7 +139,7 @@ def flow_css(d):
 def build(theme):
     t = THEMES[theme]
     W, H = 720, 256
-    d = Doc(W, H, TITLE, DESC, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 6.4", "CLAUDE TOOLSETS / FILE UPLOAD")
     defs(d)
     flow_css(d)
@@ -190,58 +190,5 @@ def build(theme):
     d.save(f"confirmation-callback-{theme}")
 
 
-def build_mobile(theme):
-    """360 px, 1:1. Flow runs down; the two return paths climb the left edge back to Claude."""
-    t = THEMES[theme]
-    W, H = 360, 448
-    d = Doc(W, H, TITLE, DESC, t)
-    d.paper("FIG 6.4", "FILE UPLOAD")
-    defs(d)
-    flow_css(d)
-    ink, ink2, ink3, org, ot = t["ink"], t["ink2"], t["ink3"], t["orange"], t["otext"]
-    k = 0.82
-    X, NX = 120, 170
-    ys = [86, 186, 286, 386]
-    half = 32  # object half-height on the flow line
-    XO, XI = 30, 52  # outer (allowed) and inner (denied) buses
-
-    # denied: callback -> inner bus -> Claude
-    line(d, f"M{X - 36} {ys[2]}H{XI}V{ys[0] + 8}H{X - 40}", ink3, dash="3 3", marker="ah")
-    xmark(d, (X - 36 + XI) / 2 + 2, ys[2], 4.5)
-    fe = "False or exception"
-    d.add(f'<text transform="translate({XI + 14} {ys[2] - 14}) rotate(-90)" font-size="11" class="m" fill="{ink2}">{fe}</text>')
-    assert ys[2] - 14 - tw(fe, 11, mono=True) > ys[0] + 30
-    # allowed: browser -> outer bus -> Claude
-    line(d, f"M{X - 42} {ys[3]}H{XO}V{ys[0] - 8}H{X - 44}", org, w=1.4, marker="aho")
-
-    # forward flow
-    for i in range(2):
-        line(d, f"M{X} {ys[i] + half}V{ys[i + 1] - half - 4}", ink2, marker="ah")
-    d.add(f'<rect x="{X - 3}" y="{ys[2] + half}" width="6" height="{ys[3] - ys[2] - 2 * half - 6}" rx="3" fill="{org}" '
-          f'fill-opacity="{.5 if theme == "dark" else .35}" filter="url(#glow)"/>')
-    line(d, f"M{X} {ys[2] + half}V{ys[3] - half - 4}", org, marker="aho", w=1.6)
-    line(d, f"M{X} {ys[2] + half}V{ys[3] - half - 10}", t["paper"], dash="3 11", w=1.6, cls="fl")
-
-    obj_claude(d, X, ys[0], k)
-    obj_checks(d, X, ys[1], k)
-    obj_switch(d, X, ys[2], k)
-    obj_browser(d, X, ys[3], 0.95)
-
-    d.text(X + 10, (ys[0] + ys[1]) / 2 + 4, "file_upload", 11, ink, 500, mono=True)
-    d.text(X + 10, (ys[2] + ys[3]) / 2 + 4, "True", 11, ot, 600, mono=True)
-    names = [("Claude", None, ink), ("SDK checks", "enabled · file_policy", ink), ("Your callback", "confirm(context)", ink),
-             ("Browser Use", None, ot)]
-    for y, (n, sub, col) in zip(ys, names):
-        if sub:
-            d.text(NX, y - 3, n, 13, col, 600)
-            d.text(NX, y + 15, sub, 11, ink2, mono=True)
-            assert NX + tw(sub, 11, mono=True) <= W - 24, sub
-        else:
-            d.text(NX, y + 5, n, 13, col, 600)
-    assert ys[3] + half + 26 <= H
-    d.save(f"confirmation-callback-{theme}-mobile")
-
-
 for th in ("light", "dark"):
     build(th)
-    build_mobile(th)

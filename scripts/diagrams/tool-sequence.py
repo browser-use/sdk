@@ -172,7 +172,7 @@ def name(d, x, y, s, sub=None, anchor="middle", orange=False):
 def build(theme):
     t = THEMES[theme]
     W, H = 720, 300
-    d = Doc(W, H, TITLE, DESC, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 6.1", "CLAUDE TOOLSETS / TOOL LOOP")
     defs(d)
     CY = 158
@@ -217,7 +217,7 @@ def build_mobile(theme):
     """360 px, 1:1. Claude above the runner; the runner's two tools branch off a trunk on the left."""
     t = THEMES[theme]
     W, H = 360, 482
-    d = Doc(W, H, TITLE, DESC, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper("FIG 6.1", "CLAUDE / TOOL LOOP")
     defs(d)
     CX = 62

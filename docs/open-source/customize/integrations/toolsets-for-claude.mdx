@@ -237,11 +237,11 @@ The quickstart uses `confirm=lambda _: True` to approve browser actions automati
 
 <picture className="block dark:hidden">
   <source media="(max-width: 600px)" srcSet="/open-source/images/anthropic/approval-gate-light-mobile.svg" />
-  <img src="/open-source/images/anthropic/approval-gate-light.svg" alt="Claude sends each browser action to your confirm(context) callback. If it returns True the driver executes the action; if it returns False or raises, no action runs, and either way a tool_result returns to Claude." noZoom />
+  <img src="/open-source/images/anthropic/approval-gate-light.svg" alt="For each browser action Claude requests, the SDK calls your confirm(context) callback. If it returns True the driver executes the action; if it returns False or raises, no action runs, and either way a tool_result returns to Claude." noZoom />
 </picture>
 <picture className="hidden dark:block">
   <source media="(max-width: 600px)" srcSet="/open-source/images/anthropic/approval-gate-dark-mobile.svg" />
-  <img src="/open-source/images/anthropic/approval-gate-dark.svg" alt="Claude sends each browser action to your confirm(context) callback. If it returns True the driver executes the action; if it returns False or raises, no action runs, and either way a tool_result returns to Claude." noZoom />
+  <img src="/open-source/images/anthropic/approval-gate-dark.svg" alt="For each browser action Claude requests, the SDK calls your confirm(context) callback. If it returns True the driver executes the action; if it returns False or raises, no action runs, and either way a tool_result returns to Claude." noZoom />
 </picture>
 
 <p className="dark:hidden"><a href="/open-source/images/anthropic/approval-gate-light.svg">Open full-size diagram</a> · <a href="/open-source/images/anthropic/confirmation-callback-light.svg">See the file-upload sequence</a></p>

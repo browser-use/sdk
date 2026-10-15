@@ -32,7 +32,7 @@ def slab(d, x0, x1, y, h, dp, accent):
     top = f"{x0:.1f},{y:.1f} {x1:.1f},{y:.1f} {x1 + dx:.1f},{y - dy:.1f} {x0 + dx:.1f},{y - dy:.1f}"
     end = f"{x1:.1f},{y:.1f} {x1 + dx:.1f},{y - dy:.1f} {x1 + dx:.1f},{y + h - dy:.1f} {x1:.1f},{y + h:.1f}"
     if accent:
-        d.add(f'<rect x="{x0}" y="{y}" width="{x1 - x0:.1f}" height="{h}" fill="{t["oglow"]}" opacity=".35" filter="url(#glow)"/>')
+        d.add(f'<rect x="{x0}" y="{y}" width="{x1 - x0:.1f}" height="{h}" fill="{t["orange"]}" opacity=".35" filter="url(#glow)"/>')
         fs, ft, fe, st = t["orange"], t["osoft"], t["otext"], t["orange"]
     else:
         fs, ft, fe, st = t["fill2"], t["fill"], t["faint"], t["ink3"]
@@ -69,7 +69,7 @@ def defs(d):
 
 def build(theme):
     W, H = 720, 370
-    d = Doc(W, H, TITLE, DESC, THEMES[theme])
+    d = Doc(W, H, THEMES[theme], TITLE, DESC)
     d.paper("FIG 7.0", "BU BENCH V1 / SUCCESS RATE")
     defs(d)
     assert tw("claude-sonnet-4-6", 13, mono=True) < 200 - 56
@@ -79,7 +79,7 @@ def build(theme):
 
 def build_mobile(theme):
     W, H = 360, 322
-    d = Doc(W, H, TITLE, DESC, THEMES[theme])
+    d = Doc(W, H, THEMES[theme], TITLE, DESC)
     d.paper("FIG 7.0", "BU BENCH V1 / SUCCESS RATE")
     defs(d)
     assert tw("claude-sonnet-4-6", 11, mono=True) < 158 - 34 - 8

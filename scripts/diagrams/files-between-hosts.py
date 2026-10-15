@@ -1,30 +1,14 @@
 """FIG 6.2 files between hosts (open-source/customize/integrations/toolsets-for-claude.mdx, File uploads and downloads).
 
 Run: python3 -I scripts/diagrams/files-between-hosts.py   (writes docs/open-source/images/anthropic/files-between-hosts-{light,dark}[-mobile].svg)
-Self-contained copy of the paper-technical primitives (core.py palette). Orange = the Browser Use driver's calls;
-ink = bytes your application moves. No text inside objects, so every <text> is a counted label.
+Orange = the Browser Use driver's calls; ink = bytes your application moves. No text inside objects, so every <text> is a counted label.
 """
-import math, pathlib, re
-
-OUT = pathlib.Path(__file__).resolve().parents[2] / "docs" / "open-source" / "images" / "anthropic"
-C, S = math.cos(math.radians(30)), 0.5
-SANS = "Geist, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
-MONO = "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
-NS = 'vector-effect="non-scaling-stroke"'
-RJ = 'stroke-linejoin="round" stroke-linecap="round"'
-
-THEMES = {
-    "light": dict(
-        paper="#FBFAF7", border="#E6E2D9", ink="#1B1A17", ink2="#5F5B53", ink3="#9A958A",
-        hair="#C9C3B6", faint="#ECE8DF", dot="#DDD8CD", fill="#FFFFFF", fill2="#F4F1EA",
-        orange="#FE750E", otext="#C4530A", osoft="#FFE6D2", grain=0.05, glow=.35,
-    ),
-    "dark": dict(
-        paper="#111113", border="#26262B", ink="#EDEDEF", ink2="#A1A1AA", ink3="#6B6B74",
-        hair="#3D3D45", faint="#1E1E22", dot="#232328", fill="#151518", fill2="#1A1A1E",
-        orange="#FE750E", otext="#FF8A3D", osoft="#3A2214", grain=0.07, glow=.5,
-    ),
-}
+import math, pathlib, sys
+HERE = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import core  # noqa
+from core import THEMES, Doc, tw, P, pts, m_top, m_front, C, S, NS, RJ  # noqa
+core.OUT = HERE.parents[1] / "docs" / "open-source" / "images" / "anthropic"
 
 FIG, TAG, TAG_M = "FIG 6.2", "CLAUDE TOOLSETS / FILES", "FILES"
 TITLE = "Files between the SDK host and a remote browser"
@@ -33,105 +17,6 @@ DESC = ("The SDK host and a remote browser host have separate filesystems. "
         "passes an approved document ID that resolves to the staged path. "
         "Download: the driver's download notice carries only a path on the browser host; "
         "your application retrieves the bytes to the SDK host.")
-
-
-def tw(s, size, mono=False, weight=400):
-    if mono:
-        return len(s) * size * 0.61
-    w = 0
-    for ch in s:
-        if ch in "il.,:;'|!()[]{} ":
-            w += 0.30
-        elif ch in "mwMW@":
-            w += 0.86
-        elif ch.isupper() or ch.isdigit():
-            w += 0.66
-        else:
-            w += 0.55
-    return w * size * (1.04 if weight >= 600 else 1.0)
-
-
-def esc(s):
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
-
-
-def P(x, y, z=0, o=(0, 0)):
-    return (o[0] + (x - y) * C, o[1] + (x + y) * S - z)
-
-
-def pts(ps):
-    return " ".join(f"{x:.1f},{y:.1f}" for x, y in ps)
-
-
-def m_top(o, z=0):
-    return f"matrix({C:.4f},{S},{-C:.4f},{S},{o[0]:.1f},{o[1] - z:.1f})"
-
-
-def m_front(o, y=0):
-    ox, oy = P(0, y, 0, o)
-    return f"matrix({C:.4f},{S},0,1,{ox:.1f},{oy:.1f})"
-
-
-class Doc:
-    def __init__(self, w, h, t, m=34):
-        self.w, self.h, self.t, self.m = w, h, t, m
-        self.defs, self.body, self.css, self.boxes = [], [], [], []
-
-    def add(self, s):
-        self.body.append(s)
-
-    def text(self, x, y, s, size=12, fill=None, weight=400, mono=False, anchor="start", ls=None):
-        assert size >= 11 or s.startswith("FIG") or s.isupper(), ("label under 11 px", s)
-        fam = "m" if mono else "s"
-        a = f' text-anchor="{anchor}"' if anchor != "start" else ""
-        w = f' font-weight="{weight}"' if weight != 400 else ""
-        l = f' letter-spacing="{ls}"' if ls else ""
-        self.add(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" fill="{fill or self.t["ink"]}"{w}{a}{l} class="{fam}">{esc(s)}</text>')
-        wd = tw(s, size, mono, weight) * (1.12 if ls else 1)
-        x0 = x - wd if anchor == "end" else x - wd / 2 if anchor == "middle" else x
-        assert x0 >= 22 and x0 + wd <= self.w - 22, ("off card", s, x0, x0 + wd)
-        self.boxes.append((x0, y - size * 0.78, x0 + wd, y + size * 0.22, s))
-
-    def paper(self, fig, tag):
-        t, w, h, m = self.t, self.w, self.h, self.m
-        self.defs.append(
-            f'<pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">'
-            f'<circle cx="8" cy="8" r="0.7" fill="{t["dot"]}"/></pattern>'
-            f'<filter id="grain" x="0" y="0" width="100%" height="100%">'
-            f'<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch"/>'
-            f'<feColorMatrix values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 {t["grain"]} 0"/></filter>'
-            f'<clipPath id="card"><rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14"/></clipPath>'
-        )
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="{t["paper"]}"/>')
-        self.add(f'<g clip-path="url(#card)"><rect width="{w}" height="{h}" fill="url(#dots)"/>'
-                 f'<rect width="{w}" height="{h}" filter="url(#grain)"/></g>')
-        self.add(f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="14" fill="none" stroke="{t["border"]}"/>')
-        r = m - 14
-        for (x, y) in ((r, 20), (w - r, 20), (r, h - 20), (w - r, h - 20)):
-            self.add(f'<path d="M{x - 5} {y}h10M{x} {y - 5}v10" stroke="{t["hair"]}" stroke-width="0.75"/>')
-        self.text(m, 24.5, fig, 10, t["ink3"], mono=True, ls="0.08em")
-        self.text(w - m, 24.5, tag, 10, t["ink3"], mono=True, anchor="end", ls="0.08em")
-        self.header = len(self.boxes)
-
-    def save(self, name):
-        b = self.boxes
-        for i in range(len(b)):
-            for j in range(i + 1, len(b)):
-                p, q = b[i], b[j]
-                assert not (p[0] < q[2] and q[0] < p[2] and p[1] < q[3] and q[1] < p[3]), ("text overlap", p[4], q[4])
-        css = f".s{{font-family:{SANS}}}.m{{font-family:{MONO}}}text{{font-kerning:normal}}" + "".join(self.css)
-        svg = (
-            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {self.w} {self.h}" width="{self.w}" height="{self.h}" '
-            f'role="img" aria-labelledby="t d" fill="none">'
-            f'<title id="t">{esc(TITLE)}</title><desc id="d">{esc(DESC)}</desc>'
-            f'<style>{css}</style><defs>{"".join(self.defs)}</defs>{"".join(self.body)}</svg>'
-        )
-        svg = re.sub(r"\n\s*", "", svg)
-        p = OUT / f"{name}.svg"
-        p.write_text(svg)
-        kb = len(svg.encode()) / 1024
-        assert kb < 60, (name, kb)
-        print(f"{p} {kb:.1f} KB, {len(b) - self.header} text runs in drawing")
 
 
 def defs(d):
@@ -265,7 +150,7 @@ def label(d, x, y, main, sub, main_fill, size):
     x0 = x - (w1 + (gap + w2 if sub else 0)) / 2
     d.text(x0, y, main, size, main_fill, mono=True)
     if sub:
-        d.text(x0 + w1 + gap, y, sub, size, t["ink3"], mono=True)
+        d.text(x0 + w1 + gap, y, sub, size, t["ink2"], mono=True)
 
 
 def figure(d, XL, XR, obj_bottom, name_size, lab_size, rows, slab_xy, win):
@@ -301,7 +186,7 @@ def figure(d, XL, XR, obj_bottom, name_size, lab_size, rows, slab_xy, win):
 def build(theme):
     t = THEMES[theme]
     W, H = 720, 348
-    d = Doc(W, H, t)
+    d = Doc(W, H, t, TITLE, DESC)
     d.paper(FIG, TAG)
     defs(d)
     end = figure(d, 160, 560, 138, 14, 12, (196, 230, 276, 310), (96, 64), (70, 50, 11))
@@ -312,8 +197,8 @@ def build(theme):
 def build_mobile(theme):
     t = THEMES[theme]
     W, H = 360, 320
-    d = Doc(W, H, t, m=30)
-    d.paper(FIG, TAG_M)
+    d = Doc(W, H, t, TITLE, DESC)
+    d.paper(FIG, TAG_M, m=16)
     defs(d)
     end = figure(d, 82, 276, 124, 13, 11, (176, 208, 252, 284), (72, 48), (56, 40, 9))
     assert end + 16 <= H, end
@@ -321,7 +206,6 @@ def build_mobile(theme):
 
 
 if __name__ == "__main__":
-    OUT.mkdir(exist_ok=True)
     for th in ("dark", "light"):
         build(th)
         build_mobile(th)
