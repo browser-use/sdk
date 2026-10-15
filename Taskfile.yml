@@ -23,8 +23,8 @@ tasks:
     desc: Show what changed in the OpenAPI specs
     dir: '{{.CLOUD_REPO_PATH}}'
     cmds:
-      - git diff --stat backend/spec/api/v2/openapi.json backend/spec/api/v3/openapi.json
-      - git diff backend/spec/api/v2/openapi.json backend/spec/api/v3/openapi.json
+      - git diff --stat backend/spec/api/v2/openapi.json backend/spec/api/v3/openapi.json backend/spec/api/v4/openapi.json
+      - git diff backend/spec/api/v2/openapi.json backend/spec/api/v3/openapi.json backend/spec/api/v4/openapi.json
 
   # ── Type Generation (deterministic, no AI) ────────────────────
   gen:types:
