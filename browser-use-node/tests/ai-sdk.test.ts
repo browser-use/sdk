@@ -96,14 +96,26 @@ describe("ai-sdk browserUse tool", () => {
     expect(output).toMatchObject({ status: "failed", error: "Site blocked", result: null });
   });
 
-  it("cancels the run when the wait times out", async () => {
-    const { client, runs } = fakeClient(async () => {
-      throw new Error(`Run ${RUN_ID} did not complete within 10ms`);
+  it("times out on a stalled status poll, cancels, and keeps the timeout error if cancel fails", async () => {
+    const { client, runs } = fakeClient(() => new Promise(() => {}));
+    runs.cancel.mockRejectedValueOnce(new Error("502 from cancel"));
+    await expect(
+      browserUse({ client, waitTimeout: 20 }).execute({ task: "Slow task" }),
+    ).rejects.toThrow(`Run ${RUN_ID} did not complete within 20ms`);
+    expect(runs.cancel).toHaveBeenCalledWith(RUN_ID);
+  });
+
+  it("does not start polling when aborted while the run is being created", async () => {
+    const { client, runs } = fakeClient(async () => ({ status: "completed" }));
+    const controller = new AbortController();
+    runs.create.mockImplementationOnce(async () => {
+      controller.abort(new Error("user stopped"));
+      return { id: RUN_ID, sessionId: SESSION_ID };
     });
     await expect(
-      browserUse({ client, waitTimeout: 10 }).execute({ task: "Slow task" }),
-    ).rejects.toThrow("did not complete");
-    expect(runs.waitForCompletion).toHaveBeenCalledWith(RUN_ID, { timeout: 10, interval: undefined });
+      browserUse({ client }).execute({ task: "x" }, { abortSignal: controller.signal }),
+    ).rejects.toThrow("user stopped");
+    expect(runs.waitForCompletion).not.toHaveBeenCalled();
     expect(runs.cancel).toHaveBeenCalledWith(RUN_ID);
   });
 

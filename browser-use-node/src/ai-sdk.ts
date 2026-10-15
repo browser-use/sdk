@@ -36,7 +36,7 @@ export interface BrowserUseToolOptions extends BrowserUseOptions {
   client?: BrowserUse;
   /** Extra V4 run fields sent with every call, for example model, maxCostUsd, or browserSettings. */
   runOptions?: Partial<Omit<RunCreateBody, "task" | "sessionId">>;
-  /** How long one tool call waits for its run, in ms. The run is cancelled when this passes. Default 300_000. */
+  /** How long one tool call waits for its run, in ms. When it passes, the tool cancels the run and throws. Default 300_000. */
   waitTimeout?: number;
   /** Status poll interval in ms. Default 2_000. */
   pollInterval?: number;
@@ -90,8 +90,11 @@ export function browserUse(options: BrowserUseToolOptions = {}) {
       });
 
       try {
-        const run = await waitOrAbort(
+        abortSignal?.throwIfAborted();
+        const run = await withDeadline(
           runs.waitForCompletion(created.id, { timeout: waitTimeout, interval: pollInterval }),
+          created.id,
+          waitTimeout,
           abortSignal,
         );
         return {
@@ -102,7 +105,7 @@ export function browserUse(options: BrowserUseToolOptions = {}) {
           error: run.error,
         };
       } catch (error) {
-        // The tool owns the run: never leave it billing after a timeout or abort.
+        // Best effort: stop the run so it does not keep billing after a timeout, abort, or poll error.
         await runs.cancel(created.id).catch(() => undefined);
         throw error;
       }
@@ -110,12 +113,23 @@ export function browserUse(options: BrowserUseToolOptions = {}) {
   };
 }
 
-function waitOrAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
-  if (!signal) return promise;
+/** Settle with the poll result, or reject on the deadline or abort, whichever comes first. */
+function withDeadline<T>(
+  poll: Promise<T>,
+  runId: string,
+  timeout: number,
+  signal?: AbortSignal,
+): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const onAbort = () => reject(signal.reason ?? new Error("Aborted"));
-    if (signal.aborted) return onAbort();
-    signal.addEventListener("abort", onAbort, { once: true });
-    promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", onAbort));
+    const timer = setTimeout(
+      () => reject(new Error(`Run ${runId} did not complete within ${timeout}ms`)),
+      timeout,
+    );
+    const onAbort = () => reject(signal?.reason ?? new Error("Aborted"));
+    signal?.addEventListener("abort", onAbort, { once: true });
+    poll.then(resolve, reject).finally(() => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    });
   });
 }
