@@ -45,11 +45,11 @@ The model sends a `task` in plain language. The tool returns:
 }
 ```
 
-A failed or cancelled run comes back with `status` and `error` set, so the model can retry or explain the failure. To keep working in the same browser, with its open pages and logins, the model passes the `sessionId` from an earlier result.
+A failed run comes back with `status: "failed"` and `error` set, and a cancelled one with `status: "cancelled"`, so the model can retry or explain what happened. To keep working in the same browser, with its open pages and logins, the model passes the `sessionId` from an earlier result.
 
 ## Next.js route
 
-Browser tasks take seconds to minutes, and every tool call in one request has to finish inside the route's `maxDuration`. With `maxDuration = 300`, `waitTimeout: 120_000` and `isStepCount(3)` allow at most two rounds of browser calls. If Vercel stops the function first, the run keeps going on Browser Use until it ends, so set `maxCostUsd` in `runOptions`. For longer tasks, start the run in one route and poll it from another, as in the [Vercel guide](/cloud/tutorials/integrations/vercel).
+Browser tasks take seconds to minutes, and every tool call in one request has to finish inside the route's `maxDuration`. Every step can run a browser call, so keep `steps × waitTimeout` under `maxDuration` with time left for the model: with `maxDuration = 300`, `isStepCount(3)` and `waitTimeout: 80_000` use at most 240 seconds on browser calls. If Vercel stops the function first, the run keeps going on Browser Use until it ends, so set `maxCostUsd` in `runOptions`. For longer tasks, start the run in one route and poll it from another, as in the [Vercel guide](/cloud/tutorials/integrations/vercel).
 
 ```typescript app/api/chat/route.ts
 import { convertToModelMessages, isStepCount, streamText, type UIMessage } from "ai";
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
   const result = streamText({
     model: "openai/gpt-5.6-luna",
     messages: await convertToModelMessages(messages),
-    tools: { browserUse: browserUse({ waitTimeout: 120_000 }) },
+    tools: { browserUse: browserUse({ waitTimeout: 80_000 }) },
     stopWhen: isStepCount(3),
     abortSignal: req.signal,
   });

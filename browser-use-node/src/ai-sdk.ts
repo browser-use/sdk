@@ -5,6 +5,8 @@ import type { BrowserUseOptions } from "./v4/client.js";
 import type { RunCreateBody } from "./v4/resources/runs.js";
 
 const DEFAULT_TIMEOUT_MS = 300_000;
+/** Upper bound on how long a failed call waits for its cancel request before rethrowing. */
+const CANCEL_WAIT_MS = 10_000;
 
 const inputSchema = z.object({
   task: z
@@ -31,7 +33,7 @@ export interface BrowserUseToolOutput {
   error: string | null;
 }
 
-export interface BrowserUseToolOptions extends BrowserUseOptions {
+export interface BrowserUseToolOptions extends Omit<BrowserUseOptions, "timeout"> {
   /** Reuse an existing V4 client instead of creating one from apiKey / BROWSER_USE_API_KEY. */
   client?: BrowserUse;
   /** Extra V4 run fields sent with every call, for example model, maxCostUsd, or browserSettings. */
@@ -106,7 +108,7 @@ export function browserUse(options: BrowserUseToolOptions = {}) {
         };
       } catch (error) {
         // Best effort: stop the run so it does not keep billing after a timeout, abort, or poll error.
-        await runs.cancel(created.id).catch(() => undefined);
+        await settleWithin(runs.cancel(created.id), CANCEL_WAIT_MS);
         throw error;
       }
     },
@@ -131,5 +133,16 @@ function withDeadline<T>(
       clearTimeout(timer);
       signal?.removeEventListener("abort", onAbort);
     });
+  });
+}
+
+/** Wait for a promise to settle, but never longer than `ms`; its outcome is ignored. */
+function settleWithin(promise: Promise<unknown>, ms: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    promise.then(
+      () => resolve(),
+      () => resolve(),
+    ).finally(() => clearTimeout(timer));
   });
 }

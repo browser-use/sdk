@@ -96,13 +96,19 @@ describe("ai-sdk browserUse tool", () => {
     expect(output).toMatchObject({ status: "failed", error: "Site blocked", result: null });
   });
 
-  it("times out on a stalled status poll, cancels, and keeps the timeout error if cancel fails", async () => {
-    const { client, runs } = fakeClient(() => new Promise(() => {}));
-    runs.cancel.mockRejectedValueOnce(new Error("502 from cancel"));
-    await expect(
-      browserUse({ client, waitTimeout: 20 }).execute({ task: "Slow task" }),
-    ).rejects.toThrow(`Run ${RUN_ID} did not complete within 20ms`);
-    expect(runs.cancel).toHaveBeenCalledWith(RUN_ID);
+  it("times out on a stalled status poll and rethrows even if the cancel request hangs", async () => {
+    vi.useFakeTimers();
+    try {
+      const { client, runs } = fakeClient(() => new Promise(() => {}));
+      runs.cancel.mockImplementationOnce(() => new Promise(() => {}));
+      const pending = browserUse({ client, waitTimeout: 20 }).execute({ task: "Slow task" });
+      const settled = expect(pending).rejects.toThrow(`Run ${RUN_ID} did not complete within 20ms`);
+      await vi.advanceTimersByTimeAsync(20 + 10_000);
+      await settled;
+      expect(runs.cancel).toHaveBeenCalledWith(RUN_ID);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("does not start polling when aborted while the run is being created", async () => {
