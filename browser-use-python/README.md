@@ -2,7 +2,7 @@
 
 Official Python SDK for [Browser Use Cloud](https://browser-use.com).
 
-[BU Ultrafast / BU Fast](https://docs.browser-use.com/cloud/agent/models) are low-cost V4 modes in early access. Use the documented REST example while SDK types lag; the examples below select neither.
+[BU Ultrafast / BU Fast](https://docs.browser-use.com/cloud/agent/models) are low-cost V4 modes in early access. Once enabled, select one with `client.runs.create("...", model="bu-ultrafast")`; the examples below select neither.
 
 ## Install
 
