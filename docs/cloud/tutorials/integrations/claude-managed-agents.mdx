@@ -7,7 +7,7 @@ description: Give Anthropic's Claude Managed Agents a stealth cloud browser via 
 
 The sandbox only ships a bare headless Chromium for Playwright: no stealth, no proxies, no CAPTCHA handling. So the agent starts a named Browser Use Cloud browser and drives it with `browser-use <<'PY'` Python snippets.
 
-Create the environment, vault, and agent below in the [Claude Console](https://platform.claude.com/docs/en/managed-agents/onboarding) or with the API ([environments](https://platform.claude.com/docs/en/managed-agents/environments), [vaults](https://platform.claude.com/docs/en/managed-agents/vaults), [agents](https://platform.claude.com/docs/en/managed-agents/agent-setup)), and save their IDs as `ENVIRONMENT_ID`, `VAULT_ID`, and `AGENT_ID`.
+Create the environment, vault, and agent below in the [Claude Console](https://platform.claude.com/docs/en/managed-agents/onboarding), or save each YAML block to a file and run [`ant apply`](https://platform.claude.com/docs/en/cli-sdks-libraries/cli/apply), which prints the ID. Save the IDs as `ENVIRONMENT_ID`, `VAULT_ID`, and `AGENT_ID`.
 
 ## 1. Create an environment
 
@@ -22,7 +22,7 @@ config:
       - browser-use
   networking:
     type: limited
-    allowed_hosts: ["*.browser-use.com"]
+    allowed_hosts: ["*.browser-use.com", "*.cdp.browser-use.com"]
     allow_package_managers: true
 ```
 
@@ -83,10 +83,10 @@ SESSION_ID=$(curl -sS --fail-with-body https://api.anthropic.com/v1/sessions \
   -H "anthropic-beta: managed-agents-2026-04-01" \
   -H "content-type: application/json" \
   -d '{"agent":"'"$AGENT_ID"'","environment_id":"'"$ENVIRONMENT_ID"'",
-       "vault_ids":["'"$VAULT_ID"'"]}' | jq -er .id)
+       "vault_ids":["'"$VAULT_ID"'"]}' | jq -r '.id // error(tostring)')
 ```
 
-The Console only observes; kick the agent off with a `user.message` event.
+Kick the agent off with a `user.message` event (or test it from the Console's session runner).
 
 ```bash
 curl -sS "https://api.anthropic.com/v1/sessions/$SESSION_ID/events" \
