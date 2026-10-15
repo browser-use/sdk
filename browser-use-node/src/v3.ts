@@ -1,7 +1,7 @@
 export { BrowserUse } from "./v3/client.js";
 export type { BrowserUseOptions, RunSessionOptions } from "./v3/client.js";
 
-export { BrowserUseError } from "./core/errors.js";
+export { APIKeySpendLimitError, BrowserUseError } from "./core/errors.js";
 
 export { getWalletBalance } from "./core/x402.js";
 export type { X402WalletBalance } from "./core/x402.js";

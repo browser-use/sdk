@@ -1,4 +1,4 @@
-from .errors import BrowserUseError
+from .errors import APIKeySpendLimitError, BrowserUseError
 from .http import AsyncHttpClient, SyncHttpClient
 
 _UNSET: object = object()
@@ -6,4 +6,4 @@ _UNSET: object = object()
 JSON ``null`` to disable proxies).  Using ``_UNSET`` as the default lets the SDK
 distinguish "caller didn't pass a value" from "caller explicitly passed ``None``"."""
 
-__all__ = ["BrowserUseError", "SyncHttpClient", "AsyncHttpClient", "_UNSET"]
+__all__ = ["APIKeySpendLimitError", "BrowserUseError", "SyncHttpClient", "AsyncHttpClient", "_UNSET"]

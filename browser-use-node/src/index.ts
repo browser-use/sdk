@@ -1,7 +1,7 @@
 export { BrowserUse } from "./v2/client.js";
 export type { BrowserUseOptions, RunTaskOptions } from "./v2/client.js";
 
-export { BrowserUseError } from "./core/errors.js";
+export { APIKeySpendLimitError, BrowserUseError } from "./core/errors.js";
 
 export { TaskRun } from "./v2/helpers.js";
 export type { TaskResult, RunOptions } from "./v2/helpers.js";

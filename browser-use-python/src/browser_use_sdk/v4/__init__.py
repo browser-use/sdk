@@ -1,5 +1,5 @@
 from .client import AsyncBrowserUse, BrowserUse
-from .._core.errors import BrowserUseError
+from .._core.errors import APIKeySpendLimitError, BrowserUseError
 
 from ..generated.v4.models import (
     BrowserSessionItemView,
@@ -48,6 +48,7 @@ __all__ = [
     "BrowserUse",
     "AsyncBrowserUse",
     "BrowserUseError",
+    "APIKeySpendLimitError",
     # Run models
     "RunCreateRequest",
     "RunCreateResponse",

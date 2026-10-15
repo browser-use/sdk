@@ -4,7 +4,7 @@ export type { BrowserUseOptions } from "./v4/client.js";
 export { Browsers } from "./v4/resources/browsers.js";
 export type { CreateBrowserBody } from "./v4/resources/browsers.js";
 
-export { BrowserUseError } from "./core/errors.js";
+export { APIKeySpendLimitError, BrowserUseError } from "./core/errors.js";
 
 export { Runs } from "./v4/resources/runs.js";
 export type {

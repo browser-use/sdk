@@ -1,3 +1,4 @@
+import { BrowserUseError } from "../../core/errors.js";
 import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v4/types.js";
 
@@ -12,6 +13,9 @@ type RunAttachmentsResponse = components["schemas"]["RunAttachmentsResponse"];
 
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
   Partial<Omit<RunCreateRequest, "task">>;
+
+const INITIAL_VISIBILITY_GRACE_MS = 5_000;
+const MIN_VISIBILITY_RETRY_INTERVAL_MS = 50;
 
 /** Terminal run statuses — closed enum in the v4 spec. */
 const TERMINAL_STATUSES = new Set(["completed", "failed", "cancelled"]);
@@ -102,7 +106,7 @@ export class Runs {
 
   /** Cancel a run. Returns the updated run summary. */
   cancel(runId: string): Promise<RunSummary> {
-    return this.http.post<RunSummary>(`/runs/${runId}/cancel`);
+    return this.http.requestIdempotent<RunSummary>("POST", `/runs/${runId}/cancel`);
   }
 
   /** List files the agent attached to the run. */
@@ -114,7 +118,9 @@ export class Runs {
    * Poll the run's status until terminal (completed | failed | cancelled),
    * then fetch and return the full run summary. This is the loop the v4 API
    * was designed for — status is a tiny indexed lookup, the full summary is
-   * fetched exactly once at the end.
+   * fetched exactly once at the end. Initial 404s are retried for at most
+   * five seconds (within `timeout`); after any successful status read, 404s
+   * propagate immediately.
    *
    * ```ts
    * const created = await client.runs.create({ task: "Find the top HN post" });
@@ -125,13 +131,30 @@ export class Runs {
   async waitForCompletion(runId: string, options?: WaitOptions): Promise<RunSummary> {
     const timeout = options?.timeout ?? 14_400_000;
     const interval = options?.interval ?? 2_000;
-    const deadline = Date.now() + timeout;
+    const started = Date.now();
+    const deadline = started + timeout;
+    const visibilityDeadline = Math.min(deadline, started + INITIAL_VISIBILITY_GRACE_MS);
+    let seenStatus = false;
 
     // A terminal status is always returned, even if the status() call itself
     // finished slightly past the deadline — a completed run is never thrown
     // away. Only a non-terminal status seen past the deadline is a timeout.
     for (;;) {
-      const { status } = await this.status(runId);
+      let status: string;
+      try {
+        ({ status } = await this.status(runId));
+      } catch (error) {
+        const left = visibilityDeadline - Date.now();
+        const notYetVisible =
+          error instanceof BrowserUseError && error.statusCode === 404 && !seenStatus;
+        if (!notYetVisible || left <= 0) throw error;
+        await new Promise((r) =>
+          setTimeout(r, Math.min(Math.max(interval, MIN_VISIBILITY_RETRY_INTERVAL_MS), left)),
+        );
+        if (Date.now() >= visibilityDeadline) throw error;
+        continue;
+      }
+      seenStatus = true;
       if (TERMINAL_STATUSES.has(status)) {
         return this.get(runId);
       }
