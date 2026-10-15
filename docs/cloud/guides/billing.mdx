@@ -54,7 +54,7 @@ For example, at a browser rate of \$0.02/hour billed by the minute, 12 minutes 1
 
 A [custom proxy](/cloud/browser/proxies) replaces the Browser Use managed proxy. Your proxy provider bills its own usage, and Browser Use browser/network charges still apply. Disabling the managed proxy also leaves browser and direct network usage billable.
 
-Run completion does not necessarily stop the browser. A browser may remain available for the next turn. When your application no longer needs it, explicitly stop the owned browser with `PATCH /api/v4/browsers/{id}` and `{"action":"stop"}`. Disconnecting Playwright/CDP or closing the SDK client is not the cloud stop operation. See [browser lifetime](/cloud/guides/concurrency#keep-track-of-browser-lifetime).
+Run completion does not stop the browser immediately. A V4 agent browser stays open about 2 minutes after the session's last run activity, or for the run's [`keepAlive`](/cloud/agent/sessions#keep-the-browser-open-between-runs) seconds, and that time is billed as browser time. When your application no longer needs it, explicitly stop the owned browser with `PATCH /api/v4/browsers/{id}` and `{"action":"stop"}`. Disconnecting Playwright/CDP or closing the SDK client is not the cloud stop operation. See [browser lifetime](/cloud/guides/concurrency#keep-track-of-browser-lifetime).
 
 ## Auto recharge
 

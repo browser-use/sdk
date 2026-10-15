@@ -52,12 +52,13 @@ add that intended provider's hostname to the secret binding's `allowedDomains`
 and resend the binding in a follow-up run. For `target_not_editable`, check
 field focus and readiness instead. See [checkout and payment frames](/cloud/guides/secrets#checkout-and-payment-frames).
 
-## The browser is idle, but usage or a concurrency slot remains
+## The browser is idle, but usage continues
 
-A completed agent run can leave its browser available for follow-ups. Closing
-your SDK client or disconnecting CDP does not stop the managed browser. Stop
-an unneeded browser with `PATCH /api/v4/browsers/{id}` and
-`{"action":"stop"}`. See [browser lifetime](/cloud/guides/concurrency#keep-track-of-browser-lifetime).
+A completed V4 agent run keeps its browser open about 2 minutes, or for the
+run's `keepAlive` seconds, so a follow-up can reuse it. That time is billed but
+takes no concurrency slot. Closing your SDK client or disconnecting CDP does
+not stop the managed browser. Stop an unneeded browser with
+`PATCH /api/v4/browsers/{id}` and `{"action":"stop"}`. See [browser lifetime](/cloud/guides/concurrency#keep-track-of-browser-lifetime).
 
 If a local wait times out, the server may still be running. Fetch the existing
 run's status before creating a replacement, especially if it might already

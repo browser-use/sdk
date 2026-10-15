@@ -5,7 +5,9 @@ icon: eye
 ---
 
 Wait for `browser.ready` as soon as you create the run so the URL is available
-while the browser is live:
+while the browser is live. A follow-up that reuses the session's open browser
+emits `browser.reattached`, with the same `live_view_url` field, instead; see
+[browser events](/cloud/agent/observability#browser-events).
 
 <CodeGroup>
 ```python Python
@@ -134,8 +136,9 @@ curl https://api.browser-use.com/api/v4/runs \
 </CodeGroup>
 
 The MP4 becomes available in the Dashboard after the browser stops. After a run
-completes, its browser can stay active for follow-ups; finishing the run alone
-does not finalize the video. Once you no longer need the browser, stop it with
+completes, its browser stays open about 2 minutes, or for the run's `keepAlive`
+seconds, for follow-ups; finishing the run alone does not finalize the video.
+Once you no longer need the browser, stop it with
 `PATCH /api/v4/browsers/{id}` and `{"action":"stop"}`, then allow time for upload
 and processing.
 

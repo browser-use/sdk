@@ -58,12 +58,38 @@ same files.
 
 ## Keep the browser open between runs
 
-A finished session's browser stops after 120 idle seconds, and a later
-follow-up gets a fresh browser without the old tabs. Set `keepAlive` (seconds,
-120-14400) on the run to keep it open longer; follow-ups inherit the value, a
-new value changes it, and `null` restores the default. Kept time is billed as
-normal browser time. Free-tier and Zero Data Retention projects always use 120
-seconds.
+After a session's last run, its browser stays open about 2 minutes, then
+stops. A later follow-up gets a fresh browser with the same settings and
+profile, but not the old tabs or page state. Set `keepAlive` on the run to keep
+the browser open longer: integer seconds from 120 to 14400 (default 120), never
+past the browser's 4-hour lifetime. Follow-ups inherit the value, a new value
+changes it, and `null` restores 120 seconds.
+
+<CodeGroup>
+```python Python
+run = client.runs.create("Open my dashboard", keepAlive=900)
+```
+```typescript TypeScript
+import type { RunCreateBody } from "browser-use-sdk/v4";
+
+const run = await client.runs.create({
+  task: "Open my dashboard",
+  keepAlive: 900,
+} as RunCreateBody);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Open my dashboard","keepAlive":900}'
+```
+</CodeGroup>
+
+The SDKs do not type `keepAlive` yet: Python sends it as an extra keyword
+argument, and TypeScript needs the cast. Unlike the boolean `keepAlive` in
+V2/V3, V4 takes seconds and rejects `true` with 422. Kept time is billed as
+browser time but takes no concurrency slot. Free-tier, Zero Data Retention and
+Agentic Autofill runs always use 120 seconds.
 
 ## Follow up while a run is busy
 

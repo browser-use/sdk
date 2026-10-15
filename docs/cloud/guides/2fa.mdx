@@ -36,12 +36,16 @@ This avoids another 2FA challenge while the site's cookies remain valid.
 
 Ask the first run to stop at the 2FA screen, get its `live_view_url` from the
 [`browser.ready` event](/cloud/agent/human-in-the-loop), and have the user enter
-the code. Then continue with the same session:
+the code. Set `keepAlive` on the first run so the browser stays open while
+the user works; without it, the browser stops about 2 minutes after the run
+ends. The follow-up inherits the value, and kept time is billed. Then continue
+with the same session:
 
 <CodeGroup>
 ```python Python
 first = client.runs.create(
     "Open the login page and stop at the 2FA prompt",
+    keepAlive=900,
 )
 client.runs.wait_for_completion(first.id)
 
@@ -51,10 +55,13 @@ next_run = client.runs.create(
 )
 ```
 ```typescript TypeScript
+import type { RunCreateBody } from "browser-use-sdk/v4";
+
 const first = await client.runs.create({
   task: "Open the login page and stop at the 2FA prompt",
   model: "grok-4.5",
-});
+  keepAlive: 900,
+} as RunCreateBody);
 await client.runs.waitForCompletion(first.id);
 
 const nextRun = await client.runs.create({

@@ -61,7 +61,11 @@ A V4 **session** is a conversation. A **run** is one turn in that conversation. 
 
 A browser can survive the run that created it and be reused by a later turn. A conversation can also have multiple browsers. Additional tabs in the same browser are not additional browser sessions.
 
-After all runs in a conversation are inactive, V4 browsers become eligible for cleanup after approximately 20 minutes without recent run activity. Cleanup runs periodically, so this is not an exact shutdown deadline. V4 agent browsers also have a four-hour hard timeout.
+After every run in a session has finished, its V4 agent browsers stop about 2 minutes after the last run activity. Cleanup runs every minute, so expect 2-3 minutes. A follow-up sent later gets a fresh browser with the session's settings and profile, but not the old tabs or page state. V4 agent browsers also have a four-hour hard timeout.
+
+To keep the browser open longer for a follow-up or a human, set [`keepAlive`](/cloud/agent/sessions#keep-the-browser-open-between-runs) (integer seconds, 120-14400) on the run. Follow-ups inherit it, a new value changes it, and `null` restores 120 seconds. Free-tier, Zero Data Retention and Agentic Autofill runs always use 120 seconds.
+
+A V4 session takes one concurrency slot only while it has a queued or running run. An idle V4 agent browser, including one held open by `keepAlive`, takes no slot, but its time is billed as browser time until it stops. A standalone browser holds a slot until it stops.
 
 If your application is finished with a browser, explicitly stop that browser rather than relying on idle cleanup. Only stop browser IDs your application owns and no longer needs. For a standalone browser, the stop request is:
 
@@ -75,7 +79,7 @@ curl --fail-with-body -X PATCH \
 
 Do not use this against a browser another active run or person still needs. Closing your local CDP connection is not a substitute for checking the cloud browser's lifecycle.
 
-If your workflow requires human interaction, deliver the live-view URL from `browser.ready` while the run/browser is active. A conversation remaining in history does not mean its live browser is still available.
+If your workflow requires human interaction, deliver the live-view URL from `browser.ready` or `browser.reattached` while the run/browser is active, and set `keepAlive` so the browser outlasts the human's work. A conversation remaining in history does not mean its live browser is still available.
 
 ## Queue follow-ups within a conversation
 

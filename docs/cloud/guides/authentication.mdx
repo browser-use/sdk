@@ -60,7 +60,9 @@ curl https://api.browser-use.com/api/v4/runs \
 ```
 </CodeGroup>
 
-Use one profile per end user. Follow-ups in the same [session](/cloud/agent/sessions)
-reuse the live browser; later sessions can load the same profile again.
+Use one profile per end user. A follow-up in the same [session](/cloud/agent/sessions)
+reuses the live browser if it arrives within about 2 minutes of the previous
+run, or within the run's `keepAlive` seconds. Otherwise, and in later sessions,
+a fresh browser loads the same profile.
 
 For the fastest setup, [sync an existing local login](/cloud/guides/profile-sync).

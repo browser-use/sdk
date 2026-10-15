@@ -16,7 +16,7 @@ See [Models](/cloud/agent/models) for the complete V4 picker and pricing.
 
 ## How do I get the live browser URL?
 
-The V4 run's `browser.ready` event contains `live_view_url`. Embed it in an iframe or open it in a browser.
+A V4 run's `browser.ready` event (new browser) or `browser.reattached` event (follow-up reusing the open browser) contains `live_view_url`. Embed it in an iframe or open it in a browser.
 
 ```python
 from browser_use_sdk.v4 import BrowserUse
@@ -25,11 +25,14 @@ client = BrowserUse()
 created = client.runs.create("Go to example.com")
 client.runs.wait_for_completion(created.id)
 events = client.runs.events(created.id, limit=100)
-ready = next(event for event in events.events if event.type == "browser.ready")
+ready = next(
+    event for event in events.events
+    if event.type in ("browser.ready", "browser.reattached")
+)
 print(ready.data["live_view_url"])
 ```
 
-Poll events until `browser.ready` appears if you need the URL while the run is still active. See [Human in the loop](/cloud/agent/human-in-the-loop) for a complete flow.
+Poll events until either event appears if you need the URL while the run is still active. See [Human in the loop](/cloud/agent/human-in-the-loop) for a complete flow.
 
 ## Getting blocked by a website
 
