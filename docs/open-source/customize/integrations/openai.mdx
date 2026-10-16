@@ -1,88 +1,102 @@
 ---
-title: "OpenAI browser tools"
-description: "Use OpenAI browser tools with Browser Use Cloud and the Browser Use library."
+title: "Browser Use toolsets for OpenAI"
+description: "Give OpenAI models Browser Use actions and a remote browser."
 icon: "plug"
+mode: "wide"
 sidebarTitle: "OpenAI"
 ---
 
-Use Browser Use Cloud as the remote browser for OpenAI models.
-Start with the library driver and a remote Cloud browser.
-The separate Playwright example provides another connection:
+Connect OpenAI's browser tools to Browser Use Cloud with the Browser Use library.
+OpenAI's SDK runs the model loop. Our driver turns tool calls into browser actions.
 
-| Connection | Browser actions | Dependencies |
-| --- | --- | --- |
-| Library driver | Browser Use Actor | Browser Use with the `openai-tools` extra |
-| Remote browser example | Playwright | OpenAI SDK, Browser Use Cloud SDK, Playwright |
+## Run your first task
 
-The OpenAI SDK defines the tools and runs the model loop.
-Browser Use supplies the remote browser.
-The library driver also supplies browser actions.
-
-## Browser Use library driver
-
-Install the tested Browser Use release with the OpenAI tools extra:
-
-```bash
-uv venv --python 3.12
-uv pip install --python .venv/bin/python "browser-use[openai-tools] @ git+https://github.com/browser-use/browser-use.git@0.13.13"
-```
-
-Set your keys and model:
-
-```bash
-export BROWSER_USE_API_KEY=your-browser-use-key
-export OPENAI_API_KEY=your-openai-key
-export OPENAI_MODEL=your-model
-```
-
-Get your [Browser Use API key](https://cloud.browser-use.com/new-api-key).
+You need [uv](https://docs.astral.sh/uv/getting-started/installation/), a Browser Use API key, and an OpenAI API key.
 Choose an OpenAI model that supports Responses function tools.
-OpenAI 3.x uses `httpx2` for custom HTTP clients.
-Use OpenAI's `DefaultAsyncHttpxClient` when configuring a custom client.
-The following example uses a remote browser:
 
-```python
+<Steps>
+<Step title="Create a project">
+
+```bash
+mkdir openai-browser-use
+cd openai-browser-use
+uv init --bare --python 3.12
+uv add "browser-use[openai-tools] @ git+https://github.com/browser-use/browser-use.git@0c7162167f84ac7e14350d0379cb9c5e7804a281"
+```
+
+This command installs the merged driver commit with all 28 browser tools and Bash.
+Cloud browsers need no local Chromium installation.
+
+</Step>
+<Step title="Set your API keys">
+
+Get your [Browser Use key](https://cloud.browser-use.com/new-api-key) and [OpenAI key](https://platform.openai.com/api-keys).
+
+```bash
+export BROWSER_USE_API_KEY="your-browser-use-key"
+export OPENAI_API_KEY="your-openai-key"
+export OPENAI_MODEL="your-model"
+```
+
+</Step>
+<Step title="Download and run">
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/browser-use/sdk/004259b13a1218693f8a91cd294cc759a375a260/examples/openai/browser_use_library.py -o browser_use_library.py
+uv run python browser_use_library.py
+```
+
+The model follows a link and writes a source-backed summary with Bash.
+The driver stops its remote browser when the script finishes.
+
+</Step>
+</Steps>
+
+## The complete example
+
+The example enables all 28 browser tools and Bash.
+
+```python browser_use_library.py
 import asyncio
 import os
+from pathlib import Path
+from urllib.parse import urlsplit
 
+from browser_use.integrations.openai import Bash, BrowserUse
 from openai import AsyncOpenAI
-from openai.lib.browser import AsyncBrowserToolset
+from openai.lib.browser import BROWSER_MEMBERS, AsyncBrowserToolset
 from openai.lib.responses_tool_runner import AsyncResponsesToolRunner
-
-from browser_use.integrations.openai import BrowserUse
 
 
 async def confirm(context):
-    return context["member"] in {"new_tab", "navigate"}
+    return True
 
 
 async def allow_url(context, url):
-    return url in {"https://example.com", "https://example.com/"}
+    parsed = urlsplit(url)
+    return parsed.scheme in {"http", "https"} and not parsed.username and not parsed.password
 
 
 async def main():
     model = os.environ["OPENAI_MODEL"]
-    async with AsyncOpenAI() as client, BrowserUse(use_cloud=True) as driver:
+    async with AsyncOpenAI(timeout=180, max_retries=5) as client, BrowserUse(use_cloud=True) as driver:
         tools = AsyncBrowserToolset(
             driver,
-            members=["new_tab", "navigate", "get_page_text"],
+            members=BROWSER_MEMBERS,
             confirm=confirm,
             url_policy=allow_url,
         )
-        runner = AsyncResponsesToolRunner(browser=tools)
+        runner = AsyncResponsesToolRunner(browser=tools, functions=[Bash(output_dir=Path("outputs"))])
         try:
             response = await runner.run(
                 client,
                 {
                     "model": model,
                     "store": False,
-                    "input": "Open https://example.com and read its heading and explanation.",
+                    "input": "Open https://example.com, follow Learn more, and save a source-backed summary in summary.md using Bash.",
                 },
-                max_steps=6,
+                max_steps=30,
             )
-            text = await driver.get_page_text({"tab_id": None})
-            if "documentation examples" not in text:
-                raise RuntimeError("The browser did not show the expected page.")
             print(response.output_text)
         finally:
             runner.close()
@@ -92,92 +106,92 @@ async def main():
 asyncio.run(main())
 ```
 
-The driver creates and closes its own browser.
-You can also pass an already connected `BrowserSession`.
-The caller keeps responsibility for that borrowed session.
-Use `BrowserUse()` for a local browser after installing Chromium with `uvx browser-use install`.
+The confirmation callback approves browser actions in this example.
+Use it only in an isolated environment for tasks you authorize.
+Bash runs on your application host, not inside the remote browser.
+It uses a stripped environment and execution limits, but it does not provide a security sandbox.
 
-## Remote browsers with Playwright
+## Browser actions
 
-This path uses the Cloud SDK without the open-source Browser Use agent.
-You do not need local Chromium.
+The driver uses the same Browser Use Actor API as our Claude integration.
 
-Create a separate environment:
+| Task | Tools |
+| --- | --- |
+| Move between pages | `navigate` |
+| Manage tabs | `new_tab`, `list_tabs`, `switch_tab`, `close_tab` |
+| Read a page | `read_page`, `get_page_text`, `find`, `screenshot` |
+| Interact with elements | `click`, `hover`, `type`, `key`, `scroll`, `scroll_to`, `select_option` |
+| Inspect and wait | `zoom`, `wait_for` |
 
-```bash
-uv venv --python 3.12
-uv pip install --python .venv/bin/python openai==3.31.0 browser-use-sdk==3.11.3 playwright==1.63.0
-```
+OpenAI's SDK provides `list_tabs` from the driver's state.
+Use `members=BROWSER_MEMBERS` to expose all 28 browser tools.
+Update your confirmation callback to permit the actions your task needs.
 
-Set your keys and model:
+<AccordionGroup>
+<Accordion title="Coordinate actions and JavaScript">
 
-```bash
-export BROWSER_USE_API_KEY=your-browser-use-key
-export OPENAI_API_KEY=your-openai-key
-export OPENAI_MODEL=your-model
-```
-
-Get your [Browser Use API key](https://cloud.browser-use.com/new-api-key).
-Choose an OpenAI model that supports Responses function tools.
-
-Download both files from the [remote browser example](https://github.com/browser-use/sdk/tree/main/examples/openai):
-
-- `browser_use_driver.py`
-- `browser_use_responses.py`
-
-Keep the files together and run:
-
-```bash
-.venv/bin/python browser_use_responses.py
-```
-
-The example creates a dedicated Cloud browser and connects through Chrome DevTools Protocol (CDP).
-It gives the model two tools: navigation and page-text reading.
-It permits navigation only within example.com.
-It closes the connection and stops its browser after the run.
-
-Both providers charge for their respective services.
-The example prints the model answer after the driver reads the page.
-Check the page result and browser cleanup separately.
-
-## Library driver actions
-
-The default tools cover navigation, tabs, page reads, element search, screenshots, zoom, clicks, typing, keys, scrolling, selection, and waits.
-The SDK exposes `list_tabs` from the driver's state method.
-
-Enable additional methods with `additional_members`:
+Enable every browser tool with `members=BROWSER_MEMBERS`:
 
 ```python
 tools = AsyncBrowserToolset(
     driver,
-    additional_members=["click_at", "hover_at", "drag_path", "hold_keys", "set_checked"],
+    members=BROWSER_MEMBERS,
     confirm=confirm,
     url_policy=allow_url,
 )
 ```
 
-The example confirmation callback only permits navigation.
-Change that callback to approve the actions your task needs.
-
-The driver also implements `run_script` for explicitly approved page JavaScript.
+The driver also supports `run_script` for approved page JavaScript.
 A script timeout stops waiting; it does not guarantee that page execution stops.
 
-This version does not implement scoped reads, console/network diagnostics, uploads, or downloads.
-It does not include Bash.
-The remote browser filesystem differs from the application filesystem.
+</Accordion>
+<Accordion title="Existing sessions and local browsers">
 
-## References and approvals
+Pass a connected `BrowserSession` to `BrowserUse(browser=session)` to reuse your browser.
+Your application keeps responsibility for that session.
+
+Use `BrowserUse()` for a local browser.
+Install local Chromium with `uvx browser-use install` first.
+
+</Accordion>
+<Accordion title="Element references and supported features">
 
 Read the page before using an element reference.
 A new page read replaces that tab's references.
-Navigation, detached elements, and tab changes can invalidate references.
+Navigation and detached elements can invalidate references.
 
 Page reads use the main document's accessibility tree.
 They do not guarantee complete iframe or shadow-root coverage.
-Screenshots and coordinate actions provide another way to inspect and operate the page.
+Use screenshots and coordinate actions when necessary.
 
-OpenAI's toolset validates inputs and invokes your confirmation callback before actions.
+Scoped reads discover page regions and return references for their controls.
+Diagnostics capture console messages and network responses after the driver first accesses a tab.
+Network reports exclude query strings, headers, and request bodies.
+
+File tools require application-issued grants.
+Your application calls `await driver.grant_upload(path, target=ref, tab_id=tab_id)` for an approved upload.
+Your application calls `await driver.grant_download(url, path, tab_id=tab_id)` for an approved download.
+Pass the returned grant ID to the model for its `upload_file` or `download_file` call.
+
+Each grant permits one transfer in the original document.
+Uploads capture the approved file bytes when your application creates the grant.
+Downloads create a new file on your application host.
+Both tools support files up to 10 MB (10,000,000 bytes).
+Enabling file tools does not create file grants automatically.
+Downloads use browser fetch and follow browser cross-origin rules.
+Downloads reject redirects.
+Uploads use the page's file input and dispatch input and change events.
+
+</Accordion>
+<Accordion title="Permissions and custom HTTP clients">
+
+The toolset checks inputs and calls your confirmation callback before actions.
 The URL callback checks requested navigation; it does not replace network controls.
-Keep task permissions and provider settings in application code.
+
+OpenAI 3.x uses `httpx2`.
+Use OpenAI's `DefaultAsyncHttpxClient` for custom HTTP clients.
+
+</Accordion>
+</AccordionGroup>
 
 See the [OpenAI browser helper reference](https://github.com/openai/openai-python/blob/v3.31.0/docs/browser.md).
