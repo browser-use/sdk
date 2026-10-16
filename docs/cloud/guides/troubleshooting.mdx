@@ -1,6 +1,7 @@
 ---
 title: Troubleshooting
 description: "Diagnose account, browser, file, and integration problems before retrying."
+icon: "wrench"
 ---
 
 ## My API key has credits, but a request fails
@@ -16,6 +17,7 @@ Read the complete error response before changing billing settings:
 | --- | --- |
 | 401 | Send `X-Browser-Use-API-Key`; do not put the API key in a Bearer header. |
 | 402 | Distinguish insufficient project credits from `api_key_monthly_spend_limit_reached`. A top-up does not raise a key's spending cap. |
+| 403 `API key is missing required scope: v4:runs:create` | The key is restricted. Create a key that includes that resource, or use a full-access key. See [restricted API keys](#restricted-api-keys). |
 | 404 for a profile/workspace/session | Check the ID type, API version, and owning project. An ID visible in one dashboard project may be inaccessible to another key. |
 | 409 | Check the detail: a busy conversation and a workspace-file overwrite conflict require different actions. |
 | 413 | Check per-file and workspace limits. Retrying the same oversized payload does not make it smaller. |
@@ -24,6 +26,23 @@ Read the complete error response before changing billing settings:
 
 See [billing](/cloud/guides/billing), [concurrency](/cloud/guides/concurrency),
 and [workspaces](/cloud/agent/workspaces) for the relevant limits and remedies.
+
+## Restricted API keys
+
+When you create a key in [Settings → API keys](https://cloud.browser-use.com/settings?tab=api-keys),
+turn off **Full access** to pick a permission per resource: **Read** lists and
+gets, **Write** also creates and deletes. A request outside the key's
+permissions returns `403` with the missing scope.
+
+Scopes have the form `<version>:<resource>:<action>`, with actions `read`,
+`create`, and `delete`, and `*` as a wildcard. Full-access keys hold `*:*:*`.
+V4 resources are `runs`, `sessions`, `workspaces`, `files`, `browsers`,
+`profiles`, `proxy`, `integrations`, `licenses`, `extensions`, and `imessage`.
+The wallet endpoints (`GET /agentcard/wallets`, `GET /stripe-link`) need
+**Read** on `runs`.
+Scopes cannot be changed after a key is created, and a restricted key does not
+gain resources added later unless it holds a wildcard such as `v4:*:*`. Create
+a new key with the permissions you need.
 
 ## Why am I charged when I bring my own key or proxy?
 

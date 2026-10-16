@@ -1,16 +1,19 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "aspen",
+  "theme": "luma",
+  "icons": {
+    "library": "lucide"
+  },
   "name": "Browser Use",
   "colors": {
-    "primary": "#FE750E",
-    "light": "#FE750E",
-    "dark": "#FE750E"
+    "primary": "#0F1011",
+    "light": "#F7F8F8",
+    "dark": "#F7F8F8"
   },
   "background": {
     "color": {
       "light": "#FFFFFF",
-      "dark": "#09090B"
+      "dark": "#08090A"
     }
   },
   "favicon": "/favicon.svg",
@@ -29,7 +32,13 @@
     ]
   },
   "fonts": {
-    "family": "Geist"
+    "family": "Inter"
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs",
+    "codeblocks": {
+      "theme": "css-variables"
+    }
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -55,8 +64,8 @@
         "product": "Cloud",
         "icon": "cloud",
         "color": {
-          "light": "#FE750E",
-          "dark": "#FE750E"
+          "light": "#0F1011",
+          "dark": "#F7F8F8"
         },
         "tabs": [
           {
@@ -76,7 +85,7 @@
                 "pages": [
                   {
                     "group": "Agent",
-                    "icon": "robot",
+                    "icon": "bot",
                     "root": "cloud/agent/quickstart",
                     "pages": [
                       "cloud/agent/quickstart",
@@ -105,7 +114,7 @@
                       "cloud/browser/playwright-puppeteer-selenium",
                       {
                         "group": "Authentication",
-                        "icon": "key",
+                        "icon": "key-round",
                         "pages": [
                           "cloud/guides/authentication",
                           "cloud/guides/profile-sync",
@@ -127,6 +136,7 @@
                     "pages": [
                       {
                         "group": "Anthropic",
+                        "icon": "sparkle",
                         "pages": [
                           "cloud/tutorials/integrations/claude-code",
                           "cloud/tutorials/integrations/claude-managed-agents"
@@ -137,6 +147,7 @@
                       "cloud/tutorials/integrations/openclaw",
                       "cloud/tutorials/integrations/hermes-agent",
                       "cloud/tutorials/integrations/vercel",
+                      "cloud/guides/integrations",
                       "cloud/guides/mcp-server",
                       "cloud/guides/webhooks",
                       "cloud/guides/x402",
@@ -158,7 +169,7 @@
                   "cloud/faq",
                   {
                     "group": "Legacy (v2)",
-                    "icon": "box-archive",
+                    "icon": "archive",
                     "isDefaultOpen": false,
                     "pages": [
                       "cloud/legacy/agent",
@@ -241,8 +252,8 @@
         "product": "Open Source",
         "icon": "code",
         "color": {
-          "light": "#2563EB",
-          "dark": "#2563EB"
+          "light": "#0F1011",
+          "dark": "#F7F8F8"
         },
         "groups": [
           {
@@ -253,6 +264,7 @@
               "open-source/quickstart",
               "open-source/vibecoding",
               "open-source/supported-models",
+              "open-source/bu-2-0-model-card",
               "open-source/browser-use-cli",
               "open-source/browser-use-terminal"
             ]
@@ -262,7 +274,7 @@
             "pages": [
               {
                 "group": "Agent",
-                "icon": "robot",
+                "icon": "bot",
                 "isDefaultOpen": true,
                 "pages": [
                   "open-source/customize/agent/basics",
@@ -273,7 +285,7 @@
               },
               {
                 "group": "Browser",
-                "icon": "window",
+                "icon": "app-window",
                 "pages": [
                   "open-source/customize/browser/basics",
                   "open-source/customize/browser/authentication",
@@ -304,10 +316,11 @@
               },
               {
                 "group": "Legacy",
-                "icon": "box-archive",
+                "icon": "archive",
                 "pages": [
                   {
                     "group": "Actor",
+                    "icon": "mouse-pointer-click",
                     "pages": [
                       "open-source/legacy/actor/basics",
                       "open-source/legacy/actor/examples",
@@ -316,6 +329,7 @@
                   },
                   {
                     "group": "Sandbox",
+                    "icon": "box",
                     "pages": [
                       "open-source/legacy/sandbox/quickstart",
                       "open-source/legacy/sandbox/events",
@@ -331,7 +345,7 @@
             "pages": [
               {
                 "group": "Templates",
-                "icon": "folder",
+                "icon": "layout-template",
                 "pages": [
                   "open-source/examples/templates/fast-agent",
                   "open-source/examples/templates/follow-up-tasks",
@@ -344,7 +358,7 @@
               },
               {
                 "group": "Apps",
-                "icon": "box-open",
+                "icon": "package",
                 "pages": [
                   "open-source/examples/apps/ad-use",
                   "open-source/examples/apps/vibetest-use",
@@ -354,7 +368,7 @@
               },
               {
                 "group": "Skills",
-                "icon": "wand-magic-sparkles",
+                "icon": "wand-sparkles",
                 "pages": [
                   "open-source/examples/skills/overview",
                   "open-source/examples/skills/browser-use",
@@ -372,7 +386,7 @@
             "pages": [
               {
                 "group": "Contribution",
-                "icon": "github",
+                "icon": "git-pull-request",
                 "isDefaultOpen": true,
                 "pages": [
                   "open-source/development/setup/local-setup",
@@ -381,14 +395,14 @@
               },
               {
                 "group": "Advanced",
-                "icon": "gear",
+                "icon": "settings",
                 "pages": [
                   "open-source/customize/hooks"
                 ]
               },
               {
                 "group": "Monitoring",
-                "icon": "chart-mixed",
+                "icon": "activity",
                 "pages": [
                   "open-source/development/monitoring/observability",
                   "open-source/development/monitoring/openlit",
@@ -631,6 +645,10 @@
       "destination": "/cloud/legacy/skills"
     },
     {
+      "source": "/open-source/customize/skills/basics",
+      "destination": "/cloud/legacy/skills"
+    },
+    {
       "source": "/customize/integrations/docs-mcp",
       "destination": "/open-source/customize/integrations/mcp-server"
     },
@@ -752,7 +770,15 @@
     },
     {
       "source": "/development/roadmap",
-      "destination": "/open-source/development/roadmap"
+      "destination": "/open-source/introduction"
+    },
+    {
+      "source": "/open-source/development/roadmap",
+      "destination": "/open-source/introduction"
+    },
+    {
+      "source": "/open-source/development",
+      "destination": "/open-source/development/setup/local-setup"
     },
     {
       "source": "/use-cloud",
@@ -1199,7 +1225,7 @@
   "markdown": {
     "instructions": [
       "Use https://docs.browser-use.com/llms.txt and its linked .md pages for current documentation. The managed full bundle is https://docs.browser-use.com/.well-known/llms-full.txt and can be cached for up to 24 hours. Do not use the obsolete /cloud/llms*.txt or /open-source/llms*.txt static exports.",
-      "Choose Cloud API V4 for new agent integrations; V2 is the lower-cost option for simple tasks. Keep V3 examples explicitly versioned. The open-source browser-use library and hosted browser-use-sdk have different APIs.",
+      "Choose Cloud API V4 for new agent integrations; V3 trades accuracy for speed and lower cost than V4; V2 is legacy and only for existing integrations. Keep V3 examples explicitly versioned. The open-source browser-use library and hosted browser-use-sdk have different APIs.",
       "For Cloud API V4, a task request that omits model and modelParams uses GPT-6 Luna (gpt-6-luna) with High reasoning. Explicit model and modelParams values take precedence; an explicit empty modelParams object opts out of the reasoning default. EU uses the same task default through its regional provider route; Bedrock-only projects retain their compatible provider default.",
       "Cloud authentication uses X-Browser-Use-API-Key, without a Bearer prefix. Install or upgrade browser-use-sdk and use its explicit v4 import for V4. Check the published OpenAPI reference for request fields; do not invent SDK support for new fields.",
       "Cloud concurrency and HTTP request rate are separate. Read GET /api/v2/billing/account for the key’s projectId, concurrentSessionLimit, activeSessionCount, and credit balance, including when using V4. Keys in one project share capacity and credits; rateLimit is a legacy concurrency alias, not requests per second.",

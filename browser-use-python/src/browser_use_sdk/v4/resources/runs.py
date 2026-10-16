@@ -4,10 +4,12 @@ import asyncio
 import time
 from typing import TYPE_CHECKING, Any
 
+from ..._core import _UNSET
 from ..._core.errors import BrowserUseError
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
     InlineSecretSource,
+    Model,
     RunAttachmentsResponse,
     RunBrowserSettings,
     RunCreateResponse,
@@ -34,11 +36,13 @@ _TERMINAL_EVENT_TYPES = {
     "run.cancelled",
     "run.dispatch_failed",
 }
+# A follow-up run that reuses the session's browser emits browser.reattached instead of browser.ready.
+_EVENT_ALIASES = {"browser.ready": {"browser.ready", "browser.reattached"}}
 
 
 def _build_create_body(
     task: str,
-    model: str | None,
+    model: Model | str | None,
     model_params: dict[str, Any] | None,
     output_schema: dict[str, Any] | None,
     session_id: str | UUID | None,
@@ -49,11 +53,15 @@ def _build_create_body(
     secret_bindings: list[SecretBinding | dict[str, Any]] | None,
     judge: RunJudgeSettings | dict[str, Any] | None,
     max_cost_usd: float | str | None,
+    op_vault_id: str | None,
+    op_vault_allowed_domains: list[str] | None,
+    stripe_link_connection_id: str | UUID | None,
+    keep_alive: int | None,
     extra: dict[str, Any],
 ) -> dict[str, Any]:
     body: dict[str, Any] = {"task": task}
     if model is not None:
-        body["model"] = model
+        body["model"] = model.value if isinstance(model, Model) else model
     if model_params is not None:
         body["modelParams"] = model_params
     if output_schema is not None:
@@ -102,6 +110,14 @@ def _build_create_body(
             body["judge"] = judge
     if max_cost_usd is not None:
         body["maxCostUsd"] = max_cost_usd
+    if op_vault_id is not None:
+        body["opVaultId"] = op_vault_id
+    if op_vault_allowed_domains is not None:
+        body["opVaultAllowedDomains"] = op_vault_allowed_domains
+    if stripe_link_connection_id is not None:
+        body["stripeLinkConnectionId"] = str(stripe_link_connection_id)
+    if keep_alive is not _UNSET:
+        body["keepAlive"] = keep_alive
     body.update(extra)
     return body
 
@@ -114,7 +130,7 @@ class Runs:
         self,
         task: str,
         *,
-        model: str | None = None,
+        model: Model | str | None = None,
         model_params: dict[str, Any] | None = None,
         output_schema: dict[str, Any] | None = None,
         session_id: str | UUID | None = None,
@@ -125,6 +141,10 @@ class Runs:
         secret_bindings: list[SecretBinding | dict[str, Any]] | None = None,
         judge: RunJudgeSettings | dict[str, Any] | None = None,
         max_cost_usd: float | str | None = None,
+        op_vault_id: str | None = None,
+        op_vault_allowed_domains: list[str] | None = None,
+        stripe_link_connection_id: str | UUID | None = None,
+        keep_alive: int | None = _UNSET,  # type: ignore[assignment]
         **extra: Any,
     ) -> RunCreateResponse:
         """Create a run (a new session, or a follow-up turn when session_id is set)."""
@@ -141,6 +161,10 @@ class Runs:
             secret_bindings,
             judge,
             max_cost_usd,
+            op_vault_id,
+            op_vault_allowed_domains,
+            stripe_link_connection_id,
+            keep_alive,
             extra,
         )
         return RunCreateResponse.model_validate(
@@ -208,14 +232,17 @@ class Runs:
     ) -> RunEvent:
         """Poll immediately, then every three seconds until ``event_type`` appears.
 
-        Event reads share the project's general request budget. Set ``interval``
-        in seconds to tune latency and traffic across concurrent waits.
+        Waiting for ``browser.ready`` also returns ``browser.reattached``, which a
+        reused browser emits instead. Event reads share the project's general
+        request budget. Set ``interval`` in seconds to tune latency and traffic
+        across concurrent waits.
         """
+        accepted = _EVENT_ALIASES.get(event_type, {event_type})
         deadline = time.monotonic() + timeout
         while True:
             page = self.events(run_id, after=after, limit=limit)
             event = next(
-                (item for item in page.events if item.type == event_type), None
+                (item for item in page.events if item.type in accepted), None
             )
             if event is not None:
                 return event
@@ -304,7 +331,7 @@ class AsyncRuns:
         self,
         task: str,
         *,
-        model: str | None = None,
+        model: Model | str | None = None,
         model_params: dict[str, Any] | None = None,
         output_schema: dict[str, Any] | None = None,
         session_id: str | UUID | None = None,
@@ -315,6 +342,10 @@ class AsyncRuns:
         secret_bindings: list[SecretBinding | dict[str, Any]] | None = None,
         judge: RunJudgeSettings | dict[str, Any] | None = None,
         max_cost_usd: float | str | None = None,
+        op_vault_id: str | None = None,
+        op_vault_allowed_domains: list[str] | None = None,
+        stripe_link_connection_id: str | UUID | None = None,
+        keep_alive: int | None = _UNSET,  # type: ignore[assignment]
         **extra: Any,
     ) -> RunCreateResponse:
         """Create a run (a new session, or a follow-up turn when session_id is set)."""
@@ -331,6 +362,10 @@ class AsyncRuns:
             secret_bindings,
             judge,
             max_cost_usd,
+            op_vault_id,
+            op_vault_allowed_domains,
+            stripe_link_connection_id,
+            keep_alive,
             extra,
         )
         return RunCreateResponse.model_validate(
@@ -400,14 +435,17 @@ class AsyncRuns:
     ) -> RunEvent:
         """Poll immediately, then every three seconds until ``event_type`` appears.
 
-        Event reads share the project's general request budget. Set ``interval``
-        in seconds to tune latency and traffic across concurrent waits.
+        Waiting for ``browser.ready`` also returns ``browser.reattached``, which a
+        reused browser emits instead. Event reads share the project's general
+        request budget. Set ``interval`` in seconds to tune latency and traffic
+        across concurrent waits.
         """
+        accepted = _EVENT_ALIASES.get(event_type, {event_type})
         deadline = time.monotonic() + timeout
         while True:
             page = await self.events(run_id, after=after, limit=limit)
             event = next(
-                (item for item in page.events if item.type == event_type), None
+                (item for item in page.events if item.type in accepted), None
             )
             if event is not None:
                 return event

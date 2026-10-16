@@ -39,6 +39,7 @@ class Browsers:
         solve_captchas: bool | None = None,
         custom_proxy: CustomProxy | None = None,
         enable_recording: bool | None = None,
+        extension_ids: list[str] | None = None,
         **extra: Any,
     ) -> BrowserSessionItemView:
         """Create a standalone browser session."""
@@ -68,6 +69,8 @@ class Browsers:
             )
         if enable_recording is not None:
             body["enableRecording"] = enable_recording
+        if extension_ids is not None:
+            body["extensionIds"] = extension_ids
         body.update(extra)
         return BrowserSessionItemView.model_validate(
             self._http.request("POST", "/browsers", json=body)
@@ -155,6 +158,7 @@ class AsyncBrowsers:
         solve_captchas: bool | None = None,
         custom_proxy: CustomProxy | None = None,
         enable_recording: bool | None = None,
+        extension_ids: list[str] | None = None,
         **extra: Any,
     ) -> BrowserSessionItemView:
         """Create a standalone browser session."""
@@ -184,6 +188,8 @@ class AsyncBrowsers:
             )
         if enable_recording is not None:
             body["enableRecording"] = enable_recording
+        if extension_ids is not None:
+            body["extensionIds"] = extension_ids
         body.update(extra)
         return BrowserSessionItemView.model_validate(
             await self._http.request("POST", "/browsers", json=body)

@@ -53,6 +53,7 @@ export type WorkspaceUpdateRequest = S["WorkspaceUpdateRequest"];
 export type BrowserDownloadFile = S["BrowserDownloadFile"];
 export type BrowserDownloadListResponse = S["BrowserDownloadListResponse"];
 export type BrowserSessionItemView = S["BrowserSessionItemView"];
+export type BrowserExtensionView = S["BrowserExtensionView"];
 export type BrowserSessionView = S["BrowserSessionView"];
 export type BrowserSessionListResponse = S["BrowserSessionListResponse"];
 export type CreateBrowserSessionRequest = S["CreateBrowserSessionRequest"];

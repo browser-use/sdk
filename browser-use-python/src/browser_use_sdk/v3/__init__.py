@@ -7,6 +7,7 @@ from ..generated.v3.models import (
     AccountView,
     BrowserDownloadFile,
     BrowserDownloadListResponse,
+    BrowserExtensionView,
     BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionStatus,
@@ -57,6 +58,7 @@ __all__ = [
     # Browser models
     "BrowserDownloadFile",
     "BrowserDownloadListResponse",
+    "BrowserExtensionView",
     "BrowserSessionItemView",
     "BrowserSessionListResponse",
     "BrowserSessionStatus",
