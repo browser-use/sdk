@@ -79,6 +79,32 @@ curl -X POST https://api.browser-use.com/api/v4/runs \
 ```
 </CodeGroup>
 
+### OpenAI Fast mode
+
+Add `"service_tier": "priority"` (or its alias `"fast"`) to `modelParams` for
+faster OpenAI responses. It works with `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`,
+`gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-luna`, `gpt-6-sol`, `gpt-6-astra`, and
+`gpt-6.1-sol`. Fast mode bills tokens at 2x the model's Standard rate (2.5x
+for `gpt-5.5`).
+
+`modelParams` replaces the model's default parameters, so include the reasoning
+effort you want:
+
+```bash
+curl -X POST https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Compare three project-management tools",
+    "model": "gpt-6-luna",
+    "modelParams": {"reasoning": {"effort": "high"}, "service_tier": "priority"}
+  }'
+```
+
+If the project's OpenAI route cannot serve Fast mode, for example on the EU
+deployment without your own OpenAI key or on a Bedrock-only project, the run is
+rejected with `422 Fast mode is unavailable on this project’s OpenAI route`.
+
 ## API V3 support
 
 V3 accepts the normalized REST field `thinkingLevel`. Legacy aliases are

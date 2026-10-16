@@ -63,6 +63,7 @@ task publish         # npm + pypi publish
 - **Only retry HTTP 429.** Do not retry 5xx errors.
 - **Every public method needs a docstring** (Python) or JSDoc (TS). One-liner, imperative style.
 - **Re-export all user-facing types** from top-level `__init__.py` / `index.ts`. Users should never need to import from `generated/` directly.
+- **Busy 503 exception.** `request_idempotent` / `requestIdempotent` retry a 503 carrying `Retry-After` (capped at 10s). Use them only for idempotent calls the server marks busy, such as run cancel and session delete.
 
 ## Python SDK Rules
 
