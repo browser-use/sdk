@@ -9,9 +9,12 @@ The following Browser Use-hosted models have published token pricing:
 
 | Model | API string | Input | Cache read | Output | BYOK |
 | ----- | ---------- | ----: | ---------: | -----: | ---- |
+| GPT-6 Luna (default) | `gpt-6-luna` | \$0.12 | \$0.012 | \$0.60 | OpenAI |
 | GPT-5.6 Luna | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
 | Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
 | Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
+| GPT-6.1 Sol | `gpt-6.1-sol` | \$2.40 | \$0.12 | \$12.00 | OpenAI |
+| Claude Opus 5.5 | `claude-opus-5-5` | \$4.80 | \$0.24 | \$24.00 | Anthropic |
 | GPT-5.6 Sol | `gpt-5.6-sol` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
 | MiniMax M3 | `minimax-m3` | \$0.36 | \$0.072 | \$1.44 | — |
 
@@ -38,14 +41,22 @@ from the dashboard picker.
 
 | Provider | Model IDs | BYOK provider |
 | --- | --- | --- |
-| Anthropic | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-fable-5`, `claude-sonnet-5` | Anthropic |
+| Anthropic | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-opus-5-5`, `claude-fable-5`, `claude-sonnet-5` | Anthropic |
 | OpenAI | `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-astra`, `gpt-6-sol`, `gpt-6.1-sol`, `gpt-6-luna` | OpenAI |
 | Google | `gemini-3-flash`, `gemini-3.1-pro`, `gemini-3.5-flash`, `gemini-3.6-flash` | Google |
 | xAI | `grok-4.5`, `grok-4.6` | — |
 | Z.ai | `glm-5.2`, `glm-5.3-flash` | — |
-| DeepSeek (experimental) | `deepseek-v4-flash-vision` | — |
+| DeepSeek | `deepseek-v4.1-flash`, `deepseek-v4-flash-vision` (experimental) | — |
+| Xiaomi | `mimo-v2.6-pro`, `mimo-v2.6-flash` | — |
 | Moonshot AI | `kimi-k3` | — |
 | MiniMax | `minimax-m3` | — |
+
+Free-plan projects (no credits purchased yet) can use only `gpt-6-luna`,
+`gpt-5.6-luna`, `deepseek-v4.1-flash`, `gemini-3-flash`, `minimax-m3`, and
+the early-access `bu-ultrafast` and `bu-fast` presets; other models return 403
+until you buy credits. Zero Data Retention projects
+cannot use `claude-fable-5`, `deepseek-v4.1-flash`, `mimo-v2.6-pro`, or
+`mimo-v2.6-flash` (403).
 
 See [Thinking levels](/cloud/agent/thinking-levels) for the reasoning controls
 accepted by each model. Not every model accepts `modelParams`.

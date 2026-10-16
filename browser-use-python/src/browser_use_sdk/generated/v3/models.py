@@ -157,7 +157,7 @@ class BrowserSessionView(BaseModel):
     recording_url: str | None = Field(
         None,
         alias='recordingUrl',
-        description='Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.',
+        description='Presigned URL to download the session recording, if recording was enabled. Only populated on GET /browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.',
         title='Recording URL',
     )
     recording_available: bool | None = Field(
@@ -1084,7 +1084,7 @@ class BrowserSessionItemView(BaseModel):
     recording_url: str | None = Field(
         None,
         alias='recordingUrl',
-        description='Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses.',
+        description='Presigned URL to download the session recording. Only populated on `GET /browsers/{session_id}`; always `null` in list responses.',
         title='Recording URL',
     )
     metadata: Dict[str, str] | None = Field(

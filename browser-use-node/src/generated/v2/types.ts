@@ -379,7 +379,7 @@ export interface paths {
          *     and blocks the event loop. With page_size up to the max this CPU-pegs the
          *     worker and starves the DB pool, cascading into pool exhaustion across the
          *     fleet. Clients should fetch the recording URL on demand via
-         *     `GET /api/v2/browsers/{id}`, which signs exactly one URL for a single
+         *     `GET /browsers/{session_id}`, which signs exactly one URL for a single
          *     session. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).
          */
         get: operations["list_browser_sessions_browsers_get"];
@@ -958,7 +958,7 @@ export interface components {
             agentSessionId?: string | null;
             /**
              * Recording URL
-             * @description Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses.
+             * @description Presigned URL to download the session recording. Only populated on `GET /browsers/{session_id}`; always `null` in list responses.
              */
             recordingUrl?: string | null;
             /**
@@ -1089,7 +1089,7 @@ export interface components {
             agentSessionId?: string | null;
             /**
              * Recording URL
-             * @description Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.
+             * @description Presigned URL to download the session recording, if recording was enabled. Only populated on GET /browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.
              */
             recordingUrl?: string | null;
             /**

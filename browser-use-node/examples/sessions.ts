@@ -30,7 +30,11 @@ async function main() {
     const followUpResult = await client.runs.waitForCompletion(followUp.id);
     console.log("Task 2:", followUpResult.result);
   } finally {
-    if (sessionId) await client.browsers.stop(sessionId);
+    // sessionId is the agent session; each of its browsers has its own id.
+    if (sessionId) {
+      const browsers = await client.browsers.list({ agentSessionId: sessionId, filterBy: "active" });
+      for (const b of browsers.items) await client.browsers.stop(b.id);
+    }
   }
 }
 

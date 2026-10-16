@@ -5,7 +5,9 @@ from typing import TYPE_CHECKING, Any
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
+    BrowserDownloadListResponse,
     BrowserSessionItemView,
+    BrowserSessionListResponse,
     BrowserSessionView,
     CustomProxy,
 )
@@ -115,6 +117,59 @@ class Browsers:
             )
         )
 
+    def list(
+        self,
+        *,
+        page_size: int | None = None,
+        page_number: int | None = None,
+        filter_by: str | None = None,
+        agent_session_id: str | UUID | None = None,
+        metadata: list[str] | None = None,
+    ) -> BrowserSessionListResponse:
+        """List browser sessions; ``metadata`` terms are ``key`` or ``key=value``."""
+        return BrowserSessionListResponse.model_validate(
+            self._http.request(
+                "GET",
+                "/browsers",
+                params={
+                    "pageSize": page_size,
+                    "pageNumber": page_number,
+                    "filterBy": filter_by,
+                    "agentSessionId": (
+                        str(agent_session_id) if agent_session_id is not None else None
+                    ),
+                    "metadata": metadata,
+                },
+            )
+        )
+
+    def get(self, session_id: str | UUID) -> BrowserSessionView:
+        """Get a browser session, including its recording URL when ready."""
+        return BrowserSessionView.model_validate(
+            self._http.request("GET", f"/browsers/{session_id}")
+        )
+
+    def downloads(
+        self,
+        session_id: str | UUID,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        include_urls: bool | None = None,
+    ) -> BrowserDownloadListResponse:
+        """List files the browser downloaded during the session."""
+        return BrowserDownloadListResponse.model_validate(
+            self._http.request(
+                "GET",
+                f"/browsers/{session_id}/downloads",
+                params={
+                    "limit": limit,
+                    "cursor": cursor,
+                    "includeUrls": include_urls,
+                },
+            )
+        )
+
 
 class AsyncBrowsers:
     def __init__(self, http: AsyncHttpClient) -> None:
@@ -162,5 +217,58 @@ class AsyncBrowsers:
         return BrowserSessionView.model_validate(
             await self._http.request(
                 "PATCH", f"/browsers/{session_id}", json={"action": "stop"}
+            )
+        )
+
+    async def list(
+        self,
+        *,
+        page_size: int | None = None,
+        page_number: int | None = None,
+        filter_by: str | None = None,
+        agent_session_id: str | UUID | None = None,
+        metadata: list[str] | None = None,
+    ) -> BrowserSessionListResponse:
+        """List browser sessions; ``metadata`` terms are ``key`` or ``key=value``."""
+        return BrowserSessionListResponse.model_validate(
+            await self._http.request(
+                "GET",
+                "/browsers",
+                params={
+                    "pageSize": page_size,
+                    "pageNumber": page_number,
+                    "filterBy": filter_by,
+                    "agentSessionId": (
+                        str(agent_session_id) if agent_session_id is not None else None
+                    ),
+                    "metadata": metadata,
+                },
+            )
+        )
+
+    async def get(self, session_id: str | UUID) -> BrowserSessionView:
+        """Get a browser session, including its recording URL when ready."""
+        return BrowserSessionView.model_validate(
+            await self._http.request("GET", f"/browsers/{session_id}")
+        )
+
+    async def downloads(
+        self,
+        session_id: str | UUID,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        include_urls: bool | None = None,
+    ) -> BrowserDownloadListResponse:
+        """List files the browser downloaded during the session."""
+        return BrowserDownloadListResponse.model_validate(
+            await self._http.request(
+                "GET",
+                f"/browsers/{session_id}/downloads",
+                params={
+                    "limit": limit,
+                    "cursor": cursor,
+                    "includeUrls": include_urls,
+                },
             )
         )
