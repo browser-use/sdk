@@ -58,7 +58,7 @@ Call the [V4 API](/cloud/api-v4-overview) with plain **HTTP Request** nodes.
 1. Create a **Header Auth** credential with Name `X-Browser-Use-API-Key` and Value `YOUR_API_KEY` (without a `Bearer` prefix).
 2. Add an **HTTP Request** node named `Create run`: `POST https://api.browser-use.com/api/v4/runs` with that credential and JSON body `{"task": "Find the top 3 trending repos on GitHub today"}`. It returns the run `id`.
 3. Poll `GET https://api.browser-use.com/api/v4/runs/{{ $('Create run').item.json.id }}/status` with an **If** node and a **Wait** node (5–10 seconds) until `status` is `completed`, `failed`, or `cancelled`.
-4. Fetch `GET https://api.browser-use.com/api/v4/runs/{{ $('Create run').item.json.id }}` once. The agent's answer is in `result`; `error` explains a failed run.
+4. Fetch `GET https://api.browser-use.com/api/v4/runs/{{ $('Create run').item.json.id }}` once. Branch on `status`: only a `completed` run has the answer in `result` (and in `output` when you sent an `outputSchema`); for `failed` or `cancelled`, read `error`.
 
 V4 runs do not send webhooks, so poll the status endpoint. See [polling guidance](/cloud/guides/concurrency#budget-http-requests-separately).
 
