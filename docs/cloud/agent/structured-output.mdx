@@ -61,8 +61,9 @@ curl https://api.browser-use.com/api/v4/runs \
          "properties":{"title":{"type":"string"},"points":{"type":"integer"}},
          "required":["title","points"]}}'
 
-# Poll until "status" is "completed", then read "output".
-curl https://api.browser-use.com/api/v4/runs/<run-id> \
+# Poll until "status" is "completed", "failed" or "cancelled".
+# Read "output" only when it is "completed"; otherwise read "error".
+curl https://api.browser-use.com/api/v4/runs/$RUN_ID \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
 ```
 </CodeGroup>
