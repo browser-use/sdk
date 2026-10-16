@@ -1,7 +1,7 @@
 ---
 title: 2FA
 description: "Handle two-factor authentication in API V4 runs."
-icon: shield-halved
+icon: "smartphone"
 ---
 
 The most reliable options are a saved profile or a human checkpoint.
@@ -21,7 +21,8 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Download my latest invoice",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   browserSettings: {
     profileId: "YOUR_PROFILE_ID",
     proxyCountryCode: "us",
@@ -36,14 +37,21 @@ This avoids another 2FA challenge while the site's cookies remain valid.
 
 Ask the first run to stop at the 2FA screen, get its `live_view_url` from the
 [`browser.ready` event](/cloud/agent/human-in-the-loop), and have the user enter
-the code. Then continue with the same session:
+the code. Set `keepAlive` on the first run so the browser stays open while
+the user works; without it, the browser stops about 2 minutes after the run
+ends. The follow-up inherits the value, and kept time is billed. Then continue
+with the same session:
 
 <CodeGroup>
 ```python Python
 first = client.runs.create(
     "Open the login page and stop at the 2FA prompt",
+    keepAlive=900,
 )
+ready = client.runs.wait_for_event(first.id, "browser.ready")
 client.runs.wait_for_completion(first.id)
+print(ready.data["live_view_url"])
+input("Press Enter after entering the 2FA code...")
 
 next_run = client.runs.create(
     "Continue after login and download the invoice",
@@ -51,15 +59,26 @@ next_run = client.runs.create(
 )
 ```
 ```typescript TypeScript
+import type { RunCreateBody } from "browser-use-sdk/v4";
+import * as readline from "node:readline/promises";
+
 const first = await client.runs.create({
   task: "Open the login page and stop at the 2FA prompt",
-  model: "grok-4.5",
-});
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
+  keepAlive: 900,
+} as RunCreateBody);
+const ready = await client.runs.waitForEvent(first.id, "browser.ready");
 await client.runs.waitForCompletion(first.id);
+console.log(ready.data.live_view_url);
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+await rl.question("Press Enter after entering the 2FA code...");
+rl.close();
 
 const nextRun = await client.runs.create({
   task: "Continue after login and download the invoice",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   sessionId: first.sessionId,
 });
 ```

@@ -5,7 +5,9 @@ from typing import TYPE_CHECKING, Any
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
+    BrowserDownloadListResponse,
     BrowserSessionItemView,
+    BrowserSessionListResponse,
     BrowserSessionView,
     CustomProxy,
 )
@@ -27,6 +29,7 @@ def _build_create_body(
     solve_captchas: bool | None = None,
     custom_proxy: CustomProxy | None = None,
     enable_recording: bool | None = None,
+    extension_ids: list[str] | None = None,
     **extra: Any,
 ) -> dict[str, Any]:
     if metadata is not None and len(metadata) > 10:
@@ -59,6 +62,8 @@ def _build_create_body(
         body["customProxy"] = custom_proxy.model_dump(by_alias=True, exclude_none=True)
     if enable_recording is not None:
         body["enableRecording"] = enable_recording
+    if extension_ids is not None:
+        body["extensionIds"] = extension_ids
     body.update(extra)
     return body
 
@@ -81,6 +86,7 @@ class Browsers:
         solve_captchas: bool | None = None,
         custom_proxy: CustomProxy | None = None,
         enable_recording: bool | None = None,
+        extension_ids: list[str] | None = None,
         **extra: Any,
     ) -> BrowserSessionItemView:
         """Create a new standalone browser session."""
@@ -96,6 +102,7 @@ class Browsers:
             solve_captchas=solve_captchas,
             custom_proxy=custom_proxy,
             enable_recording=enable_recording,
+            extension_ids=extension_ids,
             **extra,
         )
         return BrowserSessionItemView.model_validate(
@@ -107,6 +114,59 @@ class Browsers:
         return BrowserSessionView.model_validate(
             self._http.request(
                 "PATCH", f"/browsers/{session_id}", json={"action": "stop"}
+            )
+        )
+
+    def list(
+        self,
+        *,
+        page_size: int | None = None,
+        page_number: int | None = None,
+        filter_by: str | None = None,
+        agent_session_id: str | UUID | None = None,
+        metadata: list[str] | None = None,
+    ) -> BrowserSessionListResponse:
+        """List browser sessions; ``metadata`` terms are ``key`` or ``key=value``."""
+        return BrowserSessionListResponse.model_validate(
+            self._http.request(
+                "GET",
+                "/browsers",
+                params={
+                    "pageSize": page_size,
+                    "pageNumber": page_number,
+                    "filterBy": filter_by,
+                    "agentSessionId": (
+                        str(agent_session_id) if agent_session_id is not None else None
+                    ),
+                    "metadata": metadata,
+                },
+            )
+        )
+
+    def get(self, session_id: str | UUID) -> BrowserSessionView:
+        """Get a browser session, including its recording URL when ready."""
+        return BrowserSessionView.model_validate(
+            self._http.request("GET", f"/browsers/{session_id}")
+        )
+
+    def downloads(
+        self,
+        session_id: str | UUID,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        include_urls: bool | None = None,
+    ) -> BrowserDownloadListResponse:
+        """List files the browser downloaded during the session."""
+        return BrowserDownloadListResponse.model_validate(
+            self._http.request(
+                "GET",
+                f"/browsers/{session_id}/downloads",
+                params={
+                    "limit": limit,
+                    "cursor": cursor,
+                    "includeUrls": include_urls,
+                },
             )
         )
 
@@ -129,6 +189,7 @@ class AsyncBrowsers:
         solve_captchas: bool | None = None,
         custom_proxy: CustomProxy | None = None,
         enable_recording: bool | None = None,
+        extension_ids: list[str] | None = None,
         **extra: Any,
     ) -> BrowserSessionItemView:
         """Create a new standalone browser session."""
@@ -144,6 +205,7 @@ class AsyncBrowsers:
             solve_captchas=solve_captchas,
             custom_proxy=custom_proxy,
             enable_recording=enable_recording,
+            extension_ids=extension_ids,
             **extra,
         )
         return BrowserSessionItemView.model_validate(
@@ -155,5 +217,58 @@ class AsyncBrowsers:
         return BrowserSessionView.model_validate(
             await self._http.request(
                 "PATCH", f"/browsers/{session_id}", json={"action": "stop"}
+            )
+        )
+
+    async def list(
+        self,
+        *,
+        page_size: int | None = None,
+        page_number: int | None = None,
+        filter_by: str | None = None,
+        agent_session_id: str | UUID | None = None,
+        metadata: list[str] | None = None,
+    ) -> BrowserSessionListResponse:
+        """List browser sessions; ``metadata`` terms are ``key`` or ``key=value``."""
+        return BrowserSessionListResponse.model_validate(
+            await self._http.request(
+                "GET",
+                "/browsers",
+                params={
+                    "pageSize": page_size,
+                    "pageNumber": page_number,
+                    "filterBy": filter_by,
+                    "agentSessionId": (
+                        str(agent_session_id) if agent_session_id is not None else None
+                    ),
+                    "metadata": metadata,
+                },
+            )
+        )
+
+    async def get(self, session_id: str | UUID) -> BrowserSessionView:
+        """Get a browser session, including its recording URL when ready."""
+        return BrowserSessionView.model_validate(
+            await self._http.request("GET", f"/browsers/{session_id}")
+        )
+
+    async def downloads(
+        self,
+        session_id: str | UUID,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        include_urls: bool | None = None,
+    ) -> BrowserDownloadListResponse:
+        """List files the browser downloaded during the session."""
+        return BrowserDownloadListResponse.model_validate(
+            await self._http.request(
+                "GET",
+                f"/browsers/{session_id}/downloads",
+                params={
+                    "limit": limit,
+                    "cursor": cursor,
+                    "includeUrls": include_urls,
+                },
             )
         )

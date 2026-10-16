@@ -1,9 +1,19 @@
 ---
 title: Concurrency and limits
 description: "Preserved legacy allowances, spend tiers, browser lifetime, polling budgets, queues, and retry guidance."
+icon: "gauge"
 ---
 
 Browser Use has separate limits for simultaneous browser work and API request frequency. A project can have available browser capacity and still receive a rate-limit response if it sends too many HTTP requests.
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/concurrency-two-limits-light-mobile.svg" />
+  <img src="/cloud/images/concurrency-two-limits-light.svg" alt="Your app passes two separate limits: browser slots, set by concurrentSessionLimit, and a request budget, reported as limit_rps. Either can return 429 while the other has room." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/concurrency-two-limits-dark-mobile.svg" />
+  <img src="/cloud/images/concurrency-two-limits-dark.svg" alt="Your app passes two separate limits: browser slots, set by concurrentSessionLimit, and a request budget, reported as limit_rps. Either can return 429 while the other has room." noZoom />
+</picture>
 
 For reliable batch processing, use a bounded worker pool, track the browsers your application owns, and budget polling requests across the project.
 
@@ -61,7 +71,11 @@ A V4 **session** is a conversation. A **run** is one turn in that conversation. 
 
 A browser can survive the run that created it and be reused by a later turn. A conversation can also have multiple browsers. Additional tabs in the same browser are not additional browser sessions.
 
-After all runs in a conversation are inactive, V4 browsers become eligible for cleanup after approximately 20 minutes without recent run activity. Cleanup runs periodically, so this is not an exact shutdown deadline. V4 agent browsers also have a four-hour hard timeout.
+After every run in a session has finished, its V4 agent browsers stop about 2 minutes after the last run activity. Cleanup runs every minute, so expect 2-3 minutes. A follow-up sent later gets a fresh browser with the session's settings and profile, but not the old tabs or page state. V4 agent browsers also have a four-hour hard timeout.
+
+To keep the browser open longer for a follow-up or a human, set [`keepAlive`](/cloud/agent/sessions#keep-the-browser-open-between-runs) (integer seconds, 120-14400) on the run. Follow-ups inherit it, a new value changes it, and `null` restores 120 seconds. Free-tier and Zero Data Retention runs always use 120 seconds.
+
+A V4 session takes one concurrency slot only while it has a queued or running run. An idle V4 agent browser, including one held open by `keepAlive`, takes no slot, but its time is billed as browser time until it stops. A standalone browser holds a slot until it stops.
 
 If your application is finished with a browser, explicitly stop that browser rather than relying on idle cleanup. Only stop browser IDs your application owns and no longer needs. For a standalone browser, the stop request is:
 
@@ -75,7 +89,7 @@ curl --fail-with-body -X PATCH \
 
 Do not use this against a browser another active run or person still needs. Closing your local CDP connection is not a substitute for checking the cloud browser's lifecycle.
 
-If your workflow requires human interaction, deliver the live-view URL from `browser.ready` while the run/browser is active. A conversation remaining in history does not mean its live browser is still available.
+If your workflow requires human interaction, deliver the live-view URL from `browser.ready` or `browser.reattached` while the run/browser is active, and set `keepAlive` so the browser outlasts the human's work. A conversation remaining in history does not mean its live browser is still available.
 
 ## Queue follow-ups within a conversation
 
@@ -191,7 +205,7 @@ your shared request budget; a longer interval also makes backlog traversal slowe
 | 402 with `detail.code: "api_key_monthly_spend_limit_reached"` | This key's monthly soft spending cap was reached | Check the cap and recorded spend in the current UTC month. |
 | Other 402 | May be insufficient project balance or another payment condition | Inspect the complete response and the API key's project. |
 
-The SDK retries some transient responses, including 429, but the default is only three retries. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
+The SDK retries only HTTP 429, three times by default; it does not retry 5xx responses or network errors. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
 
 SDK 3.11.3 errors expose the response status and body, but not response headers.
 Use `retry_after_seconds` when the body includes it. To diagnose an edge throttle

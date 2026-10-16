@@ -276,7 +276,8 @@ def test_async_404_after_visible_is_not_retried():
     asyncio.run(run())
 
 
-@pytest.mark.parametrize("code", [500, 503])
+# 502/503/504 reads are retried (CLAUDE.md retry rule), so only a plain 500 surfaces at once.
+@pytest.mark.parametrize("code", [500])
 def test_async_other_http_errors_are_not_retried(code):
     async def run():
         with fixture_http([code], complete_after=None) as s:
@@ -294,7 +295,7 @@ def test_async_other_http_errors_are_not_retried(code):
     (["completed"], "completed", 1),
     ([401], 401, 1),
     ([403], 403, 1),
-    ([503], 503, 1),
+    ([500], 500, 1),
     (["running", 404, "completed"], 404, 2),
 ])
 def test_sync_visibility_and_error_controls(plan, expected, polls):

@@ -1,6 +1,7 @@
 ---
 title: MCP Server
 description: "Run browser automation tasks from your AI coding assistant. Connect to Claude, Cursor, Windsurf, or any MCP client."
+icon: "server"
 ---
 
 ```
@@ -9,23 +10,39 @@ https://api.browser-use.com/v3/mcp
 
 Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
 
+Use the standard `Authorization: Bearer YOUR_API_KEY` header. The legacy
+`x-browser-use-api-key` header remains supported for existing integrations.
+Treat your API key as a secret; do not commit it to your repository.
+
 ## Claude Code
 
 ```bash
-claude mcp add -t http -H "x-browser-use-api-key: YOUR_API_KEY" browser-use https://api.browser-use.com/v3/mcp
+claude mcp add -t http -H "Authorization: Bearer YOUR_API_KEY" browser-use https://api.browser-use.com/v3/mcp
 ```
 
 ## Claude Desktop
 
 Add to `claude_desktop_config.json`:
 
+This local bridge requires Node.js and converts Claude Desktop's stdio transport
+to the remote HTTP endpoint. Native remote connectors are configured separately
+in Claude's connector settings, not in this file. The header argument has no spaces
+because Claude Desktop on Windows does not escape spaces in `args`.
+
 ```json
 {
   "mcpServers": {
     "browser-use": {
-      "url": "https://api.browser-use.com/v3/mcp",
-      "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://api.browser-use.com/v3/mcp",
+        "--header",
+        "Authorization:${BROWSER_USE_AUTH_HEADER}"
+      ],
+      "env": {
+        "BROWSER_USE_AUTH_HEADER": "Bearer YOUR_API_KEY"
       }
     }
   }
@@ -42,7 +59,7 @@ Add to `.cursor/mcp.json`:
     "browser-use": {
       "url": "https://api.browser-use.com/v3/mcp",
       "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
+        "Authorization": "Bearer YOUR_API_KEY"
       }
     }
   }
@@ -59,7 +76,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
     "browser-use": {
       "serverUrl": "https://api.browser-use.com/v3/mcp",
       "headers": {
-        "x-browser-use-api-key": "YOUR_API_KEY"
+        "Authorization": "Bearer YOUR_API_KEY"
       }
     }
   }
@@ -70,10 +87,12 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 | Tool | Description |
 |------|-------------|
-| `run_session` | Create a session and run a task. Supports `keep_alive`, `model` (`claude-sonnet-4.6`, `claude-opus-4.6`, `gpt-5.4-mini`), `output_schema`, and `profile_id`. |
+| `run_session` | Create a V3 session and run a task. Supports `keep_alive`, `model` (e.g. `claude-sonnet-5`, `gemini-3-flash`, `claude-opus-4.8`; `tools/list` returns the full list), `output_schema`, `profile_id`, `workspace_id`, and `proxy_country` (default `us`; `null` disables). |
 | `get_session` | Poll session status and output. Returns status, step count, cost breakdown, and live URL. |
 | `send_task` | Send a follow-up task to an idle keep-alive session. |
 | `stop_session` | Stop a session. `strategy: "task"` stops only the task, `"session"` destroys the sandbox. |
 | `get_session_messages` | Get the agent's messages — browser actions, reasoning, and results. |
 | `list_sessions` | List recent sessions with status and cost. |
 | `list_browser_profiles` | List browser profiles for authenticated tasks. |
+
+The MCP server runs API V3 sessions, not V4 runs.

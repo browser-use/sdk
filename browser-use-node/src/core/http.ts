@@ -1,5 +1,33 @@
-import { BrowserUseError } from "./errors.js";
+import { APIKeySpendLimitError, BrowserUseError } from "./errors.js";
 import type { FetchLike } from "./x402.js";
+
+const MAX_RETRY_DELAY = 10_000;
+
+/** Honor Cloud's integer-second Retry-After; other formats use normal backoff. */
+function retryDelay(response: Response, attempt: number): number | undefined {
+  const value = response.headers.get("Retry-After")?.trim();
+  const retryAfter = value && /^\d+$/.test(value) ? Number(value) * 1000 : undefined;
+  // Timeout remains per attempt; preserve the existing ten-second delay cap.
+  if (retryAfter !== undefined && retryAfter > MAX_RETRY_DELAY) return undefined;
+
+  const backoff = Math.min(1000 * 2 ** attempt, MAX_RETRY_DELAY);
+  return Math.min(Math.max(backoff, retryAfter ?? 0) + Math.random() * 250, MAX_RETRY_DELAY);
+}
+
+async function sleep(delay: number, signal?: AbortSignal): Promise<void> {
+  signal?.throwIfAborted();
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", abort);
+      resolve();
+    }, delay);
+    const abort = () => {
+      clearTimeout(timer);
+      reject(signal?.reason);
+    };
+    signal?.addEventListener("abort", abort, { once: true });
+  });
+}
 
 export interface HttpClientOptions {
   apiKey: string;
@@ -14,6 +42,9 @@ export interface HttpClientOptions {
    */
   fetch?: FetchLike | Promise<FetchLike>;
 }
+
+const MAX_RETRY_AFTER_MS = 10_000;
+const SPEND_LIMIT_CODE = "api_key_monthly_spend_limit_reached";
 
 export class HttpClient {
   private readonly apiKey: string;
@@ -71,15 +102,14 @@ export class HttpClient {
     if (this.useApiKeyHeader) {
       headers["X-Browser-Use-API-Key"] = this.apiKey;
     }
-    if (options?.body !== undefined) {
+    // FormData bodies are sent as-is so fetch sets the multipart boundary.
+    const isForm = typeof FormData !== "undefined" && options?.body instanceof FormData;
+    if (options?.body !== undefined && !isForm) {
       headers["Content-Type"] = "application/json";
     }
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
-      if (attempt > 0) {
-        const delay = Math.min(1000 * 2 ** (attempt - 1), 10_000);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      }
+      options?.signal?.throwIfAborted();
 
       const controller = new AbortController();
       const timeoutId = options?.signal
@@ -94,7 +124,12 @@ export class HttpClient {
         const response = await fetchImpl(url.toString(), {
           method,
           headers,
-          body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
+          body:
+            options?.body === undefined
+              ? undefined
+              : isForm
+                ? (options.body as FormData)
+                : JSON.stringify(options.body),
           signal,
         });
 
@@ -104,14 +139,23 @@ export class HttpClient {
           if (response.status === 204) {
             return undefined as T;
           }
-          return (await response.json()) as T;
+          // Bodiless 2xx replies (e.g. 202 from session purge) have no JSON to parse.
+          const text = await response.text();
+          return (text ? JSON.parse(text) : undefined) as T;
         }
 
+        // GETs are safe to replay after a temporary upstream failure. Writes
+        // retain only the existing 429 retry: a 5xx may follow a successful write.
         const shouldRetry =
-          response.status === 429 &&
+          (response.status === 429 ||
+            (method.toUpperCase() === "GET" && [502, 503, 504].includes(response.status))) &&
           attempt < this.maxRetries;
+        const delay = shouldRetry ? retryDelay(response, attempt) : undefined;
 
-        if (shouldRetry) {
+        if (delay !== undefined) {
+          // Release the failed response before waiting or opening another request.
+          await response.body?.cancel().catch(() => {});
+          await sleep(delay, options?.signal);
           continue;
         }
 
@@ -129,13 +173,28 @@ export class HttpClient {
                 ? (errorBody as Record<string, unknown>).detail
                 : undefined
             : undefined;
+        const fields =
+          typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
         const message =
-          raw === undefined
-            ? `HTTP ${response.status}`
-            : typeof raw === "string"
-              ? raw
-              : JSON.stringify(raw);
-        throw new BrowserUseError(response.status, message, errorBody);
+          typeof fields.message === "string"
+            ? fields.message
+            : raw === undefined
+              ? `HTTP ${response.status}`
+              : typeof raw === "string"
+                ? raw
+                : JSON.stringify(raw);
+        const header = response.headers.get("Retry-After")?.trim();
+        const retryAfter = header && /^\d+$/.test(header) ? Number(header) : undefined;
+        if (response.status === 402 && fields.code === SPEND_LIMIT_CODE) {
+          const num = (value: unknown) => (typeof value === "number" ? value : undefined);
+          throw new APIKeySpendLimitError(
+            message,
+            errorBody,
+            { code: SPEND_LIMIT_CODE, cap: num(fields.cap), spent: num(fields.spent) },
+            retryAfter,
+          );
+        }
+        throw new BrowserUseError(response.status, message, errorBody, retryAfter);
       } catch (error) {
         clearTimeout(timeoutId);
         throw error;
@@ -143,6 +202,20 @@ export class HttpClient {
     }
 
     throw new Error("Unreachable: retry loop exhausted");
+  }
+
+  /** Send an idempotent request, retrying 503 busy replies after their Retry-After. */
+  async requestIdempotent<T>(method: string, path: string): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await this.request<T>(method, path);
+      } catch (error) {
+        const busy =
+          error instanceof BrowserUseError && error.statusCode === 503 ? error.retryAfter : undefined;
+        if (busy === undefined || attempt >= this.maxRetries) throw error;
+        await new Promise((resolve) => setTimeout(resolve, Math.min(busy * 1000, MAX_RETRY_AFTER_MS)));
+      }
+    }
   }
 
   get<T>(path: string, query?: Record<string, unknown>): Promise<T> {
@@ -160,6 +233,10 @@ export class HttpClient {
 
   patch<T>(path: string, body?: unknown, query?: Record<string, unknown>): Promise<T> {
     return this.request<T>("PATCH", path, { body, query });
+  }
+
+  put<T>(path: string, body?: unknown, query?: Record<string, unknown>): Promise<T> {
+    return this.request<T>("PUT", path, { body, query });
   }
 
   delete<T>(path: string, query?: Record<string, unknown>): Promise<T> {

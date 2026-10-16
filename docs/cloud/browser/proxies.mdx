@@ -1,25 +1,21 @@
 ---
 title: Proxies
 description: "Configure residential or custom proxies for API V4 browsers and agent runs."
-icon: globe
+icon: "map-pin"
 ---
 
 A US residential proxy is enabled by default. The browser's traffic passes
 through that residential IP before reaching the website, so the website sees
 the proxy's location—not your server's.
 
-<img
-  src="/cloud/images/browser-proxy-light.svg"
-  alt="A cloud browser routing its traffic through a residential proxy before reaching a website"
-  noZoom
-  className="block dark:hidden"
-/>
-<img
-  src="/cloud/images/browser-proxy-dark.svg"
-  alt="A cloud browser routing its traffic through a residential proxy before reaching a website"
-  noZoom
-  className="hidden dark:block"
-/>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/browser-proxy-light-mobile.svg" />
+  <img src="/cloud/images/browser-proxy-light.svg" alt="A cloud browser reaches a website by one of three routes: the default residential proxy, whose country is set by proxyCountryCode, your own proxy via customProxy, or directly with proxyCountryCode null." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/browser-proxy-dark-mobile.svg" />
+  <img src="/cloud/images/browser-proxy-dark.svg" alt="A cloud browser reaches a website by one of three routes: the default residential proxy, whose country is set by proxyCountryCode, your own proxy via customProxy, or directly with proxyCountryCode null." noZoom />
+</picture>
 
 Set `browser_settings` / `browserSettings` when you create a V4 run to choose
 another country:
@@ -46,7 +42,8 @@ import { BrowserUse } from "browser-use-sdk/v4";
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Get the iPhone 16 price on amazon.de",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   browserSettings: { proxyCountryCode: "de" },
 });
 ```
@@ -73,7 +70,8 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Test my staging site",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   browserSettings: { proxyCountryCode: null },
 });
 ```
@@ -145,7 +143,8 @@ run = client.runs.create(
 ```typescript TypeScript
 const run = await client.runs.create({
   task: "Check the account dashboard",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   browserSettings: {
     proxyCountryCode: "us",
     customProxy: {

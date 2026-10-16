@@ -1,25 +1,21 @@
 ---
 title: Sessions
 description: "Continue one conversation across multiple V4 runs."
-icon: comments
+icon: "layers"
 ---
 
 A **session** holds the agent's conversation and can reuse its live browser.
 One session ID can contain multiple runs. Every run creates a session implicitly
 unless you pass an existing session ID.
 
-<img
-  src="/cloud/images/v4-sessions-light.svg"
-  alt="One session ID containing three sequential runs, where each run continues the same conversation, workspace, and live browser"
-  noZoom
-  className="block dark:hidden"
-/>
-<img
-  src="/cloud/images/v4-sessions-dark.svg"
-  alt="One session ID containing three sequential runs, where each run continues the same conversation, workspace, and live browser"
-  noZoom
-  className="hidden dark:block"
-/>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/v4-sessions-light-mobile.svg" />
+  <img src="/cloud/images/v4-sessions-light.svg" alt="One session ID holding four runs: the conversation gains a turn per run and the workspace keeps its files, while back-to-back runs reuse one live browser. That browser stops after 120 s idle, so a later run gets a new browser but keeps the conversation and files." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/v4-sessions-dark-mobile.svg" />
+  <img src="/cloud/images/v4-sessions-dark.svg" alt="One session ID holding four runs: the conversation gains a turn per run and the workspace keeps its files, while back-to-back runs reuse one live browser. That browser stops after 120 s idle, so a later run gets a new browser but keeps the conversation and files." noZoom />
+</picture>
 
 Pass `session_id` / `sessionId` to continue:
 
@@ -38,13 +34,15 @@ print(result.result)
 ```typescript TypeScript
 const first = await client.runs.create({
   task: "Open Hacker News",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
 });
 await client.runs.waitForCompletion(first.id);
 
 const followUp = await client.runs.create({
   task: "Now summarize the top story",
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   sessionId: first.sessionId,
 });
 const result = await client.runs.waitForCompletion(followUp.id);
@@ -55,6 +53,41 @@ console.log(result.result);
 Omit the session ID for a new conversation. Pass only a [workspace
 ID](/cloud/agent/workspaces) when you want a fresh conversation that keeps the
 same files.
+
+## Keep the browser open between runs
+
+After a session's last run, its browser stays open about 2 minutes, then
+stops. A later follow-up gets a fresh browser with the same settings and
+profile, but not the old tabs or page state. Set `keepAlive` on the run to keep
+the browser open longer: integer seconds from 120 to 14400 (default 120), never
+past the browser's 4-hour lifetime. Follow-ups inherit the value, a new value
+changes it, and `null` restores 120 seconds.
+
+<CodeGroup>
+```python Python
+run = client.runs.create("Open my dashboard", keepAlive=900)
+```
+```typescript TypeScript
+import type { RunCreateBody } from "browser-use-sdk/v4";
+
+const run = await client.runs.create({
+  task: "Open my dashboard",
+  keepAlive: 900,
+} as RunCreateBody);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Open my dashboard","keepAlive":900}'
+```
+</CodeGroup>
+
+The SDKs do not type `keepAlive` yet: Python sends it as an extra keyword
+argument, and TypeScript needs the cast. Unlike the boolean `keepAlive` in
+V2/V3, V4 takes seconds and rejects `true` with 422. Kept time is billed as
+browser time but takes no concurrency slot. Free-tier and Zero Data Retention
+runs always use 120 seconds.
 
 ## Follow up while a run is busy
 
@@ -112,3 +145,59 @@ This example times out only its local wait. It does not remove the queued
 message or cancel a run. `interrupt=True` / `interrupt: true` instead cancels
 the active run so the new instruction can run immediately. Keep it false
 to preserve the active work.
+
+## Manage a session
+
+### Rename
+
+```bash
+curl -X PATCH "https://api.browser-use.com/api/v4/sessions/$SESSION_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Q3 vendor research"}'
+```
+
+Titles are up to 255 characters. `null` or a blank title clears the name, and
+the dashboard shows the opening task instead.
+
+### Delete
+
+```bash
+curl -X DELETE "https://api.browser-use.com/api/v4/sessions/$SESSION_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+Returns `204`. The session disappears from lists and cannot be opened or
+continued. An active run and any pending queued messages are cancelled first.
+Deleting again also returns `204`. On `502` or `503` the session was not
+deleted; retry. Delete hides the session but keeps its records for billing; it
+does not erase data.
+
+### Share a read-only link
+
+```bash
+curl -X POST "https://api.browser-use.com/api/v4/sessions/$SESSION_ID/share" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+The response contains `shareUrl`, `shareToken`, `isActive`, and `viewCount`.
+Anyone with the link can see the session's tasks, results, workspace files, and
+recording without an API key.
+
+Disable the link with `PUT /api/v4/sessions/{id}/share` and
+`{"isActive": false}`; it stops working immediately. Enabling it again keeps
+the same URL. `GET /api/v4/sessions/{id}/share` returns `null` if the session
+was never shared. Zero Data Retention projects cannot share sessions.
+
+### Purge data (Zero Data Retention projects)
+
+```bash
+curl -i -X POST "https://api.browser-use.com/api/v4/sessions/$SESSION_ID/purge" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+Purge erases the session's run content, workspace files, recordings, and
+downloads. It returns `204` when done, or `202` with `Retry-After: 60` while
+active work or uploads delay deletion; call it again after that delay. Projects
+without Zero Data Retention get `403`. The SDK `sessions.purge` helpers do not
+handle the `202` yet, so use the HTTP call to know when deletion finished.

@@ -1,3 +1,4 @@
+import { BrowserUseError } from "../../core/errors.js";
 import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v4/types.js";
 
@@ -10,8 +11,25 @@ type RunEventsResponse = components["schemas"]["RunEventsResponse"];
 type RunEvent = components["schemas"]["RunEvent"];
 type RunAttachmentsResponse = components["schemas"]["RunAttachmentsResponse"];
 
+/** Known V4 model ids; `RunCreateBody.model` also accepts ids added after this release. */
+export type RunModel = RunCreateRequest["model"];
+
+// Wallet ids stay off the SDK surface, which has no wallet resource to look them up.
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
-  Partial<Omit<RunCreateRequest, "task">>;
+  Partial<
+    Omit<
+      RunCreateRequest,
+      "task" | "model" | "browserSettings" | "agentcardWalletId" | "stripeLinkConnectionId"
+    >
+  > & {
+    // `string & {}` keeps autocomplete for known ids without rejecting new ones.
+    model?: RunModel | (string & {});
+    // Generated types mark defaulted fields (proxyCountryCode) required; the server fills them.
+    browserSettings?: Partial<RunCreateRequest["browserSettings"] & {}> | null;
+  };
+
+const INITIAL_VISIBILITY_GRACE_MS = 5_000;
+const MIN_VISIBILITY_RETRY_INTERVAL_MS = 50;
 
 /** Terminal run statuses — closed enum in the v4 spec. */
 const TERMINAL_STATUSES = new Set(["completed", "failed", "cancelled"]);
@@ -20,6 +38,10 @@ const TERMINAL_EVENT_TYPES = new Set([
   "run.failed",
   "run.cancelled",
   "run.dispatch_failed",
+]);
+// A follow-up run that reuses the session's browser emits browser.reattached instead of browser.ready.
+const EVENT_ALIASES = new Map<string, string[]>([
+  ["browser.ready", ["browser.ready", "browser.reattached"]],
 ]);
 
 export interface RunListParams {
@@ -73,6 +95,7 @@ export class Runs {
 
   /**
    * Poll immediately, then every 3 seconds until the requested event appears (5-minute timeout).
+   * Waiting for `browser.ready` also returns `browser.reattached`, which a reused browser emits instead.
    * Event reads share the project's general request budget; tune interval across concurrent waits.
    */
   async waitForEvent(
@@ -84,10 +107,11 @@ export class Runs {
     const interval = options?.interval ?? 3_000;
     const deadline = Date.now() + timeout;
     let after = options?.after ?? null;
+    const accepted = new Set(EVENT_ALIASES.get(type) ?? [type]);
 
     for (;;) {
       const page = await this.events(runId, { after, limit: options?.limit ?? 100 });
-      const event = page.events.find((candidate) => candidate.type === type);
+      const event = page.events.find((candidate) => accepted.has(candidate.type));
       if (event) return event;
       const terminal = page.events.find((candidate) => TERMINAL_EVENT_TYPES.has(candidate.type));
       if (terminal) {
@@ -102,7 +126,7 @@ export class Runs {
 
   /** Cancel a run. Returns the updated run summary. */
   cancel(runId: string): Promise<RunSummary> {
-    return this.http.post<RunSummary>(`/runs/${runId}/cancel`);
+    return this.http.requestIdempotent<RunSummary>("POST", `/runs/${runId}/cancel`);
   }
 
   /** List files the agent attached to the run. */
@@ -114,7 +138,9 @@ export class Runs {
    * Poll the run's status until terminal (completed | failed | cancelled),
    * then fetch and return the full run summary. This is the loop the v4 API
    * was designed for — status is a tiny indexed lookup, the full summary is
-   * fetched exactly once at the end.
+   * fetched exactly once at the end. Initial 404s are retried for at most
+   * five seconds (within `timeout`); after any successful status read, 404s
+   * propagate immediately.
    *
    * ```ts
    * const created = await client.runs.create({ task: "Find the top HN post" });
@@ -125,13 +151,30 @@ export class Runs {
   async waitForCompletion(runId: string, options?: WaitOptions): Promise<RunSummary> {
     const timeout = options?.timeout ?? 14_400_000;
     const interval = options?.interval ?? 2_000;
-    const deadline = Date.now() + timeout;
+    const started = Date.now();
+    const deadline = started + timeout;
+    const visibilityDeadline = Math.min(deadline, started + INITIAL_VISIBILITY_GRACE_MS);
+    let seenStatus = false;
 
     // A terminal status is always returned, even if the status() call itself
     // finished slightly past the deadline — a completed run is never thrown
     // away. Only a non-terminal status seen past the deadline is a timeout.
     for (;;) {
-      const { status } = await this.status(runId);
+      let status: string;
+      try {
+        ({ status } = await this.status(runId));
+      } catch (error) {
+        const left = visibilityDeadline - Date.now();
+        const notYetVisible =
+          error instanceof BrowserUseError && error.statusCode === 404 && !seenStatus;
+        if (!notYetVisible || left <= 0) throw error;
+        await new Promise((r) =>
+          setTimeout(r, Math.min(Math.max(interval, MIN_VISIBILITY_RETRY_INTERVAL_MS), left)),
+        );
+        if (Date.now() >= visibilityDeadline) throw error;
+        continue;
+      }
+      seenStatus = true;
       if (TERMINAL_STATUSES.has(status)) {
         return this.get(runId);
       }

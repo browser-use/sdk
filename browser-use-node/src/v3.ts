@@ -1,7 +1,7 @@
 export { BrowserUse } from "./v3/client.js";
 export type { BrowserUseOptions, RunSessionOptions } from "./v3/client.js";
 
-export { BrowserUseError } from "./core/errors.js";
+export { APIKeySpendLimitError, BrowserUseError } from "./core/errors.js";
 
 export { getWalletBalance } from "./core/x402.js";
 export type { X402WalletBalance } from "./core/x402.js";
@@ -53,6 +53,7 @@ export type WorkspaceUpdateRequest = S["WorkspaceUpdateRequest"];
 export type BrowserDownloadFile = S["BrowserDownloadFile"];
 export type BrowserDownloadListResponse = S["BrowserDownloadListResponse"];
 export type BrowserSessionItemView = S["BrowserSessionItemView"];
+export type BrowserExtensionView = S["BrowserExtensionView"];
 export type BrowserSessionView = S["BrowserSessionView"];
 export type BrowserSessionListResponse = S["BrowserSessionListResponse"];
 export type CreateBrowserSessionRequest = S["CreateBrowserSessionRequest"];

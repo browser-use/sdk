@@ -148,10 +148,31 @@ function v3EndpointToSdkMethod(
   return null;
 }
 
+// Wallets stay off the SDK surface and GET cost-cap is not in production yet; map every other v4 endpoint.
+const v4NotInSdk = new Set([
+  "GET /agentcard/wallets",
+  "GET /stripe-link",
+  "GET /sessions/{session_id}/cost-cap",
+]);
+
 function v4EndpointToSdkMethod(
   ep: { method: string; path: string },
 ): { resource: string; method: string } | null {
   const { method, path } = ep;
+
+  // Browsers
+  if (method === "post" && path === "/browsers") return { resource: "browsers", method: "create" };
+  if (method === "get" && path === "/browsers") return { resource: "browsers", method: "list" };
+  if (method === "get" && path === "/browsers/{session_id}") return { resource: "browsers", method: "get" };
+  if (method === "patch" && path === "/browsers/{session_id}") return { resource: "browsers", method: "stop" };
+  if (method === "get" && path === "/browsers/{session_id}/downloads") return { resource: "browsers", method: "downloads" };
+
+  // Profiles
+  if (method === "post" && path === "/profiles") return { resource: "profiles", method: "create" };
+  if (method === "get" && path === "/profiles") return { resource: "profiles", method: "list" };
+  if (method === "get" && path === "/profiles/{profile_id}") return { resource: "profiles", method: "get" };
+  if (method === "patch" && path === "/profiles/{profile_id}") return { resource: "profiles", method: "update" };
+  if (method === "delete" && path === "/profiles/{profile_id}") return { resource: "profiles", method: "delete" };
 
   // Runs
   if (method === "post" && path === "/runs") return { resource: "runs", method: "create" };
@@ -170,6 +191,20 @@ function v4EndpointToSdkMethod(
   if (method === "get" && path === "/sessions/{session_id}/queue") return { resource: "sessions", method: "queue" };
   if (method === "get" && path === "/sessions/{session_id}/queue/{message_id}") return { resource: "sessions", method: "getMessage" };
   if (method === "delete" && path === "/sessions/{session_id}/queue/{message_id}") return { resource: "sessions", method: "removeMessage" };
+  if (method === "patch" && path === "/sessions/{session_id}") return { resource: "sessions", method: "update" };
+  if (method === "delete" && path === "/sessions/{session_id}") return { resource: "sessions", method: "delete" };
+  if (method === "get" && path === "/sessions/{session_id}/cost") return { resource: "sessions", method: "cost" };
+  if (method === "patch" && path === "/sessions/{session_id}/cost-cap") return { resource: "sessions", method: "updateCostCap" };
+  if (method === "get" && path === "/sessions/{session_id}/share") return { resource: "sessions", method: "getShare" };
+  if (method === "post" && path === "/sessions/{session_id}/share") return { resource: "sessions", method: "createShare" };
+  if (method === "put" && path === "/sessions/{session_id}/share") return { resource: "sessions", method: "updateShare" };
+
+  // Integrations
+  if (method === "get" && path === "/integrations") return { resource: "integrations", method: "list" };
+  if (method === "get" && path === "/integrations/categories") return { resource: "integrations", method: "categories" };
+  if (method === "post" && path === "/integrations/{provider}/authorize") return { resource: "integrations", method: "authorize" };
+  if (method === "get" && path === "/integrations/{provider}/status") return { resource: "integrations", method: "status" };
+  if (method === "delete" && path === "/integrations/{provider}") return { resource: "integrations", method: "disconnect" };
 
   // Workspaces
   if (method === "post" && path === "/workspaces") return { resource: "workspaces", method: "create" };
@@ -180,6 +215,12 @@ function v4EndpointToSdkMethod(
   if (method === "get" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "files" };
   if (method === "delete" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "deleteFile" };
   if (method === "post" && path === "/workspaces/{workspace_id}/files/upload") return { resource: "workspaces", method: "uploadFiles" };
+
+  // Extensions
+  if (method === "post" && path === "/extensions") return { resource: "extensions", method: "create" };
+  if (method === "get" && path === "/extensions") return { resource: "extensions", method: "list" };
+  if (method === "get" && path === "/extensions/{extension_id}") return { resource: "extensions", method: "get" };
+  if (method === "delete" && path === "/extensions/{extension_id}") return { resource: "extensions", method: "delete" };
 
   return null;
 }
@@ -223,15 +264,10 @@ describe("V4 SDK coverage", () => {
 
   const client = new BrowserUseV4({ apiKey: "test" });
 
-  // /browsers and /profiles mount the same handlers as v3 — use the v3
-  // namespace for those. Not duplicated in the v4 SDK surface.
-  const v4SkippedPaths = (path: string) =>
-    path.startsWith("/browsers") || path.startsWith("/profiles");
-
   it("should map every v4 endpoint to a known SDK method", () => {
     const unmapped: string[] = [];
     for (const ep of endpoints) {
-      if (v4SkippedPaths(ep.path)) continue;
+      if (v4NotInSdk.has(`${ep.method.toUpperCase()} ${ep.path}`)) continue;
       const mapping = v4EndpointToSdkMethod(ep);
       if (!mapping) {
         unmapped.push(`${ep.method.toUpperCase()} ${ep.path}`);

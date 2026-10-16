@@ -1,35 +1,44 @@
 """
 Stealth mode -- use proxies for geo-specific browsing.
 
-Every session gets a residential proxy. You can choose the country.
-Without a session, tasks auto-create one with a US proxy.
+Every run's browser gets a residential proxy. You can choose the country;
+the default is US.
 """
 
 import asyncio
 
 from dotenv import load_dotenv
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v4 import AsyncBrowserUse
 
 load_dotenv()
 
+TASK = "Go to whatismyipaddress.com and tell me my location"
+
+
+async def run_task(client: AsyncBrowserUse, **settings) -> str | None:
+    """Run TASK, stop its browsers, and return the result."""
+    run = await client.runs.create(TASK, **settings)
+    try:
+        result = await client.runs.wait_for_completion(run.id)
+    finally:
+        # session_id is the agent session; each of its browsers has its own id.
+        browsers = await client.browsers.list(
+            agent_session_id=run.session_id, filter_by="active"
+        )
+        for b in browsers.items:
+            await client.browsers.stop(b.id)
+    if result.status.value != "completed":
+        raise RuntimeError(f"Run {result.status.value}: {result.error}")
+    return result.result
+
 
 async def main():
-    client = AsyncBrowserUse()
+    async with AsyncBrowserUse() as client:
+        # Default proxy (US)
+        print(f"US proxy: {await run_task(client)}")
 
-    # Auto-session (US proxy by default)
-    us_output = await client.run("Go to whatismyipaddress.com and tell me my location")
-    print(f"US proxy: {us_output}")
-
-    # Custom proxy -- Germany
-    de_session = await client.sessions.create(proxy_country_code="de")
-    de_output = await client.run(
-        "Go to whatismyipaddress.com and tell me my location",
-        session_id=str(de_session.id),
-        keep_alive=False,
-    )
-    print(f"DE proxy: {de_output}")
-
-    await client.sessions.stop(str(de_session.id))
+        # Custom proxy -- Germany
+        print(f"DE proxy: {await run_task(client, browser_settings={'proxyCountryCode': 'de'})}")
 
 
 asyncio.run(main())
