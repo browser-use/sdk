@@ -264,6 +264,7 @@
               "open-source/quickstart",
               "open-source/vibecoding",
               "open-source/supported-models",
+              "open-source/bu-2-0-model-card",
               "open-source/browser-use-cli",
               "open-source/browser-use-terminal"
             ]
@@ -644,6 +645,10 @@
       "destination": "/cloud/legacy/skills"
     },
     {
+      "source": "/open-source/customize/skills/basics",
+      "destination": "/cloud/legacy/skills"
+    },
+    {
       "source": "/customize/integrations/docs-mcp",
       "destination": "/open-source/customize/integrations/mcp-server"
     },
@@ -765,7 +770,15 @@
     },
     {
       "source": "/development/roadmap",
-      "destination": "/open-source/development/roadmap"
+      "destination": "/open-source/introduction"
+    },
+    {
+      "source": "/open-source/development/roadmap",
+      "destination": "/open-source/introduction"
+    },
+    {
+      "source": "/open-source/development",
+      "destination": "/open-source/development/setup/local-setup"
     },
     {
       "source": "/use-cloud",

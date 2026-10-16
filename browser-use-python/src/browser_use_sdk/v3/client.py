@@ -9,7 +9,11 @@ from pydantic import BaseModel
 
 from .._core import _UNSET
 from .._core.http import AsyncHttpClient, SyncHttpClient
-from .._core.x402 import X402_BASE_URL_DEFAULT, x402_client_from_private_key
+from .._core.x402 import (
+    X402_BASE_URL_DEFAULT,
+    apply_x402_max_payment_usd,
+    x402_client_from_private_key,
+)
 from .resources.billing import AsyncBilling, Billing as BillingResource
 from .resources.browsers import AsyncBrowsers, Browsers as BrowsersResource
 from .resources.profiles import AsyncProfiles, Profiles as ProfilesResource
@@ -23,13 +27,24 @@ _V3_BASE_URL = "https://api.browser-use.com/api/v3"
 T = TypeVar("T")
 
 
-def _resolve_x402(x402: Any | None, x402_private_key: str | None) -> Any | None:
+def _resolve_x402(
+    x402: Any | None,
+    x402_private_key: str | None,
+    x402_max_payment_usd: float | str | None,
+) -> Any | None:
     """Resolve x402 client from explicit args + env vars. Returns None if unused."""
     if x402 is not None:
+        if x402_max_payment_usd is not None:
+            return apply_x402_max_payment_usd(x402, x402_max_payment_usd)
         return x402
     key = x402_private_key or os.environ.get("BROWSER_USE_X402_PRIVATE_KEY")
     if key:
-        return x402_client_from_private_key(key)
+        return x402_client_from_private_key(
+            key,
+            max_payment_usd=(
+                1.0 if x402_max_payment_usd is None else x402_max_payment_usd
+            ),
+        )
     return None
 
 
@@ -352,8 +367,11 @@ class AsyncBrowserUse:
         use_own_key: bool | None = None,
         x402: Any | None = None,
         x402_private_key: str | None = None,
+        x402_max_payment_usd: float | str | None = None,
     ) -> None:
-        x402_client = _resolve_x402(x402, x402_private_key)
+        x402_client = _resolve_x402(
+            x402, x402_private_key, x402_max_payment_usd
+        )
         if x402_client is not None:
             topup_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
             self._http = AsyncHttpClient(

@@ -53,7 +53,8 @@ first = client.runs.create(
     proof/run-2.json. Confirm both outputs have a fresh fetched_at value and
     five stories. Add scripts/README.md with the command to run it again.
     """,
-    model="grok-4.5",
+    model="gpt-5.6-luna",
+    model_params={"reasoning": {"effort": "xhigh"}},
     workspace_id=workspace.id,
 )
 client.runs.wait_for_completion(first.id)
@@ -83,7 +84,8 @@ const first = await client.runs.create({
     proof/run-2.json. Confirm both outputs have a fresh fetched_at value and
     five stories. Add scripts/README.md with the command to run it again.
   `,
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   workspaceId: workspace.id,
 });
 await client.runs.waitForCompletion(first.id);
@@ -115,7 +117,8 @@ later = client.runs.create(
     has five stories. If the script fails or the result is malformed, inspect
     the live page and repair the saved script before returning the new result.
     """,
-    model="grok-4.5",
+    model="gpt-5.6-luna",
+    model_params={"reasoning": {"effort": "xhigh"}},
     workspace_id=workspace_id,
 )
 result = client.runs.wait_for_completion(later.id)
@@ -134,7 +137,8 @@ const later = await client.runs.create({
     has five stories. If the script fails or the result is malformed, inspect
     the live page and repair the saved script before returning the new result.
   `,
-  model: "grok-4.5",
+  model: "gpt-5.6-luna",
+  modelParams: { reasoning: { effort: "xhigh" } },
   workspaceId,
 });
 const result = await client.runs.waitForCompletion(later.id);
