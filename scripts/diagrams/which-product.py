@@ -107,7 +107,7 @@ def terminal(d, cx, bottom, WW=86, WH=56):
     g.append(f'<path d="M7 {y0 - 4} l4 3 l-4 3" stroke="{org}" stroke-width="1.1" {RJ} {NS}/>')
     g.append(f'<line x1="15" y1="{y0 - 1}" x2="{min(54, WW - 14)}" y2="{y0 - 1}" stroke="{ink2}" stroke-width="1.1" {NS}/>')
     for k, L in enumerate((58, 44, 66)):
-        g.append(f'<line x1="7" y1="{y0 + 9 + k * 5.5}" x2="{7 + L}" y2="{y0 + 9 + k * 5.5}" stroke="{hair}" stroke-width="0.9" {NS}/>')
+        g.append(f'<line x1="7" y1="{y0 + 9 + k * 5.5}" x2="{min(7 + L, WW - 7)}" y2="{y0 + 9 + k * 5.5}" stroke="{hair}" stroke-width="0.9" {NS}/>')
     g.append(f'<path d="M7 {-13} l4 3 l-4 3" stroke="{ink3}" stroke-width="1.1" {RJ} {NS}/>')
     g.append(f'<rect class="blink" x="14" y="-13.5" width="4.5" height="7" fill="{org}"/>')
     d.add("".join(g) + "</g>")

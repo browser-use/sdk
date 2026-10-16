@@ -88,7 +88,7 @@ def window(d, ob, WW, WH, kind, ghosts=0, gap=13, ring_cls=""):
         g.append(f'<rect x="7" y="{-WH + 32}" width="30" height="4" rx="1" fill="{ink3}" fill-opacity=".55"/>')
         cw = (WW - 14 - 8) / 3
         for k in range(3):
-            g.append(f'<rect x="{7 + k * (cw + 4):.1f}" y="{-WH + 40}" width="{cw:.1f}" height="{WH - 50 - 9:.1f}" rx="2" stroke="{hair}" stroke-width="0.8" {NS}/>')
+            g.append(f'<rect x="{7 + k * (cw + 4):.1f}" y="{-WH + 40}" width="{cw:.1f}" height="{WH - 40 - 9:.1f}" rx="2" stroke="{hair}" stroke-width="0.8" {NS}/>')
             g.append(f'<line x1="{11 + k * (cw + 4):.1f}" y1="{-WH + 46}" x2="{7 + k * (cw + 4) + cw - 6:.1f}" y2="{-WH + 46}" stroke="{hair}" stroke-width="0.8" {NS}/>')
         g.append(f'<line x1="7" y1="{-6}" x2="{WW * .55:.1f}" y2="{-6}" stroke="{hair}" stroke-width="0.8" {NS}/>')
     g.append("</g>")

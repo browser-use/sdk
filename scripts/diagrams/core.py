@@ -15,7 +15,7 @@ THEMES = {
     "light": dict(
         paper="#FBFAF7", border="#E6E2D9", ink="#1B1A17", ink2="#5F5B53", ink3="#9A958A",
         hair="#C9C3B6", faint="#ECE8DF", dot="#DDD8CD", fill="#FFFFFF", fill2="#F4F1EA",
-        orange="#FE750E", otext="#B84D09", osoft="#FFE6D2", grain=0.05, glow=.35,
+        orange="#FE750E", otext="#AC4808", osoft="#FFE6D2", grain=0.05, glow=.35,
     ),
     "dark": dict(
         paper="#111113", border="#26262B", ink="#EDEDEF", ink2="#A1A1AA", ink3="#6B6B74",
@@ -151,5 +151,5 @@ class Doc:
         self.check(svg)
         kb = len(svg.encode()) / 1024
         assert kb < 60, (name, kb)
-        (OUT / f"{name}.svg").write_text(svg)
+        (OUT / f"{name}.svg").write_text(svg, encoding="utf-8")
         print(f"{name}.svg {kb:.1f} KB")
