@@ -53,7 +53,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "test": "vitest run --exclude tests/live.test.ts --exclude tests/prod.test.ts",
+    "test": "vitest run --exclude tests/live.test.ts --exclude tests/prod.test.ts --typecheck --typecheck.tsconfig tsconfig.type-tests.json",
     "test:live": "tsx tests/live.test.ts",
     "test:prod": "tsx tests/prod.test.ts",
     "test:watch": "vitest",

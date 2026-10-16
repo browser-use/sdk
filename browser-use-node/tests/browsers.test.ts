@@ -18,6 +18,7 @@ describe.each([
       metadata: { team: "sdk", env: "test" },
       pdfRendererEnabled: false,
       solveCaptchas: false,
+      extensionIds: ["00000000-0000-0000-0000-000000000020"],
     });
     await browsers.list({ metadata: ["team", "env=test"] });
 
@@ -25,6 +26,7 @@ describe.each([
       metadata: { team: "sdk", env: "test" },
       pdfRendererEnabled: false,
       solveCaptchas: false,
+      extensionIds: ["00000000-0000-0000-0000-000000000020"],
     });
     expect(http.get).toHaveBeenCalledWith("/browsers", {
       metadata: ["team", "env=test"],

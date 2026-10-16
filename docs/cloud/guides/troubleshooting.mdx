@@ -16,6 +16,7 @@ Read the complete error response before changing billing settings:
 | --- | --- |
 | 401 | Send `X-Browser-Use-API-Key`; do not put the API key in a Bearer header. |
 | 402 | Distinguish insufficient project credits from `api_key_monthly_spend_limit_reached`. A top-up does not raise a key's spending cap. |
+| 403 `API key is missing required scope: v4:runs:create` | The key is restricted. Create a key that includes that resource, or use a full-access key. See [restricted API keys](#restricted-api-keys). |
 | 404 for a profile/workspace/session | Check the ID type, API version, and owning project. An ID visible in one dashboard project may be inaccessible to another key. |
 | 409 | Check the detail: a busy conversation and a workspace-file overwrite conflict require different actions. |
 | 413 | Check per-file and workspace limits. Retrying the same oversized payload does not make it smaller. |
@@ -24,6 +25,23 @@ Read the complete error response before changing billing settings:
 
 See [billing](/cloud/guides/billing), [concurrency](/cloud/guides/concurrency),
 and [workspaces](/cloud/agent/workspaces) for the relevant limits and remedies.
+
+## Restricted API keys
+
+When you create a key in [Settings → API keys](https://cloud.browser-use.com/settings?tab=api-keys),
+turn off **Full access** to pick a permission per resource: **Read** lists and
+gets, **Write** also creates and deletes. A request outside the key's
+permissions returns `403` with the missing scope.
+
+Scopes have the form `<version>:<resource>:<action>`, with actions `read`,
+`create`, and `delete`, and `*` as a wildcard. Full-access keys hold `*:*:*`.
+V4 resources are `runs`, `sessions`, `workspaces`, `files`, `browsers`,
+`profiles`, `proxy`, `integrations`, `licenses`, `extensions`, and `imessage`.
+The wallet endpoints (`GET /agentcard/wallets`, `GET /stripe-link`) need
+**Read** on `runs`.
+Scopes cannot be changed after a key is created, and a restricted key does not
+gain resources added later unless it holds a wildcard such as `v4:*:*`. Create
+a new key with the permissions you need.
 
 ## Why am I charged when I bring my own key or proxy?
 
@@ -45,12 +63,20 @@ A site can also challenge a fresh browser even if it accepts an existing
 logged-in browser. Reuse an appropriate [profile](/cloud/guides/profile-sync),
 and compare the actual proxy configuration before changing the agent prompt.
 
-## The browser is idle, but usage or a concurrency slot remains
+## A checkout secret is refused
 
-A completed agent run can leave its browser available for follow-ups. Closing
-your SDK client or disconnecting CDP does not stop the managed browser. Stop
-an unneeded browser with `PATCH /api/v4/browsers/{id}` and
-`{"action":"stop"}`. See [browser lifetime](/cloud/guides/concurrency#keep-track-of-browser-lifetime).
+The payment field may be inside a provider's iframe. For `domain_not_allowed`,
+add that intended provider's hostname to the secret binding's `allowedDomains`
+and resend the binding in a follow-up run. For `target_not_editable`, check
+field focus and readiness instead. See [checkout and payment frames](/cloud/guides/secrets#checkout-and-payment-frames).
+
+## The browser is idle, but usage continues
+
+A completed V4 agent run keeps its browser open about 2 minutes, or for the
+run's `keepAlive` seconds, so a follow-up can reuse it. That time is billed but
+takes no concurrency slot. Closing your SDK client or disconnecting CDP does
+not stop the managed browser. Stop an unneeded browser with
+`PATCH /api/v4/browsers/{id}` and `{"action":"stop"}`. See [browser lifetime](/cloud/guides/concurrency#keep-track-of-browser-lifetime).
 
 If a local wait times out, the server may still be running. Fetch the existing
 run's status before creating a replacement, especially if it might already
@@ -77,12 +103,16 @@ clicking or refreshing a challenge. See [proxies](/cloud/browser/proxies) and
 
 ## What should I send support?
 
+If you hit an issue you cannot explain, email contact@browser-use.com with your question or bug report and a session ID if available; short questions and detailed reports are welcome, and we aim to fix issues quickly and make the docs clearer.
+
+The details below help us investigate, but you do not need all of them to ask.
+
 Include the API version and endpoint, run/session/browser/workspace IDs that
 apply, the project ID, timestamp with time zone, SDK version, and the complete
 redacted error response. State what you expected and what actually happened.
 For billing, include the payment reference and selected project; for a file
 problem, include the filename, size, and the operation that failed.
 
-Do not send API keys, passwords, custom-proxy credentials, session cookies,
+Do not send API keys, passwords, card details, custom-proxy credentials, session cookies,
 or active CDP/live-view URLs. A screenshot alone often omits the identifier
 needed to trace a request.

@@ -38,10 +38,12 @@ For projects on current pricing, concurrency increases with the project's net se
 | Lifetime qualifying spend | Concurrent sessions |
 |---:|---:|
 | \$0 | 10 |
-| \$200 | 50 |
+| \$100 | 50 |
 | \$1,000 | 250 |
 | \$5,000 | 500 |
 | \$25,000 | 1,000 |
+
+Before any qualifying payment, the current spend-tier baseline is 10 concurrent sessions, subject to account-specific free-tier restrictions. A top-up raises concurrency only when cumulative qualifying payments cross a tier threshold; a small first purchase does not automatically grant 50 sessions.
 
 Payments count for the project that received them. Refunds and disputed payments do not contribute to qualifying spend. Signup credits and other credit grants are not qualifying purchases. Funding through other billing arrangements may follow different rules.
 
@@ -49,13 +51,21 @@ Payments count for the project that received them. Refunds and disputed payments
 
 Some active legacy or externally billed projects follow a different billing path. Lapsed or cancelling legacy plans can transition onto current pricing while keeping their higher grant. Use `concurrentSessionLimit` and the project’s Billing page as the source of truth. If the tier ladder is absent or differs from your expectations, contact support with your project ID before making a purchase solely to increase concurrency.
 
+## Profile quotas are separate
+
+Stored browser profiles, simultaneous browser sessions, HTTP request rates and credit balance have separate limits. A profile-count limit is not a concurrency limit. Read the full error before adding credits: a top-up does not raise the profile-count ceiling or an API key's monthly spending cap. For an unexpected `Profile limit reached` response, send support the project ID, endpoint, timestamp and exact response; do not send the API key.
+
 ## Keep track of browser lifetime
 
 A V4 **session** is a conversation. A **run** is one turn in that conversation. A **browser** is the live Chrome instance used for website interaction.
 
 A browser can survive the run that created it and be reused by a later turn. A conversation can also have multiple browsers. Additional tabs in the same browser are not additional browser sessions.
 
-After all runs in a conversation are inactive, V4 browsers become eligible for cleanup after approximately 20 minutes without recent run activity. Cleanup runs periodically, so this is not an exact shutdown deadline. V4 agent browsers also have a four-hour hard timeout.
+After every run in a session has finished, its V4 agent browsers stop about 2 minutes after the last run activity. Cleanup runs every minute, so expect 2-3 minutes. A follow-up sent later gets a fresh browser with the session's settings and profile, but not the old tabs or page state. V4 agent browsers also have a four-hour hard timeout.
+
+To keep the browser open longer for a follow-up or a human, set [`keepAlive`](/cloud/agent/sessions#keep-the-browser-open-between-runs) (integer seconds, 120-14400) on the run. Follow-ups inherit it, a new value changes it, and `null` restores 120 seconds. Free-tier and Zero Data Retention runs always use 120 seconds.
+
+A V4 session takes one concurrency slot only while it has a queued or running run. An idle V4 agent browser, including one held open by `keepAlive`, takes no slot, but its time is billed as browser time until it stops. A standalone browser holds a slot until it stops.
 
 If your application is finished with a browser, explicitly stop that browser rather than relying on idle cleanup. Only stop browser IDs your application owns and no longer needs. For a standalone browser, the stop request is:
 
@@ -69,7 +79,7 @@ curl --fail-with-body -X PATCH \
 
 Do not use this against a browser another active run or person still needs. Closing your local CDP connection is not a substitute for checking the cloud browser's lifecycle.
 
-If your workflow requires human interaction, deliver the live-view URL from `browser.ready` while the run/browser is active. A conversation remaining in history does not mean its live browser is still available.
+If your workflow requires human interaction, deliver the live-view URL from `browser.ready` or `browser.reattached` while the run/browser is active, and set `keepAlive` so the browser outlasts the human's work. A conversation remaining in history does not mean its live browser is still available.
 
 ## Queue follow-ups within a conversation
 
@@ -81,7 +91,7 @@ Choose the behavior you need:
 - Submit through the session message queue to process a later turn.
 - Intentionally interrupt the active run when you want to change its current work.
 
-The session message queue accepts up to **10 pending messages**. A full queue returns **429**. It is a queue for that conversation, not a project-wide batch queue or a reservation of browser capacity.
+The session message queue accepts up to **20 pending messages**. A full queue returns **429**. It is a queue for that conversation, not a project-wide batch queue or a reservation of browser capacity.
 
 Keep a large batch in your application's own job queue. Admit a bounded number of jobs and leave the rest pending there.
 
@@ -106,11 +116,11 @@ special endpoints can have different limits.
 
 ### Project limits
 
-The edge increase did **not** change the standard per-project application buckets:
+The standard per-project application buckets both scale with your stored concurrency grant. The general bucket is capped at 100 RPS; higher general budgets are account overrides:
 
 | Requests | Default request budget |
 |---|---:|
-| Creates, lists, updates, deletes, event reads, and full run reads | 25 requests/second |
+| Creates, lists, updates, deletes, event reads, and full run reads | `max(25, 2 × stored concurrency)` requests/second, capped at 100 |
 | Selected individual status reads | `max(25, 2 × stored concurrency)` requests/second |
 
 The selected V4 polling endpoints include:
@@ -119,11 +129,12 @@ The selected V4 polling endpoints include:
 - `GET /api/v4/sessions/{session_id}`
 - `GET /api/v4/browsers/{browser_session_id}`
 
-`GET /api/v4/runs/{run_id}/events` and `GET /api/v4/runs/{run_id}` use the general bucket. Their budget does not automatically grow with your concurrency grant. Account overrides and other protections can differ from these defaults; use the response headers and error details when diagnosing throttling.
+`GET /api/v4/runs/{run_id}/events` and `GET /api/v4/runs/{run_id}` use the general bucket, which shares the poll bucket's formula up to its 100 RPS cap and is counted separately. Account overrides and other protections can differ from these defaults; use the response headers and error details when diagnosing throttling.
 
 For example, a project with 500 stored concurrent sessions and no request-rate
-override has a 1,000 RPS status-polling budget and a separate 25 RPS general
-budget. All API keys in that project share those budgets. Creating a new key
+override has a 1,000 RPS status-polling budget and a separate 100 RPS general
+budget. A free or Tier 0 project (10 concurrent sessions) sits on the 25 RPS floor
+of both. All API keys in that project share those budgets. Creating a new key
 does not create more request capacity.
 
 The project limiter counts requests in **five-second windows**. A 25 RPS
@@ -164,7 +175,7 @@ For SDK event waits, set `wait_for_event(..., interval=3)` in Python or
 `waitForEvent(..., { interval: 3_000 })` in TypeScript. This also works on SDK
 3.11.3, whose event-wait default is one second. One hundred waits at a
 three-second interval average about 33 event requests per second, exceeding
-the standard 25 RPS general budget. For that workload, explicitly use a
+the 25 RPS general floor of a Tier 0 project. For that workload, explicitly use a
 five-second interval (20 event requests per second) or a shared request
 scheduler, leaving headroom for creates, pagination, and other general calls.
 
@@ -179,12 +190,12 @@ your shared request budget; a longer interval also makes backlog traversal slowe
 | 429 with `error: "rate_limited"` and `limit_rps` | Project HTTP request budget exhausted | Honor `Retry-After`/`retry_after_seconds`; reduce or stagger requests across the project. |
 | 429 with `error: "rate_limited"`, no `limit_rps`, and `Retry-After: 300` | Edge request protection | Back off for the returned delay; check bursts and traffic sharing the same public IP. |
 | 429 with a concurrent-session message in `detail` | Active session allowance reached | Inspect capacity, stop unneeded browsers, and reduce admitted jobs. |
-| 429 with a queue-full message in `detail` | This conversation has 10 pending messages | Wait for its queue to drain or cancel an appropriate pending message. |
+| 429 with a queue-full message in `detail` | This conversation has 20 pending messages | Wait for its queue to drain or cancel an appropriate pending message. |
 | 409 with an active-run message | Conversation is already busy | Wait, queue, or intentionally interrupt. |
 | 402 with `detail.code: "api_key_monthly_spend_limit_reached"` | This key's monthly soft spending cap was reached | Check the cap and recorded spend in the current UTC month. |
 | Other 402 | May be insufficient project balance or another payment condition | Inspect the complete response and the API key's project. |
 
-The SDK retries some transient responses, including 429, but the default is only three retries. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
+The SDK retries only HTTP 429, three times by default; it does not retry 5xx responses or network errors. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
 
 SDK 3.11.3 errors expose the response status and body, but not response headers.
 Use `retry_after_seconds` when the body includes it. To diagnose an edge throttle

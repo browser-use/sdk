@@ -4,6 +4,7 @@ import asyncio
 import time
 from typing import TYPE_CHECKING, Any
 
+from ..._core.errors import BrowserUseError
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
     InlineSecretSource,
@@ -22,6 +23,9 @@ from ...generated.v4.models import (
 if TYPE_CHECKING:
     from uuid import UUID
 
+_INITIAL_VISIBILITY_GRACE_SECONDS = 5.0
+_MIN_VISIBILITY_RETRY_INTERVAL = 0.05
+
 # Terminal run statuses — closed enum in the v4 spec.
 _TERMINAL_STATUSES = {"completed", "failed", "cancelled"}
 _TERMINAL_EVENT_TYPES = {
@@ -36,6 +40,7 @@ def _build_create_body(
     task: str,
     model: str | None,
     model_params: dict[str, Any] | None,
+    output_schema: dict[str, Any] | None,
     session_id: str | UUID | None,
     workspace_id: str | UUID | None,
     browser_settings: RunBrowserSettings | dict[str, Any] | None,
@@ -51,6 +56,8 @@ def _build_create_body(
         body["model"] = model
     if model_params is not None:
         body["modelParams"] = model_params
+    if output_schema is not None:
+        body["outputSchema"] = output_schema
     if session_id is not None:
         body["sessionId"] = str(session_id)
     if workspace_id is not None:
@@ -109,6 +116,7 @@ class Runs:
         *,
         model: str | None = None,
         model_params: dict[str, Any] | None = None,
+        output_schema: dict[str, Any] | None = None,
         session_id: str | UUID | None = None,
         workspace_id: str | UUID | None = None,
         browser_settings: RunBrowserSettings | dict[str, Any] | None = None,
@@ -124,6 +132,7 @@ class Runs:
             task,
             model,
             model_params,
+            output_schema,
             session_id,
             workspace_id,
             browser_settings,
@@ -229,7 +238,7 @@ class Runs:
     def cancel(self, run_id: str | UUID) -> RunSummary:
         """Cancel a run. Returns the updated run summary."""
         return RunSummary.model_validate(
-            self._http.request("POST", f"/runs/{run_id}/cancel")
+            self._http.request_idempotent("POST", f"/runs/{run_id}/cancel")
         )
 
     def attachments(self, run_id: str | UUID) -> RunAttachmentsResponse:
@@ -249,7 +258,10 @@ class Runs:
 
         Polls GET /runs/{id}/status (tiny indexed lookup) until the status is
         completed, failed, or cancelled, then fetches the full RunSummary once.
-        This is the loop the v4 API was designed for.
+        Initial 404s are retried for at most five seconds, within ``timeout``,
+        using ``interval`` with a 50ms minimum. After any successful status read,
+        404s propagate immediately. Expired visibility grace preserves the 404;
+        HTTP request timeouts and terminal-result handling remain unchanged.
 
         Usage::
 
@@ -257,12 +269,25 @@ class Runs:
             run = client.runs.wait_for_completion(created.id)
             print(run.status, run.result)
         """
-        deadline = time.monotonic() + timeout
+        started = time.monotonic()
+        deadline = started + timeout
+        visibility_deadline = min(deadline, started + _INITIAL_VISIBILITY_GRACE_SECONDS)
+        seen_status = False
         # A terminal status is always returned, even if the status() call itself
         # finished slightly past the deadline — a completed run is never thrown
         # away. Only a non-terminal status seen past the deadline is a timeout.
         while True:
-            status = self.status(run_id)
+            try:
+                status = self.status(run_id)
+            except BrowserUseError as error:
+                remaining = visibility_deadline - time.monotonic()
+                if error.status_code != 404 or seen_status or remaining <= 0:
+                    raise
+                time.sleep(min(max(interval, _MIN_VISIBILITY_RETRY_INTERVAL), remaining))
+                if time.monotonic() >= visibility_deadline:
+                    raise
+                continue
+            seen_status = True
             if status.status.value in _TERMINAL_STATUSES:
                 return self.get(run_id)
             remaining = deadline - time.monotonic()
@@ -281,6 +306,7 @@ class AsyncRuns:
         *,
         model: str | None = None,
         model_params: dict[str, Any] | None = None,
+        output_schema: dict[str, Any] | None = None,
         session_id: str | UUID | None = None,
         workspace_id: str | UUID | None = None,
         browser_settings: RunBrowserSettings | dict[str, Any] | None = None,
@@ -296,6 +322,7 @@ class AsyncRuns:
             task,
             model,
             model_params,
+            output_schema,
             session_id,
             workspace_id,
             browser_settings,
@@ -403,7 +430,7 @@ class AsyncRuns:
     async def cancel(self, run_id: str | UUID) -> RunSummary:
         """Cancel a run. Returns the updated run summary."""
         return RunSummary.model_validate(
-            await self._http.request("POST", f"/runs/{run_id}/cancel")
+            await self._http.request_idempotent("POST", f"/runs/{run_id}/cancel")
         )
 
     async def attachments(self, run_id: str | UUID) -> RunAttachmentsResponse:
@@ -423,7 +450,10 @@ class AsyncRuns:
 
         Polls GET /runs/{id}/status (tiny indexed lookup) until the status is
         completed, failed, or cancelled, then fetches the full RunSummary once.
-        This is the loop the v4 API was designed for.
+        Initial 404s are retried for at most five seconds, within ``timeout``,
+        using ``interval`` with a 50ms minimum. After any successful status read,
+        404s propagate immediately. Expired visibility grace preserves the 404;
+        HTTP request timeouts and terminal-result handling remain unchanged.
 
         Usage::
 
@@ -431,12 +461,25 @@ class AsyncRuns:
             run = await client.runs.wait_for_completion(created.id)
             print(run.status, run.result)
         """
-        deadline = time.monotonic() + timeout
+        started = time.monotonic()
+        deadline = started + timeout
+        visibility_deadline = min(deadline, started + _INITIAL_VISIBILITY_GRACE_SECONDS)
+        seen_status = False
         # A terminal status is always returned, even if the status() call itself
         # finished slightly past the deadline — a completed run is never thrown
         # away. Only a non-terminal status seen past the deadline is a timeout.
         while True:
-            status = await self.status(run_id)
+            try:
+                status = await self.status(run_id)
+            except BrowserUseError as error:
+                remaining = visibility_deadline - time.monotonic()
+                if error.status_code != 404 or seen_status or remaining <= 0:
+                    raise
+                await asyncio.sleep(min(max(interval, _MIN_VISIBILITY_RETRY_INTERVAL), remaining))
+                if time.monotonic() >= visibility_deadline:
+                    raise
+                continue
+            seen_status = True
             if status.status.value in _TERMINAL_STATUSES:
                 return await self.get(run_id)
             remaining = deadline - time.monotonic()

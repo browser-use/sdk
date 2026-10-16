@@ -1,4 +1,4 @@
-import { BrowserUseError } from "./errors.js";
+import { APIKeySpendLimitError, BrowserUseError } from "./errors.js";
 import type { FetchLike } from "./x402.js";
 
 const MAX_RETRY_DELAY = 10_000;
@@ -42,6 +42,9 @@ export interface HttpClientOptions {
    */
   fetch?: FetchLike | Promise<FetchLike>;
 }
+
+const MAX_RETRY_AFTER_MS = 10_000;
+const SPEND_LIMIT_CODE = "api_key_monthly_spend_limit_reached";
 
 export class HttpClient {
   private readonly apiKey: string;
@@ -99,7 +102,9 @@ export class HttpClient {
     if (this.useApiKeyHeader) {
       headers["X-Browser-Use-API-Key"] = this.apiKey;
     }
-    if (options?.body !== undefined) {
+    // FormData bodies are sent as-is so fetch sets the multipart boundary.
+    const isForm = typeof FormData !== "undefined" && options?.body instanceof FormData;
+    if (options?.body !== undefined && !isForm) {
       headers["Content-Type"] = "application/json";
     }
 
@@ -119,7 +124,12 @@ export class HttpClient {
         const response = await fetchImpl(url.toString(), {
           method,
           headers,
-          body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
+          body:
+            options?.body === undefined
+              ? undefined
+              : isForm
+                ? (options.body as FormData)
+                : JSON.stringify(options.body),
           signal,
         });
 
@@ -129,7 +139,9 @@ export class HttpClient {
           if (response.status === 204) {
             return undefined as T;
           }
-          return (await response.json()) as T;
+          // Bodiless 2xx replies (e.g. 202 from session purge) have no JSON to parse.
+          const text = await response.text();
+          return (text ? JSON.parse(text) : undefined) as T;
         }
 
         // GETs are safe to replay after a temporary upstream failure. Writes
@@ -161,13 +173,28 @@ export class HttpClient {
                 ? (errorBody as Record<string, unknown>).detail
                 : undefined
             : undefined;
+        const fields =
+          typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
         const message =
-          raw === undefined
-            ? `HTTP ${response.status}`
-            : typeof raw === "string"
-              ? raw
-              : JSON.stringify(raw);
-        throw new BrowserUseError(response.status, message, errorBody);
+          typeof fields.message === "string"
+            ? fields.message
+            : raw === undefined
+              ? `HTTP ${response.status}`
+              : typeof raw === "string"
+                ? raw
+                : JSON.stringify(raw);
+        const header = response.headers.get("Retry-After")?.trim();
+        const retryAfter = header && /^\d+$/.test(header) ? Number(header) : undefined;
+        if (response.status === 402 && fields.code === SPEND_LIMIT_CODE) {
+          const num = (value: unknown) => (typeof value === "number" ? value : undefined);
+          throw new APIKeySpendLimitError(
+            message,
+            errorBody,
+            { code: SPEND_LIMIT_CODE, cap: num(fields.cap), spent: num(fields.spent) },
+            retryAfter,
+          );
+        }
+        throw new BrowserUseError(response.status, message, errorBody, retryAfter);
       } catch (error) {
         clearTimeout(timeoutId);
         throw error;
@@ -175,6 +202,20 @@ export class HttpClient {
     }
 
     throw new Error("Unreachable: retry loop exhausted");
+  }
+
+  /** Send an idempotent request, retrying 503 busy replies after their Retry-After. */
+  async requestIdempotent<T>(method: string, path: string): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await this.request<T>(method, path);
+      } catch (error) {
+        const busy =
+          error instanceof BrowserUseError && error.statusCode === 503 ? error.retryAfter : undefined;
+        if (busy === undefined || attempt >= this.maxRetries) throw error;
+        await new Promise((resolve) => setTimeout(resolve, Math.min(busy * 1000, MAX_RETRY_AFTER_MS)));
+      }
+    }
   }
 
   get<T>(path: string, query?: Record<string, unknown>): Promise<T> {

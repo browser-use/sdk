@@ -432,6 +432,31 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * APIKeySpendLimitDetail
+         * @description Machine-readable 402 detail shared by run and browser creation.
+         */
+        APIKeySpendLimitDetail: {
+            /**
+             * Code
+             * @default api_key_monthly_spend_limit_reached
+             */
+            code: string;
+            /** Message */
+            message: string;
+            /** Cap */
+            cap: number;
+            /** Spent */
+            spent: number;
+        };
+        /**
+         * APIKeySpendLimitError
+         * @description FastAPI wraps endpoint errors in a top-level ``detail`` field.
+         */
+        APIKeySpendLimitError: {
+            /** Detail */
+            detail: string | components["schemas"]["APIKeySpendLimitDetail"];
+        };
+        /**
          * AccountNotFoundError
          * @description Error response when an account is not found
          */
@@ -469,9 +494,19 @@ export interface components {
             additionalCreditsBalanceUsd: number;
             /**
              * Rate Limit
-             * @description The rate limit for the account
+             * @description Legacy alias for the concurrent browser session limit
              */
             rateLimit: number;
+            /**
+             * Concurrent Session Limit
+             * @description The maximum number of concurrent browser sessions for the project
+             */
+            concurrentSessionLimit: number;
+            /**
+             * Active Session Count
+             * @description The number of browser sessions currently active for the project
+             */
+            activeSessionCount: number;
             /**
              * Plan Info
              * @description The plan information
@@ -489,6 +524,11 @@ export interface components {
              * @description The ID of the project
              */
             projectId: string;
+            /**
+             * API Key ID
+             * @description The internal ID of the authenticated API key
+             */
+            apiKeyId?: string | null;
             /**
              * Tracing Disabled
              * @description Whether third-party LLM tracing is disabled for this project
@@ -544,6 +584,28 @@ export interface components {
              * @default false
              */
             hasMore: boolean;
+        };
+        /**
+         * BrowserExtensionView
+         * @description An extension installed in a browser session.
+         */
+        BrowserExtensionView: {
+            /**
+             * ID
+             * Format: uuid
+             * @description Extension ID from POST /api/v4/extensions
+             */
+            id: string;
+            /**
+             * Runtime ID
+             * @description Chromium extension ID, as in chrome-extension://{runtimeId}/
+             */
+            runtimeId: string;
+            /**
+             * Version
+             * @description Version from the extension manifest
+             */
+            version: string;
         };
         /**
          * BrowserSessionItemView
@@ -624,6 +686,12 @@ export interface components {
             metadata: {
                 [key: string]: string;
             };
+            /**
+             * Extensions
+             * @description Extensions installed in the browser, in the order of `extensionIds`.
+             * @default []
+             */
+            extensions: components["schemas"]["BrowserExtensionView"][];
         };
         /**
          * BrowserSessionListResponse
@@ -755,6 +823,12 @@ export interface components {
             metadata: {
                 [key: string]: string;
             };
+            /**
+             * Extensions
+             * @description Extensions installed in the browser, in the order of `extensionIds`.
+             * @default []
+             */
+            extensions: components["schemas"]["BrowserExtensionView"][];
         };
         /**
          * BuAgentSessionStatus
@@ -861,6 +935,12 @@ export interface components {
              * @default false
              */
             enableRecording: boolean;
+            /**
+             * Extension IDs
+             * @description Up to 3 ready extensions from POST /api/v4/extensions to install before the browser starts.
+             * @default []
+             */
+            extensionIds: string[];
         };
         /**
          * CustomProxy
@@ -1264,7 +1344,7 @@ export interface components {
              * @default claude-opus-4.7
              */
             model: components["schemas"]["BuModel"];
-            /** @description Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level for Gemini 3 Flash and 3.5 Flash, and to a zero thinking budget for Gemini 2.5 Flash and the gemini-flash-latest variants); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected. */
+            /** @description Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected. */
             thinkingLevel?: components["schemas"]["ThinkingLevel"] | null;
             /**
              * Sessionid
@@ -1508,7 +1588,7 @@ export interface components {
             totalOutputTokens: number;
             /**
              * Proxyusedmb
-             * @description Proxy bandwidth used in megabytes.
+             * @description Proxy bandwidth used in megabytes, across the session and its browsers.
              * @default 0
              */
             proxyUsedMb: string;
@@ -1520,7 +1600,7 @@ export interface components {
             llmCostUsd: string;
             /**
              * Proxycostusd
-             * @description Cost of proxy bandwidth in USD.
+             * @description Cost of proxy bandwidth in USD, across the session and its browsers.
              * @default 0
              */
             proxyCostUsd: string;
@@ -2023,7 +2103,16 @@ export interface operations {
                     "application/json": components["schemas"]["BrowserSessionItemView"];
                 };
             };
-            /** @description Session timeout limit exceeded (maximum 4 hours) */
+            /** @description Insufficient credits, or the API key reached its monthly spend limit. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIKeySpendLimitError"];
+                };
+            };
+            /** @description Session timeout limit exceeded (maximum 4 hours), or extensions are not available to this project */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2032,7 +2121,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionTimeoutLimitExceededError"];
                 };
             };
-            /** @description Profile not found */
+            /** @description Profile or extension not found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2244,7 +2333,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProfileView"];
                 };
             };
-            /** @description Subscription required for additional profiles */
+            /** @description Profile limit reached; delete unused profiles to create new ones */
             402: {
                 headers: {
                     [name: string]: unknown;

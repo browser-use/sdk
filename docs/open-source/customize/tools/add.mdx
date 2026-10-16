@@ -47,6 +47,53 @@ See [Available Objects](#available-objects) below for the correct parameter name
 </Warning>
 
 
+## Add Tools from an MCP Server
+
+The Python library can also import tools from an external MCP server.
+This extends a Browser Use agent; it is different from [running Browser Use as an MCP server](/open-source/customize/integrations/mcp-server).
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and Browser Use, and set `BROWSER_USE_API_KEY` for the agent's model.
+Warm the reference time server's package cache before connecting:
+
+```bash
+uvx mcp-server-time==2026.8.18 --help
+```
+
+```python
+import asyncio
+from browser_use import Agent, ChatBrowserUse, Tools
+from browser_use.mcp.client import MCPClient
+
+async def main():
+    tools = Tools()
+    client = MCPClient(
+        server_name="time",
+        command="uvx",
+        args=["mcp-server-time==2026.8.18", "--local-timezone=UTC"],
+    )
+    try:
+        await client.register_to_tools(
+            tools, tool_filter=["get_current_time"], prefix="time_"
+        )
+        agent = Agent(
+            task="Use time_get_current_time to report the current UTC time.",
+            llm=ChatBrowserUse(),
+            tools=tools,
+        )
+        await agent.run()
+    finally:
+        await client.disconnect()
+
+asyncio.run(main())
+```
+
+`tool_filter` uses the server's original names. `prefix` changes the names the agent sees and avoids collisions with built-in actions, which remain available.
+Keep the connection open until the agent finishes, then disconnect it. Create a fresh client for a new run.
+
+The current client launches local stdio servers, has a roughly 10-second connection budget, and reads one `tools/list` response. It does not yet discover tools on later catalog pages or connect directly to HTTP/SSE endpoints.
+Only run trusted servers: their subprocesses execute on your machine, and their tools may have side effects.
+The time lookup itself needs no model key; running the agent above uses your configured model and may incur model charges.
+
 ## Available Objects
 
 Your function has access to these objects:

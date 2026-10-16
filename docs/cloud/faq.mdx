@@ -6,17 +6,15 @@ icon: circle-question
 
 ## Which model should I use?
 
-- **GPT-5.6 Luna** (`gpt-5.6-luna`, recommended) — the best balance of accuracy, speed, and price for most tasks.
-- **Claude Opus 5** (`claude-opus-5`) — maximum intelligence for difficult, long-horizon work.
-- **Grok 4.5** (`grok-4.5`) — a strong general-purpose alternative.
-- **GPT-5.6 Sol** (`gpt-5.6-sol`) — a higher-cost OpenAI option for complex tasks.
-- **MiniMax M3** (`minimax-m3`) — inexpensive for simple and high-volume tasks.
+- **GPT-6 Luna** (`gpt-6-luna`, recommended) with High reasoning is the V4 default and the low-cost pick for simple and high-volume tasks. Omit `model` and `modelParams` to use it; Bedrock-only projects retain their compatible default.
+- **GPT-6.1 Sol** (`gpt-6.1-sol`) — harder reasoning.
+- **Claude Opus 5** (`claude-opus-5`) — the hardest work.
 
 See [Models](/cloud/agent/models) for the complete V4 picker and pricing.
 
 ## How do I get the live browser URL?
 
-The V4 run's `browser.ready` event contains `live_view_url`. Embed it in an iframe or open it in a browser.
+A V4 run's `browser.ready` event (new browser) or `browser.reattached` event (follow-up reusing the open browser) contains `live_view_url`. Embed it in an iframe or open it in a browser.
 
 ```python
 from browser_use_sdk.v4 import BrowserUse
@@ -25,11 +23,14 @@ client = BrowserUse()
 created = client.runs.create("Go to example.com")
 client.runs.wait_for_completion(created.id)
 events = client.runs.events(created.id, limit=100)
-ready = next(event for event in events.events if event.type == "browser.ready")
+ready = next(
+    event for event in events.events
+    if event.type in ("browser.ready", "browser.reattached")
+)
 print(ready.data["live_view_url"])
 ```
 
-Poll events until `browser.ready` appears if you need the URL while the run is still active. See [Human in the loop](/cloud/agent/human-in-the-loop) for a complete flow.
+Poll events until either event appears if you need the URL while the run is still active. See [Human in the loop](/cloud/agent/human-in-the-loop) for a complete flow.
 
 ## Getting blocked by a website
 
@@ -48,7 +49,69 @@ Use bounded workers, stagger polling, and respect `Retry-After` when provided. T
 
 For insufficient-balance or API-key spending-cap errors (402), see [Billing and credits](/cloud/guides/billing).
 
-## V2 or V4 — which should I use?
+## How do I get a V4 judge verdict?
+
+Pass `judge: {}` when creating a run to ask an LLM to evaluate its completed
+trajectory. Add `context` with your evaluation criteria when needed. Judging
+is opt-in, and the judge's LLM call is billed to the run. Omit `judge` to keep
+the default behavior without that extra call.
+
+The verdict arrives after the run becomes terminal. `wait_for_completion()` /
+`waitForCompletion()` waits for the run, so its returned `judgement` can still
+be `null`. Refresh that same run's summary to retrieve the verdict:
+
+<CodeGroup>
+```python Python
+import time
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+created = client.runs.create(
+    "Return the top five Hacker News story titles and URLs",
+    judge={"context": "The result must contain five titles and their URLs."},
+)
+result = client.runs.wait_for_completion(created.id)
+
+for _ in range(30):
+    if result.judgement is not None or result.status.value == "cancelled":
+        break
+    time.sleep(2)
+    result = client.runs.get(created.id)
+
+print("Run status:", result.status.value)
+print("Judgement:", result.judgement)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const created = await client.runs.create({
+  task: "Return the top five Hacker News story titles and URLs",
+  judge: { context: "The result must contain five titles and their URLs." },
+});
+let result = await client.runs.waitForCompletion(created.id);
+
+for (let attempt = 0; attempt < 30; attempt++) {
+  if (result.judgement != null || result.status === "cancelled") break;
+  await new Promise((resolve) => setTimeout(resolve, 2_000));
+  result = await client.runs.get(created.id);
+}
+
+console.log("Run status:", result.status);
+console.log("Judgement:", result.judgement);
+```
+</CodeGroup>
+
+This example refreshes at most 30 times, with a two-second pause before each
+request. If `judgement` is still `null`, it is unavailable, not a pass or fail.
+It may remain unavailable; do not poll forever. You can fetch the same run
+again later without creating another run. A `completed` run status alone is
+not a judge verdict.
+
+See the [create-run reference](/cloud/api-v4/runs/create-run) for `judge` and
+the [run summary](/cloud/api-v4/runs/get-run) for `judgement`.
+
+## Which API version should I use?
 
 Use **V4** for difficult tasks where accuracy matters. It supports:
 
@@ -56,10 +119,10 @@ Use **V4** for difficult tasks where accuracy matters. It supports:
 - Conversation sessions with follow-ups
 - Persistent workspaces and turn-scoped file attachments
 - Incremental events for custom UIs and monitoring
-- Per-run cost totals, cost caps, and optional judgement
+- Per-session [cost breakdown](/cloud/guides/billing#see-what-a-v4-session-cost) (LLM, search, browser, proxy), run cost caps, and optional judgement
 
-Use **V2** when tasks are simple and your priority is very low cost and
-predictable speed. Its accuracy is substantially lower.
+Use **V3** when speed and cost matter more than accuracy. V2 is legacy; keep
+it only for existing integrations. See [Choosing an Agent](/cloud/choosing-an-agent).
 
 See Browser Use at #1 on the
 [Odysseys benchmark](https://odysseysbench.com/leaderboard).

@@ -8,18 +8,14 @@ icon: rocket
 Every browser includes stealth, proxies, live preview, and recording. Its
 **CDP URL** is a WebSocket endpoint for remotely controlling Chrome.
 
-<img
-  src="/cloud/images/browser-cdp-light.svg"
-  alt="Your code using a CDP URL to connect to and control a cloud browser that accesses the web"
-  noZoom
-  className="block dark:hidden"
-/>
-<img
-  src="/cloud/images/browser-cdp-dark.svg"
-  alt="Your code using a CDP URL to connect to and control a cloud browser that accesses the web"
-  noZoom
-  className="hidden dark:block"
-/>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/browser-cdp-light-mobile.svg" />
+  <img src="/cloud/images/browser-cdp-light.svg" alt="Your code creates a cloud browser through the Browser Use Cloud API with client.browsers.create(). It then connects to the browser over CDP with connect_over_cdp(session.cdp_url) to browse the web, and stops it through the same API with client.browsers.stop(session.id)." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/browser-cdp-dark-mobile.svg" />
+  <img src="/cloud/images/browser-cdp-dark.svg" alt="Your code creates a cloud browser through the Browser Use Cloud API with client.browsers.create(). It then connects to the browser over CDP with connect_over_cdp(session.cdp_url) to browse the web, and stops it through the same API with client.browsers.stop(session.id)." noZoom />
+</picture>
 
 Get an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) and
 export it:
@@ -150,6 +146,54 @@ is running, then stop it when you are done. Recording is off by default for API
 browsers. Set `enable_recording=True` / `enableRecording: true` when creating the browser if you
 need a recording. The video becomes available asynchronously after it stops;
 Zero Data Retention projects never record.
+
+## Label and find browsers
+
+Attach up to 10 `metadata` labels when you create a browser. Keys are up to
+100 characters and values up to 1,000.
+
+<CodeGroup>
+```python Python
+browser = client.browsers.create(metadata={"customer": "acme", "env": "prod"})
+```
+```typescript TypeScript
+const browser = await client.browsers.create({
+  metadata: { customer: "acme", env: "prod" },
+});
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"metadata": {"customer": "acme", "env": "prod"}}'
+```
+</CodeGroup>
+
+Filter the browser list by label. `key=value` matches exactly, `key` matches any
+value, and repeated terms must all match (up to 10). Pass
+`agentSessionId=<session-id>` instead to list the browsers an agent session
+used.
+
+```bash
+curl -G https://api.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  --data-urlencode "metadata=customer=acme" \
+  --data-urlencode "metadata=env"
+```
+
+## Get downloaded files
+
+Files the browser downloads are saved for you. List them, with download links
+that expire after 15 minutes:
+
+```bash
+curl "https://api.browser-use.com/api/v4/browsers/$BROWSER_SESSION_ID/downloads?includeUrls=true" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+Each file has `path`, `size`, `lastModified`, and `url`. Pages hold up to 100
+files (`limit`, default 50); pass `nextCursor` as `cursor` while `hasMore` is
+`true`.
 
 <CardGroup cols={2}>
   <Card

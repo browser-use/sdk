@@ -1,0 +1,126 @@
+---
+title: Extensions
+description: "Upload Chrome extensions once and load them into API V4 browsers."
+icon: puzzle-piece
+---
+
+Upload a Chrome extension to your project once. Then load up to 3 uploaded
+extensions into any browser you create. The extensions are installed before the
+browser is ready, so the first page you open already runs them.
+
+To load extensions into agent runs, see the
+[agent Extensions guide](/cloud/agent/extensions).
+
+<Note>
+  Zero Data Retention projects cannot use extensions.
+</Note>
+
+## Upload an extension
+
+Upload a ZIP file with `manifest.json` at its root. You can unzip an extension
+from the Chrome Web Store and upload the result as it is.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+extension = client.extensions.create("ublock-origin-lite.zip")
+print(extension.id, extension.name, extension.version)
+```
+```typescript TypeScript
+import { readFile } from "node:fs/promises";
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const extension = await client.extensions.create(
+  await readFile("ublock-origin-lite.zip"),
+);
+console.log(extension.id, extension.name, extension.version);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/extensions \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -F file=@ublock-origin-lite.zip
+```
+</CodeGroup>
+
+The response contains the extension `id`, `name`, `version`, and `createdAt`.
+Keep the `id`: you use it to load the extension into a browser.
+
+## Use extensions in a browser
+
+Pass up to 3 extension IDs when you create a browser:
+
+<CodeGroup>
+```python Python
+browser = client.browsers.create(extension_ids=[extension.id])
+for installed in browser.extensions:
+    print(installed.id, installed.runtime_id, installed.version)
+```
+```typescript TypeScript
+const browser = await client.browsers.create({ extensionIds: [extension.id] });
+for (const installed of browser.extensions ?? []) {
+  console.log(installed.id, installed.runtimeId, installed.version);
+}
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"extensionIds": ["<extension-id>"]}'
+```
+</CodeGroup>
+
+Each installed extension has a `runtimeId`, the Chrome extension ID. Its pages
+are available at `chrome-extension://<runtimeId>/`, for example to open an
+extension's options page from Playwright or Puppeteer.
+
+## List and delete extensions
+
+<CodeGroup>
+```python Python
+for item in client.extensions.list().items:
+    print(item.id, item.name)
+
+client.extensions.delete(extension.id)
+```
+```typescript TypeScript
+const { items } = await client.extensions.list();
+for (const item of items) {
+  console.log(item.id, item.name);
+}
+
+await client.extensions.delete(extension.id);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/extensions \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+
+curl -X DELETE https://api.browser-use.com/api/v4/extensions/<extension-id> \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+Deleting an extension removes its files permanently. Browsers that are already
+running keep the extension until they stop. New browsers cannot use the deleted
+ID.
+
+## Limits
+
+| Limit | Value |
+| --- | --- |
+| Manifest version | Manifest V3 only |
+| File | A ZIP archive, not a `.crx` file |
+| ZIP size | 100 MiB |
+| Size after unzipping | 256 MiB |
+| Files in the ZIP | 10,000 |
+| Extensions per project | 100 |
+| Extensions per browser | 3 |
+| Combined size after unzipping, per browser | 512 MiB |
+
+The upload refuses an extension that sets `key` in `manifest.json`, or that
+requests the `debugger`, `proxy`, `processes`, `dns`, `experimental`, or any
+`enterprise.*` permission. The error response names the problem, for example
+`{"detail": {"code": "prohibited_permission", "message": "The debugger
+permission is not allowed."}}`.

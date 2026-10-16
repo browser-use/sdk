@@ -1,12 +1,13 @@
 from .client import AsyncBrowserUse, BrowserUse
 from .helpers import AsyncSessionRun, SessionResult
-from .._core.errors import BrowserUseError
+from .._core.errors import APIKeySpendLimitError, BrowserUseError
 from .._core.x402 import get_wallet_balance
 
 from ..generated.v3.models import (
     AccountView,
     BrowserDownloadFile,
     BrowserDownloadListResponse,
+    BrowserExtensionView,
     BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionStatus,
@@ -48,6 +49,7 @@ __all__ = [
     "AsyncSessionRun",
     "SessionResult",
     "BrowserUseError",
+    "APIKeySpendLimitError",
     # x402
     "get_wallet_balance",
     # Billing models
@@ -56,6 +58,7 @@ __all__ = [
     # Browser models
     "BrowserDownloadFile",
     "BrowserDownloadListResponse",
+    "BrowserExtensionView",
     "BrowserSessionItemView",
     "BrowserSessionListResponse",
     "BrowserSessionStatus",

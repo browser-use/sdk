@@ -44,18 +44,14 @@ Every new run implicitly creates a [session](/cloud/agent/sessions) for its
 conversation and live browser, plus a [workspace](/cloud/agent/workspaces) for
 persistent files.
 
-<img
-  src="/cloud/images/v4-agent-overview-light.svg"
-  alt="A task starts a run inside a session and the run reads and writes persistent workspace files"
-  noZoom
-  className="block dark:hidden"
-/>
-<img
-  src="/cloud/images/v4-agent-overview-dark.svg"
-  alt="A task starts a run inside a session and the run reads and writes persistent workspace files"
-  noZoom
-  className="hidden dark:block"
-/>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/v4-agent-overview-light-mobile.svg" />
+  <img src="/cloud/images/v4-agent-overview-light.svg" alt="A task sent to POST /api/v4/runs starts a run inside a session, which holds the conversation and the live browser. The run reads and writes files in a workspace." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/v4-agent-overview-dark-mobile.svg" />
+  <img src="/cloud/images/v4-agent-overview-dark.svg" alt="A task sent to POST /api/v4/runs starts a run inside a session, which holds the conversation and the live browser. The run reads and writes files in a workspace." noZoom />
+</picture>
 
 <CardGroup cols={2}>
   <Card title="Copy API V4 docs" icon="sparkles" href="https://docs.browser-use.com/llms.txt">

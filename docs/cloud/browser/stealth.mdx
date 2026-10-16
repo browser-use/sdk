@@ -25,3 +25,11 @@ Residential proxies are enabled by default across 195+ countries. This makes bro
 Stealth is included in the managed browser. It is not a separate subscription
 upgrade you must buy to enable these protections. A target site can still
 reject a browser or require verification; see [troubleshooting](/cloud/guides/troubleshooting).
+
+## Window resizing
+
+The browser window size is fixed by default, because resizing makes a browser
+easier to detect. To let your code or the agent resize it over CDP, set
+`allowResizing: true` when you create a browser, or
+`browserSettings.allowResizing` on a V4 run. On a run, the setting applies only
+when the run starts a new browser, and follow-up runs inherit it.

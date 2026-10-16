@@ -68,6 +68,7 @@ tasks:
       - |
         datamodel-codegen \
           --input {{.OPENAPI_V4}} \
+          --set-default-enum-member \
           --input-file-type openapi \
           --output {{.PY_SDK}}/src/browser_use_sdk/generated/v4/models.py \
           --output-model-type pydantic_v2.BaseModel \
@@ -366,6 +367,11 @@ tasks:
       - python3 -m json.tool --indent 4 snapshots/v2.json docs/cloud/openapi/v2.json
       - python3 -m json.tool --indent 4 snapshots/v3.json docs/cloud/openapi/v3.json
       - python3 -m json.tool --indent 4 snapshots/v4.json docs/cloud/openapi/v4.json
+
+  docs:diagrams:
+    desc: Regenerate docs/cloud/images and docs/open-source/images diagram SVGs from scripts/diagrams (stdlib Python, deterministic)
+    cmds:
+      - for f in scripts/diagrams/*.py; do [ "$f" = scripts/diagrams/core.py ] || python3 -I "$f" || exit 1; done
 
   docs:dev:
     desc: Start Mintlify docs dev server using the checked-in public reference
