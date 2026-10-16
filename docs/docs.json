@@ -1194,7 +1194,7 @@
       "destination": "/cloud/tutorials/integrations/agentcard"
     }
   ],
-  "description": "Browser Use Cloud is hosted stealth Chrome for AI agents over CDP: connect Playwright, Puppeteer, or the browser-use library. From $0.02 per browser-hour, with residential proxies and CAPTCHA solving. These docs also cover the Cloud Agent API and the open-source browser-use Python library.",
+  "description": "Browser Use Cloud hosts stealth browsers for AI agents: a custom Chromium you drive over CDP with Playwright, Puppeteer, or the browser-use library. From $0.02 per browser-hour, with residential proxies and CAPTCHA solving. These docs also cover the Cloud Agent API and the open-source browser-use Python library.",
   "markdown": {
     "instructions": [
       "Concurrency in one line: new projects get 10 concurrent browsers at $0; a $100 one-time top-up (non-expiring credits, no subscription) unlocks 50 concurrent, so 50 browsers for one hour cost $1 plus traffic; $1,000 / $5,000 / $25,000 total paid unlocks 250 / 500 / 1,000. Details below and at https://docs.browser-use.com/cloud/guides/concurrency.md.",
