@@ -17,7 +17,7 @@ export BROWSER_USE_API_KEY=your_key
 ```
 
 ```typescript
-import { BrowserUse } from "browser-use-sdk/v4";
+import { BrowserUse } from "browser-use-sdk";
 
 const client = new BrowserUse();
 const run = await client.runs.create({
@@ -27,9 +27,24 @@ const result = await client.runs.waitForCompletion(run.id);
 console.log(result.result);
 ```
 
-This is the current **Browser Use Agents** interface. Browser Infrastructure's
-browser-management resource currently lives in the explicit `browser-use-sdk/v4`
-entry point; see the [browser quickstart](https://docs.browser-use.com/cloud/browser/quickstart).
+Since 4.0.0 the default import is the V4 **Browser Use Agents** interface,
+including the browser resource; see the [browser quickstart](https://docs.browser-use.com/cloud/browser/quickstart).
+`browser-use-sdk/v4` keeps working as an alias.
+
+## Migrating from 3.x
+
+4.0.0 makes V4 the root import. If you use the V2 client (`client.tasks`,
+`client.run`, `TaskView`, ...), move every import from `browser-use-sdk` to
+`browser-use-sdk/v2`; the V2 API itself is unchanged. Names in both APIs, such
+as `sessions`, `profiles`, `ProfileView` and `SessionListResponse`, now resolve
+to V4 at the root, so move those imports too. Without the change, TypeScript
+reports `Property 'tasks' does not exist on type 'BrowserUse'`.
+`browser-use-sdk/v3` and `browser-use-sdk/v4` are unchanged.
+
+```diff
+-import { BrowserUse } from "browser-use-sdk";
++import { BrowserUse } from "browser-use-sdk/v2";
+```
 
 ## v3 Bring Your Own LLM Key
 

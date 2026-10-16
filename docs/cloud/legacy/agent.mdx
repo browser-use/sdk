@@ -42,7 +42,7 @@ Get a presigned URL, then upload via POST.
 <CodeGroup>
 ```python Python
 import httpx
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v2 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 session = await client.sessions.create()
@@ -61,7 +61,7 @@ with open("input.pdf", "rb") as f:
 result = await client.run("Summarize the uploaded PDF", session_id=session.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v2"; // SDK 4.0+; on 3.x import from "browser-use-sdk"
 import { readFileSync } from "fs";
 
 const client = new BrowserUse();
@@ -113,7 +113,7 @@ Use `async for` to yield steps as the agent works.
 
 <CodeGroup>
 ```python Python
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v2 import AsyncBrowserUse
 
 client = AsyncBrowserUse()
 run = client.run("Find the most upvoted post on Reddit r/technology today")
@@ -124,7 +124,7 @@ async for step in run:
 print(run.result.output)  # final result after iteration
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v2"; // SDK 4.0+; on 3.x import from "browser-use-sdk"
 
 const client = new BrowserUse();
 const run = client.run("Find the most upvoted post on Reddit r/technology today");

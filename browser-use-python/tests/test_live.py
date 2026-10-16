@@ -38,7 +38,7 @@ pytestmark = [
 
 @pytest.fixture(scope="module")
 def v2():
-    from browser_use_sdk import BrowserUse
+    from browser_use_sdk.v2 import BrowserUse
     with BrowserUse(api_key=API_KEY, base_url=f"{BASE_URL}/api/v2") as client:
         yield client
 
@@ -193,7 +193,7 @@ class TestV2Marketplace:
 
 class TestV2Errors:
     def test_invalid_api_key(self):
-        from browser_use_sdk import BrowserUse
+        from browser_use_sdk.v2 import BrowserUse
         from browser_use_sdk._core.errors import BrowserUseError
         client = BrowserUse(api_key="bu_invalid", base_url=f"{BASE_URL}/api/v2")
         with pytest.raises(BrowserUseError) as exc_info:

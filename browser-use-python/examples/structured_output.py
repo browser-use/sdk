@@ -9,7 +9,7 @@ import asyncio
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from browser_use_sdk import AsyncBrowserUse
+from browser_use_sdk.v2 import AsyncBrowserUse
 
 load_dotenv()
 

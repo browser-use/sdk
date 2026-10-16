@@ -733,3 +733,24 @@ describe("v4 structured output", () => {
     expect(result.result).toBe("done");
   });
 });
+
+describe("entry points", () => {
+  it("defaults to V4 and keeps V2 on its subpath", async () => {
+    const [root, v4, v2] = await Promise.all([
+      import("../src/index.js"),
+      import("../src/v4.js"),
+      import("../src/v2.js"),
+    ]);
+    expect(root.BrowserUse).toBe(v4.BrowserUse);
+    expect(root.BrowserUse).not.toBe(v2.BrowserUse);
+    const client = new root.BrowserUse({ apiKey: "test-key" });
+    // @ts-expect-error tasks is V2-only
+    expect(client.tasks).toBeUndefined();
+    expect("tasks" in client).toBe(false);
+    expect(new v2.BrowserUse({ apiKey: "test-key" }).tasks).toBeDefined();
+    vi.stubEnv("BROWSER_USE_API_KEY", "");
+    // @ts-expect-error x402PrivateKey is V2-only
+    expect(() => new root.BrowserUse({ x402PrivateKey: "0xabc" })).toThrow("browser-use-sdk/v2");
+    vi.unstubAllEnvs();
+  });
+});

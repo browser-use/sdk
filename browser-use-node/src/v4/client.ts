@@ -30,8 +30,14 @@ export class BrowserUse {
   constructor(options: BrowserUseOptions = {}) {
     const apiKey = options.apiKey ?? process.env.BROWSER_USE_API_KEY ?? "";
     if (!apiKey) {
+      // x402 options exist only on the V2 client; plain JS from 3.x can still pass them here.
+      const x402 = options as { x402?: unknown; x402PrivateKey?: unknown };
+      const v2Hint =
+        x402.x402 || x402.x402PrivateKey || process.env.BROWSER_USE_X402_PRIVATE_KEY
+          ? ' x402 payments are V2-only: use `import { BrowserUse } from "browser-use-sdk/v2"`.'
+          : "";
       throw new Error(
-        "No API key provided. Pass apiKey or set BROWSER_USE_API_KEY.",
+        `No API key provided. Pass apiKey or set BROWSER_USE_API_KEY.${v2Hint}`,
       );
     }
     this.http = new HttpClient({

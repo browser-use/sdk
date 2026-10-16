@@ -41,7 +41,7 @@ pytestmark = [
 
 @pytest.fixture(scope="module")
 def client():
-    from browser_use_sdk import BrowserUse
+    from browser_use_sdk.v2 import BrowserUse
 
     # No base_url override -- hits prod
     with BrowserUse(api_key=API_KEY) as c:
@@ -91,7 +91,7 @@ class TestProfiles:
 class TestTaskLifecycle:
     def test_run_returns_task_result(self, client):
         """run() returns TaskResult with output and metadata."""
-        from browser_use_sdk import TaskResult
+        from browser_use_sdk.v2 import TaskResult
 
         result = client.run("Return the exact text: hello world")
         assert isinstance(result, TaskResult)
@@ -113,7 +113,7 @@ class MathResult(BaseModel):
 class TestStructuredOutput:
     def test_run_with_schema(self, client):
         """run() with schema returns TaskResult with parsed model."""
-        from browser_use_sdk import TaskResult
+        from browser_use_sdk.v2 import TaskResult
 
         result = client.run(
             "What is 7 * 8? Return the answer and a one-sentence explanation.",
@@ -132,7 +132,7 @@ class TestStructuredOutput:
 class TestStreaming:
     def test_stream_yields_steps(self, client):
         """stream() yields TaskStepView with step-by-step details."""
-        from browser_use_sdk import TaskResult
+        from browser_use_sdk.v2 import TaskResult
 
         stream = client.stream("Return the exact text: ping")
         count = 0
@@ -190,7 +190,7 @@ class TestErrors:
         assert exc_info.value.status_code == 404
 
     def test_auth_error_on_invalid_key(self):
-        from browser_use_sdk import BrowserUse
+        from browser_use_sdk.v2 import BrowserUse
         from browser_use_sdk._core.errors import BrowserUseError
 
         bad = BrowserUse(api_key="bu_invalid_key")

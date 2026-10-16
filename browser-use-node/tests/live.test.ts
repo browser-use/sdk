@@ -32,7 +32,7 @@ if (!API_KEY) {
 }
 
 // ── Import the SDK from source ──────────────────────────────────────────────
-import { BrowserUse, BrowserUseError } from "../src/index.js";
+import { BrowserUse, BrowserUseError } from "../src/v2.js";
 import { BrowserUse as BrowserUseV3 } from "../src/v3.js";
 
 const v2 = new BrowserUse({

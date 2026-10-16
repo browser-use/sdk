@@ -2,7 +2,7 @@
  * Structured output — get typed results using Zod schemas.
  */
 import "dotenv/config";
-import { BrowserUse } from "browser-use-sdk";
+import { BrowserUse } from "browser-use-sdk/v2";
 import { z } from "zod";
 
 async function main() {
