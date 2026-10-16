@@ -94,7 +94,7 @@ class Sessions:
     def update_cost_cap(
         self, session_id: str | UUID, *, max_cost_usd: float | str, **extra: Any
     ) -> SessionCostCapResponse:
-        """Set the session's USD spend cap."""
+        """Set the USD spend cap (``max_cost_usd``)."""
         return SessionCostCapResponse.model_validate(
             self._http.request(
                 "PATCH",
@@ -231,7 +231,7 @@ class AsyncSessions:
     async def update_cost_cap(
         self, session_id: str | UUID, *, max_cost_usd: float | str, **extra: Any
     ) -> SessionCostCapResponse:
-        """Set the session's USD spend cap."""
+        """Set the USD spend cap (``max_cost_usd``)."""
         return SessionCostCapResponse.model_validate(
             await self._http.request(
                 "PATCH",

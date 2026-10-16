@@ -56,7 +56,7 @@ export class Sessions {
     return this.http.get<SessionCostResponse>(`/sessions/${sessionId}/cost`);
   }
 
-  /** Set the session's USD spend cap. */
+  /** Set the USD spend cap (`maxCostUsd`). */
   updateCostCap(sessionId: string, body: SessionCostCapRequest): Promise<SessionCostCapResponse> {
     return this.http.patch<SessionCostCapResponse>(`/sessions/${sessionId}/cost-cap`, body);
   }

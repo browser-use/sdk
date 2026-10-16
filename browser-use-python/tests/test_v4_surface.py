@@ -56,7 +56,7 @@ CASES: list[Any] = [
         lambda r: r.create(
             "Buy the cheapest one",
             model=RunModel.bu_ultrafast,
-            stripe_link_connection_id=LINK_ID,
+            stripeLinkConnectionId=LINK_ID,
             op_vault_id="vault",
             op_vault_allowed_domains=["amazon.com"],
             keep_alive=None,
@@ -76,7 +76,7 @@ CASES: list[Any] = [
             None,
         ),
         _ANY,
-        id="runs.create camelCases the new fields and unwraps the model enum",
+        id="runs.create camelCases the new fields, passes extras through and unwraps the model enum",
     ),
     pytest.param(
         Sessions,
