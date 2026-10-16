@@ -30,7 +30,7 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-import { BrowserUse, BrowserUseError } from "../src/index.js";
+import { BrowserUse, BrowserUseError } from "../src/v2.js";
 import { z } from "zod";
 
 // No baseUrl override — uses default prod URL

@@ -50,3 +50,17 @@ export class BrowserUse {
     this.workspaces = new Workspaces(this.http);
   }
 }
+
+// 3.x code reached these V2 members through the root import. Prototype getters keep them compile errors in TS
+// while plain JS gets a pointer to the v2 subpath instead of "cannot read properties of undefined".
+for (const name of ["billing", "tasks", "files", "skills", "marketplace", "run"]) {
+  Object.defineProperty(BrowserUse.prototype, name, {
+    configurable: true,
+    get(): never {
+      throw new TypeError(
+        `BrowserUse.${name} is a V2 API: since browser-use-sdk 4.0.0 the root import is the V4 client. ` +
+          `For V2 use \`import { BrowserUse } from "browser-use-sdk/v2"\`.`,
+      );
+    },
+  });
+}

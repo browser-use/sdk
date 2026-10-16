@@ -86,7 +86,7 @@ Follow existing patterns in the codebase. Read before writing.
 
 - Method naming: `POST → .create()`, `GET → .list()`, `GET /{id} → .get()`, `DELETE → .delete()`, `PATCH → .stop()` (named methods for actions)
 - Package: `browser-use-sdk` (npm + PyPI)
-- v2 = default import, v3 = subpath import
+- v4 = default import (since 4.0.0); v2, v3, v4 = subpath imports
 - Python: snake_case params → camelCase in request body
 - TS: types from `components["schemas"]["..."]`
 - List responses: `{ items, totalItems, pageNumber, pageSize }`

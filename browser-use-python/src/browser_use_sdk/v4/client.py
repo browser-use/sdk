@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import typing
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
 from .resources.browsers import AsyncBrowsers, Browsers
@@ -12,6 +13,19 @@ from .resources.sessions import AsyncSessions, Sessions
 from .resources.workspaces import AsyncWorkspaces, Workspaces
 
 _V4_BASE_URL = "https://api.browser-use.com/api/v4"
+
+# V2 client members that 3.x code reached through the root import.
+_V2_ONLY = frozenset({"billing", "tasks", "files", "skills", "marketplace", "run", "stream"})
+
+
+def _missing_attribute(obj: object, name: str) -> AttributeError:
+    cls = type(obj).__name__
+    if name in _V2_ONLY:
+        return AttributeError(
+            f"{cls!r} object has no attribute {name!r}: since browser-use-sdk 4.0.0 the root import is the V4 client. "
+            f"For the V2 API use `from browser_use_sdk.v2 import {cls}`."
+        )
+    return AttributeError(f"{cls!r} object has no attribute {name!r}")
 
 
 class BrowserUse:
@@ -57,6 +71,11 @@ class BrowserUse:
     def __exit__(self, *args: object) -> None:
         self.close()
 
+    if not typing.TYPE_CHECKING:  # Hidden from type checkers so they still flag unknown attributes.
+
+        def __getattr__(self, name: str) -> object:
+            raise _missing_attribute(self, name)
+
 
 class AsyncBrowserUse:
     """Asynchronous Browser Use v4 client.
@@ -100,3 +119,8 @@ class AsyncBrowserUse:
 
     async def __aexit__(self, *args: object) -> None:
         await self.close()
+
+    if not typing.TYPE_CHECKING:  # Hidden from type checkers so they still flag unknown attributes.
+
+        def __getattr__(self, name: str) -> object:
+            raise _missing_attribute(self, name)

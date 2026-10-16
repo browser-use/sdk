@@ -17,7 +17,7 @@ export BROWSER_USE_API_KEY=your_key
 ```
 
 ```python
-from browser_use_sdk.v4 import BrowserUse
+from browser_use_sdk import BrowserUse
 
 with BrowserUse() as client:
     run = client.runs.create("Find the top 3 trending repos on GitHub today")
@@ -25,9 +25,23 @@ with BrowserUse() as client:
     print(result.result)
 ```
 
-This is the current **Browser Use Agents** interface. Browser Infrastructure's
-browser-management resource currently lives in the explicit `browser_use_sdk.v4`
-namespace; see the [browser quickstart](https://docs.browser-use.com/cloud/browser/quickstart).
+Since 4.0.0 the default import is the V4 **Browser Use Agents** interface,
+including the browser resource; see the [browser quickstart](https://docs.browser-use.com/cloud/browser/quickstart).
+`browser_use_sdk.v4` keeps working as an alias.
+
+## Migrating from 3.x
+
+4.0.0 makes V4 the root import. Code that imported the V2 client from the root
+(`client.tasks`, `client.run`, `TaskView`, ...) needs one import change and
+nothing else; the V2 API itself is unchanged. Without the change, V2-only names
+raise an `ImportError` and V2-only client attributes raise an `AttributeError`,
+both naming `browser_use_sdk.v2`. `browser_use_sdk.v3` and `browser_use_sdk.v4`
+are unchanged.
+
+```diff
+-from browser_use_sdk import AsyncBrowserUse
++from browser_use_sdk.v2 import AsyncBrowserUse
+```
 
 ## v3 Bring Your Own LLM Key
 

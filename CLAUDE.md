@@ -6,7 +6,8 @@ Official TypeScript and Python SDKs for the Browser Use cloud API. Published as 
 
 ```
 browser-use-node/src/          # TypeScript SDK
-  index.ts                     # default = v2
+  index.ts                     # default = v4
+  v2.ts                        # subpath = v2
   v3.ts                        # subpath = v3
   v4.ts                        # subpath = v4
   core/                        # shared http + errors
@@ -16,7 +17,7 @@ browser-use-node/src/          # TypeScript SDK
   v4/                          # client + resource files + polling helpers
 
 browser-use-python/src/browser_use_sdk/   # Python SDK
-  __init__.py                  # default = v2
+  __init__.py                  # default = v4
   _core/                       # shared http + errors
   generated/v{2,3,4}/models.py # datamodel-codegen output
   v2/                          # client + resource files + helpers
@@ -31,9 +32,9 @@ RUNBOOK.md                     # /sdk pipeline guide + learnings
 
 ## API Versions
 
-- **v2** (default) — stable, full API surface. `import { BrowserUse } from "browser-use-sdk"` / `from browser_use_sdk import BrowserUse`
+- **v4** (default since 4.0.0) — current API. `import { BrowserUse } from "browser-use-sdk"` / `from browser_use_sdk import BrowserUse`; also at the `v4` subpath.
+- **v2** — legacy, subpath import. `import { BrowserUse } from "browser-use-sdk/v2"` / `from browser_use_sdk.v2 import BrowserUse`
 - **v3** — subpath import. `import { BrowserUse } from "browser-use-sdk/v3"` / `from browser_use_sdk.v3 import BrowserUse`
-- **v4** — current API, subpath import. `import { BrowserUse } from "browser-use-sdk/v4"` / `from browser_use_sdk.v4 import BrowserUse`
 
 ## SDK Updates
 

@@ -565,12 +565,20 @@ class TestSpecDrift:
 
 
 class TestClientInit:
-    def test_v2_default_import(self) -> None:
-        from browser_use_sdk import BrowserUse, AsyncBrowserUse, BrowserUseError
+    def test_v4_default_import_points_v2_users_at_subpath(self) -> None:
+        import browser_use_sdk
+        from browser_use_sdk import v2, v4
 
-        assert BrowserUse is not None
-        assert AsyncBrowserUse is not None
-        assert issubclass(BrowserUseError, Exception)
+        assert browser_use_sdk.BrowserUse is v4.BrowserUse
+        assert browser_use_sdk.AsyncBrowserUse is v4.AsyncBrowserUse
+        with pytest.raises(ImportError, match=r"from browser_use_sdk\.v2 import TaskView"):
+            from browser_use_sdk import TaskView  # noqa: F401  # pyright: ignore[reportAttributeAccessIssue]
+        client = browser_use_sdk.BrowserUse(api_key="test-key")
+        with pytest.raises(AttributeError, match=r"from browser_use_sdk\.v2 import BrowserUse"):
+            client.tasks  # noqa: B018  # pyright: ignore[reportAttributeAccessIssue]
+        assert not hasattr(client, "nope")
+        client.close()
+        assert v2.BrowserUse is not v4.BrowserUse
 
     def test_v3_import(self) -> None:
         from browser_use_sdk.v3 import BrowserUse, AsyncBrowserUse
@@ -579,7 +587,7 @@ class TestClientInit:
         assert AsyncBrowserUse is not None
 
     def test_v2_resources_attached(self) -> None:
-        from browser_use_sdk import BrowserUse
+        from browser_use_sdk.v2 import BrowserUse
 
         client = BrowserUse(api_key="test-key")
         expected = [

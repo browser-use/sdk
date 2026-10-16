@@ -1,153 +1,25 @@
 """Browser Use Python SDK.
 
-Default imports expose the v2 client and core error type.
-For v3, use ``from browser_use_sdk.v3 import BrowserUse``.
+Default imports expose the v4 client and types since 4.0.0.
+For v2 or v3, use ``from browser_use_sdk.v2 import BrowserUse`` or ``browser_use_sdk.v3``.
 """
 
-from ._core.errors import APIKeySpendLimitError, BrowserUseError
-from .v2.client import AsyncBrowserUse, BrowserUse
-from .v2.helpers import AsyncTaskRun, TaskResult, TaskStream
+from typing import TYPE_CHECKING
 
-from .generated.v2.models import (
-    AccountView,
-    BrowserDownloadFile,
-    BrowserDownloadListResponse,
-    BrowserExtensionView,
-    BrowserSessionItemView,
-    BrowserSessionListResponse,
-    BrowserSessionView,
-    CreateBrowserSessionRequest,
-    CreateSessionRequest,
-    CreateSkillRequest,
-    CreateSkillResponse,
-    CreateTaskRequest,
-    CustomProxy,
-    ExecuteSkillRequest,
-    ExecuteSkillResponse,
-    FileView,
-    ProfileCreateRequest,
-    ProfileUpdateRequest,
-    MarketplaceSkillListResponse,
-    MarketplaceSkillResponse,
-    ParameterSchema,
-    PlanInfo,
-    ProfileListResponse,
-    ProfileView,
-    RefineSkillRequest,
-    RefineSkillResponse,
-    SessionItemView,
-    SessionListResponse,
-    SessionSettings,
-    SessionView,
-    ShareView,
-    SkillExecutionListResponse,
-    SkillExecutionOutputResponse,
-    SkillExecutionView,
-    SkillListResponse,
-    SkillResponse,
-    TaskCreatedResponse,
-    TaskListResponse,
-    TaskLogFileResponse,
-    TaskOutputFileResponse,
-    TaskStatusView,
-    TaskStepView,
-    TaskItemView,
-    TaskView,
-    UpdateBrowserSessionRequest,
-    UpdateSessionRequest,
-    UpdateSkillRequest,
-    UpdateTaskRequest,
-    UploadFilePresignedUrlResponse,
-    UploadFileRequest,
-    # Enums
-    BrowserSessionStatus,
-    BrowserSessionUpdateAction,
-    ContentType,
-    ParameterType,
-    ProxyCountryCode,
-    SessionStatus,
-    SessionUpdateAction,
-    SkillCategory,
-    SkillsGenerationStatus,
-    SupportedLLMs,
-    ThinkingLevel,
-    TaskStatus,
-    TaskUpdateAction,
-)
+from .v4 import *  # noqa: F403
+from .v4 import __all__ as __all__
 
-__all__ = [
-    # Client
-    "BrowserUse",
-    "AsyncBrowserUse",
-    "BrowserUseError",
-    "APIKeySpendLimitError",
-    "TaskStream",
-    "AsyncTaskRun",
-    "TaskResult",
-    # Response models
-    "AccountView",
-    "BrowserDownloadFile",
-    "BrowserDownloadListResponse",
-    "BrowserExtensionView",
-    "BrowserSessionItemView",
-    "BrowserSessionListResponse",
-    "BrowserSessionView",
-    "CreateSkillResponse",
-    "ExecuteSkillResponse",
-    "FileView",
-    "MarketplaceSkillListResponse",
-    "MarketplaceSkillResponse",
-    "ParameterSchema",
-    "PlanInfo",
-    "ProfileListResponse",
-    "ProfileView",
-    "RefineSkillResponse",
-    "SessionItemView",
-    "SessionListResponse",
-    "SessionView",
-    "ShareView",
-    "SkillExecutionListResponse",
-    "SkillExecutionOutputResponse",
-    "SkillExecutionView",
-    "SkillListResponse",
-    "SkillResponse",
-    "TaskCreatedResponse",
-    "TaskListResponse",
-    "TaskLogFileResponse",
-    "TaskOutputFileResponse",
-    "TaskStatusView",
-    "TaskStepView",
-    "TaskItemView",
-    "TaskView",
-    "UploadFilePresignedUrlResponse",
-    # Input models
-    "CreateBrowserSessionRequest",
-    "CreateSessionRequest",
-    "CreateSkillRequest",
-    "CreateTaskRequest",
-    "CustomProxy",
-    "ExecuteSkillRequest",
-    "ProfileCreateRequest",
-    "ProfileUpdateRequest",
-    "RefineSkillRequest",
-    "SessionSettings",
-    "UpdateBrowserSessionRequest",
-    "UpdateSessionRequest",
-    "UpdateSkillRequest",
-    "UpdateTaskRequest",
-    "UploadFileRequest",
-    # Enums
-    "BrowserSessionStatus",
-    "BrowserSessionUpdateAction",
-    "ContentType",
-    "ParameterType",
-    "ProxyCountryCode",
-    "SessionStatus",
-    "SessionUpdateAction",
-    "SkillCategory",
-    "SkillsGenerationStatus",
-    "SupportedLLMs",
-    "ThinkingLevel",
-    "TaskStatus",
-    "TaskUpdateAction",
-]
+if not TYPE_CHECKING:  # Hidden from type checkers so they still flag the moved names.
+
+    def __getattr__(name: str) -> object:
+        """Point former root-level v2 names at browser_use_sdk.v2."""
+        from importlib import import_module
+
+        # `from . import v2` would recurse into this hook before v2 is loaded.
+        if name in import_module(".v2", __name__).__all__:
+            # ImportError, not AttributeError: `from x import y` drops AttributeError messages.
+            raise ImportError(
+                f"{name} moved to browser_use_sdk.v2 in 4.0.0, where V4 became the default; "
+                f"use `from browser_use_sdk.v2 import {name}`"
+            )
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
