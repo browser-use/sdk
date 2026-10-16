@@ -148,6 +148,13 @@ function v3EndpointToSdkMethod(
   return null;
 }
 
+// Wallets stay off the SDK surface and GET cost-cap is not in production yet; map every other v4 endpoint.
+const v4NotInSdk = new Set([
+  "GET /agentcard/wallets",
+  "GET /stripe-link",
+  "GET /sessions/{session_id}/cost-cap",
+]);
+
 function v4EndpointToSdkMethod(
   ep: { method: string; path: string },
 ): { resource: string; method: string } | null {
@@ -199,10 +206,6 @@ function v4EndpointToSdkMethod(
   if (method === "get" && path === "/integrations/{provider}/status") return { resource: "integrations", method: "status" };
   if (method === "delete" && path === "/integrations/{provider}") return { resource: "integrations", method: "disconnect" };
 
-  // Wallets
-  if (method === "get" && path === "/agentcard/wallets") return { resource: "wallets", method: "agentcard" };
-  if (method === "get" && path === "/stripe-link") return { resource: "wallets", method: "stripeLink" };
-
   // Workspaces
   if (method === "post" && path === "/workspaces") return { resource: "workspaces", method: "create" };
   if (method === "get" && path === "/workspaces/{workspace_id}") return { resource: "workspaces", method: "get" };
@@ -212,6 +215,12 @@ function v4EndpointToSdkMethod(
   if (method === "get" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "files" };
   if (method === "delete" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "deleteFile" };
   if (method === "post" && path === "/workspaces/{workspace_id}/files/upload") return { resource: "workspaces", method: "uploadFiles" };
+
+  // Extensions
+  if (method === "post" && path === "/extensions") return { resource: "extensions", method: "create" };
+  if (method === "get" && path === "/extensions") return { resource: "extensions", method: "list" };
+  if (method === "get" && path === "/extensions/{extension_id}") return { resource: "extensions", method: "get" };
+  if (method === "delete" && path === "/extensions/{extension_id}") return { resource: "extensions", method: "delete" };
 
   return null;
 }
@@ -255,13 +264,10 @@ describe("V4 SDK coverage", () => {
 
   const client = new BrowserUseV4({ apiKey: "test" });
 
-  // Extensions are added by sdk#309.
-  const v4SkippedPaths = (path: string) => path.startsWith("/extensions");
-
   it("should map every v4 endpoint to a known SDK method", () => {
     const unmapped: string[] = [];
     for (const ep of endpoints) {
-      if (v4SkippedPaths(ep.path)) continue;
+      if (v4NotInSdk.has(`${ep.method.toUpperCase()} ${ep.path}`)) continue;
       const mapping = v4EndpointToSdkMethod(ep);
       if (!mapping) {
         unmapped.push(`${ep.method.toUpperCase()} ${ep.path}`);

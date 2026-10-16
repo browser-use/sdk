@@ -879,7 +879,7 @@ class OpVaultId(RootModel[str]):
 class MaxCostUsd(RootModel[float]):
     root: float = Field(
         ...,
-        description='USD spend cap for this run. Default 25, and never above your available balance.',
+        description='USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.',
         gt=0.0,
         title='Maxcostusd',
     )
@@ -891,7 +891,7 @@ class MaxCostUsd1(RootModel[str]):
     )
     root: str = Field(
         ...,
-        description='USD spend cap for this run. Default 25, and never above your available balance.',
+        description='USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.',
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Maxcostusd',
     )
@@ -1012,10 +1012,19 @@ class SecretBinding(BaseModel):
     )
 
 
+class SessionBudgetResponse(BaseModel):
+    session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
+    spent_usd: str = Field(..., alias='spentUsd', title='Spentusd')
+    max_cost_usd: str | None = Field(..., alias='maxCostUsd', title='Maxcostusd')
+    budget_scope: Literal['session'] = Field(
+        ..., alias='budgetScope', title='Budgetscope'
+    )
+
+
 class MaxCostUsd2(RootModel[float]):
     root: float = Field(
         ...,
-        description="New USD spend cap for the session's active run.",
+        description='New total USD budget for the session; spending so far counts against it.',
         gt=0.0,
         title='Maxcostusd',
     )
@@ -1027,7 +1036,7 @@ class MaxCostUsd3(RootModel[str]):
     )
     root: str = Field(
         ...,
-        description="New USD spend cap for the session's active run.",
+        description='New total USD budget for the session; spending so far counts against it.',
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Maxcostusd',
     )
@@ -1040,7 +1049,7 @@ class SessionCostCapRequest(BaseModel):
     max_cost_usd: MaxCostUsd2 | MaxCostUsd3 = Field(
         ...,
         alias='maxCostUsd',
-        description="New USD spend cap for the session's active run.",
+        description='New total USD budget for the session; spending so far counts against it.',
         title='Maxcostusd',
     )
 
@@ -1050,7 +1059,7 @@ class SessionCostCapResponse(BaseModel):
     max_cost_usd: str = Field(
         ...,
         alias='maxCostUsd',
-        description='The cap now applied to the active run, in USD.',
+        description='The session budget now applied, in USD.',
         title='Maxcostusd',
     )
 
@@ -1584,17 +1593,14 @@ class RunCreateRequest(BaseModel):
     agentcard_wallet_id: UUID | None = Field(
         None,
         alias='agentcardWalletId',
-        description='AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. Follow-up runs must send it again.',
+        description="AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's grant.",
         title='Agentcardwalletid',
     )
     stripe_link_connection_id: UUID | None = Field(
         None,
         alias='stripeLinkConnectionId',
-        description='Stripe Link connection (from GET /stripe-link) this run may pay with. Follow-up runs must send it again.',
+        description="Stripe Link connection (from GET /stripe-link) this run may pay with. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's connection.",
         title='Stripelinkconnectionid',
-    )
-    agentic_autofill_grant_id: UUID | None = Field(
-        None, alias='agenticAutofillGrantId', title='Agenticautofillgrantid'
     )
     attached_file_ids: AttachedFileIds1 | None = Field(
         None,
@@ -1627,7 +1633,7 @@ class RunCreateRequest(BaseModel):
     max_cost_usd: MaxCostUsd | MaxCostUsd1 | None = Field(
         None,
         alias='maxCostUsd',
-        description='USD spend cap for this run. Default 25, and never above your available balance.',
+        description='USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.',
         title='Maxcostusd',
     )
 

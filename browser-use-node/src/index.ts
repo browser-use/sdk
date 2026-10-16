@@ -1,7 +1,7 @@
 export { BrowserUse } from "./v2/client.js";
 export type { BrowserUseOptions, RunTaskOptions } from "./v2/client.js";
 
-export { BrowserUseError } from "./core/errors.js";
+export { APIKeySpendLimitError, BrowserUseError } from "./core/errors.js";
 
 export { TaskRun } from "./v2/helpers.js";
 export type { TaskResult, RunOptions } from "./v2/helpers.js";
@@ -32,6 +32,7 @@ export type AccountView = S["AccountView"];
 export type BrowserDownloadFile = S["BrowserDownloadFile"];
 export type BrowserDownloadListResponse = S["BrowserDownloadListResponse"];
 export type BrowserSessionItemView = S["BrowserSessionItemView"];
+export type BrowserExtensionView = S["BrowserExtensionView"];
 export type BrowserSessionListResponse = S["BrowserSessionListResponse"];
 export type BrowserSessionView = S["BrowserSessionView"];
 export type CreateSkillResponse = S["CreateSkillResponse"];

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import io
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -12,8 +13,11 @@ import httpx
 import pytest
 from pydantic import SecretStr
 
+from browser_use_sdk._core import http as http_module
+from browser_use_sdk._core.http import AsyncHttpClient, SyncHttpClient
 from browser_use_sdk.v4 import InlineSecretSource, OnePasswordSecretSource, SecretBinding
 from browser_use_sdk.v4.resources.browsers import AsyncBrowsers, Browsers
+from browser_use_sdk.v4.resources.extensions import AsyncExtensions, Extensions
 from browser_use_sdk.v4.resources.runs import AsyncRuns, Runs
 from browser_use_sdk.v4.resources.sessions import Sessions
 from browser_use_sdk.v4.resources.workspaces import AsyncWorkspaces, Workspaces
@@ -22,6 +26,7 @@ RUN_ID = "00000000-0000-0000-0000-000000000001"
 SESSION_ID = "00000000-0000-0000-0000-000000000002"
 WORKSPACE_ID = "00000000-0000-0000-0000-000000000010"
 UPLOAD_ID = "00000000-0000-0000-0000-000000000099"
+EXTENSION_ID = "00000000-0000-0000-0000-000000000020"
 
 
 def _run_summary(status: str) -> dict[str, Any]:
@@ -142,6 +147,7 @@ def test_browsers_create() -> None:
         metadata={"flow": "quickstart"},
         pdf_renderer_enabled=False,
         solve_captchas=False,
+        extension_ids=[EXTENSION_ID],
     )
 
     assert http.calls[0][:3] == (
@@ -152,6 +158,7 @@ def test_browsers_create() -> None:
             "metadata": {"flow": "quickstart"},
             "pdfRendererEnabled": False,
             "solveCaptchas": False,
+            "extensionIds": [EXTENSION_ID],
         },
     )
     assert browser.cdp_url == "wss://connect.browser-use.com/devtools/browser/test"
@@ -715,6 +722,82 @@ def test_workspaces_upload_files_presign() -> None:
         "allowOverrides": True,
     }
     assert str(resp.files[0].id) == UPLOAD_ID
+
+
+def _extension_view() -> dict[str, Any]:
+    return {
+        "id": EXTENSION_ID,
+        "name": "Demo",
+        "version": "1.0",
+        "createdAt": "2026-01-01T00:00:00Z",
+    }
+
+
+@pytest.mark.parametrize("is_async", [False, True])
+@pytest.mark.parametrize("kind", ["path", "bytes", "file"])
+def test_extensions_create_resends_multipart_file_after_429(
+    tmp_path: Path, monkeypatch: Any, kind: str, is_async: bool
+) -> None:
+    zip_bytes = b"PK\x03\x04 extension bytes"
+    zip_path = tmp_path / "demo.zip"
+    zip_path.write_bytes(zip_bytes)
+    file = {"path": zip_path, "bytes": zip_bytes, "file": io.BytesIO(zip_bytes)}[kind]
+    monkeypatch.setattr(http_module, "_BACKOFF_BASE", 0)
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if len(requests) == 1:
+            return httpx.Response(429, json={"detail": "slow down"})
+        return httpx.Response(201, json=_extension_view())
+
+    transport = httpx.MockTransport(handler)
+
+    async def create_async() -> Any:
+        http = AsyncHttpClient("https://api.example.com", "test")
+        await http.close()
+        http._client = httpx.AsyncClient(base_url="https://api.example.com", transport=transport)
+        try:
+            return await AsyncExtensions(http).create(file)
+        finally:
+            await http.close()
+
+    if is_async:
+        extension = asyncio.run(create_async())
+    else:
+        http = SyncHttpClient("https://api.example.com", "test")
+        http.close()
+        http._client = httpx.Client(base_url="https://api.example.com", transport=transport)
+        try:
+            extension = Extensions(http).create(file)
+        finally:
+            http.close()
+
+    assert len(requests) == 2
+    for request in requests:
+        assert (request.method, request.url.path) == ("POST", "/extensions")
+        assert request.headers["content-type"].startswith("multipart/form-data")
+        assert b'name="file"' in request.content
+        assert zip_bytes in request.content
+    assert str(extension.id) == EXTENSION_ID
+
+
+def test_extensions_list_get_and_delete() -> None:
+    page = {"items": [_extension_view()], "totalItems": 1, "pageNumber": 2, "pageSize": 20}
+    http = FakeSyncHttp([page, _extension_view(), {}])
+    extensions = Extensions(http)  # type: ignore[arg-type]
+
+    listed = extensions.list(page_size=20, page_number=2)
+    extension = extensions.get(EXTENSION_ID)
+    extensions.delete(EXTENSION_ID)
+
+    assert http.calls == [
+        ("GET", "/extensions", None, {"pageSize": 20, "pageNumber": 2}),
+        ("GET", f"/extensions/{EXTENSION_ID}", None, None),
+        ("DELETE", f"/extensions/{EXTENSION_ID}", None, None),
+    ]
+    assert listed.items[0].name == "Demo"
+    assert extension.version == "1.0"
 
 
 class _FakePutResponse:

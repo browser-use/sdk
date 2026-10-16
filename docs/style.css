@@ -1,15 +1,561 @@
+/* Mintlify already serves variable Inter (fonts.family); only the mono face is extra. */
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap");
+
+/* ---------- Tokens ---------- */
+/* Cool neutral ramp; Mintlify otherwise derives a tinted one from the primary color. */
+:root {
+  --gray-50: 247 248 248;
+  --gray-100: 240 241 243;
+  --gray-200: 227 229 232;
+  --gray-300: 208 214 224;
+  --gray-400: 138 143 152;
+  --gray-500: 107 111 118;
+  --gray-600: 74 77 83;
+  --gray-700: 52 54 59;
+  --gray-800: 35 37 42;
+  --gray-900: 24 25 27;
+  --gray-950: 15 16 17;
+
+  --bu-accent: #fe750e;
+  --bu-fg: #0f1011;
+  --bu-text: #3c4149;
+  --bu-muted: #6b6f76;
+  --bu-border: rgba(15, 16, 17, 0.09);
+  --bu-border-strong: rgba(15, 16, 17, 0.18);
+  --bu-surface: #f8f9fa;
+  --bu-hover: rgba(15, 16, 17, 0.045);
+  --bu-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --bu-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Code: monochrome plus one accent (quoted strings); every token >= 4.5:1 on --bu-surface */
+  --mint-background: transparent;
+  --mint-foreground: #0f1011;
+  --mint-token-keyword: #5b6068;
+  --mint-token-function: #0f1011;
+  --mint-token-constant: #0f1011;
+  --mint-token-parameter: #3c4149;
+  --mint-token-punctuation: #6b6f76;
+  --mint-token-comment: #6e737b;
+  --mint-token-string: #b93d0a;
+  --mint-token-string-expression: #b93d0a;
+  --mint-token-link: #b93d0a;
+}
+
+html.dark {
+  --bu-fg: #f7f8f8;
+  --bu-text: #d0d6e0;
+  --bu-muted: #8a8f98;
+  --bu-border: rgba(255, 255, 255, 0.08);
+  --bu-border-strong: rgba(255, 255, 255, 0.16);
+  --bu-surface: #0f1011;
+  --bu-hover: rgba(255, 255, 255, 0.055);
+
+  --mint-foreground: #f7f8f8;
+  --mint-token-keyword: #8a8f98;
+  --mint-token-function: #ffffff;
+  --mint-token-constant: #e6e8ea;
+  --mint-token-parameter: #d0d6e0;
+  --mint-token-punctuation: #8a8f98;
+  --mint-token-comment: #7c818a;
+  --mint-token-string: #ff9a52;
+  --mint-token-string-expression: #ff9a52;
+  --mint-token-link: #ff9a52;
+}
+
+/* Shell grammars mark every bare argument as a string; only quoted ones (string-expression) keep the accent. */
+:is(pre, code)[language="shellscript"],
+:is(pre, code)[language="bash"],
+:is(pre, code)[language="sh"],
+:is(pre, code)[language="shell"],
+:is(pre, code)[language="zsh"] {
+  --mint-token-string: var(--mint-token-parameter);
+}
+
+html {
+  --sidebar-width: 18rem;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body {
+  font-family: var(--bu-sans);
+  font-feature-settings: "cv01", "ss03";
+}
+
+::selection {
+  background: rgba(254, 117, 14, 0.28);
+}
+
+/* ---------- Page header ---------- */
+#page-title {
+  color: var(--bu-fg);
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 590;
+  letter-spacing: -0.02em;
+}
+#header .breadcrumb-item,
+#header .breadcrumb-item a,
+#header .eyebrow {
+  color: var(--bu-muted) !important;
+  font-size: 13px;
+  font-weight: 450;
+  letter-spacing: 0;
+  text-transform: none;
+}
+#header .breadcrumb-item a:hover {
+  color: var(--bu-fg) !important;
+}
+/* Mobile navbar already shows the section */
+@media (max-width: 1023px) {
+  #header nav[aria-label="Breadcrumb"],
+  #header .eyebrow {
+    display: none;
+  }
+}
+#header .prose {
+  color: var(--bu-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* ---------- Prose ---------- */
+.mdx-content {
+  color: var(--bu-text);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.mdx-content :is(p, [data-as="p"], li) {
+  font-size: 15px;
+  line-height: 1.6;
+}
+.mdx-content :is(h1, h2, h3, h4, strong, th) {
+  color: var(--bu-fg);
+}
+.mdx-content h2 {
+  font-size: 1.375rem;
+  line-height: 1.3;
+  font-weight: 590;
+  letter-spacing: -0.012em;
+}
+.mdx-content h3 {
+  font-size: 1.0625rem;
+  line-height: 1.4;
+  font-weight: 590;
+  letter-spacing: -0.006em;
+}
+.mdx-content h4 {
+  font-size: 15px;
+  font-weight: 590;
+}
+.mdx-content strong {
+  font-weight: 590;
+}
+
+/* Links: neutral underline, accent only on hover */
+.mdx-content a:not(.card):not([class*="card"]):not(.not-prose a) {
+  color: var(--bu-fg);
+  font-weight: inherit;
+  border-bottom: 0;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--bu-border-strong);
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+.mdx-content a:not(.card):not([class*="card"]):not(.not-prose a):hover {
+  color: var(--bu-accent);
+  text-decoration-color: var(--bu-accent);
+}
+
+/* Inline code */
+.mdx-content :not(pre) > code {
+  font-family: var(--bu-mono);
+  font-size: 0.86em;
+  font-weight: 450;
+  color: var(--bu-fg);
+  background: var(--bu-hover);
+  border: 0;
+  border-radius: 4px;
+  padding: 0.12em 0.32em;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+.mdx-content :not(pre) > code::before,
+.mdx-content :not(pre) > code::after {
+  content: none;
+}
+
+/* Lists */
+.mdx-content :is(ul, ol) > li::marker {
+  color: var(--bu-muted);
+}
+
+/* ---------- Code blocks ---------- */
+.code-block,
+.code-group {
+  border-radius: 8px !important;
+  border: 1px solid var(--bu-border) !important;
+  background: var(--bu-surface) !important;
+  --tw-ring-color: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.code-group .code-block {
+  border: 0 !important;
+  background: transparent !important;
+}
+/* css-variables marks blocks codeblock-dark, which leaves titles white-on-white in light mode */
+.codeblock-dark :is(.text-gray-50, .text-white, .text-gray-300) {
+  color: var(--bu-fg) !important;
+}
+[data-component-part="code-block-root"] {
+  border-radius: 0 0 8px 8px !important;
+  background: transparent !important;
+}
+.code-block > [data-component-part="code-block-root"] {
+  border-radius: 8px !important;
+}
+.code-block pre,
+.code-block code,
+.code-group pre,
+.code-group code {
+  font-family: var(--bu-mono) !important;
+  font-size: 13px !important;
+  line-height: 22px !important;
+}
+@media (max-width: 639px) {
+  .code-block pre,
+  .code-block code,
+  .code-group pre,
+  .code-group code {
+    font-size: 12px !important;
+    line-height: 20px !important;
+  }
+}
+.code-block-fade-overlay {
+  --fade-color-light: #f8f9fa !important;
+  --fade-color-dark: #0f1011 !important;
+}
+[data-component-part="code-group-tab-bar"] {
+  border-bottom: 1px solid var(--bu-border);
+  background: transparent;
+  min-height: 40px;
+}
+[data-component-part="code-group-tab-bar"] [role="tab"] {
+  color: var(--bu-muted) !important;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+[data-component-part="code-group-tab-bar"] [role="tab"]:hover,
+[data-component-part="code-group-tab-bar"] [role="tab"][aria-selected="true"] {
+  color: var(--bu-fg) !important;
+}
+[data-component-part="code-group-tab-bar"] [role="tab"] > div.absolute {
+  background-color: var(--bu-fg) !important;
+  height: 1px;
+  bottom: -5px;
+}
+[data-component-part="code-group-tab-bar"] [role="tab"] > div:first-child {
+  background: transparent !important;
+  color: inherit !important;
+}
+/* One copy action per block: drop the assistant sparkle */
+#ask-assistant-code-block-button,
+[data-floating-buttons] [aria-label*="ssistant"] {
+  display: none !important;
+}
+.code-block-copy-button button,
+[data-testid="copy-code-button"] {
+  background: transparent !important;
+}
+/* css-variables makes Mintlify assume a dark block; pin the icon color for light mode too */
+.code-block-copy-button svg,
+[data-testid="copy-code-button"] svg {
+  color: var(--bu-muted) !important;
+}
+.code-block-copy-button button:hover svg,
+[data-testid="copy-code-button"]:hover svg {
+  color: var(--bu-fg) !important;
+}
+
+/* ---------- Cards ---------- */
+.card {
+  border-radius: 10px !important;
+  border: 1px solid var(--bu-border) !important;
+  background: transparent !important;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+.card:hover {
+  border-color: var(--bu-border-strong) !important;
+  background: var(--bu-surface) !important;
+}
+[data-component-part="card-icon"] {
+  color: var(--bu-muted) !important;
+}
+/* Font Awesome icons are CSS masks painted with background-color */
+[data-component-part="card-icon"] svg {
+  background-color: var(--bu-muted) !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+.card:hover [data-component-part="card-icon"] svg {
+  background-color: var(--bu-fg) !important;
+}
+[data-component-part="card-title"] {
+  color: var(--bu-fg) !important;
+  font-weight: 590 !important;
+  letter-spacing: -0.006em;
+  font-size: 15px !important;
+}
+[data-component-part="card-content"] {
+  color: var(--bu-muted) !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+
+/* ---------- Callouts: neutral surface, color only on the icon ---------- */
+.callout {
+  border-radius: 8px !important;
+  border: 1px solid var(--bu-border) !important;
+  background: var(--bu-surface) !important;
+  padding: 14px 16px !important;
+}
+.callout [data-component-part="callout-content"] {
+  color: var(--bu-text) !important;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.callout [data-component-part="callout-content"] :is(strong, code, a) {
+  color: var(--bu-fg) !important;
+}
+.callout[data-callout-type="warning"] [data-component-part="callout-icon"] { color: #f5a524; }
+.callout[data-callout-type="danger"] [data-component-part="callout-icon"] { color: #f04438; }
+.callout[data-callout-type="tip"] [data-component-part="callout-icon"],
+.callout[data-callout-type="check"] [data-component-part="callout-icon"] { color: #3ecf8e; }
+.callout:is([data-callout-type="note"], [data-callout-type="info"]) [data-component-part="callout-icon"] { color: var(--bu-muted); }
+
+/* ---------- Tables ---------- */
+.mdx-content table {
+  font-size: 14px;
+  line-height: 1.55;
+  border-collapse: collapse;
+}
+.mdx-content th {
+  font-size: 13px;
+  font-weight: 510;
+  color: var(--bu-muted) !important;
+  border-bottom: 1px solid var(--bu-border-strong) !important;
+  white-space: nowrap;
+}
+.mdx-content td {
+  border-bottom: 1px solid var(--bu-border) !important;
+  vertical-align: top;
+}
+/* IDs and prices stay whole; the table wrapper scrolls on narrow screens */
+.mdx-content td code {
+  white-space: nowrap;
+}
+.mdx-content td[data-numeric] {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* Mintlify forces 150px per cell, which pushed the 6-column pricing table off-screen */
+.mdx-content table td {
+  min-width: 0;
+}
+.mdx-content table :is(th, td):not(:first-child) {
+  padding-left: 12px;
+}
+/* Fade the right edge only while a wide table still has hidden columns */
+.mdx-content [data-component-part="scroll-area-viewport"]:has(table) {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - min(var(--scroll-area-overflow-x-end, 0px), 48px)), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - min(var(--scroll-area-overflow-x-end, 0px), 48px)), transparent);
+}
+
+/* ---------- Sidebar ---------- */
+/* Icons were on some items and not others; text-only reads cleaner. */
+#sidebar-content li > a > div:first-child:has(> svg[style*="mask"]),
+#sidebar-content li > a > div:first-child:has(> svg[class*="icon"]),
+#sidebar-content li > button > div:first-child:has(> svg[style*="mask"]),
+#sidebar-content .sidebar-group-header > svg {
+  display: none !important;
+}
+/* Room for labels like "Playwright, Puppeteer, Selenium" on one line */
+#sidebar-content [data-component-part="scroll-area-viewport"] {
+  padding-right: 12px;
+}
+#sidebar-content li > a {
+  padding-right: 8px;
+}
+#sidebar-content .sidebar-group-header {
+  color: var(--bu-muted) !important;
+  font-size: 12px;
+  font-weight: 510;
+  letter-spacing: 0;
+  text-transform: none;
+}
+#sidebar-content li > a,
+#sidebar-content li > button {
+  color: var(--bu-muted);
+  font-size: 14px;
+  border-radius: 6px;
+  text-shadow: none !important;
+}
+#sidebar-content li > a:hover,
+#sidebar-content li > button:hover {
+  color: var(--bu-fg) !important;
+  background: var(--bu-hover);
+}
+#sidebar-content li[data-active] > a,
+#sidebar-content a[aria-current="page"] {
+  position: relative;
+  color: var(--bu-fg) !important;
+  background: var(--bu-hover) !important;
+  font-weight: 510;
+}
+/* The one brand signal in the sidebar */
+#sidebar-content a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2px;
+  height: 14px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: var(--bu-accent);
+}
+/* API nav: method labels in gray, not a second color system */
+#sidebar-content .method-nav-pill span {
+  background: transparent !important;
+  color: var(--bu-muted) !important;
+  font-family: var(--bu-mono);
+  font-weight: 500;
+}
+
+/* ---------- Table of contents ---------- */
+#table-of-contents .relative > span.rounded-full {
+  display: none;
+}
+#table-of-contents .toc {
+  border-left: 1px solid var(--bu-border);
+}
+.toc-item a {
+  color: var(--bu-muted) !important;
+  font-size: 13px;
+  text-shadow: none !important;
+}
+.toc-item a:hover {
+  color: var(--bu-fg) !important;
+}
+.toc-item[data-active] > a {
+  color: var(--bu-fg) !important;
+}
+.toc-item[data-active-deepest="true"]::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--bu-fg);
+}
+
+/* ---------- Navbar ---------- */
+#navbar .navbar-link a {
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--bu-muted) !important;
+  padding: 0 10px !important;
+}
+#navbar .navbar-link a:hover {
+  color: var(--bu-fg) !important;
+}
+#navbar a[href].link,
+#search-bar-entry,
+#theme-preference-menu-trigger {
+  border-radius: 8px !important;
+}
+#navbar a.link {
+  height: 32px !important;
+  padding: 0 12px !important;
+}
+/* The one place the brand color appears in chrome */
+#topbar-cta-button a {
+  background: var(--bu-accent) !important;
+  border-radius: 8px !important;
+  height: 32px !important;
+  opacity: 1 !important;
+}
+#topbar-cta-button a:hover {
+  background: #ff8a33 !important;
+}
+#topbar-cta-button a span,
+#topbar-cta-button a svg {
+  color: #0a0a0a !important;
+  font-weight: 500;
+}
+#header #page-context-menu.ml-auto {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+#page-context-menu button {
+  border-radius: 8px;
+  border-color: var(--bu-border) !important;
+}
+#page-context-menu-button {
+  border-radius: 8px 0 0 8px !important;
+}
+#page-context-menu > button:last-child {
+  border-radius: 0 8px 8px 0 !important;
+}
+
+/* The floating "Ask a question" bar covered page content; Cmd+I still opens the assistant. */
+.chat-assistant-floating-input {
+  display: none !important;
+}
+
+/* ---------- Footer ---------- */
+#pagination a {
+  border-radius: 8px;
+  border-color: var(--bu-border) !important;
+}
+#pagination a:hover {
+  border-color: var(--bu-border-strong) !important;
+}
+
+/* ---------- API reference ---------- */
 th {
   text-align: left;
 }
 
-/* API method badges */
+/* Playground: neutral method pill and Try it button instead of Mintlify's blue */
+.method-pill {
+  background: var(--bu-hover) !important;
+  color: var(--bu-fg) !important;
+  font-family: var(--bu-mono);
+  font-weight: 500 !important;
+}
+.tryit-button {
+  background: var(--bu-fg) !important;
+  color: var(--bu-surface) !important;
+  border-radius: 8px !important;
+}
+.tryit-button svg {
+  background-color: var(--bu-surface) !important;
+}
+
 .method-badge {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--bu-mono);
   letter-spacing: 0.02em;
   line-height: 1.5;
 }
@@ -50,27 +596,6 @@ th {
   color: #f87171;
 }
 
-/* API Reference sidebar: gray active state instead of orange */
-#sidebar-content:has(.method-nav-pill) .bg-primary\/10 {
-  background-color: rgba(0, 0, 0, 0.06);
-}
-
-#sidebar-content:has(.method-nav-pill) .text-primary {
-  color: rgb(55, 65, 81);
-}
-
-.dark #sidebar-content:has(.method-nav-pill) .bg-primary\/10 {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.dark #sidebar-content:has(.method-nav-pill) .text-primary {
-  color: rgb(209, 213, 219);
-}
-
-#sidebar-content:has(.method-nav-pill) .\[text-shadow\:-0\.2px_0_0_currentColor\,0\.2px_0_0_currentColor\] {
-  text-shadow: none;
-}
-
 /* Remove ring/border from product switcher dropdown */
 [data-radix-popper-content-wrapper] * {
   outline: none;
@@ -86,13 +611,4 @@ th {
   outline: none;
   border-color: transparent;
   box-shadow: none;
-}
-
-
-
-/* Open Source pages: blue accent */
-html[data-product="open-source"] {
-  --primary: 37 99 235 !important;
-  --primary-light: 37 99 235 !important;
-  --primary-dark: 96 165 250 !important;
 }

@@ -779,12 +779,65 @@
       }
     },
     "/sessions/{session_id}/cost-cap": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get Session Cost Cap",
+        "description": "Read committed budget spending from the primary database.",
+        "operationId": "get_session_cost_cap_sessions__session_id__cost_cap_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionBudgetResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
+          },
+          "404": {
+            "description": "Run, session, workspace, or profile not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch": {
         "tags": [
           "Sessions"
         ],
         "summary": "Update Session Cost Cap",
-        "description": "Update the active run cap without starting another run.",
+        "description": "Replace the session budget without resetting spending or starting a run.",
         "operationId": "update_session_cost_cap_sessions__session_id__cost_cap_patch",
         "security": [
           {
@@ -829,9 +882,6 @@
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
-          },
-          "409": {
-            "description": "The session has no active run."
           },
           "422": {
             "description": "Validation Error",
@@ -5137,7 +5187,7 @@
               }
             ],
             "title": "Agentcardwalletid",
-            "description": "AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. Follow-up runs must send it again."
+            "description": "AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's grant."
           },
           "stripeLinkConnectionId": {
             "anyOf": [
@@ -5150,19 +5200,7 @@
               }
             ],
             "title": "Stripelinkconnectionid",
-            "description": "Stripe Link connection (from GET /stripe-link) this run may pay with. Follow-up runs must send it again."
-          },
-          "agenticAutofillGrantId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Agenticautofillgrantid"
+            "description": "Stripe Link connection (from GET /stripe-link) this run may pay with. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's connection."
           },
           "attachedFileIds": {
             "anyOf": [
@@ -5251,7 +5289,7 @@
               }
             ],
             "title": "Maxcostusd",
-            "description": "USD spend cap for this run. Default 25, and never above your available balance."
+            "description": "USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one."
           }
         },
         "additionalProperties": false,
@@ -5723,6 +5761,44 @@
         "title": "SecretBinding",
         "description": "One credential this run may have typed into a browser field.\n\nThe value never reaches the agent. It is encrypted at rest, kept out of the\nworker payload, and typed straight into the focused field by the server when\nthe agent asks for the alias by name \u2014 and only while the page it is typing\ninto is on one of `allowedDomains`.\n\nRun-scoped: bindings die with the run, so a follow-up run that needs the same\ncredential must send it again."
       },
+      "SessionBudgetResponse": {
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid"
+          },
+          "spentUsd": {
+            "type": "string",
+            "title": "Spentusd"
+          },
+          "maxCostUsd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxcostusd"
+          },
+          "budgetScope": {
+            "type": "string",
+            "const": "session",
+            "title": "Budgetscope"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sessionId",
+          "spentUsd",
+          "maxCostUsd",
+          "budgetScope"
+        ],
+        "title": "SessionBudgetResponse",
+        "description": "Report recorded budget spending without estimating unfinished model calls."
+      },
       "SessionCostCapRequest": {
         "properties": {
           "maxCostUsd": {
@@ -5737,7 +5813,7 @@
               }
             ],
             "title": "Maxcostusd",
-            "description": "New USD spend cap for the session's active run."
+            "description": "New total USD budget for the session; spending so far counts against it."
           }
         },
         "additionalProperties": false,
@@ -5746,7 +5822,7 @@
           "maxCostUsd"
         ],
         "title": "SessionCostCapRequest",
-        "description": "Set the maximum spend for the active run in a session."
+        "description": "Set the total session budget, including when the session is idle."
       },
       "SessionCostCapResponse": {
         "properties": {
@@ -5758,7 +5834,7 @@
           "maxCostUsd": {
             "type": "string",
             "title": "Maxcostusd",
-            "description": "The cap now applied to the active run, in USD."
+            "description": "The session budget now applied, in USD."
           }
         },
         "type": "object",

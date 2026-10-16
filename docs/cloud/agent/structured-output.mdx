@@ -1,11 +1,17 @@
 ---
 title: Structured output
-description: "Ask for JSON and validate the V4 result in your application."
+description: "Pass a JSON Schema and read the V4 result as parsed JSON."
 icon: table
 ---
 
-V4 returns `run.result` as a string. Ask for JSON only, then validate it
-client-side:
+Pass a JSON Schema as `output_schema` / `outputSchema`. When the run completes,
+`run.output` holds the parsed JSON value and `run.result` still holds the text
+answer.
+
+<Note>
+  SDK support for `output_schema` / `outputSchema` and `run.output` ships in the
+  first `browser-use-sdk` release after 3.11.3. On 3.11.3, use the REST API.
+</Note>
 
 <CodeGroup>
 ```python Python
@@ -19,10 +25,13 @@ class Story(BaseModel):
     points: int
 
 run = client.runs.create(
-    'Find the top HN story. Return only {"title":"...","points":0}.'
+    "Find the top Hacker News story and its points.",
+    output_schema=Story.model_json_schema(),
 )
 run = client.runs.wait_for_completion(run.id)
-story = Story.model_validate_json(run.result or "{}")
+if run.status.value != "completed":
+    raise RuntimeError(run.error or run.status.value)
+story = Story.model_validate(run.output)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v4";
@@ -36,13 +45,37 @@ const Story = z.object({
 });
 
 const run = await client.runs.create({
-  task: 'Find the top HN story. Return only {"title":"...","points":0}.',
-  model: "grok-4.5",
+  task: "Find the top Hacker News story and its points.",
+  outputSchema: z.toJSONSchema(Story),
 });
 const result = await client.runs.waitForCompletion(run.id);
-const story = Story.parse(JSON.parse(result.result ?? "{}"));
+if (result.status !== "completed") throw new Error(result.error ?? result.status);
+const story = Story.parse(result.output);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Find the top Hacker News story and its points.",
+       "outputSchema":{"type":"object",
+         "properties":{"title":{"type":"string"},"points":{"type":"integer"}},
+         "required":["title","points"]}}'
+
+# Poll until "status" is "completed", "failed" or "cancelled".
+# Read "output" only when it is "completed"; otherwise read "error".
+curl https://api.browser-use.com/api/v4/runs/$RUN_ID \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
 ```
 </CodeGroup>
 
-V4 does not accept `output_schema` / `outputSchema`. Handle validation errors
-and retry with a [session follow-up](/cloud/agent/sessions) when needed.
+Browser Use checks the agent's final answer against the schema. If the agent
+cannot produce a matching answer, the run fails with
+`Could not produce output matching outputSchema`. Validate `run.output` in your
+application as well, as the examples do.
+
+## Limits
+
+- API-key runs only. Runs started from the dashboard return `422`.
+- JSON Schema 2020-12 unless the schema sets another `$schema`.
+- At most 64 KiB, 64 nesting levels, and about 4,000 values (every key's value and array item counts).
+- `$ref` must point inside the schema (`#/...`).

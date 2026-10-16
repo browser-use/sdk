@@ -122,14 +122,6 @@ _V3_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("post", "/workspaces/{workspace_id}/files/upload"): ("workspaces", "upload_files"),
 }
 
-# Extensions are added by sdk#309.
-_V4_UNMAPPED = {
-    ("post", "/extensions"),
-    ("get", "/extensions"),
-    ("get", "/extensions/{extension_id}"),
-    ("delete", "/extensions/{extension_id}"),
-}
-
 _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     # browsers
     ("post", "/browsers"): ("browsers", "create"),
@@ -172,9 +164,6 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("post", "/integrations/{provider}/authorize"): ("integrations", "authorize"),
     ("get", "/integrations/{provider}/status"): ("integrations", "status"),
     ("delete", "/integrations/{provider}"): ("integrations", "disconnect"),
-    # wallets
-    ("get", "/agentcard/wallets"): ("wallets", "agentcard"),
-    ("get", "/stripe-link"): ("wallets", "stripe_link"),
     # workspaces
     ("post", "/workspaces"): ("workspaces", "create"),
     ("get", "/workspaces/{workspace_id}"): ("workspaces", "get"),
@@ -184,6 +173,18 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/workspaces/{workspace_id}/files"): ("workspaces", "files"),
     ("delete", "/workspaces/{workspace_id}/files"): ("workspaces", "delete_file"),
     ("post", "/workspaces/{workspace_id}/files/upload"): ("workspaces", "upload_files"),
+    # extensions
+    ("post", "/extensions"): ("extensions", "create"),
+    ("get", "/extensions"): ("extensions", "list"),
+    ("get", "/extensions/{extension_id}"): ("extensions", "get"),
+    ("delete", "/extensions/{extension_id}"): ("extensions", "delete"),
+}
+
+# Wallets stay off the SDK surface and GET cost-cap is not in production yet; map every other v4 endpoint.
+_V4_NOT_IN_SDK: Set[Tuple[str, str]] = {
+    ("get", "/agentcard/wallets"),
+    ("get", "/stripe-link"),
+    ("get", "/sessions/{session_id}/cost-cap"),
 }
 
 _HTTP_METHODS = {"get", "post", "put", "patch", "delete", "head", "options"}
@@ -336,9 +337,9 @@ class TestV4Coverage:
         self.spec = _load_spec(_V4_SPEC)
 
     def test_all_spec_endpoints_mapped(self) -> None:
-        spec_eps = _spec_endpoints(self.spec) - _V4_UNMAPPED
+        spec_eps = _spec_endpoints(self.spec)
         mapped = set(_V4_MAP.keys())
-        missing = spec_eps - mapped
+        missing = spec_eps - mapped - _V4_NOT_IN_SDK
         assert not missing, f"Unmapped v4 endpoints: {missing}"
 
     def test_sdk_methods_exist(self) -> None:
@@ -348,18 +349,18 @@ class TestV4Coverage:
             profiles,
             runs,
             sessions,
-            wallets,
             workspaces,
         )
+        from browser_use_sdk.v4.resources import extensions, runs, sessions, workspaces
 
         resource_classes = {
             "browsers": browsers.Browsers,
             "profiles": profiles.Profiles,
+            "extensions": extensions.Extensions,
             "runs": runs.Runs,
             "sessions": sessions.Sessions,
             "workspaces": workspaces.Workspaces,
             "integrations": integrations.Integrations,
-            "wallets": wallets.Wallets,
         }
         for (_, _), (resource_attr, method_name) in _V4_MAP.items():
             cls = resource_classes[resource_attr]
@@ -374,18 +375,18 @@ class TestV4Coverage:
             profiles,
             runs,
             sessions,
-            wallets,
             workspaces,
         )
+        from browser_use_sdk.v4.resources import extensions, runs, sessions, workspaces
 
         async_classes = {
             "browsers": browsers.AsyncBrowsers,
             "profiles": profiles.AsyncProfiles,
+            "extensions": extensions.AsyncExtensions,
             "runs": runs.AsyncRuns,
             "sessions": sessions.AsyncSessions,
             "workspaces": workspaces.AsyncWorkspaces,
             "integrations": integrations.AsyncIntegrations,
-            "wallets": wallets.AsyncWallets,
         }
         for (_, _), (resource_attr, method_name) in _V4_MAP.items():
             cls = async_classes[resource_attr]
@@ -611,6 +612,6 @@ class TestClientInit:
         assert hasattr(client, "sessions")
         assert hasattr(client, "workspaces")
         assert hasattr(client, "integrations")
-        assert hasattr(client, "wallets")
+        assert hasattr(client, "extensions")
         assert hasattr(client, "profiles")
         client.close()

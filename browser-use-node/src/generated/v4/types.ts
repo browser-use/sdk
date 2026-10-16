@@ -250,7 +250,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get Session Cost Cap
+         * @description Read committed budget spending from the primary database.
+         */
+        get: operations["get_session_cost_cap_sessions__session_id__cost_cap_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -258,7 +262,7 @@ export interface paths {
         head?: never;
         /**
          * Update Session Cost Cap
-         * @description Update the active run cap without starting another run.
+         * @description Replace the session budget without resetting spending or starting a run.
          */
         patch: operations["update_session_cost_cap_sessions__session_id__cost_cap_patch"];
         trace?: never;
@@ -1839,16 +1843,14 @@ export interface components {
             agentmail: boolean;
             /**
              * Agentcardwalletid
-             * @description AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. Follow-up runs must send it again.
+             * @description AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's grant.
              */
             agentcardWalletId?: string | null;
             /**
              * Stripelinkconnectionid
-             * @description Stripe Link connection (from GET /stripe-link) this run may pay with. Follow-up runs must send it again.
+             * @description Stripe Link connection (from GET /stripe-link) this run may pay with. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's connection.
              */
             stripeLinkConnectionId?: string | null;
-            /** Agenticautofillgrantid */
-            agenticAutofillGrantId?: string | null;
             /**
              * Attachedfileids
              * @description Upload ids from POST /workspaces/{workspace_id}/files/upload to show the agent in this run only. Ids that cannot be confirmed are reported, not fatal.
@@ -1873,7 +1875,7 @@ export interface components {
             judge?: components["schemas"]["RunJudgeSettings"] | null;
             /**
              * Maxcostusd
-             * @description USD spend cap for this run. Default 25, and never above your available balance.
+             * @description USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.
              */
             maxCostUsd?: number | string | null;
         };
@@ -2082,13 +2084,33 @@ export interface components {
             allowedDomains: string[];
         };
         /**
+         * SessionBudgetResponse
+         * @description Report recorded budget spending without estimating unfinished model calls.
+         */
+        SessionBudgetResponse: {
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Spentusd */
+            spentUsd: string;
+            /** Maxcostusd */
+            maxCostUsd: string | null;
+            /**
+             * Budgetscope
+             * @constant
+             */
+            budgetScope: "session";
+        };
+        /**
          * SessionCostCapRequest
-         * @description Set the maximum spend for the active run in a session.
+         * @description Set the total session budget, including when the session is idle.
          */
         SessionCostCapRequest: {
             /**
              * Maxcostusd
-             * @description New USD spend cap for the session's active run.
+             * @description New total USD budget for the session; spending so far counts against it.
              */
             maxCostUsd: number | string;
         };
@@ -2101,7 +2123,7 @@ export interface components {
             sessionId: string;
             /**
              * Maxcostusd
-             * @description The cap now applied to the active run, in USD.
+             * @description The session budget now applied, in USD.
              */
             maxCostUsd: string;
         };
@@ -3111,6 +3133,51 @@ export interface operations {
             };
         };
     };
+    get_session_cost_cap_sessions__session_id__cost_cap_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionBudgetResponse"];
+                };
+            };
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Run, session, workspace, or profile not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_session_cost_cap_sessions__session_id__cost_cap_patch: {
         parameters: {
             query?: never;
@@ -3144,13 +3211,6 @@ export interface operations {
             };
             /** @description Run, session, workspace, or profile not found. */
             404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The session has no active run. */
-            409: {
                 headers: {
                     [name: string]: unknown;
                 };

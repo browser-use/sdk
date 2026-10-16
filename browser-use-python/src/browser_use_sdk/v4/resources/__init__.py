@@ -1,9 +1,9 @@
 from .browsers import AsyncBrowsers, Browsers
 from .integrations import AsyncIntegrations, Integrations
 from .profiles import AsyncProfiles, Profiles
+from .extensions import AsyncExtensions, Extensions
 from .runs import AsyncRuns, Runs
 from .sessions import AsyncSessions, Sessions
-from .wallets import AsyncWallets, Wallets
 from .workspaces import AsyncWorkspaces, Workspaces
 
 __all__ = [
@@ -13,12 +13,12 @@ __all__ = [
     "AsyncIntegrations",
     "Profiles",
     "AsyncProfiles",
+    "Extensions",
+    "AsyncExtensions",
     "Runs",
     "AsyncRuns",
     "Sessions",
     "AsyncSessions",
-    "Wallets",
-    "AsyncWallets",
     "Workspaces",
     "AsyncWorkspaces",
 ]

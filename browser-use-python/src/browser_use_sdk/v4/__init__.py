@@ -1,14 +1,12 @@
 from .client import AsyncBrowserUse, BrowserUse
-from .._core.errors import BrowserUseError
+from .._core.errors import APIKeySpendLimitError, BrowserUseError
 
 from ..generated.v4.models import (
-    AgentCardWalletListResponse,
-    AgentCardWalletSummary,
     APIKeySpendLimitDetail,
-    APIKeySpendLimitError,
     AuthorizeResponse,
     BrowserDownloadFile,
     BrowserDownloadListResponse,
+    BrowserExtensionView,
     BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionStatus,
@@ -16,11 +14,12 @@ from ..generated.v4.models import (
     ConnectionStatusResponse,
     CustomProxy,
     DisconnectResponse,
+    ExtensionListResponse,
+    ExtensionView,
     InlineSecretSource,
     IntegrationCategoryResponse,
     IntegrationListResponse,
     IntegrationResponse,
-    Mode1 as StripeLinkMode,
     Model as RunModel,
     OnePasswordSecretSource,
     ProfileCreateRequest,
@@ -55,7 +54,6 @@ from ..generated.v4.models import (
     Status as QueuedMessageStatus,
     Status1 as RunAttachmentStatus,
     Status2 as RunStatus,
-    StripeLinkStatusResponse,
     WorkspaceCreateRequest,
     WorkspaceFileInfo,
     WorkspaceFileListResponse,
@@ -73,6 +71,7 @@ __all__ = [
     "BrowserUse",
     "AsyncBrowserUse",
     "BrowserUseError",
+    "APIKeySpendLimitError",
     # Run models
     "RunCreateRequest",
     "RunCreateResponse",
@@ -119,14 +118,12 @@ __all__ = [
     "AuthorizeResponse",
     "ConnectionStatusResponse",
     "DisconnectResponse",
-    # Wallet models
-    "AgentCardWalletListResponse",
-    "AgentCardWalletSummary",
-    "StripeLinkStatusResponse",
-    "StripeLinkMode",
     # Errors
     "APIKeySpendLimitDetail",
-    "APIKeySpendLimitError",
+    # Extension models
+    "BrowserExtensionView",
+    "ExtensionView",
+    "ExtensionListResponse",
     # Workspace models
     "WorkspaceInfo",
     "WorkspaceCreateRequest",

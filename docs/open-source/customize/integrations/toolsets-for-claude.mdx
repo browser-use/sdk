@@ -9,11 +9,17 @@ keywords: ["Browser Use toolsets for Claude", "Claude browser automation", "Brow
 
 Browser Use toolsets for Claude is maintained by Browser Use and is compatible with Claude. It provides browser actions and a Bash tool through the Anthropic Python SDK. The SDK's tool runner sends each of Claude's tool calls to Browser Use, returns the result to Claude, and repeats until Claude finishes.
 
-<Frame>
-  <img className="w-full" src="/open-source/images/anthropic/architecture.svg" alt="Claude sends tool calls through the Anthropic SDK tool runner to the Browser Use integration, which provides browser actions and Bash. Results return to Claude. The browser runs locally or remotely. Bash runs on the SDK host." />
-</Frame>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/anthropic/architecture-light-mobile.svg" />
+  <img src="/open-source/images/anthropic/architecture-light.svg" alt="Claude sends tool calls to the Anthropic SDK tool runner, which passes them to Browser Use and returns each result to Claude. Browser Use provides browser actions on a local, Cloud, or existing CDP browser, and Bash, which runs on the SDK host." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/anthropic/architecture-dark-mobile.svg" />
+  <img src="/open-source/images/anthropic/architecture-dark.svg" alt="Claude sends tool calls to the Anthropic SDK tool runner, which passes them to Browser Use and returns each result to Claude. Browser Use provides browser actions on a local, Cloud, or existing CDP browser, and Bash, which runs on the SDK host." noZoom />
+</picture>
 
-[Open full-size diagram](/open-source/images/anthropic/architecture.svg)
+<p className="dark:hidden"><a href="/open-source/images/anthropic/architecture-light.svg">Open full-size diagram</a></p>
+<p className="hidden dark:block"><a href="/open-source/images/anthropic/architecture-dark.svg">Open full-size diagram</a></p>
 
 ## Installation
 
@@ -141,11 +147,17 @@ The Browser Use integration provides `BrowserUse` for browser actions and `Bash`
 
 Claude calls structured actions such as `navigate`, `read_page`, and `left_click`, and the driver runs them over CDP. `javascript_exec` runs JavaScript inside the page; it is not a general-purpose CDP code interpreter. Bash runs beside your Python process with `output_dir` as its working directory, where it can process extracted data and write reports.
 
-<Frame>
-  <img className="w-full" src="/open-source/images/anthropic/tool-sequence.svg" alt="Sequence after opening Hacker News. Claude calls read_page, the tool runner passes it to Browser Use, and the page contents return to Claude. Claude then calls bash, which writes the Markdown and JSON files on the SDK host, and the result returns to Claude." />
-</Frame>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/anthropic/tool-sequence-light-mobile.svg" />
+  <img src="/open-source/images/anthropic/tool-sequence-light.svg" alt="Claude sends a tool call to the Anthropic SDK tool runner. The runner passes read_page to the browser, shown on news.ycombinator.com, and bash to the SDK host, which writes hacker-news.md and hacker-news.json." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/anthropic/tool-sequence-dark-mobile.svg" />
+  <img src="/open-source/images/anthropic/tool-sequence-dark.svg" alt="Claude sends a tool call to the Anthropic SDK tool runner. The runner passes read_page to the browser, shown on news.ycombinator.com, and bash to the SDK host, which writes hacker-news.md and hacker-news.json." noZoom />
+</picture>
 
-[Open full-size diagram](/open-source/images/anthropic/tool-sequence.svg)
+<p className="dark:hidden"><a href="/open-source/images/anthropic/tool-sequence-light.svg">Open full-size diagram</a></p>
+<p className="hidden dark:block"><a href="/open-source/images/anthropic/tool-sequence-dark.svg">Open full-size diagram</a></p>
 
 <Accordion title="All 31 browser actions">
   - Navigation: `navigate`, `new_tab`, `list_tabs`, `switch_tab`, `close_tab`.
@@ -174,11 +186,17 @@ To opt out, set an action's `enabled` value to `False` in the `configs` passed t
 
 File paths in browser actions refer to the browser host. With local Chromium, that is the same machine as your Python process: an approved local file can be uploaded, and downloaded bytes can be read locally. A remote browser has its own filesystem.
 
-<Frame>
-  <img className="w-full" src="/open-source/images/anthropic/files-between-hosts.svg" alt="A report starts on the SDK host. The application copies bytes to the remote browser host before file_upload can select the staged file. Download notifications return metadata; the application must retrieve the bytes before Bash can read a local copy. These transfers are not built into the driver." />
-</Frame>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/anthropic/files-between-hosts-light-mobile.svg" />
+  <img src="/open-source/images/anthropic/files-between-hosts-light.svg" alt="The SDK host and a remote browser have separate filesystems. Your app copies the file's bytes to the browser host before file_upload selects them by document ID, and a download notice carries only a path until your app retrieves the bytes." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/anthropic/files-between-hosts-dark-mobile.svg" />
+  <img src="/open-source/images/anthropic/files-between-hosts-dark.svg" alt="The SDK host and a remote browser have separate filesystems. Your app copies the file's bytes to the browser host before file_upload selects them by document ID, and a download notice carries only a path until your app retrieves the bytes." noZoom />
+</picture>
 
-[Open full-size diagram](/open-source/images/anthropic/files-between-hosts.svg)
+<p className="dark:hidden"><a href="/open-source/images/anthropic/files-between-hosts-light.svg">Open full-size diagram</a></p>
+<p className="hidden dark:block"><a href="/open-source/images/anthropic/files-between-hosts-dark.svg">Open full-size diagram</a></p>
 
 ### Uploads to a remote browser
 
@@ -217,11 +235,17 @@ Enabling `file_upload` or `javascript_exec` requires a confirmation callback. Th
 
 The quickstart uses `confirm=lambda _: True` to approve browser actions automatically. Replace it with the callback below to ask for approval when Claude uploads a file or runs page JavaScript. It approves other browser actions automatically. The callback can use a terminal prompt, a review screen in your app, or your own approval service.
 
-<Frame>
-  <img className="w-full" src="/open-source/images/anthropic/approval-gate.svg" alt="Claude requests an action. The confirmation callback either allows the driver to execute it or declines it. A callback error also prevents execution. The action output, refusal, or error returns to Claude; approval covers one action." />
-</Frame>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/anthropic/approval-gate-light-mobile.svg" />
+  <img src="/open-source/images/anthropic/approval-gate-light.svg" alt="For each browser action Claude requests, the SDK calls your confirm(context) callback. If it returns True the driver executes the action; if it returns False or raises, no action runs, and either way a tool_result returns to Claude." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/anthropic/approval-gate-dark-mobile.svg" />
+  <img src="/open-source/images/anthropic/approval-gate-dark.svg" alt="For each browser action Claude requests, the SDK calls your confirm(context) callback. If it returns True the driver executes the action; if it returns False or raises, no action runs, and either way a tool_result returns to Claude." noZoom />
+</picture>
 
-[Open full-size diagram](/open-source/images/anthropic/approval-gate.svg) · [See the file-upload sequence](/open-source/images/anthropic/confirmation-callback.svg)
+<p className="dark:hidden"><a href="/open-source/images/anthropic/approval-gate-light.svg">Open full-size diagram</a> · <a href="/open-source/images/anthropic/confirmation-callback-light.svg">See the file-upload sequence</a></p>
+<p className="hidden dark:block"><a href="/open-source/images/anthropic/approval-gate-dark.svg">Open full-size diagram</a> · <a href="/open-source/images/anthropic/confirmation-callback-dark.svg">See the file-upload sequence</a></p>
 
 ```python
 import asyncio

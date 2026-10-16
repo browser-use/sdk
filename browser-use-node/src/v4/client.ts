@@ -2,9 +2,9 @@ import { HttpClient } from "../core/http.js";
 import { Browsers } from "./resources/browsers.js";
 import { Integrations } from "./resources/integrations.js";
 import { Profiles } from "./resources/profiles.js";
+import { Extensions } from "./resources/extensions.js";
 import { Runs } from "./resources/runs.js";
 import { Sessions } from "./resources/sessions.js";
-import { Wallets } from "./resources/wallets.js";
 import { Workspaces } from "./resources/workspaces.js";
 
 const DEFAULT_BASE_URL = "https://api.browser-use.com/api/v4";
@@ -20,9 +20,9 @@ export class BrowserUse {
   readonly browsers: Browsers;
   readonly integrations: Integrations;
   readonly profiles: Profiles;
+  readonly extensions: Extensions;
   readonly runs: Runs;
   readonly sessions: Sessions;
-  readonly wallets: Wallets;
   readonly workspaces: Workspaces;
 
   private readonly http: HttpClient;
@@ -44,9 +44,9 @@ export class BrowserUse {
     this.browsers = new Browsers(this.http);
     this.integrations = new Integrations(this.http);
     this.profiles = new Profiles(this.http);
+    this.extensions = new Extensions(this.http);
     this.runs = new Runs(this.http);
     this.sessions = new Sessions(this.http);
-    this.wallets = new Wallets(this.http);
     this.workspaces = new Workspaces(this.http);
   }
 }

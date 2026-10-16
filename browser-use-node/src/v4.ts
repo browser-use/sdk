@@ -11,7 +11,10 @@ export type {
 export { Profiles } from "./v4/resources/profiles.js";
 export type { ProfileListParams } from "./v4/resources/profiles.js";
 
-export { BrowserUseError } from "./core/errors.js";
+export { APIKeySpendLimitError, BrowserUseError } from "./core/errors.js";
+
+export { Extensions } from "./v4/resources/extensions.js";
+export type { ExtensionListParams } from "./v4/resources/extensions.js";
 
 export { Runs } from "./v4/resources/runs.js";
 export type {
@@ -30,8 +33,6 @@ export type { WorkspaceFilesParams } from "./v4/resources/workspaces.js";
 
 export { Integrations } from "./v4/resources/integrations.js";
 export type { IntegrationListParams } from "./v4/resources/integrations.js";
-
-export { Wallets } from "./v4/resources/wallets.js";
 
 export type { components as V4Types } from "./generated/v4/types.js";
 
@@ -90,14 +91,8 @@ export type AuthorizeResponse = S["AuthorizeResponse"];
 export type ConnectionStatusResponse = S["ConnectionStatusResponse"];
 export type DisconnectResponse = S["DisconnectResponse"];
 
-// Wallet models
-export type AgentCardWalletListResponse = S["AgentCardWalletListResponse"];
-export type AgentCardWalletSummary = S["AgentCardWalletSummary"];
-export type StripeLinkStatusResponse = S["StripeLinkStatusResponse"];
-
 // Errors
 export type APIKeySpendLimitDetail = S["APIKeySpendLimitDetail"];
-export type APIKeySpendLimitError = S["APIKeySpendLimitError"];
 
 // Workspace models
 export type WorkspaceInfo = S["WorkspaceInfo"];
@@ -110,6 +105,11 @@ export type WorkspaceFileUploadItem = S["WorkspaceFileUploadItem"];
 export type WorkspaceFileUploadRequest = S["WorkspaceFileUploadRequest"];
 export type WorkspaceFileUploadResponse = S["WorkspaceFileUploadResponse"];
 export type WorkspaceFileUploadResponseItem = S["WorkspaceFileUploadResponseItem"];
+
+// Extension models
+export type BrowserExtensionView = S["BrowserExtensionView"];
+export type ExtensionView = S["ExtensionView"];
+export type ExtensionListResponse = S["ExtensionListResponse"];
 
 // Enums / string unions
 export type ProxyCountryCode = S["ProxyCountryCode"];
