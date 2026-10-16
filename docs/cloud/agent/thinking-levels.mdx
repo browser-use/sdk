@@ -20,25 +20,39 @@ field names and accepted values therefore differ by model family.
 
 | Model strings | Path | Accepted values |
 | --- | --- | --- |
-| `gpt-6-luna` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
-| `gpt-6-astra` | `reasoning.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
+| `gpt-6-luna`, `gpt-6-sol` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
+| `gpt-6-astra`, `gpt-6.1-sol` | `reasoning.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
 | `gpt-5.5` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh` |
 | `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
-| `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-sonnet-5` | `output_config.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
-| Same Claude models | `thinking.type` | `adaptive`, `disabled` |
-| Same Claude models | `thinking.display` | `omitted`, `summarized` |
+| `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-opus-5-5`, `claude-sonnet-5` | `output_config.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
+| `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-sonnet-5` | `thinking.type` | `adaptive`, `disabled` |
+| `claude-opus-5-5` | `thinking.type` | `adaptive` |
+| All Claude models above | `thinking.display` | `omitted`, `summarized` |
 | `gemini-3-flash`, `gemini-3.5-flash`, `gemini-3.6-flash` | `thinkingConfig.thinkingLevel` | `minimal`, `low`, `medium`, `high` |
 | `gemini-3.1-pro` | `thinkingConfig.thinkingLevel` | `low`, `medium`, `high` |
+| `deepseek-v4.1-flash` | `thinking.type` | `enabled`, `disabled` |
+| `deepseek-v4.1-flash` | `reasoning_effort` | `low`, `high`, `max` |
+| `mimo-v2.6-pro`, `mimo-v2.6-flash` | `thinking.type` | `enabled`, `disabled` |
+| `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-astra`, `gpt-6-sol`, `gpt-6.1-sol`, `gpt-6-luna` | `service_tier` | `default`, `fast`, `priority` |
 
 `glm-5.2`, `glm-5.3-flash`, `grok-4.5`, `grok-4.6`,
 `deepseek-v4-flash-vision`, `kimi-k3`, `minimax-m3`, and `claude-fable-5`
-do not currently accept V4 `modelParams`.
+do not currently accept V4 `modelParams`. The `bu-ultrafast` and `bu-fast`
+presets also reject it.
+
+`service_tier: fast` and `priority` bill at OpenAI's Fast-mode token rates
+(2x to 2.5x Standard) and need a direct OpenAI route; on other routes the
+request returns 422.
 
 <Note>
   Omitting both `model` and `modelParams` uses `gpt-6-luna` with
   `reasoning.effort: high`. For an explicit model, omitting `modelParams` applies
-  that model's defaults; `gpt-5.6-luna` and `gpt-6-astra` use `reasoning.effort: xhigh`.
-  Astra does not accept `none` or `minimal`. Send an empty
+  that model's defaults: `gpt-5.6-luna`, `gpt-5.6-sol`, `gpt-6-sol`,
+  `gpt-6.1-sol`, and `gpt-6-astra` use `reasoning.effort: xhigh`;
+  `claude-opus-5`, `claude-sonnet-5`, and `claude-opus-5-5` use
+  `thinking: {type: adaptive, display: summarized}`; MiMo and
+  `deepseek-v4.1-flash` use `thinking.type: disabled`. Astra and GPT-6.1 Sol
+  do not accept `none` or `minimal`. Send an empty
   object (`"modelParams": {}`) to opt out and use the provider's defaults.
 </Note>
 

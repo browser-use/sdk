@@ -1,12 +1,12 @@
 ---
 title: "Agentcard"
-description: "Let an agent pay with a user's own card through Agentcard Vault in a Browser Use browser."
+description: "Let an agent pay with a user's own card through Agentcard Vault, or from a Browser Use project wallet (beta)."
 ---
 
 [Agentcard](https://agentcard.sh) lets your agent shop with a user's card through the **Vault**. The agent submits a placeholder card, the SDK pauses a supported payment request, and the user approves on their own device with a passkey. Their device sends the real card to the payment processor; the real card stays out of the agent's task and browser.
 
 <Note>
-  Agentcard's legacy **wallet** API is deprecated. New integrations should use the Vault flow below instead of the old `agentcard_wallet_id` integration. Vault attaches over CDP; it does not require a wallet ID on a Browser Use run.
+  Vault is Agentcard's current flow for paying with a user's own card, and it attaches over CDP without a wallet ID. Browser Use Cloud also has a separate [project wallet (beta)](#project-wallet-beta): the hosted agent spends from a Browser Use project wallet with single-use virtual cards, for runs started in the Cloud app.
 </Note>
 
 ## What you need
@@ -117,3 +117,13 @@ Stop the browser on setup failure or abandonment too, once you have established 
 For Browser Use hosted agents, see [Agentcard's Browser Use integration guide](https://docs.agentcard.sh/vault/integrations/agent-browsers/browser-use). A hosted run starts executing when created. Attach Vault before the shopping task begins, and account for session expiry or browser replacement. Observing a dispatch event and then cancelling is not a synchronous gate before the agent's first action.
 
 The [Vault quickstart](https://docs.agentcard.sh/vault/quickstart) covers card enrollment, approval, and the complete purchase flow.
+
+## Project wallet (beta)
+
+A project wallet lets the Browser Use hosted agent pay without a user's card. Agentcard issues a single-use virtual card for each purchase, funded from your project's wallet. During the beta, Browser Use funds wallets; contact support to set one up. Each card and each project's monthly wallet spend are capped.
+
+During the beta, only runs started in the [Cloud app](https://cloud.browser-use.com) can spend, and the wallet is unavailable in the EU deployment. Pick a wallet in the chat composer. A queued follow-up keeps it while it stays active; an interrupt drops it.
+
+<Warning>
+  API runs cannot pay yet. The API reference lists `GET /agentcard/wallets` and the `agentcardWalletId` run field, but a run created with an API key is not given the wallet, so its agent cannot make a purchase.
+</Warning>
