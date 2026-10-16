@@ -34,9 +34,10 @@ async def main():
                 {
                     "model": model,
                     "store": False,
+                    "context_management": [{"type": "compaction", "compact_threshold": 60000}],
                     "input": "Open https://example.com, follow Learn more, and save a source-backed summary in summary.md using Bash.",
                 },
-                max_steps=30,
+                max_steps=100,
             )
             print(response.output_text)
         finally:
