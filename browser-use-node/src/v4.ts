@@ -2,7 +2,14 @@ export { BrowserUse } from "./v4/client.js";
 export type { BrowserUseOptions } from "./v4/client.js";
 
 export { Browsers } from "./v4/resources/browsers.js";
-export type { CreateBrowserBody } from "./v4/resources/browsers.js";
+export type {
+  BrowserDownloadsParams,
+  BrowserListParams,
+  CreateBrowserBody,
+} from "./v4/resources/browsers.js";
+
+export { Profiles } from "./v4/resources/profiles.js";
+export type { ProfileListParams } from "./v4/resources/profiles.js";
 
 export { APIKeySpendLimitError, BrowserUseError } from "./core/errors.js";
 
@@ -12,6 +19,7 @@ export type { ExtensionListParams } from "./v4/resources/extensions.js";
 export { Runs } from "./v4/resources/runs.js";
 export type {
   RunCreateBody,
+  RunModel,
   RunListParams,
   RunEventsParams,
   WaitOptions,
@@ -22,6 +30,9 @@ export type { SendMessageOptions, SessionListParams } from "./v4/resources/sessi
 
 export { Workspaces } from "./v4/resources/workspaces.js";
 export type { WorkspaceFilesParams } from "./v4/resources/workspaces.js";
+
+export { Integrations } from "./v4/resources/integrations.js";
+export type { IntegrationListParams } from "./v4/resources/integrations.js";
 
 export type { components as V4Types } from "./generated/v4/types.js";
 
@@ -45,15 +56,43 @@ export type InlineSecretSource = S["InlineSecretSource"];
 export type OnePasswordSecretSource = S["OnePasswordSecretSource"];
 export type SecretBinding = S["SecretBinding"];
 
-// Session models
+// Browser models
 export type BrowserSessionItemView = S["BrowserSessionItemView"];
 export type BrowserSessionView = S["BrowserSessionView"];
-export type BrowserExtensionView = S["BrowserExtensionView"];
+export type BrowserSessionListResponse = S["BrowserSessionListResponse"];
+export type BrowserSessionStatus = S["BrowserSessionStatus"];
+export type BrowserDownloadFile = S["BrowserDownloadFile"];
+export type BrowserDownloadListResponse = S["BrowserDownloadListResponse"];
+
+// Profile models
+export type ProfileView = S["ProfileView"];
+export type ProfileListResponse = S["ProfileListResponse"];
+export type ProfileCreateRequest = S["ProfileCreateRequest"];
+export type ProfileUpdateRequest = S["ProfileUpdateRequest"];
+
+// Session models
 export type SessionInfo = S["SessionInfo"];
 export type SessionListResponse = S["SessionListResponse"];
 export type QueueMessageRequest = S["QueueMessageRequest"];
 export type QueuedMessage = S["QueuedMessage"];
 export type QueueListResponse = S["QueueListResponse"];
+export type SessionUpdateRequest = S["SessionUpdateRequest"];
+export type SessionCostResponse = S["SessionCostResponse"];
+export type SessionCostCapRequest = S["SessionCostCapRequest"];
+export type SessionCostCapResponse = S["SessionCostCapResponse"];
+export type SessionShareInfo = S["SessionShareInfo"];
+export type SessionShareUpdateRequest = S["SessionShareUpdateRequest"];
+
+// Integration models
+export type IntegrationListResponse = S["IntegrationListResponse"];
+export type IntegrationResponse = S["IntegrationResponse"];
+export type IntegrationCategoryResponse = S["IntegrationCategoryResponse"];
+export type AuthorizeResponse = S["AuthorizeResponse"];
+export type ConnectionStatusResponse = S["ConnectionStatusResponse"];
+export type DisconnectResponse = S["DisconnectResponse"];
+
+// Errors
+export type APIKeySpendLimitDetail = S["APIKeySpendLimitDetail"];
 
 // Workspace models
 export type WorkspaceInfo = S["WorkspaceInfo"];
@@ -68,6 +107,7 @@ export type WorkspaceFileUploadResponse = S["WorkspaceFileUploadResponse"];
 export type WorkspaceFileUploadResponseItem = S["WorkspaceFileUploadResponseItem"];
 
 // Extension models
+export type BrowserExtensionView = S["BrowserExtensionView"];
 export type ExtensionView = S["ExtensionView"];
 export type ExtensionListResponse = S["ExtensionListResponse"];
 

@@ -1651,7 +1651,7 @@
           "Browsers"
         ],
         "summary": "List Browser Sessions",
-        "description": "Get paginated list of browser sessions with optional status filtering.\n\nList responses intentionally omit per-session presigned recording URLs\n(`recording_url` is always `null` here). Each recording URL requires a\nsynchronous boto3 SigV4 signing call (plus an S3 HEAD) that holds the GIL\nand blocks the event loop. With page_size up to the max this CPU-pegs the\nworker and starves the DB pool, cascading into pool exhaustion across the\nfleet. Clients should fetch the recording URL on demand via\n`GET /api/v2/browsers/{id}`, which signs exactly one URL for a single\nsession. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).",
+        "description": "Get paginated list of browser sessions with optional status filtering.\n\nList responses intentionally omit per-session presigned recording URLs\n(`recording_url` is always `null` here). Each recording URL requires a\nsynchronous boto3 SigV4 signing call (plus an S3 HEAD) that holds the GIL\nand blocks the event loop. With page_size up to the max this CPU-pegs the\nworker and starves the DB pool, cascading into pool exhaustion across the\nfleet. Clients should fetch the recording URL on demand via\n`GET /browsers/{session_id}`, which signs exactly one URL for a single\nsession. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).",
         "operationId": "list_browser_sessions_browsers_get",
         "security": [
           {
@@ -3683,7 +3683,7 @@
               }
             ],
             "title": "Recording URL",
-            "description": "Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses."
+            "description": "Presigned URL to download the session recording. Only populated on `GET /browsers/{session_id}`; always `null` in list responses."
           },
           "metadata": {
             "additionalProperties": {
@@ -3873,7 +3873,7 @@
               }
             ],
             "title": "Recording URL",
-            "description": "Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response."
+            "description": "Presigned URL to download the session recording, if recording was enabled. Only populated on GET /browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response."
           },
           "recordingAvailable": {
             "type": "boolean",

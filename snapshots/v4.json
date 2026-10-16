@@ -59,7 +59,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -71,11 +71,11 @@
             "description": "The project is at its concurrent-session limit."
           },
           "422": {
-            "description": "Validation Error",
+            "description": "Invalid request: detail is a list for schema errors, a string otherwise.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/RunCreateValidationError"
                 }
               }
             }
@@ -152,7 +152,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "400": {
             "description": "Malformed pagination cursor."
@@ -207,7 +207,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -261,7 +261,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -316,7 +316,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -371,7 +371,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -462,7 +462,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -539,7 +539,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "400": {
             "description": "Malformed pagination cursor."
@@ -645,7 +645,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -708,7 +708,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -754,13 +754,134 @@
             "description": "Successful Response"
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
           },
           "502": {
             "description": "The request could not be forwarded to the control plane."
+          },
+          "503": {
+            "description": "The run is finishing; retry the cancel after Retry-After seconds."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}/cost-cap": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get Session Cost Cap",
+        "description": "Read committed budget spending from the primary database.",
+        "operationId": "get_session_cost_cap_sessions__session_id__cost_cap_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionBudgetResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
+          },
+          "404": {
+            "description": "Run, session, workspace, or profile not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Update Session Cost Cap",
+        "description": "Replace the session budget without resetting spending or starting a run.",
+        "operationId": "update_session_cost_cap_sessions__session_id__cost_cap_patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionCostCapRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionCostCapResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
+          },
+          "404": {
+            "description": "Run, session, workspace, or profile not found."
           },
           "422": {
             "description": "Validation Error",
@@ -812,7 +933,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -903,7 +1024,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -959,7 +1080,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -1023,7 +1144,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -1085,7 +1206,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -1201,7 +1322,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -1264,7 +1385,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -1376,7 +1497,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -1702,7 +1823,7 @@
             }
           },
           "403": {
-            "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
@@ -2371,7 +2492,7 @@
           "Browsers"
         ],
         "summary": "List Browser Sessions",
-        "description": "Get paginated list of browser sessions with optional status filtering.\n\nList responses intentionally omit per-session presigned recording URLs\n(`recording_url` is always `null` here). Each recording URL requires a\nsynchronous boto3 SigV4 signing call (plus an S3 HEAD) that holds the GIL\nand blocks the event loop. With page_size up to the max this CPU-pegs the\nworker and starves the DB pool, cascading into pool exhaustion across the\nfleet. Clients should fetch the recording URL on demand via\n`GET /api/v2/browsers/{id}`, which signs exactly one URL for a single\nsession. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).",
+        "description": "Get paginated list of browser sessions with optional status filtering.\n\nList responses intentionally omit per-session presigned recording URLs\n(`recording_url` is always `null` here). Each recording URL requires a\nsynchronous boto3 SigV4 signing call (plus an S3 HEAD) that holds the GIL\nand blocks the event loop. With page_size up to the max this CPU-pegs the\nworker and starves the DB pool, cascading into pool exhaustion across the\nfleet. Clients should fetch the recording URL on demand via\n`GET /browsers/{session_id}`, which signs exactly one URL for a single\nsession. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).",
         "operationId": "list_browser_sessions_browsers_get",
         "security": [
           {
@@ -3421,7 +3542,7 @@
               }
             ],
             "title": "Recording URL",
-            "description": "Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses."
+            "description": "Presigned URL to download the session recording. Only populated on `GET /browsers/{session_id}`; always `null` in list responses."
           },
           "metadata": {
             "additionalProperties": {
@@ -3611,7 +3732,7 @@
               }
             ],
             "title": "Recording URL",
-            "description": "Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response."
+            "description": "Presigned URL to download the session recording, if recording was enabled. Only populated on GET /browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response."
           },
           "recordingAvailable": {
             "type": "boolean",
@@ -4907,19 +5028,30 @@
             ],
             "title": "Record",
             "description": "Record the browser session to an mp4, retrievable via GET /browsers/{id} once the browser stops. API runs default to off; pass true to enable. Like other browser settings, this only applies when a new browser is provisioned: a follow-up that reuses the session's live browser keeps that browser's recording state. Ignored (always off) for Zero Data Retention projects."
+          },
+          "extensionIds": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Extensionids",
+            "description": "Up to 3 ready extensions from POST /api/v4/extensions to install in every browser of the session. Follow-up runs inherit the session's extensions; passing a different set returns 400. After you delete an extension, omit extensionIds or pass the reduced set; later browsers skip deleted extensions. The agent is not told about installed extensions, so name any extension pages in the task."
           }
         },
         "additionalProperties": false,
         "type": "object",
         "title": "RunBrowserSettings",
-        "description": "Browser config, owned by the browser row (never the run). Follow-ups:\nomitted fields inherit the session's prior browser; explicit values apply\nonly to newly provisioned browsers (a live browser is reused as-is).\nProfile is the exception: a different profile \u2192 400; an explicit value\nmismatching the live browser's profile (incl. null vs a profiled browser)\ndeclines reuse and provisions fresh. A live browser already matching the\nrequested profile is reused."
+        "description": "Browser config, owned by the browser row (never the run). Follow-ups:\nomitted fields inherit the session's prior browser; explicit values apply\nonly to newly provisioned browsers (a live browser is reused as-is).\nProfile is the exception: a different profile \u2192 400; an explicit value\nmismatching the live browser's profile (incl. null vs a profiled browser)\ndeclines reuse and provisions fresh. A live browser already matching the\nrequested profile is reused. Extensions are session-wide: follow-ups\ninherit them, and a different set \u2192 400 (see extensionIds)."
       },
       "RunCreateRequest": {
         "properties": {
           "task": {
             "type": "string",
             "minLength": 1,
-            "title": "Task"
+            "title": "Task",
+            "description": "What the agent should do in this run."
           },
           "outputSchema": {
             "anyOf": [
@@ -4953,6 +5085,7 @@
               "claude-opus-5-5",
               "claude-fable-5",
               "claude-sonnet-5",
+              "claude-sonnet-5-5",
               "gpt-5.5",
               "gpt-5.6",
               "gpt-6-astra",
@@ -4971,7 +5104,7 @@
             ],
             "title": "Model",
             "description": "bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.",
-            "default": "gpt-5.6-luna"
+            "default": "gpt-6-luna"
           },
           "modelParams": {
             "anyOf": [
@@ -4984,7 +5117,7 @@
               }
             ],
             "title": "Modelparams",
-            "description": "Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {\"reasoning\": {\"effort\": \"high\"}} for OpenAI, {\"thinking\": {\"type\": \"adaptive\"}} for Anthropic, {\"thinkingConfig\": {\"thinkingLevel\": \"high\"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-5.6-luna defaults to {\"reasoning\": {\"effort\": \"xhigh\"}}); passing {} opts out of that default and leaves the provider's own defaults in place."
+            "description": "Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {\"reasoning\": {\"effort\": \"high\"}} for OpenAI, {\"thinking\": {\"type\": \"adaptive\"}} for Anthropic, {\"thinkingConfig\": {\"thinkingLevel\": \"high\"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-6-luna defaults to {\"reasoning\": {\"effort\": \"high\"}}); passing {} opts out of that default and leaves the provider's own defaults in place."
           },
           "sessionId": {
             "anyOf": [
@@ -4996,7 +5129,8 @@
                 "type": "null"
               }
             ],
-            "title": "Sessionid"
+            "title": "Sessionid",
+            "description": "Continue this session; omit to start a new session."
           },
           "workspaceId": {
             "anyOf": [
@@ -5008,7 +5142,8 @@
                 "type": "null"
               }
             ],
-            "title": "Workspaceid"
+            "title": "Workspaceid",
+            "description": "Files workspace to use. Omitted on a new session creates one; omitted on a follow-up reuses the session's workspace."
           },
           "browserSettings": {
             "anyOf": [
@@ -5018,7 +5153,22 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Browser settings. Omitted or null on a follow-up keeps the session's browser."
+          },
+          "keepAlive": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 14400.0,
+                "minimum": 120.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keepalive",
+            "description": "Seconds the session's browser stays open after its last run, so a follow-up run reuses the same page, never past the browser's 4 h lifetime. Default 120. Follow-up runs inherit the session's value; send a new value to change it or null to restore the default. Kept time is billed as browser time. Ignored (always 120) for free-tier and Zero Data Retention projects."
           },
           "agentmail": {
             "type": "boolean",
@@ -5036,7 +5186,8 @@
                 "type": "null"
               }
             ],
-            "title": "Agentcardwalletid"
+            "title": "Agentcardwalletid",
+            "description": "AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's grant."
           },
           "stripeLinkConnectionId": {
             "anyOf": [
@@ -5048,7 +5199,8 @@
                 "type": "null"
               }
             ],
-            "title": "Stripelinkconnectionid"
+            "title": "Stripelinkconnectionid",
+            "description": "Stripe Link connection (from GET /stripe-link) this run may pay with. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's connection."
           },
           "attachedFileIds": {
             "anyOf": [
@@ -5064,7 +5216,8 @@
                 "type": "null"
               }
             ],
-            "title": "Attachedfileids"
+            "title": "Attachedfileids",
+            "description": "Upload ids from POST /workspaces/{workspace_id}/files/upload to show the agent in this run only. Ids that cannot be confirmed are reported, not fatal."
           },
           "secretBindings": {
             "anyOf": [
@@ -5118,7 +5271,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "LLM judge of the finished run; send {} for defaults. Omitted or null runs no judge."
           },
           "maxCostUsd": {
             "anyOf": [
@@ -5134,7 +5288,8 @@
                 "type": "null"
               }
             ],
-            "title": "Maxcostusd"
+            "title": "Maxcostusd",
+            "description": "USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one."
           }
         },
         "additionalProperties": false,
@@ -5208,6 +5363,31 @@
           "eventsUrl"
         ],
         "title": "RunCreateResponse"
+      },
+      "RunCreateValidationError": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "RunCreateValidationError",
+        "description": "422 body for POST /runs."
       },
       "RunEvent": {
         "properties": {
@@ -5580,6 +5760,89 @@
         ],
         "title": "SecretBinding",
         "description": "One credential this run may have typed into a browser field.\n\nThe value never reaches the agent. It is encrypted at rest, kept out of the\nworker payload, and typed straight into the focused field by the server when\nthe agent asks for the alias by name \u2014 and only while the page it is typing\ninto is on one of `allowedDomains`.\n\nRun-scoped: bindings die with the run, so a follow-up run that needs the same\ncredential must send it again."
+      },
+      "SessionBudgetResponse": {
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid"
+          },
+          "spentUsd": {
+            "type": "string",
+            "title": "Spentusd"
+          },
+          "maxCostUsd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxcostusd"
+          },
+          "budgetScope": {
+            "type": "string",
+            "const": "session",
+            "title": "Budgetscope"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sessionId",
+          "spentUsd",
+          "maxCostUsd",
+          "budgetScope"
+        ],
+        "title": "SessionBudgetResponse",
+        "description": "Report recorded budget spending without estimating unfinished model calls."
+      },
+      "SessionCostCapRequest": {
+        "properties": {
+          "maxCostUsd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Maxcostusd",
+            "description": "New total USD budget for the session; spending so far counts against it."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "maxCostUsd"
+        ],
+        "title": "SessionCostCapRequest",
+        "description": "Set the total session budget, including when the session is idle."
+      },
+      "SessionCostCapResponse": {
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid"
+          },
+          "maxCostUsd": {
+            "type": "string",
+            "title": "Maxcostusd",
+            "description": "The session budget now applied, in USD."
+          }
+        },
+        "type": "object",
+        "required": [
+          "sessionId",
+          "maxCostUsd"
+        ],
+        "title": "SessionCostCapResponse"
       },
       "SessionCostResponse": {
         "properties": {

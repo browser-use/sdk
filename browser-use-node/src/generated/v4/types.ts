@@ -243,6 +243,30 @@ export interface paths {
         patch: operations["update_session_sessions__session_id__patch"];
         trace?: never;
     };
+    "/sessions/{session_id}/cost-cap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Session Cost Cap
+         * @description Read committed budget spending from the primary database.
+         */
+        get: operations["get_session_cost_cap_sessions__session_id__cost_cap_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Session Cost Cap
+         * @description Replace the session budget without resetting spending or starting a run.
+         */
+        patch: operations["update_session_cost_cap_sessions__session_id__cost_cap_patch"];
+        trace?: never;
+    };
     "/sessions/{session_id}/cost": {
         parameters: {
             query?: never;
@@ -714,7 +738,7 @@ export interface paths {
          *     and blocks the event loop. With page_size up to the max this CPU-pegs the
          *     worker and starves the DB pool, cascading into pool exhaustion across the
          *     fleet. Clients should fetch the recording URL on demand via
-         *     `GET /api/v2/browsers/{id}`, which signs exactly one URL for a single
+         *     `GET /browsers/{session_id}`, which signs exactly one URL for a single
          *     session. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).
          */
         get: operations["list_browser_sessions_browsers_get"];
@@ -1059,7 +1083,7 @@ export interface components {
             agentSessionId?: string | null;
             /**
              * Recording URL
-             * @description Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses.
+             * @description Presigned URL to download the session recording. Only populated on `GET /browsers/{session_id}`; always `null` in list responses.
              */
             recordingUrl?: string | null;
             /**
@@ -1190,7 +1214,7 @@ export interface components {
             agentSessionId?: string | null;
             /**
              * Recording URL
-             * @description Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.
+             * @description Presigned URL to download the session recording, if recording was enabled. Only populated on GET /browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.
              */
             recordingUrl?: string | null;
             /**
@@ -1724,7 +1748,8 @@ export interface components {
          *     Profile is the exception: a different profile → 400; an explicit value
          *     mismatching the live browser's profile (incl. null vs a profiled browser)
          *     declines reuse and provisions fresh. A live browser already matching the
-         *     requested profile is reused.
+         *     requested profile is reused. Extensions are session-wide: follow-ups
+         *     inherit them, and a different set → 400 (see extensionIds).
          */
         RunBrowserSettings: {
             /**
@@ -1759,10 +1784,18 @@ export interface components {
              * @description Record the browser session to an mp4, retrievable via GET /browsers/{id} once the browser stops. API runs default to off; pass true to enable. Like other browser settings, this only applies when a new browser is provisioned: a follow-up that reuses the session's live browser keeps that browser's recording state. Ignored (always off) for Zero Data Retention projects.
              */
             record?: boolean | null;
+            /**
+             * Extensionids
+             * @description Up to 3 ready extensions from POST /api/v4/extensions to install in every browser of the session. Follow-up runs inherit the session's extensions; passing a different set returns 400. After you delete an extension, omit extensionIds or pass the reduced set; later browsers skip deleted extensions. The agent is not told about installed extensions, so name any extension pages in the task.
+             */
+            extensionIds?: string[];
         };
         /** RunCreateRequest */
         RunCreateRequest: {
-            /** Task */
+            /**
+             * Task
+             * @description What the agent should do in this run.
+             */
             task: string;
             /**
              * Outputschema
@@ -1774,33 +1807,54 @@ export interface components {
             /**
              * Model
              * @description bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.
-             * @default gpt-5.6-luna
+             * @default gpt-6-luna
              * @enum {string}
              */
-            model: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "deepseek-v4-flash-vision" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.1-sol" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
+            model: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "deepseek-v4-flash-vision" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "claude-sonnet-5-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.1-sol" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
             /**
              * Modelparams
-             * @description Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-5.6-luna defaults to {"reasoning": {"effort": "xhigh"}}); passing {} opts out of that default and leaves the provider's own defaults in place.
+             * @description Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider's own defaults in place.
              */
             modelParams?: {
                 [key: string]: unknown;
             } | null;
-            /** Sessionid */
+            /**
+             * Sessionid
+             * @description Continue this session; omit to start a new session.
+             */
             sessionId?: string | null;
-            /** Workspaceid */
+            /**
+             * Workspaceid
+             * @description Files workspace to use. Omitted on a new session creates one; omitted on a follow-up reuses the session's workspace.
+             */
             workspaceId?: string | null;
+            /** @description Browser settings. Omitted or null on a follow-up keeps the session's browser. */
             browserSettings?: components["schemas"]["RunBrowserSettings"] | null;
+            /**
+             * Keepalive
+             * @description Seconds the session's browser stays open after its last run, so a follow-up run reuses the same page, never past the browser's 4 h lifetime. Default 120. Follow-up runs inherit the session's value; send a new value to change it or null to restore the default. Kept time is billed as browser time. Ignored (always 120) for free-tier and Zero Data Retention projects.
+             */
+            keepAlive?: number | null;
             /**
              * Agentmail
              * @description If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.
              * @default false
              */
             agentmail: boolean;
-            /** Agentcardwalletid */
+            /**
+             * Agentcardwalletid
+             * @description AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's grant.
+             */
             agentcardWalletId?: string | null;
-            /** Stripelinkconnectionid */
+            /**
+             * Stripelinkconnectionid
+             * @description Stripe Link connection (from GET /stripe-link) this run may pay with. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's connection.
+             */
             stripeLinkConnectionId?: string | null;
-            /** Attachedfileids */
+            /**
+             * Attachedfileids
+             * @description Upload ids from POST /workspaces/{workspace_id}/files/upload to show the agent in this run only. Ids that cannot be confirmed are reported, not fatal.
+             */
             attachedFileIds?: string[] | null;
             /**
              * Secretbindings
@@ -1817,8 +1871,12 @@ export interface components {
              * @description Hosts every credential from opVaultId may be typed into, e.g. ["amazon.com"]. Omit to derive each item's hosts from its own 1Password website entries; items with no website are then skipped and reported in skippedVaultItems. A host covers its subdomains, so 1Password's ExactDomain autofill setting is not honored either way.
              */
             opVaultAllowedDomains?: string[] | null;
+            /** @description LLM judge of the finished run; send {} for defaults. Omitted or null runs no judge. */
             judge?: components["schemas"]["RunJudgeSettings"] | null;
-            /** Maxcostusd */
+            /**
+             * Maxcostusd
+             * @description USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.
+             */
             maxCostUsd?: number | string | null;
         };
         /** RunCreateResponse */
@@ -1854,6 +1912,16 @@ export interface components {
              * @description Titles of opVaultId items that hold a credential but no 1Password website, so deriving their domains left them with nowhere to be typed. The run still starts without them; add a website to the item or pass opVaultAllowedDomains.
              */
             skippedVaultItems?: string[];
+        };
+        /**
+         * RunCreateValidationError
+         * @description 422 body for POST /runs.
+         */
+        RunCreateValidationError: {
+            /** Detail */
+            detail: string | {
+                [key: string]: unknown;
+            }[];
         };
         /** RunEvent */
         RunEvent: {
@@ -2014,6 +2082,50 @@ export interface components {
              * @description Hosts the secret may be typed into, e.g. ["github.com"]. A host covers its subdomains. Bare hostnames only — no scheme, port, path, or wildcard.
              */
             allowedDomains: string[];
+        };
+        /**
+         * SessionBudgetResponse
+         * @description Report recorded budget spending without estimating unfinished model calls.
+         */
+        SessionBudgetResponse: {
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Spentusd */
+            spentUsd: string;
+            /** Maxcostusd */
+            maxCostUsd: string | null;
+            /**
+             * Budgetscope
+             * @constant
+             */
+            budgetScope: "session";
+        };
+        /**
+         * SessionCostCapRequest
+         * @description Set the total session budget, including when the session is idle.
+         */
+        SessionCostCapRequest: {
+            /**
+             * Maxcostusd
+             * @description New total USD budget for the session; spending so far counts against it.
+             */
+            maxCostUsd: number | string;
+        };
+        /** SessionCostCapResponse */
+        SessionCostCapResponse: {
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /**
+             * Maxcostusd
+             * @description The session budget now applied, in USD.
+             */
+            maxCostUsd: string;
         };
         /**
          * SessionCostResponse
@@ -2434,7 +2546,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2490,7 +2602,7 @@ export interface operations {
                     "application/json": components["schemas"]["APIKeySpendLimitError"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2511,13 +2623,13 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Validation Error */
+            /** @description Invalid request: detail is a list for schema errors, a string otherwise. */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["RunCreateValidationError"];
                 };
             };
             /** @description The project is at its concurrent-session limit. */
@@ -2549,7 +2661,7 @@ export interface operations {
                     "application/json": components["schemas"]["RunAttachmentsResponse"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2594,7 +2706,7 @@ export interface operations {
                     "application/json": components["schemas"]["RunSummary"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2639,7 +2751,7 @@ export interface operations {
                     "application/json": components["schemas"]["RunStatusResponse"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2684,7 +2796,7 @@ export interface operations {
                     "application/json": components["schemas"]["RunSummary"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2747,7 +2859,7 @@ export interface operations {
                     "application/json": components["schemas"]["RunEventsResponse"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2802,7 +2914,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2890,7 +3002,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionInfo"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2933,7 +3045,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2958,6 +3070,13 @@ export interface operations {
             };
             /** @description The request could not be forwarded to the control plane. */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The run is finishing; retry the cancel after Retry-After seconds. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2989,7 +3108,101 @@ export interface operations {
                     "application/json": components["schemas"]["SessionInfo"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Run, session, workspace, or profile not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_cost_cap_sessions__session_id__cost_cap_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionBudgetResponse"];
+                };
+            };
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Run, session, workspace, or profile not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_session_cost_cap_sessions__session_id__cost_cap_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionCostCapRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionCostCapResponse"];
+                };
+            };
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3034,7 +3247,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionCostResponse"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3079,7 +3292,7 @@ export interface operations {
                     "application/json": components["schemas"]["QueueListResponse"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3139,7 +3352,7 @@ export interface operations {
                     "application/json": components["schemas"]["APIKeySpendLimitError"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3192,7 +3405,7 @@ export interface operations {
                     "application/json": components["schemas"]["QueuedMessage"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3238,7 +3451,7 @@ export interface operations {
                     "application/json": components["schemas"]["QueuedMessage"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3332,7 +3545,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionShareInfo"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3377,7 +3590,7 @@ export interface operations {
                     "application/json": components["schemas"]["SessionShareInfo"];
                 };
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3466,7 +3679,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3671,7 +3884,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Zero Data Retention is enabled on the project (V4 unsupported). */
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
             403: {
                 headers: {
                     [name: string]: unknown;

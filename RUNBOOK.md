@@ -43,7 +43,7 @@ If a trusted publisher binding is ever revoked or misconfigured, publishing will
 
 ## Phase 0: Discover
 
-Diff the fresh OpenAPI specs (`$CLOUD_REPO_PATH/backend/spec/api/v{2,3}/openapi.json`) against the snapshots (`snapshots/v{2,3}.json`). Classify each change:
+Diff the fresh OpenAPI specs (`$CLOUD_REPO_PATH/backend/spec/api/v{2,3,4}/openapi.json`) against the snapshots (`snapshots/v{2,3,4}.json`). Classify each change:
 
 | Change | Version Impact |
 |--------|---------------|
@@ -58,12 +58,12 @@ If no spec changes, ask user if they want to proceed anyway (useful for fixing S
 
 ## Phase 1: Regenerate & Audit
 
-1. Run `task gen:types` — regenerates all 4 type files (TS v2/v3 + Python v2/v3)
-2. Post-gen fix: patch enum string literal defaults → enum members (datamodel-codegen bug)
+1. Run `task gen:types` — regenerates all 6 type files (TS + Python, v2/v3/v4)
+2. Check enum defaults stayed enum members (`gen:types:py` passes `--set-default-enum-member`; without it pyright fails)
 3. Post-gen fix: check Python models for regex lookaheads, add `ConfigDict(regex_engine="python-re")` if needed
 4. **Deep audit with 2 parallel subagents:**
-   - **TS auditor**: Read the OpenAPI specs + every SDK file in `browser-use-node/src/v2/` and `v3/`. Compare every route, parameter, type, and response field against the spec. Check the git diff from type regeneration to understand what changed. Report everything that's missing, wrong, or outdated.
-   - **Python auditor**: Same for `browser-use-python/src/browser_use_sdk/v2/` and `v3/`.
+   - **TS auditor**: Read the OpenAPI specs + every SDK file in `browser-use-node/src/v2/`, `v3/` and `v4/`. Compare every route, parameter, type, and response field against the spec. Check the git diff from type regeneration to understand what changed. Report everything that's missing, wrong, or outdated.
+   - **Python auditor**: Same for `browser-use-python/src/browser_use_sdk/v2/`, `v3/` and `v4/`.
 
 The audit reports become the fix plan for Phase 2.
 
@@ -77,7 +77,7 @@ Follow existing patterns in the codebase. Read before writing.
 
 1. Run `task test`. Fix failures (max 3 attempts, then escalate).
 2. Optionally run `task test:live` if backend is reachable.
-3. Confirm version bump with user → bump both packages → save snapshots → commit.
+3. Confirm version bump with user → bump both packages → `task snapshot:save` → `task docs:refresh-production` (snapshot:save copies the cloud-main snapshots into `docs/openapi/` and `docs/cloud/openapi/`; the refresh puts the docs back on what production serves) → commit.
 4. **Merge the bump PR to main.** The `auto-release-on-version-bump` workflow creates the GitHub Release for `v$NEW_VERSION` at the bump commit, which fires `publish.yml`. See the "Releasing" section above for the full flow. Ping a release reviewer (gregpr07 or LarsenCundric, whoever is NOT you) to approve at the `release` environment gate in the Actions tab. On approval: npm + PyPI publish in parallel, ~3-5 minutes. If publish fails: the GitHub Release stays as the rollback handle; investigate, fix, re-cut a new patch version.
 
 ---

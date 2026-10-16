@@ -8,19 +8,22 @@ Official TypeScript and Python SDKs for the Browser Use cloud API. Published as 
 browser-use-node/src/          # TypeScript SDK
   index.ts                     # default = v2
   v3.ts                        # subpath = v3
+  v4.ts                        # subpath = v4
   core/                        # shared http + errors
-  generated/v{2,3}/types.ts    # openapi-typescript output
+  generated/v{2,3,4}/types.ts  # openapi-typescript output
   v2/                          # client + resource files + helpers
   v3/                          # client + sessions + helpers
+  v4/                          # client + resource files + polling helpers
 
 browser-use-python/src/browser_use_sdk/   # Python SDK
   __init__.py                  # default = v2
   _core/                       # shared http + errors
-  generated/v{2,3}/models.py   # datamodel-codegen output
+  generated/v{2,3,4}/models.py # datamodel-codegen output
   v2/                          # client + resource files + helpers
   v3/                          # client + sessions + helpers
+  v4/                          # client + resource files + polling helpers
 
-snapshots/v{2,3}.json          # last-generated OpenAPI specs
+snapshots/v{2,3,4}.json        # last-generated OpenAPI specs
 Taskfile.yml                   # mechanical commands
 RUNBOOK.md                     # /sdk pipeline guide + learnings
 .env                           # CLOUD_REPO_PATH, BACKEND_URL, BROWSER_USE_API_KEY
@@ -30,6 +33,7 @@ RUNBOOK.md                     # /sdk pipeline guide + learnings
 
 - **v2** (default) — stable, full API surface. `import { BrowserUse } from "browser-use-sdk"` / `from browser_use_sdk import BrowserUse`
 - **v3** — subpath import. `import { BrowserUse } from "browser-use-sdk/v3"` / `from browser_use_sdk.v3 import BrowserUse`
+- **v4** — current API, subpath import. `import { BrowserUse } from "browser-use-sdk/v4"` / `from browser_use_sdk.v4 import BrowserUse`
 
 ## SDK Updates
 

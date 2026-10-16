@@ -11,8 +11,17 @@ type RunEventsResponse = components["schemas"]["RunEventsResponse"];
 type RunEvent = components["schemas"]["RunEvent"];
 type RunAttachmentsResponse = components["schemas"]["RunAttachmentsResponse"];
 
+/** Known V4 model ids; `RunCreateBody.model` also accepts ids added after this release. */
+export type RunModel = RunCreateRequest["model"];
+
+// AgentCard wallets stay off the SDK surface; API-key runs are not given the wallet.
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
-  Partial<Omit<RunCreateRequest, "task">>;
+  Partial<Omit<RunCreateRequest, "task" | "model" | "browserSettings" | "agentcardWalletId">> & {
+    // `string & {}` keeps autocomplete for known ids without rejecting new ones.
+    model?: RunModel | (string & {});
+    // Generated types mark defaulted fields (proxyCountryCode) required; the server fills them.
+    browserSettings?: Partial<RunCreateRequest["browserSettings"] & {}> | null;
+  };
 
 const INITIAL_VISIBILITY_GRACE_MS = 5_000;
 const MIN_VISIBILITY_RETRY_INTERVAL_MS = 50;
@@ -24,6 +33,10 @@ const TERMINAL_EVENT_TYPES = new Set([
   "run.failed",
   "run.cancelled",
   "run.dispatch_failed",
+]);
+// A follow-up run that reuses the session's browser emits browser.reattached instead of browser.ready.
+const EVENT_ALIASES = new Map<string, string[]>([
+  ["browser.ready", ["browser.ready", "browser.reattached"]],
 ]);
 
 export interface RunListParams {
@@ -77,6 +90,7 @@ export class Runs {
 
   /**
    * Poll immediately, then every 3 seconds until the requested event appears (5-minute timeout).
+   * Waiting for `browser.ready` also returns `browser.reattached`, which a reused browser emits instead.
    * Event reads share the project's general request budget; tune interval across concurrent waits.
    */
   async waitForEvent(
@@ -88,10 +102,11 @@ export class Runs {
     const interval = options?.interval ?? 3_000;
     const deadline = Date.now() + timeout;
     let after = options?.after ?? null;
+    const accepted = new Set(EVENT_ALIASES.get(type) ?? [type]);
 
     for (;;) {
       const page = await this.events(runId, { after, limit: options?.limit ?? 100 });
-      const event = page.events.find((candidate) => candidate.type === type);
+      const event = page.events.find((candidate) => accepted.has(candidate.type));
       if (event) return event;
       const terminal = page.events.find((candidate) => TERMINAL_EVENT_TYPES.has(candidate.type));
       if (terminal) {

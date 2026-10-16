@@ -23,8 +23,8 @@ tasks:
     desc: Show what changed in the OpenAPI specs
     dir: '{{.CLOUD_REPO_PATH}}'
     cmds:
-      - git diff --stat backend/spec/api/v2/openapi.json backend/spec/api/v3/openapi.json
-      - git diff backend/spec/api/v2/openapi.json backend/spec/api/v3/openapi.json
+      - git diff --stat backend/spec/api/v2/openapi.json backend/spec/api/v3/openapi.json backend/spec/api/v4/openapi.json
+      - git diff backend/spec/api/v2/openapi.json backend/spec/api/v3/openapi.json backend/spec/api/v4/openapi.json
 
   # ── Type Generation (deterministic, no AI) ────────────────────
   gen:types:
@@ -48,6 +48,7 @@ tasks:
       - |
         datamodel-codegen \
           --input {{.OPENAPI_V2}} \
+          --set-default-enum-member \
           --input-file-type openapi \
           --output {{.PY_SDK}}/src/browser_use_sdk/generated/v2/models.py \
           --output-model-type pydantic_v2.BaseModel \
@@ -58,6 +59,7 @@ tasks:
       - |
         datamodel-codegen \
           --input {{.OPENAPI_V3}} \
+          --set-default-enum-member \
           --input-file-type openapi \
           --output {{.PY_SDK}}/src/browser_use_sdk/generated/v3/models.py \
           --output-model-type pydantic_v2.BaseModel \

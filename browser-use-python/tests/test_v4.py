@@ -299,6 +299,57 @@ def test_wait_for_event_returns_browser_ready_before_terminal_wait() -> None:
     assert http.calls[-1][3] == {"after": 1, "limit": 100}
 
 
+def test_wait_for_browser_ready_accepts_reattached_browser() -> None:
+    http = FakeSyncHttp(
+        [
+            {
+                "events": [
+                    {
+                        "runId": RUN_ID,
+                        "id": 3,
+                        "ts": "2026-01-01T00:00:00Z",
+                        "type": "browser.reattached",
+                        "data": {"live_view_url": "https://live"},
+                    }
+                ],
+                "nextAfter": 3,
+                "hasMore": False,
+            }
+        ]
+    )
+    event = Runs(http).wait_for_event(RUN_ID, "browser.ready", timeout=0)  # type: ignore[arg-type]
+    assert event.type == "browser.reattached"
+    assert event.data["live_view_url"] == "https://live"
+
+
+def test_async_wait_for_browser_ready_accepts_reattached_browser() -> None:
+    async def run() -> None:
+        http = FakeAsyncHttp(
+            [
+                {
+                    "events": [
+                        {
+                            "runId": RUN_ID,
+                            "id": 3,
+                            "ts": "2026-01-01T00:00:00Z",
+                            "type": "browser.reattached",
+                            "data": {"live_view_url": "https://live"},
+                        }
+                    ],
+                    "nextAfter": 3,
+                    "hasMore": False,
+                }
+            ]
+        )
+        event = await AsyncRuns(http).wait_for_event(  # type: ignore[arg-type]
+            RUN_ID, "browser.ready", timeout=0
+        )
+        assert event.type == "browser.reattached"
+        assert event.data["live_view_url"] == "https://live"
+
+    asyncio.run(run())
+
+
 def test_async_wait_for_event_returns_browser_ready() -> None:
     async def run() -> None:
         http = FakeAsyncHttp(

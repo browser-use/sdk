@@ -8,6 +8,15 @@ Pass a JSON Schema as `output_schema` / `outputSchema`. When the run completes,
 `run.output` holds the parsed JSON value and `run.result` still holds the text
 answer.
 
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/structured-output-two-fields-light-mobile.svg" />
+  <img src="/cloud/images/structured-output-two-fields-light.svg" alt="A task sent with an outputSchema starts a run. When it completes, run.result holds the text answer and run.output holds the parsed JSON, checked against the schema." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/structured-output-two-fields-dark-mobile.svg" />
+  <img src="/cloud/images/structured-output-two-fields-dark.svg" alt="A task sent with an outputSchema starts a run. When it completes, run.result holds the text answer and run.output holds the parsed JSON, checked against the schema." noZoom />
+</picture>
+
 <Note>
   SDK support for `output_schema` / `outputSchema` and `run.output` ships in the
   first `browser-use-sdk` release after 3.11.3. On 3.11.3, use the REST API.
