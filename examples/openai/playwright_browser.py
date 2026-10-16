@@ -56,7 +56,7 @@ async def _dispose(handle: JSHandle | None) -> None:
         try:
             await handle.dispose()
         except Error:
-            pass  # Navigation or closure may have destroyed the document.
+            pass  # Ignore handles after navigation or page closure.
 
 
 class PlaywrightBrowser:
