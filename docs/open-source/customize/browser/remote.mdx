@@ -1,6 +1,6 @@
 ---
 title: "Remote Browser"
-description: "Connect to remote browsers via CDP — use with the Cloud, Browserbase, or any remote Chrome instance."
+description: "Connect to remote browsers via CDP — use with Browser Use Cloud, Steel, Browserbase, or any remote Chrome instance."
 icon: "cloud"
 mode: "wide"
 ---
@@ -56,7 +56,48 @@ agent = Agent(
 - ✅ Global proxy support for geo-restricted content
 
 ### Third-Party Cloud Browsers
-You can pass in a CDP URL from any remote browser
+You can pass in a CDP URL from any remote browser.
+
+#### Steel
+
+Install both packages:
+
+```bash
+pip install browser-use steel-sdk
+```
+
+Create a Steel session, add the API key to its WebSocket URL, and always release the session so it stops billing:
+
+```python
+import asyncio
+import os
+
+from browser_use import Agent, Browser, ChatOpenAI
+from steel import Steel
+
+
+async def main():
+    steel_api_key = os.environ["STEEL_API_KEY"]
+    client = Steel(steel_api_key=steel_api_key)
+    session = client.sessions.create()
+
+    try:
+        cdp_url = f"{session.websocket_url}&apiKey={steel_api_key}"
+        browser = Browser(cdp_url=cdp_url)
+        agent = Agent(
+            task="Find the latest Browser Use release on GitHub",
+            llm=ChatOpenAI(model="gpt-5"),
+            browser=browser,
+        )
+        await agent.run()
+    finally:
+        client.sessions.release(session.id)
+
+
+asyncio.run(main())
+```
+
+Set `STEEL_API_KEY` and `OPENAI_API_KEY` before running it. See Steel's maintained [Browser Use recipe](https://github.com/steel-dev/steel-cookbook/tree/main/examples/browser-use) for a complete project and live-view output.
 
 
 ### Proxy Connection
