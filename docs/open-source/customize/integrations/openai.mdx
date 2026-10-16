@@ -9,11 +9,14 @@ Connect OpenAI's browser tools to Browser Use Cloud with the Browser Use library
 OpenAI's SDK runs the model loop. Our driver turns tool calls into browser actions.
 Browser Use Cloud runs Chromium remotely, so your application needs no local browser installation.
 
-```mermaid
-flowchart TB
-    O("OpenAI SDK") <--> D("Browser Use driver")
-    D <--> C(["Cloud browser"])
-```
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-architecture-light-mobile.svg" />
+  <img src="/open-source/images/openai/openai-architecture-light.svg" alt="The OpenAI model sends function calls to the OpenAI SDK's AsyncResponsesToolRunner, which passes each one to Browser Use and returns each function_call_output to the model. Browser Use provides 28 browser tools on a Browser Use Cloud browser, and Bash, which runs on your application host." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-architecture-dark-mobile.svg" />
+  <img src="/open-source/images/openai/openai-architecture-dark.svg" alt="The OpenAI model sends function calls to the OpenAI SDK's AsyncResponsesToolRunner, which passes each one to Browser Use and returns each function_call_output to the model. Browser Use provides 28 browser tools on a Browser Use Cloud browser, and Bash, which runs on your application host." noZoom />
+</picture>
 
 Use this driver for all 28 browser tools. Bash runs beside your application; the browser runs in Browser Use Cloud.
 Use the [OpenAI + Playwright guide](/cloud/tutorials/integrations/openai) for an existing Playwright application.
@@ -30,10 +33,10 @@ Choose an OpenAI model that supports Responses function tools.
 mkdir openai-browser-use
 cd openai-browser-use
 uv init --bare --python 3.12
-uv add "browser-use[openai-tools] @ git+https://github.com/browser-use/browser-use.git@2b9d0aeaae3bfa943dcb3c26ff027aac99e8e8eb"
+uv add "browser-use[openai-tools] @ git+https://github.com/browser-use/browser-use.git@aadf9ecd91622be3ffefbca7ed626f329a4f2a3b"
 ```
 
-This command installs the merged driver commit with all 28 browser tools and Bash.
+This command installs this driver commit with all 28 browser tools and Bash.
 Cloud browsers need no local Chromium installation.
 
 </Step>
@@ -51,7 +54,7 @@ export OPENAI_MODEL="your-model"
 <Step title="Download and run">
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/browser-use/sdk/004259b13a1218693f8a91cd294cc759a375a260/examples/openai/browser_use_library.py -o browser_use_library.py
+curl -fsSL https://raw.githubusercontent.com/browser-use/sdk/2d063e4e57c397bf95dca0404076fb2ff9eb34d3/examples/openai/browser_use_library.py -o browser_use_library.py
 uv run python browser_use_library.py
 ```
 
@@ -60,6 +63,19 @@ The driver stops its remote browser when the script finishes.
 
 </Step>
 </Steps>
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-tool-loop-light-mobile.svg" />
+  <img src="/open-source/images/openai/openai-tool-loop-light.svg" alt="The tool runner relays the model's browser calls to the Cloud browser on example.com and its bash call to your application host, where it writes outputs/summary.md. A typical run uses the navigate, read_page, click (on Learn more), read_page, and bash tools, and native compaction shrinks the context only after it passes 60,000 tokens." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-tool-loop-dark-mobile.svg" />
+  <img src="/open-source/images/openai/openai-tool-loop-dark.svg" alt="The tool runner relays the model's browser calls to the Cloud browser on example.com and its bash call to your application host, where it writes outputs/summary.md. A typical run uses the navigate, read_page, click (on Learn more), read_page, and bash tools, and native compaction shrinks the context only after it passes 60,000 tokens." noZoom />
+</picture>
+
+The example enables OpenAI's [native compaction](https://developers.openai.com/api/docs/guides/compaction) at 60,000 tokens.
+Compaction reduces conversation context during long tasks.
+The SDK keeps control of the model loop.
 
 ## The complete example
 
@@ -102,9 +118,10 @@ async def main():
                 {
                     "model": model,
                     "store": False,
+                    "context_management": [{"type": "compaction", "compact_threshold": 60000}],
                     "input": "Open https://example.com, follow Learn more, and save a source-backed summary in summary.md using Bash.",
                 },
-                max_steps=30,
+                max_steps=100,
             )
             print(response.output_text)
         finally:
@@ -118,6 +135,8 @@ asyncio.run(main())
 The confirmation callback approves browser actions in this example.
 Use it only in an isolated environment for tasks you authorize.
 Bash runs on your application host, not inside the remote browser.
+Bash uses your application's Python environment and stores temporary files under outputs/.tmp.
+Pass python_executable to select another Python environment.
 It uses a stripped environment and execution limits, but it does not provide a security sandbox.
 
 ## Browser actions
@@ -140,6 +159,17 @@ The driver uses the same Browser Use Actor API as our Claude integration.
 OpenAI's SDK provides `list_tabs` from the driver's state.
 Use `members=BROWSER_MEMBERS` to expose all 28 browser tools.
 Update your confirmation callback to permit the actions your task needs.
+
+File tools move one file per grant that your application issues.
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-file-grants-light-mobile.svg" />
+  <img src="/open-source/images/openai/openai-file-grants-light.svg" alt="Your application calls driver.grant_upload or driver.grant_download and passes the returned grant_id to the model. The model uses the upload_file or download_file tool with that grant_id, and the driver moves one file of up to 10 MB: an upload into the browser's file input, or a download to a new file on your application host." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-file-grants-dark-mobile.svg" />
+  <img src="/open-source/images/openai/openai-file-grants-dark.svg" alt="Your application calls driver.grant_upload or driver.grant_download and passes the returned grant_id to the model. The model uses the upload_file or download_file tool with that grant_id, and the driver moves one file of up to 10 MB: an upload into the browser's file input, or a download to a new file on your application host." noZoom />
+</picture>
 
 <AccordionGroup>
 <Accordion title="Coordinate actions and JavaScript">
@@ -171,13 +201,17 @@ Install local Chromium with `uvx browser-use install` first.
 <Accordion title="Element references and supported features">
 
 Read the page before using an element reference.
-A new page read replaces that tab's references.
+Page reads preserve references for existing elements.
 Navigation and detached elements can invalidate references.
 
 Page reads preserve the main document's accessibility tree, including hierarchy, control states, and field values.
-Page reads, page text, and JavaScript results stop at 50,000 characters and report truncation.
+Page reads, page text, and JavaScript results stop at 10,000 characters and report truncation.
 Use scoped reads or `find` for specific content.
 `find` searches the complete tree before limiting its output.
+The driver retries page reads and screenshots once after a failure.
+It reconnects once when browser state fails.
+Persistent state failures still stop the OpenAI runner.
+It does not replay clicks or typing after uncertain effects.
 Page reads do not guarantee complete iframe or shadow-root coverage.
 Use screenshots and coordinate actions when necessary.
 

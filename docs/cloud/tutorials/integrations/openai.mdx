@@ -8,11 +8,14 @@ sidebarTitle: "OpenAI"
 Use your existing Playwright code with a remote Browser Use Cloud browser.
 OpenAI runs the model loop. A small adapter exposes Playwright actions as tools.
 
-```mermaid
-flowchart TB
-    O("OpenAI SDK") <--> P("Playwright adapter")
-    P <--> C(["Cloud browser"])
-```
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/openai-playwright-architecture-light-mobile.svg" />
+  <img src="/cloud/images/openai-playwright-architecture-light.svg" alt="Inside your application, the OpenAI SDK tool runner sends tool calls to the Playwright adapter, which exposes read_page, click, type, and select_option and drives Playwright, which connects over CDP to a Browser Use Cloud browser." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/openai-playwright-architecture-dark-mobile.svg" />
+  <img src="/cloud/images/openai-playwright-architecture-dark.svg" alt="Inside your application, the OpenAI SDK tool runner sends tool calls to the Playwright adapter, which exposes read_page, click, type, and select_option and drives Playwright, which connects over CDP to a Browser Use Cloud browser." noZoom />
+</picture>
 
 This example exposes `read_page`, `click`, `type`, and `select_option`.
 OpenAI shared the small adapter used here; it is not a general Playwright driver.
@@ -135,6 +138,15 @@ The confirmation callback approves actions for this example.
 Use tasks you authorize, and change the callback for your application's permissions.
 
 ## Choose your integration
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/openai-integrations-light-mobile.svg" />
+  <img src="/cloud/images/openai-integrations-light.svg" alt="The Playwright adapter gives the model 4 of the 28 browser tools on your existing Playwright page, the Browser Use driver gives it all 28 plus Bash on your host, and both run on a Browser Use Cloud browser." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/openai-integrations-dark-mobile.svg" />
+  <img src="/cloud/images/openai-integrations-dark.svg" alt="The Playwright adapter gives the model 4 of the 28 browser tools on your existing Playwright page, the Browser Use driver gives it all 28 plus Bash on your host, and both run on a Browser Use Cloud browser." noZoom />
+</picture>
 
 | Your application | Integration |
 | --- | --- |
