@@ -382,6 +382,7 @@ body {
   transition: background-color 120ms ease;
 }
 :is(#sidebar-content, #mobile-nav) li > :is(a, button):hover > div:first-child > svg[style*="mask"],
+:is(#sidebar-content, #mobile-nav) li[data-active] > a > div:first-child > svg[style*="mask"],
 :is(#sidebar-content, #mobile-nav) a[aria-current="page"] > div:first-child > svg[style*="mask"] {
   background-color: var(--bu-fg) !important;
 }
