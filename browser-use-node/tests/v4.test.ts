@@ -179,6 +179,16 @@ describe("v4 runs.waitForEvent", () => {
     expect(http.get).toHaveBeenLastCalledWith(`/runs/${RUN_ID}/events`, { after: 1, limit: 100 });
   });
 
+  it("returns browser.reattached when a follow-up run reuses the browser", async () => {
+    const http = { get: vi.fn(async () => ({
+      events: [{ runId: RUN_ID, id: 3, ts: "2026-01-01T00:00:00Z", type: "browser.reattached", data: { live_view_url: "https://live" } }],
+      nextAfter: 3, hasMore: false,
+    })) };
+    const event = await new Runs(http as any).waitForEvent(RUN_ID, "browser.ready", { timeout: 0 });
+    expect(event.type).toBe("browser.reattached");
+    expect(event.data.live_view_url).toBe("https://live");
+  });
+
   it("fails immediately when the run ends before the requested event", async () => {
     const http = {
       get: vi.fn(async () => ({

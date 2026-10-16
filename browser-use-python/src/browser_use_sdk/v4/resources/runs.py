@@ -34,6 +34,8 @@ _TERMINAL_EVENT_TYPES = {
     "run.cancelled",
     "run.dispatch_failed",
 }
+# A follow-up run that reuses the session's browser emits browser.reattached instead of browser.ready.
+_EVENT_ALIASES = {"browser.ready": {"browser.ready", "browser.reattached"}}
 
 
 def _build_create_body(
@@ -208,14 +210,17 @@ class Runs:
     ) -> RunEvent:
         """Poll immediately, then every three seconds until ``event_type`` appears.
 
-        Event reads share the project's general request budget. Set ``interval``
-        in seconds to tune latency and traffic across concurrent waits.
+        Waiting for ``browser.ready`` also returns ``browser.reattached``, which a
+        reused browser emits instead. Event reads share the project's general
+        request budget. Set ``interval`` in seconds to tune latency and traffic
+        across concurrent waits.
         """
+        accepted = _EVENT_ALIASES.get(event_type, {event_type})
         deadline = time.monotonic() + timeout
         while True:
             page = self.events(run_id, after=after, limit=limit)
             event = next(
-                (item for item in page.events if item.type == event_type), None
+                (item for item in page.events if item.type in accepted), None
             )
             if event is not None:
                 return event
@@ -400,14 +405,17 @@ class AsyncRuns:
     ) -> RunEvent:
         """Poll immediately, then every three seconds until ``event_type`` appears.
 
-        Event reads share the project's general request budget. Set ``interval``
-        in seconds to tune latency and traffic across concurrent waits.
+        Waiting for ``browser.ready`` also returns ``browser.reattached``, which a
+        reused browser emits instead. Event reads share the project's general
+        request budget. Set ``interval`` in seconds to tune latency and traffic
+        across concurrent waits.
         """
+        accepted = _EVENT_ALIASES.get(event_type, {event_type})
         deadline = time.monotonic() + timeout
         while True:
             page = await self.events(run_id, after=after, limit=limit)
             event = next(
-                (item for item in page.events if item.type == event_type), None
+                (item for item in page.events if item.type in accepted), None
             )
             if event is not None:
                 return event

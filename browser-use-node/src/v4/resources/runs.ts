@@ -25,6 +25,10 @@ const TERMINAL_EVENT_TYPES = new Set([
   "run.cancelled",
   "run.dispatch_failed",
 ]);
+// A follow-up run that reuses the session's browser emits browser.reattached instead of browser.ready.
+const EVENT_ALIASES: Record<string, string[]> = {
+  "browser.ready": ["browser.ready", "browser.reattached"],
+};
 
 export interface RunListParams {
   sessionId?: string;
@@ -77,6 +81,7 @@ export class Runs {
 
   /**
    * Poll immediately, then every 3 seconds until the requested event appears (5-minute timeout).
+   * Waiting for `browser.ready` also returns `browser.reattached`, which a reused browser emits instead.
    * Event reads share the project's general request budget; tune interval across concurrent waits.
    */
   async waitForEvent(
@@ -88,10 +93,11 @@ export class Runs {
     const interval = options?.interval ?? 3_000;
     const deadline = Date.now() + timeout;
     let after = options?.after ?? null;
+    const accepted = new Set(EVENT_ALIASES[type] ?? [type]);
 
     for (;;) {
       const page = await this.events(runId, { after, limit: options?.limit ?? 100 });
-      const event = page.events.find((candidate) => candidate.type === type);
+      const event = page.events.find((candidate) => accepted.has(candidate.type));
       if (event) return event;
       const terminal = page.events.find((candidate) => TERMINAL_EVENT_TYPES.has(candidate.type));
       if (terminal) {
