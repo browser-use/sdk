@@ -778,6 +778,71 @@
                 }
             }
         },
+        "/sessions/{session_id}/cost-cap": {
+            "patch": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Update Session Cost Cap",
+                "description": "Update the active run cap without starting another run.",
+                "operationId": "update_session_cost_cap_sessions__session_id__cost_cap_patch",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SessionCostCapRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionCostCapResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+                    },
+                    "404": {
+                        "description": "Run, session, workspace, or profile not found."
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sessions/{session_id}/cost": {
             "get": {
                 "tags": [
@@ -4966,6 +5031,7 @@
                             "claude-opus-5-5",
                             "claude-fable-5",
                             "claude-sonnet-5",
+                            "claude-sonnet-5-5",
                             "gpt-5.5",
                             "gpt-5.6",
                             "gpt-6-astra",
@@ -5033,6 +5099,20 @@
                             }
                         ]
                     },
+                    "keepAlive": {
+                        "anyOf": [
+                            {
+                                "type": "integer",
+                                "maximum": 14400.0,
+                                "minimum": 120.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Keepalive",
+                        "description": "Seconds the session's browser stays open after its last run, so a follow-up run reuses the same page, never past the browser's 4 h lifetime. Default 120. Follow-up runs inherit the session's value; send a new value to change it or null to restore the default. Kept time is billed as browser time. Ignored (always 120) for free-tier and Zero Data Retention projects."
+                    },
                     "agentmail": {
                         "type": "boolean",
                         "title": "Agentmail",
@@ -5062,6 +5142,18 @@
                             }
                         ],
                         "title": "Stripelinkconnectionid"
+                    },
+                    "agenticAutofillGrantId": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Agenticautofillgrantid"
                     },
                     "attachedFileIds": {
                         "anyOf": [
@@ -5593,6 +5685,49 @@
                 ],
                 "title": "SecretBinding",
                 "description": "One credential this run may have typed into a browser field.\n\nThe value never reaches the agent. It is encrypted at rest, kept out of the\nworker payload, and typed straight into the focused field by the server when\nthe agent asks for the alias by name \u2014 and only while the page it is typing\ninto is on one of `allowedDomains`.\n\nRun-scoped: bindings die with the run, so a follow-up run that needs the same\ncredential must send it again."
+            },
+            "SessionCostCapRequest": {
+                "properties": {
+                    "maxCostUsd": {
+                        "anyOf": [
+                            {
+                                "type": "number",
+                                "exclusiveMinimum": 0.0
+                            },
+                            {
+                                "type": "string",
+                                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                            }
+                        ],
+                        "title": "Maxcostusd"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "maxCostUsd"
+                ],
+                "title": "SessionCostCapRequest",
+                "description": "Set the maximum spend for the active run in a session."
+            },
+            "SessionCostCapResponse": {
+                "properties": {
+                    "sessionId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Sessionid"
+                    },
+                    "maxCostUsd": {
+                        "type": "string",
+                        "title": "Maxcostusd"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "sessionId",
+                    "maxCostUsd"
+                ],
+                "title": "SessionCostCapResponse"
             },
             "SessionCostResponse": {
                 "properties": {

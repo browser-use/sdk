@@ -1,73 +1,72 @@
 ---
 title: n8n
-description: Use Browser Use as an HTTP node in n8n workflows.
+description: Run Browser Use in n8n workflows with the official verified community node.
 ---
 
-Browser Use works with [n8n](https://n8n.io) as a standard HTTP integration — no custom nodes needed.
+Use the official [`n8n-nodes-browser-use-cloud`](https://www.npmjs.com/package/n8n-nodes-browser-use-cloud) community node. New nodes default to API V4. If your n8n instance cannot install community nodes, use [HTTP Request nodes](#without-the-community-node) instead.
 
-## 1. Create a credential
+## 1. Install the node
 
-In n8n, go to **Credentials → Add Credential → Header Auth** and set:
+1. In n8n, open **Settings → Community Nodes**.
+2. Install `n8n-nodes-browser-use-cloud`.
+3. Restart n8n if it asks you to.
 
-| Field | Value |
-|-------|-------|
-| Name | `X-Browser-Use-API-Key` |
-| Value | `YOUR_API_KEY` (without a `Bearer` prefix) |
+Do not install `n8n-nodes-browser-use`. That is an older third-party package.
 
-Get your API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+## 2. Add your key
 
-## 2. Start a session
+1. Create a Browser Use API key at [cloud.browser-use.com/settings](https://cloud.browser-use.com/settings?tab=api-keys&new=1).
+2. In n8n, create a **Browser Use API** credential.
+3. Paste the key.
+4. Leave the Base URL at its default value. The node picks the right API path from the **API Version** field.
 
-Add an **HTTP Request** node:
+## 3. Run your first task
 
-| Setting | Value |
-|---------|-------|
-| Method | `POST` |
-| URL | `https://api.browser-use.com/api/v3/sessions` |
-| Authentication | Header Auth (from step 1) |
-| Body Type | JSON |
+1. Add a trigger.
+2. Add the **Browser Use** node.
+3. Pick **v4**, **Run**, then **Run and Wait**.
+4. Add a task such as:
 
-Body:
-```json
-{
-  "task": "Find the top 3 trending repos on GitHub today"
-}
-```
+   `Open browser-use.com and return the first three customer names shown on the home page.`
 
-The response includes an `id` you'll use to poll for results. Save it in your workflow so later nodes can still reference this session.
+5. Run the workflow.
 
-## 3. Poll for completion
+The node waits for the run and returns the result, status, cost, session ID, and events URL. Turn on **Extract Structured Data** when the next n8n node needs JSON.
 
-Add a second **HTTP Request** node in a loop:
+## Pick an API version
 
-| Setting | Value |
-|---------|-------|
-| Method | `GET` |
-| URL | `https://api.browser-use.com/api/v3/sessions/{{ $json.id }}` |
-| Authentication | Header Auth (from step 1) |
+| Version | Use it for |
+| --- | --- |
+| v4 | New workflows and hard, long browser jobs. New nodes start here. Not available on Zero Data Retention projects. |
+| v3 | Faster or cheaper session jobs and standalone cloud browsers. |
+| v2 | Old workflows that still need V2-only settings. |
 
-Check the `status` field. The session is done when status is `idle`, `stopped`, `error`, or `timed_out`. Use an **If** node to loop back with a **Wait** node (5–10 seconds) until complete.
+Existing workflows keep the version they were saved with. Updating the package does not move an old workflow to V4.
 
-The final response contains `output` with the agent's result.
+## Common fixes
 
-## Event-driven alternative
+**I only see the old task actions.** Update `n8n-nodes-browser-use-cloud`, then add a new Browser Use node. New nodes use type version 2 and start on API V4.
 
-Instead of polling, use [Webhooks](/cloud/guides/webhooks) to receive status changes. Configure your webhook endpoint in the [dashboard](https://cloud.browser-use.com/settings?tab=webhooks), then add a **Webhook** trigger node in n8n to receive V3 `session.status.update` events. Match `payload.session_id` to the `id` saved from the create response, then check `payload.status` for completion. The `agent.task.status_update` event belongs to V2 tasks.
+**My key fails.** Make sure the credential uses `X-Browser-Use-API-Key` and leave the Base URL unchanged.
 
-```json
-{
-  "type": "session.status.update",
-  "timestamp": "2026-09-09T12:00:00Z",
-  "payload": {
-    "session_id": "the-id-from-your-create-response",
-    "status": "idle",
-    "output": "The agent's result"
-  }
-}
-```
+**The run takes a while.** Use **Run and Wait** and raise **Wait Timeout**. Set **Max Cost USD** when you want a hard spend limit.
 
-Validate the signature before accepting a webhook. See the [verification example](/cloud/guides/webhooks#signature-verification); use a verified receiver in front of n8n if your workflow cannot perform that verification itself.
+## Without the community node
+
+Call the [V4 API](/cloud/api-v4-overview) with plain **HTTP Request** nodes.
+
+1. Create a **Header Auth** credential with Name `X-Browser-Use-API-Key` and Value `YOUR_API_KEY` (without a `Bearer` prefix).
+2. Add an **HTTP Request** node named `Create run`: `POST https://api.browser-use.com/api/v4/runs` with that credential and JSON body `{"task": "Find the top 3 trending repos on GitHub today"}`. It returns the run `id`.
+3. Poll `GET https://api.browser-use.com/api/v4/runs/{{ $('Create run').item.json.id }}/status` with an **If** node and a **Wait** node (5–10 seconds) until `status` is `completed`, `failed`, or `cancelled`.
+4. Fetch `GET https://api.browser-use.com/api/v4/runs/{{ $('Create run').item.json.id }}` once. Branch on `status`: only a `completed` run has the answer in `result` (and in `output` when you sent an `outputSchema`); for `failed` or `cancelled`, read `error`.
+
+V4 runs do not send webhooks, so poll the status endpoint. See [polling guidance](/cloud/guides/concurrency#budget-http-requests-separately).
 
 <Tip>
-  This pattern works with any workflow tool that supports HTTP requests — Make, Zapier, Pipedream, or custom orchestrators.
+  The HTTP pattern works with any workflow tool that supports HTTP requests: Make, Zapier, Pipedream, or custom orchestrators.
 </Tip>
+
+## Sources
+
+- [Official repo for `n8n-nodes-browser-use-cloud`](https://github.com/browser-use/n8n-nodes-browser-use)
+- [Verified Browser Use page on n8n](https://n8n.io/integrations/browser-use/)

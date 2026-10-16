@@ -48,6 +48,21 @@ Events cover run lifecycle, model calls, browser readiness, tool activity,
 artifacts, and completion. See [Get run events](/cloud/api-v4/runs/get-run-events)
 for the complete response shape.
 
+## Browser events
+
+| Event | When | `data` |
+| --- | --- | --- |
+| `browser.ready` | A new browser started for the run | `browser_session_id`, `live_view_url` |
+| `browser.reattached` | A follow-up reused the session's open browser | `browser_session_id`, `live_view_url` |
+| `browser.released` | The run ended | `status`, usually `browser_session_id` |
+
+`browser.released` `status` is `kept_alive` (the browser is still open for
+follow-ups), `already_stopped`, `no_browser` or `browser_not_found`. With
+`kept_alive`, `timeout_at` is the browser's 4-hour hard limit, not when it
+stops: an idle browser stops about 2 minutes after the session's last run, or
+after the run's
+[`keepAlive`](/cloud/agent/sessions#keep-the-browser-open-between-runs) seconds.
+
 For browser HTTP request metadata, attach your own live CDP observer with
 [Capture browser network events](/cloud/agent/network-capture).
 

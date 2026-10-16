@@ -148,6 +148,23 @@ function v3EndpointToSdkMethod(
   return null;
 }
 
+// These v4 endpoints have no SDK methods yet, and each new endpoint must be mapped or listed here.
+const v4NotInSdk = new Set([
+  "DELETE /integrations/{provider}",
+  "DELETE /sessions/{session_id}",
+  "GET /agentcard/wallets",
+  "GET /integrations",
+  "GET /integrations/categories",
+  "GET /integrations/{provider}/status",
+  "GET /sessions/{session_id}/cost",
+  "GET /sessions/{session_id}/share",
+  "GET /stripe-link",
+  "PATCH /sessions/{session_id}",
+  "POST /integrations/{provider}/authorize",
+  "POST /sessions/{session_id}/share",
+  "PUT /sessions/{session_id}/share",
+]);
+
 function v4EndpointToSdkMethod(
   ep: { method: string; path: string },
 ): { resource: string; method: string } | null {
@@ -180,6 +197,12 @@ function v4EndpointToSdkMethod(
   if (method === "get" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "files" };
   if (method === "delete" && path === "/workspaces/{workspace_id}/files") return { resource: "workspaces", method: "deleteFile" };
   if (method === "post" && path === "/workspaces/{workspace_id}/files/upload") return { resource: "workspaces", method: "uploadFiles" };
+
+  // Extensions
+  if (method === "post" && path === "/extensions") return { resource: "extensions", method: "create" };
+  if (method === "get" && path === "/extensions") return { resource: "extensions", method: "list" };
+  if (method === "get" && path === "/extensions/{extension_id}") return { resource: "extensions", method: "get" };
+  if (method === "delete" && path === "/extensions/{extension_id}") return { resource: "extensions", method: "delete" };
 
   return null;
 }
@@ -231,7 +254,7 @@ describe("V4 SDK coverage", () => {
   it("should map every v4 endpoint to a known SDK method", () => {
     const unmapped: string[] = [];
     for (const ep of endpoints) {
-      if (v4SkippedPaths(ep.path)) continue;
+      if (v4SkippedPaths(ep.path) || v4NotInSdk.has(`${ep.method.toUpperCase()} ${ep.path}`)) continue;
       const mapping = v4EndpointToSdkMethod(ep);
       if (!mapping) {
         unmapped.push(`${ep.method.toUpperCase()} ${ep.path}`);

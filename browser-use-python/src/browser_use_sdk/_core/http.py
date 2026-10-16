@@ -10,7 +10,7 @@ from uuid import UUID
 import httpx
 from pydantic import BaseModel
 
-from .errors import BrowserUseError
+from .errors import APIKeySpendLimitError, BrowserUseError
 
 _RETRY_STATUSES = {429}
 _DEFAULT_MAX_RETRIES = 3
@@ -50,6 +50,9 @@ def _raise_for_status(response: httpx.Response) -> None:
         raw = body.get("message", body.get("detail"))
     else:
         raw = None
+    fields: dict[str, Any] = raw if isinstance(raw, dict) else {}
+    if isinstance(fields.get("message"), str):
+        raw = fields["message"]
     if raw is None:
         message = response.reason_phrase or str(response.status_code)
     elif isinstance(raw, str):
@@ -57,7 +60,23 @@ def _raise_for_status(response: httpx.Response) -> None:
     else:
         import json
         message = json.dumps(raw)
-    raise BrowserUseError(response.status_code, message, detail)
+    header = response.headers.get("Retry-After", "").strip()
+    retry_after = int(header) if header.isascii() and header.isdigit() else None
+    if response.status_code == 402 and fields.get("code") == _SPEND_LIMIT_CODE:
+        raise APIKeySpendLimitError(
+            response.status_code,
+            message,
+            detail,
+            retry_after,
+            code=_SPEND_LIMIT_CODE,
+            cap=fields.get("cap"),
+            spent=fields.get("spent"),
+        )
+    raise BrowserUseError(response.status_code, message, detail, retry_after)
+
+
+_MAX_RETRY_AFTER = 10.0
+_SPEND_LIMIT_CODE = "api_key_monthly_spend_limit_reached"
 
 
 class SyncHttpClient:
@@ -85,6 +104,7 @@ class SyncHttpClient:
         json: Any = None,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        files: dict[str, Any] | None = None,
     ) -> Any:
         json = _clean_json(json) if json is not None else None
         cleaned_params = _clean_params(params)
@@ -92,18 +112,28 @@ class SyncHttpClient:
             if attempt > 0:
                 time.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
             response = self._client.request(
-                method, path, json=json, params=cleaned_params, headers=headers
+                method, path, json=json, params=cleaned_params, headers=headers, files=files
             )
 
             if _should_retry(response.status_code) and attempt < self._max_retries:
                 continue
 
             _raise_for_status(response)
-            if response.status_code == 204:
+            if response.status_code == 204 or not response.content:
                 return None
             return response.json()
 
         _raise_for_status(response)  # type: ignore[possibly-undefined]
+
+    def request_idempotent(self, method: str, path: str) -> Any:
+        """Send an idempotent request, retrying 503 busy replies after their Retry-After."""
+        for attempt in range(self._max_retries + 1):
+            try:
+                return self.request(method, path)
+            except BrowserUseError as error:
+                if error.status_code != 503 or error.retry_after is None or attempt == self._max_retries:
+                    raise
+                time.sleep(min(error.retry_after, _MAX_RETRY_AFTER))
 
     def close(self) -> None:
         self._client.close()
@@ -149,6 +179,7 @@ class AsyncHttpClient:
         json: Any = None,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        files: dict[str, Any] | None = None,
     ) -> Any:
         json = _clean_json(json) if json is not None else None
         cleaned_params = _clean_params(params)
@@ -156,18 +187,28 @@ class AsyncHttpClient:
             if attempt > 0:
                 await asyncio.sleep(min(_BACKOFF_BASE * (2 ** attempt), 10))
             response = await self._client.request(
-                method, path, json=json, params=cleaned_params, headers=headers
+                method, path, json=json, params=cleaned_params, headers=headers, files=files
             )
 
             if _should_retry(response.status_code) and attempt < self._max_retries:
                 continue
 
             _raise_for_status(response)
-            if response.status_code == 204:
+            if response.status_code == 204 or not response.content:
                 return None
             return response.json()
 
         _raise_for_status(response)  # type: ignore[possibly-undefined]
+
+    async def request_idempotent(self, method: str, path: str) -> Any:
+        """Send an idempotent request, retrying 503 busy replies after their Retry-After."""
+        for attempt in range(self._max_retries + 1):
+            try:
+                return await self.request(method, path)
+            except BrowserUseError as error:
+                if error.status_code != 503 or error.retry_after is None or attempt == self._max_retries:
+                    raise
+                await asyncio.sleep(min(error.retry_after, _MAX_RETRY_AFTER))
 
     async def close(self) -> None:
         await self._client.aclose()

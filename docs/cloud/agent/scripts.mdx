@@ -12,18 +12,14 @@ This pattern works well for repeated data extraction, checks, and reports. The
 example below collects the top five Hacker News stories. The first run writes
 and tests the script. Every later run sends a new request to the live page.
 
-<img
-  src="/cloud/images/v4-scripts-light.svg"
-  alt="A first agent run saves and tests script.py and a README in a workspace; later runs reuse the script and repair it only when necessary"
-  noZoom
-  className="block dark:hidden"
-/>
-<img
-  src="/cloud/images/v4-scripts-dark.svg"
-  alt="A first agent run saves and tests script.py and a README in a workspace; later runs reuse the script and repair it only when necessary"
-  noZoom
-  className="hidden dark:block"
-/>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/v4-scripts-light-mobile.svg" />
+  <img src="/cloud/images/v4-scripts-light.svg" alt="A first agent run writes and tests extract_top_stories.py in a workspace. Later runs pass workspace_id to reuse the script, send a fresh request to the live site each time, and repair the script if it breaks." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/v4-scripts-dark-mobile.svg" />
+  <img src="/cloud/images/v4-scripts-dark.svg" alt="A first agent run writes and tests extract_top_stories.py in a workspace. Later runs pass workspace_id to reuse the script, send a fresh request to the live site each time, and repair the script if it breaks." noZoom />
+</picture>
 
 <Note>
   The file stays. The running process does not. Each later run starts an agent
