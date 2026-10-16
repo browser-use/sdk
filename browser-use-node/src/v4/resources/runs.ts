@@ -35,9 +35,9 @@ const TERMINAL_EVENT_TYPES = new Set([
   "run.dispatch_failed",
 ]);
 // A follow-up run that reuses the session's browser emits browser.reattached instead of browser.ready.
-const EVENT_ALIASES: Record<string, string[]> = {
-  "browser.ready": ["browser.ready", "browser.reattached"],
-};
+const EVENT_ALIASES = new Map<string, string[]>([
+  ["browser.ready", ["browser.ready", "browser.reattached"]],
+]);
 
 export interface RunListParams {
   sessionId?: string;
@@ -102,7 +102,7 @@ export class Runs {
     const interval = options?.interval ?? 3_000;
     const deadline = Date.now() + timeout;
     let after = options?.after ?? null;
-    const accepted = new Set(EVENT_ALIASES[type] ?? [type]);
+    const accepted = new Set(EVENT_ALIASES.get(type) ?? [type]);
 
     for (;;) {
       const page = await this.events(runId, { after, limit: options?.limit ?? 100 });
