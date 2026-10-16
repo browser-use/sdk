@@ -89,6 +89,7 @@ export class HttpClient {
     while (base.endsWith("/")) base = base.slice(0, -1);
     this.baseUrl = base;
     this.maxRetries = options.maxRetries ?? 3;
+    if (!Number.isInteger(this.maxRetries) || this.maxRetries < 0) throw new RangeError("maxRetries must be a non-negative integer");
     this.timeout = options.timeout ?? 30_000;
     this.fetchPromise = Promise.resolve(
       options.fetch ?? ((input, init) => fetch(input, init)),
@@ -181,7 +182,7 @@ export class HttpClient {
             !this.customFetch &&
             !signal.aborted &&
             attempt < this.maxRetries &&
-            (readingBody || (code !== undefined && !NO_RETRY_CODE.test(code)));
+            (code === undefined ? readingBody : !NO_RETRY_CODE.test(code));
           if (!retryable) throw error;
           clearTimeout(timeoutId);
           await sleep(backoffDelay(attempt), options?.signal);

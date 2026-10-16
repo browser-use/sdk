@@ -128,6 +128,8 @@ class SyncHttpClient:
         timeout: float = 30.0,
         max_retries: int = _DEFAULT_MAX_RETRIES,
     ) -> None:
+        if max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
         self._max_retries = max_retries
         self._client = httpx.Client(
             base_url=base_url,
@@ -204,6 +206,8 @@ class AsyncHttpClient:
         *,
         x402_client: Any = None,
     ) -> None:
+        if max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
         self._max_retries = max_retries
         # x402 pays per request, so a replayed GET could pay twice.
         self._retry_transport = x402_client is None

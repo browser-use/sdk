@@ -278,6 +278,19 @@ describe("HttpClient retries", () => {
     expect(await pending).toEqual({ status: "completed" });
   });
 
+  it("does not retry a GET whose body read times out", async () => {
+    const timeout = Object.assign(new TypeError("terminated"), { cause: { code: "UND_ERR_BODY_TIMEOUT" } });
+    const fetch = vi.fn<FetchLike>().mockImplementation(
+      async () => new Response(new ReadableStream({ start: (c) => c.error(timeout) })),
+    );
+    await expect(platformClient(fetch).get("/runs/id")).rejects.toBe(timeout);
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a negative maxRetries", () => {
+    expect(() => client(vi.fn<FetchLike>(), -1)).toThrow(RangeError);
+  });
+
   it("rejects an invalid API key header before sending or retrying", async () => {
     const fetch = vi.fn<FetchLike>();
     const http = new HttpClient({ apiKey: "bad\nkey", baseUrl: "https://api.example.com", fetch });

@@ -224,6 +224,13 @@ def test_unretryable_transport_error_fails_once(
     assert len(requests) == 1
 
 
+def test_negative_max_retries_is_rejected() -> None:
+    with pytest.raises(ValueError, match="max_retries"):
+        http.SyncHttpClient("https://api.example.com", "test", max_retries=-1)
+    with pytest.raises(ValueError, match="max_retries"):
+        http.AsyncHttpClient("https://api.example.com", "test", max_retries=-1)
+
+
 def test_x402_client_does_not_retry_transport_errors(monkeypatch: pytest.MonkeyPatch) -> None:
     from browser_use_sdk._core import x402
 
