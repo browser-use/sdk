@@ -62,6 +62,15 @@ A run's `totalCostUsd` is its LLM and web-search charge only. Browser time and
 proxy traffic belong to the session's browser, which can outlive a run. Read the
 session cost for the full number:
 
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/billing-session-cost-light-mobile.svg" />
+  <img src="/cloud/images/billing-session-cost-light.svg" alt="A run's totalCostUsd covers llmCostUsd and searchCostUsd. The session cost endpoint adds browserCostUsd and proxyCostUsd from the session's browser." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/billing-session-cost-dark-mobile.svg" />
+  <img src="/cloud/images/billing-session-cost-dark.svg" alt="A run's totalCostUsd covers llmCostUsd and searchCostUsd. The session cost endpoint adds browserCostUsd and proxyCostUsd from the session's browser." noZoom />
+</picture>
+
 ```bash
 curl "https://api.browser-use.com/api/v4/sessions/$SESSION_ID/cost" \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"

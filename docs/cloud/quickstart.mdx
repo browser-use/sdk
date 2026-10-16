@@ -14,8 +14,17 @@ icon: rocket
 </CardGroup>
 
 Both Cloud paths use API V4. Choose whether Browser Use drives the browser or
-your Playwright/Puppeteer code connects directly over CDP. For a local agent,
+your Playwright or Browser Use code connects directly over CDP. For a local agent,
 use the [open-source library](/open-source/quickstart).
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/quickstart-two-paths-light-mobile.svg" />
+  <img src="/cloud/images/quickstart-two-paths-light.svg" alt="Your code sends a task to POST /api/v4/runs and the V4 agent drives a cloud browser and returns the result, or your code creates a browser with POST /api/v4/browsers and connects Playwright or Browser Use to its cdpUrl." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/quickstart-two-paths-dark-mobile.svg" />
+  <img src="/cloud/images/quickstart-two-paths-dark.svg" alt="Your code sends a task to POST /api/v4/runs and the V4 agent drives a cloud browser and returns the result, or your code creates a browser with POST /api/v4/browsers and connects Playwright or Browser Use to its cdpUrl." noZoom />
+</picture>
 
 Get an [API key](https://cloud.browser-use.com/settings?tab=api-keys&new=1) and
 export it:
@@ -33,7 +42,7 @@ Use Python 3.10 or newer for the Python SDK. Skip installation if you use curl.
 pip install --upgrade browser-use-sdk playwright
 ```
 ```bash TypeScript
-npm install browser-use-sdk@latest puppeteer-core
+npm install browser-use-sdk@latest playwright-core
 ```
 </CodeGroup>
 
@@ -92,20 +101,20 @@ with BrowserUse() as client:
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v4";
-import puppeteer from "puppeteer-core";
+import { chromium } from "playwright-core";
 
 const client = new BrowserUse();
 const session = await client.browsers.create({ proxyCountryCode: "us" });
 try {
   if (!session.cdpUrl) throw new Error("The browser did not return a CDP URL");
-  const browser = await puppeteer.connect({ browserWSEndpoint: session.cdpUrl });
+  const browser = await chromium.connectOverCDP(session.cdpUrl);
   try {
-    const context = browser.defaultBrowserContext();
-    const page = (await context.pages())[0] ?? await context.newPage();
+    const context = browser.contexts()[0];
+    const page = context.pages()[0] ?? await context.newPage();
     await page.goto("https://example.com");
     console.log(await page.title());
   } finally {
-    await browser.disconnect();
+    await browser.close();
   }
 } finally {
   await client.browsers.stop(session.id);

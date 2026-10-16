@@ -60,8 +60,6 @@ Starting something new? Use V4 instead; it's far more accurate.
 
 V4 completed 76% of difficult, real-world browser tasks — nine points ahead of V3 and twenty-two ahead of V2.
 
-![Browser Use Cloud success rate on hard web tasks: V2 Agent 54.25%, V3 Agent 67.25%, V4 Agent 76.47%](/cloud/images/agent-accuracy.png)
-
 ## Typical tasks cost \$0.70–\$1.64
 
 Measured in July 2026 with the same model — Claude Opus 4.7 — across 30 days of production usage, the typical customer's successful task costs \$0.70 on V2, \$0.87 on V3, and \$1.64 on V4, taking about 1, 2, and 5 minutes respectively. V4 costs more per task because customers use it for more complex work, and V2's tasks run shortest only because it gets the simplest ones. On identical hard tasks, V3 is the fastest agent (about 6 minutes, versus about 10 for V2 and V4). These figures do not reflect the current V4 default, GPT-6 Luna, whose [token prices](/cloud/agent/models) are much lower than Claude Opus 4.7's.
@@ -71,11 +69,16 @@ Measured in July 2026 with the same model — Claude Opus 4.7 — across 30 days
 | Cost per task | \$0.70    | \$0.87    | \$1.64    |
 | Time per task | ~1 min   | ~2 min   | ~5 min   |
 
-![What a task costs with Claude Opus 4.7 from real usage: V2 \$0.70, V3 \$0.87, V4 \$1.64 per successful task](/cloud/images/agent-real-cost.png)
+## Comparing accuracy and cost
 
-## Comparing accuracy, speed, and cost
-
-![Comparing agent accuracy, speed, and cost: V4 is most accurate at \$1.64 per task, V3 is fastest at \$0.87, V2 is cheapest at \$0.70 but least accurate](/cloud/images/agent-comparison.png)
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/choosing-agent-accuracy-cost-light-mobile.svg" />
+  <img src="/cloud/images/choosing-agent-accuracy-cost-light.svg" alt="Accuracy on hard tasks against cost per task: V4 Agent 76% at $1.64 per task, V3 Agent 67% at $0.87, V2 Agent 54% at $0.70. Accuracy is Internal Bench Hard with Claude Opus 4.8; cost is the median production task with Claude Opus 4.7." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/choosing-agent-accuracy-cost-dark-mobile.svg" />
+  <img src="/cloud/images/choosing-agent-accuracy-cost-dark.svg" alt="Accuracy on hard tasks against cost per task: V4 Agent 76% at $1.64 per task, V3 Agent 67% at $0.87, V2 Agent 54% at $0.70. Accuracy is Internal Bench Hard with Claude Opus 4.8; cost is the median production task with Claude Opus 4.7." noZoom />
+</picture>
 
 ## How we measured this
 

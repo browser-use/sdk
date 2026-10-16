@@ -44,6 +44,15 @@ while (true) {
 ```
 </CodeGroup>
 
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/observability-event-cursor-light-mobile.svg" />
+  <img src="/cloud/images/observability-event-cursor-light.svg" alt="A run writes ordered events. Your loop reads a page of events after a cursor, passes nextAfter as the next after value, and keeps reading while hasMore is true." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/observability-event-cursor-dark-mobile.svg" />
+  <img src="/cloud/images/observability-event-cursor-dark.svg" alt="A run writes ordered events. Your loop reads a page of events after a cursor, passes nextAfter as the next after value, and keeps reading while hasMore is true." noZoom />
+</picture>
+
 Events cover run lifecycle, model calls, browser readiness, tool activity,
 artifacts, and completion. See [Get run events](/cloud/api-v4/runs/get-run-events)
 for the complete response shape.

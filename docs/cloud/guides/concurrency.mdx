@@ -5,6 +5,15 @@ description: "Preserved legacy allowances, spend tiers, browser lifetime, pollin
 
 Browser Use has separate limits for simultaneous browser work and API request frequency. A project can have available browser capacity and still receive a rate-limit response if it sends too many HTTP requests.
 
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/concurrency-two-limits-light-mobile.svg" />
+  <img src="/cloud/images/concurrency-two-limits-light.svg" alt="Your app passes two separate limits: browser slots, set by concurrentSessionLimit, and a request budget, reported as limit_rps. Either can return 429 while the other has room." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/concurrency-two-limits-dark-mobile.svg" />
+  <img src="/cloud/images/concurrency-two-limits-dark.svg" alt="Your app passes two separate limits: browser slots, set by concurrentSessionLimit, and a request budget, reported as limit_rps. Either can return 429 while the other has room." noZoom />
+</picture>
+
 For reliable batch processing, use a bounded worker pool, track the browsers your application owns, and budget polling requests across the project.
 
 ## Check your project's capacity
