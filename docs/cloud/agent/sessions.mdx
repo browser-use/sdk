@@ -65,15 +65,13 @@ changes it, and `null` restores 120 seconds.
 
 <CodeGroup>
 ```python Python
-run = client.runs.create("Open my dashboard", keepAlive=900)
+run = client.runs.create("Open my dashboard", keep_alive=900)
 ```
 ```typescript TypeScript
-import type { RunCreateBody } from "browser-use-sdk/v4";
-
 const run = await client.runs.create({
   task: "Open my dashboard",
   keepAlive: 900,
-} as RunCreateBody);
+});
 ```
 ```bash curl
 curl https://api.browser-use.com/api/v4/runs \
@@ -83,11 +81,11 @@ curl https://api.browser-use.com/api/v4/runs \
 ```
 </CodeGroup>
 
-The SDKs do not type `keepAlive` yet: Python sends it as an extra keyword
-argument, and TypeScript needs the cast. Unlike the boolean `keepAlive` in
-V2/V3, V4 takes seconds and rejects `true` with 422. Kept time is billed as
-browser time but takes no concurrency slot. Free-tier and Zero Data Retention
-runs always use 120 seconds.
+SDK 3.12+ types it as `keep_alive` / `keepAlive`. On 3.11.3, Python must pass
+`keepAlive=900` (`keep_alive` sends the wrong key) and TypeScript needs
+`as RunCreateBody`. Unlike the boolean `keepAlive` in V2/V3, V4 takes seconds
+and rejects `true` with 422. Kept time is billed as browser time but takes no
+concurrency slot. Free-tier and Zero Data Retention runs always use 120 seconds.
 
 ## Follow up while a run is busy
 

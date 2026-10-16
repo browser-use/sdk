@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import ssl
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from types import SimpleNamespace
@@ -194,18 +195,81 @@ def test_other_errors_are_not_retried(
 
 
 @pytest.mark.parametrize("is_async", [False, True])
-def test_ambiguous_post_transport_error_is_not_retried(monkeypatch: pytest.MonkeyPatch, is_async: bool) -> None:
+@pytest.mark.parametrize("method,error,cause", [
+    ("POST", httpx.ReadTimeout, None),
+    ("POST", httpx.ConnectError, None),
+    ("GET", httpx.ReadTimeout, None),
+    ("GET", httpx.LocalProtocolError, None),
+    ("GET", httpx.UnsupportedProtocol, None),
+    ("GET", httpx.ConnectError, ssl.SSLCertVerificationError(1, "certificate has expired")),
+    ("POST", httpx.ConnectError, ssl.SSLCertVerificationError(1, "certificate has expired")),
+])
+def test_unretryable_transport_error_fails_once(
+    monkeypatch: pytest.MonkeyPatch,
+    is_async: bool,
+    method: str,
+    error: type[httpx.TransportError],
+    cause: BaseException | None,
+) -> None:
     requests: list[httpx.Request] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         requests.append(request)
-        raise httpx.ReadTimeout("response lost", request=request)
+        raise error("no retry", request=request) from cause
 
     with _replay(monkeypatch, is_async, handler) as (client, delays):
-        with pytest.raises(httpx.ReadTimeout, match="response lost"):
-            _request(client, is_async, "POST")
+        with pytest.raises(error, match="no retry"):
+            _request(client, is_async, method)
         assert delays == []
     assert len(requests) == 1
+
+
+def test_x402_client_does_not_retry_transport_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    from browser_use_sdk._core import x402
+
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        raise httpx.ReadError("cut off", request=request)
+
+    # x402 pays per request, so a replayed GET could pay twice.
+    monkeypatch.setattr(x402, "x402_async_httpx_client", lambda *a, **k: httpx.AsyncClient(
+        base_url="https://api.example.com", transport=httpx.MockTransport(handler)))
+    client = http.AsyncHttpClient("https://api.example.com", "", x402_client=object())
+    with pytest.raises(httpx.ReadError):
+        asyncio.run(client.request("GET", "/resource"))
+    assert len(requests) == 1
+
+
+@pytest.mark.parametrize("is_async", [False, True])
+@pytest.mark.parametrize("method,error,attempts", [
+    ("GET", httpx.ReadError, 2),
+    ("GET", httpx.RemoteProtocolError, 2),
+    ("GET", httpx.ConnectTimeout, 2),
+    ("GET", None, 4),
+])
+def test_transport_errors_retry_with_backoff(
+    monkeypatch: pytest.MonkeyPatch, is_async: bool, method: str, error: type[httpx.TransportError] | None, attempts: int,
+) -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if error is None:
+            raise httpx.ConnectError("refused", request=request)
+        if len(requests) == 1:
+            raise error("blip", request=request)
+        return httpx.Response(200, json={"result": "ready"})
+
+    with _replay(monkeypatch, is_async, handler) as (client, delays):
+        if error is None:
+            with pytest.raises(httpx.ConnectError, match="refused"):
+                _request(client, is_async, method)
+        else:
+            assert _request(client, is_async, method) == {"result": "ready"}
+        assert delays == [1.125, 2.125, 4.125][: attempts - 1]
+    assert len(requests) == attempts
 
 
 @pytest.mark.parametrize("is_async", [False, True])

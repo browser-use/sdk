@@ -1,3 +1,5 @@
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HttpClient } from "../src/core/http.js";
@@ -29,13 +31,14 @@ describe("HttpClient query serialization", () => {
     expect(url.searchParams.get("pageSize")).toBe("10");
   });
 
-  it("forwards per-request headers alongside authentication", async () => {
-    let requestedHeaders = new Headers();
+  it("forwards per-request headers alongside authentication as a plain object", async () => {
+    let requestedHeaders: unknown;
     const http = new HttpClient({
       apiKey: "test",
       baseUrl: "https://api.example.com",
       fetch: async (_input, init) => {
-        requestedHeaders = new Headers(init?.headers);
+        // Wrappers commonly spread init.headers, which drops a Headers instance's entries.
+        requestedHeaders = { ...(init?.headers as Record<string, string>) };
         return new Response("{}", {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -50,8 +53,11 @@ describe("HttpClient query serialization", () => {
       { "X-V4-Queue-Deduplicate": "exact-text-v1" },
     );
 
-    expect(requestedHeaders.get("X-V4-Queue-Deduplicate")).toBe("exact-text-v1");
-    expect(requestedHeaders.get("X-Browser-Use-API-Key")).toBe("test");
+    expect(requestedHeaders).toEqual({
+      "X-V4-Queue-Deduplicate": "exact-text-v1",
+      "X-Browser-Use-API-Key": "test",
+      "Content-Type": "application/json",
+    });
   });
 });
 
@@ -76,6 +82,12 @@ describe("HttpClient retries", () => {
 
   function client(fetch: FetchLike, maxRetries?: number) {
     return new HttpClient({ apiKey: "test", baseUrl: "https://api.example.com", fetch, maxRetries });
+  }
+
+  // Transport retries apply only to the platform fetch, so stub it globally.
+  function platformClient(fetch: FetchLike) {
+    vi.stubGlobal("fetch", fetch);
+    return new HttpClient({ apiKey: "test", baseUrl: "https://api.example.com" });
   }
 
   it.each([502, 503, 504])("recovers a transient GET %i", async (status) => {
@@ -218,11 +230,60 @@ describe("HttpClient retries", () => {
     expect(fetch).toHaveBeenCalledOnce();
   });
 
-  it.each(["GET", "POST"])("does not retry %s transport failures", async (method) => {
-    const failure = new TypeError("fetch failed");
+  it.each([
+    ["GET", { cause: { code: "ECONNRESET" } }, 4],
+    ["GET", { code: "ConnectionRefused" }, 4],
+    ["GET", {}, 1],
+    ["GET", { cause: { code: "CERT_HAS_EXPIRED" } }, 1],
+    ["GET", { cause: { code: "UND_ERR_HEADERS_TIMEOUT" } }, 1],
+    ["POST", { cause: { code: "ECONNREFUSED" } }, 1],
+    ["POST", { cause: { code: "ECONNRESET" } }, 1],
+  ] as const)("bounds %s failure %o to %i attempts", async (method, shape, attempts) => {
+    const failure = Object.assign(new TypeError("fetch failed"), shape);
     const fetch = vi.fn<FetchLike>().mockRejectedValue(failure);
-    await expect(client(fetch).request(method, "/browsers")).rejects.toBe(failure);
+    const rejected = expect(platformClient(fetch).request(method, "/browsers")).rejects.toBe(failure);
+    await vi.runAllTimersAsync();
+    await rejected;
+    expect(fetch).toHaveBeenCalledTimes(attempts);
+  });
+
+  it("does not retry transport failures through a custom fetch such as x402", async () => {
+    const failure = Object.assign(new TypeError("fetch failed"), { cause: { code: "ECONNRESET" } });
+    const fetch = vi.fn<FetchLike>().mockRejectedValue(failure);
+    await expect(client(fetch).get("/browsers")).rejects.toBe(failure);
     expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("does not retry a GET that hits the client timeout", async () => {
+    const fetch = vi.fn<FetchLike>().mockImplementation(
+      (_url, init) => new Promise((_, reject) => init!.signal!.addEventListener("abort", () => reject(init!.signal!.reason))),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const http = new HttpClient({ apiKey: "test", baseUrl: "https://api.example.com", timeout: 50 });
+    const rejected = expect(http.get("/browsers")).rejects.toBeDefined();
+    await vi.runAllTimersAsync();
+    await rejected;
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("recovers a GET whose response body is cut off", async () => {
+    // Node 24 undici reports a cut chunked body with no error code.
+    const reset = new TypeError("terminated");
+    const truncated = new ReadableStream({ start: (c) => c.error(reset) });
+    const fetch = vi.fn<FetchLike>()
+      .mockResolvedValueOnce(new Response(truncated))
+      .mockResolvedValueOnce(new Response('{"status":"completed"}'));
+    const pending = platformClient(fetch).get("/runs/id/status");
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(await pending).toEqual({ status: "completed" });
+  });
+
+  it("rejects an invalid API key header before sending or retrying", async () => {
+    const fetch = vi.fn<FetchLike>();
+    const http = new HttpClient({ apiKey: "bad\nkey", baseUrl: "https://api.example.com", fetch });
+    await expect(http.get("/browsers")).rejects.toThrow(TypeError);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("aborts during backoff without sending another request or leaving a timer", async () => {
@@ -243,5 +304,37 @@ describe("HttpClient retries", () => {
     await expect(client(fetch).request("GET", "/browsers", { signal: AbortSignal.abort() }))
       .rejects.toMatchObject({ name: "AbortError" });
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("HttpClient redirects", () => {
+  it("surfaces a redirect as BrowserUseError without sending the key to the target", async () => {
+    const seen: unknown[] = [];
+    const target = createServer((req, res) => {
+      seen.push(req.headers["x-browser-use-api-key"]);
+      res.end("{}");
+    });
+    const origin = createServer((_req, res) => {
+      const { port } = target.address() as AddressInfo;
+      res.writeHead(307, { Location: `http://127.0.0.1:${port}/tasks` }).end();
+    });
+    await Promise.all(
+      [target, origin].map((s) => new Promise<void>((resolve) => s.listen(0, "127.0.0.1", resolve))),
+    );
+    try {
+      const http = new HttpClient({
+        apiKey: "secret",
+        baseUrl: `http://127.0.0.1:${(origin.address() as AddressInfo).port}`,
+      });
+      await expect(http.post("/tasks/", { task: "x" })).rejects.toMatchObject({
+        name: "BrowserUseError",
+        statusCode: 307,
+        message: expect.stringContaining(`redirect to http://127.0.0.1:${(target.address() as AddressInfo).port}`),
+      });
+      expect(seen).toEqual([]);
+    } finally {
+      origin.close();
+      target.close();
+    }
   });
 });

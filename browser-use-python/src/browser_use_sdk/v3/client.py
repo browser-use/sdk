@@ -61,6 +61,7 @@ class BrowserUse:
         *,
         base_url: str | None = None,
         timeout: float = 30.0,
+        max_retries: int = 3,
         use_own_key: bool | None = None,
         x402: Any | None = None,
         x402_private_key: str | None = None,
@@ -79,6 +80,7 @@ class BrowserUse:
             base_url=base_url or _V3_BASE_URL,
             api_key=resolved_key,
             timeout=timeout,
+            max_retries=max_retries,
         )
         self.billing = BillingResource(self._http)
         self.browsers = BrowsersResource(self._http)
@@ -364,6 +366,7 @@ class AsyncBrowserUse:
         *,
         base_url: str | None = None,
         timeout: float = 30.0,
+        max_retries: int = 3,
         use_own_key: bool | None = None,
         x402: Any | None = None,
         x402_private_key: str | None = None,
@@ -378,6 +381,7 @@ class AsyncBrowserUse:
                 base_url=base_url or X402_BASE_URL_DEFAULT,
                 api_key=topup_key,
                 timeout=timeout,
+                max_retries=max_retries,
                 x402_client=x402_client,
             )
         else:
@@ -392,6 +396,7 @@ class AsyncBrowserUse:
                 base_url=base_url or _V3_BASE_URL,
                 api_key=resolved_key,
                 timeout=timeout,
+                max_retries=max_retries,
             )
         self.billing = AsyncBilling(self._http)
         self.browsers = AsyncBrowsers(self._http)

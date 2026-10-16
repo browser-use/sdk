@@ -10,8 +10,33 @@ function retryDelay(response: Response, attempt: number): number | undefined {
   // Timeout remains per attempt; preserve the existing ten-second delay cap.
   if (retryAfter !== undefined && retryAfter > MAX_RETRY_DELAY) return undefined;
 
+  return backoffDelay(attempt, retryAfter);
+}
+
+function backoffDelay(attempt: number, floor = 0): number {
   const backoff = Math.min(1000 * 2 ** attempt, MAX_RETRY_DELAY);
-  return Math.min(Math.max(backoff, retryAfter ?? 0) + Math.random() * 250, MAX_RETRY_DELAY);
+  return Math.min(Math.max(backoff, floor) + Math.random() * 250, MAX_RETRY_DELAY);
+}
+
+/** Network error code: undici sets `cause.code`, Bun sets `code`. Client-side TypeErrors have none. */
+function networkErrorCode(error: unknown): string | undefined {
+  const e = error as { code?: unknown; cause?: { code?: unknown } } | null;
+  const code = e?.cause?.code ?? e?.code;
+  return typeof code === "string" ? code : undefined;
+}
+
+/** Not retried: TLS certificate failures never succeed, and read stalls would multiply the timeout. */
+const NO_RETRY_CODE = /^(CERT_|UNABLE_TO_|SELF_SIGNED_|DEPTH_ZERO_|ERR_TLS_CERT_)|^(INVALID_CA|HOSTNAME_MISMATCH|UND_ERR_HEADERS_TIMEOUT|UND_ERR_BODY_TIMEOUT)$/;
+
+/** Name the redirect target so a misconfigured baseUrl is diagnosable. */
+function redirectMessage(response: Response, url: URL): string | undefined {
+  const location = response.headers.get("Location");
+  if (response.status < 300 || response.status >= 400 || !location) return undefined;
+  try {
+    return `HTTP ${response.status} redirect to ${new URL(location, url).origin} (not followed; check baseUrl)`;
+  } catch {
+    return undefined;
+  }
 }
 
 async function sleep(delay: number, signal?: AbortSignal): Promise<void> {
@@ -53,6 +78,7 @@ export class HttpClient {
   private readonly timeout: number;
   private readonly fetchPromise: Promise<FetchLike>;
   private readonly useApiKeyHeader: boolean;
+  private readonly customFetch: boolean;
 
   constructor(options: HttpClientOptions) {
     this.apiKey = options.apiKey;
@@ -67,6 +93,7 @@ export class HttpClient {
     this.fetchPromise = Promise.resolve(
       options.fetch ?? ((input, init) => fetch(input, init)),
     );
+    this.customFetch = options.fetch !== undefined;
     // Send the API key header whenever apiKey is non-empty. In x402 mode
     // an empty apiKey means "accountless" (wallet is identity); a non-empty
     // apiKey means "top up the existing key's project".
@@ -107,6 +134,9 @@ export class HttpClient {
     if (options?.body !== undefined && !isForm) {
       headers["Content-Type"] = "application/json";
     }
+    // Throws on an invalid header value before any request or retry; fetch keeps the plain object wrappers spread.
+    new Headers(headers);
+    const isGet = method.toUpperCase() === "GET";
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       options?.signal?.throwIfAborted();
@@ -121,17 +151,42 @@ export class HttpClient {
 
       try {
         const fetchImpl = await this.fetchPromise;
-        const response = await fetchImpl(url.toString(), {
-          method,
-          headers,
-          body:
-            options?.body === undefined
-              ? undefined
-              : isForm
-                ? (options.body as FormData)
-                : JSON.stringify(options.body),
-          signal,
-        });
+        let response: Response;
+        let text: string | undefined;
+        let readingBody = false;
+        try {
+          response = await fetchImpl(url.toString(), {
+            method,
+            headers,
+            body:
+              options?.body === undefined
+                ? undefined
+                : isForm
+                  ? (options.body as FormData)
+                  : JSON.stringify(options.body),
+            signal,
+            // Never follow redirects: they would forward the API key to another origin.
+            redirect: "manual",
+          });
+          // Read success bodies here so a GET cut off mid-body is retried like a reset.
+          readingBody = true;
+          if (response.ok && response.status !== 204) text = await response.text();
+          readingBody = false;
+        } catch (error) {
+          const code = networkErrorCode(error);
+          // Only GETs replay network failures: a write may have reached the server. A custom fetch (x402) may pay
+          // per request, and timeouts are aborts, so neither is retried. Body read errors lack a code on some undici.
+          const retryable =
+            isGet &&
+            !this.customFetch &&
+            !signal.aborted &&
+            attempt < this.maxRetries &&
+            (readingBody || (code !== undefined && !NO_RETRY_CODE.test(code)));
+          if (!retryable) throw error;
+          clearTimeout(timeoutId);
+          await sleep(backoffDelay(attempt), options?.signal);
+          continue;
+        }
 
         clearTimeout(timeoutId);
 
@@ -140,7 +195,6 @@ export class HttpClient {
             return undefined as T;
           }
           // Bodiless 2xx replies (e.g. 202 from session purge) have no JSON to parse.
-          const text = await response.text();
           return (text ? JSON.parse(text) : undefined) as T;
         }
 
@@ -148,7 +202,7 @@ export class HttpClient {
         // retain only the existing 429 retry: a 5xx may follow a successful write.
         const shouldRetry =
           (response.status === 429 ||
-            (method.toUpperCase() === "GET" && [502, 503, 504].includes(response.status))) &&
+            (isGet && [502, 503, 504].includes(response.status))) &&
           attempt < this.maxRetries;
         const delay = shouldRetry ? retryDelay(response, attempt) : undefined;
 
@@ -176,13 +230,14 @@ export class HttpClient {
         const fields =
           typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
         const message =
-          typeof fields.message === "string"
+          redirectMessage(response, url) ??
+          (typeof fields.message === "string"
             ? fields.message
             : raw === undefined
               ? `HTTP ${response.status}`
               : typeof raw === "string"
                 ? raw
-                : JSON.stringify(raw);
+                : JSON.stringify(raw));
         const header = response.headers.get("Retry-After")?.trim();
         const retryAfter = header && /^\d+$/.test(header) ? Number(header) : undefined;
         if (response.status === 402 && fields.code === SPEND_LIMIT_CODE) {

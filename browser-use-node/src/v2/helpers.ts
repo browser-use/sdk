@@ -6,7 +6,7 @@ type TaskCreatedResponse = components["schemas"]["TaskCreatedResponse"];
 type TaskStepView = components["schemas"]["TaskStepView"];
 type TaskView = components["schemas"]["TaskView"];
 
-export const TERMINAL_STATUSES = new Set(["finished", "stopped"]);
+export const TERMINAL_STATUSES = new Set(["finished", "failed", "stopped"]);
 
 /** Task result with typed output. All TaskView fields are directly accessible. */
 export type TaskResult<T = string | null> = Omit<TaskView, "output"> & { output: T };
@@ -41,6 +41,8 @@ export class TaskRun<T = string> implements PromiseLike<TaskResult<T>> {
     options?: RunOptions,
   ) {
     this._createPromise = createPromise;
+    // The create starts eagerly; a failure must reach the caller's await, not crash Node first.
+    createPromise.catch(() => {});
     this._tasks = tasks;
     this._schema = schema;
     this._timeout = options?.timeout ?? 300_000;

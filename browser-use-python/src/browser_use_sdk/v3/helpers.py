@@ -102,18 +102,31 @@ class AsyncSessionRun(Generic[T]):
         self._start_cursor_ref = _start_cursor_ref
         self.session_id: str | None = None
         self.result: SessionResult[T] | None = None
+        self._created: asyncio.Future[SessionResponse] | None = None
 
     @property
     def output(self) -> T | None:
         """Final typed output (available after awaiting)."""
         return self.result.output if self.result else None
 
-    async def _wait_for_output(self) -> SessionResult[T]:
-        data = await self._create_fn()
+    async def _ensure_session_id(self) -> str:
+        # One shared create per handle; a failed create is re-raised, never re-sent.
+        if self._created is None:
+            self._created = asyncio.ensure_future(self._create_fn())
+            # Mark the exception retrieved so a create nobody waits for does not log a warning.
+            self._created.add_done_callback(lambda f: f.cancelled() or f.exception())
+        # Shield: a cancelled waiter must not cancel the shared, possibly already billed, create.
+        data = self._created.result() if self._created.done() else await asyncio.shield(self._created)
         self.session_id = str(data.id)
+        return self.session_id
+
+    async def _wait_for_output(self) -> SessionResult[T]:
+        if self.result is not None:
+            return self.result
+        session_id = await self._ensure_session_id()
         result = await _async_poll_output(
             self._sessions,
-            self.session_id,
+            session_id,
             self._output_schema,
             timeout=self._timeout,
             interval=self._interval,
@@ -134,23 +147,22 @@ class AsyncSessionRun(Generic[T]):
                 print(f"[{msg.role}] {msg.summary}")
             print(run.result.output)
         """
-        data = await self._create_fn()
-        self.session_id = str(data.id)
+        session_id = await self._ensure_session_id()
         # Resolve cursor: prefer the ref callback (set during create_fn) over static value
         cursor: str | None = self._start_cursor_ref() if self._start_cursor_ref else self._start_cursor
         deadline = time.monotonic() + self._timeout
 
         while time.monotonic() < deadline:
-            resp = await self._sessions.messages(self.session_id, after=cursor, limit=100)
+            resp = await self._sessions.messages(session_id, after=cursor, limit=100)
             for msg in resp.messages:
                 yield msg
                 cursor = str(msg.id)
 
-            session = await self._sessions.get(self.session_id)
+            session = await self._sessions.get(session_id)
             if session.status.value in _TERMINAL_STATUSES:
                 # Drain all remaining messages (may be multiple pages)
                 while True:
-                    resp = await self._sessions.messages(self.session_id, after=cursor, limit=100)
+                    resp = await self._sessions.messages(session_id, after=cursor, limit=100)
                     if not resp.messages:
                         break
                     for msg in resp.messages:
@@ -161,7 +173,7 @@ class AsyncSessionRun(Generic[T]):
 
             await asyncio.sleep(self._interval)
 
-        raise TimeoutError(f"Session {self.session_id} did not complete within {self._timeout}s")
+        raise TimeoutError(f"Session {session_id} did not complete within {self._timeout}s")
 
 
 class SessionStream(Generic[T]):

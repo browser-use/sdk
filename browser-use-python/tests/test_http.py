@@ -1,10 +1,12 @@
+import copy
+import pickle
 from collections.abc import Callable
 from unittest.mock import patch
 
 import httpx
 import pytest
 
-from browser_use_sdk import APIKeySpendLimitError
+from browser_use_sdk import APIKeySpendLimitError, BrowserUseError
 from browser_use_sdk._core.http import SyncHttpClient, _clean_params
 from browser_use_sdk.v4.resources.runs import Runs
 from browser_use_sdk.v4.resources.sessions import Sessions
@@ -109,6 +111,22 @@ def test_spend_limit_402_raises_typed_error() -> None:
     error = raised.value
     assert (error.status_code, error.message) == (402, detail["message"])
     assert (error.code, error.cap, error.spent) == (detail["code"], 5.0, 5.01)
+
+
+@pytest.mark.parametrize("detail", [
+    {"code": "api_key_monthly_spend_limit_reached", "message": "limit", "cap": 5.0, "spent": 5.01},
+    {"message": "payment required"},
+])
+@pytest.mark.parametrize("clone", [lambda e: pickle.loads(pickle.dumps(e)), copy.copy, copy.deepcopy])
+def test_errors_survive_pickle_and_copy(detail: dict, clone: Callable[[BrowserUseError], BrowserUseError]) -> None:
+    client = _mock_client(lambda _: httpx.Response(402, json={"detail": detail}, headers={"Retry-After": "3"}))
+    with pytest.raises(BrowserUseError) as raised:
+        client.request("POST", "/runs", json={"task": "x"})
+
+    restored = clone(raised.value)
+
+    assert type(restored) is type(raised.value)
+    assert (restored.__dict__, restored.args) == (raised.value.__dict__, raised.value.args)
 
 
 def test_cancel_retries_busy_503_after_retry_after() -> None:

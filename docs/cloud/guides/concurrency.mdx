@@ -171,7 +171,7 @@ result = client.runs.wait_for_completion(run_id)
 print(result.status, result.result)
 ```
 
-SDK 3.11.3 defaults to a two-second status interval and a four-hour client wait timeout. Reaching that timeout raises an exception locally; it does not cancel the server-side run. Inspect or cancel the existing run before deciding whether to submit replacement work.
+The SDK defaults to a two-second status interval and a four-hour client wait timeout. Reaching that timeout raises an exception locally; it does not cancel the server-side run. Inspect or cancel the existing run before deciding whether to submit replacement work.
 
 ### When you need events
 
@@ -181,9 +181,9 @@ Set a request budget across all event streams in the project. For example, polli
 
 Spread poll times so that every worker does not send its request on the same clock tick. A per-project limiter in your application is more predictable than each worker independently retrying.
 
-For SDK event waits, set `wait_for_event(..., interval=3)` in Python or
-`waitForEvent(..., { interval: 3_000 })` in TypeScript. This also works on SDK
-3.11.3, whose event-wait default is one second. One hundred waits at a
+SDK 3.12+ event waits poll every three seconds by default. SDK 3.11.3 polls
+every second; set `wait_for_event(..., interval=3)` in Python or
+`waitForEvent(..., { interval: 3_000 })` in TypeScript. One hundred waits at a
 three-second interval average about 33 event requests per second, exceeding
 the 25 RPS general floor of a Tier 0 project. For that workload, explicitly use a
 five-second interval (20 event requests per second) or a shared request
@@ -205,12 +205,13 @@ your shared request budget; a longer interval also makes backlog traversal slowe
 | 402 with `detail.code: "api_key_monthly_spend_limit_reached"` | This key's monthly soft spending cap was reached | Check the cap and recorded spend in the current UTC month. |
 | Other 402 | May be insufficient project balance or another payment condition | Inspect the complete response and the API key's project. |
 
-The SDK retries only HTTP 429, three times by default; it does not retry 5xx responses or network errors. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
+SDK 3.12+ retries HTTP 429 on any method and 502/503/504 on GET only, three times by default, after about 1, 2, and 4 seconds plus up to 0.25 seconds of jitter. It honors an integer `Retry-After` up to 10 seconds; a longer one raises immediately with `retry_after` / `retryAfter` set. Run cancel and session delete also retry a busy 503 that carries `Retry-After`, waiting at most 10 seconds. From 3.12.1 GET requests on Node, Bun and Python also retry network failures such as refused or reset connections or a connect timeout, except through a custom `fetch` or x402, which can pay per request; other methods never retry a network failure, because the write may have reached the server. Read and overall request timeouts are not retried; the timeout applies to each attempt. Other 5xx responses, TLS certificate failures, and client-side errors such as an invalid header are not retried. From 3.12.1 the TypeScript SDK no longer follows redirects, matching Python: a 3xx raises `BrowserUseError`, so use an `https://` `baseUrl` that points at the API itself. SDK 3.11.3 retries only 429, regardless of `Retry-After`, after about 1, 2, and 4 seconds (TypeScript and Python). Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
 
-SDK 3.11.3 errors expose the response status and body, but not response headers.
-Use `retry_after_seconds` when the body includes it. To diagnose an edge throttle
-or read its exact `Retry-After`, capture the raw HTTP response through your
-application's HTTP instrumentation or a REST client.
+SDK 3.12+ errors expose an integer `Retry-After` as `retry_after` (Python) or
+`retryAfter` (TypeScript), alongside the status and body. SDK 3.11.3 errors
+expose only the status and body. Use `retry_after_seconds` when the body
+includes it. To read other response headers, capture the raw HTTP response
+through your application's HTTP instrumentation or a REST client.
 
 API-key monthly spending caps are **soft limits**. They use a cached spend snapshot; already-running or simultaneous work can finish above the cap. They do not replace project balance management or per-run cost controls. BYOK provider charges also remain separate from Browser Use charges.
 

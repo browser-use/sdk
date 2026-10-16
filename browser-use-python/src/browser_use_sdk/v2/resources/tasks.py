@@ -15,7 +15,7 @@ from ...generated.v2.models import (
     TaskView,
 )
 
-_TERMINAL_STATUSES = {"finished", "stopped"}
+TERMINAL_STATUSES = {"finished", "failed", "stopped"}
 
 
 def _build_create_body(
@@ -211,7 +211,7 @@ class Tasks:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             status = self.status(task_id)
-            if status.status.value in _TERMINAL_STATUSES:
+            if status.status.value in TERMINAL_STATUSES:
                 return self.get(task_id)
             time.sleep(interval)
         raise TimeoutError(f"Task {task_id} did not complete within {timeout}s")
@@ -347,7 +347,7 @@ class AsyncTasks:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             status = await self.status(task_id)
-            if status.status.value in _TERMINAL_STATUSES:
+            if status.status.value in TERMINAL_STATUSES:
                 return await self.get(task_id)
             await asyncio.sleep(interval)
         raise TimeoutError(f"Task {task_id} did not complete within {timeout}s")

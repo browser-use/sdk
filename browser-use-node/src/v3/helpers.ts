@@ -40,6 +40,8 @@ export class SessionRun<T = string> implements PromiseLike<SessionResult<T>> {
     options?: RunOptions,
   ) {
     this._createPromise = createPromise;
+    // The create starts eagerly; a failure must reach the caller's await, not crash Node first.
+    createPromise.catch(() => {});
     this._sessions = sessions;
     this._schema = schema;
     this._timeout = options?.timeout ?? 14_400_000;
