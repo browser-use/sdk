@@ -237,12 +237,12 @@ def build(theme):
 
     JX = GX0 + 26
     path_cable(d, [(sxr + 6, sym), (JX, sym)])
-    path_cable(d, [(JX, sym), (JX, by), (bx - 6, by)])
-    path_cable(d, [(JX, sym), (JX, ty), (tx - 6, ty)])
+    path_cable(d, [(JX, sym), (JX, by), (bx, by)])
+    path_cable(d, [(JX, sym), (JX, ty), (tx, ty)])
     port(d, sxr + 6, sym)
     junction(d, JX, sym)
-    port(d, bx - 6, by)
-    port(d, tx - 6, ty)
+    port(d, bx, by)
+    port(d, tx, ty)
     assert GY0 > 34 and GY1 > R2 + 40, (GY0, GY1)
     d.save(f"architecture-{theme}")
 
@@ -285,12 +285,12 @@ def build_mobile(theme):
     # trunk leaves the SDK slab's right corner, runs down the right edge, feeds both objects from the right
     JX = 322
     path_cable(d, [(sxr + 4, sym), (JX, sym)])
-    path_cable(d, [(JX, sym), (JX, by), (bx + 6, by)])
-    path_cable(d, [(JX, by), (JX, ty), (tx + 6, ty)])
+    path_cable(d, [(JX, sym), (JX, by), (bx, by)])
+    path_cable(d, [(JX, by), (JX, ty), (tx, ty)])
     port(d, sxr + 4, sym)
     junction(d, JX, by)
-    port(d, bx + 6, by)
-    port(d, tx + 6, ty)
+    port(d, bx, by)
+    port(d, tx, ty)
     d.save(f"architecture-{theme}-mobile")
 
 
