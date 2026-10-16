@@ -53,7 +53,6 @@ def _build_create_body(
     max_cost_usd: float | str | None,
     op_vault_id: str | None,
     op_vault_allowed_domains: list[str] | None,
-    stripe_link_connection_id: str | UUID | None,
     keep_alive: int | None,
     extra: dict[str, Any],
 ) -> dict[str, Any]:
@@ -112,8 +111,6 @@ def _build_create_body(
         body["opVaultId"] = op_vault_id
     if op_vault_allowed_domains is not None:
         body["opVaultAllowedDomains"] = op_vault_allowed_domains
-    if stripe_link_connection_id is not None:
-        body["stripeLinkConnectionId"] = str(stripe_link_connection_id)
     if keep_alive is not _UNSET:
         body["keepAlive"] = keep_alive
     body.update(extra)
@@ -141,7 +138,6 @@ class Runs:
         max_cost_usd: float | str | None = None,
         op_vault_id: str | None = None,
         op_vault_allowed_domains: list[str] | None = None,
-        stripe_link_connection_id: str | UUID | None = None,
         keep_alive: int | None = _UNSET,  # type: ignore[assignment]
         **extra: Any,
     ) -> RunCreateResponse:
@@ -161,7 +157,6 @@ class Runs:
             max_cost_usd,
             op_vault_id,
             op_vault_allowed_domains,
-            stripe_link_connection_id,
             keep_alive,
             extra,
         )
@@ -339,7 +334,6 @@ class AsyncRuns:
         max_cost_usd: float | str | None = None,
         op_vault_id: str | None = None,
         op_vault_allowed_domains: list[str] | None = None,
-        stripe_link_connection_id: str | UUID | None = None,
         keep_alive: int | None = _UNSET,  # type: ignore[assignment]
         **extra: Any,
     ) -> RunCreateResponse:
@@ -359,7 +353,6 @@ class AsyncRuns:
             max_cost_usd,
             op_vault_id,
             op_vault_allowed_domains,
-            stripe_link_connection_id,
             keep_alive,
             extra,
         )
