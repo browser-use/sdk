@@ -67,7 +67,7 @@ task publish         # npm + pypi publish
 - **Both SDKs must stay in sync.** Same retry logic, same polling defaults (2s interval, 300s timeout), same terminal statuses, same backoff cap (10s). When changing behavior in one SDK, change both.
 - **Retry HTTP 429 for all methods, and 502/503/504 for GET only.** Honor integer-second `Retry-After` within the existing ten-second delay cap; surface longer waits and use normal backoff for other formats. Keep the retry count and up to 250ms jitter; timeout remains per attempt. Do not retry other 5xx or transport failures.
 - **Every public method needs a docstring** (Python) or JSDoc (TS). One-liner, imperative style.
-- **Re-export all user-facing types** from top-level `__init__.py` / `index.ts`. Users should never need to import from `generated/` directly.
+- **Re-export all user-facing types** from each version entry point (`v2`, `v3`, `v4`). The root `__init__.py` / `index.ts` re-exports `v4` only; never add V2 or V3 names there. Users should never need to import from `generated/` directly.
 - **Busy 503 exception.** `request_idempotent` / `requestIdempotent` retry a 503 carrying `Retry-After` (capped at 10s). Use them only for idempotent calls the server marks busy, such as run cancel and session delete.
 
 ## Python SDK Rules

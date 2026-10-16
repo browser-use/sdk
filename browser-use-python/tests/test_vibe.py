@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import inspect
 import json
+import subprocess
+import sys
 import typing
 from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple
@@ -579,6 +581,19 @@ class TestClientInit:
         assert not hasattr(client, "nope")
         client.close()
         assert v2.BrowserUse is not v4.BrowserUse
+
+    def test_v2_subpackage_resolves_on_first_attribute_access(self) -> None:
+        code = "import browser_use_sdk; print(browser_use_sdk.v2.BrowserUse.__module__)"
+        out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
+        assert out.stdout.strip() == "browser_use_sdk.v2.client"
+
+    def test_missing_key_with_x402_env_points_at_v2(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from browser_use_sdk import AsyncBrowserUse
+
+        monkeypatch.delenv("BROWSER_USE_API_KEY", raising=False)
+        monkeypatch.setenv("BROWSER_USE_X402_PRIVATE_KEY", "0xabc")
+        with pytest.raises(ValueError, match=r"from browser_use_sdk\.v2 import BrowserUse"):
+            AsyncBrowserUse()
 
     def test_v3_import(self) -> None:
         from browser_use_sdk.v3 import BrowserUse, AsyncBrowserUse

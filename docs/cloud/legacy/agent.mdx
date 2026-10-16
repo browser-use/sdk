@@ -61,7 +61,7 @@ with open("input.pdf", "rb") as f:
 result = await client.run("Summarize the uploaded PDF", session_id=session.id)
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v2";
+import { BrowserUse } from "browser-use-sdk/v2"; // SDK 4.0+; on 3.x import from "browser-use-sdk"
 import { readFileSync } from "fs";
 
 const client = new BrowserUse();
@@ -124,7 +124,7 @@ async for step in run:
 print(run.result.output)  # final result after iteration
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v2";
+import { BrowserUse } from "browser-use-sdk/v2"; // SDK 4.0+; on 3.x import from "browser-use-sdk"
 
 const client = new BrowserUse();
 const run = client.run("Find the most upvoted post on Reddit r/technology today");

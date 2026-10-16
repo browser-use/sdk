@@ -33,11 +33,12 @@ including the browser resource; see the [browser quickstart](https://docs.browse
 
 ## Migrating from 3.x
 
-4.0.0 makes V4 the root import. Code that imported the V2 client from the root
-(`client.tasks`, `client.run`, `TaskView`, ...) needs one import change and
-nothing else; the V2 API itself is unchanged. Without the change, TypeScript
-reports `Property 'tasks' does not exist on type 'BrowserUse'` and plain
-JavaScript throws a `TypeError` naming `browser-use-sdk/v2`.
+4.0.0 makes V4 the root import. If you use the V2 client (`client.tasks`,
+`client.run`, `TaskView`, ...), move every import from `browser-use-sdk` to
+`browser-use-sdk/v2`; the V2 API itself is unchanged. Names in both APIs, such
+as `sessions`, `profiles`, `ProfileView` and `SessionListResponse`, now resolve
+to V4 at the root, so move those imports too. Without the change, TypeScript
+reports `Property 'tasks' does not exist on type 'BrowserUse'`.
 `browser-use-sdk/v3` and `browser-use-sdk/v4` are unchanged.
 
 ```diff

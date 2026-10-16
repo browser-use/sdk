@@ -16,7 +16,10 @@ if not TYPE_CHECKING:  # Hidden from type checkers so they still flag the moved 
         from importlib import import_module
 
         # `from . import v2` would recurse into this hook before v2 is loaded.
-        if name in import_module(".v2", __name__).__all__:
+        v2 = import_module(".v2", __name__)
+        if name == "v2":
+            return v2
+        if name in v2.__all__:
             # ImportError, not AttributeError: `from x import y` drops AttributeError messages.
             raise ImportError(
                 f"{name} moved to browser_use_sdk.v2 in 4.0.0, where V4 became the default; "

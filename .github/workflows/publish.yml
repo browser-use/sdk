@@ -253,6 +253,8 @@ jobs:
 
       - name: Publish to npm (OIDC trusted publishing)
         working-directory: browser-use-node
+        env:
+          VERSION: ${{ needs.preflight.outputs.version }}
         run: |
           set -euo pipefail
           # Node 22 ships with npm 10.x; OIDC trusted publishing requires
@@ -263,4 +265,11 @@ jobs:
           NPM_VERSION="11"
           echo "Node:    $(node --version)"
           echo "npm:     $(npx -y npm@${NPM_VERSION} --version)"
-          npx -y npm@${NPM_VERSION} publish --access public
+          LATEST="$(npx -y npm@${NPM_VERSION} view browser-use-sdk dist-tags.latest 2>/dev/null || true)"
+          DIST_TAG=latest
+          # An older major (e.g. a 3.x patch after 4.0) must not take npm `latest`; npm rejects range-like tags such as v3.
+          if [ -n "$LATEST" ] && [ "${VERSION%%.*}" -lt "${LATEST%%.*}" ]; then
+            DIST_TAG="latest-v${VERSION%%.*}"
+          fi
+          echo "Publishing ${VERSION} with dist-tag ${DIST_TAG} (npm latest: ${LATEST:-none})"
+          npx -y npm@${NPM_VERSION} publish --access public --tag "$DIST_TAG"

@@ -28,6 +28,13 @@ def _missing_attribute(obj: object, name: str) -> AttributeError:
     return AttributeError(f"{cls!r} object has no attribute {name!r}")
 
 
+def _no_api_key() -> ValueError:
+    message = "No API key provided. Pass api_key or set BROWSER_USE_API_KEY."
+    if os.environ.get("BROWSER_USE_X402_PRIVATE_KEY"):
+        message += " x402 payments are V2-only: use `from browser_use_sdk.v2 import BrowserUse`."
+    return ValueError(message)
+
+
 class BrowserUse:
     """Synchronous Browser Use v4 client.
 
@@ -45,9 +52,7 @@ class BrowserUse:
     ) -> None:
         resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
         if not resolved_key:
-            raise ValueError(
-                "No API key provided. Pass api_key or set BROWSER_USE_API_KEY."
-            )
+            raise _no_api_key()
         self._http = SyncHttpClient(
             base_url=base_url or _V4_BASE_URL,
             api_key=resolved_key,
@@ -94,9 +99,7 @@ class AsyncBrowserUse:
     ) -> None:
         resolved_key = api_key or os.environ.get("BROWSER_USE_API_KEY") or ""
         if not resolved_key:
-            raise ValueError(
-                "No API key provided. Pass api_key or set BROWSER_USE_API_KEY."
-            )
+            raise _no_api_key()
         self._http = AsyncHttpClient(
             base_url=base_url or _V4_BASE_URL,
             api_key=resolved_key,
