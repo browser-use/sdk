@@ -72,7 +72,7 @@ html.dark {
 }
 
 html {
-  --sidebar-width: 20rem;
+  --sidebar-width: 18rem;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -386,7 +386,7 @@ body {
 :is(#sidebar-content, #mobile-nav) a[aria-current="page"] > div:first-child > svg[style*="mask"] {
   background-color: var(--bu-fg) !important;
 }
-/* Room for labels like "Playwright, Puppeteer, Selenium" on one line */
+/* Keep long labels clear of the scrollbar */
 #sidebar-content [data-component-part="scroll-area-viewport"] {
   padding-right: 12px;
 }
