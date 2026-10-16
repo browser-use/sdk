@@ -5,7 +5,8 @@ icon: hand
 ---
 
 Use a human checkpoint for approvals, authentication, payments, or review.
-After a run stops, get its `live_view_url` from the `browser.ready` event:
+After a run stops, get its `live_view_url` from the `browser.ready` event, or
+`browser.reattached` when a follow-up reused the open browser:
 
 <CodeGroup>
 ```python Python
@@ -21,7 +22,7 @@ run = client.runs.wait_for_completion(run.id)
 events = client.runs.events(run.id, limit=100)
 ready = next(
     event for event in events.events
-    if event.type == "browser.ready"
+    if event.type in ("browser.ready", "browser.reattached")
 )
 print(ready.data["live_view_url"])
 
@@ -46,7 +47,7 @@ const events = await client.runs.events(run.id, {
   limit: 100,
 });
 const ready = events.events.find(
-  (event) => event.type === "browser.ready",
+  (event) => event.type === "browser.ready" || event.type === "browser.reattached",
 );
 console.log(ready?.data.live_view_url);
 

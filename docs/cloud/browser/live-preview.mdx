@@ -6,7 +6,8 @@ icon: eye
 
 Wait for `browser.ready` as soon as you create the run so the URL is available
 while the browser is live. A follow-up that reuses the session's open browser
-emits `browser.reattached`, with the same `live_view_url` field, instead; see
+emits `browser.reattached`, with the same `live_view_url` field, instead. The SDK
+wait for `browser.ready` returns either event; see
 [browser events](/cloud/agent/observability#browser-events).
 
 <CodeGroup>
