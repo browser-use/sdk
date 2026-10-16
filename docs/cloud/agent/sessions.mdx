@@ -190,7 +190,7 @@ was never shared. Zero Data Retention projects cannot share sessions.
 ### Purge data (Zero Data Retention projects)
 
 ```bash
-curl -X POST "https://api.browser-use.com/api/v4/sessions/$SESSION_ID/purge" \
+curl -i -X POST "https://api.browser-use.com/api/v4/sessions/$SESSION_ID/purge" \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
 ```
 

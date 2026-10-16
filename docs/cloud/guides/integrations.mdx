@@ -53,4 +53,5 @@ curl -X DELETE "https://api.browser-use.com/api/v4/integrations/gmail" \
   list and disconnect existing connections.
 - Connected apps are not available on the [EU deployment](/cloud/eu-deployment).
 - A [restricted API key](/cloud/guides/troubleshooting#restricted-api-keys)
-  needs the `integrations` resource.
+  needs `integrations` **Read** to list connections and check status, and
+  **Write** to authorize or disconnect.

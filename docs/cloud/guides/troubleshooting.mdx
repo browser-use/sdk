@@ -37,6 +37,8 @@ Scopes have the form `<version>:<resource>:<action>`, with actions `read`,
 `create`, and `delete`, and `*` as a wildcard. Full-access keys hold `*:*:*`.
 V4 resources are `runs`, `sessions`, `workspaces`, `files`, `browsers`,
 `profiles`, `proxy`, `integrations`, `licenses`, `extensions`, and `imessage`.
+The wallet endpoints (`GET /agentcard/wallets`, `GET /stripe-link`) need
+**Read** on `runs`.
 Scopes cannot be changed after a key is created, and a restricted key does not
 gain resources added later unless it holds a wildcard such as `v4:*:*`. Create
 a new key with the permissions you need.
