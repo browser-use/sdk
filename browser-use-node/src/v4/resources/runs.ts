@@ -14,11 +14,8 @@ type RunAttachmentsResponse = components["schemas"]["RunAttachmentsResponse"];
 /** Known V4 model ids; `RunCreateBody.model` also accepts ids added after this release. */
 export type RunModel = RunCreateRequest["model"];
 
-// agenticAutofillGrantId is gated per project and stays untyped, matching the Python SDK.
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
-  Partial<
-    Omit<RunCreateRequest, "task" | "model" | "browserSettings" | "agenticAutofillGrantId">
-  > & {
+  Partial<Omit<RunCreateRequest, "task" | "model" | "browserSettings">> & {
     // `string & {}` keeps autocomplete for known ids without rejecting new ones.
     model?: RunModel | (string & {});
     // Generated types mark defaulted fields (proxyCountryCode) required; the server fills them.
