@@ -18,12 +18,16 @@ async function main() {
     task: "Go to my LinkedIn profile and get my connection count",
     browserSettings: { profileId: PROFILE_ID },
   });
-  const result = await client.runs.waitForCompletion(run.id);
+  let result;
+  try {
+    result = await client.runs.waitForCompletion(run.id);
+  } finally {
+    // sessionId is the agent session; each of its browsers has its own id.
+    const browsers = await client.browsers.list({ agentSessionId: run.sessionId, filterBy: "active" });
+    for (const b of browsers.items) await client.browsers.stop(b.id);
+  }
+  if (result.status !== "completed") throw new Error(`Run ${result.status}: ${result.error}`);
   console.log(result.result);
-
-  // sessionId is the agent session; each of its browsers has its own id.
-  const browsers = await client.browsers.list({ agentSessionId: run.sessionId, filterBy: "active" });
-  for (const b of browsers.items) await client.browsers.stop(b.id);
 }
 
 main();

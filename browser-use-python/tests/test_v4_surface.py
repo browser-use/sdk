@@ -17,6 +17,7 @@ from .test_v4 import FakeSyncHttp
 SESSION_ID = "00000000-0000-0000-0000-000000000002"
 WALLET_ID = "00000000-0000-0000-0000-000000000020"
 LINK_ID = "00000000-0000-0000-0000-000000000021"
+PROFILE_ID = "00000000-0000-0000-0000-000000000040"
 
 _RUN = {
     "id": "00000000-0000-0000-0000-000000000001",
@@ -119,6 +120,14 @@ CASES: list[Any] = [
         ("PATCH", f"/sessions/{SESSION_ID}/cost-cap", {"maxCostUsd": "2.50"}, None),
         _ANY,
         id="sessions.update_cost_cap camelCases max_cost_usd",
+    ),
+    pytest.param(
+        Profiles,
+        lambda p: p.update(PROFILE_ID, name=None),
+        {"id": PROFILE_ID, "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"},
+        ("PATCH", f"/profiles/{PROFILE_ID}", {"name": None}, None),
+        _ANY,
+        id="profiles.update sends a null name to clear it and omits unset user_id",
     ),
     pytest.param(
         Profiles,

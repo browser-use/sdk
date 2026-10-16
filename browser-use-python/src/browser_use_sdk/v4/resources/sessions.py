@@ -83,7 +83,7 @@ class Sessions:
 
     def delete(self, session_id: str | UUID) -> None:
         """Delete a session, cancelling its active run and pending messages."""
-        self._http.request("DELETE", f"/sessions/{session_id}")
+        self._http.request_idempotent("DELETE", f"/sessions/{session_id}")
 
     def cost(self, session_id: str | UUID) -> SessionCostResponse:
         """Get what the session has cost so far: LLM, search, browser and proxy."""
@@ -94,7 +94,7 @@ class Sessions:
     def update_cost_cap(
         self, session_id: str | UUID, *, max_cost_usd: float | str, **extra: Any
     ) -> SessionCostCapResponse:
-        """Change the USD spend cap of the session's active run."""
+        """Set the session's USD spend cap."""
         return SessionCostCapResponse.model_validate(
             self._http.request(
                 "PATCH",
@@ -220,7 +220,7 @@ class AsyncSessions:
 
     async def delete(self, session_id: str | UUID) -> None:
         """Delete a session, cancelling its active run and pending messages."""
-        await self._http.request("DELETE", f"/sessions/{session_id}")
+        await self._http.request_idempotent("DELETE", f"/sessions/{session_id}")
 
     async def cost(self, session_id: str | UUID) -> SessionCostResponse:
         """Get what the session has cost so far: LLM, search, browser and proxy."""
@@ -231,7 +231,7 @@ class AsyncSessions:
     async def update_cost_cap(
         self, session_id: str | UUID, *, max_cost_usd: float | str, **extra: Any
     ) -> SessionCostCapResponse:
-        """Change the USD spend cap of the session's active run."""
+        """Set the session's USD spend cap."""
         return SessionCostCapResponse.model_validate(
             await self._http.request(
                 "PATCH",

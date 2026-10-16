@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
     ProfileListResponse,
@@ -60,15 +61,15 @@ class Profiles:
         self,
         profile_id: str | UUID,
         *,
-        name: str | None = None,
-        user_id: str | None = None,
+        name: str | None = _UNSET,  # type: ignore[assignment]
+        user_id: str | None = _UNSET,  # type: ignore[assignment]
         **extra: Any,
     ) -> ProfileView:
-        """Update a profile."""
+        """Update a profile; pass ``None`` to clear ``name`` or ``user_id``."""
         body: dict[str, Any] = {}
-        if name is not None:
+        if name is not _UNSET:
             body["name"] = name
-        if user_id is not None:
+        if user_id is not _UNSET:
             body["userId"] = user_id
         body.update(extra)
         return ProfileView.model_validate(
@@ -128,15 +129,15 @@ class AsyncProfiles:
         self,
         profile_id: str | UUID,
         *,
-        name: str | None = None,
-        user_id: str | None = None,
+        name: str | None = _UNSET,  # type: ignore[assignment]
+        user_id: str | None = _UNSET,  # type: ignore[assignment]
         **extra: Any,
     ) -> ProfileView:
-        """Update a profile."""
+        """Update a profile; pass ``None`` to clear ``name`` or ``user_id``."""
         body: dict[str, Any] = {}
-        if name is not None:
+        if name is not _UNSET:
             body["name"] = name
-        if user_id is not None:
+        if user_id is not _UNSET:
             body["userId"] = user_id
         body.update(extra)
         return ProfileView.model_validate(

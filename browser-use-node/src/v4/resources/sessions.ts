@@ -48,7 +48,7 @@ export class Sessions {
 
   /** Delete a session, cancelling its active run and pending messages. */
   delete(sessionId: string): Promise<void> {
-    return this.http.delete<void>(`/sessions/${sessionId}`);
+    return this.http.requestIdempotent<void>("DELETE", `/sessions/${sessionId}`);
   }
 
   /** Get what the session has cost so far: LLM, search, browser and proxy. */
@@ -56,7 +56,7 @@ export class Sessions {
     return this.http.get<SessionCostResponse>(`/sessions/${sessionId}/cost`);
   }
 
-  /** Change the USD spend cap of the session's active run. */
+  /** Set the session's USD spend cap. */
   updateCostCap(sessionId: string, body: SessionCostCapRequest): Promise<SessionCostCapResponse> {
     return this.http.patch<SessionCostCapResponse>(`/sessions/${sessionId}/cost-cap`, body);
   }

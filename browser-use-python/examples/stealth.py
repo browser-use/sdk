@@ -15,23 +15,30 @@ load_dotenv()
 TASK = "Go to whatismyipaddress.com and tell me my location"
 
 
+async def run_task(client: AsyncBrowserUse, **settings) -> str | None:
+    """Run TASK, stop its browsers, and return the result."""
+    run = await client.runs.create(TASK, **settings)
+    try:
+        result = await client.runs.wait_for_completion(run.id)
+    finally:
+        # session_id is the agent session; each of its browsers has its own id.
+        browsers = await client.browsers.list(
+            agent_session_id=run.session_id, filter_by="active"
+        )
+        for b in browsers.items:
+            await client.browsers.stop(b.id)
+    if result.status.value != "completed":
+        raise RuntimeError(f"Run {result.status.value}: {result.error}")
+    return result.result
+
+
 async def main():
     async with AsyncBrowserUse() as client:
         # Default proxy (US)
-        us = await client.runs.create(TASK)
-        print(f"US proxy: {(await client.runs.wait_for_completion(us.id)).result}")
+        print(f"US proxy: {await run_task(client)}")
 
         # Custom proxy -- Germany
-        de = await client.runs.create(TASK, browser_settings={"proxyCountryCode": "de"})
-        print(f"DE proxy: {(await client.runs.wait_for_completion(de.id)).result}")
-
-        # session_id is the agent session; each of its browsers has its own id.
-        for run in (us, de):
-            browsers = await client.browsers.list(
-                agent_session_id=run.session_id, filter_by="active"
-            )
-            for b in browsers.items:
-                await client.browsers.stop(b.id)
+        print(f"DE proxy: {await run_task(client, browser_settings={'proxyCountryCode': 'de'})}")
 
 
 asyncio.run(main())

@@ -23,15 +23,18 @@ async def main():
             "Go to my LinkedIn profile and get my connection count",
             browser_settings={"profileId": PROFILE_ID},
         )
-        result = await client.runs.wait_for_completion(run.id)
+        try:
+            result = await client.runs.wait_for_completion(run.id)
+        finally:
+            # session_id is the agent session; each of its browsers has its own id.
+            browsers = await client.browsers.list(
+                agent_session_id=run.session_id, filter_by="active"
+            )
+            for b in browsers.items:
+                await client.browsers.stop(b.id)
+        if result.status.value != "completed":
+            raise RuntimeError(f"Run {result.status.value}: {result.error}")
         print(result.result)
-
-        # session_id is the agent session; each of its browsers has its own id.
-        browsers = await client.browsers.list(
-            agent_session_id=run.session_id, filter_by="active"
-        )
-        for b in browsers.items:
-            await client.browsers.stop(b.id)
 
 
 asyncio.run(main())

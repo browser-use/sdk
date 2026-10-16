@@ -608,6 +608,7 @@ class TestClientInit:
         from browser_use_sdk.v4 import BrowserUse
 
         client = BrowserUse(api_key="test-key")
+        assert hasattr(client, "browsers")
         assert hasattr(client, "runs")
         assert hasattr(client, "sessions")
         assert hasattr(client, "workspaces")

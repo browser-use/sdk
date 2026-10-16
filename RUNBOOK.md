@@ -77,7 +77,7 @@ Follow existing patterns in the codebase. Read before writing.
 
 1. Run `task test`. Fix failures (max 3 attempts, then escalate).
 2. Optionally run `task test:live` if backend is reachable.
-3. Confirm version bump with user → bump both packages → `task snapshot:save` (also copies the snapshots into `docs/openapi/` and `docs/cloud/openapi/`) → commit.
+3. Confirm version bump with user → bump both packages → `task snapshot:save` → `task docs:refresh-production` (snapshot:save copies the cloud-main snapshots into `docs/openapi/` and `docs/cloud/openapi/`; the refresh puts the docs back on what production serves) → commit.
 4. **Merge the bump PR to main.** The `auto-release-on-version-bump` workflow creates the GitHub Release for `v$NEW_VERSION` at the bump commit, which fires `publish.yml`. See the "Releasing" section above for the full flow. Ping a release reviewer (gregpr07 or LarsenCundric, whoever is NOT you) to approve at the `release` environment gate in the Actions tab. On approval: npm + PyPI publish in parallel, ~3-5 minutes. If publish fails: the GitHub Release stays as the rollback handle; investigate, fix, re-cut a new patch version.
 
 ---
