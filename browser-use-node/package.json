@@ -1,7 +1,7 @@
 {
   "name": "browser-use-sdk",
   "version": "3.12.1",
-  "description": "Official TypeScript SDK for the Browser Use API",
+  "description": "Official TypeScript SDK for Browser Use Cloud: hosted cloud browsers for AI agents (CDP) and a browser agent API, from $0.02/browser-hour",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/browser-use/sdk.git"
