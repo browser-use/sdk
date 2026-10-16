@@ -1,6 +1,9 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "luma",
+  "icons": {
+    "library": "lucide"
+  },
   "name": "Browser Use",
   "colors": {
     "primary": "#0F1011",
@@ -82,7 +85,7 @@
                 "pages": [
                   {
                     "group": "Agent",
-                    "icon": "robot",
+                    "icon": "bot",
                     "root": "cloud/agent/quickstart",
                     "pages": [
                       "cloud/agent/quickstart",
@@ -111,7 +114,7 @@
                       "cloud/browser/playwright-puppeteer-selenium",
                       {
                         "group": "Authentication",
-                        "icon": "key",
+                        "icon": "key-round",
                         "pages": [
                           "cloud/guides/authentication",
                           "cloud/guides/profile-sync",
@@ -133,6 +136,7 @@
                     "pages": [
                       {
                         "group": "Anthropic",
+                        "icon": "sparkle",
                         "pages": [
                           "cloud/tutorials/integrations/claude-code",
                           "cloud/tutorials/integrations/claude-managed-agents"
@@ -165,7 +169,7 @@
                   "cloud/faq",
                   {
                     "group": "Legacy (v2)",
-                    "icon": "box-archive",
+                    "icon": "archive",
                     "isDefaultOpen": false,
                     "pages": [
                       "cloud/legacy/agent",
@@ -269,7 +273,7 @@
             "pages": [
               {
                 "group": "Agent",
-                "icon": "robot",
+                "icon": "bot",
                 "isDefaultOpen": true,
                 "pages": [
                   "open-source/customize/agent/basics",
@@ -280,7 +284,7 @@
               },
               {
                 "group": "Browser",
-                "icon": "window",
+                "icon": "app-window",
                 "pages": [
                   "open-source/customize/browser/basics",
                   "open-source/customize/browser/authentication",
@@ -311,10 +315,11 @@
               },
               {
                 "group": "Legacy",
-                "icon": "box-archive",
+                "icon": "archive",
                 "pages": [
                   {
                     "group": "Actor",
+                    "icon": "mouse-pointer-click",
                     "pages": [
                       "open-source/legacy/actor/basics",
                       "open-source/legacy/actor/examples",
@@ -323,6 +328,7 @@
                   },
                   {
                     "group": "Sandbox",
+                    "icon": "box",
                     "pages": [
                       "open-source/legacy/sandbox/quickstart",
                       "open-source/legacy/sandbox/events",
@@ -338,7 +344,7 @@
             "pages": [
               {
                 "group": "Templates",
-                "icon": "folder",
+                "icon": "layout-template",
                 "pages": [
                   "open-source/examples/templates/fast-agent",
                   "open-source/examples/templates/follow-up-tasks",
@@ -351,7 +357,7 @@
               },
               {
                 "group": "Apps",
-                "icon": "box-open",
+                "icon": "package",
                 "pages": [
                   "open-source/examples/apps/ad-use",
                   "open-source/examples/apps/vibetest-use",
@@ -361,7 +367,7 @@
               },
               {
                 "group": "Skills",
-                "icon": "wand-magic-sparkles",
+                "icon": "wand-sparkles",
                 "pages": [
                   "open-source/examples/skills/overview",
                   "open-source/examples/skills/browser-use",
@@ -379,7 +385,7 @@
             "pages": [
               {
                 "group": "Contribution",
-                "icon": "github",
+                "icon": "git-pull-request",
                 "isDefaultOpen": true,
                 "pages": [
                   "open-source/development/setup/local-setup",
@@ -388,14 +394,14 @@
               },
               {
                 "group": "Advanced",
-                "icon": "gear",
+                "icon": "settings",
                 "pages": [
                   "open-source/customize/hooks"
                 ]
               },
               {
                 "group": "Monitoring",
-                "icon": "chart-mixed",
+                "icon": "activity",
                 "pages": [
                   "open-source/development/monitoring/observability",
                   "open-source/development/monitoring/openlit",

@@ -295,7 +295,7 @@ body {
 [data-component-part="card-icon"] {
   color: var(--bu-muted) !important;
 }
-/* Font Awesome icons are CSS masks painted with background-color */
+/* Mintlify icons are CSS masks painted with background-color */
 [data-component-part="card-icon"] svg {
   background-color: var(--bu-muted) !important;
   width: 20px !important;
@@ -376,19 +376,25 @@ body {
 }
 
 /* ---------- Sidebar ---------- */
-/* Icons were on some items and not others; text-only reads cleaner. */
-#sidebar-content li > a > div:first-child:has(> svg[style*="mask"]),
-#sidebar-content li > a > div:first-child:has(> svg[class*="icon"]),
-#sidebar-content li > button > div:first-child:has(> svg[style*="mask"]),
-#sidebar-content .sidebar-group-header > svg {
-  display: none !important;
+/* Every nav item has a Lucide icon (docs.json icons.library); masks are painted with background-color. */
+:is(#sidebar-content, #mobile-nav) li > :is(a, button) > div:first-child > svg[style*="mask"] {
+  background-color: var(--bu-muted) !important;
+  transition: background-color 120ms ease;
 }
-/* Room for labels like "Playwright, Puppeteer, Selenium" on one line */
+:is(#sidebar-content, #mobile-nav) li > :is(a, button):hover > div:first-child > svg[style*="mask"],
+:is(#sidebar-content, #mobile-nav) li[data-active] > a > div:first-child > svg[style*="mask"],
+:is(#sidebar-content, #mobile-nav) a[aria-current="page"] > div:first-child > svg[style*="mask"] {
+  background-color: var(--bu-fg) !important;
+}
+/* Keep long labels clear of the scrollbar */
 #sidebar-content [data-component-part="scroll-area-viewport"] {
   padding-right: 12px;
 }
 #sidebar-content li > a {
   padding-right: 8px;
+}
+#sidebar-content li > :is(a, button) {
+  column-gap: 10px;
 }
 #sidebar-content .sidebar-group-header {
   color: var(--bu-muted) !important;
