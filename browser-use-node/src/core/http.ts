@@ -75,7 +75,7 @@ export class HttpClient {
       headers["X-Browser-Use-API-Key"] = this.apiKey;
     }
     // FormData bodies are sent as-is so fetch sets the multipart boundary.
-    const isForm = options?.body instanceof FormData;
+    const isForm = typeof FormData !== "undefined" && options?.body instanceof FormData;
     if (options?.body !== undefined && !isForm) {
       headers["Content-Type"] = "application/json";
     }

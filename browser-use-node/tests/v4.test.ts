@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from "fs";
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -619,11 +619,19 @@ describe("v4 extensions", () => {
   };
   const zipBytes = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 1, 2, 3]);
 
+  const tmpDirs: string[] = [];
+
   function zipPath(): string {
-    const path = join(mkdtempSync(join(tmpdir(), "bu-v4-ext-")), "demo.zip");
+    const dir = mkdtempSync(join(tmpdir(), "bu-v4-ext-"));
+    tmpDirs.push(dir);
+    const path = join(dir, "demo.zip");
     writeFileSync(path, zipBytes);
     return path;
   }
+
+  afterEach(() => {
+    for (const dir of tmpDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+  });
 
   it.each([
     ["a file path", () => zipPath()],
