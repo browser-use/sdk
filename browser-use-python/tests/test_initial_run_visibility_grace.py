@@ -1,7 +1,7 @@
 """Local HTTP evidence for bounded initial visibility recovery.
 
 HTTP is real loopback; budget tests replace only clock/sleep functions. The server deliberately schedules a visibility lag;
-this does not emulate PostgreSQL or establish the customer's SDK version.
+this does not emulate PostgreSQL.
 """
 import asyncio
 import json
@@ -122,8 +122,8 @@ def observe(name, state, **data):
     print("OBSERVATION " + json.dumps(dict(name=name, calls=state.calls, **data)), flush=True)
 
 
-def test_proposed_initial_visibility_recovery_red():
-    """PROPOSED: bounded initial 404 recovery after acknowledged create, not an existing SDK promise."""
+def test_initial_visibility_recovery():
+    """Bounded initial 404 recovery after an acknowledged create."""
     async def run():
         with fixture_http([404, "running", "completed"]) as s:
             async with client(s) as c:
@@ -142,11 +142,11 @@ def test_proposed_initial_visibility_recovery_red():
                 assert completed.status.value == "completed"
                 assert count(s, "/runs", "POST") == 1
                 assert not s.cancelled
-                observe("proposed_visibility", s, elapsed_s=elapsed, waiter_polls=waiter_polls,
+                observe("initial_visibility", s, elapsed_s=elapsed, waiter_polls=waiter_polls,
                         failure_type=type(failure).__name__ if failure else None,
                         failure_status=getattr(failure, "status_code", None), fixture_completed=True)
                 assert result is not None and result.status.value == "completed", (
-                    f"Proposed initial-visibility recovery failed: {type(failure).__name__}: {failure}; "
+                    f"Initial-visibility recovery failed: {type(failure).__name__}: {failure}; "
                     f"waiter made {waiter_polls} status GET(s), fixture completed independently"
                 )
                 assert elapsed < 0.35
@@ -187,7 +187,7 @@ def test_permanent_missing_and_auth_error_controls(code):
     asyncio.run(run())
 
 
-def test_customer_create_wait_recovers_without_timeout_cancellation():
+def test_create_wait_recovers_without_timeout_cancellation():
     async def run():
         with fixture_http([404, "running", "completed"]) as s:
             async with client(s) as c:
@@ -198,7 +198,7 @@ def test_customer_create_wait_recovers_without_timeout_cancellation():
                 timeout_handler = False
                 run = await c.runs.create(task, model=model, model_params=model_params)
                 try:
-                    # Same customer flow; only polling cadence is shortened for this fixture.
+                    # Typical create+wait flow; only polling cadence is shortened for this fixture.
                     result = await c.runs.wait_for_completion(run.id, timeout=task_timeout, interval=0.005)
                 except TimeoutError:
                     timeout_handler = True
@@ -209,7 +209,7 @@ def test_customer_create_wait_recovers_without_timeout_cancellation():
                 assert not s.cancelled
                 assert count(s, "/status") == 3
                 assert count(s, "/runs", "POST") == 1
-                observe("customer_snippet_recovery", s, timeout_handler=False, fixture_completed=True)
+                observe("create_wait_recovery", s, timeout_handler=False, fixture_completed=True)
     asyncio.run(run())
 
 

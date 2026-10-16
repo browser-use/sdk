@@ -71,9 +71,15 @@ def _build_create_body(
         body["workspaceId"] = str(workspace_id)
     if browser_settings is not None:
         if isinstance(browser_settings, RunBrowserSettings):
-            body["browserSettings"] = browser_settings.model_dump(
-                by_alias=True, exclude_none=True, mode="json"
-            )
+            settings = browser_settings.model_dump(by_alias=True, exclude_none=True, mode="json")
+            # Send proxyCountryCode only when set (null means no proxy); otherwise the server default or session inherits.
+            if "proxy_country_code" in browser_settings.model_fields_set:
+                settings["proxyCountryCode"] = browser_settings.model_dump(
+                    by_alias=True, mode="json", include={"proxy_country_code"}
+                )["proxyCountryCode"]
+            else:
+                settings.pop("proxyCountryCode", None)
+            body["browserSettings"] = settings
         else:
             body["browserSettings"] = browser_settings
     if agentmail is not None:

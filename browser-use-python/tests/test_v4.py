@@ -15,7 +15,13 @@ from pydantic import SecretStr
 
 from browser_use_sdk._core import http as http_module
 from browser_use_sdk._core.http import AsyncHttpClient, SyncHttpClient
-from browser_use_sdk.v4 import InlineSecretSource, OnePasswordSecretSource, SecretBinding
+from browser_use_sdk.v4 import (
+    InlineSecretSource,
+    OnePasswordSecretSource,
+    RunBrowserSettings,
+    RunJudgeSettings,
+    SecretBinding,
+)
 from browser_use_sdk.v4.resources.browsers import AsyncBrowsers, Browsers
 from browser_use_sdk.v4.resources.extensions import AsyncExtensions, Extensions
 from browser_use_sdk.v4.resources.runs import AsyncRuns, Runs
@@ -507,6 +513,24 @@ def test_runs_create_sends_camel_case_body() -> None:
         "maxCostUsd": "1.50",
     }
     assert str(created.id) == RUN_ID
+
+
+@pytest.mark.parametrize(("settings", "wire"), [
+    ({}, {}),
+    ({"proxyCountryCode": None}, {"proxyCountryCode": None}),
+    ({"proxyCountryCode": "de"}, {"proxyCountryCode": "de"}),
+    ({"record": True}, {"record": True}),
+    ({"profileId": None, "screenWidth": None, "extensionIds": None}, {}),
+])
+def test_runs_create_typed_settings_send_only_set_fields(settings: dict[str, Any], wire: dict[str, Any]) -> None:
+    created = {"id": RUN_ID, "status": "queued", "model": "minimax-m3", "sessionId": SESSION_ID,
+               "workspaceId": WORKSPACE_ID, "eventsUrl": f"https://api.browser-use.com/api/v4/runs/{RUN_ID}/events"}
+    http = FakeSyncHttp([created])
+    runs = Runs(http)  # type: ignore[arg-type]
+
+    runs.create("t", browser_settings=RunBrowserSettings.model_validate(settings))
+
+    assert http.calls[0][2] == {"task": "t", "browserSettings": wire}
 
 
 def test_runs_create_serializes_onepassword_binding() -> None:

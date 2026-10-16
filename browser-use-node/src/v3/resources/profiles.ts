@@ -8,7 +8,11 @@ type ProfileUpdateRequest = components["schemas"]["ProfileUpdateRequest"];
 
 export interface ProfileListParams {
   query?: string;
+  pageSize?: number;
+  pageNumber?: number;
+  /** @deprecated Use `pageNumber`. */
   page?: number;
+  /** @deprecated Use `pageSize`. */
   page_size?: number;
 }
 
@@ -22,7 +26,12 @@ export class Profiles {
 
   /** List profiles for the authenticated project. */
   list(params?: ProfileListParams): Promise<ProfileListResponse> {
-    return this.http.get<ProfileListResponse>("/profiles", params as Record<string, unknown>);
+    const { page, page_size, ...rest } = params ?? {};
+    return this.http.get<ProfileListResponse>("/profiles", {
+      ...rest,
+      pageNumber: rest.pageNumber ?? page,
+      pageSize: rest.pageSize ?? page_size,
+    });
   }
 
   /** Get profile details. */

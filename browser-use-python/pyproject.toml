@@ -4,16 +4,16 @@ build-backend = "hatchling.build"
 
 [project]
 name = "browser-use-sdk"
-version = "3.12.0"
+version = "3.12.1"
 description = "Python SDK for the Browser Use cloud API"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
-    "httpx==0.28.1",
-    "pydantic==2.13.5",
-    # Security pin on a transitive dependency of httpx.
-    "idna==3.19",  # CVE-2026-45409
+    "httpx>=0.24.1,<1",
+    "pydantic>=2.10.6,<3",
+    # Security floor on a transitive dependency of httpx.
+    "idna>=3.19",  # CVE-2026-45409
 ]
 
 [project.urls]
@@ -46,6 +46,10 @@ x402 = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/browser_use_sdk"]
+
+# Ship only the package source in the sdist; tests, examples and uv.lock stay in the repo.
+[tool.hatch.build.targets.sdist]
+only-include = ["src", "README.md", "pyproject.toml"]
 
 [tool.pytest.ini_options]
 markers = [

@@ -17,7 +17,7 @@ from browser_use_sdk.v4 import BrowserUse
 client = BrowserUse()
 run = client.runs.create(
     "Open the login page and stop for human review",
-    keepAlive=900,
+    keep_alive=900,
 )
 ready = client.runs.wait_for_event(run.id, "browser.ready")
 client.runs.wait_for_completion(run.id)
@@ -30,7 +30,7 @@ next_run = client.runs.create(
 )
 ```
 ```typescript TypeScript
-import { BrowserUse, type RunCreateBody } from "browser-use-sdk/v4";
+import { BrowserUse } from "browser-use-sdk/v4";
 import * as readline from "node:readline/promises";
 
 const client = new BrowserUse();
@@ -39,7 +39,7 @@ const run = await client.runs.create({
   model: "gpt-5.6-luna",
   modelParams: { reasoning: { effort: "xhigh" } },
   keepAlive: 900,
-} as RunCreateBody);
+});
 const ready = await client.runs.waitForEvent(run.id, "browser.ready");
 await client.runs.waitForCompletion(run.id);
 console.log(ready.data.live_view_url);
@@ -67,8 +67,9 @@ const nextRun = await client.runs.create({
 
 The same session keeps the conversation and workspace. Without `keepAlive`,
 its browser stops about 2 minutes after the run ends, and the follow-up starts
-on a fresh browser without the human's page state. `keepAlive=900` keeps it
-open for 15 minutes; the follow-up inherits the value, and kept time is billed.
-See [Sessions](/cloud/agent/sessions#keep-the-browser-open-between-runs).
+on a fresh browser without the human's page state. A `keepAlive` of 900 keeps
+it open for 15 minutes; the follow-up inherits the value, and kept time is billed.
+The typed `keep_alive` / `keepAlive` needs SDK 3.12+; see
+[Sessions](/cloud/agent/sessions#keep-the-browser-open-between-runs) for 3.11.3.
 In a web app, replace the terminal prompt with an explicit Continue control.
 Treat live-view URLs as credentials.

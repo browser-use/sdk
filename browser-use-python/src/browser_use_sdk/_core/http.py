@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 import asyncio
 import random
+import ssl
 from datetime import datetime
 from enum import Enum
 from typing import Any
@@ -40,6 +41,28 @@ def _should_retry(method: str, status_code: int) -> bool:
     return status_code == 429 or (
         method.upper() == "GET" and status_code in _RETRY_GET_STATUSES
     )
+
+
+# GET only: a write may have reached the server. Read timeouts are excluded so a hang fails after one timeout.
+_RETRY_GET_TRANSPORT = (httpx.NetworkError, httpx.RemoteProtocolError, httpx.ConnectTimeout)
+
+
+def _is_cert_error(error: BaseException | None) -> bool:
+    # httpx chains the ssl error through httpcore, as __cause__ or __context__.
+    while error is not None:
+        if isinstance(error, ssl.SSLCertVerificationError):
+            return True
+        error = error.__cause__ or error.__context__
+    return False
+
+
+def _should_retry_transport(method: str, error: httpx.TransportError) -> bool:
+    return method.upper() == "GET" and isinstance(error, _RETRY_GET_TRANSPORT) and not _is_cert_error(error)
+
+
+def _backoff_delay(attempt: int) -> float:
+    backoff = min(_BACKOFF_BASE * (2 ** min(attempt + 1, 5)), _MAX_RETRY_DELAY)
+    return min(_MAX_RETRY_DELAY, backoff + random.random() * 0.25)
 
 
 def _retry_delay(response: httpx.Response, attempt: int) -> float | None:
@@ -105,6 +128,8 @@ class SyncHttpClient:
         timeout: float = 30.0,
         max_retries: int = _DEFAULT_MAX_RETRIES,
     ) -> None:
+        if max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
         self._max_retries = max_retries
         self._client = httpx.Client(
             base_url=base_url,
@@ -125,9 +150,15 @@ class SyncHttpClient:
         json = _clean_json(json) if json is not None else None
         cleaned_params = _clean_params(params)
         for attempt in range(self._max_retries + 1):
-            response = self._client.request(
-                method, path, json=json, params=cleaned_params, headers=headers, files=files
-            )
+            try:
+                response = self._client.request(
+                    method, path, json=json, params=cleaned_params, headers=headers, files=files
+                )
+            except httpx.TransportError as error:
+                if attempt < self._max_retries and _should_retry_transport(method, error):
+                    time.sleep(_backoff_delay(attempt))
+                    continue
+                raise
 
             if _should_retry(method, response.status_code) and attempt < self._max_retries:
                 delay = _retry_delay(response, attempt)
@@ -175,7 +206,11 @@ class AsyncHttpClient:
         *,
         x402_client: Any = None,
     ) -> None:
+        if max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
         self._max_retries = max_retries
+        # x402 pays per request, so a replayed GET could pay twice.
+        self._retry_transport = x402_client is None
         if x402_client is not None:
             from .x402 import x402_async_httpx_client
             self._client = x402_async_httpx_client(
@@ -201,9 +236,15 @@ class AsyncHttpClient:
         json = _clean_json(json) if json is not None else None
         cleaned_params = _clean_params(params)
         for attempt in range(self._max_retries + 1):
-            response = await self._client.request(
-                method, path, json=json, params=cleaned_params, headers=headers, files=files
-            )
+            try:
+                response = await self._client.request(
+                    method, path, json=json, params=cleaned_params, headers=headers, files=files
+                )
+            except httpx.TransportError as error:
+                if self._retry_transport and attempt < self._max_retries and _should_retry_transport(method, error):
+                    await asyncio.sleep(_backoff_delay(attempt))
+                    continue
+                raise
 
             if _should_retry(method, response.status_code) and attempt < self._max_retries:
                 delay = _retry_delay(response, attempt)

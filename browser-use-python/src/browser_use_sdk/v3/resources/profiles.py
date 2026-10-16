@@ -38,15 +38,20 @@ class Profiles:
         self,
         *,
         query: str | None = None,
-        page: int | None = None,
+        page_number: int | None = None,
         page_size: int | None = None,
+        page: int | None = None,
     ) -> ProfileListResponse:
-        """List profiles for the authenticated project."""
+        """List profiles for the authenticated project. ``page`` is a deprecated alias of ``page_number``."""
         return ProfileListResponse.model_validate(
             self._http.request(
                 "GET",
                 "/profiles",
-                params={"query": query, "page": page, "page_size": page_size},
+                params={
+                    "query": query,
+                    "pageNumber": page if page_number is None else page_number,
+                    "pageSize": page_size,
+                },
             )
         )
 
@@ -106,15 +111,20 @@ class AsyncProfiles:
         self,
         *,
         query: str | None = None,
-        page: int | None = None,
+        page_number: int | None = None,
         page_size: int | None = None,
+        page: int | None = None,
     ) -> ProfileListResponse:
-        """List profiles for the authenticated project."""
+        """List profiles for the authenticated project. ``page`` is a deprecated alias of ``page_number``."""
         return ProfileListResponse.model_validate(
             await self._http.request(
                 "GET",
                 "/profiles",
-                params={"query": query, "page": page, "page_size": page_size},
+                params={
+                    "query": query,
+                    "pageNumber": page if page_number is None else page_number,
+                    "pageSize": page_size,
+                },
             )
         )
 

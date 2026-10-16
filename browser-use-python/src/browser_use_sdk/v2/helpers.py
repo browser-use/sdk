@@ -8,9 +8,7 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 
 from ..generated.v2.models import TaskCreatedResponse, TaskStepView, TaskView
-from .resources.tasks import AsyncTasks, Tasks
-
-TERMINAL_STATUSES = {"finished", "stopped"}
+from .resources.tasks import TERMINAL_STATUSES, AsyncTasks, Tasks
 
 T = TypeVar("T")
 
@@ -166,6 +164,7 @@ class AsyncTaskRun(Generic[T]):
         self._interval = interval
         self._task_id: str | None = None
         self.result: TaskResult[T] | None = None
+        self._created: asyncio.Future[TaskCreatedResponse] | None = None
 
     @property
     def task_id(self) -> str | None:
@@ -178,9 +177,14 @@ class AsyncTaskRun(Generic[T]):
         return self.result.output if self.result else None
 
     async def _ensure_task_id(self) -> str:
-        if self._task_id is None:
-            data: TaskCreatedResponse = await self._create_fn()
-            self._task_id = str(data.id)
+        # One shared create per handle; a failed create is re-raised, never re-sent.
+        if self._created is None:
+            self._created = asyncio.ensure_future(self._create_fn())
+            # Mark the exception retrieved so a create nobody waits for does not log a warning.
+            self._created.add_done_callback(lambda f: f.cancelled() or f.exception())
+        # Shield: a cancelled waiter must not cancel the shared, possibly already billed, create.
+        data = self._created.result() if self._created.done() else await asyncio.shield(self._created)
+        self._task_id = str(data.id)
         return self._task_id
 
     def __await__(self):  # type: ignore[override]
