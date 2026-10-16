@@ -148,6 +148,28 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/workspaces/{workspace_id}/files"): ("workspaces", "files"),
     ("delete", "/workspaces/{workspace_id}/files"): ("workspaces", "delete_file"),
     ("post", "/workspaces/{workspace_id}/files/upload"): ("workspaces", "upload_files"),
+    # extensions
+    ("post", "/extensions"): ("extensions", "create"),
+    ("get", "/extensions"): ("extensions", "list"),
+    ("get", "/extensions/{extension_id}"): ("extensions", "get"),
+    ("delete", "/extensions/{extension_id}"): ("extensions", "delete"),
+}
+
+# These v4 endpoints have no SDK methods yet, and each new endpoint must be mapped or listed here.
+_V4_NOT_IN_SDK: Set[Tuple[str, str]] = {
+    ("delete", "/integrations/{provider}"),
+    ("delete", "/sessions/{session_id}"),
+    ("get", "/agentcard/wallets"),
+    ("get", "/integrations"),
+    ("get", "/integrations/categories"),
+    ("get", "/integrations/{provider}/status"),
+    ("get", "/sessions/{session_id}/cost"),
+    ("get", "/sessions/{session_id}/share"),
+    ("get", "/stripe-link"),
+    ("patch", "/sessions/{session_id}"),
+    ("post", "/integrations/{provider}/authorize"),
+    ("post", "/sessions/{session_id}/share"),
+    ("put", "/sessions/{session_id}/share"),
 }
 
 _HTTP_METHODS = {"get", "post", "put", "patch", "delete", "head", "options"}
@@ -305,13 +327,14 @@ class TestV4Coverage:
         # namespace for those. Not duplicated in the v4 SDK surface.
         spec_eps = {ep for ep in spec_eps if not (ep[1].startswith("/browsers") or ep[1].startswith("/profiles"))}
         mapped = set(_V4_MAP.keys())
-        missing = spec_eps - mapped
+        missing = spec_eps - mapped - _V4_NOT_IN_SDK
         assert not missing, f"Unmapped v4 endpoints: {missing}"
 
     def test_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v4.resources import runs, sessions, workspaces
+        from browser_use_sdk.v4.resources import extensions, runs, sessions, workspaces
 
         resource_classes = {
+            "extensions": extensions.Extensions,
             "runs": runs.Runs,
             "sessions": sessions.Sessions,
             "workspaces": workspaces.Workspaces,
@@ -323,9 +346,10 @@ class TestV4Coverage:
             )
 
     def test_async_sdk_methods_exist(self) -> None:
-        from browser_use_sdk.v4.resources import runs, sessions, workspaces
+        from browser_use_sdk.v4.resources import extensions, runs, sessions, workspaces
 
         async_classes = {
+            "extensions": extensions.AsyncExtensions,
             "runs": runs.AsyncRuns,
             "sessions": sessions.AsyncSessions,
             "workspaces": workspaces.AsyncWorkspaces,
