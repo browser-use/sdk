@@ -90,7 +90,14 @@ Custom tools are part of the model input for that run. This lets teams expose de
 
 ## Benchmarks
 
-<img className="block" src="/open-source/images/bu-2-0-benchmark-scores.png" alt="BU Bench V1 success-rate comparison for bu-2-0" />
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/bu-2-0-benchmark-scores-light-mobile.svg" />
+  <img src="/open-source/images/bu-2-0-benchmark-scores-light.svg" alt="BU Bench V1 success rates: claude-fable-5 80.0%, bu-2-0 63.3% (highlighted), claude-opus-4-6 62.0%, gemini-3-1-pro 59.3%, claude-sonnet-4-6 59.0%, gpt-5 52.4%, gpt-5-mini 37.0%, gemini-2.5-flash 35.2%" />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/bu-2-0-benchmark-scores-dark-mobile.svg" />
+  <img src="/open-source/images/bu-2-0-benchmark-scores-dark.svg" alt="BU Bench V1 success rates: claude-fable-5 80.0%, bu-2-0 63.3% (highlighted), claude-opus-4-6 62.0%, gemini-3-1-pro 59.3%, claude-sonnet-4-6 59.0%, gpt-5 52.4%, gpt-5-mini 37.0%, gemini-2.5-flash 35.2%" />
+</picture>
 
 BU Bench V1 is a browser-agent benchmark, not a generic language benchmark. The public benchmark draws challenging but completable browser tasks from five sources:
 

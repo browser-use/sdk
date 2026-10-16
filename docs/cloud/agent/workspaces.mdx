@@ -15,18 +15,14 @@ Workspace files are synchronized to storage between runs. This is not a live
 shared filesystem between simultaneous sessions: finish one writer before
 starting another run that needs its changes.
 
-<img
-  src="/cloud/images/v4-workspaces-light.svg"
-  alt="Two independent sessions reading and writing people.csv, script.py, and output.json in one persistent workspace"
-  noZoom
-  className="block dark:hidden"
-/>
-<img
-  src="/cloud/images/v4-workspaces-dark.svg"
-  alt="Two independent sessions reading and writing people.csv, script.py, and output.json in one persistent workspace"
-  noZoom
-  className="hidden dark:block"
-/>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/v4-workspaces-light-mobile.svg" />
+  <img src="/cloud/images/v4-workspaces-light.svg" alt="Your code uploads people.csv to a workspace. A run in session A writes output.json, saved to the workspace when the run ends. A later run in session B gets both files restored at start. Your code downloads output.json." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/v4-workspaces-dark-mobile.svg" />
+  <img src="/cloud/images/v4-workspaces-dark.svg" alt="Your code uploads people.csv to a workspace. A run in session A writes output.json, saved to the workspace when the run ends. A later run in session B gets both files restored at start. Your code downloads output.json." noZoom />
+</picture>
 
 ## Upload and attach a file
 

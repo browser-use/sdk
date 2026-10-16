@@ -10,6 +10,17 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
+class APIKeySpendLimitDetail(BaseModel):
+    code: str | None = Field('api_key_monthly_spend_limit_reached', title='Code')
+    message: str = Field(..., title='Message')
+    cap: float = Field(..., title='Cap')
+    spent: float = Field(..., title='Spent')
+
+
+class APIKeySpendLimitError(BaseModel):
+    detail: str | APIKeySpendLimitDetail = Field(..., title='Detail')
+
+
 class AccountNotFoundError(BaseModel):
     detail: str | None = Field('Account not found', title='Detail')
 
@@ -49,6 +60,21 @@ class BrowserDownloadListResponse(BaseModel):
         alias='hasMore',
         description='Whether there are more files beyond this page.',
         title='Hasmore',
+    )
+
+
+class BrowserExtensionView(BaseModel):
+    id: UUID = Field(
+        ..., description='Extension ID from POST /api/v4/extensions', title='ID'
+    )
+    runtime_id: str = Field(
+        ...,
+        alias='runtimeId',
+        description='Chromium extension ID, as in chrome-extension://{runtimeId}/',
+        title='Runtime ID',
+    )
+    version: str = Field(
+        ..., description='Version from the extension manifest', title='Version'
     )
 
 
@@ -144,6 +170,11 @@ class BrowserSessionView(BaseModel):
         {},
         description='Caller-supplied labels set when the browser was created.',
         title='Metadata',
+    )
+    extensions: List[BrowserExtensionView] | None = Field(
+        default_factory=list,
+        description='Extensions installed in the browser, in the order of `extensionIds`.',
+        title='Extensions',
     )
 
 
@@ -942,8 +973,20 @@ class AccountView(BaseModel):
     rate_limit: int = Field(
         ...,
         alias='rateLimit',
-        description='The rate limit for the account',
+        description='Legacy alias for the concurrent browser session limit',
         title='Rate Limit',
+    )
+    concurrent_session_limit: int = Field(
+        ...,
+        alias='concurrentSessionLimit',
+        description='The maximum number of concurrent browser sessions for the project',
+        title='Concurrent Session Limit',
+    )
+    active_session_count: int = Field(
+        ...,
+        alias='activeSessionCount',
+        description='The number of browser sessions currently active for the project',
+        title='Active Session Count',
     )
     plan_info: PlanInfo = Field(
         ..., alias='planInfo', description='The plan information', title='Plan Info'
@@ -956,6 +999,12 @@ class AccountView(BaseModel):
     )
     project_id: UUID = Field(
         ..., alias='projectId', description='The ID of the project', title='Project ID'
+    )
+    api_key_id: UUID | None = Field(
+        None,
+        alias='apiKeyId',
+        description='The internal ID of the authenticated API key',
+        title='API Key ID',
     )
     tracing_disabled: bool | None = Field(
         False,
@@ -1042,6 +1091,11 @@ class BrowserSessionItemView(BaseModel):
         {},
         description='Caller-supplied labels set when the browser was created.',
         title='Metadata',
+    )
+    extensions: List[BrowserExtensionView] | None = Field(
+        default_factory=list,
+        description='Extensions installed in the browser, in the order of `extensionIds`.',
+        title='Extensions',
     )
 
 
@@ -1130,6 +1184,13 @@ class CreateBrowserSessionRequest(BaseModel):
         description='If True, enables session recording. Defaults to False.',
         title='Enable Recording',
     )
+    extension_ids: List[UUID] | None = Field(
+        [],
+        alias='extensionIds',
+        description='Up to 3 ready extensions from POST /api/v4/extensions to install before the browser starts.',
+        max_length=3,
+        title='Extension IDs',
+    )
 
 
 class FileUploadResponse(BaseModel):
@@ -1183,7 +1244,7 @@ class RunTaskRequest(BaseModel):
     thinking_level: ThinkingLevel | None = Field(
         None,
         alias='thinkingLevel',
-        description="Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level for Gemini 3 Flash and 3.5 Flash, and to a zero thinking budget for Gemini 2.5 Flash and the gemini-flash-latest variants); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected.",
+        description="Optional model reasoning depth. Omit this field to preserve the model provider default. Supported values depend on the selected model: most supported Claude models and GPT-5.1+ models support disabled/low/medium/high; Gemini Flash models support all four (disabled maps to Gemini's minimal level); Claude Fable 5, earlier GPT-5 models, Gemini 2.5 Pro, o3/o4, and Grok support low/medium/high; Gemini 3.1 Pro supports low/high; GLM supports disabled/high. Unsupported model/level combinations are rejected.",
     )
     session_id: UUID | None = Field(
         None,
@@ -1403,7 +1464,7 @@ class SessionResponse(BaseModel):
     proxy_used_mb: str | None = Field(
         '0',
         alias='proxyUsedMb',
-        description='Proxy bandwidth used in megabytes.',
+        description='Proxy bandwidth used in megabytes, across the session and its browsers.',
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Proxyusedmb',
     )
@@ -1417,7 +1478,7 @@ class SessionResponse(BaseModel):
     proxy_cost_usd: str | None = Field(
         '0',
         alias='proxyCostUsd',
-        description='Cost of proxy bandwidth in USD.',
+        description='Cost of proxy bandwidth in USD, across the session and its browsers.',
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Proxycostusd',
     )

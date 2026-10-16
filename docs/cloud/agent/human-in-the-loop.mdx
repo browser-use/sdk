@@ -13,7 +13,8 @@ from browser_use_sdk.v4 import BrowserUse
 
 client = BrowserUse()
 run = client.runs.create(
-    "Open the login page and stop for human review"
+    "Open the login page and stop for human review",
+    keepAlive=900,
 )
 run = client.runs.wait_for_completion(run.id)
 
@@ -31,13 +32,14 @@ next_run = client.runs.create(
 )
 ```
 ```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v4";
+import { BrowserUse, type RunCreateBody } from "browser-use-sdk/v4";
 
 const client = new BrowserUse();
 const run = await client.runs.create({
   task: "Open the login page and stop for human review",
   model: "grok-4.5",
-});
+  keepAlive: 900,
+} as RunCreateBody);
 await client.runs.waitForCompletion(run.id);
 
 const events = await client.runs.events(run.id, {
@@ -57,5 +59,9 @@ const nextRun = await client.runs.create({
 ```
 </CodeGroup>
 
-The same session preserves the conversation and workspace and reuses the live
-browser while it is available. Treat live-view URLs as credentials.
+The same session keeps the conversation and workspace. Without `keepAlive`,
+its browser stops about 2 minutes after the run ends, and the follow-up starts
+on a fresh browser without the human's page state. `keepAlive=900` keeps it
+open for 15 minutes; the follow-up inherits the value, and kept time is billed.
+See [Sessions](/cloud/agent/sessions#keep-the-browser-open-between-runs).
+Treat live-view URLs as credentials.

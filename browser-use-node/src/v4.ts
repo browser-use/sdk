@@ -4,7 +4,10 @@ export type { BrowserUseOptions } from "./v4/client.js";
 export { Browsers } from "./v4/resources/browsers.js";
 export type { CreateBrowserBody } from "./v4/resources/browsers.js";
 
-export { BrowserUseError } from "./core/errors.js";
+export { APIKeySpendLimitError, BrowserUseError } from "./core/errors.js";
+
+export { Extensions } from "./v4/resources/extensions.js";
+export type { ExtensionListParams } from "./v4/resources/extensions.js";
 
 export { Runs } from "./v4/resources/runs.js";
 export type {
@@ -45,6 +48,7 @@ export type SecretBinding = S["SecretBinding"];
 // Session models
 export type BrowserSessionItemView = S["BrowserSessionItemView"];
 export type BrowserSessionView = S["BrowserSessionView"];
+export type BrowserExtensionView = S["BrowserExtensionView"];
 export type SessionInfo = S["SessionInfo"];
 export type SessionListResponse = S["SessionListResponse"];
 export type QueueMessageRequest = S["QueueMessageRequest"];
@@ -62,6 +66,10 @@ export type WorkspaceFileUploadItem = S["WorkspaceFileUploadItem"];
 export type WorkspaceFileUploadRequest = S["WorkspaceFileUploadRequest"];
 export type WorkspaceFileUploadResponse = S["WorkspaceFileUploadResponse"];
 export type WorkspaceFileUploadResponseItem = S["WorkspaceFileUploadResponseItem"];
+
+// Extension models
+export type ExtensionView = S["ExtensionView"];
+export type ExtensionListResponse = S["ExtensionListResponse"];
 
 // Enums / string unions
 export type ProxyCountryCode = S["ProxyCountryCode"];

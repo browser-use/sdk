@@ -238,7 +238,7 @@ class Runs:
     def cancel(self, run_id: str | UUID) -> RunSummary:
         """Cancel a run. Returns the updated run summary."""
         return RunSummary.model_validate(
-            self._http.request("POST", f"/runs/{run_id}/cancel")
+            self._http.request_idempotent("POST", f"/runs/{run_id}/cancel")
         )
 
     def attachments(self, run_id: str | UUID) -> RunAttachmentsResponse:
@@ -430,7 +430,7 @@ class AsyncRuns:
     async def cancel(self, run_id: str | UUID) -> RunSummary:
         """Cancel a run. Returns the updated run summary."""
         return RunSummary.model_validate(
-            await self._http.request("POST", f"/runs/{run_id}/cancel")
+            await self._http.request_idempotent("POST", f"/runs/{run_id}/cancel")
         )
 
     async def attachments(self, run_id: str | UUID) -> RunAttachmentsResponse:

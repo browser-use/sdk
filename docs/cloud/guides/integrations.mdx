@@ -1,0 +1,57 @@
+---
+title: Connected apps
+description: "Connect Gmail, Slack, GitHub, and other apps to a project through the V4 API."
+---
+
+Connect an app once per project with OAuth. The agent can then use it in chats
+you start in the [Cloud app](https://cloud.browser-use.com).
+
+<Warning>
+  Runs created with an API key do not get connected-app tools yet. The
+  endpoints below manage the project's connections; they do not add tools to
+  API runs.
+</Warning>
+
+## Connect an app
+
+Find the provider name:
+
+```bash
+curl "https://api.browser-use.com/api/v4/integrations?search=gmail" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+Each item has `provider`, `display_name`, `category`, and `is_connected`. Use
+`popular_only=true` or `connected_only=true` to filter the list, but not both.
+`GET /api/v4/integrations/categories` lists the categories.
+
+Start OAuth and open the returned `redirect_url` in a browser:
+
+```bash
+curl -X POST "https://api.browser-use.com/api/v4/integrations/gmail/authorize" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+After you approve access, poll until `is_connected` is `true`:
+
+```bash
+curl "https://api.browser-use.com/api/v4/integrations/gmail/status" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+## Disconnect an app
+
+```bash
+curl -X DELETE "https://api.browser-use.com/api/v4/integrations/gmail" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+## Limits
+
+- Connections belong to the project, not to one API key or session.
+- Zero Data Retention and PHI projects get `403` on authorize. They can still
+  list and disconnect existing connections.
+- Connected apps are not available on the [EU deployment](/cloud/eu-deployment).
+- A [restricted API key](/cloud/guides/troubleshooting#restricted-api-keys)
+  needs `integrations` **Read** to list connections and check status, and
+  **Write** to authorize or disconnect.
