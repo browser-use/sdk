@@ -4,7 +4,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from core import C, S, NS, THEMES, Doc, tw, P, pts, m_top, m_front  # noqa: E402
 
 TITLE = "keepAlive holds the browser open so a human can work in it before the next run"
-DESC = ("The first run ends and the browser stays open for keepAlive 900 seconds. A human uses the live_view_url in that browser, "
+DESC = ("The first run ends and the browser stays open for up to keepAlive 900 seconds. A human uses the live_view_url in that browser, "
         "then a follow-up run with the same session_id continues on the same page.")
 FIG = "FIG 2.1"
 
@@ -16,6 +16,8 @@ def defs(d, W, H):
         f'<path d="M1 1.5 L9 5 L1 8.5" stroke="{t["ink3"]}" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></marker>'
         f'<linearGradient id="fade" x1="0" x2="1"><stop offset="0" stop-color="{t["orange"]}"/>'
         f'<stop offset="1" stop-color="{t["orange"]}" stop-opacity="0"/></linearGradient>'
+        f'<linearGradient id="fadeo" x1="0" x2="1"><stop offset="0" stop-color="{t["otext"]}"/>'
+        f'<stop offset="1" stop-color="{t["otext"]}" stop-opacity="0"/></linearGradient>'
         f'<filter id="glow" filterUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}"><feGaussianBlur stdDeviation="4"/></filter>'
     )
     d.css.append("@keyframes cur{0%,100%{transform:translate(0,0)}35%{transform:translate(-6px,-4px)}70%{transform:translate(-11px,1px)}}"
@@ -119,7 +121,10 @@ def lanes(d, theme, X0, X1, R1, R2, yr, yh, yb, pad=8):
 
     # keepAlive dimension under the gap
     yd = yb + 14
-    d.add(f'<path d="M{g0} {yd - 4}v8M{g1} {yd - 4}v8M{g0} {yd}H{g1}" stroke="{ot}" stroke-width="1"/>')
+    # keepAlive is a ceiling: the follow-up starts inside it, so the span runs past g1 and fades
+    tail = g1 + (R2[1] - g1) * 0.6
+    d.add(f'<path d="M{g0} {yd - 4}v8M{g0} {yd}H{g1}" stroke="{ot}" stroke-width="1"/>')
+    d.add(f'<rect x="{g1}" y="{yd - 0.5}" width="{tail - g1:.1f}" height="1" fill="url(#fadeo)"/>')
     d.text(mid, yd + 16, "keepAlive=900", 11, ot, 600, mono=True, anchor="middle")
     return yd + 16
 

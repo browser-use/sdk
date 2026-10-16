@@ -157,7 +157,7 @@ def build_mobile(theme):
     oy = sheet_top + 29.5         # output plate origin y
     H = round(oy + 37 + 11 + 28)
     d = Doc(W, H, t, TITLE, DESC)
-    d.paper("FIG 4.0", "V4 AGENT", m=16)
+    d.paper("FIG 4.0", "STRUCTURED OUTPUT", m=16)
     setup(d)
 
     to = (X - (86 - 62) * C / 2, ty)

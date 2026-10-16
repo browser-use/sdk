@@ -8,7 +8,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from core import NS, RJ, THEMES, Doc, P, pts, m_top, m_front  # noqa: E402
 
 TITLE = "A run writes one ordered event stream; your loop reads it page by page with a cursor"
-DESC = ("The run writes ordered events, from browser.ready to completed. Your loop reads one page of events after a cursor. "
+DESC = ("The run writes ordered events, from browser.ready to run.completed. Your loop reads one page of events after a cursor. "
         "Each page returns nextAfter; pass it back as after and keep reading while hasMore is true.")
 N, CUT = 8, 4  # events on the tape; the cursor sits after event CUT
 
@@ -127,8 +127,8 @@ def build(theme):
     d.add(f'<circle cx="{XC}" cy="{ya}" r="3.2" fill="{t["paper"]}" stroke="{ink}" stroke-width="1.4"/>')
     d.text(XC - 8, yl, "nextAfter", 11, ink, mono=True, anchor="end")
     d.text(XC + 8, yl, "after", 11, ink, mono=True)
-    d.text(xs[0] - 18, yl, "browser.ready", 11, ot, mono=True)
-    d.text(xs[-1] + 18, yl, "completed", 11, ot, mono=True, anchor="end")
+    d.text(xs[0], yl, "browser.ready", 11, ot, mono=True, anchor="middle")
+    d.text(xs[-1], yl, "run.completed", 11, ot, mono=True, anchor="middle")
 
     # your loop reads the end of the tape; while hasMore it asks again from the cursor
     WW, WH = 56, 40
@@ -177,7 +177,7 @@ def build_mobile(theme):
         event_card(d, XR, y - 4, k)
 
     d.text(XR + 30, ys[0] + 0, "browser.ready", 11, ot, mono=True)
-    d.text(XR + 30, ys[-1] + 0, "completed", 11, ot, mono=True)
+    d.text(XR + 30, ys[-1] + 0, "run.completed", 11, ot, mono=True)
 
     # cursor pin
     xe = XR + 96

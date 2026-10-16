@@ -6,7 +6,7 @@ from core import C, S, NS, RJ, THEMES, Doc, tw, P, pts, m_top, m_front  # noqa: 
 TITLE = "A run's totalCostUsd covers LLM and search; the session cost adds the browser and proxy"
 DESC = ("The session cost is a stack of four parts: llmCostUsd and searchCostUsd from the run, "
         "browserCostUsd and proxyCostUsd from the session's browser. A run's totalCostUsd covers only the lower two. "
-        "GET /sessions/{id}/cost returns all four, including browser time after the run ends.")
+        "GET /api/v4/sessions/{id}/cost returns all four, including browser time after the run ends.")
 FIG, TAG, TAG_M = "FIG 8.1", "BILLING / SESSION COST", "SESSION COST"
 PARTS = ("llmCostUsd", "searchCostUsd", "browserCostUsd", "proxyCostUsd")  # bottom -> top
 
@@ -89,7 +89,7 @@ def build(theme):
     d.paper(FIG, TAG)
     ink, ink2, org, ot = t["ink"], t["ink2"], t["orange"], t["otext"]
 
-    xl, xr, spans = column(d, 326, 158, s=80, sz=24, gap=6)
+    xl, xr, spans = column(d, 292, 158, s=72, sz=24, gap=6)
     run = (spans[0][1], spans[1][0])      # llm + search
     brw = (spans[2][1], spans[3][0])      # browser + proxy
     full = (spans[0][1], spans[3][0])
@@ -107,14 +107,14 @@ def build(theme):
     ix = bx - 40
     run_cube(d, ix, sum(run) / 2)
     browser(d, ix, sum(brw) / 2 - 2, WW=46, WH=34)
-    d.text(ix - 40, sum(run) / 2 + 4, "run totalCostUsd", 11, ink, mono=True, anchor="end")
+    d.text(ix - 34, sum(run) / 2 + 4, "run totalCostUsd", 11, ink, mono=True, anchor="end")
 
     # right: the session endpoint reads the whole stack
-    ox = lend + 16
+    ox = lend + 12
     bracket(d, ox, full[1], full[0], -1, org, sw=1.6, tick=6, glow=True)
-    d.text(ox + 12, sum(full) / 2 + 4, "GET /sessions/{id}/cost", 11, ot, 600, mono=True)
-    assert ox + 12 + tw("GET /sessions/{id}/cost", 11, mono=True, weight=600) <= W - 34
-    assert ix - 40 - tw("run totalCostUsd", 11, mono=True) >= 34
+    d.text(ox + 10, sum(full) / 2 + 4, "GET /api/v4/sessions/{id}/cost", 11, ot, 600, mono=True)
+    assert ox + 10 + tw("GET /api/v4/sessions/{id}/cost", 11, mono=True, weight=600) <= W - 34
+    assert ix - 34 - tw("run totalCostUsd", 11, mono=True) >= 34
     d.save(f"billing-session-cost-{theme}")
 
 
@@ -151,7 +151,7 @@ def build_mobile(theme):
     bracket(d, ox, full[1], full[0], -1, org, sw=1.6, tick=6, glow=True)
     yt = full[1] - 44
     d.add(f'<path d="M{ox} {full[1]}V{yt + 6}" stroke="{org}" stroke-width="1"/>')
-    d.text(ox + 4, yt, "GET /sessions/{id}/cost", 11, ot, 600, mono=True, anchor="end")
+    d.text(ox + 4, yt, "GET /api/v4/sessions/{id}/cost", 11, ot, 600, mono=True, anchor="end")
     d.save(f"billing-session-cost-{theme}-mobile")
 
 
