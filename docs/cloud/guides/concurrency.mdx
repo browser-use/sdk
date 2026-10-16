@@ -43,11 +43,17 @@ For projects on current pricing, concurrency increases with the project's net se
 | \$5,000 | 500 |
 | \$25,000 | 1,000 |
 
+Before any qualifying payment, the current spend-tier baseline is 10 concurrent sessions, subject to account-specific free-tier restrictions. A top-up raises concurrency only when cumulative qualifying payments cross a tier threshold; a small first purchase does not automatically grant 50 sessions.
+
 Payments count for the project that received them. Refunds and disputed payments do not contribute to qualifying spend. Signup credits and other credit grants are not qualifying purchases. Funding through other billing arrangements may follow different rules.
 
 **Your higher concurrency allowance is preserved.** When a project participates in spend tiers, its limit takes the maximum of its applicable legacy-plan allowance, the current pricing floor, and its spend-tier allowance. An already-granted higher limit is not automatically lowered. For example, a legacy allowance of 250 remains 250 when the spend tier would grant 50.
 
 Some active legacy or externally billed projects follow a different billing path. Lapsed or cancelling legacy plans can transition onto current pricing while keeping their higher grant. Use `concurrentSessionLimit` and the project’s Billing page as the source of truth. If the tier ladder is absent or differs from your expectations, contact support with your project ID before making a purchase solely to increase concurrency.
+
+## Profile quotas are separate
+
+Stored browser profiles, simultaneous browser sessions, HTTP request rates and credit balance have separate limits. A profile-count limit is not a concurrency limit. Read the full error before adding credits: a top-up does not raise the profile-count ceiling or an API key's monthly spending cap. For an unexpected `Profile limit reached` response, send support the project ID, endpoint, timestamp and exact response; do not send the API key.
 
 ## Keep track of browser lifetime
 
@@ -55,7 +61,11 @@ A V4 **session** is a conversation. A **run** is one turn in that conversation. 
 
 A browser can survive the run that created it and be reused by a later turn. A conversation can also have multiple browsers. Additional tabs in the same browser are not additional browser sessions.
 
-After all runs in a conversation are inactive, V4 browsers become eligible for cleanup after approximately 20 minutes without recent run activity. Cleanup runs periodically, so this is not an exact shutdown deadline. V4 agent browsers also have a four-hour hard timeout.
+After every run in a session has finished, its V4 agent browsers stop about 2 minutes after the last run activity. Cleanup runs every minute, so expect 2-3 minutes. A follow-up sent later gets a fresh browser with the session's settings and profile, but not the old tabs or page state. V4 agent browsers also have a four-hour hard timeout.
+
+To keep the browser open longer for a follow-up or a human, set [`keepAlive`](/cloud/agent/sessions#keep-the-browser-open-between-runs) (integer seconds, 120-14400) on the run. Follow-ups inherit it, a new value changes it, and `null` restores 120 seconds. Free-tier and Zero Data Retention runs always use 120 seconds.
+
+A V4 session takes one concurrency slot only while it has a queued or running run. An idle V4 agent browser, including one held open by `keepAlive`, takes no slot, but its time is billed as browser time until it stops. A standalone browser holds a slot until it stops.
 
 If your application is finished with a browser, explicitly stop that browser rather than relying on idle cleanup. Only stop browser IDs your application owns and no longer needs. For a standalone browser, the stop request is:
 
@@ -69,7 +79,7 @@ curl --fail-with-body -X PATCH \
 
 Do not use this against a browser another active run or person still needs. Closing your local CDP connection is not a substitute for checking the cloud browser's lifecycle.
 
-If your workflow requires human interaction, deliver the live-view URL from `browser.ready` while the run/browser is active. A conversation remaining in history does not mean its live browser is still available.
+If your workflow requires human interaction, deliver the live-view URL from `browser.ready` or `browser.reattached` while the run/browser is active, and set `keepAlive` so the browser outlasts the human's work. A conversation remaining in history does not mean its live browser is still available.
 
 ## Queue follow-ups within a conversation
 
@@ -185,7 +195,7 @@ your shared request budget; a longer interval also makes backlog traversal slowe
 | 402 with `detail.code: "api_key_monthly_spend_limit_reached"` | This key's monthly soft spending cap was reached | Check the cap and recorded spend in the current UTC month. |
 | Other 402 | May be insufficient project balance or another payment condition | Inspect the complete response and the API key's project. |
 
-The SDK retries some transient responses, including 429, but the default is only three retries. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
+The SDK retries only HTTP 429, three times by default; it does not retry 5xx responses or network errors. SDK 3.11.3 uses exponential delays of roughly 1, 2, and 4 seconds and does not itself apply `Retry-After` or jitter. Add application-level scheduling for sustained workloads. Do not repeatedly submit a new billable run when the outcome of an earlier submission is uncertain.
 
 SDK 3.11.3 errors expose the response status and body, but not response headers.
 Use `retry_after_seconds` when the body includes it. To diagnose an edge throttle

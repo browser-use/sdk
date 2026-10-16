@@ -9,7 +9,7 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
 
 | Event | API | When |
 |-------|-----|------|
-| `agent.task.status_update` | V2 | Task status changes (`running`, `idle`, or `stopped`) |
+| `agent.task.status_update` | V2 | Task status changes (`started`, `finished`, `stopped`, or `failed`) |
 | `session.status.update` | V3 | Session status changes; inspect `payload.status` |
 | `test` | Dashboard | Webhook test ping |
 
@@ -26,7 +26,7 @@ A V2 task event includes `task_id`, `session_id`, `status`, and task `metadata`:
   "payload": {
     "task_id": "task_abc123",
     "session_id": "session_xyz",
-    "status": "idle",
+    "status": "finished",
     "metadata": {}
   }
 }

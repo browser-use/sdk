@@ -8,18 +8,14 @@ A US residential proxy is enabled by default. The browser's traffic passes
 through that residential IP before reaching the website, so the website sees
 the proxy's location—not your server's.
 
-<img
-  src="/cloud/images/browser-proxy-light.svg"
-  alt="A cloud browser routing its traffic through a residential proxy before reaching a website"
-  noZoom
-  className="block dark:hidden"
-/>
-<img
-  src="/cloud/images/browser-proxy-dark.svg"
-  alt="A cloud browser routing its traffic through a residential proxy before reaching a website"
-  noZoom
-  className="hidden dark:block"
-/>
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/browser-proxy-light-mobile.svg" />
+  <img src="/cloud/images/browser-proxy-light.svg" alt="A cloud browser reaches a website by one of three routes: the default residential proxy, whose country is set by proxyCountryCode, your own proxy via customProxy, or directly with proxyCountryCode null." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/browser-proxy-dark-mobile.svg" />
+  <img src="/cloud/images/browser-proxy-dark.svg" alt="A cloud browser reaches a website by one of three routes: the default residential proxy, whose country is set by proxyCountryCode, your own proxy via customProxy, or directly with proxyCountryCode null." noZoom />
+</picture>
 
 Set `browser_settings` / `browserSettings` when you create a V4 run to choose
 another country:
