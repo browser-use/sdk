@@ -1,5 +1,5 @@
-/* Inter variable so 510/590 render as real weights; one request for both families. */
-@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=Geist+Mono:wght@400;500&display=swap");
+/* Mintlify already serves variable Inter (fonts.family); only the mono face is extra. */
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap");
 
 /* ---------- Tokens ---------- */
 /* Cool neutral ramp; Mintlify otherwise derives a tinted one from the primary color. */
@@ -206,7 +206,7 @@ body {
   background: transparent !important;
 }
 /* css-variables marks blocks codeblock-dark, which leaves titles white-on-white in light mode */
-.codeblock-dark :is(.text-gray-50, .text-white) {
+.codeblock-dark :is(.text-gray-50, .text-white, .text-gray-300) {
   color: var(--bu-fg) !important;
 }
 [data-component-part="code-block-root"] {
