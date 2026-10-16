@@ -42,7 +42,7 @@ Use Python 3.10 or newer for the Python SDK. Skip installation if you use curl.
 pip install --upgrade browser-use-sdk playwright
 ```
 ```bash TypeScript
-npm install browser-use-sdk@latest puppeteer-core
+npm install browser-use-sdk@latest playwright-core
 ```
 </CodeGroup>
 
@@ -101,20 +101,20 @@ with BrowserUse() as client:
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v4";
-import puppeteer from "puppeteer-core";
+import { chromium } from "playwright-core";
 
 const client = new BrowserUse();
 const session = await client.browsers.create({ proxyCountryCode: "us" });
 try {
   if (!session.cdpUrl) throw new Error("The browser did not return a CDP URL");
-  const browser = await puppeteer.connect({ browserWSEndpoint: session.cdpUrl });
+  const browser = await chromium.connectOverCDP(session.cdpUrl);
   try {
-    const context = browser.defaultBrowserContext();
-    const page = (await context.pages())[0] ?? await context.newPage();
+    const context = browser.contexts()[0];
+    const page = context.pages()[0] ?? await context.newPage();
     await page.goto("https://example.com");
     console.log(await page.title());
   } finally {
-    await browser.disconnect();
+    await browser.close();
   }
 } finally {
   await client.browsers.stop(session.id);
