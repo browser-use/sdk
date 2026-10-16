@@ -28,7 +28,7 @@ def defs(d):
         "@keyframes blink{0%,49%{fill-opacity:1}50%,100%{fill-opacity:0}}"
         "@keyframes live{0%,100%{fill-opacity:1}50%{fill-opacity:.25}}"
         "@media (prefers-reduced-motion:no-preference){"
-        ".pk{animation:fl 1.2s linear infinite}.spin{animation:spin 1.6s linear infinite}"
+        ".pk{animation:fl 1.2s linear infinite}.rv{animation-direction:reverse}.spin{animation:spin 1.6s linear infinite}"
         ".blink{animation:blink 1.1s steps(1) infinite}.live{animation:live 1.8s ease-in-out infinite}}"
     )
 
@@ -144,7 +144,7 @@ def terminal(d, cx, cy, WW=58, WH=40):
 
 # ---------------------------------------------------------------- connectors
 def cable(d, a, b):
-    """Two-rail orange cable a -> b (axis-aligned) with packets flowing a -> b."""
+    """Two-rail orange cable a <-> b (axis-aligned): packets flow a -> b on one rail and back on the other."""
     t = d.t
     org = t["orange"]
     (x0, y0), (x1, y1) = a, b
@@ -158,8 +158,11 @@ def cable(d, a, b):
         c = (f'x1="{x0 + dd:.1f}" y1="{y0:.1f}" x2="{x1 + dd:.1f}" y2="{y1:.1f}"' if vert
              else f'x1="{x0:.1f}" y1="{y0 + dd:.1f}" x2="{x1:.1f}" y2="{y1 + dd:.1f}"')
         d.add(f'<line {c} stroke="{org}" stroke-width="0.9" stroke-opacity=".5"/>')
-    d.add(f'<line class="pk" x1="{x0:.1f}" y1="{y0:.1f}" x2="{x1:.1f}" y2="{y1:.1f}" stroke="{org}" stroke-width="1.8" '
-          f'stroke-linecap="round" stroke-dasharray="5 19"/>')
+    # calls ride one rail a -> b, tool results ride the other rail b -> a
+    for dd, cls in ((-2.5, "pk"), (2.5, "pk rv")):
+        c = (f'x1="{x0 + dd:.1f}" y1="{y0:.1f}" x2="{x1 + dd:.1f}" y2="{y1:.1f}"' if vert
+             else f'x1="{x0:.1f}" y1="{y0 + dd:.1f}" x2="{x1:.1f}" y2="{y1 + dd:.1f}"')
+        d.add(f'<line class="{cls}" {c} stroke="{org}" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="5 19"/>')
 
 
 def path_cable(d, ps):
