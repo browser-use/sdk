@@ -15,7 +15,6 @@ from browser_use_sdk.v4.resources.sessions import Sessions
 from .test_v4 import FakeSyncHttp
 
 SESSION_ID = "00000000-0000-0000-0000-000000000002"
-WALLET_ID = "00000000-0000-0000-0000-000000000020"
 LINK_ID = "00000000-0000-0000-0000-000000000021"
 PROFILE_ID = "00000000-0000-0000-0000-000000000040"
 
@@ -57,7 +56,6 @@ CASES: list[Any] = [
         lambda r: r.create(
             "Buy the cheapest one",
             model=RunModel.bu_ultrafast,
-            agentcard_wallet_id=WALLET_ID,
             stripe_link_connection_id=LINK_ID,
             op_vault_id="vault",
             op_vault_allowed_domains=["amazon.com"],
@@ -72,7 +70,6 @@ CASES: list[Any] = [
                 "model": "bu-ultrafast",
                 "opVaultId": "vault",
                 "opVaultAllowedDomains": ["amazon.com"],
-                "agentcardWalletId": WALLET_ID,
                 "stripeLinkConnectionId": LINK_ID,
                 "keepAlive": None,
             },
