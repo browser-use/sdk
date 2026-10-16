@@ -30,7 +30,7 @@ Choose an OpenAI model that supports Responses function tools.
 mkdir openai-browser-use
 cd openai-browser-use
 uv init --bare --python 3.12
-uv add "browser-use[openai-tools] @ git+https://github.com/browser-use/browser-use.git@0c7162167f84ac7e14350d0379cb9c5e7804a281"
+uv add "browser-use[openai-tools] @ git+https://github.com/browser-use/browser-use.git@2b9d0aeaae3bfa943dcb3c26ff027aac99e8e8eb"
 ```
 
 This command installs the merged driver commit with all 28 browser tools and Bash.
@@ -174,8 +174,11 @@ Read the page before using an element reference.
 A new page read replaces that tab's references.
 Navigation and detached elements can invalidate references.
 
-Page reads use the main document's accessibility tree.
-They do not guarantee complete iframe or shadow-root coverage.
+Page reads preserve the main document's accessibility tree, including hierarchy, control states, and field values.
+Page reads, page text, and JavaScript results stop at 50,000 characters and report truncation.
+Use scoped reads or `find` for specific content.
+`find` searches the complete tree before limiting its output.
+Page reads do not guarantee complete iframe or shadow-root coverage.
 Use screenshots and coordinate actions when necessary.
 
 Scoped reads discover page regions and return references for their controls.
