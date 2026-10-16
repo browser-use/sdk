@@ -30,10 +30,10 @@ Choose an OpenAI model that supports Responses function tools.
 mkdir openai-browser-use
 cd openai-browser-use
 uv init --bare --python 3.12
-uv add "browser-use[openai-tools] @ git+https://github.com/browser-use/browser-use.git@2b9d0aeaae3bfa943dcb3c26ff027aac99e8e8eb"
+uv add "browser-use[openai-tools] @ git+https://github.com/browser-use/browser-use.git@aadf9ecd91622be3ffefbca7ed626f329a4f2a3b"
 ```
 
-This command installs the merged driver commit with all 28 browser tools and Bash.
+This command installs this driver commit with all 28 browser tools and Bash.
 Cloud browsers need no local Chromium installation.
 
 </Step>
@@ -51,7 +51,7 @@ export OPENAI_MODEL="your-model"
 <Step title="Download and run">
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/browser-use/sdk/004259b13a1218693f8a91cd294cc759a375a260/examples/openai/browser_use_library.py -o browser_use_library.py
+curl -fsSL https://raw.githubusercontent.com/browser-use/sdk/2d063e4e57c397bf95dca0404076fb2ff9eb34d3/examples/openai/browser_use_library.py -o browser_use_library.py
 uv run python browser_use_library.py
 ```
 
@@ -60,6 +60,10 @@ The driver stops its remote browser when the script finishes.
 
 </Step>
 </Steps>
+
+The example enables OpenAI's [native compaction](https://developers.openai.com/api/docs/guides/compaction) at 60,000 tokens.
+Compaction reduces conversation context during long tasks.
+The SDK keeps control of the model loop.
 
 ## The complete example
 
@@ -102,9 +106,10 @@ async def main():
                 {
                     "model": model,
                     "store": False,
+                    "context_management": [{"type": "compaction", "compact_threshold": 60000}],
                     "input": "Open https://example.com, follow Learn more, and save a source-backed summary in summary.md using Bash.",
                 },
-                max_steps=30,
+                max_steps=100,
             )
             print(response.output_text)
         finally:
@@ -118,6 +123,8 @@ asyncio.run(main())
 The confirmation callback approves browser actions in this example.
 Use it only in an isolated environment for tasks you authorize.
 Bash runs on your application host, not inside the remote browser.
+Bash uses your application's Python environment and stores temporary files under outputs/.tmp.
+Pass python_executable to select another Python environment.
 It uses a stripped environment and execution limits, but it does not provide a security sandbox.
 
 ## Browser actions
@@ -171,13 +178,17 @@ Install local Chromium with `uvx browser-use install` first.
 <Accordion title="Element references and supported features">
 
 Read the page before using an element reference.
-A new page read replaces that tab's references.
+Page reads preserve references for existing elements.
 Navigation and detached elements can invalidate references.
 
 Page reads preserve the main document's accessibility tree, including hierarchy, control states, and field values.
-Page reads, page text, and JavaScript results stop at 50,000 characters and report truncation.
+Page reads, page text, and JavaScript results stop at 10,000 characters and report truncation.
 Use scoped reads or `find` for specific content.
 `find` searches the complete tree before limiting its output.
+The driver retries page reads and screenshots once after a failure.
+It reconnects once when browser state fails.
+Persistent state failures still stop the OpenAI runner.
+It does not replay clicks or typing after uncertain effects.
 Page reads do not guarantee complete iframe or shadow-root coverage.
 Use screenshots and coordinate actions when necessary.
 
