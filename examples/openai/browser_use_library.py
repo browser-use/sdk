@@ -1,10 +1,11 @@
 import asyncio
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from browser_use.integrations.openai import Bash, BrowserUse
 from openai import AsyncOpenAI
-from openai.lib.browser import AsyncBrowserToolset
+from openai.lib.browser import BROWSER_MEMBERS, AsyncBrowserToolset
 from openai.lib.responses_tool_runner import AsyncResponsesToolRunner
 
 
@@ -12,13 +13,19 @@ async def confirm(context):
     return True
 
 
+async def allow_url(context, url):
+    parsed = urlsplit(url)
+    return parsed.scheme in {"http", "https"} and not parsed.username and not parsed.password
+
+
 async def main():
     model = os.environ["OPENAI_MODEL"]
     async with AsyncOpenAI(timeout=180, max_retries=5) as client, BrowserUse(use_cloud=True) as driver:
         tools = AsyncBrowserToolset(
             driver,
-            additional_members=["run_script", "click_at", "hover_at", "drag_path", "hold_keys", "set_checked"],
+            members=BROWSER_MEMBERS,
             confirm=confirm,
+            url_policy=allow_url,
         )
         runner = AsyncResponsesToolRunner(browser=tools, functions=[Bash(output_dir=Path("outputs"))])
         try:
