@@ -26,7 +26,8 @@ Add to `claude_desktop_config.json`:
 
 This local bridge requires Node.js and converts Claude Desktop's stdio transport
 to the remote HTTP endpoint. Native remote connectors are configured separately
-in Claude's connector settings, not in this file.
+in Claude's connector settings, not in this file. The header argument has no spaces
+because Claude Desktop on Windows does not escape spaces in `args`.
 
 ```json
 {
@@ -38,10 +39,10 @@ in Claude's connector settings, not in this file.
         "mcp-remote",
         "https://api.browser-use.com/v3/mcp",
         "--header",
-        "Authorization: Bearer ${BROWSER_USE_API_KEY}"
+        "Authorization:${BROWSER_USE_AUTH_HEADER}"
       ],
       "env": {
-        "BROWSER_USE_API_KEY": "YOUR_API_KEY"
+        "BROWSER_USE_AUTH_HEADER": "Bearer YOUR_API_KEY"
       }
     }
   }
