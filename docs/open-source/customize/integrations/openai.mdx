@@ -1,13 +1,22 @@
 ---
-title: "Browser Use toolsets for OpenAI"
-description: "Give OpenAI models Browser Use actions and a remote browser."
+title: "OpenAI browser automation with Browser Use"
+description: "Run OpenAI browser tools on Browser Use Cloud infrastructure. Enable clicks, typing, JavaScript, file transfers, and Bash with the Python SDK."
 icon: "plug"
-mode: "wide"
 sidebarTitle: "OpenAI"
 ---
 
 Connect OpenAI's browser tools to Browser Use Cloud with the Browser Use library.
 OpenAI's SDK runs the model loop. Our driver turns tool calls into browser actions.
+Browser Use Cloud runs Chromium remotely, so your application needs no local browser installation.
+
+```mermaid
+flowchart TB
+    O("OpenAI SDK") <--> D("Browser Use driver")
+    D <--> C(["Cloud browser"])
+```
+
+Use this driver for all 28 browser tools. Bash runs beside your application; the browser runs in Browser Use Cloud.
+Use the [OpenAI + Playwright guide](/cloud/tutorials/integrations/openai) for an existing Playwright application.
 
 ## Run your first task
 
@@ -121,7 +130,12 @@ The driver uses the same Browser Use Actor API as our Claude integration.
 | Manage tabs | `new_tab`, `list_tabs`, `switch_tab`, `close_tab` |
 | Read a page | `read_page`, `get_page_text`, `find`, `screenshot` |
 | Interact with elements | `click`, `hover`, `type`, `key`, `scroll`, `scroll_to`, `select_option` |
-| Inspect and wait | `zoom`, `wait_for` |
+| Inspect and wait | `zoom`, `wait_for`, `read_page_scoped`, `read_diagnostics` |
+| Use coordinates | `click_at`, `hover_at`, `drag_path`, `hold_keys` |
+| Change controls | `set_checked` |
+| Run page JavaScript | `run_script` |
+| Transfer approved files | `upload_file`, `download_file` |
+| Run shell commands | `Bash` on your application host |
 
 OpenAI's SDK provides `list_tabs` from the driver's state.
 Use `members=BROWSER_MEMBERS` to expose all 28 browser tools.
