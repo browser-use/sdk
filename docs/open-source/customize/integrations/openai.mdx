@@ -9,11 +9,14 @@ Connect OpenAI's browser tools to Browser Use Cloud with the Browser Use library
 OpenAI's SDK runs the model loop. Our driver turns tool calls into browser actions.
 Browser Use Cloud runs Chromium remotely, so your application needs no local browser installation.
 
-```mermaid
-flowchart TB
-    O("OpenAI SDK") <--> D("Browser Use driver")
-    D <--> C(["Cloud browser"])
-```
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-architecture-light-mobile.svg" />
+  <img src="/open-source/images/openai/openai-architecture-light.svg" alt="The OpenAI model sends function calls to the OpenAI SDK's AsyncResponsesToolRunner, which passes each one to Browser Use and returns each function_call_output to the model. Browser Use provides 28 browser tools on a Browser Use Cloud browser, and Bash, which runs on your application host." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-architecture-dark-mobile.svg" />
+  <img src="/open-source/images/openai/openai-architecture-dark.svg" alt="The OpenAI model sends function calls to the OpenAI SDK's AsyncResponsesToolRunner, which passes each one to Browser Use and returns each function_call_output to the model. Browser Use provides 28 browser tools on a Browser Use Cloud browser, and Bash, which runs on your application host." noZoom />
+</picture>
 
 Use this driver for all 28 browser tools. Bash runs beside your application; the browser runs in Browser Use Cloud.
 Use the [OpenAI + Playwright guide](/cloud/tutorials/integrations/openai) for an existing Playwright application.
@@ -60,6 +63,15 @@ The driver stops its remote browser when the script finishes.
 
 </Step>
 </Steps>
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-tool-loop-light-mobile.svg" />
+  <img src="/open-source/images/openai/openai-tool-loop-light.svg" alt="The tool runner relays the model's browser calls to the Cloud browser on example.com and its bash call to your application host, where it writes outputs/summary.md. A typical run uses the navigate, read_page, click (on Learn more), read_page, and bash tools, and native compaction shrinks the context only after it passes 60,000 tokens." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-tool-loop-dark-mobile.svg" />
+  <img src="/open-source/images/openai/openai-tool-loop-dark.svg" alt="The tool runner relays the model's browser calls to the Cloud browser on example.com and its bash call to your application host, where it writes outputs/summary.md. A typical run uses the navigate, read_page, click (on Learn more), read_page, and bash tools, and native compaction shrinks the context only after it passes 60,000 tokens." noZoom />
+</picture>
 
 The example enables OpenAI's [native compaction](https://developers.openai.com/api/docs/guides/compaction) at 60,000 tokens.
 Compaction reduces conversation context during long tasks.
@@ -147,6 +159,17 @@ The driver uses the same Browser Use Actor API as our Claude integration.
 OpenAI's SDK provides `list_tabs` from the driver's state.
 Use `members=BROWSER_MEMBERS` to expose all 28 browser tools.
 Update your confirmation callback to permit the actions your task needs.
+
+File tools move one file per grant that your application issues.
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-file-grants-light-mobile.svg" />
+  <img src="/open-source/images/openai/openai-file-grants-light.svg" alt="Your application calls driver.grant_upload or driver.grant_download and passes the returned grant_id to the model. The model uses the upload_file or download_file tool with that grant_id, and the driver moves one file of up to 10 MB: an upload into the browser's file input, or a download to a new file on your application host." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/openai/openai-file-grants-dark-mobile.svg" />
+  <img src="/open-source/images/openai/openai-file-grants-dark.svg" alt="Your application calls driver.grant_upload or driver.grant_download and passes the returned grant_id to the model. The model uses the upload_file or download_file tool with that grant_id, and the driver moves one file of up to 10 MB: an upload into the browser's file input, or a download to a new file on your application host." noZoom />
+</picture>
 
 <AccordionGroup>
 <Accordion title="Coordinate actions and JavaScript">
