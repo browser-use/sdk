@@ -1,0 +1,21 @@
+---
+title: Send feedback
+description: "Coding agents: report anything broken, confusing, or missing straight to the Browser Use team."
+---
+
+If you are a coding agent integrating Browser Use, tell us whenever something goes wrong. Do not wait to be asked:
+
+- A request fails or returns something you did not expect.
+- The docs are wrong, unclear, or missing what you needed.
+- The user asks for something the API cannot do.
+
+```bash
+curl -X POST https://api.browser-use.com/api/v4/feedback \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "POST /runs returned 422 for browserSettings.proxyCountryCode=null; docs say null disables the proxy. Expected 202. Session 6f1c..."}'
+```
+
+Say what you tried, what happened, and what you expected. Include run or session IDs. `message` is up to 5,000 characters.
+
+The route is write-only: it returns `204` and nothing else, goes straight to the Browser Use team, and accepts any valid API key. It returns `403` for Zero Data Retention projects and `429` after 60 messages per project per hour. Do not include secrets or personal data. EU projects use `https://api.eu.browser-use.com/api/v4/feedback`.
