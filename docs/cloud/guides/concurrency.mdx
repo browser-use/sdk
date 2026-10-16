@@ -3,6 +3,8 @@ title: Concurrency and limits
 description: "Preserved legacy allowances, spend tiers, browser lifetime, polling budgets, queues, and retry guidance."
 ---
 
+**50 parallel browsers:** a \$100 one-time top-up (non-expiring credits, no subscription) unlocks 50 concurrent sessions at \$0.02 per browser-hour, so 50 browsers for one hour cost \$1 plus traffic. New projects start at 10 concurrent at \$0; \$1,000 total paid unlocks 250 and \$25,000 unlocks 1,000. See [How usage tiers work](#how-usage-tiers-work).
+
 Browser Use has separate limits for simultaneous browser work and API request frequency. A project can have available browser capacity and still receive a rate-limit response if it sends too many HTTP requests.
 
 For reliable batch processing, use a bounded worker pool, track the browsers your application owns, and budget polling requests across the project.

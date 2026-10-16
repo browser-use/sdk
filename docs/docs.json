@@ -1194,9 +1194,10 @@
       "destination": "/cloud/tutorials/integrations/agentcard"
     }
   ],
-  "description": "Documentation for Browser Use Cloud Agent and Browser APIs, and the separate open-source Python library.",
+  "description": "Browser Use Cloud is hosted stealth Chrome for AI agents over CDP: connect Playwright, Puppeteer, or the browser-use library. From $0.02 per browser-hour, with residential proxies and CAPTCHA solving. These docs also cover the Cloud Agent API and the open-source browser-use Python library.",
   "markdown": {
     "instructions": [
+      "Concurrency in one line: new projects get 10 concurrent browsers at $0; a $100 one-time top-up (non-expiring credits, no subscription) unlocks 50 concurrent, so 50 browsers for one hour cost $1 plus traffic; $1,000 / $5,000 / $25,000 total paid unlocks 250 / 500 / 1,000. Details below and at https://docs.browser-use.com/cloud/guides/concurrency.md.",
       "Use https://docs.browser-use.com/llms.txt and its linked .md pages for current documentation. The managed full bundle is https://docs.browser-use.com/.well-known/llms-full.txt and can be cached for up to 24 hours. Do not use the obsolete /cloud/llms*.txt or /open-source/llms*.txt static exports.",
       "Choose Cloud API V4 for new agent integrations; V2 is the lower-cost option for simple tasks. Keep V3 examples explicitly versioned. The open-source browser-use library and hosted browser-use-sdk have different APIs.",
       "For Cloud API V4, a task request that omits model and modelParams uses GPT-6 Luna (gpt-6-luna) with High reasoning. Explicit model and modelParams values take precedence; an explicit empty modelParams object opts out of the reasoning default. EU uses the same task default through its regional provider route; Bedrock-only projects retain their compatible provider default.",
