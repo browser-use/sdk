@@ -123,6 +123,18 @@ _V3_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
 }
 
 _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
+    # browsers
+    ("post", "/browsers"): ("browsers", "create"),
+    ("get", "/browsers"): ("browsers", "list"),
+    ("get", "/browsers/{session_id}"): ("browsers", "get"),
+    ("patch", "/browsers/{session_id}"): ("browsers", "stop"),
+    ("get", "/browsers/{session_id}/downloads"): ("browsers", "downloads"),
+    # profiles
+    ("post", "/profiles"): ("profiles", "create"),
+    ("get", "/profiles"): ("profiles", "list"),
+    ("get", "/profiles/{profile_id}"): ("profiles", "get"),
+    ("patch", "/profiles/{profile_id}"): ("profiles", "update"),
+    ("delete", "/profiles/{profile_id}"): ("profiles", "delete"),
     # runs
     ("post", "/runs"): ("runs", "create"),
     ("get", "/runs"): ("runs", "list"),
@@ -139,6 +151,19 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/sessions/{session_id}/queue"): ("sessions", "queue"),
     ("get", "/sessions/{session_id}/queue/{message_id}"): ("sessions", "get_message"),
     ("delete", "/sessions/{session_id}/queue/{message_id}"): ("sessions", "remove_message"),
+    ("patch", "/sessions/{session_id}"): ("sessions", "update"),
+    ("delete", "/sessions/{session_id}"): ("sessions", "delete"),
+    ("get", "/sessions/{session_id}/cost"): ("sessions", "cost"),
+    ("patch", "/sessions/{session_id}/cost-cap"): ("sessions", "update_cost_cap"),
+    ("get", "/sessions/{session_id}/share"): ("sessions", "get_share"),
+    ("post", "/sessions/{session_id}/share"): ("sessions", "create_share"),
+    ("put", "/sessions/{session_id}/share"): ("sessions", "update_share"),
+    # integrations
+    ("get", "/integrations"): ("integrations", "list"),
+    ("get", "/integrations/categories"): ("integrations", "categories"),
+    ("post", "/integrations/{provider}/authorize"): ("integrations", "authorize"),
+    ("get", "/integrations/{provider}/status"): ("integrations", "status"),
+    ("delete", "/integrations/{provider}"): ("integrations", "disconnect"),
     # workspaces
     ("post", "/workspaces"): ("workspaces", "create"),
     ("get", "/workspaces/{workspace_id}"): ("workspaces", "get"),
@@ -155,21 +180,11 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("delete", "/extensions/{extension_id}"): ("extensions", "delete"),
 }
 
-# These v4 endpoints have no SDK methods yet, and each new endpoint must be mapped or listed here.
+# Wallets stay off the SDK surface and GET cost-cap is not in production yet; map every other v4 endpoint.
 _V4_NOT_IN_SDK: Set[Tuple[str, str]] = {
-    ("delete", "/integrations/{provider}"),
-    ("delete", "/sessions/{session_id}"),
     ("get", "/agentcard/wallets"),
-    ("get", "/integrations"),
-    ("get", "/integrations/categories"),
-    ("get", "/integrations/{provider}/status"),
-    ("get", "/sessions/{session_id}/cost"),
-    ("get", "/sessions/{session_id}/share"),
     ("get", "/stripe-link"),
-    ("patch", "/sessions/{session_id}"),
-    ("post", "/integrations/{provider}/authorize"),
-    ("post", "/sessions/{session_id}/share"),
-    ("put", "/sessions/{session_id}/share"),
+    ("get", "/sessions/{session_id}/cost-cap"),
 }
 
 _HTTP_METHODS = {"get", "post", "put", "patch", "delete", "head", "options"}
@@ -323,21 +338,29 @@ class TestV4Coverage:
 
     def test_all_spec_endpoints_mapped(self) -> None:
         spec_eps = _spec_endpoints(self.spec)
-        # /browsers and /profiles mount the same handlers as v3 — use the v3
-        # namespace for those. Not duplicated in the v4 SDK surface.
-        spec_eps = {ep for ep in spec_eps if not (ep[1].startswith("/browsers") or ep[1].startswith("/profiles"))}
         mapped = set(_V4_MAP.keys())
         missing = spec_eps - mapped - _V4_NOT_IN_SDK
         assert not missing, f"Unmapped v4 endpoints: {missing}"
 
     def test_sdk_methods_exist(self) -> None:
+        from browser_use_sdk.v4.resources import (
+            browsers,
+            integrations,
+            profiles,
+            runs,
+            sessions,
+            workspaces,
+        )
         from browser_use_sdk.v4.resources import extensions, runs, sessions, workspaces
 
         resource_classes = {
+            "browsers": browsers.Browsers,
+            "profiles": profiles.Profiles,
             "extensions": extensions.Extensions,
             "runs": runs.Runs,
             "sessions": sessions.Sessions,
             "workspaces": workspaces.Workspaces,
+            "integrations": integrations.Integrations,
         }
         for (_, _), (resource_attr, method_name) in _V4_MAP.items():
             cls = resource_classes[resource_attr]
@@ -346,13 +369,24 @@ class TestV4Coverage:
             )
 
     def test_async_sdk_methods_exist(self) -> None:
+        from browser_use_sdk.v4.resources import (
+            browsers,
+            integrations,
+            profiles,
+            runs,
+            sessions,
+            workspaces,
+        )
         from browser_use_sdk.v4.resources import extensions, runs, sessions, workspaces
 
         async_classes = {
+            "browsers": browsers.AsyncBrowsers,
+            "profiles": profiles.AsyncProfiles,
             "extensions": extensions.AsyncExtensions,
             "runs": runs.AsyncRuns,
             "sessions": sessions.AsyncSessions,
             "workspaces": workspaces.AsyncWorkspaces,
+            "integrations": integrations.AsyncIntegrations,
         }
         for (_, _), (resource_attr, method_name) in _V4_MAP.items():
             cls = async_classes[resource_attr]
@@ -574,7 +608,11 @@ class TestClientInit:
         from browser_use_sdk.v4 import BrowserUse
 
         client = BrowserUse(api_key="test-key")
+        assert hasattr(client, "browsers")
         assert hasattr(client, "runs")
         assert hasattr(client, "sessions")
         assert hasattr(client, "workspaces")
+        assert hasattr(client, "integrations")
+        assert hasattr(client, "extensions")
+        assert hasattr(client, "profiles")
         client.close()

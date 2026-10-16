@@ -4,6 +4,7 @@ Sessions -- run multiple tasks in the same browser session.
 Pass a session ID to continue the conversation and workspace. A live browser
 is reused when available.
 """
+
 import asyncio
 
 from dotenv import load_dotenv
@@ -35,7 +36,12 @@ async def main():
             print(f"Task 2: {follow_up_result.result}")
         finally:
             if session_id:
-                await client.browsers.stop(session_id)
+                # session_id is the agent session; each of its browsers has its own id.
+                browsers = await client.browsers.list(
+                    agent_session_id=session_id, filter_by="active"
+                )
+                for b in browsers.items:
+                    await client.browsers.stop(b.id)
 
 
 asyncio.run(main())

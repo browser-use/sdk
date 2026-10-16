@@ -11,8 +11,17 @@ type RunEventsResponse = components["schemas"]["RunEventsResponse"];
 type RunEvent = components["schemas"]["RunEvent"];
 type RunAttachmentsResponse = components["schemas"]["RunAttachmentsResponse"];
 
+/** Known V4 model ids; `RunCreateBody.model` also accepts ids added after this release. */
+export type RunModel = RunCreateRequest["model"];
+
+// AgentCard wallets stay off the SDK surface; API-key runs are not given the wallet.
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
-  Partial<Omit<RunCreateRequest, "task">>;
+  Partial<Omit<RunCreateRequest, "task" | "model" | "browserSettings" | "agentcardWalletId">> & {
+    // `string & {}` keeps autocomplete for known ids without rejecting new ones.
+    model?: RunModel | (string & {});
+    // Generated types mark defaulted fields (proxyCountryCode) required; the server fills them.
+    browserSettings?: Partial<RunCreateRequest["browserSettings"] & {}> | null;
+  };
 
 const INITIAL_VISIBILITY_GRACE_MS = 5_000;
 const MIN_VISIBILITY_RETRY_INTERVAL_MS = 50;

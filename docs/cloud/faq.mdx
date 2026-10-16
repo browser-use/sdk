@@ -6,11 +6,9 @@ icon: circle-question
 
 ## Which model should I use?
 
-- **GPT-6 Luna** (`gpt-6-luna`, recommended) with High reasoning is the V4 default. Omit `model` and `modelParams` to use it; Bedrock-only projects retain their compatible default.
-- **Claude Opus 5** (`claude-opus-5`) — maximum intelligence for difficult, long-horizon work.
-- **Grok 4.5** (`grok-4.5`) — a strong general-purpose alternative.
-- **GPT-5.6 Sol** (`gpt-5.6-sol`) — a higher-cost OpenAI option for complex tasks.
-- **MiniMax M3** (`minimax-m3`) — inexpensive for simple and high-volume tasks.
+- **GPT-6 Luna** (`gpt-6-luna`, recommended) with High reasoning is the V4 default and the low-cost pick for simple and high-volume tasks. Omit `model` and `modelParams` to use it; Bedrock-only projects retain their compatible default.
+- **GPT-6.1 Sol** (`gpt-6.1-sol`) — harder reasoning.
+- **Claude Opus 5** (`claude-opus-5`) — the hardest work.
 
 See [Models](/cloud/agent/models) for the complete V4 picker and pricing.
 
@@ -113,7 +111,7 @@ not a judge verdict.
 See the [create-run reference](/cloud/api-v4/runs/create-run) for `judge` and
 the [run summary](/cloud/api-v4/runs/get-run) for `judgement`.
 
-## V2 or V4 — which should I use?
+## Which API version should I use?
 
 Use **V4** for difficult tasks where accuracy matters. It supports:
 
@@ -123,8 +121,8 @@ Use **V4** for difficult tasks where accuracy matters. It supports:
 - Incremental events for custom UIs and monitoring
 - Per-session [cost breakdown](/cloud/guides/billing#see-what-a-v4-session-cost) (LLM, search, browser, proxy), run cost caps, and optional judgement
 
-Use **V2** when tasks are simple and your priority is very low cost and
-predictable speed. Its accuracy is substantially lower.
+Use **V3** when speed and cost matter more than accuracy. V2 is legacy; keep
+it only for existing integrations. See [Choosing an Agent](/cloud/choosing-an-agent).
 
 See Browser Use at #1 on the
 [Odysseys benchmark](https://odysseysbench.com/leaderboard).

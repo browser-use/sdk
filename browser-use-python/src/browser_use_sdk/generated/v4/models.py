@@ -176,7 +176,7 @@ class BrowserSessionView(BaseModel):
     recording_url: str | None = Field(
         None,
         alias='recordingUrl',
-        description='Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.',
+        description='Presigned URL to download the session recording, if recording was enabled. Only populated on GET /browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response.',
         title='Recording URL',
     )
     recording_available: bool | None = Field(
@@ -804,6 +804,13 @@ class RunBrowserSettings(BaseModel):
         description="Record the browser session to an mp4, retrievable via GET /browsers/{id} once the browser stops. API runs default to off; pass true to enable. Like other browser settings, this only applies when a new browser is provisioned: a follow-up that reuses the session's live browser keeps that browser's recording state. Ignored (always off) for Zero Data Retention projects.",
         title='Record',
     )
+    extension_ids: List[UUID] | None = Field(
+        None,
+        alias='extensionIds',
+        description="Up to 3 ready extensions from POST /api/v4/extensions to install in every browser of the session. Follow-up runs inherit the session's extensions; passing a different set returns 400. After you delete an extension, omit extensionIds or pass the reduced set; later browsers skip deleted extensions. The agent is not told about installed extensions, so name any extension pages in the task.",
+        max_length=3,
+        title='Extensionids',
+    )
 
 
 class Model(Enum):
@@ -823,6 +830,7 @@ class Model(Enum):
     claude_opus_5_5 = 'claude-opus-5-5'
     claude_fable_5 = 'claude-fable-5'
     claude_sonnet_5 = 'claude-sonnet-5'
+    claude_sonnet_5_5 = 'claude-sonnet-5-5'
     gpt_5_5 = 'gpt-5.5'
     gpt_5_6 = 'gpt-5.6'
     gpt_6_astra = 'gpt-6-astra'
@@ -840,6 +848,25 @@ class Model(Enum):
     bu_fast = 'bu-fast'
 
 
+class KeepAlive(RootModel[int]):
+    root: int = Field(
+        ...,
+        description="Seconds the session's browser stays open after its last run, so a follow-up run reuses the same page, never past the browser's 4 h lifetime. Default 120. Follow-up runs inherit the session's value; send a new value to change it or null to restore the default. Kept time is billed as browser time. Ignored (always 120) for free-tier and Zero Data Retention projects.",
+        ge=120,
+        le=14400,
+        title='Keepalive',
+    )
+
+
+class AttachedFileIds1(RootModel[List[UUID]]):
+    root: List[UUID] = Field(
+        ...,
+        description='Upload ids from POST /workspaces/{workspace_id}/files/upload to show the agent in this run only. Ids that cannot be confirmed are reported, not fatal.',
+        max_length=20,
+        title='Attachedfileids',
+    )
+
+
 class OpVaultId(RootModel[str]):
     root: str = Field(
         ...,
@@ -850,7 +877,12 @@ class OpVaultId(RootModel[str]):
 
 
 class MaxCostUsd(RootModel[float]):
-    root: float = Field(..., gt=0.0, title='Maxcostusd')
+    root: float = Field(
+        ...,
+        description='USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.',
+        gt=0.0,
+        title='Maxcostusd',
+    )
 
 
 class MaxCostUsd1(RootModel[str]):
@@ -858,7 +890,10 @@ class MaxCostUsd1(RootModel[str]):
         regex_engine="python-re",
     )
     root: str = Field(
-        ..., pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$', title='Maxcostusd'
+        ...,
+        description='USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Maxcostusd',
     )
 
 
@@ -887,6 +922,10 @@ class RunCreateResponse(BaseModel):
         description='Titles of opVaultId items that hold a credential but no 1Password website, so deriving their domains left them with nowhere to be typed. The run still starts without them; add a website to the item or pass opVaultAllowedDomains.',
         title='Skippedvaultitems',
     )
+
+
+class RunCreateValidationError(BaseModel):
+    detail: str | List[Dict[str, Any]] = Field(..., title='Detail')
 
 
 class RunEvent(BaseModel):
@@ -970,6 +1009,58 @@ class SecretBinding(BaseModel):
         max_length=20,
         min_length=1,
         title='Alloweddomains',
+    )
+
+
+class SessionBudgetResponse(BaseModel):
+    session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
+    spent_usd: str = Field(..., alias='spentUsd', title='Spentusd')
+    max_cost_usd: str | None = Field(..., alias='maxCostUsd', title='Maxcostusd')
+    budget_scope: Literal['session'] = Field(
+        ..., alias='budgetScope', title='Budgetscope'
+    )
+
+
+class MaxCostUsd2(RootModel[float]):
+    root: float = Field(
+        ...,
+        description='New total USD budget for the session; spending so far counts against it.',
+        gt=0.0,
+        title='Maxcostusd',
+    )
+
+
+class MaxCostUsd3(RootModel[str]):
+    model_config = ConfigDict(
+        regex_engine="python-re",
+    )
+    root: str = Field(
+        ...,
+        description='New total USD budget for the session; spending so far counts against it.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Maxcostusd',
+    )
+
+
+class SessionCostCapRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    max_cost_usd: MaxCostUsd2 | MaxCostUsd3 = Field(
+        ...,
+        alias='maxCostUsd',
+        description='New total USD budget for the session; spending so far counts against it.',
+        title='Maxcostusd',
+    )
+
+
+class SessionCostCapResponse(BaseModel):
+    session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
+    max_cost_usd: str = Field(
+        ...,
+        alias='maxCostUsd',
+        description='The session budget now applied, in USD.',
+        title='Maxcostusd',
     )
 
 
@@ -1274,7 +1365,7 @@ class BrowserSessionItemView(BaseModel):
     recording_url: str | None = Field(
         None,
         alias='recordingUrl',
-        description='Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses.',
+        description='Presigned URL to download the session recording. Only populated on `GET /browsers/{session_id}`; always `null` in list responses.',
         title='Recording URL',
     )
     metadata: Dict[str, str] | None = Field(
@@ -1448,7 +1539,12 @@ class RunCreateRequest(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    task: str = Field(..., min_length=1, title='Task')
+    task: str = Field(
+        ...,
+        description='What the agent should do in this run.',
+        min_length=1,
+        title='Task',
+    )
     output_schema: Dict[str, Any] | None = Field(
         None,
         alias='outputSchema',
@@ -1456,32 +1552,61 @@ class RunCreateRequest(BaseModel):
         title='Outputschema',
     )
     model: Model | None = Field(
-        Model.gpt_5_6_luna,
+        Model.gpt_6_luna,
         description='bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.',
         title='Model',
     )
     model_params: Dict[str, Any] | None = Field(
         None,
         alias='modelParams',
-        description='Optional provider-native request parameters for the selected model, written with the provider\'s own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model\'s default parameters (gpt-5.6-luna defaults to {"reasoning": {"effort": "xhigh"}}); passing {} opts out of that default and leaves the provider\'s own defaults in place.',
+        description='Optional provider-native request parameters for the selected model, written with the provider\'s own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model\'s default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider\'s own defaults in place.',
         title='Modelparams',
     )
-    session_id: UUID | None = Field(None, alias='sessionId', title='Sessionid')
-    workspace_id: UUID | None = Field(None, alias='workspaceId', title='Workspaceid')
-    browser_settings: RunBrowserSettings | None = Field(None, alias='browserSettings')
+    session_id: UUID | None = Field(
+        None,
+        alias='sessionId',
+        description='Continue this session; omit to start a new session.',
+        title='Sessionid',
+    )
+    workspace_id: UUID | None = Field(
+        None,
+        alias='workspaceId',
+        description="Files workspace to use. Omitted on a new session creates one; omitted on a follow-up reuses the session's workspace.",
+        title='Workspaceid',
+    )
+    browser_settings: RunBrowserSettings | None = Field(
+        None,
+        alias='browserSettings',
+        description="Browser settings. Omitted or null on a follow-up keeps the session's browser.",
+    )
+    keep_alive: KeepAlive | None = Field(
+        None,
+        alias='keepAlive',
+        description="Seconds the session's browser stays open after its last run, so a follow-up run reuses the same page, never past the browser's 4 h lifetime. Default 120. Follow-up runs inherit the session's value; send a new value to change it or null to restore the default. Kept time is billed as browser time. Ignored (always 120) for free-tier and Zero Data Retention projects.",
+        title='Keepalive',
+    )
     agentmail: bool | None = Field(
         False,
         description='If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.',
         title='Agentmail',
     )
     agentcard_wallet_id: UUID | None = Field(
-        None, alias='agentcardWalletId', title='Agentcardwalletid'
+        None,
+        alias='agentcardWalletId',
+        description="AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's grant.",
+        title='Agentcardwalletid',
     )
     stripe_link_connection_id: UUID | None = Field(
-        None, alias='stripeLinkConnectionId', title='Stripelinkconnectionid'
+        None,
+        alias='stripeLinkConnectionId',
+        description="Stripe Link connection (from GET /stripe-link) this run may pay with. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's connection.",
+        title='Stripelinkconnectionid',
     )
-    attached_file_ids: AttachedFileIds | None = Field(
-        None, alias='attachedFileIds', title='Attachedfileids'
+    attached_file_ids: AttachedFileIds1 | None = Field(
+        None,
+        alias='attachedFileIds',
+        description='Upload ids from POST /workspaces/{workspace_id}/files/upload to show the agent in this run only. Ids that cannot be confirmed are reported, not fatal.',
+        title='Attachedfileids',
     )
     secret_bindings: SecretBindings | None = Field(
         None,
@@ -1501,9 +1626,15 @@ class RunCreateRequest(BaseModel):
         description='Hosts every credential from opVaultId may be typed into, e.g. ["amazon.com"]. Omit to derive each item\'s hosts from its own 1Password website entries; items with no website are then skipped and reported in skippedVaultItems. A host covers its subdomains, so 1Password\'s ExactDomain autofill setting is not honored either way.',
         title='Opvaultalloweddomains',
     )
-    judge: RunJudgeSettings | None = None
+    judge: RunJudgeSettings | None = Field(
+        None,
+        description='LLM judge of the finished run; send {} for defaults. Omitted or null runs no judge.',
+    )
     max_cost_usd: MaxCostUsd | MaxCostUsd1 | None = Field(
-        None, alias='maxCostUsd', title='Maxcostusd'
+        None,
+        alias='maxCostUsd',
+        description='USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.',
+        title='Maxcostusd',
     )
 
 

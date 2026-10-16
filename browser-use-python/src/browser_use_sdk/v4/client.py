@@ -4,6 +4,8 @@ import os
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
 from .resources.browsers import AsyncBrowsers, Browsers
+from .resources.integrations import AsyncIntegrations, Integrations
+from .resources.profiles import AsyncProfiles, Profiles
 from .resources.extensions import AsyncExtensions, Extensions
 from .resources.runs import AsyncRuns, Runs
 from .resources.sessions import AsyncSessions, Sessions
@@ -38,6 +40,8 @@ class BrowserUse:
             timeout=timeout,
         )
         self.browsers = Browsers(self._http)
+        self.integrations = Integrations(self._http)
+        self.profiles = Profiles(self._http)
         self.extensions = Extensions(self._http)
         self.runs = Runs(self._http)
         self.sessions = Sessions(self._http)
@@ -80,6 +84,8 @@ class AsyncBrowserUse:
             timeout=timeout,
         )
         self.browsers = AsyncBrowsers(self._http)
+        self.integrations = AsyncIntegrations(self._http)
+        self.profiles = AsyncProfiles(self._http)
         self.extensions = AsyncExtensions(self._http)
         self.runs = AsyncRuns(self._http)
         self.sessions = AsyncSessions(self._http)
