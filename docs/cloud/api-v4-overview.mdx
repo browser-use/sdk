@@ -57,6 +57,15 @@ curl -X POST https://api.browser-use.com/api/v4/sessions/SESSION_ID/queue \
   -d '{"text": "Now open the top result", "interrupt": false}'
 ```
 
+## Session budgets
+
+The session-wide budget rollout remains pending.
+The current production runtime checks paid budgets per run.
+After the rollout, `maxCostUsd` sets one total budget across a session's runs.
+Use `PATCH /sessions/{session_id}/cost-cap` to edit the stored limit without starting a run.
+The new GET endpoint at that path also awaits deployment.
+See [session budgets](/cloud/agent/sessions#set-a-session-budget) for examples, availability, and cost coverage.
+
 ## Direct browser control
 
 Use the browser endpoints when your code will control Chrome over CDP instead of asking a hosted agent to do the work:

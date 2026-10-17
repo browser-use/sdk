@@ -784,7 +784,7 @@
                     "Sessions"
                 ],
                 "summary": "Update Session Cost Cap",
-                "description": "Update the active run cap without starting another run.",
+                "description": "Update the stored cost cap without starting another run. This endpoint supports active and idle sessions.",
                 "operationId": "update_session_cost_cap_sessions__session_id__cost_cap_patch",
                 "security": [
                     {
