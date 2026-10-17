@@ -841,6 +841,59 @@
                         }
                     }
                 }
+            },
+            "get": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get Session Cost Cap",
+                "description": "Read the stored session budget and recorded model and search spending. Production currently checks paid budgets per run.",
+                "operationId": "get_session_cost_cap_sessions__session_id__cost_cap_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionBudgetResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
+                    },
+                    "404": {
+                        "description": "Run, session, workspace, or profile not found."
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/sessions/{session_id}/cost": {
@@ -6413,6 +6466,44 @@
                 },
                 "type": "object",
                 "title": "WorkspaceUpdateRequest"
+            },
+            "SessionBudgetResponse": {
+                "properties": {
+                    "sessionId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Sessionid"
+                    },
+                    "spentUsd": {
+                        "type": "string",
+                        "title": "Spentusd"
+                    },
+                    "maxCostUsd": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Maxcostusd"
+                    },
+                    "budgetScope": {
+                        "type": "string",
+                        "const": "session",
+                        "title": "Budgetscope"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "sessionId",
+                    "spentUsd",
+                    "maxCostUsd",
+                    "budgetScope"
+                ],
+                "title": "SessionBudgetResponse",
+                "description": "Report recorded budget spending without estimating unfinished model calls."
             }
         },
         "securitySchemes": {

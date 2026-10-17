@@ -149,10 +149,8 @@ The fix preserves existing budgets because it cannot distinguish balance reducti
 
 ### Read the budget and recorded spending
 
-<Info>
-The GET endpoint also awaits the coordinated rollout.
-The public API can return `405 Method Not Allowed` until that deployment completes.
-</Info>
+GET now returns the stored budget and recorded spending.
+The October 17, 2026 production check returned `200 OK` after the native API deployment.
 
 ```bash
 curl --fail-with-body \
@@ -160,7 +158,7 @@ curl --fail-with-body \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
 ```
 
-After deployment, this endpoint returns the session budget and recorded spending:
+The response contains the session budget and recorded spending:
 
 ```json
 {
