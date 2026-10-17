@@ -33,6 +33,29 @@ export it:
 export BROWSER_USE_API_KEY=your_key
 ```
 
+## Check your key (no install)
+
+This one request starts a cloud browser that stops itself after 5 minutes. Open
+the `liveUrl` it returns to watch it.
+
+```bash
+curl -sS https://api.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"timeout": 5}'
+```
+
+To stop it early, put the returned `id` in place of `BROWSER_ID`:
+
+```bash
+curl -sS -X PATCH https://api.browser-use.com/api/v4/browsers/BROWSER_ID \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"stop"}'
+```
+
+A `401` means the key is wrong or not exported in this shell.
+
 ## Install the SDK
 
 Use Python 3.10 or newer for the Python SDK. Skip installation if you use curl.
