@@ -1,0 +1,101 @@
+---
+title: "Verifying Real-World Outcomes"
+description: "Check that an agent's action actually took effect, not just that the last page looked right."
+icon: "badge-check"
+mode: "wide"
+---
+
+An agent can finish a task, report success, and still have achieved nothing. A form can show "Thank you!" even when the submission was dropped, and a checkout can land on a confirmation screen even when no order was created. If your workflow depends on the outcome, verify it separately.
+
+## Three layers
+
+| Layer | Question | Who checks it |
+|---|---|---|
+| **Action effect** | Did the browser action itself succeed (the click landed, the field was filled, the tab switched)? | The framework, through `ActionResult.error` |
+| **Fresh evidence** | Is the "success" signal from *after* the attempt, not left over from before it? | Your workflow logic |
+| **Real-world outcome** | Did the site actually record the result (lead created, order placed, application received)? | You, with a check outside the agent's session |
+
+<Note>
+Some actions can currently report success even when their effect couldn't be confirmed (see [#5361](https://github.com/browser-use/browser-use/issues/5361) and [#5438](https://github.com/browser-use/browser-use/issues/5438); previously [#5486](https://github.com/browser-use/browser-use/issues/5486)). Work to enforce this at the framework level is tracked in [#5957](https://github.com/browser-use/browser-use/issues/5957). Until it lands, don't treat a clean run as proof that every action took effect.
+</Note>
+
+## Use fresh evidence, and treat "unknown" as blocked
+
+A check can pass for the wrong reason if it reads state that existed before the action. A widget that "disappeared," or a page that already showed a success banner from an earlier run, says nothing about the attempt you just made.
+
+A simple rule:
+
+```text
+blocked → attempt (or hand off to a person) → re-inspect → continue only on fresh, passing evidence
+```
+
+- **Fresh** means captured after the attempt and tied to the same page or task, such as a new reference ID, a server-validated success, or a newly unlocked page.
+- If the evidence is **unknown or times out, stay blocked.** Don't continue, and don't report success. Retry the check or escalate to a person.
+
+## Why a confirmation page isn't proof
+
+- Many sites show a generic thank-you page whether or not the backend accepted the submission.
+- Client-side validation can pass while server-side processing fails later.
+- A page can show success, then fail asynchronously (payment declined, duplicate rejected).
+- The agent saw the page inside its own session. Cached or optimistic UI may never have been confirmed by the server.
+
+## Three patterns
+
+### 1. Re-fetch the result page in a fresh session
+
+Load the confirmation or order-status URL again, outside the agent's browser session, and check that it still shows the result. A page that only renders once, or only inside the original session, is weak evidence.
+
+### 2. Look for a durable reference
+
+Treat the outcome as confirmed only if the page shows something durable and specific: a confirmation number, order ID or application reference. "Thanks, we'll be in touch" alone isn't enough. Have the agent extract the reference and store it with the task result.
+
+### 3. Query the system of record
+
+When you have access, check the source directly: the CRM for a new lead, the store's order API, an email inbox for the confirmation message. This is the strongest check.
+
+## Example: re-fetch and look for a reference
+
+```python
+import re
+import httpx
+from browser_use import Agent
+
+# The reference must contain at least one digit, so phrases like
+# "order confirmation" aren't mistaken for a reference.
+REF_PATTERN = re.compile(
+    r"\b(?:order|confirmation|reference|ref)\b(?:\s*(?:number|no\.?|id))?[\s#:]*((?=[A-Z0-9-]*\d)[A-Z0-9-]{5,})",
+    re.I,
+)
+
+async def submit_and_verify(task: str, llm) -> dict:
+    agent = Agent(task=task, llm=llm)
+    history = await agent.run()
+
+    # history.urls() has one entry per step and may contain None
+    urls = [u for u in history.urls() if u]
+    final_url = urls[-1] if urls else None
+    if not final_url:
+        return {"status": "unknown", "reason": "no final URL"}
+
+    # Re-fetch outside the agent's session
+    async with httpx.AsyncClient(follow_redirects=True, timeout=15) as client:
+        resp = await client.get(final_url)
+
+    if resp.status_code >= 400:
+        return {"status": "failed", "reason": f"result page returned {resp.status_code}", "url": final_url}
+
+    match = REF_PATTERN.search(resp.text)
+    if match:
+        return {"status": "confirmed", "reference": match.group(1), "url": final_url}
+
+    # Page loads but shows no durable reference: don't assume success
+    return {"status": "unknown", "reason": "no durable reference on result page", "url": final_url}
+```
+
+Return `unknown` rather than guessing. A workflow that can tell "confirmed", "failed" and "not sure" apart is safer than one that treats every finished run as a success.
+
+## Tips
+
+- Store the evidence (URL, reference, timestamp) with the task result so you can audit it later.
+- Retry the outcome check, not the action, so a slow backend doesn't cause duplicate submissions.
+- For pages behind a login, use pattern 3 instead. Re-fetching without a session will only show the login wall.
