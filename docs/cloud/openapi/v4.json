@@ -5239,7 +5239,8 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Maxcostusd"
+                        "title": "Maxcostusd",
+                        "description": "New API sessions use the $25 default when callers omit this field. Follow-ups inherit the stored budget when callers omit this field. Use $25 as a starting budget unless the user chooses another value. An explicit value replaces the stored budget. Low account credits can reduce budgets until the proposed fix deploys. Production checks paid budgets per run until session-wide enforcement deploys."
                     }
                 },
                 "additionalProperties": false,
@@ -5699,7 +5700,8 @@
                                 "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
                             }
                         ],
-                        "title": "Maxcostusd"
+                        "title": "Maxcostusd",
+                        "description": "Set a positive replacement budget in USD without starting a run. Use $25 as a starting budget unless the user chooses another value. Preserve higher existing budgets unless the user requests a decrease. This request preserves recorded spending. Production currently checks paid budgets per run. The session-wide budget rollout remains pending."
                     }
                 },
                 "additionalProperties": false,
@@ -5708,7 +5710,7 @@
                     "maxCostUsd"
                 ],
                 "title": "SessionCostCapRequest",
-                "description": "Set the maximum spend for the active run in a session."
+                "description": "Replace the stored cost cap for an active or idle session."
             },
             "SessionCostCapResponse": {
                 "properties": {

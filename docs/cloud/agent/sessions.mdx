@@ -66,6 +66,8 @@ This section describes the behavior after the coordinated rollout.
 After the rollout, `maxCostUsd` sets the total budget for the session, including its previous runs.
 It does not give each follow-up a new budget.
 New API sessions default to \$25.
+Start with the \$25 default unless the user chooses another budget.
+Omit `maxCostUsd` for a new session to use the default.
 
 The proposed fix keeps this budget independent of the account balance.
 Cloud still checks available credits when it starts a run.
@@ -79,8 +81,8 @@ A top-up adds credits without changing the session budget.
 | PATCH to `/sessions/{session_id}/cost-cap` | Replaces the budget without starting a run. |
 
 Previous recorded spending counts against the budget.
-For example, a session with a \$5 budget and \$2 spent has \$3 left.
-Changing its budget to \$8 leaves \$6, not \$8.
+For example, a session with a \$25 budget and \$2 spent has \$23 left.
+Changing its budget to \$50 leaves \$48.
 You can increase or decrease the budget, but the value must exceed zero.
 A lower budget does not refund previous spending.
 
@@ -91,29 +93,29 @@ Concurrent or already-running work can exceed the account balance.
 ### Start and follow up
 
 These examples assume enough available credits.
-Create a session with a \$5 total budget:
+Create a session with a \$25 total budget:
 
 ```bash
 curl --fail-with-body https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"task":"Find three vendors","maxCostUsd":5}'
+  -d '{"task":"Find three vendors","maxCostUsd":25}'
 ```
 
 Save the response's `sessionId` as `SESSION_ID`.
 Wait for the run to finish before you send this follow-up.
-This request raises the total budget to \$8:
+This request raises the total budget to \$50:
 
 ```bash
 curl --fail-with-body https://api.browser-use.com/api/v4/runs \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d "{\"task\":\"Compare their prices\",\"sessionId\":\"$SESSION_ID\",\"maxCostUsd\":8}"
+  -d "{\"task\":\"Compare their prices\",\"sessionId\":\"$SESSION_ID\",\"maxCostUsd\":50}"
 ```
 
-Omit `maxCostUsd` to keep the current budget.
-In the Python SDK, use `max_cost_usd=5` with `client.runs.create()`.
-In the TypeScript SDK, use `maxCostUsd: 5` with `client.runs.create()`.
+Omit `maxCostUsd` on follow-ups to keep the current budget.
+In the Python SDK, use `max_cost_usd=25` with `client.runs.create()`.
+In the TypeScript SDK, use `maxCostUsd: 25` with `client.runs.create()`.
 
 ### Edit the budget without starting a run
 
@@ -125,7 +127,7 @@ curl --fail-with-body -X PATCH \
   "https://api.browser-use.com/api/v4/sessions/$SESSION_ID/cost-cap" \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"maxCostUsd":8}'
+  -d '{"maxCostUsd":50}'
 ```
 
 The response contains `sessionId` and the new `maxCostUsd` as a decimal string.
@@ -164,13 +166,13 @@ After deployment, this endpoint returns the session budget and recorded spending
 {
   "sessionId": "00000000-0000-0000-0000-000000000000",
   "spentUsd": "2.000000",
-  "maxCostUsd": "8.000000",
+  "maxCostUsd": "50.000000",
   "budgetScope": "session"
 }
 ```
 
-The example leaves \$6 of the session budget.
-Actual available spending also depends on the account balance.
+The example leaves \$48 of the session budget.
+Cloud checks account credits before it starts another run.
 `spentUsd` reports recorded charges, so unfinished calls can add costs later.
 `maxCostUsd` can be `null` for a session without a stored budget.
 
