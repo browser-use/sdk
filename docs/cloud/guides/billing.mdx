@@ -100,6 +100,13 @@ growing until the browser stops. See the [session cost reference](/cloud/api-v4/
 The session-wide budget rollout remains pending.
 The current production runtime checks paid budgets per run.
 After the rollout, follow-ups share one total budget without resetting previous spending.
+
+The proposed fix also removes balance-based budget reductions after a credit check during execution takes effect.
+Parallel sessions share project credits.
+Cloud checks available credits when it starts a run.
+Running V4 requests currently follow stored run budgets without rechecking project credits.
+A top-up adds credits without resetting the session budget.
+
 Model and web-search charges count against that budget.
 Browser and network charges remain separate.
 See [session budgets](/cloud/agent/sessions#set-a-session-budget) for examples, the top-up issue, and endpoint availability.
