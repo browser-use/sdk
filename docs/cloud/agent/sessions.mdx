@@ -54,6 +54,131 @@ Omit the session ID for a new conversation. Pass only a [workspace
 ID](/cloud/agent/workspaces) when you want a fresh conversation that keeps the
 same files.
 
+## Set a session budget
+
+<Warning>
+The session-wide budget rollout remains pending.
+The current production runtime still checks paid budgets per run.
+Do not rely on `maxCostUsd` to limit total spending across paid-session follow-ups yet.
+This section describes the behavior after the coordinated rollout.
+</Warning>
+
+After the rollout, `maxCostUsd` sets the total budget for the session, including its previous runs.
+It does not give each follow-up a new budget.
+New API sessions default to \$25.
+Start with the \$25 default unless the user chooses another budget.
+Omit `maxCostUsd` for a new session to use the default.
+
+The proposed fix keeps this budget independent of the account balance.
+Cloud still checks available credits when it starts a run.
+A top-up adds credits without changing the session budget.
+
+| Request | Budget behavior |
+|---|---|
+| New run with `maxCostUsd` | Sets the new session's total budget. |
+| Follow-up without `maxCostUsd` | Keeps the session's current budget. |
+| Follow-up with `maxCostUsd` | Requests a replacement for the session's total budget. |
+| PATCH to `/sessions/{session_id}/cost-cap` | Replaces the budget without starting a run. |
+
+Previous recorded spending counts against the budget.
+For example, a session with a \$25 budget and \$2 spent has \$23 left.
+Changing its budget to \$50 leaves \$48.
+You can increase or decrease the budget, but the value must exceed zero.
+A lower budget does not refund previous spending.
+
+Parallel sessions share project credits.
+Their budgets do not reserve those credits.
+Concurrent or already-running work can exceed the account balance.
+
+### Start and follow up
+
+These examples assume enough available credits.
+Create a session with a \$25 total budget:
+
+```bash
+curl --fail-with-body https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Find three vendors","maxCostUsd":25}'
+```
+
+Save the response's `sessionId` as `SESSION_ID`.
+Wait for the run to finish before you send this follow-up.
+This request raises the total budget to \$50:
+
+```bash
+curl --fail-with-body https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"task\":\"Compare their prices\",\"sessionId\":\"$SESSION_ID\",\"maxCostUsd\":50}"
+```
+
+Omit `maxCostUsd` on follow-ups to keep the current budget.
+In the Python SDK, use `max_cost_usd=25` with `client.runs.create()`.
+In the TypeScript SDK, use `maxCostUsd: 25` with `client.runs.create()`.
+
+### Edit the budget without starting a run
+
+PATCH already updates the stored limit while the session runs or stays idle.
+After the rollout, that limit controls the total session budget:
+
+```bash
+curl --fail-with-body -X PATCH \
+  "https://api.browser-use.com/api/v4/sessions/$SESSION_ID/cost-cap" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"maxCostUsd":50}'
+```
+
+The response contains `sessionId` and the new `maxCostUsd` as a decimal string.
+This request does not reset spending or restart a stopped run.
+Send a follow-up after you raise an exhausted budget.
+The budget check uses the updated value for subsequent work.
+Work already in progress can finish above the budget.
+
+Queued messages keep the session budget.
+The queue request does not support `maxCostUsd`.
+Use PATCH to change the budget before you send the next queued message.
+
+<Warning>
+Production currently reduces saved budgets when credits run low.
+A top-up does not restore those existing budgets.
+Use PATCH to replace an affected budget.
+The fix preserves existing budgets because it cannot distinguish balance reductions from user choices.
+</Warning>
+
+### Read the budget and recorded spending
+
+GET now returns the stored budget and recorded spending.
+The October 17, 2026 production check returned `200 OK` after the native API deployment.
+
+```bash
+curl --fail-with-body \
+  "https://api.browser-use.com/api/v4/sessions/$SESSION_ID/cost-cap" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+The response contains the session budget and recorded spending:
+
+```json
+{
+  "sessionId": "00000000-0000-0000-0000-000000000000",
+  "spentUsd": "2.000000",
+  "maxCostUsd": "50.000000",
+  "budgetScope": "session"
+}
+```
+
+The example leaves \$48 of the session budget.
+Cloud checks account credits before it starts another run.
+`spentUsd` reports recorded charges, so unfinished calls can add costs later.
+`maxCostUsd` can be `null` for a session without a stored budget.
+
+The planned paid-session budget covers model and web-search charges.
+It does not include browser time or proxy traffic.
+Read [`GET /sessions/{session_id}/cost`](/cloud/guides/billing#see-what-a-v4-session-cost) for browser and proxy costs.
+That cost endpoint reports usage, not the remaining budget.
+
 ## Keep the browser open between runs
 
 After a session's last run, its browser stays open about 2 minutes, then

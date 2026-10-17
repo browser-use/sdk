@@ -784,7 +784,7 @@
                     "Sessions"
                 ],
                 "summary": "Update Session Cost Cap",
-                "description": "Update the active run cap without starting another run.",
+                "description": "Update the stored cost cap without starting another run. This endpoint supports active and idle sessions.",
                 "operationId": "update_session_cost_cap_sessions__session_id__cost_cap_patch",
                 "security": [
                     {
@@ -826,6 +826,59 @@
                     },
                     "403": {
                         "description": "Zero Data Retention is enabled on the project (V4 unsupported)."
+                    },
+                    "404": {
+                        "description": "Run, session, workspace, or profile not found."
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get Session Cost Cap",
+                "description": "Read the stored session budget and recorded model and search spending. Production currently checks paid budgets per run.",
+                "operationId": "get_session_cost_cap_sessions__session_id__cost_cap_get",
+                "security": [
+                    {
+                        "APIKeyHeader": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionBudgetResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
                     },
                     "404": {
                         "description": "Run, session, workspace, or profile not found."
@@ -5239,7 +5292,8 @@
                                 "type": "null"
                             }
                         ],
-                        "title": "Maxcostusd"
+                        "title": "Maxcostusd",
+                        "description": "New API sessions use the $25 default when callers omit this field. Follow-ups inherit the stored budget when callers omit this field. Use $25 as a starting budget unless the user chooses another value. An explicit value replaces the stored budget. Low account credits can reduce budgets until the proposed fix deploys. Production checks paid budgets per run until session-wide enforcement deploys."
                     }
                 },
                 "additionalProperties": false,
@@ -5699,7 +5753,8 @@
                                 "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
                             }
                         ],
-                        "title": "Maxcostusd"
+                        "title": "Maxcostusd",
+                        "description": "Set a positive replacement budget in USD without starting a run. Use $25 as a starting budget unless the user chooses another value. Preserve higher existing budgets unless the user requests a decrease. This request preserves recorded spending. Production currently checks paid budgets per run. The session-wide budget rollout remains pending."
                     }
                 },
                 "additionalProperties": false,
@@ -5708,7 +5763,7 @@
                     "maxCostUsd"
                 ],
                 "title": "SessionCostCapRequest",
-                "description": "Set the maximum spend for the active run in a session."
+                "description": "Replace the stored cost cap for an active or idle session."
             },
             "SessionCostCapResponse": {
                 "properties": {
@@ -6411,6 +6466,44 @@
                 },
                 "type": "object",
                 "title": "WorkspaceUpdateRequest"
+            },
+            "SessionBudgetResponse": {
+                "properties": {
+                    "sessionId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Sessionid"
+                    },
+                    "spentUsd": {
+                        "type": "string",
+                        "title": "Spentusd"
+                    },
+                    "maxCostUsd": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Maxcostusd"
+                    },
+                    "budgetScope": {
+                        "type": "string",
+                        "const": "session",
+                        "title": "Budgetscope"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "sessionId",
+                    "spentUsd",
+                    "maxCostUsd",
+                    "budgetScope"
+                ],
+                "title": "SessionBudgetResponse",
+                "description": "Report recorded budget spending without estimating unfinished model calls."
             }
         },
         "securitySchemes": {
