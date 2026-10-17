@@ -68,9 +68,7 @@ It does not give each follow-up a new budget.
 New API sessions default to \$25.
 
 The proposed fix keeps this budget independent of the account balance.
-Its release requires a credit check during execution first.
-All sessions in one project share its credits.
-Cloud checks available credits when it starts a run.
+Cloud still checks available credits when it starts a run.
 A top-up adds credits without changing the session budget.
 
 | Request | Budget behavior |
@@ -86,10 +84,9 @@ Changing its budget to \$8 leaves \$6, not \$8.
 You can increase or decrease the budget, but the value must exceed zero.
 A lower budget does not refund previous spending.
 
-For example, 50 sessions can each have a \$25 budget while sharing \$10 of project credits.
-The API does not reserve \$25 for each session.
-Running V4 model and search requests do not recheck project credits.
-A session can therefore continue after other sessions exhaust the shared credits.
+Parallel sessions share project credits.
+Their budgets do not reserve those credits.
+Concurrent or already-running work can exceed the account balance.
 
 ### Start and follow up
 
