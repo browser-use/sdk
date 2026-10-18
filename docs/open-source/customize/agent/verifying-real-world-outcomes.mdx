@@ -53,17 +53,21 @@ Treat the outcome as confirmed only if the page shows something durable and spec
 
 When you have access, check the source directly: the CRM for a new lead, the store's order API, an email inbox for the confirmation message. This is the strongest check.
 
-## Example: re-fetch and look for a reference
+## Example: re-fetch and match the reference
 
 ```python
+import html
 import re
-import httpx
 from browser_use import Agent
+
+ALLOWED_HOSTS = {"example.com"}  # exact hostnames the task should end on, including www if used
 
 # The reference must contain at least one digit, so phrases like
 # "order confirmation" aren't mistaken for a reference.
 REF_PATTERN = re.compile(
-    r"\b(?:order|confirmation|reference|ref)\b(?:\s*(?:number|no\.?|id))?[\s#:]*((?=[A-Z0-9-]*\d)[A-Z0-9-]{5,})",
+    r"\b(?:order|confirmation|reference|ref)\b"
+    r"(?:\s*(?:number|no\.?|id))?[\s#:-]*"
+    r"((?=[A-Z0-9-]*\d)[A-Z0-9][A-Z0-9-]{4,})",
     re.I,
 )
 
@@ -71,28 +75,58 @@ async def submit_and_verify(task: str, llm) -> dict:
     agent = Agent(task=task, llm=llm)
     history = await agent.run()
 
-    # history.urls() has one entry per step and may contain None
-    urls = [u for u in history.urls() if u]
+    # Each step records the page it started on, so the last entry is the page the agent finished on
+    urls = history.urls()
     final_url = urls[-1] if urls else None
     if not final_url:
         return {"status": "unknown", "reason": "no final URL"}
+    claimed = REF_PATTERN.search(history.final_result() or "")
+    if not claimed:
+        return {"status": "unknown", "reason": "agent reported no reference", "url": final_url}
 
-    # Re-fetch outside the agent's session
-    async with httpx.AsyncClient(follow_redirects=True, timeout=15) as client:
-        resp = await client.get(final_url)
+    # Re-fetch outside the agent's session (helper below)
+    resp = await fetch_on_allowed_site(final_url, ALLOWED_HOSTS)
+    if isinstance(resp, str):
+        return {"status": "unknown", "reason": resp, "url": final_url}
+    if not resp.is_success:  # only 404/410 mean failed; 401, 403, 429 and 5xx can't tell
+        status = "failed" if resp.status_code in (404, 410) else "unknown"
+        return {"status": status, "reason": f"result page returned {resp.status_code}", "url": final_url}
 
-    if resp.status_code >= 400:
-        return {"status": "failed", "reason": f"result page returned {resp.status_code}", "url": final_url}
+    # Search the visible text, not the raw HTML, for the reference the agent reported
+    text = html.unescape(re.sub(r"(?is)<(script|style)\b.*?</\1>|<[^>]+>", " ", resp.text))
+    found = {m.group(1).upper() for m in REF_PATTERN.finditer(text)}
+    if claimed.group(1).upper() in found:
+        return {"status": "confirmed", "reference": claimed.group(1), "url": final_url}
 
-    match = REF_PATTERN.search(resp.text)
-    if match:
-        return {"status": "confirmed", "reference": match.group(1), "url": final_url}
-
-    # Page loads but shows no durable reference: don't assume success
-    return {"status": "unknown", "reason": "no durable reference on result page", "url": final_url}
+    # No reference on the page, or a different (possibly stale) one: don't assume success
+    return {"status": "unknown", "reason": "agent's reference not found on result page", "url": final_url}
 ```
 
 Return `unknown` rather than guessing. A workflow that can tell "confirmed", "failed" and "not sure" apart is safer than one that treats every finished run as a success.
+
+### Safe re-fetch helper
+
+Re-fetching agent-visited URLs from a server can be steered to internal addresses, so this helper follows redirects only within the sites you allow.
+
+```python
+import httpx
+
+async def fetch_on_allowed_site(url: str, allowed_hosts: set[str]) -> httpx.Response | str:
+    """Return the final response, or a reason string when the URL can't be fetched safely."""
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            for _ in range(6):  # the first request plus up to 5 redirects
+                parsed = httpx.URL(url)
+                if parsed.scheme != "https" or parsed.host not in allowed_hosts:
+                    return f"not an allowed https URL: {url}"
+                resp = await client.get(url)  # redirects are not followed automatically
+                if resp.next_request is None:
+                    return resp
+                url = str(resp.next_request.url)
+    except (httpx.HTTPError, httpx.InvalidURL) as exc:
+        return f"re-fetch failed: {type(exc).__name__}"
+    return "too many redirects"
+```
 
 ## Tips
 
