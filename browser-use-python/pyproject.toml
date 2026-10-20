@@ -41,7 +41,7 @@ x402 = [
     # Security pin on a transitive dep (x402[evm] -> web3 -> aiohttp).
     # CVE-2026-34993, CVE-2026-47265, CVE-2026-54273, CVE-2026-54274,
     # CVE-2026-54276, CVE-2026-54277, CVE-2026-54278
-    "aiohttp==3.14.3; python_version >= '3.10'",
+    "aiohttp==3.14.4; python_version >= '3.10'",
 ]
 
 [tool.hatch.build.targets.wheel]
