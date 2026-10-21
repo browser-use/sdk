@@ -112,6 +112,7 @@
                       "cloud/browser/extensions",
                       "cloud/browser/live-preview",
                       "cloud/browser/playwright-puppeteer-selenium",
+                      "cloud/browser/screenshots",
                       {
                         "group": "Authentication",
                         "icon": "key-round",
