@@ -1,0 +1,14 @@
+docs/cloud/zero-data-retention.mdx
+  h_e7a2b198222b93 63,66-67,79-80,90,92,95,118,123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5405c5c7029c2f6cfd17067350e60e41a1cb5157",
+  "prompts": {},
+  "humans": {
+    "h_e7a2b198222b93": {
+      "author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}
