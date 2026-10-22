@@ -449,6 +449,10 @@
   },
   "redirects": [
     {
+      "source": "/customize/installation",
+      "destination": "/open-source/quickstart"
+    },
+    {
       "source": "/",
       "destination": "/cloud/quickstart"
     },
