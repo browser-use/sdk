@@ -6,7 +6,7 @@ mode: "wide"
 ---
 
 <Note>
-Codex says "Work browser access requires an authenticated account"? That is a Codex account check, not a website login. Since Codex app 26.1013, Work mode with the built-in browser or computer tools on needs a ChatGPT sign-in, so API key users get it on every message ([openai/codex#54841](https://github.com/openai/codex/issues/54841)). Fixes users report: sign in to ChatGPT in the app, or set `conversationDetailMode` back to `"STEPS_COMMANDS"` in `~/.codex/config.toml` and fully restart the app. [Details, and a browser for Codex without a ChatGPT account](https://browser-use.com/codex-browser).
+Codex says "Work browser access requires an authenticated account"? That is a Codex account check, not a website login. Users of Codex app 26.1013 report that when the built-in browser or computer tools are enabled, Work mode requires a ChatGPT sign-in, so API key users get the error on every message ([openai/codex#54841](https://github.com/openai/codex/issues/54841), still open). Fixes reported in that issue: sign in to ChatGPT in the app, or in `~/.codex/config.toml` change the existing `conversationDetailMode = "STEPS_PROSE"` line under `[desktop]` to `"STEPS_COMMANDS"` and fully restart the app. [Details, and a browser for Codex without a ChatGPT account](https://browser-use.com/codex-browser).
 </Note>
 
 Browser-Use supports multiple authentication strategies depending on your use case:
