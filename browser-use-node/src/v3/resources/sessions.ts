@@ -39,6 +39,9 @@ export class Sessions {
     ) {
       requestBody.useOwnKey = this.options.useOwnKey;
     }
+    if (requestBody.proxyCountryCode) {
+      requestBody.proxyCountryCode = requestBody.proxyCountryCode.toLowerCase() as any;
+    }
     return this.http.post<SessionResponse>("/sessions", requestBody);
   }
 
