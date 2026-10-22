@@ -1,0 +1,18 @@
+docs/cloud/browser/live-preview.mdx
+  h_e7a2b198222b93 150
+docs/cloud/zero-data-retention.mdx
+  h_e7a2b198222b93 1-122
+docs/docs.json
+  h_e7a2b198222b93 166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3bece6cc55613ad989d224b680df7eb303404bb1",
+  "prompts": {},
+  "humans": {
+    "h_e7a2b198222b93": {
+      "author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}
