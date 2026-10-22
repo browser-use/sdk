@@ -60,9 +60,11 @@ Only models that support the project's privacy policy remain available.
 ## Keep browser profiles
 
 A browser profile stores login information such as cookies.
-You can choose **Keep browser profiles and saved logins** during self-service activation.
+You can choose **Zero Data Retention, except profiles** during self-service activation.
 This choice excludes profile data from automatic deletion.
 We keep that data until you delete each profile.
+The **Full Zero Data Retention** option deletes existing profiles and saved logins.
+Full ZDR also prevents new profiles.
 Other run content still follows the ZDR policy.
 
 This exception means that your project intentionally retains profile data.
@@ -74,8 +76,8 @@ See [profile management](/cloud/guides/profile-sync).
 
 <Note>
 Self-service activation rolls out separately from existing ZDR support.
-An eligible project owner sees the activation button in **Settings → Privacy & compliance**.
-Contact support if your project does not yet show the button.
+Every project owner can use the activation button in **Settings → Privacy & compliance**.
+Self-service activation requires no project approval after release.
 Use the US dashboard to change the project policy; regional services receive that policy.
 </Note>
 
@@ -85,12 +87,12 @@ Use the US dashboard to change the project policy; regional services receive tha
     Existing runs can keep their earlier execution settings.
   </Step>
   <Step title="Review the changes">
-    Select **Enable Zero Data Retention**.
+    Select **Enable** beside **Zero Data Retention**.
     Review deletion and feature changes.
-    Choose whether to keep browser profiles.
+    Choose full ZDR or ZDR with browser profiles.
   </Step>
   <Step title="Confirm the project">
-    Accept the confirmation and type the exact project name.
+    Confirm that cleanup deletes past sessions in this project only.
     Self-service activation includes existing stored run data in cleanup.
     You cannot turn ZDR off in settings.
   </Step>
@@ -113,10 +115,11 @@ Turning on ZDR cannot undo processing that occurred before activation.
 Existing projects keep their ZDR protection during the database policy migration.
 Existing profile exceptions remain in place.
 The migration keeps the old project lists until both Python and Go use the database policy.
+The migration copies the existing policy automatically.
 You do not need to activate ZDR again.
 
 ## Download confirmation
 
-Open **Settings → Privacy & compliance** and select **Download ZDR confirmation**.
+Open **Settings → Privacy & compliance** and select **Download PDF** beside **Zero Data Retention**.
 The download requires an active ZDR policy for the current project.
 The confirmation describes the policy; it does not certify a particular cleanup run.
