@@ -1,0 +1,122 @@
+---
+title: "Zero Data Retention"
+description: "Understand result retrieval, automatic deletion, unavailable features, and optional browser profiles."
+---
+
+Zero Data Retention (ZDR) limits storage of browser and agent content.
+It does not mean that a run never stores data.
+The service temporarily stores some content to process runs and deliver results.
+We do not use your data to train models.
+
+<Warning>
+Save results in your own system promptly. You cannot recover content after cleanup deletes it.
+ZDR browsers do not record video, even when your request enables recording.
+</Warning>
+
+## When deletion happens
+
+The automatic cleanup job runs every 15 minutes.
+The following times describe normal operation, not guaranteed deletion deadlines.
+Failures, active shared resources, and uploads can delay cleanup.
+
+| Run type | Retrieval and cleanup |
+| --- | --- |
+| API V4 agent | Retrieve results when the run finishes. Cleanup normally starts 15–30 minutes after its last terminal update. |
+| Standalone browser | Cleanup selects a stopped browser after 10 minutes. Normal timing is 10–25 minutes after stopping. |
+| API V3 agent | The service hands results to the webhook delivery path, then attempts immediate deletion. Do not rely on a polling grace period. Start a new session for each task after self-service activation. |
+| Legacy API V2 task | Cleanup selects tasks 15 minutes after completion or 30 minutes after starting, whichever applies first. |
+
+For V4, poll the task or session endpoint until the run finishes.
+Save its final result immediately.
+Download required output files during the retrieval period.
+After cleanup, results and stored files no longer remain available.
+An idle V4 run can also enter cleanup after four hours without an update.
+
+<Note>
+The schedule does not prove that deletion finished.
+A displayed next cleanup time shows the next scheduled check.
+It does not report a completed deletion or promise a fixed deadline.
+</Note>
+
+## What stays available
+
+You can create API agent runs and standalone browsers.
+You can watch a live browser while it runs.
+You can retrieve V4 results during the retrieval period.
+Supported webhook delivery remains available.
+Only models that support the project's privacy policy remain available.
+
+| Feature | With ZDR |
+| --- | --- |
+| Live browser access | Available while the browser runs |
+| V4 final result and output files | Available temporarily; save them promptly |
+| Browser recordings | Unavailable |
+| Persistent chat and run history | Unavailable after cleanup |
+| Sharing, workspaces, and skills | Unavailable |
+| New schedules, extensions, and integrations | Unavailable |
+| Browser profiles and saved logins | Unavailable unless the project keeps the profile exception |
+| Billing and account records | Remain available; ZDR does not delete the account |
+
+## Keep browser profiles
+
+A browser profile stores login information such as cookies.
+You can choose **Keep browser profiles and saved logins** during self-service activation.
+This choice excludes profile data from automatic deletion.
+We keep that data until you delete each profile.
+Other run content still follows the ZDR policy.
+
+This exception means that your project intentionally retains profile data.
+It does not restore recordings, history, workspaces, or integrations.
+A website can still expire a saved login.
+See [profile management](/cloud/guides/profile-sync).
+
+## Enable ZDR for a project
+
+<Note>
+Self-service activation rolls out separately from existing ZDR support.
+An eligible project owner sees the activation button in **Settings → Privacy & compliance**.
+Contact support if your project does not yet show the button.
+Use the US dashboard to change the project policy; regional services receive that policy.
+</Note>
+
+<Steps>
+  <Step title="Finish active work">
+    Finish active runs and save any results that you need.
+    Existing runs can keep their earlier execution settings.
+  </Step>
+  <Step title="Review the changes">
+    Select **Enable Zero Data Retention**.
+    Review deletion and feature changes.
+    Choose whether to keep browser profiles.
+  </Step>
+  <Step title="Confirm the project">
+    Accept the confirmation and type the exact project name.
+    Self-service activation includes existing stored run data in cleanup.
+    You cannot turn ZDR off in settings.
+  </Step>
+  <Step title="Check the status">
+    Wait for the server to confirm that it saved the policy.
+    Policy updates normally reach running services in about 30 seconds.
+    Wait before you start new work.
+    Settings shows the profile choice and the next scheduled cleanup check.
+  </Step>
+</Steps>
+
+Activation does not erase all data within the button request.
+Cleanup still applies its retrieval periods and active-resource checks.
+A profile exception keeps profile data.
+Billing, account records, and operational identifiers remain.
+Turning on ZDR cannot undo processing that occurred before activation.
+
+## Existing ZDR projects
+
+Existing projects keep their ZDR protection during the database policy migration.
+Existing profile exceptions remain in place.
+The migration keeps the old project lists until both Python and Go use the database policy.
+You do not need to activate ZDR again.
+
+## Download confirmation
+
+Open **Settings → Privacy & compliance** and select **Download ZDR confirmation**.
+The download requires an active ZDR policy for the current project.
+The confirmation describes the policy; it does not certify a particular cleanup run.

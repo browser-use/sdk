@@ -163,6 +163,7 @@
                   },
                   "cloud/guides/concurrency",
                   "cloud/eu-deployment",
+                  "cloud/zero-data-retention",
                   "cloud/guides/billing",
                   "cloud/guides/imessage",
                   "cloud/guides/troubleshooting",
