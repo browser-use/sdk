@@ -21,7 +21,7 @@ Failures, active shared resources, and uploads can delay cleanup.
 
 | Run type | Retrieval and cleanup |
 | --- | --- |
-| API V4 agent | Retrieve results when the run finishes. Cleanup normally starts 15–30 minutes after its last terminal update. |
+| API V4 agent | Retrieve results when the run finishes. Runs normally become eligible 15–30 minutes after their last terminal update. Upload safeguards can defer deletion further. |
 | Standalone browser | Cleanup selects a stopped browser after 10 minutes. Normal timing is 10–25 minutes after stopping. |
 | API V3 agent | The service hands results to the webhook delivery path, then attempts immediate deletion. Do not rely on a polling grace period. Start a new session for each task after self-service activation. |
 | Legacy API V2 task | Cleanup selects tasks 15 minutes after completion or 30 minutes after starting, whichever applies first. |
@@ -31,6 +31,9 @@ Save its final result immediately.
 Download required output files during the retrieval period.
 After cleanup, results and stored files no longer remain available.
 An idle V4 run can also enter cleanup after four hours without an update.
+The Go cleanup path adds a 16-minute upload safeguard when it first marks a run for deletion.
+Outstanding upload permissions can extend that wait.
+These safeguards prevent late uploads from recreating deleted files.
 
 <Note>
 The schedule does not prove that deletion finished.
@@ -123,3 +126,8 @@ You do not need to activate ZDR again.
 Open **Settings → Privacy & compliance** and select **Download PDF** beside **Zero Data Retention**.
 The download requires an active ZDR policy for the current project.
 The confirmation describes the policy; it does not certify a particular cleanup run.
+After self-service activation, we also attempt to email each project owner an activation receipt.
+The receipt includes the chosen profile policy and a PDF.
+The ZDR receipt is not a signed agreement.
+HIPAA activation separately emails the signed Business Associate Addendum to the signer and project owners.
+Email delivery failures do not reverse activation.
