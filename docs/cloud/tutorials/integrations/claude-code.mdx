@@ -11,7 +11,7 @@ icon: "terminal"
 
 - **Claude in Chrome** (Anthropic's extension): Claude works in your Chrome, Edge or another Chromium browser, in a visible window, logged in as you. It pauses at logins and CAPTCHAs for you to handle. It needs a Pro, Max, Team or Enterprise plan signed in with `/login`, and stays off with an API key or `claude setup-token`, through Amazon Bedrock, Google Cloud's Agent Platform or Microsoft Foundry, and in WSL. Install the extension, then run `claude --chrome` ([Use Claude Code with Chrome](https://code.claude.com/docs/en/chrome)).
 - **Playwright MCP** (Microsoft): Claude drives a browser Playwright launches with its own profile, good for testing your own app. `claude mcp add playwright npx @playwright/mcp@latest` ([Playwright MCP](https://github.com/microsoft/playwright-mcp)).
-- **Browser Use CLI** (this page): works with any Claude Code login, including an API key. By default it drives the Chrome you already have open, with your tabs and logins. On a server, or to run many browsers at once, it can start Browser Use cloud browsers: $0.02 per browser-hour plus $5/GB of proxy traffic ([pricing](https://browser-use.com/pricing)).
+- **Browser Use CLI** (this page): works with any Claude Code login, including an API key. By default it drives the Chrome you already have open, with your tabs and logins. On a server, or to run many browsers at once, it can start Browser Use cloud browsers: $0.02 per browser-hour, plus $5/GB through the managed residential proxy or $0.20/GB without it ([pricing](https://browser-use.com/pricing)).
 
 More options side by side, with setup commands: [browser-use.com/claude-code-browser](https://browser-use.com/claude-code-browser).
 
@@ -53,4 +53,4 @@ Claude Code uses its bash tool to run CLI commands directly:
 > Use browser-use to open github.com/trending and summarize the top repos
 ```
 
-The first time it attaches to your Chrome, Chrome asks you to allow remote debugging. For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
+The first time it attaches to your Chrome, Chrome asks you to allow remote debugging; approve it and rerun the command. For the complete CLI reference and Python execution examples, see the [Browser Use CLI docs](https://docs.browser-use.com/open-source/browser-use-cli).
