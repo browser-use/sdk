@@ -12,7 +12,7 @@ Two ways to set it up: connect a Browser Use cloud browser to OpenClaw's native 
 
 - **On your own laptop**, you usually don't. OpenClaw's local browser runs on your IP, and its `user` and `chrome` profiles drive your signed-in Chrome ([OpenClaw browser profiles](https://docs.openclaw.ai/tools/browser/profiles)).
 - **On a VPS or in Docker**, sites see a datacenter IP and a fresh, automated Chromium with no history. Those are the usual reasons for blocks and CAPTCHAs.
-- **A Browser Use cloud browser** runs a hardened Chromium with stealth on, behind a residential proxy in the country you pick (US by default), with automatic CAPTCHA solving (off in the EU region; [CAPTCHA handling](https://docs.browser-use.com/cloud/browser/captcha-handling)). On Browser Use's [Stealth Bench V2](https://browser-use.com/benchmarks/browsers) (100 bot-protected sites, 2 visits each, September 25, 2026) it got through on 90.5% of visits; the next provider, Anchor, got 82%. The sites were picked where Browser Use Cloud historically got through and stock Chrome did not, so they are not a balanced sample, and no browser gets through everywhere.
+- **A Browser Use cloud browser** runs a hardened Chromium with stealth on, behind a residential proxy in the country you pick (US by default), with automatic CAPTCHA solving ([CAPTCHA handling](https://docs.browser-use.com/cloud/browser/captcha-handling)). This page covers the US deployment; the [EU deployment](https://docs.browser-use.com/cloud/eu-deployment) has its own keys and endpoint, and does not solve CAPTCHAs automatically. On Browser Use's [Stealth Bench V2](https://browser-use.com/benchmarks/browsers) (100 bot-protected sites, 2 visits each, September 25, 2026) it got through on 90.5% of visits; the next provider, Anchor, got 82%. The sites were picked where Browser Use Cloud historically got through and stock Chrome did not, so they are not a balanced sample, and no browser gets through everywhere.
 - **Cost:** $0.02 per browser-hour plus $5/GB of residential proxy traffic, no subscription ([pricing](https://browser-use.com/pricing)).
 
 Hosted options compared, with prices: [browser-use.com/openclaw](https://browser-use.com/openclaw).
@@ -77,7 +77,7 @@ openclaw browser screenshot
 **If a site still blocks it**
 
 - Try another country in `proxyCountryCode`. Some sites block whole regions or IP ranges.
-- For sites you log in to, save the login in a profile once and add `&profileId=<PROFILE_ID>` to the `cdpUrl` ([profile sync](https://docs.browser-use.com/cloud/guides/profile-sync)). The browser then starts signed in, and no password goes into the prompt.
+- For sites you log in to, save the login in a profile once and add `&profileId=<PROFILE_ID>` to the `cdpUrl` ([profile sync](https://docs.browser-use.com/cloud/guides/profile-sync)). The browser starts with those cookies, so no password goes into the prompt. Sites can still expire the login, bind it to a device or network, or ask you to verify again; re-sync when that happens.
 - Slow the agent down on rate-limited sites, and use the site's official API where one exists.
 
 ## Option 2: Browser Use CLI
