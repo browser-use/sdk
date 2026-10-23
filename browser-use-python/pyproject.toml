@@ -12,8 +12,9 @@ requires-python = ">=3.10"
 dependencies = [
     "httpx>=0.24.1,<1",
     "pydantic>=2.10.6,<3",
-    # Security floor on a transitive dependency of httpx.
+    # Security floors on transitive dependencies of httpx.
     "idna>=3.19",  # CVE-2026-45409
+    "certifi>=2026.10.19",  # GHSA-6q48-6c7w-9gw2
 ]
 
 [project.urls]
