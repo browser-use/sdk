@@ -1,0 +1,148 @@
+---
+title: "Zero Data Retention for Browser Use Cloud"
+sidebarTitle: "Zero Data Retention"
+description: "Enable self-service Zero Data Retention for US browser automation. Control session data and saved logins without an enterprise contract or additional commitment."
+---
+
+Zero Data Retention (ZDR) gives you control over the data your browser automation keeps.
+A project owner can enable it directly in Cloud settings.
+Setup takes a few steps, with no sales call, enterprise contract, or additional commitment.
+
+You choose whether automatic cleanup also deletes browser profiles and saved logins.
+The setting applies to one project, so each project can follow its own data policy.
+
+<Note>
+Self-service activation covers **US session data**.
+It does not enable EU cleanup or delete EU history.
+Read the [EU deployment guide](/cloud/eu-deployment) before planning a regional data policy.
+</Note>
+
+## Enable Zero Data Retention
+
+<Steps>
+  <Step title="Open your project settings">
+    Choose your project in the [US Cloud dashboard](https://cloud.browser-use.com/settings?tab=privacy).
+    Open **Settings → Privacy & compliance** as a project owner.
+    Finish active runs and save any results you need.
+  </Step>
+  <Step title="Choose your profile policy">
+    Select **Enable** beside **Zero Data Retention**.
+
+    - **Full Zero Data Retention:** cleanup deletes existing profiles and saved logins, and blocks new profiles.
+    - **Zero Data Retention, except profiles:** keep profiles and saved logins until you delete each profile.
+
+    Both choices apply automatic cleanup to covered US session data.
+  </Step>
+  <Step title="Confirm activation">
+    Review the feature changes and accept the deletion consent.
+    Select **Enable Zero Data Retention**.
+
+    Cleanup includes past US session data for this project.
+    You cannot recover data after deletion.
+  </Step>
+  <Step title="Check the active status">
+    Cloud shows a green **Active** badge after it confirms the setting.
+    Wait about 30 seconds before starting new runs so services can refresh the policy.
+    Select **Download PDF** for a project confirmation.
+  </Step>
+</Steps>
+
+Activation starts the cleanup policy.
+It does not erase all stored data immediately.
+Contact support if you need to change an active policy.
+
+## How automatic cleanup works
+
+ZDR limits storage of browser and agent content.
+The service temporarily stores some content to process runs and deliver results.
+
+Cleanup checks run every 15 minutes.
+Active runs, cleanup delays, and upload safeguards can extend the time before deletion.
+The native cleanup path includes a 16-minute upload safeguard to prevent late uploads from recreating deleted files.
+
+For **API V4 runs**, save results and download required output files within 15 minutes after completion.
+Save results as soon as the run finishes.
+Do not use the next scheduled cleanup check as a guaranteed deletion deadline.
+
+<Warning>
+ZDR removes persistent session history and disables V4 recordings.
+Deletion cannot restore data to your application.
+Save the results you need in your own system.
+</Warning>
+
+Older APIs use different result-delivery and cleanup paths.
+Do not assume the V4 retrieval window applies to V2 or V3.
+Contact support to confirm coverage for an existing legacy workflow.
+
+## Browser profiles and saved logins
+
+A browser profile keeps cookies and local storage that can preserve a website login.
+The profile exception lets your automation reuse those logins while covered session data follows automatic cleanup.
+
+Profiles remain until you delete them.
+Follow the [profile deletion steps](/cloud/guides/profile-sync#delete-a-browser-profile) when you no longer need a login.
+A website can also expire a login independently.
+
+Full ZDR removes this exception.
+Cleanup deletes existing profiles, and the project cannot create new profiles.
+
+## Features and data policy
+
+| Feature | With Zero Data Retention |
+| --- | --- |
+| Live browser access | Available while the browser runs |
+| V4 results and output files | Available temporarily; save them promptly |
+| V4 recordings | Unavailable |
+| Persistent session history | Unavailable |
+| Browser profiles and saved logins | Available only when you choose the profile exception |
+| Models | Models that require data retention are unavailable |
+| Session sharing | Unavailable |
+| Cloud workspace and skill pages | Unavailable in the dashboard |
+| New schedules | Unavailable |
+| Browser extensions | Unavailable |
+| New integration connections | Unavailable; you can still disconnect existing connections |
+| Billing and account records | Remain available |
+
+Enabling ZDR does not delete your account.
+It does not remove billing records or undo processing that happened before activation.
+An **Active** badge confirms the project policy, not the completion of each physical deletion.
+
+## Enterprise data controls without an enterprise contract
+
+Teams often evaluate data retention alongside enterprise features, access controls, and regional hosting.
+Self-service ZDR lets project owners set a data policy without a separate enterprise commitment.
+You can use this control without a sales-led setup process.
+
+ZDR, HIPAA agreements, and SOC 2 compliance address different requirements.
+ZDR activation does not establish HIPAA compliance or sign a Business Associate Addendum.
+Use the separate HIPAA settings and your security review for those requirements.
+
+For regional requirements, review [EU hosting](/cloud/eu-deployment).
+For login management, review [browser authentication](/cloud/guides/authentication) and [profile management](/cloud/guides/profile-sync).
+
+## Frequently asked questions
+
+### Do I need an enterprise plan or a sales call?
+
+No separate enterprise contract, sales call, or additional commitment is required for self-service ZDR activation.
+A project owner enables it in the US Cloud dashboard.
+
+### Can I keep saved logins?
+
+Yes. Choose **Zero Data Retention, except profiles**.
+Delete each profile when you no longer need its saved login.
+
+### Does activation delete everything immediately?
+
+No. Scheduled cleanup applies retrieval windows, active-run checks, and upload safeguards.
+Billing and account records remain.
+
+### Does the US setting cover EU projects?
+
+No. The US setting does not activate EU cleanup.
+An EU region selection or database migration alone does not establish EU ZDR coverage.
+
+### What does the confirmation PDF prove?
+
+The PDF describes the project's active ZDR policy.
+It does not certify that a particular cleanup cycle deleted every stored object.
