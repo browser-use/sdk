@@ -1,0 +1,16 @@
+docs/cloud/guides/profile-sync.mdx
+  h_e7a2b198222b93 54-71
+docs/cloud/zero-data-retention.mdx
+  h_e7a2b198222b93 2-4,7-56,58-65,68-70,73-75,77,79-80,82-84,86-87,89,91,94-99,101-103,105-140,142-143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d70f46bfd261d6b27231b3999fe2649e67b3921f",
+  "prompts": {},
+  "humans": {
+    "h_e7a2b198222b93": {
+      "author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}
