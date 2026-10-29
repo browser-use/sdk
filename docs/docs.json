@@ -450,6 +450,10 @@
   },
   "redirects": [
     {
+      "source": "/open-source/browser-use-cli/local-browser-setup",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
       "source": "/customize/installation",
       "destination": "/open-source/quickstart"
     },
