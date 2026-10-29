@@ -5,12 +5,11 @@ icon: "earth"
 ---
 
 Browser Use's EU deployment runs agents and browsers in Frankfurt, Germany.
-It uses the same Cloud codebase and V4 API as the US deployment, with separate
-workload storage and a smaller set of supported features.
+Use the V4 API with separate EU workload storage.
 
 Use your existing account and project. Create an EU API key and point your
-client at the EU endpoint. You do not need to bring your own model key:
-managed **GPT-6 Luna**, **GPT-5.6 Luna** and **GPT-5.6 Sol** are available.
+client at the EU endpoint. OpenAI models are available, including **GPT-6 Luna**
+and **GPT-6.1 Sol**. You do not need to bring your own model key.
 
 | | EU | US |
 | --- | --- | --- |
@@ -84,7 +83,7 @@ curl --fail-with-body https://api.eu.browser-use.com/api/v4/runs \
 The REST call returns a run ID. Poll `GET /api/v4/runs/{id}/status` on the same
 EU host until its status is `completed`, `failed` or `cancelled`, then read
 `GET /api/v4/runs/{id}` for the result. To use Sol,
-set `model` to `gpt-5.6-sol`. Omitting both `model` and `modelParams` uses
+set `model` to `gpt-6.1-sol`. Omitting both `model` and `modelParams` uses
 GPT-6 Luna with High reasoning. Explicit GPT-5.6 Luna and Sol selections remain supported.
 
 The normal [session](/cloud/agent/sessions),
@@ -130,7 +129,7 @@ that code. Run that client in Europe if your requirements include its location.
 | Agent execution and cloud browsers | Frankfurt AWS infrastructure. |
 | Prompts, run history, screenshots, recordings, workspace uploads/downloads and saved browser profiles | EU database/object storage when retained. Profiles include saved browser state such as cookies. |
 | Regional API keys and stored model keys | Regional EU storage. US API keys do not authenticate EU API requests. |
-| Managed Luna/Sol model requests | OpenRouter's EU gateway, restricted to Azure EU with provider fallback disabled and zero-data-retention routing required. |
+| OpenAI model requests | OpenAI's EU service. |
 | Enabled application and browser-host logs | Frankfurt CloudWatch/host journals, forwarded to Datadog EU. Operational logs may contain identifiers, URLs or error details. |
 
 ### What is shared or can leave the EU
@@ -152,8 +151,7 @@ can visit websites outside Europe. Your client receives API results and
 downloads wherever it runs. A European proxy exit does not establish the
 location of a website or all of a proxy provider's processing. You are
 responsible for choosing suitable destinations, custom proxies and model
-providers when bringing your own key. A customer OpenAI key uses the direct
-OpenAI route, not the managed Azure EU route.
+providers when bringing your own key.
 
 The dashboard uses Vercel and shared authentication. Its global edge and
 vendor metadata processing should not be treated as an EU-only boundary. For
@@ -166,9 +164,9 @@ security team before sending sensitive data.
   error rather than sending work to the US. Browser/profile endpoints under
   `/api/v2`, `/api/v3` and `/api/v4` are supported; the version number alone
   does not determine availability. Use V4 for new integrations.
-- **Managed models are Luna and Sol.** Other supported OpenAI models require
-  a stored OpenAI key in the EU project. Anthropic, Gemini, DeepSeek and GLM
-  agent models are unavailable on this deployment.
+- **OpenAI models are available through OpenAI's EU service.** See the
+  [models guide](/cloud/agent/models) for model IDs. Anthropic, Gemini, DeepSeek
+  and GLM agent models are unavailable on this deployment.
 - **Marketplace and Vercel-managed billing projects are unavailable.** Use a
   project billed directly through Browser Use.
 - **Managed proxy countries must be EU member states.** New browsers default
