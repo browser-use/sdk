@@ -1,0 +1,14 @@
+docs/cloud/eu-deployment.mdx
+  h_e7a2b198222b93 8,11-12,86,132,154,167-169
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2e6181ed03320d39311b91a8e99af7c88f308633",
+  "prompts": {},
+  "humans": {
+    "h_e7a2b198222b93": {
+      "author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}
