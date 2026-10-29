@@ -1,0 +1,24 @@
+docs/cloud/eu-deployment.mdx
+  h_e7a2b198222b93 14-24
+docs/cloud/images/eu-workload-boundary-dark-mobile.svg
+  h_e7a2b198222b93 1
+docs/cloud/images/eu-workload-boundary-dark.svg
+  h_e7a2b198222b93 1
+docs/cloud/images/eu-workload-boundary-light-mobile.svg
+  h_e7a2b198222b93 1
+docs/cloud/images/eu-workload-boundary-light.svg
+  h_e7a2b198222b93 1
+scripts/diagrams/eu-workload-boundary.py
+  h_e7a2b198222b93 1-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "743ea2384c7c3f087b16d022396756c18fe8e23f",
+  "prompts": {},
+  "humans": {
+    "h_e7a2b198222b93": {
+      "author": "Gregor Žunič <36313686+gregpr07@users.noreply.github.com>"
+    }
+  }
+}
