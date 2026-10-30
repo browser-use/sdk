@@ -145,6 +145,7 @@
                       "cloud/tutorials/integrations/openai",
                       "cloud/tutorials/integrations/fireworks",
                       "cloud/tutorials/integrations/agentcard",
+                      "cloud/guides/stripe-link",
                       "cloud/tutorials/integrations/openclaw",
                       "cloud/tutorials/integrations/hermes-agent",
                       "cloud/tutorials/integrations/vercel",
