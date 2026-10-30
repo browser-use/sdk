@@ -5049,7 +5049,7 @@
                             "bu-fast"
                         ],
                         "title": "Model",
-                        "description": "bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.",
+                        "description": "bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.",
                         "default": "gpt-6-luna"
                     },
                     "modelParams": {

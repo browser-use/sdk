@@ -38,7 +38,7 @@ field names and accepted values therefore differ by model family.
 `glm-5.2`, `glm-5.3-flash`, `grok-4.5`, `grok-4.6`,
 `deepseek-v4-flash-vision`, `kimi-k3`, `minimax-m3`, and `claude-fable-5`
 do not currently accept V4 `modelParams`. The `bu-ultrafast` and `bu-fast`
-presets also reject it.
+presets also reject it; see [BU Ultrafast](/cloud/agent/ultrafast).
 
 `service_tier: fast` and `priority` bill at OpenAI's Fast-mode token rates
 (2x to 2.5x Standard) and need a direct OpenAI route; on other routes the
@@ -118,8 +118,6 @@ curl -X POST https://api.browser-use.com/api/v4/runs \
 If the project's OpenAI route cannot serve Fast mode, for example on the EU
 deployment without your own OpenAI key or on a Bedrock-only project, the run is
 rejected with `422 Fast mode is unavailable on this project’s OpenAI route`.
-
-For the fastest preset, use [BU Ultrafast](/cloud/agent/ultrafast) instead of tuning `modelParams`.
 
 ## API V3 support
 

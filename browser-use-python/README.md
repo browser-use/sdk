@@ -32,7 +32,8 @@ namespace; see the [browser quickstart](https://docs.browser-use.com/cloud/brows
 ## Fast runs
 
 ```python
-run = client.runs.create("Find the top Hacker News story", model="bu-ultrafast")
+with BrowserUse() as client:
+    run = client.runs.create("Find the top Hacker News story", model="bu-ultrafast")
 ```
 
 See [BU Ultrafast](https://docs.browser-use.com/cloud/agent/ultrafast).

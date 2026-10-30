@@ -1,6 +1,6 @@
 ---
 title: "BU Ultrafast"
-description: "The fastest V4 agent: set model to bu-ultrafast."
+description: "The low-latency V4 preset: set model to bu-ultrafast."
 icon: "zap"
 ---
 
@@ -48,13 +48,17 @@ curl https://api.browser-use.com/api/v4/runs \
 
 ## Limits
 
-- `bu-ultrafast` and `bu-fast` are presets and take no `modelParams`; sending
-  it returns 422.
+- `bu-ultrafast` and `bu-fast` are presets and require Browser Use Pi. They take
+  no `modelParams`, `mode` or `harness: "browsercode"`; sending any of them returns 422.
 - The preset sticks to the [session](/cloud/agent/sessions). Follow-ups keep it;
   a follow-up that sets another `model` or `modelParams` returns 422.
+- New sessions run without the managed proxy unless you set
+  `browserSettings.proxyCountryCode` (for example `"us"`). See [Proxies](/cloud/browser/proxies).
 - HIPAA and Bedrock-only projects run the preset on the standard tier.
-- With your own OpenAI key (BYOK), priority-tier tokens bill to your OpenAI account.
 
 ## Pricing
 
-See [pricing](https://browser-use.com/pricing) for current rates.
+Both presets bill GPT-6 Luna tokens. `bu-ultrafast` uses OpenAI's priority tier,
+billed at the Fast-mode rate (2x Standard, see [Thinking levels](/cloud/agent/thinking-levels#openai-fast-mode));
+`bu-fast` bills at the Standard rate. With your own OpenAI key, OpenAI bills
+the tokens to your account, plus the 0.2x Browser Use orchestration fee.
