@@ -517,6 +517,32 @@ Required environment variables:
 CEREBRAS_API_KEY=
 ```
 
+## Fireworks AI {#fireworks}
+
+[Available models](https://fireworks.ai/models). Fireworks serves open models such as Kimi K3 and GLM 5.3 Flash through an OpenAI-compatible endpoint. See the [Fireworks guide](/cloud/tutorials/integrations/fireworks) to run them in Browser Use Cloud without a Fireworks key.
+
+```python
+from browser_use import Agent, ChatOpenAI
+import os
+
+llm = ChatOpenAI(
+    model="accounts/fireworks/models/kimi-k3",
+    base_url="https://api.fireworks.ai/inference/v1",
+    api_key=os.getenv("FIREWORKS_API_KEY"),
+)
+
+agent = Agent(
+    task="Your task here",
+    llm=llm
+)
+```
+
+Required environment variables:
+
+```bash .env
+FIREWORKS_API_KEY=
+```
+
 ## OpenRouter [example](https://github.com/browser-use/browser-use/blob/main/examples/models/openrouter.py) {#openrouter}
 
 [Available models](https://openrouter.ai/models). Access 300\+ models from any provider through a single API.
