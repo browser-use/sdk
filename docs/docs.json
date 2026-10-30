@@ -143,6 +143,7 @@
                         ]
                       },
                       "cloud/tutorials/integrations/openai",
+                      "cloud/tutorials/integrations/fireworks",
                       "cloud/tutorials/integrations/agentcard",
                       "cloud/tutorials/integrations/openclaw",
                       "cloud/tutorials/integrations/hermes-agent",

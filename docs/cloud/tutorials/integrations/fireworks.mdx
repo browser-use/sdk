@@ -1,0 +1,89 @@
+---
+title: Fireworks AI
+description: "Run Browser Use agents on Fireworks-served Kimi K3 and GLM 5.3 Flash, in Browser Use Cloud or with your own Fireworks key in the open-source library."
+icon: "flame"
+---
+
+[Fireworks AI](https://fireworks.ai) serves open models with fast inference. You can use it with Browser Use in two ways:
+
+- **Browser Use Cloud** runs `kimi-k3` and `glm-5.3-flash` on Fireworks. Pass the model ID; you need no Fireworks account.
+- **The open-source library** calls any Fireworks model with your own `FIREWORKS_API_KEY` through its OpenAI-compatible endpoint.
+
+## Browser Use Cloud
+
+| Model | API string | Notes |
+| --- | --- | --- |
+| Kimi K3 | `kimi-k3` | Moonshot's K3 on Fireworks' fast serving path. Vision and long context. |
+| GLM 5.3 Flash | `glm-5.3-flash` | Z.ai's first multimodal GLM 5 model. Low cost per step. |
+
+Get a key from [Browser Use Cloud](https://cloud.browser-use.com/new-api-key) and pass the model when you create a run:
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+run = client.runs.create(
+    "Open https://news.ycombinator.com and return the title of the top story.",
+    model="kimi-k3",
+)
+result = client.runs.wait_for_completion(run.id)
+print(result.result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const run = await client.runs.create({
+  task: "Open https://news.ycombinator.com and return the title of the top story.",
+  model: "kimi-k3",
+});
+const result = await client.runs.waitForCompletion(run.id);
+console.log(result.result);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Open https://news.ycombinator.com and return the title of the top story.","model":"kimi-k3"}'
+```
+</CodeGroup>
+
+Usage is billed to your Browser Use credits. These models do not take a bring-your-own Fireworks key in Cloud. Free-plan projects need to buy credits before using them. See [Models](/cloud/agent/models) for every V4 model ID.
+
+## Open-source library
+
+Install [Browser Use](/open-source/quickstart), get a key from the [Fireworks dashboard](https://app.fireworks.ai/settings/users/api-keys), and point `ChatOpenAI` at the Fireworks endpoint:
+
+```python
+import asyncio
+import os
+
+from browser_use import Agent, ChatOpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+
+llm = ChatOpenAI(
+    model="accounts/fireworks/models/kimi-k3",
+    base_url="https://api.fireworks.ai/inference/v1",
+    api_key=os.getenv("FIREWORKS_API_KEY"),
+)
+
+
+async def main():
+    agent = Agent(
+        task="Open https://news.ycombinator.com and return the title of the top story.",
+        llm=llm,
+    )
+    await agent.run()
+
+
+asyncio.run(main())
+```
+
+```bash .env
+FIREWORKS_API_KEY=
+```
+
+Any [Fireworks model](https://fireworks.ai/models) ID works in `model`, such as `accounts/fireworks/models/glm-5p3-flash`. Fireworks bills these calls to your Fireworks account.
