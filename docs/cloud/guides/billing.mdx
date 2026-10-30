@@ -95,6 +95,22 @@ totals: promotions and credits apply later in billing. LLM charges settle up to
 about 90 seconds after a run finishes, and browser and proxy costs keep
 growing until the browser stops. See the [session cost reference](/cloud/api-v4/sessions/get-session-cost).
 
+## V4 session budgets
+
+The session-wide budget rollout remains pending.
+The current production runtime checks paid budgets per run.
+After the rollout, follow-ups share one total budget without resetting previous spending.
+
+The proposed fix removes balance-based budget reductions.
+Cloud still checks available credits when it starts a run.
+Parallel sessions share credits, and their budgets do not reserve those credits.
+Concurrent or already-running work can exceed the account balance.
+A top-up adds credits without resetting the session budget.
+
+Model and web-search charges count against that budget.
+Browser and network charges remain separate.
+See [session budgets](/cloud/agent/sessions#set-a-session-budget) for examples, the top-up issue, and endpoint availability.
+
 ## Auto recharge
 
 Auto recharge requires a saved payment method. If it is not visible in Billing, first save a payment method through a manual credit purchase. Select the project that should receive the credits.
