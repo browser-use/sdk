@@ -43,6 +43,22 @@ const result = await client.run("Find the top 3 trending repos on GitHub today")
 console.log(result.output);
 ```
 
+## Vercel AI SDK tool
+
+```typescript
+import { generateText, isStepCount } from "ai";
+import { browserUse } from "browser-use-sdk/ai-sdk";
+
+const { text } = await generateText({
+  model: "openai/gpt-5.6-luna",
+  tools: { browserUse: browserUse() },
+  stopWhen: isStepCount(5),
+  prompt: "Open https://news.ycombinator.com and summarize the top 3 stories.",
+});
+```
+
+See the [AI SDK guide](https://docs.browser-use.com/cloud/tutorials/integrations/ai-sdk).
+
 ## Docs
 
 [docs.browser-use.com](https://docs.browser-use.com)
