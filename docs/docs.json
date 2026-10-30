@@ -282,6 +282,7 @@
                   "open-source/customize/agent/basics",
                   "open-source/customize/agent/prompting-guide",
                   "open-source/customize/agent/output-format",
+                  "open-source/customize/agent/verifying-real-world-outcomes",
                   "open-source/customize/agent/all-parameters"
                 ]
               },
