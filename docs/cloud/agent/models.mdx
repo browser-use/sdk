@@ -30,6 +30,10 @@ the normalized `thinkingLevel` values available in V2 and V3.
   Omit both `model` and `modelParams` to let the API apply it.
 </Tip>
 
+<Tip>
+  Need speed? Set `model: "bu-ultrafast"`. See [BU Ultrafast](/cloud/agent/ultrafast).
+</Tip>
+
 ## All supported V4 model IDs
 
 The V4 request schema accepts the following model IDs. The Cloud dashboard may
@@ -50,10 +54,11 @@ from the dashboard picker.
 | Xiaomi | `mimo-v2.6-pro`, `mimo-v2.6-flash` | — |
 | Moonshot AI | `kimi-k3` | — |
 | MiniMax | `minimax-m3` | — |
+| Browser Use | `bu-ultrafast`, `bu-fast` | OpenAI |
 
 Free-plan projects (no credits purchased yet) can use only `gpt-6-luna`,
 `gpt-5.6-luna`, `deepseek-v4.1-flash`, `gemini-3-flash`, `minimax-m3`, and
-the early-access `bu-ultrafast` and `bu-fast` presets; other models return 403
+the `bu-ultrafast` and `bu-fast` presets; other models return 403
 until you buy credits. Zero Data Retention projects
 cannot use `claude-fable-5`, `deepseek-v4.1-flash`, `mimo-v2.6-pro`, or
 `mimo-v2.6-flash` (403).
