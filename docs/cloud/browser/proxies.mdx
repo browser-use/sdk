@@ -191,7 +191,7 @@ endpoints need an API key with the `v4:browsers:create` scope (**Write** on
 | Body | Result |
 | --- | --- |
 | `{"mode": "managed", "country": "de"}` | Residential proxy in a country. |
-| `{"rotate": true}` | New residential IP in the same country. |
+| `{"rotate": true}` | New residential IP in the same country. On a direct browser, send `"mode": "managed"` instead. |
 | `{"target": "https://shop.example.com"}` | Residential proxy in the current country, with a new IP. |
 | `{"mode": "direct"}` | No proxy. |
 | `{"mode": "custom", "customProxy": {...}}` | Your proxy, with the fields above except `ignoreCertErrors`, which works only when the browser starts. |
@@ -235,7 +235,7 @@ The response has the new state:
   returns `409`.
 - Custom mode is not available on the EU route (`422`).
 - `409` also means the browser is stopped, belongs to an agent run, or has
-  saved autofill passwords (custom mode only).
+  the agentic autofill extension (custom mode only).
 
 See the [Update browser proxy
 reference](/cloud/api-v4/browsers/update-browser-proxy).
