@@ -172,7 +172,7 @@ reference](/cloud/api-v4/runs/create-run) for the complete settings object.
 | `username`, `password` | No | Proxy login. Send both or neither. The username can have up to 2048 characters and the password up to 8192. |
 | `protocol` | No | `"http"` or `"https"` (TLS to the proxy itself). When you omit it, port 443 uses `https` and other ports use `http`. |
 | `caBundle` | No | PEM certificates that the browser trusts in addition to the public roots, up to 16384 bytes. |
-| `caBundleUrl` | No | An `https` URL of the PEM certificates. Browser Use downloads it. Send `caBundle` or `caBundleUrl`, not both. |
+| `caBundleUrl` | No | An `https` URL of the PEM certificates, up to 2048 characters. Browser Use downloads it. Send `caBundle` or `caBundleUrl`, not both. |
 | `ignoreCertErrors` | No | Turns off certificate checks for all sites. Use `caBundle` instead when you can. |
 
 Use `caBundle` or `caBundleUrl` for a proxy that decrypts traffic with its own
@@ -185,16 +185,16 @@ sites keep full certificate checks. API responses never include the password,
 `PATCH /api/v4/browsers/{id}/proxy` changes the proxy of a running standalone
 browser. The browser does not restart, so tabs, cookies and local storage
 stay. `GET /api/v4/browsers/{id}/proxy` returns the current proxy. Both
-endpoints need an API key with the `browsers:create` scope, and they also
-exist in API v2 and v3.
+endpoints need an API key with the `v4:browsers:create` scope (**Write** on
+`browsers`), and they also exist in API v2 and v3.
 
 | Body | Result |
 | --- | --- |
 | `{"mode": "managed", "country": "de"}` | Residential proxy in a country. |
 | `{"rotate": true}` | New residential IP in the same country. |
-| `{"target": "https://shop.example.com"}` | Residential proxy for that site, with a new IP. |
+| `{"target": "https://shop.example.com"}` | Residential proxy in the current country, with a new IP. |
 | `{"mode": "direct"}` | No proxy. |
-| `{"mode": "custom", "customProxy": {...}}` | Your proxy, with the fields above. |
+| `{"mode": "custom", "customProxy": {...}}` | Your proxy, with the fields above except `ignoreCertErrors`, which works only when the browser starts. |
 
 For example, an agent can shop on the residential proxy and change to a
 card-vault proxy at the payment step:
@@ -230,7 +230,10 @@ The response has the new state:
   CA. Other changes take less than 1 second.
 - Send one change at a time. A second change for the same browser returns
   `409` until the first one ends.
-- Custom mode does not accept `country`, `target` or `rotate`.
+- Custom mode does not accept `country`, `target` or `rotate` (`422`).
+- A browser on a custom proxy needs `mode` in each change. Else the change
+  returns `409`.
+- Custom mode is not available on the EU route (`422`).
 - `409` also means the browser is stopped, belongs to an agent run, or has
   saved autofill passwords (custom mode only).
 

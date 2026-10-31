@@ -5464,31 +5464,6 @@
                 ],
                 "title": "RunCreateResponse"
             },
-            "RunCreateValidationError": {
-                "properties": {
-                    "detail": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "items": {
-                                    "additionalProperties": true,
-                                    "type": "object"
-                                },
-                                "type": "array"
-                            }
-                        ],
-                        "title": "Detail"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "detail"
-                ],
-                "title": "RunCreateValidationError",
-                "description": "422 body for POST /runs."
-            },
             "RunEvent": {
                 "properties": {
                     "runId": {
@@ -5860,44 +5835,6 @@
                 ],
                 "title": "SecretBinding",
                 "description": "One credential this run may have typed into a browser field.\n\nThe value never reaches the agent. It is encrypted at rest, kept out of the\nworker payload, and typed straight into the focused field by the server when\nthe agent asks for the alias by name \u2014 and only while the page it is typing\ninto is on one of `allowedDomains`.\n\nRun-scoped: bindings die with the run, so a follow-up run that needs the same\ncredential must send it again."
-            },
-            "SessionBudgetResponse": {
-                "properties": {
-                    "sessionId": {
-                        "type": "string",
-                        "format": "uuid",
-                        "title": "Sessionid"
-                    },
-                    "spentUsd": {
-                        "type": "string",
-                        "title": "Spentusd"
-                    },
-                    "maxCostUsd": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Maxcostusd"
-                    },
-                    "budgetScope": {
-                        "type": "string",
-                        "const": "session",
-                        "title": "Budgetscope"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "sessionId",
-                    "spentUsd",
-                    "maxCostUsd",
-                    "budgetScope"
-                ],
-                "title": "SessionBudgetResponse",
-                "description": "Report recorded budget spending without estimating unfinished model calls."
             },
             "SessionCostCapRequest": {
                 "properties": {
