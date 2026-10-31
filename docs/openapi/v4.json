@@ -2760,6 +2760,112 @@
         }
       }
     },
+    "/browsers/{session_id}/proxy": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Get Browser Proxy",
+        "operationId": "get_browser_session_proxy_browsers__session_id__proxy_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserProxyView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found"
+          },
+          "409": {
+            "description": "Browser proxy unavailable"
+          },
+          "422": {
+            "description": "Invalid request"
+          },
+          "502": {
+            "description": "Browser proxy driver failed"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Update Browser Proxy",
+        "operationId": "update_browser_session_proxy_browsers__session_id__proxy_patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserProxyView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found"
+          },
+          "409": {
+            "description": "Browser proxy unavailable"
+          },
+          "422": {
+            "description": "Invalid request"
+          },
+          "502": {
+            "description": "Browser proxy driver failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowserProxyUpdateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/browsers/{session_id}/downloads": {
       "get": {
         "tags": [
@@ -3886,7 +3992,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 255,
+                "maxLength": 2048,
                 "minLength": 1
               },
               {
@@ -3900,7 +4006,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 255,
+                "maxLength": 8192,
                 "minLength": 1
               },
               {
@@ -3915,6 +4021,50 @@
             "title": "Ignore Certificate Errors",
             "description": "Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).",
             "default": false
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "http",
+                  "https"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol",
+            "description": "Protocol of the connection to the proxy. Use https for a proxy that accepts only TLS. Defaults to https on port 443 and to http on other ports."
+          },
+          "caBundle": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16384,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "CA Bundle",
+            "description": "PEM certificates that the browser and the proxy connection trust in addition to the public roots, such as the CA of a TLS-intercepting proxy. Other sites keep full certificate checks."
+          },
+          "caBundleUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "CA Bundle URL",
+            "description": "HTTPS URL of PEM certificates that Browser Use downloads and trusts in the same way as caBundle. Send either caBundle or caBundleUrl."
           }
         },
         "type": "object",
@@ -6411,6 +6561,71 @@
         },
         "type": "object",
         "title": "WorkspaceUpdateRequest"
+      },
+      "BrowserProxyUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "direct",
+              "custom"
+            ]
+          },
+          "country": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "rotate": {
+            "type": "boolean"
+          },
+          "customProxy": {
+            "$ref": "#/components/schemas/CustomProxy"
+          }
+        },
+        "title": "BrowserProxyUpdateRequest"
+      },
+      "BrowserProxyView": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "direct",
+              "custom"
+            ]
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exitIp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mode",
+          "country",
+          "exitIp"
+        ],
+        "title": "BrowserProxyView"
       }
     },
     "securitySchemes": {

@@ -162,3 +162,80 @@ const run = await client.runs.create({
 A custom proxy overrides `proxyCountryCode` and must be passed again when a
 follow-up provisions a new browser. See the [Create run
 reference](/cloud/api-v4/runs/create-run) for the complete settings object.
+
+### Custom proxy fields
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `host` | Yes | Proxy host name, up to 255 characters. |
+| `port` | Yes | Proxy port, 1 to 65535. |
+| `username`, `password` | No | Proxy login. Send both or neither. The username can have up to 2048 characters and the password up to 8192. |
+| `protocol` | No | `"http"` or `"https"` (TLS to the proxy itself). When you omit it, port 443 uses `https` and other ports use `http`. |
+| `caBundle` | No | PEM certificates that the browser trusts in addition to the public roots, up to 16384 bytes. |
+| `caBundleUrl` | No | An `https` URL of the PEM certificates, up to 2048 characters. Browser Use downloads it. Send `caBundle` or `caBundleUrl`, not both. |
+| `ignoreCertErrors` | No | Turns off certificate checks for all sites. Use `caBundle` instead when you can. |
+
+Use `caBundle` or `caBundleUrl` for a proxy that decrypts traffic with its own
+CA, such as a card-vault proxy. The browser trusts that CA, and all other
+sites keep full certificate checks. API responses never include the password,
+`caBundle` or `caBundleUrl`.
+
+## Change the proxy of a running browser
+
+`PATCH /api/v4/browsers/{id}/proxy` changes the proxy of a running standalone
+browser. The browser does not restart, so tabs, cookies and local storage
+stay. `GET /api/v4/browsers/{id}/proxy` returns the current proxy. Both
+endpoints need an API key with the `v4:browsers:create` scope (**Write** on
+`browsers`), and they also exist in API v2 and v3.
+
+| Body | Result |
+| --- | --- |
+| `{"mode": "managed", "country": "de"}` | Residential proxy in a country. |
+| `{"rotate": true}` | New residential IP in the same country. On a direct browser, send `"mode": "managed"` instead. |
+| `{"target": "https://shop.example.com"}` | Residential proxy in the current country, with a new IP. |
+| `{"mode": "direct"}` | No proxy. |
+| `{"mode": "custom", "customProxy": {...}}` | Your proxy, with the fields above except `ignoreCertErrors`, which works only when the browser starts. |
+
+For example, an agent can shop on the residential proxy and change to a
+card-vault proxy at the payment step:
+
+```bash curl
+curl -X PATCH https://api.browser-use.com/api/v4/browsers/$BROWSER_ID/proxy \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "custom",
+    "customProxy": {
+      "host": "vault-proxy.example.com",
+      "port": 443,
+      "username": "YOUR_PROXY_USERNAME",
+      "password": "YOUR_PROXY_PASSWORD",
+      "caBundleUrl": "https://vault-proxy.example.com/ca.pem"
+    }
+  }'
+```
+
+After the payment, change back with `{"mode": "managed", "country": "us"}`,
+or send a new `customProxy` for the next proxy login.
+
+The response has the new state:
+
+```json
+{"mode": "custom", "country": null, "exitIp": null}
+```
+
+- `exitIp` is `null` for a custom proxy, because Browser Use does not send
+  extra requests through your proxy.
+- A change with a new CA takes about 5 seconds, while the browser loads the
+  CA. Other changes take less than 1 second.
+- Send one change at a time. A second change for the same browser returns
+  `409` until the first one ends.
+- Custom mode does not accept `country`, `target` or `rotate` (`422`).
+- A browser on a custom proxy needs `mode` in each change. Else the change
+  returns `409`.
+- Custom mode is not available on the EU route (`422`).
+- `409` also means the browser is stopped, belongs to an agent run, or has
+  the agentic autofill extension (custom mode only).
+
+See the [Update browser proxy
+reference](/cloud/api-v4/browsers/update-browser-proxy).
