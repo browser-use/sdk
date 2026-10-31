@@ -27,7 +27,8 @@ the normalized `thinkingLevel` values available in V2 and V3.
 
 <Tip>
   Use **GPT-6 Luna with High reasoning** for the default V4 configuration.
-  Omit both `model` and `modelParams` to let the API apply it.
+  Omit both `model` and `modelParams` to let the API apply it. For low latency,
+  set `model: "bu-ultrafast"` ([BU Ultrafast](/cloud/agent/ultrafast)).
 </Tip>
 
 ## All supported V4 model IDs
@@ -50,10 +51,11 @@ from the dashboard picker.
 | Xiaomi | `mimo-v2.6-pro`, `mimo-v2.6-flash` | — |
 | Moonshot AI | `kimi-k3` | — |
 | MiniMax | `minimax-m3` | — |
+| Browser Use | `bu-ultrafast`, `bu-fast` | OpenAI |
 
 Free-plan projects (no credits purchased yet) can use only `gpt-6-luna`,
 `gpt-5.6-luna`, `deepseek-v4.1-flash`, `gemini-3-flash`, `minimax-m3`, and
-the early-access `bu-ultrafast` and `bu-fast` presets; other models return 403
+the `bu-ultrafast` and `bu-fast` presets; other models return 403
 until you buy credits. Zero Data Retention projects
 cannot use `claude-fable-5`, `deepseek-v4.1-flash`, `mimo-v2.6-pro`, or
 `mimo-v2.6-flash` (403).

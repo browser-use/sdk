@@ -29,6 +29,15 @@ This is the current **Browser Use Agents** interface. Browser Infrastructure's
 browser-management resource currently lives in the explicit `browser_use_sdk.v4`
 namespace; see the [browser quickstart](https://docs.browser-use.com/cloud/browser/quickstart).
 
+## Fast runs
+
+```python
+with BrowserUse() as client:
+    run = client.runs.create("Find the top Hacker News story", model="bu-ultrafast")
+```
+
+See [BU Ultrafast](https://docs.browser-use.com/cloud/agent/ultrafast).
+
 ## v3 Bring Your Own LLM Key
 
 Add your provider API key in Browser Use project settings, then enable BYOK for v3 agent runs:

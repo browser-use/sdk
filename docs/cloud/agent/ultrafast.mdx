@@ -1,0 +1,64 @@
+---
+title: "BU Ultrafast"
+description: "The low-latency V4 preset: set model to bu-ultrafast."
+icon: "zap"
+---
+
+BU Ultrafast runs Browser Use Pi in ultrafast mode on GPT-6 Luna with low
+reasoning and OpenAI's priority tier. It is available on every plan, including free.
+
+## Pick one
+
+| Task | `model` |
+| --- | --- |
+| Short, interaction-heavy flows | `bu-ultrafast` |
+| The same kind of flow with more steps, where `bu-ultrafast` misses | `bu-fast` (medium reasoning, standard tier) |
+| Research, bulk collection, files, long instructions | Omit `model` for the default, GPT-6 Luna with High reasoning |
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+with BrowserUse() as client:
+    run = client.runs.create(
+        "Find the top Hacker News story",
+        model="bu-ultrafast",
+    )
+    result = client.runs.wait_for_completion(run.id)
+    print(result.result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const run = await client.runs.create({
+  task: "Find the top Hacker News story",
+  model: "bu-ultrafast",
+});
+const result = await client.runs.waitForCompletion(run.id);
+console.log(result.result);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Find the top Hacker News story","model":"bu-ultrafast"}'
+```
+</CodeGroup>
+
+## Limits
+
+- `bu-ultrafast` and `bu-fast` are presets and require Browser Use Pi. They take
+  no `modelParams`, `mode` or `harness: "browsercode"`; sending any of them returns 422.
+- The preset sticks to the [session](/cloud/agent/sessions). Follow-ups keep it;
+  a follow-up that sets another `model` or `modelParams` returns 422.
+- New sessions run without the managed proxy unless you set
+  `browserSettings.proxyCountryCode` (for example `"us"`). See [Proxies](/cloud/browser/proxies).
+- HIPAA and Bedrock-only projects run the preset on the standard tier.
+
+## Pricing
+
+Both presets bill GPT-6 Luna tokens. `bu-ultrafast` uses OpenAI's priority tier,
+billed at the Fast-mode rate (2x Standard, see [Thinking levels](/cloud/agent/thinking-levels#openai-fast-mode));
+`bu-fast` bills at the Standard rate. With your own OpenAI key, OpenAI bills
+the tokens to your account, plus the 0.2x Browser Use orchestration fee.
