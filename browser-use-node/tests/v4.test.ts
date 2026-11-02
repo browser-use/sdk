@@ -88,7 +88,58 @@ describe("v4 browsers", () => {
     });
     expect(browser.status).toBe("stopped");
   });
+
+  it("lowercases an uppercase proxyCountryCode before sending", async () => {
+    const http = { post: vi.fn(async () => ({ id: SESSION_ID, status: "active" })) };
+    const browsers = new Browsers(http as any);
+
+    await browsers.create({ proxyCountryCode: "AU" as any });
+
+    expect(http.post).toHaveBeenCalledWith("/browsers", expect.objectContaining({
+      proxyCountryCode: "au",
+    }));
+  });
+
+  it("passes a null proxyCountryCode through unchanged", async () => {
+    const http = { post: vi.fn(async () => ({ id: SESSION_ID, status: "active" })) };
+    const browsers = new Browsers(http as any);
+
+    await browsers.create({ proxyCountryCode: null as any });
+
+    expect(http.post).toHaveBeenCalledWith("/browsers", expect.objectContaining({
+      proxyCountryCode: null,
+    }));
+  });
 });
+
+describe("v4 runs.create proxyCountryCode normalisation", () => {
+  it("lowercases an uppercase proxyCountryCode in browserSettings before sending", async () => {
+    const http = { post: vi.fn(async () => ({ id: RUN_ID, sessionId: SESSION_ID })) };
+    const runs = new Runs(http as any);
+
+    await runs.create({ task: "Find pricing", browserSettings: { proxyCountryCode: "AU" as any } });
+
+    expect(http.post).toHaveBeenCalledWith("/runs", expect.objectContaining({
+      browserSettings: expect.objectContaining({
+        proxyCountryCode: "au",
+      }),
+    }));
+  });
+
+  it("passes a null proxyCountryCode in browserSettings through unchanged", async () => {
+    const http = { post: vi.fn(async () => ({ id: RUN_ID, sessionId: SESSION_ID })) };
+    const runs = new Runs(http as any);
+
+    await runs.create({ task: "Find pricing", browserSettings: { proxyCountryCode: null } });
+
+    expect(http.post).toHaveBeenCalledWith("/runs", expect.objectContaining({
+      browserSettings: expect.objectContaining({
+        proxyCountryCode: null,
+      }),
+    }));
+  });
+});
+
 
 describe("v4 runs.waitForCompletion", () => {
   it("polls status until terminal, then fetches the full run once", async () => {

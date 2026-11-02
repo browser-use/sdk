@@ -30,6 +30,9 @@ export class Browsers {
     if (body.metadata && Object.keys(body.metadata).length > 10) {
       throw new RangeError("metadata supports at most 10 key-value pairs");
     }
+    if (body.proxyCountryCode) {
+      body = { ...body, proxyCountryCode: body.proxyCountryCode.toLowerCase() as typeof body.proxyCountryCode };
+    }
     return this.http.post<BrowserSessionItemView>("/browsers", body);
   }
 

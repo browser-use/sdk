@@ -67,6 +67,16 @@ export class Runs {
 
   /** Create a run (a new session, or a follow-up turn when sessionId is set). */
   create(body: RunCreateBody): Promise<RunCreateResponse> {
+    const pcc = body.browserSettings?.proxyCountryCode;
+    if (pcc) {
+      body = {
+        ...body,
+        browserSettings: {
+          ...body.browserSettings,
+          proxyCountryCode: pcc.toLowerCase() as typeof pcc,
+        },
+      };
+    }
     return this.http.post<RunCreateResponse>("/runs", body);
   }
 
