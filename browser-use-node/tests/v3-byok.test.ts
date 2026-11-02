@@ -27,3 +27,29 @@ describe("v3 BYOK settings", () => {
     });
   });
 });
+
+describe("v3 sessions.create proxyCountryCode normalisation", () => {
+  it("lowercases an uppercase proxyCountryCode before sending", async () => {
+    const post = vi.fn(async (_path: string, body: unknown) => body);
+    const sessions = new Sessions({ post } as any);
+
+    await sessions.create({ task: "Find pricing", proxyCountryCode: "AU" as any });
+
+    expect(post).toHaveBeenCalledWith("/sessions", {
+      task: "Find pricing",
+      proxyCountryCode: "au",
+    });
+  });
+
+  it("passes a null proxyCountryCode through unchanged", async () => {
+    const post = vi.fn(async (_path: string, body: unknown) => body);
+    const sessions = new Sessions({ post } as any);
+
+    await sessions.create({ task: "Find pricing", proxyCountryCode: null });
+
+    expect(post).toHaveBeenCalledWith("/sessions", {
+      task: "Find pricing",
+      proxyCountryCode: null,
+    });
+  });
+});
