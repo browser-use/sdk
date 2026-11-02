@@ -12,8 +12,9 @@ requires-python = ">=3.10"
 dependencies = [
     "httpx>=0.24.1,<1",
     "pydantic>=2.10.6,<3",
-    # Security floor on a transitive dependency of httpx.
+    # Security floors on transitive dependencies of httpx.
     "idna>=3.19",  # CVE-2026-45409
+    "certifi>=2026.10.19",  # GHSA-6q48-6c7w-9gw2
 ]
 
 [project.urls]
@@ -37,11 +38,13 @@ x402 = [
     "x402[evm]==2.17.0; python_version >= '3.10'",
     # Security pin on a transitive dep (x402[evm] -> web3 -> requests -> urllib3).
     # Published in the extra so it reaches consumers, not just this repo's lockfile.
-    "urllib3==2.7.0; python_version >= '3.10'",  # CVE-2026-44431, CVE-2026-44432
+    "urllib3==2.8.0; python_version >= '3.10'",  # CVE-2026-44431, CVE-2026-44432, CVE-2026-97687, CVE-2026-97688, CVE-2026-97689
     # Security pin on a transitive dep (x402[evm] -> web3 -> aiohttp).
     # CVE-2026-34993, CVE-2026-47265, CVE-2026-54273, CVE-2026-54274,
-    # CVE-2026-54276, CVE-2026-54277, CVE-2026-54278
-    "aiohttp==3.14.3; python_version >= '3.10'",
+    # CVE-2026-54276, CVE-2026-54277, CVE-2026-54278, CVE-2026-111063,
+    # CVE-2026-111064, CVE-2026-111065, CVE-2026-111066, CVE-2026-111748,
+    # CVE-2026-111749, CVE-2026-111750, GHSA-2g87-pp6c-29x5
+    "aiohttp==3.14.4; python_version >= '3.10'",
 ]
 
 [tool.hatch.build.targets.wheel]
