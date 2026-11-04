@@ -198,7 +198,7 @@ Regional hosting, automatic cleanup, and HIPAA support are separate controls.
 Shared account and billing metadata remain in the US.
 
 The US ZDR setting does not establish EU cleanup coverage.
-Existing self-service consent covers US history.
+Existing self-service deletion consent covers US data only.
 Contact support before you rely on automatic deletion of EU sessions or profiles.
 
 Browser Use cleanup and model-provider retention also have separate scopes.
@@ -208,9 +208,9 @@ Do not treat an EU endpoint or `store=false` as proof of screenshot ZDR.
 
 HIPAA projects currently require approved Bedrock model routes.
 The EU deployment currently uses OpenAI's direct EU service and blocks HIPAA projects.
-Enabling HIPAA for a shared project therefore does not enable EU agent execution.
+Enabling HIPAA for a shared project blocks its EU agent execution.
 
-OpenAI's Global Bedrock profiles can process requests outside Europe.
+AWS Global Bedrock profiles for OpenAI models can process requests outside Europe.
 They do not provide Europe-only processing.
 EU Bedrock Claude routes require separate integration and verification before Browser Use can offer them here.
 
