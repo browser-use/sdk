@@ -1,0 +1,183 @@
+---
+title: Network policies
+description: "Allow or block domains for API V4 browsers and agent runs."
+icon: "shield-check"
+---
+
+A network policy is a list of domains that a browser can open and a list of
+domains that it cannot open. Create a policy once, then pass its ID as
+`networkPolicyId` when you create a browser or a run. The Browser Use proxy
+applies the policy to every request of that browser.
+
+Network policies are part of API V4. The SDKs do not have methods for them
+yet, so the examples use REST.
+
+## Create a policy
+
+```bash curl
+curl https://api.browser-use.com/api/v4/network-policies \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Shop only",
+    "defaultAction": "allow",
+    "allow": {"domains": ["cdn.example.com"]},
+    "block": {"domains": ["example.com", "ads.example.net"]}
+  }'
+```
+
+The response is `201` with the stored policy:
+
+```json
+{
+  "id": "6f1c2a4e-8b0d-4e7a-9f3c-2d5b7e9a1c40",
+  "name": "Shop only",
+  "defaultAction": "allow",
+  "allow": {"domains": ["cdn.example.com"]},
+  "block": {"domains": ["example.com", "ads.example.net"]},
+  "version": 1,
+  "createdAt": "2026-11-05T10:00:00Z",
+  "updatedAt": "2026-11-05T10:00:00Z"
+}
+```
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `name` | Yes | 1 to 100 characters. |
+| `defaultAction` | No | `"allow"` or `"block"`. The action for a domain that no list entry matches. The default is `"allow"`. |
+| `allow` | No | `{"domains": [...]}`, the domains to allow. |
+| `block` | No | `{"domains": [...]}`, the domains to block. |
+
+Browser Use generates `id`. `version` starts at 1 and increases by 1 with each
+update.
+
+## Domain rules
+
+Browser Use stores each domain in a normal form:
+
+- It removes spaces, changes letters to lower case, and removes a trailing dot.
+- It converts international domain names to punycode.
+- It stores `*.example.com` as `example.com`, because each entry also covers
+  its subdomains.
+- It removes duplicate entries.
+
+The API refuses these entries with `422`:
+
+- URLs, paths, and ports, such as `https://example.com/` or `example.com:443`.
+- IP addresses.
+- Other wildcards, such as `shop.*.com`.
+- A domain that is in both `allow` and `block`.
+
+A policy has at most 10,000 domains in `allow` and `block` together. A project
+has at most 100 policies. A request over a limit returns `422`.
+
+## How a policy decides
+
+An entry covers the domain and all of its subdomains. When more than one entry
+matches a host, the most specific entry wins. If no entry matches, the browser
+uses `defaultAction`.
+
+With the policy above:
+
+| Host | Result | Reason |
+| --- | --- | --- |
+| `cdn.example.com` | Allowed | `cdn.example.com` in `allow` is more specific than `example.com` in `block`. |
+| `img.cdn.example.com` | Allowed | `cdn.example.com` covers its subdomains. |
+| `www.example.com` | Blocked | `example.com` in `block` covers it. |
+| `ads.example.net` | Blocked | It is in `block`. |
+| `wikipedia.org` | Allowed | No entry matches, so `defaultAction` applies. |
+
+To make an allowlist, set `defaultAction` to `"block"` and put the permitted
+domains in `allow`:
+
+```json
+{
+  "name": "Example only",
+  "defaultAction": "block",
+  "allow": {"domains": ["example.com"]}
+}
+```
+
+The Browser Use security blocklist always applies first. An entry in `allow`
+does not open a domain that this blocklist blocks.
+
+## Use a policy
+
+### Standalone browsers
+
+Put `networkPolicyId` in the body of `POST /api/v4/browsers`:
+
+```bash curl
+curl https://api.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"networkPolicyId": "6f1c2a4e-8b0d-4e7a-9f3c-2d5b7e9a1c40"}'
+```
+
+### Agent runs
+
+Put `networkPolicyId` in the run's `browserSettings`:
+
+```http
+POST /api/v4/runs HTTP/1.1
+Host: api.browser-use.com
+X-Browser-Use-API-Key: bu_...
+Content-Type: application/json
+
+{
+  "task": "Find the price of the blue mug on cdn.example.com",
+  "browserSettings": {"networkPolicyId": "6f1c2a4e-8b0d-4e7a-9f3c-2d5b7e9a1c40"}
+}
+```
+
+The ID must name a policy of your project. Else the request returns `404`.
+
+For a follow-up run in the same session:
+
+- If you omit `networkPolicyId`, the run keeps the session's policy.
+- If you send `null`, the run uses no policy.
+- If the policy differs from the policy of the open browser, Browser Use does
+  not reuse that browser. It starts a new browser with the new policy.
+
+### Browser Use proxy with an API key
+
+If you use the Browser Use proxy with your API key as the proxy password, add
+`-policy-<id>` to the proxy username, for example
+`user-country-us-policy-6f1c2a4e-8b0d-4e7a-9f3c-2d5b7e9a1c40`.
+
+## Blocked requests
+
+The proxy refuses a blocked request with `403`. In the browser, the page does
+not load and shows a network error. An agent sees the same error.
+
+## Change or delete a policy
+
+`PATCH /api/v4/network-policies/{id}` changes only the fields that the request
+contains. A domain list in the request replaces the whole list:
+
+```bash curl
+curl -X PATCH https://api.browser-use.com/api/v4/network-policies/$POLICY_ID \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"block": {"domains": ["example.com", "ads.example.net", "tracker.example.org"]}}'
+```
+
+Running browsers get the change within a few seconds. When the change blocks
+more domains, the proxy closes the open connections of the browsers, and the
+new policy decides each new connection.
+
+`DELETE /api/v4/network-policies/{id}` returns `204`. Browsers that use the
+policy continue without a network policy within a few seconds. The Browser Use
+security blocklist still applies.
+
+## Endpoints
+
+| Method and path | Scope | Result |
+| --- | --- | --- |
+| `POST /api/v4/network-policies` | `v4:network-policies:create` | `201` with the policy. |
+| `GET /api/v4/network-policies?pageNumber=1&pageSize=10` | `v4:network-policies:read` | `200` with `items`, `totalItems`, `pageNumber`, and `pageSize`, newest first. `pageSize` is 1 to 100. |
+| `GET /api/v4/network-policies/{id}` | `v4:network-policies:read` | `200` with the policy, or `404`. |
+| `PATCH /api/v4/network-policies/{id}` | `v4:network-policies:create` | `200` with the policy, or `404`. |
+| `DELETE /api/v4/network-policies/{id}` | `v4:network-policies:delete` | `204`. |
+
+See also [Proxies](/cloud/browser/proxies).
