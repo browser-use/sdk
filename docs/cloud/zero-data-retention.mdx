@@ -1,7 +1,7 @@
 ---
 title: "Zero Data Retention for Browser Use Cloud"
 sidebarTitle: "Zero Data Retention"
-description: "Enable self-service Zero Data Retention for US browser automation. Control session data and saved logins without an enterprise contract or additional commitment."
+description: "Enable self-service Zero Data Retention for US and EU browser automation. Control session data and saved logins without an enterprise contract or additional commitment."
 ---
 
 Zero Data Retention (ZDR) gives you control over the data your browser automation keeps.
@@ -12,8 +12,8 @@ You choose whether automatic cleanup also deletes browser profiles and saved log
 The setting applies to one project, so each project can follow its own data policy.
 
 <Note>
-Self-service activation covers **US session data**.
-It does not enable EU cleanup or delete EU history.
+Self-service activation covers **US and EU session data** for the same project.
+Activation includes past sessions in both regions.
 Read the [EU deployment guide](/cloud/eu-deployment) before planning a regional data policy.
 </Note>
 
@@ -31,13 +31,13 @@ Read the [EU deployment guide](/cloud/eu-deployment) before planning a regional 
     - **Full Zero Data Retention:** cleanup deletes existing profiles and saved logins, and blocks new profiles.
     - **Zero Data Retention, except profiles:** keep profiles and saved logins until you delete each profile.
 
-    Both choices apply automatic cleanup to covered US session data.
+    Both choices apply automatic cleanup to covered US and EU session data.
   </Step>
   <Step title="Confirm activation">
     Review the feature changes and accept the deletion consent.
     Select **Enable Zero Data Retention**.
 
-    Cleanup includes past US session data for this project.
+    Cleanup includes past US and EU session data for this project.
     You cannot recover data after deletion.
   </Step>
   <Step title="Check the active status">
@@ -114,8 +114,11 @@ An **Active** badge confirms the project policy, not the completion of each phys
 ## Regional and model-provider scope
 
 Automatic cleanup applies the project's approved deletion scope.
-Existing self-service deletion consent covers US data only.
-The same project ID in both regions does not establish EU cleanup or HIPAA coverage.
+Enable the shared project policy from the US dashboard and confirm deletion in both regions.
+EU cleanup refreshes that policy before deleting eligible regional data.
+Both regions use the same cleanup rules and profile exception.
+A policy refresh failure stops deletion for that project.
+This storage policy does not establish provider ZDR or HIPAA coverage.
 
 Model-provider retention remains separate from Browser Use storage cleanup.
 OpenAI's current Cloud configuration uses Private Retention with Private Safety Processing.
@@ -164,8 +167,10 @@ Billing and account records remain.
 
 ### Does the US setting cover EU projects?
 
-No. The US setting does not activate EU cleanup.
-An EU region selection or database migration alone does not establish EU ZDR coverage.
+Yes. Activation in the US dashboard covers the same project in both regions.
+Confirm the US and EU deletion scope during activation.
+This includes eligible older EU data and the same profile choice.
+Region selection alone does not enable cleanup.
 
 ### What does the confirmation PDF prove?
 
