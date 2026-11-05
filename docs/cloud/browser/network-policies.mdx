@@ -19,7 +19,7 @@ curl https://api.browser-use.com/api/v4/network-policies \
   -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Shop only",
+    "name": "Block example.com except its CDN",
     "defaultAction": "allow",
     "allow": {"domains": ["cdn.example.com"]},
     "block": {"domains": ["example.com", "ads.example.net"]}
@@ -31,7 +31,7 @@ The response is `201` with the stored policy:
 ```json
 {
   "id": "6f1c2a4e-8b0d-4e7a-9f3c-2d5b7e9a1c40",
-  "name": "Shop only",
+  "name": "Block example.com except its CDN",
   "defaultAction": "allow",
   "allow": {"domains": ["cdn.example.com"]},
   "block": {"domains": ["example.com", "ads.example.net"]},
@@ -55,7 +55,7 @@ update.
 
 Browser Use stores each domain in a normal form:
 
-- It removes spaces, changes letters to lower case, and removes a trailing dot.
+- It removes leading and trailing spaces, changes letters to lower case, and removes a trailing dot.
 - It converts international domain names to punycode.
 - It stores `*.example.com` as `example.com`, because each entry also covers
   its subdomains.
