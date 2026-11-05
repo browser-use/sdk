@@ -784,7 +784,7 @@
           "Sessions"
         ],
         "summary": "Update Session Cost Cap",
-        "description": "Update the active run cap without starting another run.",
+        "description": "Replace the session budget without resetting spending or starting a run.",
         "operationId": "update_session_cost_cap_sessions__session_id__cost_cap_patch",
         "security": [
           {
@@ -5858,7 +5858,7 @@
           "maxCostUsd"
         ],
         "title": "SessionCostCapRequest",
-        "description": "Set the maximum spend for the active run in a session."
+        "description": "Set the total session budget, including when the session is idle."
       },
       "SessionCostCapResponse": {
         "properties": {
