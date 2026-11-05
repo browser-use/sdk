@@ -197,9 +197,15 @@ security team before sending sensitive data.
 Regional hosting, automatic cleanup, and HIPAA support are separate controls.
 Shared account and billing metadata remain in the US.
 
-The US ZDR setting does not establish EU cleanup coverage.
-Existing self-service deletion consent covers US data only.
-Contact support before you rely on automatic deletion of EU sessions or profiles.
+Enable the shared ZDR project policy from **Settings → Privacy & compliance** in the US dashboard.
+Confirm deletion of past US and EU session data.
+EU cleanup refreshes the shared policy before deleting eligible regional data.
+Both regions use the same cleanup rules, active-run safeguards, and profile exception.
+A policy refresh failure stops deletion for that project.
+Cleanup checks run every 15 minutes, but active runs and upload safeguards can delay deletion.
+Older file versions become eligible for removal after one day.
+Storage removes those versions asynchronously.
+See [Zero Data Retention](/cloud/zero-data-retention) for activation steps and deletion limits.
 
 Browser Use cleanup and model-provider retention also have separate scopes.
 OpenAI's current Cloud configuration uses Private Retention with Private Safety Processing.
