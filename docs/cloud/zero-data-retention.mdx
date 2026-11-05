@@ -60,6 +60,10 @@ Cleanup checks run every 15 minutes.
 Active runs, cleanup delays, and upload safeguards can extend the time before deletion.
 The native cleanup path includes a 16-minute upload safeguard to prevent late uploads from recreating deleted files.
 
+US and EU object storage also keep older file versions.
+The storage lifecycle makes these versions eligible for removal after one day.
+Storage removes these versions asynchronously, so this rule does not guarantee deletion within one day.
+
 For **API V4 runs**, save results and download required output files within 15 minutes after completion.
 Save results as soon as the run finishes.
 Do not use the next scheduled cleanup check as a guaranteed deletion deadline.
