@@ -203,12 +203,21 @@ Contact support before you rely on automatic deletion of EU sessions or profiles
 
 Browser Use cleanup and model-provider retention also have separate scopes.
 OpenAI's current Cloud configuration uses Private Retention with Private Safety Processing.
-This policy permits encrypted content retention for automated safety checks.
-It does not establish standard ZDR for EU text or screenshots.
-The current EU screenshot setup does not provide provider-side ZDR.
-OpenAI requires enhanced ZDR approval for that coverage.
-That setup must let OpenAI review flagged screenshots before deletion.
-Do not treat an EU endpoint or `store=false` as proof of screenshot ZDR.
+OpenAI confirmed that this setting replaces its earlier standard ZDR coverage for the Cloud project.
+OpenAI retains encrypted safety records and destroys their decryption keys after 30 days.
+This does not guarantee deletion of every copy after 30 days.
+The policy permits human review when the law requires it.
+
+EU image inputs require separate approval for enhanced ZDR or enhanced Modified Abuse Monitoring.
+The current setup lacks that approval.
+OpenAI can retain flagged images for manual review.
+OpenAI does not guarantee that this review stays in Europe or follows the 30-day window.
+Use only text inputs when relying on the current OpenAI EU approval.
+Eligible text requests need a Europe-region project and `eu.api.openai.com`.
+OpenAI requires both controls to keep inference and stored customer content in Europe.
+An endpoint alone does not establish the provider project's region.
+The retention setting does not change that region.
+The `store=false` setting disables saved responses, but safety logging continues.
 
 OpenAI HIPAA support is active for the Cloud organization.
 Provider HIPAA activation does not enable Browser Use EU HIPAA execution.

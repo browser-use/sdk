@@ -115,11 +115,15 @@ The same project ID in both regions does not establish EU cleanup or HIPAA cover
 
 Model-provider retention remains separate from Browser Use storage cleanup.
 OpenAI's current Cloud configuration uses Private Retention with Private Safety Processing.
-This policy permits encrypted content retention for automated safety checks.
-It does not establish standard ZDR for EU text or screenshots.
-The current EU screenshot setup does not provide provider-side ZDR.
-OpenAI requires enhanced ZDR approval for that coverage.
-That setup must let OpenAI review flagged screenshots before deletion.
+OpenAI confirmed that this setting replaces its earlier standard ZDR coverage for the Cloud project.
+OpenAI retains encrypted safety records and destroys their decryption keys after 30 days.
+This does not guarantee deletion of every copy after 30 days.
+The policy permits human review when the law requires it.
+
+EU image inputs require separate approval for enhanced ZDR or enhanced Modified Abuse Monitoring.
+The current setup lacks that approval.
+OpenAI can retain flagged images for manual review.
+OpenAI does not guarantee that this review stays in Europe or follows the 30-day window.
 An EU endpoint, `store=false`, or a successful cleanup test does not confirm that provider coverage.
 
 See [EU retention and HIPAA limits](/cloud/eu-deployment#retention-and-hipaa) before sending sensitive EU workloads.
