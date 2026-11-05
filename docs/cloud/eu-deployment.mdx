@@ -202,12 +202,16 @@ Existing self-service deletion consent covers US data only.
 Contact support before you rely on automatic deletion of EU sessions or profiles.
 
 Browser Use cleanup and model-provider retention also have separate scopes.
-OpenAI confirms standard ZDR for eligible EU text requests.
+OpenAI's current Cloud configuration uses Private Retention with Private Safety Processing.
+This policy permits encrypted content retention for automated safety checks.
+It does not establish standard ZDR for EU text or screenshots.
 The current EU screenshot setup does not provide provider-side ZDR.
 OpenAI requires enhanced ZDR approval for that coverage.
 That setup must let OpenAI review flagged screenshots before deletion.
 Do not treat an EU endpoint or `store=false` as proof of screenshot ZDR.
 
+OpenAI HIPAA support is active for the Cloud organization.
+Provider HIPAA activation does not enable Browser Use EU HIPAA execution.
 HIPAA projects currently require approved Bedrock model routes.
 The EU deployment currently uses OpenAI's direct EU service and blocks HIPAA projects.
 Enabling HIPAA for a shared project blocks its EU agent execution.
