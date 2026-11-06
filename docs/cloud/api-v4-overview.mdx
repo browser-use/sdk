@@ -65,6 +65,11 @@ Use the browser endpoints when your code will control Chrome over CDP instead of
 2. Use `cdpUrl` with a local Browser Use agent (`Browser(cdp_url=...)`), Browser Use CLI (`BU_CDP_URL`), Playwright, or Puppeteer (Selenium cannot attach to a remote CDP WebSocket).
 3. `PATCH /browsers/{id}` with `{"action":"stop"}` stops the browser.
 
+`networkPolicyId` on `POST /browsers` or in run `browserSettings` limits the domains that the browser can open.
+A follow-up run that omits it keeps the session's policy, `null` removes the
+policy, and a different policy starts a new browser.
+See [Network policies](/cloud/browser/network-policies).
+
 See [remote Browser Use](/open-source/customize/browser/remote), [Browser Use CLI](/open-source/browser-use-cli), or [Playwright and Puppeteer](/cloud/browser/playwright-puppeteer-selenium) for complete connection examples.
 
 ## SDKs

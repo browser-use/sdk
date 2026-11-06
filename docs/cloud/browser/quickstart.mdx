@@ -195,6 +195,11 @@ Each file has `path`, `size`, `lastModified`, and `url`. Pages hold up to 100
 files (`limit`, default 50); pass `nextCursor` as `cursor` while `hasMore` is
 `true`.
 
+## Allow or block domains
+
+Pass `networkPolicyId` to limit the domains that the browser can open. See
+[Network policies](/cloud/browser/network-policies).
+
 <CardGroup cols={2}>
   <Card
     title="Playwright, Puppeteer, Selenium"

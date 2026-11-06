@@ -63,6 +63,11 @@ the browser open longer: integer seconds from 120 to 14400 (default 120), never
 past the browser's 4-hour lifetime. Follow-ups inherit the value, a new value
 changes it, and `null` restores 120 seconds.
 
+`browserSettings.networkPolicyId` limits the domains that the browser can open.
+A follow-up run that omits it keeps the session's policy, `null` removes the
+policy, and a different policy starts a new browser.
+See [Network policies](/cloud/browser/network-policies).
+
 <CodeGroup>
 ```python Python
 run = client.runs.create("Open my dashboard", keep_alive=900)

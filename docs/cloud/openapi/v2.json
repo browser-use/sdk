@@ -1651,7 +1651,7 @@
                     "Browsers"
                 ],
                 "summary": "List Browser Sessions",
-                "description": "Get paginated list of browser sessions with optional status filtering.\n\nList responses intentionally omit per-session presigned recording URLs\n(`recording_url` is always `null` here). Each recording URL requires a\nsynchronous boto3 SigV4 signing call (plus an S3 HEAD) that holds the GIL\nand blocks the event loop. With page_size up to the max this CPU-pegs the\nworker and starves the DB pool, cascading into pool exhaustion across the\nfleet. Clients should fetch the recording URL on demand via\n`GET /api/v2/browsers/{id}`, which signs exactly one URL for a single\nsession. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).",
+                "description": "Get paginated list of browser sessions with optional status filtering.\n\nList responses intentionally omit per-session presigned recording URLs\n(`recording_url` is always `null` here). Each recording URL requires a\nsynchronous boto3 SigV4 signing call (plus an S3 HEAD) that holds the GIL\nand blocks the event loop. With page_size up to the max this CPU-pegs the\nworker and starves the DB pool, cascading into pool exhaustion across the\nfleet. Clients should fetch the recording URL on demand via\n`GET /browsers/{session_id}`, which signs exactly one URL for a single\nsession. Mirrors the v3 sessions list fix (ENG-4904, PR #4621).",
                 "operationId": "list_browser_sessions_browsers_get",
                 "security": [
                     {
@@ -2339,81 +2339,6 @@
                         }
                     }
                 }
-            },
-            "post": {
-                "tags": [
-                    "Skills"
-                ],
-                "summary": "Create Skill",
-                "description": "Create a new skill via automated generation.",
-                "operationId": "create_skill_skills_post",
-                "security": [
-                    {
-                        "APIKeyHeader": []
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CreateSkillRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "202": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CreateSkillResponse"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Concurrent skill creations are not allowed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ConcurrentSkillCreationsError"
-                                }
-                            }
-                        }
-                    },
-                    "402": {
-                        "description": "Insufficient credits to create skill",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/InsufficientCreditsError"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too many concurrent active sessions",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
             }
         },
         "/skills/{skill_id}": {
@@ -2612,75 +2537,6 @@
                 }
             }
         },
-        "/skills/{skill_id}/cancel": {
-            "post": {
-                "tags": [
-                    "Skills"
-                ],
-                "summary": "Cancel Generation",
-                "description": "Cancel the current in-progress generation for a skill.",
-                "operationId": "cancel_generation_skills__skill_id__cancel_post",
-                "security": [
-                    {
-                        "APIKeyHeader": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "skill_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "title": "Skill Id"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SkillResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Skill not found or no generation found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SkillNotFoundError"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Generation is not cancellable",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/GenerationNotCancellableError"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/skills/{skill_id}/rollback": {
             "post": {
                 "tags": [
@@ -2822,95 +2678,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/InsufficientCreditsError"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too many concurrent active sessions",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/TooManyConcurrentActiveSessionsError"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/skills/{skill_id}/refine": {
-            "post": {
-                "tags": [
-                    "Skills"
-                ],
-                "summary": "Refine Skill",
-                "description": "Refine a skill based on feedback.",
-                "operationId": "refine_skill_skills__skill_id__refine_post",
-                "security": [
-                    {
-                        "APIKeyHeader": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "skill_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid",
-                            "title": "Skill Id"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/RefineSkillRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "202": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/RefineSkillResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Skill not found or no code available",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SkillNotFoundError"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Skill is not finished or is public",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SkillNotFinishedError"
                                 }
                             }
                         }
@@ -3834,7 +3601,7 @@
                             }
                         ],
                         "title": "Recording URL",
-                        "description": "Presigned URL to download the session recording. Only populated on `GET /api/v2/browsers/{id}`; always `null` in list responses."
+                        "description": "Presigned URL to download the session recording. Only populated on `GET /browsers/{session_id}`; always `null` in list responses."
                     },
                     "metadata": {
                         "additionalProperties": {
@@ -4024,7 +3791,7 @@
                             }
                         ],
                         "title": "Recording URL",
-                        "description": "Presigned URL to download the session recording, if recording was enabled. Only populated on GET /api/v2/browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response."
+                        "description": "Presigned URL to download the session recording, if recording was enabled. Only populated on GET /browsers/{session_id}: the upload starts when the browser stops, so it is never ready in the stop response."
                     },
                     "recordingAvailable": {
                         "type": "boolean",
@@ -4084,18 +3851,6 @@
                 "type": "object",
                 "title": "CannotRollbackPublicSkillError",
                 "description": "Error response when trying to rollback a public skill"
-            },
-            "ConcurrentSkillCreationsError": {
-                "properties": {
-                    "detail": {
-                        "type": "string",
-                        "title": "Detail",
-                        "default": "Concurrent skill creations are not allowed. Please wait for the current skill creation to finish or cancel it."
-                    }
-                },
-                "type": "object",
-                "title": "ConcurrentSkillCreationsError",
-                "description": "Error response when concurrent skill creations are attempted"
             },
             "CreateBrowserSessionRequest": {
                 "properties": {
@@ -4330,71 +4085,6 @@
                 "type": "object",
                 "title": "CreateSessionRequest",
                 "description": "Request model for creating a session."
-            },
-            "CreateSkillRequest": {
-                "properties": {
-                    "title": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "maxLength": 100
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Title",
-                        "description": "Optional title for the skill (will be generated if not provided)"
-                    },
-                    "description": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "maxLength": 1000
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Description",
-                        "description": "Optional description for the skill (will be generated if not provided)"
-                    },
-                    "goal": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "title": "Goal",
-                        "description": "Goal of the skill (description of what the skill does and what the user should expect from it)"
-                    },
-                    "agentPrompt": {
-                        "type": "string",
-                        "minLength": 10,
-                        "title": "Agentprompt",
-                        "description": "Prompt for the agent to use when generating the skill automatically"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "goal",
-                    "agentPrompt"
-                ],
-                "title": "CreateSkillRequest",
-                "description": "Request to create a new skill via automated generation."
-            },
-            "CreateSkillResponse": {
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "title": "ID",
-                        "description": "Unique identifier for the created skill"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "id"
-                ],
-                "title": "CreateSkillResponse",
-                "description": "Response after creating a skill."
             },
             "CreateTaskRequest": {
                 "properties": {
@@ -4865,18 +4555,6 @@
                 ],
                 "title": "FileView",
                 "description": "View model for representing an output file generated by the agent"
-            },
-            "GenerationNotCancellableError": {
-                "properties": {
-                    "detail": {
-                        "type": "string",
-                        "title": "Detail",
-                        "default": "Generation is not cancellable"
-                    }
-                },
-                "type": "object",
-                "title": "GenerationNotCancellableError",
-                "description": "Error response when generation is not cancellable"
             },
             "HTTPValidationError": {
                 "properties": {
@@ -5679,62 +5357,6 @@
                     "zw"
                 ],
                 "title": "ProxyCountryCode"
-            },
-            "RefineSkillRequest": {
-                "properties": {
-                    "feedback": {
-                        "type": "string",
-                        "minLength": 10,
-                        "title": "Feedback",
-                        "description": "Feedback describing what to improve"
-                    },
-                    "testOutput": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Testoutput",
-                        "description": "Last skill test output to include in refinement context"
-                    },
-                    "testLogs": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Testlogs",
-                        "description": "Last skill test logs to include in refinement context"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "feedback"
-                ],
-                "title": "RefineSkillRequest",
-                "description": "Request to refine an existing skill."
-            },
-            "RefineSkillResponse": {
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "title": "ID",
-                        "description": "Unique identifier for the skill"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "id"
-                ],
-                "title": "RefineSkillResponse",
-                "description": "Response after requesting skill refinement."
             },
             "SessionHasRunningTaskError": {
                 "properties": {
