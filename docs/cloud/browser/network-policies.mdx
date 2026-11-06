@@ -174,10 +174,10 @@ security blocklist still applies.
 
 | Method and path | Scope | Result |
 | --- | --- | --- |
-| `POST /api/v4/network-policies` | `v4:network-policies:create` | `201` with the policy. |
-| `GET /api/v4/network-policies?pageNumber=1&pageSize=10` | `v4:network-policies:read` | `200` with `items`, `totalItems`, `pageNumber`, and `pageSize`, newest first. `pageSize` is 1 to 100. |
-| `GET /api/v4/network-policies/{id}` | `v4:network-policies:read` | `200` with the policy, or `404`. |
-| `PATCH /api/v4/network-policies/{id}` | `v4:network-policies:create` | `200` with the policy, or `404`. |
-| `DELETE /api/v4/network-policies/{id}` | `v4:network-policies:delete` | `204`. |
+| [`POST /api/v4/network-policies`](/cloud/api-v4/network-policies/create-network-policy) | `v4:network-policies:create` | `201` with the policy. |
+| [`GET /api/v4/network-policies?pageNumber=1&pageSize=10`](/cloud/api-v4/network-policies/list-network-policies) | `v4:network-policies:read` | `200` with `items`, `totalItems`, `pageNumber`, and `pageSize`, newest first. `pageSize` is 1 to 100. |
+| [`GET /api/v4/network-policies/{id}`](/cloud/api-v4/network-policies/get-network-policy) | `v4:network-policies:read` | `200` with the policy, or `404`. |
+| [`PATCH /api/v4/network-policies/{id}`](/cloud/api-v4/network-policies/update-network-policy) | `v4:network-policies:create` | `200` with the policy, or `404`. |
+| [`DELETE /api/v4/network-policies/{id}`](/cloud/api-v4/network-policies/delete-network-policy) | `v4:network-policies:delete` | `204`. |
 
 See also [Proxies](/cloud/browser/proxies).

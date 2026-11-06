@@ -126,5 +126,5 @@ A project wallet lets the Browser Use hosted agent pay without a user's card. Ag
 During the beta, only runs started in the [Cloud app](https://cloud.browser-use.com) can spend, and the wallet is unavailable in the EU deployment. Pick a wallet in the chat composer. A queued follow-up keeps it while it stays active; an interrupt drops it.
 
 <Warning>
-  API runs cannot pay yet. The API reference lists `GET /agentcard/wallets` and the `agentcardWalletId` run field, but a run created with an API key is not given the wallet, so its agent cannot make a purchase.
+  API runs cannot pay yet. A run created with an API key is not given the wallet, so its agent cannot make a purchase.
 </Warning>
