@@ -1,163 +1,101 @@
 ---
-title: "Human Quickstart"
-description: "Install and run your first AI browser agent in minutes. Python setup with pip, environment variables, and a working example."
+title: "Quickstart"
+description: "Install browser-use, sign in once, and run your first agent."
 icon: "rocket"
 ---
 
-To get started with Browser Use you need to install the package and create an `.env` file with your API key.
+## 1. Install
 
-<Note icon="key" color="#FFC107">
-`ChatBrowserUse` offers the [fastest and most cost-effective models](https://browser-use.com/posts/speed-matters/), completing tasks 3-5x faster. Eligible new accounts receive $1 in one-time credits. Get your API key [here](https://cloud.browser-use.com/new-api-key).
-</Note>
-
-## 1. Installing Browser-Use
-
-
-```bash create environment
-pip install uv
-uv venv --python 3.12
-```
-```bash activate environment
-source .venv/bin/activate
-# On Windows use `.venv\Scripts\activate`
-```
-```bash install browser-use & chromium
-uv pip install browser-use
-uvx browser-use install
-```
-
-
-## 2. Choose your favorite LLM
-Create a `.env` file and add your API key. 
-
-<Callout icon="key">
-We recommend using ChatBrowserUse which is optimized for browser automation tasks (highest accuracy + fastest speed + lowest token cost). Get your API key [here](https://cloud.browser-use.com/new-api-key) — eligible new accounts receive $1 in one-time credits.
-</Callout>
-
-```bash .env
-touch .env
-```
-
-<Info>On Windows, use `echo. > .env`</Info>
-
-Then add your API key to the file.
+Python 3.11 or newer.
 
 <CodeGroup>
-```bash Browser Use
-# add your key to .env file
-BROWSER_USE_API_KEY=
-# Get your API key at https://cloud.browser-use.com/new-api-key - eligible new accounts receive $1 in one-time credits
+```bash uv
+uv add browser-use
 ```
-```bash Google
-# add your key to .env file
-GOOGLE_API_KEY=
-# Get your free Gemini API key from https://aistudio.google.com/app/u/1/apikey?pli=1.
-```
-```bash OpenAI
-# add your key to .env file
-OPENAI_API_KEY=
-```
-```bash Anthropic
-# add your key to .env file
-ANTHROPIC_API_KEY=
+```bash pip
+pip install browser-use
 ```
 </CodeGroup>
 
-See [Supported Models](/open-source/supported-models) for more.
+## 2. Sign in
 
-## 3. Run your first agent
-
-<CodeGroup>
-```python Browser Use
-from browser_use import Agent, ChatBrowserUse
-from dotenv import load_dotenv
-import asyncio
-
-load_dotenv()
-
-async def main():
-    llm = ChatBrowserUse()
-    task = "Find the number 1 post on Show HN"
-    agent = Agent(task=task, llm=llm)
-    await agent.run()
-
-if __name__ == "__main__":
-    asyncio.run(main())
+```bash
+browser-use login
 ```
-```python Google
-from browser_use import Agent, ChatGoogle
-from dotenv import load_dotenv
-import asyncio
 
-load_dotenv()
+This opens your browser and stores one Browser Use key in `~/.config/browser-harness/auth.json`. The key runs the default model, cloud browsers, web search, the CLI and the MCP server.
 
-async def main():
-    llm = ChatGoogle(model="gemini-flash-latest")
-    task = "Find the number 1 post on Show HN"
-    agent = Agent(task=task, llm=llm)
-    await agent.run()
+- Over SSH: `browser-use login --device-code`.
+- In CI or Docker: set `BROWSER_USE_API_KEY` instead. When it is set, it wins over the stored key. A `.env` file in the working directory is read on import.
 
-if __name__ == "__main__":
-    asyncio.run(main())
+## 3. Run an agent
+
+```python
+from browser_use import Agent
+
+result = Agent('Find the number of stars of the browser-use repo').run_sync()
+print(result.final_result())
 ```
-```python OpenAI
-from browser_use import Agent, ChatOpenAI
-from dotenv import load_dotenv
-import asyncio
 
-load_dotenv()
+This runs `bu-fast` on the Browser Use gateway and drives a Browser Use Cloud browser, which stops when the run ends.
 
-async def main():
-    llm = ChatOpenAI(model="gpt-4.1-mini")
-    task = "Find the number 1 post on Show HN"
-    agent = Agent(task=task, llm=llm)
-    await agent.run()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-```python Anthropic
-from browser_use import Agent, ChatAnthropic
-from dotenv import load_dotenv
-import asyncio
-
-load_dotenv()
-
-async def main():
-    llm = ChatAnthropic(model='claude-sonnet-4-0', temperature=0.0)
-    task = "Find the number 1 post on Show HN"
-    agent = Agent(task=task, llm=llm)
-    await agent.run()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-</CodeGroup>
-
-<Note> Custom browsers can be configured in one line. Check out <a href="/open-source/customize/browser/basics">browsers</a> for more. </Note>
-
-## 4. Going to Production
-
-Sandboxes are the **easiest way to run Browser-Use in production**. We handle agents, browsers, persistence, auth, cookies, and LLMs. It is also the **fastest way to deploy** - the agent runs right next to the browser, so latency is minimal.
-
-To run in production with authentication, add `@sandbox` to your function:
+In async code (FastAPI, Jupyter), use `await agent.run()`:
 
 ```python
 import asyncio
-from browser_use import Browser, sandbox, ChatBrowserUse
-from browser_use.agent.service import Agent
 
-@sandbox(cloud_profile_id='your-profile-id')
-async def production_task(browser: Browser):
-    agent = Agent(
-        task="Your authenticated task",
-        browser=browser,
-        llm=ChatBrowserUse(),
-    )
-    await agent.run()
+from browser_use import Agent
 
-if __name__ == "__main__":
-    asyncio.run(production_task())
+
+async def main():
+    agent = Agent('Find the top story on Hacker News')
+    result = await agent.run()
+    print(result.final_result())
+
+
+asyncio.run(main())
 ```
 
-See [Browser Use Cloud](/cloud/quickstart) for how to sync your cookies to the cloud.
+## Local browser, your own model
+
+```python
+import asyncio
+
+from browser_use import Agent, Browser, ChatOpenAI
+
+
+async def main():
+    agent = Agent(
+        'Find the top story on Hacker News',
+        llm=ChatOpenAI('gpt-6-luna'),  # reads OPENAI_API_KEY
+        browser=Browser('chromium'),  # a fresh local Chrome with a temp profile
+    )
+    result = await agent.run()
+    print(result.final_result())
+
+
+asyncio.run(main())
+```
+
+`Browser('chromium')` uses the Chrome, Chromium or Edge you have installed. With none installed, run `browser-use install` once to download Chromium. See [Browsers](/open-source/browsers) and [Models](/open-source/models).
+
+## What it costs
+
+The library is free. The Browser Use model and cloud browsers bill to your Browser Use account; see [pricing](https://browser-use.com/pricing). Every run reports its model cost in `result.cost_usd`.
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Agent" icon="bot" href="/open-source/agent">
+    Options, budgets and how to write tasks.
+  </Card>
+  <Card title="Output" icon="file-output" href="/open-source/output">
+    Typed results with `output_model_schema`.
+  </Card>
+  <Card title="Secrets" icon="key-round" href="/open-source/secrets">
+    Log in without showing passwords to the model.
+  </Card>
+  <Card title="Migrating from 0.x" icon="arrow-up-right" href="/open-source/migrating">
+    What changed in 1.0.
+  </Card>
+</CardGroup>

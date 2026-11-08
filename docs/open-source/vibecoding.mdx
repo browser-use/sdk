@@ -1,11 +1,31 @@
 ---
-title: "Prompts for Vibecoders"
-description: "Complete Python SDK reference for AI coding agents. Paste into Claude Code, Cursor, or Copilot for instant integration."
+title: "Prompts for Coding Agents"
+sidebarTitle: "Prompts for Coding Agents"
+description: "Give Claude Code, Cursor, Codex or Copilot the browser-use 1.0 reference before it writes code."
 icon: "sparkles"
 ---
 
+Coding agents often know browser-use 0.x, which 1.0 replaced. Give yours the current reference first.
 
+Paste this into your coding agent:
 
-1. Copy all content [🔗  from here](https://github.com/browser-use/browser-use/blob/main/AGENTS.md) (~9k tokens)
-2. Paste it into your project
-3. Prompt your coding agent (Cursor, Claude, etc.) "Help me get started with Browser Use"
+```text
+Help me build with the browser-use 1.0 Python library. Before writing code, read
+https://docs.browser-use.com/llms.txt and the linked .md pages for Agent, Browsers, Models and Output.
+Use `from browser_use import Agent, Browser`. Options removed in 1.0 raise an error naming the replacement:
+follow it, and do not use 0.x APIs (BrowserProfile, BrowserSession, controller actions, step hooks).
+```
+
+Or install the library skill, a one-page 1.0 cheat sheet your agent loads when you write code against `browser_use`:
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill open-source
+```
+
+Source: [skills/open-source/SKILL.md](https://github.com/browser-use/browser-use/blob/main/skills/open-source/SKILL.md). Other skills are listed in [Agent skills](/open-source/skills).
+
+<Tip>
+Any docs page is available as Markdown: add `.md` to its URL, for example `https://docs.browser-use.com/open-source/agent.md`.
+</Tip>
+
+To let your coding agent drive a browser itself instead of writing library code, use the [Browser Use CLI](/open-source/browser-use-cli).
