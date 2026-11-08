@@ -870,7 +870,7 @@
     },
     {
       "source": "/cli",
-      "destination": "/open-source/quickstart"
+      "destination": "/open-source/browser-use-cli"
     },
     {
       "source": "/development/local-setup",
@@ -1447,6 +1447,1178 @@
     {
       "source": "/open-source/development/get-help",
       "destination": "/open-source/get-help"
+    },
+    {
+      "source": "/customize/sensitive-data",
+      "destination": "/open-source/secrets"
+    },
+    {
+      "source": "/customize/agent/sensitive-data",
+      "destination": "/open-source/secrets"
+    },
+    {
+      "source": "/open-source/customize/sensitive-data",
+      "destination": "/open-source/secrets"
+    },
+    {
+      "source": "/open-source/customize/agent/sensitive-data",
+      "destination": "/open-source/secrets"
+    },
+    {
+      "source": "/customize/real-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/real-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/real-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/browser/real-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/overview",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/profiles",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/connect-to-your-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/proxy",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/real-browsers",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/remote-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/browser-profile",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/browser-settings",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/profile",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/browser-config",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/cloud",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/local",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/real-chrome",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/settings",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser-config",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser-profile",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser-settings/browser-profile",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/persistent-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/cdp",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/authentication",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/record-video",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/customize-the-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/browser/overview",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/browser-settings",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser-settings",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/supported-browsers",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/overview",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/proxy",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/settings",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/remote-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/browser-settings",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/browser-parameters",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/configuration",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/local",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/parameters",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/profiles",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/profile",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/browser-session",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/connect-to-your-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/multi-agent",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/development/browser/all-parameters",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/development/docker",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/self-hosting/playwright",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/tutorials/session-storage",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/customize/browser/downloads",
+      "destination": "/open-source/files"
+    },
+    {
+      "source": "/customize/browser/security",
+      "destination": "/open-source/domains"
+    },
+    {
+      "source": "/open-source/security",
+      "destination": "/open-source/domains"
+    },
+    {
+      "source": "/open-source/customize/security",
+      "destination": "/open-source/domains"
+    },
+    {
+      "source": "/open-source/customize/agent/security-and-approval-controls",
+      "destination": "/open-source/domains"
+    },
+    {
+      "source": "/security",
+      "destination": "/open-source/domains"
+    },
+    {
+      "source": "/development/security",
+      "destination": "/open-source/domains"
+    },
+    {
+      "source": "/customize/models",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/customize/llm",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/customize/llms",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/customize/llms/ollama",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/customize/langchain-models",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/customize/llm/supported-models",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/customize/models/all-models",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/customize/models/ollama",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/customize/models/overview",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/customize/models/supported-models",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/llms/supported-models",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/development/providers",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/open-source/customize/llm",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/open-source/customize/supported-models",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/open-source/customize/models",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/open-source/customize/agent/llm",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/open-source/customize/agent/supported-models",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/customize/output-format",
+      "destination": "/open-source/output"
+    },
+    {
+      "source": "/open-source/customize/output-format",
+      "destination": "/open-source/output"
+    },
+    {
+      "source": "/open-source/customize/structured-output",
+      "destination": "/open-source/output"
+    },
+    {
+      "source": "/open-source/customize/agent/structured-output",
+      "destination": "/open-source/output"
+    },
+    {
+      "source": "/open-source/customize/agent/output",
+      "destination": "/open-source/output"
+    },
+    {
+      "source": "/customize/cli",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/open-source/cli",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/open-source/customize/cli",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/open-source/customize/integrations/cli",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/cli/quickstart",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/cli/overview",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/cli/installation",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/cli/introduction",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/development/cli",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/browser-use-cli/introduction",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/open-source/browser-harness",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/cloud/cli",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/integrations/mcp",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/integrations/mcp-server",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/mcp-server",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/mcp/overview",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/mcp/server",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/mcp/introduction",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/development/mcp-server",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/development/mcp",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/customize/mcp",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/open-source/mcp-server",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/open-source/customize/mcp",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/open-source/integrations/mcp",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/open-source/customize/integrations/mcp",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/open-source/examples/mcp",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/open-source/integrations",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/open-source/integration",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/customize/mcp-client",
+      "destination": "/open-source/migrating"
+    },
+    {
+      "source": "/customize/code-agent/example-products",
+      "destination": "/open-source/migrating"
+    },
+    {
+      "source": "/customize/code-agent/basics",
+      "destination": "/open-source/migrating"
+    },
+    {
+      "source": "/customize/agent/code-agent",
+      "destination": "/open-source/migrating"
+    },
+    {
+      "source": "/open-source/legacy/code-agent/basics",
+      "destination": "/open-source/migrating"
+    },
+    {
+      "source": "/migration-guide",
+      "destination": "/open-source/migrating"
+    },
+    {
+      "source": "/reference/environment-variables",
+      "destination": "/open-source/migrating"
+    },
+    {
+      "source": "/customize/tools",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/customize/tools/overview",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/customize/actions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/customize/custom-actions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/customize/custom-tools",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/customize/controller",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/legacy-v2/custom-functions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/customize/human-in-the-loop",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/customize/agent/human-in-the-loop",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/tutorials/custom-actions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/tutorials/ui-controller",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/custom-tools",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/custom-actions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/actions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/actions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/custom-actions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/custom-functions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/agent/actions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/agent/custom-tools",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/agent/all-available-actions",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/agent/human-in-the-loop",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/tools/human-in-the-loop",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/customize/memory",
+      "destination": "/open-source/long-tasks"
+    },
+    {
+      "source": "/features/memory",
+      "destination": "/open-source/long-tasks"
+    },
+    {
+      "source": "/customize/agent/hooks",
+      "destination": "/open-source/long-tasks"
+    },
+    {
+      "source": "/open-source/customize/agent/hooks",
+      "destination": "/open-source/long-tasks"
+    },
+    {
+      "source": "/open-source/customize/agent/memory",
+      "destination": "/open-source/long-tasks"
+    },
+    {
+      "source": "/open-source/monitoring",
+      "destination": "/open-source/long-tasks"
+    },
+    {
+      "source": "/customize",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/customize/overview",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/customize/agent",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/customize/agent/settings",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/customize/agent/system-prompt",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/customize/configuration",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/customize/custom-params",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/customize/agent/initial-actions",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/agent",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/concepts/agent",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/core-concepts/agent",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/architecture/agent",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/architecture/overview",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/development/architecture",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/agent/overview",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/agent/basics",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/agents",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/core-concepts",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/how-it-works",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/architecture",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/customize/agent-settings",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/customize/agent/settings",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/customize/agent/overview",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/customize/agent/configuration",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/customize/agent/vision",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/customize/overview",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/customization",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/installation",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/open-source/installation",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/open-source/getting-started",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/open-source/getting-started/installation",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/open-source/human-quickstart",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/oss/quickstart",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/development/installation",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/customize/more-examples",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/open-source/overview",
+      "destination": "/open-source/introduction"
+    },
+    {
+      "source": "/open-source/features",
+      "destination": "/open-source/introduction"
+    },
+    {
+      "source": "/development/overview",
+      "destination": "/open-source/introduction"
+    },
+    {
+      "source": "/customize/skills",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/open-source/customize/skills",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/skills/overview",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/skills/basics",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/open-source/faq",
+      "destination": "/open-source/get-help"
+    },
+    {
+      "source": "/community",
+      "destination": "/open-source/get-help"
+    },
+    {
+      "source": "/open-source/development/contribution",
+      "destination": "/open-source/get-help"
+    },
+    {
+      "source": "/open-source/customize/sandbox",
+      "destination": "/open-source/legacy/0.x/sandbox/quickstart"
+    },
+    {
+      "source": "/cloud/sandbox",
+      "destination": "/open-source/legacy/0.x/sandbox/quickstart"
+    },
+    {
+      "source": "/development",
+      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
+    },
+    {
+      "source": "/continuous-integration/local-development/setup",
+      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
+    },
+    {
+      "source": "/customize/observability",
+      "destination": "/open-source/legacy/0.x/development/monitoring/observability"
+    },
+    {
+      "source": "/legacy/customize/browser/overview",
+      "destination": "/open-source/legacy/0.x/customize/browser/basics"
+    },
+    {
+      "source": "/open-source/which-product",
+      "destination": "/cloud/which-product"
+    },
+    {
+      "source": "/overview",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/get-started",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/get-started/introduction",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/get-started/quickstart",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/browser-use-cloud",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/search",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/overview",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/sdk",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/cloud/features",
+      "destination": "/cloud/quickstart"
+    },
+    {
+      "source": "/agent/quickstart",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/cloud/agent/runs",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/usage/workflows-beta",
+      "destination": "/cloud/agent/quickstart"
+    },
+    {
+      "source": "/agents",
+      "destination": "/cloud/choosing-an-agent"
+    },
+    {
+      "source": "/cloud/agents",
+      "destination": "/cloud/choosing-an-agent"
+    },
+    {
+      "source": "/api",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api/overview",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api-reference/runs",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api-reference/browsers",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api-reference/sessions",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api-reference/introduction",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api-reference/v4",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api-v4-reference",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api/sessions",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api/browsers",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api-v10/run-task",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/browser/api-reference",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api-v3/boxes/*",
+      "destination": "/cloud/api-reference"
+    },
+    {
+      "source": "/cloud/api-v3-overview",
+      "destination": "/cloud/api-v4-overview"
+    },
+    {
+      "source": "/usage/result-schema",
+      "destination": "/cloud/agent/structured-output"
+    },
+    {
+      "source": "/integrations",
+      "destination": "/cloud/guides/integrations"
+    },
+    {
+      "source": "/cloud/integrations",
+      "destination": "/cloud/guides/integrations"
+    },
+    {
+      "source": "/changelog",
+      "destination": "https://browser-use.com/changelog"
+    },
+    {
+      "source": "/cloud/changelog",
+      "destination": "https://browser-use.com/changelog"
+    },
+    {
+      "source": "/llms",
+      "destination": "/llms.txt"
+    },
+    {
+      "source": "/cloud/llms.txt",
+      "destination": "/llms.txt"
+    },
+    {
+      "source": "/open-source/llms.txt",
+      "destination": "/llms.txt"
+    },
+    {
+      "source": "/cloud/llms-full.txt",
+      "destination": "/llms-full.txt"
+    },
+    {
+      "source": "/open-source/llms-full.txt",
+      "destination": "/llms-full.txt"
+    },
+    {
+      "source": "/cloud/api-v4/wallets/list-agentcard-wallets",
+      "destination": "/cloud/tutorials/integrations/agentcard"
+    },
+    {
+      "source": "/cloud/api-v2/skills/create-skill",
+      "destination": "/cloud/legacy/skills"
+    },
+    {
+      "source": "/cloud/api-v2/skills/refine-skill",
+      "destination": "/cloud/legacy/skills"
+    },
+    {
+      "source": "/cloud/api-v2/skills/cancel-generation",
+      "destination": "/cloud/legacy/skills"
+    },
+    {
+      "source": "/cloud/skills",
+      "destination": "/cloud/legacy/skills"
+    },
+    {
+      "source": "/cloud/api-v4/get-shared-session",
+      "destination": "/cloud/api-v4/sessions/get-session-share"
+    },
+    {
+      "source": "/cloud/api-v4/get-shared-session-recording",
+      "destination": "/cloud/api-v4/sessions/get-session-share"
+    },
+    {
+      "source": "/cloud/api-v4/list-shared-session-files",
+      "destination": "/cloud/api-v4/sessions/get-session-share"
+    },
+    {
+      "source": "/cloud/api-v4/browsers/create-browser",
+      "destination": "/cloud/api-v4/browsers/create-browser-session"
+    },
+    {
+      "source": "/cloud/api-reference/browsers/create-browser",
+      "destination": "/cloud/api-v4/browsers/create-browser-session"
+    },
+    {
+      "source": "/cloud/browser/create-browser-session",
+      "destination": "/cloud/api-v4/browsers/create-browser-session"
+    },
+    {
+      "source": "/cloud/api-v4/browsers/stop-browser-session",
+      "destination": "/cloud/api-v4/browsers/update-browser-session"
+    },
+    {
+      "source": "/cloud/api-v3/browsers/stop-browser-session",
+      "destination": "/cloud/api-v3/browsers/update-browser-session"
+    },
+    {
+      "source": "/cloud/api-v4/sessions/get-session-feedback",
+      "destination": "/cloud/api-v4/sessions/get-session"
+    },
+    {
+      "source": "/cloud/api-v4/sessions/set-session-feedback",
+      "destination": "/cloud/api-v4/sessions/get-session"
+    },
+    {
+      "source": "/cloud/api-v4/sessions/queue-message",
+      "destination": "/cloud/api-v4/sessions/queue-session-message"
+    },
+    {
+      "source": "/cloud/browser/profiles",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/profiles",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/profile",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/browser-profiles",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/guides/profiles",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/agent/profiles",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/authentication",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/browser/authentication",
+      "destination": "/cloud/guides/authentication"
+    },
+    {
+      "source": "/cloud/mcp",
+      "destination": "/cloud/guides/mcp-server"
+    },
+    {
+      "source": "/cloud/integrations/mcp",
+      "destination": "/cloud/guides/mcp-server"
+    },
+    {
+      "source": "/cloud/security",
+      "destination": "/cloud/zero-data-retention"
+    },
+    {
+      "source": "/cloud/guides/security",
+      "destination": "/cloud/zero-data-retention"
+    },
+    {
+      "source": "/cloud/billing",
+      "destination": "/cloud/guides/billing"
+    },
+    {
+      "source": "/cloud/billing-and-credits",
+      "destination": "/cloud/guides/billing"
+    },
+    {
+      "source": "/cloud/concurrency-and-limits",
+      "destination": "/cloud/guides/concurrency"
+    },
+    {
+      "source": "/cloud/limits",
+      "destination": "/cloud/guides/concurrency"
+    },
+    {
+      "source": "/cloud/browser/overview",
+      "destination": "/cloud/browser/quickstart"
+    },
+    {
+      "source": "/cloud/browsers/overview",
+      "destination": "/cloud/browser/quickstart"
+    },
+    {
+      "source": "/cloud/browsers/quickstart",
+      "destination": "/cloud/browser/quickstart"
+    },
+    {
+      "source": "/cloud/browser-infrastructure",
+      "destination": "/cloud/browser/quickstart"
+    },
+    {
+      "source": "/cloud/browser-sessions",
+      "destination": "/cloud/browser/quickstart"
+    },
+    {
+      "source": "/cloud/browser/sessions",
+      "destination": "/cloud/browser/quickstart"
+    },
+    {
+      "source": "/cloud/browser/settings",
+      "destination": "/cloud/browser/quickstart"
+    },
+    {
+      "source": "/cloud/browser-api",
+      "destination": "/cloud/browser/quickstart"
+    },
+    {
+      "source": "/cloud/browser/captcha",
+      "destination": "/cloud/browser/captcha-handling"
+    },
+    {
+      "source": "/features/captcha",
+      "destination": "/cloud/browser/captcha-handling"
+    },
+    {
+      "source": "/cloud/browser/live-view",
+      "destination": "/cloud/browser/live-preview"
+    },
+    {
+      "source": "/cloud/browser/live-preview-recording",
+      "destination": "/cloud/browser/live-preview"
+    },
+    {
+      "source": "/cloud/proxies",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/cloud/proxy",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/cloud/browser/proxy",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/cloud/guides/proxies",
+      "destination": "/cloud/browser/proxies"
+    },
+    {
+      "source": "/cloud/agent/events",
+      "destination": "/cloud/agent/observability"
+    },
+    {
+      "source": "/cloud/agent/webhooks",
+      "destination": "/cloud/guides/webhooks"
+    },
+    {
+      "source": "/cloud/webhooks",
+      "destination": "/cloud/guides/webhooks"
+    },
+    {
+      "source": "/cloud/guides/human-in-the-loop",
+      "destination": "/cloud/agent/human-in-the-loop"
+    },
+    {
+      "source": "/cloud/secrets",
+      "destination": "/cloud/guides/secrets"
+    },
+    {
+      "source": "/cloud/workspaces",
+      "destination": "/cloud/agent/workspaces"
+    },
+    {
+      "source": "/cloud/tutorials/integrations/ai-sdk",
+      "destination": "/cloud/tutorials/integrations/vercel"
     }
   ],
   "description": "Browser Use Cloud hosts stealth browsers for AI agents: a custom Chromium you drive over CDP with Playwright, Puppeteer, or the browser-use library. From $0.02 per browser-hour, with residential proxies and CAPTCHA solving. These docs also cover the Cloud Agent API and the open-source browser-use Python library.",
