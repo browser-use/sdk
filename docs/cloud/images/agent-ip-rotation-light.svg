@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="340" viewBox="0 0 720 340" role="img" aria-labelledby="air-light-title air-light-desc">
+<title id="air-light-title">Agent-controlled IP rotation</title>
+<desc id="air-light-desc">An agent keeps the same browser, with its tabs and cart. The first connection, through a US IP, stops working. The agent calls refresh_connection. A new residential connection, through a JP IP, reaches the same website. Routing is illustrative, not a measurement.</desc>
+<style>
+.t{font-family:Inter,Arial,system-ui,-apple-system,"Segoe UI",sans-serif;fill:#1B1A17}
+.m{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;fill:#1B1A17}
+.h{font-size:16px;font-weight:600}
+.l{font-size:15px;font-weight:600}
+.r{font-size:14px}
+.w{font-weight:600}
+.s{font-size:14px;fill:#5F5B53}
+.c{text-anchor:middle}
+.card{fill:#FFFFFF;stroke:#E6E2D9}
+.plate{fill:#EFEBE3}
+.chip{fill:#F4F1EA;stroke:#E6E2D9}
+.pill{fill:#FFF1E6;stroke:#FE750E;stroke-width:1.5}
+.div{stroke:#E6E2D9;fill:none}
+.ink{stroke:#1B1A17;stroke-width:1.5;fill:none}
+.inkf{fill:#1B1A17}
+.acc{stroke:#FE750E;stroke-width:2;fill:none}
+.af{fill:#FE750E}
+.old{stroke:#B8B2A6;stroke-width:1.5;fill:none;stroke-dasharray:4 5}
+.mut{stroke:#B8B2A6;stroke-width:1.5;fill:none;stroke-linecap:round}
+.stop{fill:#FBFAF7;stroke:#B8B2A6;stroke-width:1.5}
+.dot{fill:#D6D0C4}
+.bar{fill:#ECE8DF}
+.n1{fill:#FFF1E6;stroke:#FE750E;stroke-width:1.25;stroke-linejoin:round}
+.n2{fill:#FFFFFF;stroke:#FE750E;stroke-width:1.25;stroke-linejoin:round}
+.n3{fill:#FBE3CF;stroke:#FE750E;stroke-width:1.25;stroke-linejoin:round}
+.o1{fill:#F4F1EA;stroke:#B8B2A6;stroke-width:1.25;stroke-linejoin:round}
+.o2{fill:#FFFFFF;stroke:#B8B2A6;stroke-width:1.25;stroke-linejoin:round}
+.o3{fill:#ECE8DF;stroke:#B8B2A6;stroke-width:1.25;stroke-linejoin:round}
+</style>
+<rect width="720" height="340" fill="#FBFAF7"/>
+<rect class="card" x="24" y="32" width="148" height="52" rx="10"/>
+<text class="t l c" x="98" y="63">Agent</text>
+<path class="ink" d="M172 58H204"/>
+<path class="inkf" d="M212 58l-9-4.5v9z"/>
+<rect class="pill" x="212" y="40" width="180" height="36" rx="18"/>
+<text class="m c" x="302" y="63">refresh_connection</text>
+<path class="ink" d="M98 84V107"/>
+<path class="inkf" d="M98 116l-4.5-9h9z"/>
+<rect class="plate" x="30" y="122" width="196" height="168" rx="12"/>
+<rect class="card" x="24" y="116" width="196" height="168" rx="12"/>
+<path class="div" d="M24 142H220"/>
+<circle class="dot" cx="40" cy="129" r="3.5"/>
+<circle class="dot" cx="52" cy="129" r="3.5"/>
+<circle class="dot" cx="64" cy="129" r="3.5"/>
+<rect class="chip" x="84" y="122" width="56" height="20" rx="4"/>
+<rect class="chip" x="146" y="122" width="56" height="20" rx="4"/>
+<text class="t h" x="40" y="174">Same browser</text>
+<rect class="chip" x="40" y="190" width="68" height="28" rx="14"/>
+<text class="t r c" x="74" y="209">Tabs</text>
+<rect class="chip" x="116" y="190" width="68" height="28" rx="14"/>
+<text class="t r c" x="150" y="209">Cart</text>
+<text class="t s" x="40" y="254">State kept</text>
+<path class="old" d="M220 236H546"/>
+<circle class="stop" cx="556" cy="236" r="8"/>
+<path class="mut" d="M550.5 241.5l11-11"/>
+<path class="o1" d="M410 224L422 230L410 236L398 230Z"/>
+<path class="o2" d="M398 230L410 236V248L398 242Z"/>
+<path class="o3" d="M410 236L422 230V242L410 248Z"/>
+<text class="t s" x="434" y="228">Old IP · US</text>
+<text class="t s" x="434" y="262">Stopped working</text>
+<path class="acc" d="M220 168H583"/>
+<path class="af" d="M592 168l-10-5v10z"/>
+<path class="n1" d="M410 156L422 162L410 168L398 162Z"/>
+<path class="n2" d="M398 162L410 168V180L398 174Z"/>
+<path class="n3" d="M410 168L422 162V174L410 180Z"/>
+<text class="t r w" x="434" y="160">New IP · JP</text>
+<path class="acc" d="M302 76V164"/>
+<circle class="af" cx="302" cy="168" r="4.5"/>
+<rect class="plate" x="598" y="130" width="104" height="156" rx="12"/>
+<rect class="card" x="592" y="124" width="104" height="156" rx="12"/>
+<path class="div" d="M592 146H696"/>
+<circle class="dot" cx="606" cy="135" r="3"/>
+<circle class="dot" cx="616" cy="135" r="3"/>
+<circle class="dot" cx="626" cy="135" r="3"/>
+<rect class="bar" x="608" y="162" width="72" height="8" rx="4"/>
+<rect class="bar" x="608" y="178" width="52" height="8" rx="4"/>
+<rect class="bar" x="608" y="194" width="64" height="8" rx="4"/>
+<rect class="chip" x="608" y="212" width="72" height="22" rx="4"/>
+<text class="t l c" x="644" y="264">Website</text>
+<text class="t s" x="24" y="322">Illustrative routing, not a measurement. Same browser state, new connection.</text>
+</svg>

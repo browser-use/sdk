@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="600" viewBox="0 0 360 600" role="img" aria-labelledby="cr-light-mobile-title cr-light-mobile-desc">
+<title id="cr-light-mobile-title">Choose the right recovery</title>
+<desc id="cr-light-mobile-desc">Two managed recovery options start from the agent. refresh_connection with new_browser false opens a new connection and keeps tabs, cart, and login. refresh_connection with new_browser true starts a replacement browser, so page state may reset. Both managed options accept an optional country, such as country: jp. Custom proxies reuse the same credentials. The upstream proxy decides whether the IP changes. Custom proxies do not support country changes.</desc>
+<style>
+.t{font-family:Inter,Arial,system-ui,-apple-system,"Segoe UI",sans-serif;fill:#1B1A17}
+.m{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;fill:#1B1A17}
+.l{font-size:15px;font-weight:600}
+.r{font-size:14px}
+.w{font-weight:600}
+.s{font-size:14px;fill:#5F5B53}
+.c{text-anchor:middle}
+.card{fill:#FFFFFF;stroke:#E6E2D9}
+.chip{fill:#F4F1EA;stroke:#E6E2D9}
+.pill{fill:#FFF1E6;stroke:#FE750E;stroke-width:1.5}
+.frame{fill:none;stroke:#E6E2D9}
+.note{fill:none;stroke:#CFC9BD;stroke-dasharray:4 4}
+.div{stroke:#E6E2D9;fill:none}
+.bgf{fill:#FBFAF7}
+.ink{stroke:#1B1A17;stroke-width:1.5;fill:none;stroke-linejoin:round}
+.inkf{fill:#1B1A17}
+.acc{stroke:#FE750E;stroke-width:1.5;fill:none}
+.accb{fill:#FFFFFF;stroke:#FE750E;stroke-width:1.5}
+.old{stroke:#B8B2A6;stroke-width:1.5;fill:none;stroke-dasharray:3 3}
+.n1{fill:#FFF1E6;stroke:#FE750E;stroke-width:1.25;stroke-linejoin:round}
+.n2{fill:#FFFFFF;stroke:#FE750E;stroke-width:1.25;stroke-linejoin:round}
+.n3{fill:#FBE3CF;stroke:#FE750E;stroke-width:1.25;stroke-linejoin:round}
+</style>
+<rect width="360" height="600" fill="#FBFAF7"/>
+<rect class="card" x="24" y="20" width="312" height="44" rx="10"/>
+<text class="t l c" x="180" y="47">Agent</text>
+<path class="ink" d="M180 64V75"/>
+<path class="inkf" d="M180 84l-4.5-9h9z"/>
+<rect class="frame" x="24" y="84" width="312" height="392" rx="14"/>
+<text class="t s w" x="40" y="114">Managed connection</text>
+<rect class="chip" x="40" y="128" width="116" height="28" rx="14"/>
+<text class="m c" x="98" y="147">country: jp</text>
+<text class="t s" x="168" y="147">Optional on both</text>
+<rect class="pill" x="40" y="172" width="280" height="56" rx="12"/>
+<text class="m" x="56" y="195">refresh_connection(</text>
+<text class="m" x="72" y="215">new_browser=false)</text>
+<path class="ink" d="M180 228V240"/>
+<rect class="card" x="40" y="240" width="280" height="60" rx="12"/>
+<rect class="ink" x="56" y="255" width="40" height="30" rx="4"/>
+<path class="ink" d="M56 263H96"/>
+<path class="n1" d="M98 276L105 279.5L98 283L91 279.5Z"/>
+<path class="n2" d="M91 279.5L98 283V290L91 286.5Z"/>
+<path class="n3" d="M98 283L105 279.5V286.5L98 290Z"/>
+<text class="t l" x="120" y="266">New connection</text>
+<text class="t s" x="120" y="288">Same tabs and storage</text>
+<path class="div" d="M40 316H320"/>
+<rect class="bgf" x="164" y="306" width="32" height="20"/>
+<text class="t s c" x="180" y="321">or</text>
+<rect class="pill" x="40" y="332" width="280" height="56" rx="12"/>
+<text class="m" x="56" y="355">refresh_connection(</text>
+<text class="m" x="72" y="375">new_browser=true)</text>
+<path class="ink" d="M180 388V400"/>
+<rect class="card" x="40" y="400" width="280" height="60" rx="12"/>
+<rect class="old" x="52" y="413" width="36" height="28" rx="4"/>
+<rect class="accb" x="64" y="423" width="36" height="28" rx="4"/>
+<path class="acc" d="M64 430H100"/>
+<text class="t l" x="120" y="426">Replacement browser</text>
+<text class="t s" x="120" y="448">Page state may reset</text>
+<rect class="note" x="24" y="492" width="312" height="88" rx="10"/>
+<text class="t r w" x="40" y="518">Custom proxy</text>
+<text class="t s" x="40" y="542">Same credentials. No country option.</text>
+<text class="t s" x="40" y="564">Upstream decides IP changes.</text>
+</svg>
