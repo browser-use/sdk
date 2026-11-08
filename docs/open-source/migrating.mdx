@@ -6,7 +6,7 @@ icon: "arrow-up-right"
 
 1.0 replaces the engine. The agent no longer picks one action per step from a DOM dump: it writes Python in a persistent REPL with browser helpers and raw CDP, on Pydantic AI. The common surface (`Agent`, `Browser`, `Tools`, `run()`, `final_result()`) still works.
 
-Anything 1.0 can't honor raises a clear error before a browser starts or anything is billed, never a silent no-op. Each removed feature raises `<feature> was removed in browser-use 1.0`, plus the 1.0 alternative when there is one.
+Anything 1.0 can't honor raises a clear error before a browser starts or anything is billed. Each removed feature raises `<feature> was removed in browser-use 1.0`, plus the 1.0 alternative when there is one. The exception: a few tuning knobs that can't change the result (`use_vision=True`, `flash_mode`, `use_thinking`, ...) log one warning and are ignored.
 
 Need 0.x? Pin it: `pip install 'browser-use<1'`. The 0.x docs are under [Legacy (0.x)](/open-source/legacy/0.x/introduction).
 
@@ -29,6 +29,13 @@ async def main():
 asyncio.run(main())
 ```
 
+## Common errors
+
+- **`MissingAPIKeyError: Browser() (a Browser Use Cloud browser) needs a Browser Use API key`**: `Browser()` and the default model are Browser Use Cloud now. Run `browser-use login`, or stay local: `Agent(task, llm=ChatOpenAI(...), browser=Browser('chromium'))`.
+- **`ValueError: Browser() (a cloud browser) does not take headless=`**: `headless`, `executable_path` and `user_data_dir` are for local browsers. Use `Browser('chromium', headless=True)`.
+- **`TypeError: Agent(<option>=...) was removed in browser-use 1.0`**: an option 1.0 dropped. The message names the replacement when there is one; the tables below list them all.
+- **`TypeError: Agent(max_steps=...) is not an option`**: pass it to `agent.run(max_steps=...)`.
+
 ## What changes by default
 
 | | 0.x | 1.0 |
@@ -38,24 +45,25 @@ asyncio.run(main())
 | Key | one per provider | one Browser Use key: `browser-use login` or `BROWSER_USE_API_KEY` |
 | `run(max_steps=)` | 500 | 100 |
 | Tasks with localhost / private IPs | worked | a cloud browser can't reach them: one warning, use `Browser('chromium')` |
-| Cloud proxy | off | `us` (`cloud_proxy_country_code=None` turns it off) |
 
 ## Agent
+
+Removed options raise `TypeError` and removed methods raise `AttributeError`, both with the 1.0 replacement in the message.
 
 | 0.x | 1.0 |
 |---|---|
 | `task`, `llm`, `browser`, `browser_session`, `tools`, `controller`, `output_model_schema`, `sensitive_data`, `extend_system_message` | kept |
 | `use_vision=False` | kept: no screenshot reaches the model |
 | `use_vision=True`, `vision_detail_level`, `llm_screenshot_size`, `max_actions_per_step`, `flash_mode`, `use_thinking`, `use_judge`, `max_failures`, `final_response_after_failure`, `calculate_cost` | ignored, one warning each. Instead of `use_thinking`: `reasoning='low' / 'medium' / 'high'`; of `flash_mode`: `mode='ultrafast'` |
-| `override_system_message` | `extend_system_message` |
-| `max_steps` on `Agent` | `agent.run(max_steps=...)` |
-| `llm_timeout`, `step_timeout` | `agent.run(timeout=seconds)` |
-| `file_system_path`, `available_file_paths` | `workspace=`; see [Files](/open-source/files) |
-| `initial_actions`, `directly_open_url` | say it in the task |
-| step callbacks, `on_step_start`, `on_step_end` | a `logging.Handler` on `browser_use`; see [Long tasks](/open-source/long-tasks#live-progress) |
-| `pause()`, `resume()`, `stop()`, `step()` | cancel the task awaiting `run()`; see [Agent](/open-source/agent#cancel) |
-| `save_history()`, `rerun_history()`, `load_and_rerun()` | `result.messages`; run the task again |
-| `generate_gif`, `judge_llm`, `planner_llm`, `fallback_llm`, `skill_ids`, `page_extraction_llm`, ... | removed (`TypeError`) |
+| `override_system_message` | removed: `extend_system_message` |
+| `max_steps` on `Agent` | removed: `agent.run(max_steps=...)` |
+| `llm_timeout`, `step_timeout` | removed: `agent.run(timeout=seconds)` |
+| `file_system_path`, `available_file_paths` | removed: `workspace=`; see [Files](/open-source/files) |
+| `initial_actions`, `directly_open_url` | removed: say it in the task |
+| step callbacks, `on_step_start`, `on_step_end` | removed: a `logging.Handler` on `browser_use`; see [Long tasks](/open-source/long-tasks#live-progress) |
+| `pause()`, `resume()`, `stop()`, `step()` | removed: cancel the task awaiting `run()`; see [Agent](/open-source/agent#cancel) |
+| `save_history()`, `rerun_history()`, `load_and_rerun()` | removed: `result.messages`; run the task again |
+| `generate_gif`, `judge_llm`, `planner_llm`, `fallback_llm`, `skill_ids`, `page_extraction_llm`, ... | removed |
 | new | `reasoning`, `mode`, `workspace`, `web_search`, `max_context_chars`, `highlight_actions` |
 
 ```python
@@ -88,7 +96,8 @@ See [Output](/open-source/output).
 | `Browser()`, `BrowserSession()` | `Browser()` is a cloud browser. `BrowserSession` / `BrowserProfile` imports raise |
 | `Browser(use_cloud=False)` | `Browser('chromium')` |
 | `Browser.from_system_chrome()`, `profile_directory` | `Browser('chrome')` (your open Chrome) or `Browser('chrome', profile='Work')` |
-| `headless`, `executable_path`, `user_data_dir`, `keep_alive`, `cdp_url` | kept |
+| `headless`, `executable_path`, `user_data_dir` | kept for `Browser('chromium')`; on `Browser()` they raise `ValueError` |
+| `keep_alive`, `cdp_url` | kept |
 | `cloud_profile_id`, `cloud_proxy_country_code`, `cloud_timeout` | kept |
 | `browser.close()`, `kill()` | `await browser.stop()` |
 | `allowed_domains`, `prohibited_domains`, `block_ip_addresses` | kept, in every mode; see [Domains](/open-source/domains) |
@@ -106,7 +115,7 @@ See [Browsers](/open-source/browsers).
 
 | 0.x | 1.0 |
 |---|---|
-| `ChatBrowserUse` | kept: `bu-fast`, `bu-ultrafast`, `bu-smart`. `bu-2-0`, `bu-1-0`, `bu-latest` need 0.x |
+| `ChatBrowserUse` | kept: `bu-fast`, `bu-ultrafast`, `bu-smart`. `bu-2-0`, `bu-1-0`, `bu-2-0-mini-preview`, `bu-latest` need 0.x |
 | `ChatOpenAI`, `ChatAnthropic`, `ChatGoogle` | kept, built in. Other constructor arguments raise |
 | `ChatAzureOpenAI`, `ChatAWSBedrock`, `ChatGroq`, `ChatOllama`, ... | removed: a Pydantic AI model string or `ChatOpenAI(base_url=...)`; the import error names the replacement |
 | LangChain chat models | not supported |

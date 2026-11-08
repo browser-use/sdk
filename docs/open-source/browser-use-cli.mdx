@@ -25,7 +25,7 @@ Paste this into Claude Code, Codex or another coding agent:
 Install browser-use with `uv tool install browser-use`, run `browser-use skill install` to register the skill, and connect it to my browser. If setup or connection fails, follow https://github.com/browser-use/browser-harness/blob/main/install.md.
 ```
 
-`browser-use skill install` writes the skill for every supported agent: `agents`, `claude`, `codex`, `copilot`, `cursor`, `gemini`, `openclaw`, `opencode`. Use `--target NAME` for one, or `--path DIR` for a custom location. `browser-use skill show` prints it. More skills: [Agent skills](/open-source/skills).
+`browser-use skill install` writes the skill to `~/.agents` and to each supported agent you have installed: `claude`, `codex`, `copilot`, `cursor`, `gemini`, `openclaw`, `opencode`. Use `--target NAME` for one, or `--path DIR` for a custom location. `browser-use skill show` prints it. More skills: [Agent skills](/open-source/skills).
 
 ## Run Python
 

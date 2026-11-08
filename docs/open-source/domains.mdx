@@ -27,7 +27,7 @@ They work in every browser mode. `[]` means no restriction. `about:blank`, the n
 | `'example.com'` | example.com and www.example.com (www only for a one-dot domain), http and https, any port. In `prohibited_domains`, also every subdomain. |
 | `'mail.example.com'` | Exactly that host. |
 | `'*.example.com'` | example.com and every subdomain, http and https. |
-| `'https://example.com'` | That scheme and host on the default port. A path in the pattern is a path prefix. |
+| `'https://example.com'` | That scheme and host on the default port; in `prohibited_domains`, on every port. A path in the pattern is a path prefix. |
 | `'https://*.example.com'`, `'http*://example.com/*'` | Globs on scheme, host and path. |
 | `'localhost:8080'` | That host and port. |
 

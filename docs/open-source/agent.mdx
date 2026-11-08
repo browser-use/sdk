@@ -45,7 +45,7 @@ Each step is one model request. In a step, the agent writes one Python cell that
 | `highlight_actions` | `True` | Shows the orange highlights described [below](#highlights). |
 | `use_vision` | | Only `use_vision=False` does anything: no screenshot reaches the model. |
 
-Options that 1.0 dropped raise a `TypeError` that names the replacement, before a browser starts. A few 0.x tuning knobs (`flash_mode`, `use_thinking`, `max_failures`, ...) log a warning and are ignored. See [Migrating](/open-source/migrating).
+Options that 1.0 dropped raise a `TypeError` before a browser starts, naming the replacement when there is one. A few 0.x tuning knobs (`flash_mode`, `use_thinking`, `max_failures`, ...) log a warning and are ignored. See [Migrating](/open-source/migrating).
 
 ```python
 from browser_use import Agent
@@ -61,8 +61,8 @@ except TypeError as e:
 `await agent.run(max_steps=100, timeout=1700)` returns an [`AgentHistoryList`](/open-source/output).
 
 - **`max_steps`**: model requests. The last one is a delivery-only turn: the agent must hand in what it has. One delivery repair request may follow it.
-- **`timeout`**: seconds for the agent loop (model requests and cells). Starting the browser and stopping it are not counted. The delivery-only turn starts at about 90% of the timeout.
-- A run that hits either budget still delivers: `status` is `'completed'`, and `success` is `False` when the agent reports the task unfinished. See [Long tasks](/open-source/long-tasks).
+- **`timeout`**: seconds for the agent loop (model requests and cells). Starting the browser and stopping it are not counted. The delivery-only turn starts at 90% of the timeout, or up to 30 seconds before the end on timeouts under 300 seconds.
+- A run that hits either budget gets one delivery turn. If the agent delivers, `status` is `'completed'` and `success` is `False` when it reports the task unfinished. If not, `status` is `'max_steps'` or `'timeout'`; read `result.partial`. See [Long tasks](/open-source/long-tasks).
 - `max_steps < 1` or `timeout <= 0` raises `ValueError` before any browser starts.
 - One `run()` at a time per `Agent`, and one running `Agent` per `Browser`. Otherwise `run()` raises `RuntimeError`.
 

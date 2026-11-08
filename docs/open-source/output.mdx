@@ -25,9 +25,10 @@ class Stories(BaseModel):
 
 agent = Agent('Top 3 stories on https://news.ycombinator.com', output_model_schema=Stories)
 result = agent.run_sync()
-stories = result.structured_output  # a Stories instance, or None if the run did not complete
-for s in stories.stories:
-    print(s.title, s.points)
+stories = result.structured_output  # a Stories instance; None if the run did not complete
+if stories:
+    for s in stories.stories:
+        print(s.title, s.points)
 ```
 
 Any type Pydantic can validate works: a model, `list[Model]`, `Literal['yes', 'no']`. For a JSON-schema dict, wrap it in `pydantic_ai.StructuredDict(schema)`. Anything else raises a `TypeError` in `Agent(...)`.
@@ -61,7 +62,7 @@ print(result.error)  # what ended the run, or None
 | `usage` | Tokens: `input`, `output`, `cache_read`, `cache_write`, plus `requests`. |
 | `cost_usd` | USD. `None` when the model's price is unknown. See [Models](/open-source/models#usage-and-cost). |
 | `error` | The error that ended the run, or `None`. |
-| `downloads` | Files the browser downloaded during this run. See [Files](/open-source/files). |
+| `downloads` | Files this run added to `agent.workspace/downloads`. Empty with your Chrome and `cdp_url`. See [Files](/open-source/files#downloads). |
 | `messages` | The full transcript as Pydantic AI messages, with secrets redacted. |
 
 Methods kept from 0.x: `final_result()`, `structured_output`, `is_done()`, `is_successful()`, `errors()`, `has_errors()`, `number_of_steps()`, `total_duration_seconds()`. `print(result)` omits `messages`, which can be large.

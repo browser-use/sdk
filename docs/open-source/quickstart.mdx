@@ -10,18 +10,25 @@ Python 3.11 or newer.
 
 <CodeGroup>
 ```bash uv
+uv init --python 3.12 my-agent && cd my-agent
 uv add browser-use
 ```
 ```bash pip
+python3 -m venv .venv && source .venv/bin/activate
 pip install browser-use
 ```
 </CodeGroup>
 
 ## 2. Sign in
 
-```bash
+<CodeGroup>
+```bash uv
+uv run browser-use login
+```
+```bash pip
 browser-use login
 ```
+</CodeGroup>
 
 This opens your browser and stores one Browser Use key in `~/.config/browser-harness/auth.json`. The key runs the default model, cloud browsers, web search, the CLI and the MCP server.
 
@@ -30,6 +37,8 @@ This opens your browser and stores one Browser Use key in `~/.config/browser-har
 
 ## 3. Run an agent
 
+Save this as `agent.py`:
+
 ```python
 from browser_use import Agent
 
@@ -37,9 +46,18 @@ result = Agent('Find the number of stars of the browser-use repo').run_sync()
 print(result.final_result())
 ```
 
+<CodeGroup>
+```bash uv
+uv run agent.py
+```
+```bash pip
+python agent.py
+```
+</CodeGroup>
+
 This runs `bu-fast` on the Browser Use gateway and drives a Browser Use Cloud browser, which stops when the run ends.
 
-In async code (FastAPI, Jupyter), use `await agent.run()`:
+In async code, use `await agent.run()`. In a script, start it with `asyncio.run(...)`; in Jupyter, `await agent.run()` directly in a cell.
 
 ```python
 import asyncio

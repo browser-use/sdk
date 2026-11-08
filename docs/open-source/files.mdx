@@ -44,14 +44,14 @@ from browser_use import Agent
 
 agent = Agent('Download any one file from https://the-internet.herokuapp.com/download')
 result = agent.run_sync()
-print(result.downloads)  # [PosixPath('/tmp/browser-use-.../downloads/<file>')]
+print(result.downloads)  # e.g. [PosixPath('/tmp/browser-use-.../downloads/<file>')]
 print(agent.workspace)
 ```
 
-`result.downloads` lists the files the run added. Where they land depends on the browser:
+`result.downloads` lists the files this run added to `agent.workspace/downloads`. Where they land depends on the browser:
 
 | Browser | Downloads |
 |---|---|
-| `Browser()` (cloud) | Copied to `agent.workspace/downloads` when the run ends. With `keep_alive=True`, also after each run. |
+| `Browser()` (cloud) | Copied to `agent.workspace/downloads` when the run ends (with `keep_alive=True`, after each run). |
 | `Browser('chromium')`, `Browser('chrome', profile=...)` | `agent.workspace/downloads` directly. |
-| `Browser('chrome')` (your Chrome), `Browser(cdp_url=...)` | The browser's own download folder. |
+| `Browser('chrome')` (your Chrome), `Browser(cdp_url=...)` | The browser's own download folder. `result.downloads` stays empty. |
