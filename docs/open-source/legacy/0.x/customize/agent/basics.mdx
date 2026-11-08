@@ -1,0 +1,33 @@
+---
+title: "Configuration"
+description: "Configure the agent — set your LLM, define tasks, add custom tools, and control behavior with Python."
+icon: "play"
+mode: "wide"
+---
+
+import Legacy0x from '/snippets/legacy-0x.mdx';
+
+<Legacy0x />
+
+
+```python
+from browser_use import Agent, ChatBrowserUse
+
+agent = Agent(
+    task="Search for latest news about AI",
+    llm=ChatBrowserUse(),
+)
+
+async def main():
+    history = await agent.run(max_steps=100)
+```
+
+- `task`: The task you want to automate.
+- `llm`: Your favorite LLM. See <a href="/open-source/legacy/0.x/supported-models">Supported Models</a>.
+
+
+The agent is executed using the async `run()` method:
+
+- `max_steps` (default: `100`): Maximum number of steps an agent can take.
+
+Check out all customizable parameters <a href="/open-source/legacy/0.x/customize/agent/all-parameters"> here</a>. 

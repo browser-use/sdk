@@ -267,10 +267,10 @@
               "cloud/which-product",
               "open-source/quickstart",
               "open-source/vibecoding",
-              "open-source/supported-models",
-              "open-source/bu-2-0-model-card",
+              "open-source/legacy/0.x/supported-models",
+              "open-source/legacy/0.x/bu-2-0-model-card",
               "open-source/browser-use-cli",
-              "open-source/browser-use-terminal"
+              "open-source/legacy/0.x/browser-use-terminal"
             ]
           },
           {
@@ -281,41 +281,41 @@
                 "icon": "bot",
                 "isDefaultOpen": true,
                 "pages": [
-                  "open-source/customize/agent/basics",
-                  "open-source/customize/agent/prompting-guide",
-                  "open-source/customize/agent/output-format",
-                  "open-source/customize/agent/all-parameters"
+                  "open-source/legacy/0.x/customize/agent/basics",
+                  "open-source/legacy/0.x/customize/agent/prompting-guide",
+                  "open-source/legacy/0.x/customize/agent/output-format",
+                  "open-source/legacy/0.x/customize/agent/all-parameters"
                 ]
               },
               {
                 "group": "Browser",
                 "icon": "app-window",
                 "pages": [
-                  "open-source/customize/browser/basics",
-                  "open-source/customize/browser/authentication",
-                  "open-source/customize/browser/real-browser",
-                  "open-source/customize/browser/remote",
-                  "open-source/customize/browser/all-parameters"
+                  "open-source/legacy/0.x/customize/browser/basics",
+                  "open-source/legacy/0.x/customize/browser/authentication",
+                  "open-source/legacy/0.x/customize/browser/real-browser",
+                  "open-source/legacy/0.x/customize/browser/remote",
+                  "open-source/legacy/0.x/customize/browser/all-parameters"
                 ]
               },
               {
                 "group": "Tools",
                 "icon": "wrench",
                 "pages": [
-                  "open-source/customize/tools/basics",
-                  "open-source/customize/tools/available",
-                  "open-source/customize/tools/add",
-                  "open-source/customize/tools/remove",
-                  "open-source/customize/tools/response"
+                  "open-source/legacy/0.x/customize/tools/basics",
+                  "open-source/legacy/0.x/customize/tools/available",
+                  "open-source/legacy/0.x/customize/tools/add",
+                  "open-source/legacy/0.x/customize/tools/remove",
+                  "open-source/legacy/0.x/customize/tools/response"
                 ]
               },
               {
                 "group": "Integrations",
                 "icon": "plug",
                 "pages": [
-                  "open-source/customize/integrations/toolsets-for-claude",
-                  "open-source/customize/integrations/openai",
-                  "open-source/customize/integrations/mcp-server"
+                  "open-source/legacy/0.x/customize/integrations/toolsets-for-claude",
+                  "open-source/legacy/0.x/customize/integrations/openai",
+                  "open-source/legacy/0.x/customize/integrations/mcp-server"
                 ]
               },
               {
@@ -326,18 +326,18 @@
                     "group": "Actor",
                     "icon": "mouse-pointer-click",
                     "pages": [
-                      "open-source/legacy/actor/basics",
-                      "open-source/legacy/actor/examples",
-                      "open-source/legacy/actor/all-parameters"
+                      "open-source/legacy/0.x/actor/basics",
+                      "open-source/legacy/0.x/actor/examples",
+                      "open-source/legacy/0.x/actor/all-parameters"
                     ]
                   },
                   {
                     "group": "Sandbox",
                     "icon": "box",
                     "pages": [
-                      "open-source/legacy/sandbox/quickstart",
-                      "open-source/legacy/sandbox/events",
-                      "open-source/legacy/sandbox/all-parameters"
+                      "open-source/legacy/0.x/sandbox/quickstart",
+                      "open-source/legacy/0.x/sandbox/events",
+                      "open-source/legacy/0.x/sandbox/all-parameters"
                     ]
                   }
                 ]
@@ -351,23 +351,23 @@
                 "group": "Templates",
                 "icon": "layout-template",
                 "pages": [
-                  "open-source/examples/templates/fast-agent",
-                  "open-source/examples/templates/follow-up-tasks",
-                  "open-source/examples/templates/parallel-browser",
-                  "open-source/examples/templates/playwright-integration",
-                  "open-source/examples/templates/sensitive-data",
-                  "open-source/examples/templates/secure",
-                  "open-source/examples/templates/more-examples"
+                  "open-source/legacy/0.x/examples/templates/fast-agent",
+                  "open-source/legacy/0.x/examples/templates/follow-up-tasks",
+                  "open-source/legacy/0.x/examples/templates/parallel-browser",
+                  "open-source/legacy/0.x/examples/templates/playwright-integration",
+                  "open-source/legacy/0.x/examples/templates/sensitive-data",
+                  "open-source/legacy/0.x/examples/templates/secure",
+                  "open-source/legacy/0.x/examples/templates/more-examples"
                 ]
               },
               {
                 "group": "Apps",
                 "icon": "package",
                 "pages": [
-                  "open-source/examples/apps/ad-use",
-                  "open-source/examples/apps/vibetest-use",
-                  "open-source/examples/apps/news-use",
-                  "open-source/examples/apps/msg-use"
+                  "open-source/legacy/0.x/examples/apps/ad-use",
+                  "open-source/legacy/0.x/examples/apps/vibetest-use",
+                  "open-source/legacy/0.x/examples/apps/news-use",
+                  "open-source/legacy/0.x/examples/apps/msg-use"
                 ]
               },
               {
@@ -393,28 +393,28 @@
                 "icon": "git-pull-request",
                 "isDefaultOpen": true,
                 "pages": [
-                  "open-source/development/setup/local-setup",
-                  "open-source/development/setup/contribution-guide"
+                  "open-source/legacy/0.x/development/setup/local-setup",
+                  "open-source/legacy/0.x/development/setup/contribution-guide"
                 ]
               },
               {
                 "group": "Advanced",
                 "icon": "settings",
                 "pages": [
-                  "open-source/customize/hooks"
+                  "open-source/legacy/0.x/customize/hooks"
                 ]
               },
               {
                 "group": "Monitoring",
                 "icon": "activity",
                 "pages": [
-                  "open-source/development/monitoring/observability",
-                  "open-source/development/monitoring/openlit",
-                  "open-source/development/monitoring/telemetry",
-                  "open-source/development/monitoring/costs"
+                  "open-source/legacy/0.x/development/monitoring/observability",
+                  "open-source/legacy/0.x/development/monitoring/openlit",
+                  "open-source/legacy/0.x/development/monitoring/telemetry",
+                  "open-source/legacy/0.x/development/monitoring/costs"
                 ]
               },
-              "open-source/development/get-help"
+              "open-source/legacy/0.x/development/get-help"
             ]
           }
         ]
