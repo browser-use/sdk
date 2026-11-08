@@ -1,0 +1,38 @@
+name: docs-oss-params
+
+# docs/open-source/all-parameters.mdx must list every Agent / Browser / model / Tools parameter with its real default.
+# Runs on docs changes and daily, so a library change that the docs miss fails here too.
+on:
+  pull_request:
+    paths:
+      - 'docs/open-source/**'
+      - 'scripts/check_oss_params.py'
+      - '.github/workflows/docs-oss-params.yml'
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Diff docs against the browser-use 1.0 signatures
+        env:
+          ANONYMIZED_TELEMETRY: 'false'
+        run: |
+          # main once 1.0 is merged there; until then the 1.0 branch
+          for ref in main v1-engine; do
+            uv venv -q --python 3.12 --clear .bu
+            uv pip install -q --python .bu "browser-use @ git+https://github.com/browser-use/browser-use@$ref" || continue
+            if .bu/bin/python -c "import sys; from importlib.metadata import version; sys.exit(int(version('browser-use').split('.')[0]) < 1)"; then
+              echo "browser-use from $ref"
+              exec .bu/bin/python scripts/check_oss_params.py
+            fi
+          done
+          echo "no browser-use 1.0 on main or v1-engine" && exit 1

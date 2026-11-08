@@ -1,0 +1,164 @@
+---
+title: "All parameters"
+description: "Every parameter of Agent, run(), Browser, the model classes, Tools and ActionResult in browser-use 1.0, with its default."
+icon: "list"
+---
+
+Every parameter browser-use 1.0 takes, in signature order, with its exact default. CI checks these tables against the library's signatures (`scripts/check_oss_params.py` in the docs repo), so a parameter added, removed or changed in the library fails the docs build until this page matches.
+
+A parameter that is not on this page raises a `TypeError` before any browser starts. When it was a 0.x option, the error names the replacement. See [Migrating](/open-source/migrating).
+
+## Agent
+
+`Agent(task, llm=None, *, ...)`. Everything after `llm` is keyword-only. Guide: [Agent](/open-source/agent).
+
+{/* signature: Agent.__init__ */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `task` | required | What to do. A non-empty string, else `TypeError` / `ValueError`. |
+| `llm` | `None` | The model. `None` is `'bu-fast'` on the Browser Use gateway. Also `'bu-ultrafast'`, `'bu-smart'`, `ChatOpenAI(...)`, `ChatAnthropic(...)`, `ChatGoogle(...)`, a Pydantic AI model string or `Model`. See [Models](/open-source/models). |
+| `browser` | `None` | The browser to drive. `None` is `Browser()`, a Browser Use Cloud browser. See [Browsers](/open-source/browsers). |
+| `browser_session` | `None` | 0.x name for `browser`. Passing both raises `ValueError`. |
+| `tools` | `None` | A `Tools()` with your own functions. See [Tools](/open-source/tools). |
+| `controller` | `None` | 0.x name for `tools`. |
+| `output_model_schema` | `None` | The result type: a Pydantic model, `list[Model]`, `Literal[...]`, or `pydantic_ai.StructuredDict(schema)`. `None` is `str`. See [Output](/open-source/output). |
+| `sensitive_data` | `None` | Secrets the agent types without seeing: `{'name': 'value'}` or `{'https://site': {'name': 'value'}}`. See [Secrets](/open-source/secrets). |
+| `extend_system_message` | `None` | Text appended to the system prompt. |
+| `reasoning` | `None` | `'low'`, `'medium'` or `'high'`. `None` is the gateway alias's own (`bu-fast` medium, `bu-ultrafast` low, `bu-smart` high), else `'medium'`. |
+| `mode` | `None` | `'ultrafast'` or `'default'`. `None` is `'ultrafast'` on `bu-fast` and `bu-ultrafast`, else `'default'`. See [Ultrafast](/open-source/ultrafast). |
+| `workspace` | `None` | The agent's working directory. `None` is a new temp dir, kept after the run. See [Files](/open-source/files). |
+| `web_search` | `False` | `True` gives the agent a `search()` helper, billed per search. See [Web search](/open-source/web-search). |
+| `max_context_chars` | `None` | Compact the history past 75% of this many characters. `None` is 4 per token of the model's context window (240k when unknown). No effect where compaction is server-side. See [Long tasks](/open-source/long-tasks#context). |
+| `highlight_actions` | `True` | Orange brackets around what the agent clicks or types into. See [Agent](/open-source/agent#highlights). |
+
+### Accepted from 0.x
+
+These 0.x options are accepted, log a warning and do nothing, so old code keeps running. The one exception is `use_vision=False`, which is honored: no screenshot reaches the model.
+
+{/* ignored: Agent */}
+`use_vision`, `vision_detail_level`, `llm_screenshot_size`, `flash_mode`, `use_thinking`, `max_failures`, `max_actions_per_step`, `final_response_after_failure`, `highlight_elements`, `use_judge`, `calculate_cost`
+
+## run() and run_sync()
+
+`await agent.run(...)` and `agent.run_sync(...)` take the same budgets and return an [`AgentHistoryList`](/open-source/output). Details: [Agent: run()](/open-source/agent#run).
+
+{/* signature: Agent.run, Agent.run_sync */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `max_steps` | `100` | Model requests. The last one is a delivery-only turn. Below 1 raises `ValueError`. |
+| `timeout` | `1700` | Seconds for the agent loop. Starting and stopping the browser are not counted. 0 or less raises `ValueError`. |
+
+Other `Agent` methods:
+
+{/* signature: Agent.add_new_task */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `task` | required | `agent.add_new_task(task)`: the next `run()` continues the same conversation with this task. See [Long tasks](/open-source/long-tasks#follow-up-tasks). |
+
+`await agent.close()` / `agent.close_sync()` stop the agent and its browser. `agent.workspace` is the workspace path.
+
+## Browser
+
+`Browser(kind=None, *, ...)`. Everything after `kind` is keyword-only. Guide: [Browsers](/open-source/browsers).
+
+{/* signature: Browser.__init__ */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `kind` | `None` | `'cloud'`, `'chromium'` (a fresh local browser, temp profile) or `'chrome'` (the Chrome you have open). `None` is `'cloud'`. |
+| `profile` | `None` | With `'chrome'`: launch a new Chrome on a temporary copy of this Chrome profile (display name or directory). |
+| `headless` | `None` | Browsers 1.0 launches only. `None` is headless only when there is no display. Raises on a cloud browser. |
+| `user_data_dir` | `None` | With `'chromium'`: a profile directory kept between runs. `None` is a temp profile, deleted afterwards. |
+| `executable_path` | `None` | The browser binary. `None` finds Chrome, Chromium or Edge (`BH_CHROME_PATH` or `CHROME_PATH` also work). |
+| `local` | `False` | `True` is the same as `'chromium'`. |
+| `use_cloud` | `None` | 0.x switch: `True` is a cloud browser, `False` is `'chromium'`. |
+| `cdp_url` | `None` | Drive any browser with a CDP endpoint (`http://host:9222` or `ws://...`). |
+| `keep_alive` | `False` | `True` leaves the browser running after `run()`. Stop it with `await browser.stop()`. |
+| `cloud_profile_id` | `None` | Cloud: a profile id or unique profile name. Logins persist in it. |
+| `cloud_proxy_country_code` | `'us'` | Cloud: two-letter country code of the residential proxy. `None` turns the proxy off. |
+| `cloud_timeout` | `None` | Cloud: minutes, 1 to 240. `None` is 60. The server stops the browser after this either way. |
+| `live_view` | `False` | Cloud: print and open the live view URL. Anyone with the URL can drive the browser. |
+| `captcha_solver` | `True` | Cloud: automatic CAPTCHA solving. `False` turns it off. |
+| `allowed_domains` | `None` | Only navigate to these. See [Domains](/open-source/domains). |
+| `prohibited_domains` | `None` | Never navigate to these. Ignored, with a warning, when `allowed_domains` is set. |
+| `block_ip_addresses` | `False` | `True` blocks IP-literal hosts, even if allowed. |
+
+Options that don't fit the browser raise `ValueError` (for example `headless` on a cloud browser, `profile` on `'chromium'`). The `cloud_*` options, `live_view` and `captcha_solver=False` raise on a local browser.
+
+`await browser.start()` starts it ahead of `run()`. `await browser.stop(...)` stops it:
+
+{/* signature: Browser.stop */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `downloads_dir` | `None` | Where to copy what a cloud browser downloaded. `None` is the last agent's `workspace/downloads`. Returns the local paths. |
+
+## Models
+
+Guide: [Models](/open-source/models).
+
+### ChatBrowserUse
+
+`'bu-fast'` and the other `'bu-*'` strings are shorthand for `ChatBrowserUse('bu-...')`.
+
+{/* signature: ChatBrowserUse.__init__ */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `model` | `'bu-fast'` | `'bu-fast'`, `'bu-ultrafast'`, `'bu-smart'`, or an OpenAI model the gateway lists. |
+| `api_key` | `None` | `None` is `BROWSER_USE_API_KEY`, then the key from `browser-use login`. |
+| `base_url` | `'https://api.browser-use.com/api/v4/llm/v1'` | The gateway URL. |
+
+### ChatOpenAI
+
+{/* signature: ChatOpenAI.__init__ */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `model` | required | The model id, for example `'gpt-6-luna'`. |
+| `api_key` | `None` | `None` is `OPENAI_API_KEY`. |
+| `base_url` | `None` | Any OpenAI-compatible server (Ollama, vLLM, OpenRouter, ...). `None` is `OPENAI_BASE_URL`, else api.openai.com, which uses the Responses API. |
+| `temperature` | `None` | Sampling temperature. `None` is the provider's default. |
+| `reasoning_effort` | `None` | Sent as is. Use it for OpenAI-compatible servers, which ignore `Agent(reasoning=...)`. |
+
+### ChatAnthropic
+
+{/* signature: ChatAnthropic.__init__ */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `model` | required | The model id, for example `'claude-sonnet-5-5'`. |
+| `api_key` | `None` | `None` is `ANTHROPIC_API_KEY`. |
+
+### ChatGoogle
+
+{/* signature: ChatGoogle.__init__ */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `model` | required | The model id, for example `'gemini-3.5-flash'`. |
+| `api_key` | `None` | `None` is `GOOGLE_API_KEY`. |
+
+Any other argument to a model class raises `TypeError`. For other model settings, pass a Pydantic AI `Model` built with `settings=...`.
+
+## Tools
+
+Guide: [Tools](/open-source/tools).
+
+### @tools.action
+
+`Tools()` takes no arguments. `@tools.action(...)` registers a function:
+
+{/* signature: Tools.action */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `description` | `''` | Tells the model when to use the tool. |
+| `param_model` | `None` | A Pydantic model for a 0.x action that takes one model argument. |
+| `domains` | `None` | 0.x. Raises `TypeError`: use `Browser(allowed_domains=...)`. |
+| `allowed_domains` | `None` | 0.x. Raises `TypeError`: use `Browser(allowed_domains=...)`. |
+
+### ActionResult
+
+What a tool can return. The model sees it as JSON.
+
+{/* signature: ActionResult */}
+| Parameter | Default | What it does |
+|---|---|---|
+| `extracted_content` | `None` | The text the model gets. |
+| `error` | `None` | An error message the model gets. |
+
+`is_done`, `success` and `attachments` are 0.x fields that raise; `include_in_memory` and `include_extracted_content_only_once` are ignored with a warning. See [Tools: Rules](/open-source/tools#rules).
