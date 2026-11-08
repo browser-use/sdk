@@ -73,7 +73,7 @@ print(agent.run_sync().final_result())
 - Use `@tools.action('description')` with parentheses.
 - Names must match `[a-zA-Z0-9_-]{1,64}`. `python`, `finish` and `finish_from_repl` are taken.
 - A tool gets only the arguments the model passes. The 0.x injected parameters (`browser_session`, `page_extraction_llm`, `file_system`, ...) raise.
-- `ActionResult(is_done=..., success=..., include_in_memory=..., attachments=...)` raises: the model ends the run itself.
+- `ActionResult(is_done=..., success=..., attachments=...)` raises: the model ends the run itself. `include_in_memory` and `include_extracted_content_only_once` log a warning and are ignored: every result stays in the conversation.
 - `Controller` is an alias of `Tools`.
 
 ## No built-in actions

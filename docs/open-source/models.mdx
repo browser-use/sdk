@@ -30,6 +30,31 @@ A `'bu-*'` string is the same as `ChatBrowserUse('bu-...')`. The full form is `C
 
 Benchmarks: [browser-use.com/benchmarks](https://browser-use.com/benchmarks) and the open [benchmark repo](https://github.com/browser-use/benchmark).
 
+## Model card
+
+What each gateway model runs and costs, from the gateway's model list on 2026-11-08. Prices are USD per 1M tokens.
+
+| | `bu-fast` | `bu-ultrafast` | `bu-smart` |
+|---|---|---|---|
+| Runs | GPT-6 Luna | GPT-6 Luna | GPT-6.1 Sol |
+| Reasoning | medium | low | high |
+| Processing | standard | priority | standard |
+| Context window | 250k tokens | 250k tokens | 250k tokens |
+| Max output | 32k tokens | 32k tokens | 32k tokens |
+| Input | $0.12 | $0.24 | $2.40 |
+| Cached input | $0.012 | $0.024 | $0.12 |
+| Cache write | $0.15 | $0.30 | $3.00 |
+| Output | $0.60 | $1.20 | $12.00 |
+| Mode in browser-use | `ultrafast` | `ultrafast` | `default` |
+
+`result.cost_usd` is what the gateway actually charged for the run. The live list, with every model the gateway serves and its prices:
+
+```bash
+curl -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" https://api.browser-use.com/api/v4/llm/v1/models
+```
+
+`bu-2-0` (BU 2.0) and the other 0.x Browser Use models need `browser-use<1.0`; their card is in the [0.x docs](/open-source/legacy/0.x/bu-2-0-model-card). On 1.0, use `bu-fast`.
+
 ## Your own provider
 
 Anthropic and Google are built in; no extra install.
@@ -83,19 +108,27 @@ This covers `'bedrock:...'`, `'azure:...'`, `'groq:...'`, `'mistral:...'`, `'ope
 
 LangChain chat models are not supported: `Agent(llm=...)` raises a `TypeError`.
 
-## OpenAI-compatible servers
+## Ollama
 
-Ollama, vLLM, DeepSeek or any other server with a chat completions API:
+Run a local model with [Ollama](https://ollama.com) through its OpenAI-compatible API. Pull a model that supports tool calling first, for example `ollama pull qwen2.5:7b`:
 
 ```python
 from browser_use import Agent, Browser, ChatOpenAI
 
-llm = ChatOpenAI('qwen3', base_url='http://localhost:11434/v1', api_key='ollama')
+llm = ChatOpenAI('qwen2.5:7b', base_url='http://localhost:11434/v1', api_key='ollama')
 agent = Agent('What is the title of https://example.com?', llm=llm, browser=Browser('chromium'))
 print(agent.run_sync().final_result())
 ```
 
-A local model needs a local browser: a cloud browser cannot reach your machine. These servers get no reasoning setting from `Agent(reasoning=...)`; pass `ChatOpenAI(..., reasoning_effort=...)` to send one.
+- The model must support tool calling. Small models (a few billion parameters) reach the page but often fail to finish the task; use the largest model your machine runs well.
+- `Browser('chromium')` keeps the whole run on your machine.
+- `ChatOllama` from 0.x is replaced by this; importing it raises an `ImportError` that says so.
+
+## OpenAI-compatible servers
+
+vLLM, DeepSeek, OpenRouter, LM Studio or any other server with a chat completions API work the same way: `ChatOpenAI(model, base_url=..., api_key=...)`.
+
+These servers get no reasoning setting from `Agent(reasoning=...)`; pass `ChatOpenAI(..., reasoning_effort=...)` to send one.
 
 ## Reasoning
 
