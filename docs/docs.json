@@ -266,6 +266,7 @@
               "open-source/introduction",
               "cloud/which-product",
               "open-source/quickstart",
+              "open-source/examples",
               "open-source/vibecoding"
             ]
           },
@@ -300,14 +301,19 @@
             "pages": [
               "open-source/browser-use-cli",
               "open-source/mcp",
-              "open-source/skills"
+              "open-source/skills",
+              "open-source/integrations",
+              "open-source/browser-use-terminal"
             ]
           },
           {
             "group": "Reference",
             "pages": [
+              "open-source/all-parameters",
               "open-source/migrating",
+              "open-source/observability",
               "open-source/telemetry",
+              "open-source/contributing",
               "open-source/get-help"
             ]
           },
@@ -618,7 +624,7 @@
     },
     {
       "source": "/customize/agent/all-parameters",
-      "destination": "/open-source/agent"
+      "destination": "/open-source/all-parameters#agent"
     },
     {
       "source": "/customize/browser/basics",
@@ -638,7 +644,7 @@
     },
     {
       "source": "/customize/browser/all-parameters",
-      "destination": "/open-source/browsers"
+      "destination": "/open-source/all-parameters#browser"
     },
     {
       "source": "/customize/tools/basics",
@@ -714,15 +720,15 @@
     },
     {
       "source": "/examples/templates/follow-up-tasks",
-      "destination": "/open-source/long-tasks"
+      "destination": "/open-source/long-tasks#follow-up-tasks"
     },
     {
       "source": "/examples/templates/parallel-browser",
-      "destination": "/open-source/browsers"
+      "destination": "/open-source/examples#run-agents-in-parallel"
     },
     {
       "source": "/examples/templates/playwright-integration",
-      "destination": "/open-source/legacy/0.x/examples/templates/playwright-integration"
+      "destination": "/open-source/examples#combine-with-playwright"
     },
     {
       "source": "/examples/templates/sensitive-data",
@@ -734,31 +740,31 @@
     },
     {
       "source": "/examples/templates/more-examples",
-      "destination": "/open-source/quickstart"
+      "destination": "/open-source/examples"
     },
     {
       "source": "/examples/apps/ad-use",
-      "destination": "/open-source/legacy/0.x/examples/apps/ad-use"
+      "destination": "/open-source/examples#older-example-apps"
     },
     {
       "source": "/examples/apps/vibetest-use",
-      "destination": "/open-source/legacy/0.x/examples/apps/vibetest-use"
+      "destination": "/open-source/examples#older-example-apps"
     },
     {
       "source": "/examples/apps/news-use",
-      "destination": "/open-source/legacy/0.x/examples/apps/news-use"
+      "destination": "/open-source/examples#older-example-apps"
     },
     {
       "source": "/examples/apps/msg-use",
-      "destination": "/open-source/legacy/0.x/examples/apps/msg-use"
+      "destination": "/open-source/examples#older-example-apps"
     },
     {
       "source": "/development/setup/local-setup",
-      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
+      "destination": "/open-source/contributing"
     },
     {
       "source": "/development/setup/contribution-guide",
-      "destination": "/open-source/legacy/0.x/development/setup/contribution-guide"
+      "destination": "/open-source/contributing"
     },
     {
       "source": "/development/get-help",
@@ -766,11 +772,11 @@
     },
     {
       "source": "/development/monitoring/observability",
-      "destination": "/open-source/legacy/0.x/development/monitoring/observability"
+      "destination": "/open-source/observability"
     },
     {
       "source": "/development/monitoring/openlit",
-      "destination": "/open-source/legacy/0.x/development/monitoring/openlit"
+      "destination": "/open-source/observability"
     },
     {
       "source": "/development/monitoring/telemetry",
@@ -798,7 +804,7 @@
     },
     {
       "source": "/open-source/development",
-      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
+      "destination": "/open-source/contributing"
     },
     {
       "source": "/use-cloud",
@@ -866,7 +872,7 @@
     },
     {
       "source": "/development/evaluations",
-      "destination": "/open-source/legacy/0.x/development/setup/contribution-guide"
+      "destination": "/open-source/contributing"
     },
     {
       "source": "/cli",
@@ -874,11 +880,11 @@
     },
     {
       "source": "/development/local-setup",
-      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
+      "destination": "/open-source/contributing"
     },
     {
       "source": "/development/contribution-guide",
-      "destination": "/open-source/legacy/0.x/development/setup/contribution-guide"
+      "destination": "/open-source/contributing"
     },
     {
       "source": "/development/telemetry",
@@ -898,7 +904,7 @@
     },
     {
       "source": "/development/observability",
-      "destination": "/open-source/legacy/0.x/development/monitoring/observability"
+      "destination": "/open-source/observability"
     },
     {
       "source": "/development/hooks",
@@ -918,15 +924,15 @@
     },
     {
       "source": "/customize/examples/follow-up-tasks",
-      "destination": "/open-source/long-tasks"
+      "destination": "/open-source/long-tasks#follow-up-tasks"
     },
     {
       "source": "/customize/examples/parallel-browser",
-      "destination": "/open-source/browsers"
+      "destination": "/open-source/examples#run-agents-in-parallel"
     },
     {
       "source": "/customize/examples/playwright-integration",
-      "destination": "/open-source/legacy/0.x/examples/templates/playwright-integration"
+      "destination": "/open-source/examples#combine-with-playwright"
     },
     {
       "source": "/customize/examples/sensitive-data",
@@ -938,15 +944,15 @@
     },
     {
       "source": "/customize/examples/more-examples",
-      "destination": "/open-source/quickstart"
+      "destination": "/open-source/examples"
     },
     {
       "source": "/customize/examples/ad-use",
-      "destination": "/open-source/legacy/0.x/examples/apps/ad-use"
+      "destination": "/open-source/examples#older-example-apps"
     },
     {
       "source": "/customize/examples/vibetest-use",
-      "destination": "/open-source/legacy/0.x/examples/apps/vibetest-use"
+      "destination": "/open-source/examples#older-example-apps"
     },
     {
       "source": "/customize/examples/prompting-guide",
@@ -1246,7 +1252,7 @@
     },
     {
       "source": "/open-source/customize/integrations/anthropic",
-      "destination": "/open-source/legacy/0.x/customize/integrations/toolsets-for-claude"
+      "destination": "/open-source/integrations"
     },
     {
       "source": "/integrations/agentcard",
@@ -1258,11 +1264,7 @@
     },
     {
       "source": "/open-source/bu-2-0-model-card",
-      "destination": "/open-source/legacy/0.x/bu-2-0-model-card"
-    },
-    {
-      "source": "/open-source/browser-use-terminal",
-      "destination": "/open-source/legacy/0.x/browser-use-terminal"
+      "destination": "/open-source/models#model-card"
     },
     {
       "source": "/open-source/customize/agent/basics",
@@ -1270,7 +1272,7 @@
     },
     {
       "source": "/open-source/customize/agent/all-parameters",
-      "destination": "/open-source/agent"
+      "destination": "/open-source/all-parameters#agent"
     },
     {
       "source": "/open-source/customize/agent/prompting-guide",
@@ -1286,7 +1288,7 @@
     },
     {
       "source": "/open-source/customize/browser/all-parameters",
-      "destination": "/open-source/browsers"
+      "destination": "/open-source/all-parameters#browser"
     },
     {
       "source": "/open-source/customize/browser/real-browser",
@@ -1330,11 +1332,11 @@
     },
     {
       "source": "/open-source/customize/integrations/openai",
-      "destination": "/open-source/legacy/0.x/customize/integrations/openai"
+      "destination": "/open-source/integrations"
     },
     {
       "source": "/open-source/customize/integrations/toolsets-for-claude",
-      "destination": "/open-source/legacy/0.x/customize/integrations/toolsets-for-claude"
+      "destination": "/open-source/integrations"
     },
     {
       "source": "/open-source/legacy/actor/basics",
@@ -1366,11 +1368,11 @@
     },
     {
       "source": "/open-source/examples/templates/follow-up-tasks",
-      "destination": "/open-source/long-tasks"
+      "destination": "/open-source/long-tasks#follow-up-tasks"
     },
     {
       "source": "/open-source/examples/templates/parallel-browser",
-      "destination": "/open-source/browsers"
+      "destination": "/open-source/examples#run-agents-in-parallel"
     },
     {
       "source": "/open-source/examples/templates/sensitive-data",
@@ -1382,27 +1384,27 @@
     },
     {
       "source": "/open-source/examples/templates/playwright-integration",
-      "destination": "/open-source/legacy/0.x/examples/templates/playwright-integration"
+      "destination": "/open-source/examples#combine-with-playwright"
     },
     {
       "source": "/open-source/examples/templates/more-examples",
-      "destination": "/open-source/quickstart"
+      "destination": "/open-source/examples"
     },
     {
       "source": "/open-source/examples/apps/ad-use",
-      "destination": "/open-source/legacy/0.x/examples/apps/ad-use"
+      "destination": "/open-source/examples#older-example-apps"
     },
     {
       "source": "/open-source/examples/apps/msg-use",
-      "destination": "/open-source/legacy/0.x/examples/apps/msg-use"
+      "destination": "/open-source/examples#older-example-apps"
     },
     {
       "source": "/open-source/examples/apps/news-use",
-      "destination": "/open-source/legacy/0.x/examples/apps/news-use"
+      "destination": "/open-source/examples#older-example-apps"
     },
     {
       "source": "/open-source/examples/apps/vibetest-use",
-      "destination": "/open-source/legacy/0.x/examples/apps/vibetest-use"
+      "destination": "/open-source/examples#older-example-apps"
     },
     {
       "source": "/open-source/examples/skills/overview",
@@ -1410,27 +1412,27 @@
     },
     {
       "source": "/open-source/examples/skills/browser-use",
-      "destination": "/open-source/skills"
+      "destination": "/open-source/skills#browser-use"
     },
     {
       "source": "/open-source/examples/skills/cloud",
-      "destination": "/open-source/skills"
+      "destination": "/open-source/skills#cloud"
     },
     {
       "source": "/open-source/examples/skills/open-source",
-      "destination": "/open-source/skills"
+      "destination": "/open-source/skills#open-source"
     },
     {
       "source": "/open-source/examples/skills/qa",
-      "destination": "/open-source/skills"
+      "destination": "/open-source/skills#qa"
     },
     {
       "source": "/open-source/examples/skills/remote-browser",
-      "destination": "/open-source/skills"
+      "destination": "/open-source/skills#remote-browser"
     },
     {
       "source": "/open-source/examples/skills/x402",
-      "destination": "/open-source/skills"
+      "destination": "/open-source/skills#x402"
     },
     {
       "source": "/open-source/development/monitoring/telemetry",
@@ -1442,19 +1444,19 @@
     },
     {
       "source": "/open-source/development/monitoring/observability",
-      "destination": "/open-source/legacy/0.x/development/monitoring/observability"
+      "destination": "/open-source/observability"
     },
     {
       "source": "/open-source/development/monitoring/openlit",
-      "destination": "/open-source/legacy/0.x/development/monitoring/openlit"
+      "destination": "/open-source/observability"
     },
     {
       "source": "/open-source/development/setup/local-setup",
-      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
+      "destination": "/open-source/contributing"
     },
     {
       "source": "/open-source/development/setup/contribution-guide",
-      "destination": "/open-source/legacy/0.x/development/setup/contribution-guide"
+      "destination": "/open-source/contributing"
     },
     {
       "source": "/open-source/development/get-help",
@@ -1662,7 +1664,7 @@
     },
     {
       "source": "/development/browser/all-parameters",
-      "destination": "/open-source/browsers"
+      "destination": "/open-source/all-parameters#browser"
     },
     {
       "source": "/development/docker",
@@ -1898,10 +1900,6 @@
     },
     {
       "source": "/open-source/examples/mcp",
-      "destination": "/open-source/mcp"
-    },
-    {
-      "source": "/open-source/integrations",
       "destination": "/open-source/mcp"
     },
     {
@@ -2238,15 +2236,15 @@
     },
     {
       "source": "/development",
-      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
+      "destination": "/open-source/contributing"
     },
     {
       "source": "/continuous-integration/local-development/setup",
-      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
+      "destination": "/open-source/contributing"
     },
     {
       "source": "/customize/observability",
-      "destination": "/open-source/legacy/0.x/development/monitoring/observability"
+      "destination": "/open-source/observability"
     },
     {
       "source": "/legacy/customize/browser/overview",
