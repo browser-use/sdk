@@ -1,5 +1,6 @@
 ---
-title: "News-Use (News Monitor)"
+title: "News-Use (News Monitor) (0.x)"
+sidebarTitle: "News-Use (News Monitor)"
 description: "Monitor news websites and extract articles with sentiment analysis using browser agents and Google Gemini."
 icon: "newspaper"
 mode: "wide"
@@ -31,7 +32,7 @@ This demo requires browser-use v0.7.7+.
 
 Make sure the newest version of browser-use is installed:
 ```bash
-pip install -U browser-use
+pip install -U 'browser-use<1'
 ```
 
 Export your Gemini API key, get it from: [Google AI Studio](https://makersuite.google.com/app/apikey) 
@@ -41,7 +42,7 @@ export GOOGLE_API_KEY='your-google-api-key-here'
 
 Clone the repo, cd to the app
 ```bash
-git clone https://github.com/browser-use/browser-use.git
+git clone --branch 0.13.14 https://github.com/browser-use/browser-use.git
 cd browser-use/examples/apps/news-use
 ```
 

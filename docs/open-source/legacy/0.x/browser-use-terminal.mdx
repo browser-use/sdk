@@ -1,5 +1,6 @@
 ---
-title: "Browser Use Terminal"
+title: "Browser Use Terminal (0.x)"
+sidebarTitle: "Browser Use Terminal"
 description: "Use the terminal app for browser agents, or use the same runtime from Python."
 icon: "square-terminal"
 ---
@@ -94,7 +95,7 @@ Set up Python usage in the same project where you will write your agent code:
 ```bash
 uv venv --python 3.12
 source .venv/bin/activate
-uv pip install browser-use
+uv pip install 'browser-use<1'
 ```
 
 ## TUI Commands
@@ -167,7 +168,7 @@ browser-use-terminal run-deepseek --model deepseek-v4-pro "Research Browser Use"
 Use `browser_use.beta.Agent` to run Python code on top of the Rust terminal runtime:
 
 ```bash
-uv pip install browser-use
+uv pip install 'browser-use<1'
 ```
 
 ```python
@@ -613,7 +614,7 @@ curl -fsSL https://browser-use.com/terminal/install.sh | sh
 Install or upgrade the Python package in the same environment you are running:
 
 ```bash
-uv pip install --upgrade browser-use
+uv pip install --upgrade 'browser-use<1'
 python -c "from browser_use.beta import Agent; print('ok')"
 ```
 

@@ -1,5 +1,5 @@
 ---
-title: "Browser Use toolsets for Claude"
+title: "Browser Use toolsets for Claude (0.x)"
 description: "Connect Claude to a local, Cloud, or existing CDP browser with Browser Use and the Anthropic Python SDK."
 icon: "sparkle"
 sidebarTitle: "Claude"
@@ -35,11 +35,11 @@ You need Python 3.11 or newer on Linux or macOS with `/bin/bash`. On Windows, ru
 
 ```bash
 uv init --python 3.12
-uv add "browser-use>=0.13.11" "anthropic>=1,<2"
-uvx browser-use install
+uv add "browser-use>=0.13.11,<1" "anthropic>=1,<2"
+uvx --from 'browser-use<1' browser-use install
 ```
 
-`uvx browser-use install` installs local Chromium. You can skip it if you only use Browser Use Cloud.
+`uvx --from 'browser-use<1' browser-use install` installs local Chromium. You can skip it if you only use Browser Use Cloud.
 
 Create an Anthropic API key in the [Claude Console](https://platform.claude.com/settings/keys), then export it in the terminal where you run the script. This key is required for every browser mode:
 

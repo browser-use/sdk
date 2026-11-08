@@ -1,5 +1,6 @@
 ---
-title: "Local Development Setup"
+title: "Local Development Setup (0.x)"
+sidebarTitle: "Local Development Setup"
 description: "Set up for local development. Clone the repo, install dependencies, and run tests to start contributing."
 icon: "laptop"
 mode: "wide"
@@ -12,10 +13,10 @@ import Legacy0x from '/snippets/legacy-0x.mdx';
 ## Welcome to Browser Use Development!
 
 ```bash
-git clone https://github.com/browser-use/browser-use
+git clone --branch 0.13.14 https://github.com/browser-use/browser-use
 cd browser-use
 uv sync --all-extras --dev
-# or pip install -U git+https://github.com/browser-use/browser-use.git@main
+# or pip install -U git+https://github.com/browser-use/browser-use.git@0.13.14
 ```
 
 ## Configuration

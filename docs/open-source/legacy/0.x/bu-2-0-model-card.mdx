@@ -1,5 +1,6 @@
 ---
-title: "Model Card: bu-2-0"
+title: "Model Card: bu-2-0 (0.x)"
+sidebarTitle: "Model Card: bu-2-0"
 description: "Browser Use's browser-specialized model for web automation"
 icon: "id-card"
 ---
@@ -27,8 +28,8 @@ The model is not a general-purpose chat or text-generation model. It is built fo
 
 Set up Browser Use, install the browser runtime, and provide `BROWSER_USE_API_KEY`.
 
-- Install the package: `uv pip install browser-use`
-- Install the browser runtime: `uvx browser-use install`
+- Install the package: `uv pip install 'browser-use<1'`
+- Install the browser runtime: `uvx --from 'browser-use<1' browser-use install`
 - Set the API key: `export BROWSER_USE_API_KEY="your-key"`
 
 ```python

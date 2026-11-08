@@ -1,5 +1,6 @@
 ---
-title: "Vibetest-Use (Automated QA)"
+title: "Vibetest-Use (Automated QA) (0.x)"
+sidebarTitle: "Vibetest-Use (Automated QA)"
 description: "Run multi-agent Browser-Use tests to catch UI bugs, broken links, and accessibility issues before they ship."
 icon: "bug"
 mode: "wide"
@@ -42,7 +43,7 @@ source .venv/bin/activate
 uv pip install -e .
 
 # 4.  Install browser runtime once
-uvx browser-use install
+uvx --from 'browser-use<1' browser-use install
 ```
 
 ### 1) Claude Code

@@ -1,5 +1,6 @@
 ---
-title: "MCP Server"
+title: "MCP Server (0.x)"
+sidebarTitle: "MCP Server"
 description: "Run browser-use as a local Model Context Protocol server. Connect AI models to browser automation through the MCP standard."
 icon: "server"
 ---
@@ -17,7 +18,7 @@ Looking for a hosted solution? Use the [Cloud MCP Server](/cloud/guides/mcp-serv
 ## Quick Start
 
 ```bash
-uvx --from 'browser-use[cli]' browser-use --mcp
+uvx --from 'browser-use[cli]<1' browser-use --mcp
 ```
 
 The server will start in stdio mode, ready to accept MCP connections.
@@ -27,7 +28,7 @@ The server will start in stdio mode, ready to accept MCP connections.
 <Tabs>
 <Tab title="Claude Code">
 ```bash
-claude mcp add browser-use -- uvx --from 'browser-use[cli]' browser-use --mcp
+claude mcp add browser-use -- uvx --from 'browser-use[cli]<1' browser-use --mcp
 ```
 </Tab>
 <Tab title="Claude Desktop">
@@ -201,9 +202,9 @@ asyncio.run(use_browser_mcp())
 ## Troubleshooting
 
 **"CLI addon is not installed" Error**
-Make sure you are using `--from 'browser-use[cli]'` in your uvx command:
+Make sure you are using `--from 'browser-use[cli]<1'` in your uvx command:
 ```bash
-uvx --from 'browser-use[cli]' browser-use --mcp
+uvx --from 'browser-use[cli]<1' browser-use --mcp
 ```
 
 **"spawn uvx ENOENT" Error (macOS/Linux)**
@@ -232,7 +233,7 @@ Claude Desktop cannot find `uvx` in its PATH. Use the full path in your config:
 Enable debug logging by setting:
 ```bash
 export BROWSER_USE_LOGGING_LEVEL=DEBUG
-uvx --from 'browser-use[cli]' browser-use --mcp
+uvx --from 'browser-use[cli]<1' browser-use --mcp
 ```
 
 ## Security Considerations

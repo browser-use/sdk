@@ -1,5 +1,6 @@
 ---
-title: "Human Quickstart"
+title: "Human Quickstart (0.x)"
+sidebarTitle: "Human Quickstart"
 description: "Install and run your first AI browser agent in minutes. Python setup with pip, environment variables, and a working example."
 icon: "rocket"
 ---
@@ -26,8 +27,8 @@ source .venv/bin/activate
 # On Windows use `.venv\Scripts\activate`
 ```
 ```bash install browser-use & chromium
-uv pip install browser-use
-uvx browser-use install
+uv pip install 'browser-use<1'
+uvx --from 'browser-use<1' browser-use install
 ```
 
 

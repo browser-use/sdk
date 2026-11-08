@@ -1,5 +1,6 @@
 ---
-title: "Supported Models"
+title: "Supported Models (0.x)"
+sidebarTitle: "Supported Models"
 description: "Choose between Claude, Gemini, Llama, DeepSeek, and more. Configuration examples for each provider."
 icon: "cpu"
 ---
@@ -218,7 +219,7 @@ The `use_responses_api` parameter accepts:
 
 ### AWS Bedrock [example](https://github.com/browser-use/browser-use/blob/main/examples/models/aws.py) {#aws-bedrock}
 
-[Available models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html). AWS Bedrock provides access to multiple model providers through a single API. We support both a general AWS Bedrock client and provider-specific convenience classes. Install with `pip install "browser-use[aws]"`.
+[Available models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html). AWS Bedrock provides access to multiple model providers through a single API. We support both a general AWS Bedrock client and provider-specific convenience classes. Install with `pip install "browser-use[aws]<1"`.
 
 #### General AWS Bedrock (supports all providers)
 
@@ -345,7 +346,7 @@ GROQ_API_KEY=
 
 ## Oracle Cloud Infrastructure (OCI) [example](https://github.com/browser-use/browser-use/blob/main/examples/models/oci_models.py) {#oci}
 
-[Available models](https://docs.oracle.com/en-us/iaas/Content/generative-ai/imported-models.htm). OCI provides access to various generative AI models including Meta Llama, Cohere, and other providers through their Generative AI service. Install with `pip install "browser-use[oci]"`.
+[Available models](https://docs.oracle.com/en-us/iaas/Content/generative-ai/imported-models.htm). OCI provides access to various generative AI models including Meta Llama, Cohere, and other providers through their Generative AI service. Install with `pip install "browser-use[oci]<1"`.
 
 ```python
 from browser_use import Agent, ChatOCIRaw

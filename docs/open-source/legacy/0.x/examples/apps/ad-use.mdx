@@ -1,5 +1,6 @@
 ---
-title: "Ad-Use (Ad Generator)"
+title: "Ad-Use (Ad Generator) (0.x)"
+sidebarTitle: "Ad-Use (Ad Generator)"
 description: "Generate Instagram image ads and TikTok video ads from landing pages using browser agents, Google's Nano Banana 🍌, and Veo3."
 icon: "image"
 mode: "wide"
@@ -32,7 +33,7 @@ This demo requires browser-use v0.7.6+.
 
 Make sure the newest version of browser-use is installed (with screenshot functionality):
 ```bash
-pip install -U browser-use
+pip install -U 'browser-use<1'
 ```
 
 Export your Gemini API key, get it from: [Google AI Studio](https://makersuite.google.com/app/apikey) 
@@ -42,7 +43,7 @@ export GOOGLE_API_KEY='your-google-api-key-here'
 
 Clone the repo and cd into the app folder
 ```bash
-git clone https://github.com/browser-use/browser-use.git
+git clone --branch 0.13.14 https://github.com/browser-use/browser-use.git
 cd browser-use/examples/apps/ad-use
 ```
 
