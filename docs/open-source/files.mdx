@@ -1,0 +1,57 @@
+---
+title: "Files"
+description: "The agent's workspace, uploading your files, and where downloads land."
+icon: "folder"
+---
+
+## Workspace
+
+Every agent has a workspace directory: the REPL's working directory. It holds the files the agent saves, page text, screenshots and cell output (in `.browser-use/cells/`). The agent is told to save deliverables there.
+
+- Default: a new temp directory named `browser-use-*`, created on first use. `agent.workspace` gives its path.
+- It is kept after the run, so files the result points to stay readable. Delete it when you are done, or pass your own `workspace=`.
+
+## Upload files
+
+Put the file in the workspace and name it in the task:
+
+```python
+import tempfile
+from pathlib import Path
+
+from browser_use import Agent
+
+workspace = Path(tempfile.mkdtemp())
+(workspace / 'report.txt').write_text('hello from browser-use')
+
+agent = Agent(
+    'Upload report.txt on https://the-internet.herokuapp.com/upload and tell me the file name the page confirms',
+    workspace=workspace,
+)
+print(agent.run_sync().final_result())
+```
+
+The agent sets it on the file input with `upload_file(selector, path)`. On a cloud browser, the file's bytes are sent through the page, so local paths work there too.
+
+<Note>
+There is no file allowlist: the agent runs Python as your user and can read any file you can. Run untrusted tasks in a container or VM.
+</Note>
+
+## Downloads
+
+```python
+from browser_use import Agent
+
+agent = Agent('Download any one file from https://the-internet.herokuapp.com/download')
+result = agent.run_sync()
+print(result.downloads)  # [PosixPath('/tmp/browser-use-.../downloads/<file>')]
+print(agent.workspace)
+```
+
+`result.downloads` lists the files the run added. Where they land depends on the browser:
+
+| Browser | Downloads |
+|---|---|
+| `Browser()` (cloud) | Copied to `agent.workspace/downloads` when the run ends. With `keep_alive=True`, also after each run. |
+| `Browser('chromium')`, `Browser('chrome', profile=...)` | `agent.workspace/downloads` directly. |
+| `Browser('chrome')` (your Chrome), `Browser(cdp_url=...)` | The browser's own download folder. |

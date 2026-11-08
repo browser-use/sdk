@@ -1,0 +1,81 @@
+---
+title: "Output"
+description: "What run() returns: the answer, typed output, status, success, partial results, usage and cost."
+icon: "file-output"
+---
+
+## Typed output
+
+Pass a type as `output_model_schema`. Read the instance from `result.structured_output`.
+
+```python
+from pydantic import BaseModel
+
+from browser_use import Agent
+
+
+class Story(BaseModel):
+    title: str
+    points: int
+
+
+class Stories(BaseModel):
+    stories: list[Story]
+
+
+agent = Agent('Top 3 stories on https://news.ycombinator.com', output_model_schema=Stories)
+result = agent.run_sync()
+stories = result.structured_output  # a Stories instance, or None if the run did not complete
+for s in stories.stories:
+    print(s.title, s.points)
+```
+
+Any type Pydantic can validate works: a model, `list[Model]`, `Literal['yes', 'no']`. For a JSON-schema dict, wrap it in `pydantic_ai.StructuredDict(schema)`. Anything else raises a `TypeError` in `Agent(...)`.
+
+## The result
+
+`run()` returns an `AgentHistoryList`.
+
+```python
+from browser_use import Agent
+
+result = Agent('What is the title of https://example.com?').run_sync()
+
+print(result.status)  # 'completed' | 'max_steps' | 'timeout' | 'error'
+print(result.final_result())  # the answer text, None unless completed
+print(result.success)  # the agent's verdict: True, False or None
+print(result.steps, result.duration_s, result.cost_usd)
+print(result.usage)  # {'input': ..., 'output': ..., 'cache_read': ..., 'cache_write': ..., 'requests': ...}
+print(result.error)  # what ended the run, or None
+```
+
+| Field | What it holds |
+|---|---|
+| `status` | `'completed'`, `'max_steps'`, `'timeout'` or `'error'`. |
+| `text` | The answer as text. |
+| `output` | The delivered value: a `str`, or an instance of your `output_model_schema`. |
+| `success` | The agent's own verdict from `finish(result, success)`. `None` when it gave none or the run did not complete. |
+| `partial` | The last partial result the agent saved. See [Long tasks](/open-source/long-tasks). |
+| `steps` | Model requests. |
+| `duration_s` | Seconds. |
+| `usage` | Tokens: `input`, `output`, `cache_read`, `cache_write`, plus `requests`. |
+| `cost_usd` | USD. `None` when the model's price is unknown. See [Models](/open-source/models#usage-and-cost). |
+| `error` | The error that ended the run, or `None`. |
+| `downloads` | Files the browser downloaded during this run. See [Files](/open-source/files). |
+| `messages` | The full transcript as Pydantic AI messages, with secrets redacted. |
+
+Methods kept from 0.x: `final_result()`, `structured_output`, `is_done()`, `is_successful()`, `errors()`, `has_errors()`, `number_of_steps()`, `total_duration_seconds()`. `print(result)` omits `messages`, which can be large.
+
+## Status and success
+
+A run that reaches `max_steps` or the timeout gets one forced delivery turn. If the agent delivers, `status` is still `'completed'`, and `success` is `False` when it reports the task unfinished. `'max_steps'` and `'timeout'` mean nothing was delivered; read `result.partial`.
+
+- `is_done()` is `True` when `status == 'completed'`.
+- `is_successful()` is the agent's verdict: `True`, `False`, or `None` when it gave none. It is the agent's own claim; verify important actions independently.
+- `errors()` lists only the error that ended the run. Cell errors the agent recovered from are in `messages`.
+
+For the 0.x default (no verdict counts as success), use `result.is_done() and result.success is not False`.
+
+## Removed from 0.x
+
+There are no per-step actions in 1.0, so `history`, `urls()`, `screenshots()`, `action_names()`, `model_thoughts()`, `extracted_content()`, `save_to_file()`, `load_from_file()`, `judgement()` and similar raise an `AttributeError` that points to the replacement. Use `final_result()`, `structured_output`, `messages`, `partial` and the files in `agent.workspace`.

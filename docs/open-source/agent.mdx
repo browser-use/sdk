@@ -1,0 +1,144 @@
+---
+title: "Agent"
+description: "Agent options, run() budgets, sync and async use, cancelling, and how to write tasks."
+icon: "bot"
+---
+
+```python
+import asyncio
+
+from browser_use import Agent
+
+
+async def main():
+    agent = Agent(
+        'Open https://news.ycombinator.com and return the titles of the top 3 stories',
+        extend_system_message='Answer as a numbered list.',
+    )
+    result = await agent.run(max_steps=30, timeout=300)
+    print(result.status, result.final_result())
+
+
+asyncio.run(main())
+```
+
+Each step is one model request. In a step, the agent writes one Python cell that uses browser helpers and raw CDP, runs it in a persistent REPL, and reads the output. It ends the run by delivering a result.
+
+## Options
+
+`Agent(task, llm=None, *, ...)`. Everything after `llm` is keyword-only.
+
+| Option | Default | What it does |
+|---|---|---|
+| `task` | required | What to do. A non-empty string, else `TypeError` / `ValueError` before anything starts. |
+| `llm` | `bu-fast` | The model: `'bu-fast'`, `'bu-ultrafast'`, `'bu-smart'`, `ChatOpenAI(...)`, `ChatAnthropic(...)`, `ChatGoogle(...)`, or a Pydantic AI model string or `Model`. See [Models](/open-source/models). |
+| `browser` | `Browser()` (cloud) | Which browser to drive. See [Browsers](/open-source/browsers). `browser_session=` is an alias; passing both raises. |
+| `tools` | none | A `Tools()` with your own functions. See [Tools](/open-source/tools). `controller=` is an alias. |
+| `output_model_schema` | `str` | A type for the result: a Pydantic model, `list[Model]`, `Literal[...]`. See [Output](/open-source/output). |
+| `sensitive_data` | none | Secrets the agent types without seeing them. See [Secrets](/open-source/secrets). |
+| `extend_system_message` | none | Text appended to the system prompt. The core prompt is fixed. |
+| `reasoning` | per model | `'low'`, `'medium'` or `'high'`. On the gateway the default is the alias's own (`bu-fast` medium, `bu-ultrafast` low, `bu-smart` high); elsewhere `'medium'`. Models without a reasoning setting ignore it with a warning. |
+| `mode` | per model | `'ultrafast'` or `'default'`. `'ultrafast'` on `bu-fast` and `bu-ultrafast`, `'default'` otherwise. See [Ultrafast](/open-source/ultrafast). |
+| `workspace` | new temp dir | The agent's working directory. See [Files](/open-source/files). |
+| `web_search` | `False` | Gives the agent a `search()` helper. See [Web search](/open-source/web-search). |
+| `max_context_chars` | per model | When the conversation passes 75% of this many characters, the agent compacts its history. See [Long tasks](/open-source/long-tasks). |
+| `highlight_actions` | `True` | Shows the orange highlights described [below](#highlights). |
+| `use_vision` | | Only `use_vision=False` does anything: no screenshot reaches the model. |
+
+Options that 1.0 dropped raise a `TypeError` that names the replacement, before a browser starts. A few 0.x tuning knobs (`flash_mode`, `use_thinking`, `max_failures`, ...) log a warning and are ignored. See [Migrating](/open-source/migrating).
+
+```python
+from browser_use import Agent
+
+try:
+    Agent('Find the top story on Hacker News', max_steps=5)
+except TypeError as e:
+    print(e)  # Agent(max_steps=...) is not an option: pass it to agent.run(max_steps=...).
+```
+
+## run()
+
+`await agent.run(max_steps=100, timeout=1700)` returns an [`AgentHistoryList`](/open-source/output).
+
+- **`max_steps`**: model requests. The last one is a delivery-only turn: the agent must hand in what it has. One delivery repair request may follow it.
+- **`timeout`**: seconds for the agent loop (model requests and cells). Starting the browser and stopping it are not counted. The delivery-only turn starts at about 90% of the timeout.
+- A run that hits either budget still delivers: `status` is `'completed'`, and `success` is `False` when the agent reports the task unfinished. See [Long tasks](/open-source/long-tasks).
+- `max_steps < 1` or `timeout <= 0` raises `ValueError` before any browser starts.
+- One `run()` at a time per `Agent`, and one running `Agent` per `Browser`. Otherwise `run()` raises `RuntimeError`.
+
+The browser stops when `run()` ends, unless you pass `Browser(keep_alive=True)`.
+
+## Sync and async
+
+`agent.run_sync(max_steps=100, timeout=1700)` is `run()` without `async`. It raises inside a running event loop (async code, Jupyter); use `await agent.run()` there.
+
+`async with` closes the agent and its browser when the block ends:
+
+```python
+import asyncio
+
+from browser_use import Agent
+
+
+async def main():
+    async with Agent('What is the title of https://example.com?') as agent:
+        result = await agent.run()
+    print(result.final_result())
+
+
+asyncio.run(main())
+```
+
+`await agent.close()` does the same by hand. After `run_sync()`, use `agent.close_sync()`.
+
+## Cancel
+
+Cancel the task that awaits `run()`. The browser stops.
+
+```python
+import asyncio
+
+from browser_use import Agent
+
+
+async def main():
+    agent = Agent('Read the first 50 stories on Hacker News and summarize each one')
+    task = asyncio.create_task(agent.run())
+    await asyncio.sleep(20)
+    task.cancel()  # the browser stops
+    try:
+        await task
+    except asyncio.CancelledError:
+        print('cancelled')
+
+
+asyncio.run(main())
+```
+
+From another thread, use `loop.call_soon_threadsafe(task.cancel)`. To get a partial result back instead, bound the run with `max_steps` and `timeout`.
+
+## Highlights
+
+While the agent works, orange corner brackets show for 1 second around the element it clicks, focuses or types into, so you can follow it in a visible browser or a cloud live view. They never show up in the agent's own screenshots, and the page's accessibility tree, text and clicks don't see them.
+
+Turn them off:
+
+```python
+from browser_use import Agent
+
+agent = Agent('What is the title of https://example.com?', highlight_actions=False)
+print(agent.run_sync().final_result())
+```
+
+## Writing tasks
+
+The task is the agent's only instruction. What helps:
+
+- **Say where to start.** "Open https://quotes.toscrape.com" beats "find a quotes site".
+- **Say what done looks like.** "Return the first 3 quotes with their authors as a list" beats "get some quotes".
+- **Ask for a format**, or pass `output_model_schema` for typed data.
+- **Give the fallback.** "If the page asks for a login, stop and report it."
+- **Name your tools.** With custom tools, say when to use them: "Use `get_2fa_code` for the code; never read it from the page."
+- **Keep secrets out of the task.** Pass them as [`sensitive_data`](/open-source/secrets) and refer to them by name.
+
+For things a 0.x option used to set, say them in the task instead: the window size, a user agent, permissions, the first URL to open.

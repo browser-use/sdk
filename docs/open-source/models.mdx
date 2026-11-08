@@ -1,0 +1,131 @@
+---
+title: "Models"
+description: "The Browser Use gateway models, OpenAI, Anthropic, Google, any Pydantic AI model, and OpenAI-compatible servers."
+icon: "brain"
+---
+
+```python
+from browser_use import Agent
+
+agent = Agent('What is the title of https://example.com?', llm='bu-ultrafast')
+result = agent.run_sync()
+print(result.final_result(), result.cost_usd, result.usage)
+```
+
+## Browser Use gateway
+
+The default. One Browser Use key, no provider account.
+
+| `llm=` | Model | Reasoning | Use it for |
+|---|---|---|---|
+| `'bu-fast'` (default) | `gpt-6-luna` | medium | Most tasks. The configuration we evaluate. |
+| `'bu-ultrafast'` | `gpt-6-luna` on the priority tier | low | Lowest latency. |
+| `'bu-smart'` | `gpt-6.1-sol` | high | Harder tasks. |
+
+A `'bu-*'` string is the same as `ChatBrowserUse('bu-...')`. The full form is `ChatBrowserUse(model='bu-fast', *, api_key=None, base_url=...)`. The key defaults to `BROWSER_USE_API_KEY`, then the key from `browser-use login`.
+
+- **Preflight:** before any browser starts, the agent reads the gateway's model list (free). A rejected key, no credits, or an unknown model ends the run with one line in `result.error`, and no browser is created.
+- **Cost:** `result.cost_usd` is what the gateway charged.
+- **0.x models:** `bu-2-0`, `bu-1-0`, `bu-2-0-mini-preview` and `bu-latest` raise a `ValueError` that says they need `browser-use<1.0`. Use `bu-fast`.
+
+Benchmarks: [browser-use.com/benchmarks](https://browser-use.com/benchmarks) and the open [benchmark repo](https://github.com/browser-use/benchmark).
+
+## Your own provider
+
+Anthropic and Google are built in; no extra install.
+
+<CodeGroup>
+```python OpenAI
+from browser_use import Agent, ChatOpenAI
+
+agent = Agent('What is the title of https://example.com?', llm=ChatOpenAI('gpt-6-luna'))  # OPENAI_API_KEY
+print(agent.run_sync().final_result())
+```
+```python Anthropic
+from browser_use import Agent, ChatAnthropic
+
+agent = Agent('What is the title of https://example.com?', llm=ChatAnthropic('claude-sonnet-5-5'))  # ANTHROPIC_API_KEY
+print(agent.run_sync().final_result())
+```
+```python Google
+from browser_use import Agent, ChatGoogle
+
+agent = Agent('What is the title of https://example.com?', llm=ChatGoogle('gemini-3.5-flash'))  # GOOGLE_API_KEY
+print(agent.run_sync().final_result())
+```
+</CodeGroup>
+
+| Class | Arguments |
+|---|---|
+| `ChatOpenAI` | `model, *, api_key=None, base_url=None, temperature=None, reasoning_effort=None` |
+| `ChatAnthropic` | `model, *, api_key=None` |
+| `ChatGoogle` | `model, *, api_key=None` |
+
+Any other argument raises a `TypeError`. For other model settings, pass a Pydantic AI `Model` built with `settings=...`.
+
+- `ChatOpenAI` on api.openai.com uses the Responses API. With `base_url` set to any other server, it uses chat completions.
+- `ChatAnthropic` turns on Anthropic prompt caching.
+- A missing key fails before any browser starts: `OPENAI_API_KEY is not set: export it, put it in .env, or pass api_key=... to the model.`
+- On the official OpenAI, Anthropic and Google endpoints, the agent first looks the model up (free). A rejected key or unknown model ends the run with `result.error`, and no browser is started.
+
+## Any Pydantic AI model
+
+Pass a [Pydantic AI model string](https://ai.pydantic.dev/models/overview/) or a `Model` object:
+
+```python
+from browser_use import Agent
+
+agent = Agent('What is the title of https://example.com?', llm='anthropic:claude-haiku-5-5')
+print(agent.run_sync().final_result())
+```
+
+This covers `'bedrock:...'`, `'azure:...'`, `'groq:...'`, `'mistral:...'`, `'openrouter:...'`, `'deepseek:...'`, `'cerebras:...'`, `'vercel:...'` and the rest. Some need Pydantic AI's extra, for example `pip install 'pydantic-ai-slim[groq]'`; the error says which. `'openai/<model>'` is read as `'openai-responses:<model>'`.
+
+LangChain chat models are not supported: `Agent(llm=...)` raises a `TypeError`.
+
+## OpenAI-compatible servers
+
+Ollama, vLLM, DeepSeek or any other server with a chat completions API:
+
+```python
+from browser_use import Agent, Browser, ChatOpenAI
+
+llm = ChatOpenAI('qwen3', base_url='http://localhost:11434/v1', api_key='ollama')
+agent = Agent('What is the title of https://example.com?', llm=llm, browser=Browser('chromium'))
+print(agent.run_sync().final_result())
+```
+
+A local model needs a local browser: a cloud browser cannot reach your machine. These servers get no reasoning setting from `Agent(reasoning=...)`; pass `ChatOpenAI(..., reasoning_effort=...)` to send one.
+
+## Reasoning
+
+`Agent(reasoning='low' | 'medium' | 'high')` sets the effort for OpenAI reasoning models, the gateway, Anthropic and Google.
+
+```python
+from browser_use import Agent
+
+agent = Agent('What is the title of https://example.com?', llm='bu-smart', reasoning='low')
+print(agent.run_sync().final_result())
+```
+
+Default: the gateway alias's own effort (see the table above), else `'medium'`. A model without a reasoning setting logs a warning and ignores it.
+
+## Usage and cost
+
+Every result carries `result.usage` (`input`, `output`, `cache_read`, `cache_write`, `requests`) and `result.cost_usd`.
+
+- Gateway: what the gateway charged, plus any [web searches](/open-source/web-search).
+- Other providers: computed from public prices when the model's price is known, else `None`.
+
+## Replacing 0.x model classes
+
+| 0.x | 1.0 |
+|---|---|
+| `ChatAzureOpenAI` | `llm='azure:<deployment>'` with `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `OPENAI_API_VERSION` |
+| `ChatAWSBedrock`, `ChatAnthropicBedrock` | `llm='bedrock:<model id>'` after `pip install 'pydantic-ai-slim[bedrock]'` |
+| `ChatGroq`, `ChatMistral` | `llm='groq:<model>'` / `'mistral:<model>'` after `pip install 'pydantic-ai-slim[groq]'` (or `[mistral]`) |
+| `ChatDeepSeek`, `ChatOpenRouter`, `ChatCerebras`, `ChatVercel` | `'deepseek:deepseek-chat'`, `'openrouter:<vendor>/<model>'`, `'cerebras:<model>'`, `'vercel:<vendor>/<model>'` |
+| `ChatOllama` | `ChatOpenAI('<model>', base_url='http://localhost:11434/v1', api_key='ollama')` |
+| `ChatLiteLLM` and other OpenAI-compatible wrappers | `ChatOpenAI(model, base_url=...)` |
+
+Importing a removed class raises an `ImportError` that names its replacement.

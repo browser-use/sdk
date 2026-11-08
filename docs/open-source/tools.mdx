@@ -1,0 +1,74 @@
+---
+title: "Tools"
+description: "Give the agent your own functions with @tools.action."
+icon: "wrench"
+---
+
+```python
+from browser_use import Agent, Tools
+
+tools = Tools()
+PRICES = {'A-100': 19.99, 'B-200': 4.50}
+
+
+@tools.action('Look up our internal price for a SKU')
+def get_price(sku: str) -> str:
+    if sku not in PRICES:
+        raise KeyError(f'unknown SKU {sku}')  # the model sees the error and can recover
+    return f'{PRICES[sku]} USD'
+
+
+agent = Agent('What is our internal price for SKU A-100? Use the get_price tool, no browsing needed.', tools=tools)
+print(agent.run_sync().final_result())
+```
+
+A decorated function becomes a tool the model can call next to its Python REPL. Its parameters, with type hints, become the tool's arguments. The description tells the model when to use it. Sync and `async` functions both work.
+
+## Return values
+
+The model sees what the function returns: a `str`, a Pydantic model or other JSON-able value, or an `ActionResult(extracted_content=..., error=...)`.
+
+## Errors
+
+- A tool that raises does not end the run. The model gets the error and can recover.
+- Raise `pydantic_ai.ModelRetry('...')` to ask the model to call the tool again with better arguments.
+
+## param_model
+
+To keep a 0.x action that takes one model argument, pass `param_model`:
+
+```python
+from pydantic import BaseModel
+
+from browser_use import ActionResult, Agent, Tools
+
+tools = Tools()
+
+
+class Ticket(BaseModel):
+    title: str
+    priority: int
+
+
+@tools.action('File a ticket in our tracker', param_model=Ticket)
+async def file_ticket(params: Ticket) -> ActionResult:
+    return ActionResult(extracted_content=f'Filed ticket #42: {params.title} (P{params.priority})')
+
+
+agent = Agent('File a P2 ticket titled "example.com is up" after checking https://example.com loads', tools=tools)
+print(agent.run_sync().final_result())
+```
+
+## Rules
+
+- Use `@tools.action('description')` with parentheses.
+- Names must match `[a-zA-Z0-9_-]{1,64}`. `python`, `finish` and `finish_from_repl` are taken.
+- A tool gets only the arguments the model passes. The 0.x injected parameters (`browser_session`, `page_extraction_llm`, `file_system`, ...) raise.
+- `ActionResult(is_done=..., success=..., include_in_memory=..., attachments=...)` raises: the model ends the run itself.
+- `Controller` is an alias of `Tools`.
+
+## No built-in actions
+
+0.x had built-in actions such as `click`, `extract` and `scroll`. 1.0 has none: the agent writes Python with browser helpers instead, so `Tools(exclude_actions=...)` raises. The helpers it uses include `new_tab`, `goto_url`, `js`, `cdp`, `click_at_xy`, `type_text`, `press_key`, `scroll`, `screenshot`, `upload_file`, `http_get`, `checkpoint` and `show_image`.
+
+Write a tool when the agent needs something the browser can't give it: your database, an internal API, a 2FA code from your vault, a human approval.
