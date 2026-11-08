@@ -35,6 +35,15 @@ Hosts compare case-insensitively, and international domains match in either form
 
 ## How it is enforced
 
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-domains-light-mobile.svg" />
+  <img src="/open-source/images/oss-domains-light.svg" alt="A navigation to an allowed domain passes all three layers to the browser. A disallowed URL is caught by the first layer that sees it: the REPL helpers raise PermissionError; the browser's own CDP guard fails a link click, redirect, popup or JavaScript navigation; after each cell, any tab still on a disallowed page is reset to about:blank. Browser('chrome') uses layers 1 and 3 only." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-domains-dark-mobile.svg" />
+  <img src="/open-source/images/oss-domains-dark.svg" alt="A navigation to an allowed domain passes all three layers to the browser. A disallowed URL is caught by the first layer that sees it: the REPL helpers raise PermissionError; the browser's own CDP guard fails a link click, redirect, popup or JavaScript navigation; after each cell, any tab still on a disallowed page is reset to about:blank. Browser('chrome') uses layers 1 and 3 only." noZoom />
+</picture>
+
 1. **Helpers refuse.** `goto_url`, `new_tab`, `http_get` (and each redirect it follows) and the agent's raw `Page.navigate` / `Target.createTarget` refuse a disallowed URL. The model sees `PermissionError: blocked: wikipedia.org is not in allowed_domains (example.com)`.
 2. **The browser blocks.** browser-use holds its own CDP connection that fails every main-frame navigation to a disallowed host, whoever starts it: link clicks, redirects, popups, JavaScript. The request never leaves the browser.
 3. **Tabs are reset.** After each cell, any tab still on a disallowed page goes to `about:blank`.

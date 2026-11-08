@@ -8,6 +8,15 @@ icon: "arrow-up-right"
 
 Anything 1.0 can't honor raises a clear error before a browser starts or anything is billed. Each removed feature raises `<feature> was removed in browser-use 1.0`, plus the 1.0 alternative when there is one. The exception: a few tuning knobs that can't change the result (`use_vision=True`, `flash_mode`, `use_thinking`, ...) log one warning and are ignored.
 
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-migrating-light-mobile.svg" />
+  <img src="/open-source/images/oss-migrating-light.svg" alt="In 0.x the model read an indexed DOM dump and picked one action, like click(index=12), for a local Chromium. In 1.0 the model reads the output of its last cell and writes the next Python cell, which the REPL runs with browser helpers and raw CDP against a cloud browser by default. Agent, Browser, Tools, run() and final_result() keep working." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-migrating-dark-mobile.svg" />
+  <img src="/open-source/images/oss-migrating-dark.svg" alt="In 0.x the model read an indexed DOM dump and picked one action, like click(index=12), for a local Chromium. In 1.0 the model reads the output of its last cell and writes the next Python cell, which the REPL runs with browser helpers and raw CDP against a cloud browser by default. Agent, Browser, Tools, run() and final_result() keep working." noZoom />
+</picture>
+
 Need 0.x? Pin it: `pip install 'browser-use<1'`. The 0.x docs are under [Legacy (0.x)](/open-source/legacy/0.x/introduction).
 
 ```python

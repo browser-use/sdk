@@ -58,6 +58,15 @@ Long runs outgrow the model's context window. The agent compacts its history:
 - **Gateway and OpenAI (Responses API):** server-side, once a request passes 150k tokens.
 - **Everything else:** past 75% of `max_context_chars` (default: 4 characters per token of the model's context window, or 240k when unknown) or 65% of the window in tokens, older turns are replaced by a summary checkpoint written by the same model. If the provider still rejects a request as over its context window, the agent compacts once and sends it again. An evidence archive in the workspace keeps the earlier messages (secrets redacted, images omitted).
 
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-long-tasks-light-mobile.svg" />
+  <img src="/open-source/images/oss-long-tasks-light.svg" alt="When the history passes 75% of max_context_chars, or 65% of the model's window in tokens, everything before the last two steps is replaced in the next request by one checkpoint: a summary by the same model, the original task verbatim, and the path of an evidence archive in the workspace. The last two steps are sent unchanged. Gateway and OpenAI models compact server-side past 150k tokens instead." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-long-tasks-dark-mobile.svg" />
+  <img src="/open-source/images/oss-long-tasks-dark.svg" alt="When the history passes 75% of max_context_chars, or 65% of the model's window in tokens, everything before the last two steps is replaced in the next request by one checkpoint: a summary by the same model, the original task verbatim, and the path of an evidence archive in the workspace. The last two steps are sent unchanged. Gateway and OpenAI models compact server-side past 150k tokens instead." noZoom />
+</picture>
+
 `Agent(max_context_chars=...)` has no effect where compaction is server-side. Only the last 2 screenshots stay in context.
 
 ## Retries

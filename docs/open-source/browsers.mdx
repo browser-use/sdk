@@ -14,6 +14,15 @@ icon: "app-window"
 
 `Agent.run()` starts the browser and stops it when the run ends, unless `keep_alive=True`.
 
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-browsers-light-mobile.svg" />
+  <img src="/open-source/images/oss-browsers-light.svg" alt="Browser() creates a Browser Use Cloud browser, the default. Browser('chromium') launches a fresh local browser with a temp profile. Browser('chrome') attaches to the Chrome you have open, with your logins. Browser(cdp_url=...) connects to any CDP endpoint. All four reach the same Python REPL through a browser-harness daemon over CDP." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-browsers-dark-mobile.svg" />
+  <img src="/open-source/images/oss-browsers-dark.svg" alt="Browser() creates a Browser Use Cloud browser, the default. Browser('chromium') launches a fresh local browser with a temp profile. Browser('chrome') attaches to the Chrome you have open, with your logins. Browser(cdp_url=...) connects to any CDP endpoint. All four reach the same Python REPL through a browser-harness daemon over CDP." noZoom />
+</picture>
+
 ## Cloud browser
 
 `Browser()` creates a Browser Use Cloud browser through API v4, with a 1440x900 screen. It needs your Browser Use key (see [Quickstart](/open-source/quickstart)).

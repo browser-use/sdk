@@ -24,6 +24,15 @@ print(agent.run_sync().final_result())
 
 A decorated function becomes a tool the model can call next to its Python REPL. Its parameters, with type hints, become the tool's arguments. The description tells the model when to use it. Sync and `async` functions both work.
 
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-tools-light-mobile.svg" />
+  <img src="/open-source/images/oss-tools-light.svg" alt="python(code) runs a cell in the REPL worker process, which drives the browser. A @tools.action function such as get_price(sku) runs in your process with only the arguments the model passes; its return value or error goes back to the model. finish(result) delivers the result and ends the run." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-tools-dark-mobile.svg" />
+  <img src="/open-source/images/oss-tools-dark.svg" alt="python(code) runs a cell in the REPL worker process, which drives the browser. A @tools.action function such as get_price(sku) runs in your process with only the arguments the model passes; its return value or error goes back to the model. finish(result) delivers the result and ends the run." noZoom />
+</picture>
+
 ## Return values
 
 The model sees what the function returns: a `str`, a Pydantic model or other JSON-able value, or an `ActionResult(extracted_content=..., error=...)`.

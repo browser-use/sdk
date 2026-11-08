@@ -14,6 +14,15 @@ print(result.final_result())
 
 browser-use is an MIT-licensed Python library. You give it a task, and the agent completes it in a real browser by writing Python: [browser-harness](https://github.com/browser-use/browser-harness) helpers and raw Chrome DevTools Protocol (CDP) calls in a persistent REPL. It runs on [Pydantic AI](https://ai.pydantic.dev).
 
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-intro-light-mobile.svg" />
+  <img src="/open-source/images/oss-intro-light.svg" alt="Your code calls Agent(task).run(). Each step, the model writes one Python cell, the REPL runs it with browser-harness helpers and raw CDP against the browser, and the output goes back to the model. When the model calls finish, run() returns the result to your code." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-intro-dark-mobile.svg" />
+  <img src="/open-source/images/oss-intro-dark.svg" alt="Your code calls Agent(task).run(). Each step, the model writes one Python cell, the REPL runs it with browser-harness helpers and raw CDP against the browser, and the output goes back to the model. When the model calls finish, run() returns the result to your code." noZoom />
+</picture>
+
 Defaults:
 
 - **Model:** `bu-fast` on the Browser Use gateway.
