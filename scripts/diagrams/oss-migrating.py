@@ -21,9 +21,9 @@ DESC = ("In 0.x the model read an indexed DOM dump and picked one action, like c
 
 DOM = ['[11]<a>Item 20</a>', '[12]<button>Next</button>']
 ACT = ["click(index=12)"]
-OUT = ["'Hacker News'", "30 stories"]
-CELL = ['new_tab("news.ycombinator.com")', "print(js('document.title'))"]
-CELL_M = ["new_tab(url)", "print(js(...))"]
+OUT = ["'Hacker News'", "30 urls"]
+CELL = ["new_tab(urls[0])", "print(js('document.title'))"]
+CELL_M = ["new_tab(urls[0])", "print(js(...))"]
 FOOT = "Still works: Agent, Browser, Tools, run(), final_result()."
 
 

@@ -11,7 +11,7 @@ agent's code is the same in every mode.
 import pathlib, sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from oss_kit import new, terminal, cloud_windows, chrome_window, cable, name, elbow, junction  # noqa: E402
+from oss_kit import S, C, new, terminal, cloud_windows, chrome_window, cable, name, elbow, junction  # noqa: E402
 
 TITLE = "Four ways to get a browser, one Python REPL"
 DESC = ("Browser() creates a Browser Use Cloud browser, the default. Browser('chromium') launches a fresh local browser "
@@ -96,7 +96,7 @@ def build_mobile(theme):
         route(d, elbow([(L0, y - 3), (BUS, y - 3), (BUS, YJ), (XC, YJ)], r=10), kind == "cloud")
     junction(d, XC, YJ)
     repl = terminal(d, XC, RB, WW=78, WH=50, code=((36, 0), (50, 1), (28, 0), (42, 0)))
-    y1 = repl["top"] - 18
+    y1 = repl["top"] + (XC - repl["x0"]) * S / C - 2   # the window's top edge at the cable
     cable(d, (XC, YJ + 6), (XC, y1), caps=False)
     d.text(XC + 14, (YJ + y1) / 2 - 2, "CDP", 11, t["otext"], 500, mono=True)
     d.text(XC + 14, (YJ + y1) / 2 + 16, "harness daemon", 11, t["otext"], mono=True)

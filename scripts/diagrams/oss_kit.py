@@ -37,6 +37,8 @@ def defs(d):
         f'<filter id="glow" filterUnits="userSpaceOnUse" x="0" y="0" width="{d.w}" height="{d.h}"><feGaussianBlur stdDeviation="4"/></filter>'
     )
     # every animation is a dash offset or an opacity: the static frame is the full diagram
+    # Geist Mono's contextual alternates draw "->" as an arrow and "..." spaced out; code text must read as typed
+    d.css.append(".m{font-variant-ligatures:none;font-feature-settings:'calt' 0}")
     d.css.append(
         "@keyframes fr{to{stroke-dashoffset:-24}}@keyframes fl{to{stroke-dashoffset:24}}"
         "@keyframes led{0%,100%{fill-opacity:1}50%{fill-opacity:.15}}"
