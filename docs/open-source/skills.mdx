@@ -1,0 +1,24 @@
+---
+title: "Agent skills"
+description: "SKILL.md bundles that teach Claude Code, Cursor, Codex and other coding agents to use Browser Use."
+icon: "wand-sparkles"
+---
+
+Browser Use ships [agent skills](https://www.skills.sh/browser-use/browser-use): `SKILL.md` files your coding agent loads when a task needs them. Install one with the [skills CLI](https://www.skills.sh):
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill <name>
+```
+
+The `browser-use` skill also comes with the CLI: `browser-use skill install`. See [Browser Use CLI](/open-source/browser-use-cli#set-up-your-coding-agent).
+
+| Skill | What it teaches your agent |
+|---|---|
+| [`browser-use`](https://github.com/browser-use/browser-use/tree/main/skills/browser-use) | Drive a browser with the Browser Use CLI: your Chrome, a cloud browser, or any CDP client. |
+| [`open-source`](https://github.com/browser-use/browser-use/tree/main/skills/open-source) | Write Python against the browser-use 1.0 library: `Agent`, `Browser`, `Tools`, models, secrets, results, migrating from 0.x. |
+| [`cloud`](https://github.com/browser-use/browser-use/tree/main/skills/cloud) | Use the Browser Use Cloud API and SDKs. |
+| [`qa`](https://github.com/browser-use/browser-use/tree/main/skills/qa) | QA-test a site or local dev server and return a 1 to 5 score with evidence, on a Browser Use cloud browser. |
+| [`remote-browser`](https://github.com/browser-use/browser-use/tree/main/skills/remote-browser) | Control an isolated cloud browser from a sandboxed machine with the CLI. |
+| [`x402`](https://github.com/browser-use/browser-use/tree/main/skills/x402) | Pay for Browser Use Cloud per request from a crypto wallet, without an API key. |
+
+All skills live in the [`skills/` directory](https://github.com/browser-use/browser-use/tree/main/skills) of the browser-use repo.

@@ -1,0 +1,44 @@
+---
+title: "Telemetry"
+description: "What anonymized usage data browser-use sends, what it never sends, and how to turn it off."
+icon: "chart-no-axes-column"
+---
+
+Turn it off, for the library and the CLI:
+
+```bash
+export ANONYMIZED_TELEMETRY=false
+```
+
+Any value that does not start with `t`, `y` or `1` turns it off.
+
+browser-use sends anonymized usage events to PostHog so we can see which models, browsers and helpers work and where runs fail: one `agent_event` per `Agent.run()`, and a scrubbed `cli_event` per CLI call.
+
+## Never sent
+
+- The task, follow-up tasks and `extend_system_message`.
+- The result, structured output, partial results and the model's text.
+- Code the model writes.
+- Text typed into pages, and `sensitive_data` names or values.
+- Page content: titles, HTML, screenshots, extracted data, file names.
+- Full URLs. Only the hostname is kept.
+- CDP endpoints. Only their kind (`browser-use-cloud`, `localhost`, `private`, `public-other`).
+- Error messages and tracebacks. Only the exception class.
+
+## What is sent
+
+Every field is a number, a bool, an enum, a hostname, or a name chosen by browser-use, the developer, Python or an installed package:
+
+- **Install and environment:** browser-use, Python, Pydantic AI and browser-harness versions; OS; whether it runs in Docker, CI or a notebook.
+- **Configuration:** model id and provider, reasoning, mode, `max_steps`, timeout, whether structured output, custom tools (their names), secrets (a count) or a custom workspace are used, and the task's length.
+- **Browser:** the mode (cloud, chromium, chrome, cdp), keep-alive, cloud proxy country and timeout, and start time.
+- **Outcome:** status, success, how the result was delivered, exception class, duration.
+- **Model:** steps, requests, tokens, cost, calls per tool.
+- **REPL:** cells, cell errors by class, helper and CDP method counts, imported module names, screenshots.
+- **Browsing:** hostnames the agent navigated to, navigation and download counts, CAPTCHA solver events, domain-restriction blocks.
+
+The full field list is in [TELEMETRY.md](https://github.com/browser-use/browser-use/blob/main/TELEMETRY.md).
+
+## Identity
+
+One anonymous id per machine: `BROWSER_USE_DEVICE_ID` if set, else a random id stored in `~/.config/browseruse/device_id` (`BROWSER_USE_CONFIG_DIR` moves it). If that file can't be written, a hash of the machine's MAC address and hostname. PostHog derives a location from the request IP.
