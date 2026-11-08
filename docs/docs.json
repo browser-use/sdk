@@ -266,20 +266,70 @@
               "open-source/introduction",
               "cloud/which-product",
               "open-source/quickstart",
-              "open-source/vibecoding",
-              "open-source/legacy/0.x/supported-models",
-              "open-source/legacy/0.x/bu-2-0-model-card",
-              "open-source/browser-use-cli",
-              "open-source/legacy/0.x/browser-use-terminal"
+              "open-source/vibecoding"
             ]
           },
           {
-            "group": "Customize",
+            "group": "Core",
             "pages": [
+              "open-source/agent",
+              "open-source/models",
+              "open-source/browsers",
+              "open-source/output",
+              "open-source/files",
+              "open-source/tools"
+            ]
+          },
+          {
+            "group": "Safety",
+            "pages": [
+              "open-source/secrets",
+              "open-source/domains"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "open-source/ultrafast",
+              "open-source/web-search",
+              "open-source/long-tasks"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "open-source/browser-use-cli",
+              "open-source/mcp",
+              "open-source/skills"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "open-source/migrating",
+              "open-source/telemetry",
+              "open-source/get-help"
+            ]
+          },
+          {
+            "group": "Legacy (0.x)",
+            "pages": [
+              {
+                "group": "Get Started",
+                "icon": "archive",
+                "isDefaultOpen": false,
+                "pages": [
+                  "open-source/legacy/0.x/introduction",
+                  "open-source/legacy/0.x/quickstart",
+                  "open-source/legacy/0.x/supported-models",
+                  "open-source/legacy/0.x/bu-2-0-model-card",
+                  "open-source/legacy/0.x/browser-use-terminal"
+                ]
+              },
               {
                 "group": "Agent",
                 "icon": "bot",
-                "isDefaultOpen": true,
+                "isDefaultOpen": false,
                 "pages": [
                   "open-source/legacy/0.x/customize/agent/basics",
                   "open-source/legacy/0.x/customize/agent/prompting-guide",
@@ -290,6 +340,7 @@
               {
                 "group": "Browser",
                 "icon": "app-window",
+                "isDefaultOpen": false,
                 "pages": [
                   "open-source/legacy/0.x/customize/browser/basics",
                   "open-source/legacy/0.x/customize/browser/authentication",
@@ -301,17 +352,20 @@
               {
                 "group": "Tools",
                 "icon": "wrench",
+                "isDefaultOpen": false,
                 "pages": [
                   "open-source/legacy/0.x/customize/tools/basics",
                   "open-source/legacy/0.x/customize/tools/available",
                   "open-source/legacy/0.x/customize/tools/add",
                   "open-source/legacy/0.x/customize/tools/remove",
-                  "open-source/legacy/0.x/customize/tools/response"
+                  "open-source/legacy/0.x/customize/tools/response",
+                  "open-source/legacy/0.x/customize/hooks"
                 ]
               },
               {
                 "group": "Integrations",
                 "icon": "plug",
+                "isDefaultOpen": false,
                 "pages": [
                   "open-source/legacy/0.x/customize/integrations/toolsets-for-claude",
                   "open-source/legacy/0.x/customize/integrations/openai",
@@ -319,37 +373,29 @@
                 ]
               },
               {
-                "group": "Legacy",
-                "icon": "archive",
+                "group": "Actor",
+                "icon": "mouse-pointer-click",
+                "isDefaultOpen": false,
                 "pages": [
-                  {
-                    "group": "Actor",
-                    "icon": "mouse-pointer-click",
-                    "pages": [
-                      "open-source/legacy/0.x/actor/basics",
-                      "open-source/legacy/0.x/actor/examples",
-                      "open-source/legacy/0.x/actor/all-parameters"
-                    ]
-                  },
-                  {
-                    "group": "Sandbox",
-                    "icon": "box",
-                    "pages": [
-                      "open-source/legacy/0.x/sandbox/quickstart",
-                      "open-source/legacy/0.x/sandbox/events",
-                      "open-source/legacy/0.x/sandbox/all-parameters"
-                    ]
-                  }
+                  "open-source/legacy/0.x/actor/basics",
+                  "open-source/legacy/0.x/actor/examples",
+                  "open-source/legacy/0.x/actor/all-parameters"
                 ]
-              }
-            ]
-          },
-          {
-            "group": "Examples",
-            "pages": [
+              },
               {
-                "group": "Templates",
+                "group": "Sandbox",
+                "icon": "box",
+                "isDefaultOpen": false,
+                "pages": [
+                  "open-source/legacy/0.x/sandbox/quickstart",
+                  "open-source/legacy/0.x/sandbox/events",
+                  "open-source/legacy/0.x/sandbox/all-parameters"
+                ]
+              },
+              {
+                "group": "Examples",
                 "icon": "layout-template",
+                "isDefaultOpen": false,
                 "pages": [
                   "open-source/legacy/0.x/examples/templates/fast-agent",
                   "open-source/legacy/0.x/examples/templates/follow-up-tasks",
@@ -357,13 +403,7 @@
                   "open-source/legacy/0.x/examples/templates/playwright-integration",
                   "open-source/legacy/0.x/examples/templates/sensitive-data",
                   "open-source/legacy/0.x/examples/templates/secure",
-                  "open-source/legacy/0.x/examples/templates/more-examples"
-                ]
-              },
-              {
-                "group": "Apps",
-                "icon": "package",
-                "pages": [
+                  "open-source/legacy/0.x/examples/templates/more-examples",
                   "open-source/legacy/0.x/examples/apps/ad-use",
                   "open-source/legacy/0.x/examples/apps/vibetest-use",
                   "open-source/legacy/0.x/examples/apps/news-use",
@@ -371,50 +411,18 @@
                 ]
               },
               {
-                "group": "Skills",
-                "icon": "wand-sparkles",
-                "pages": [
-                  "open-source/examples/skills/overview",
-                  "open-source/examples/skills/browser-use",
-                  "open-source/examples/skills/cloud",
-                  "open-source/examples/skills/open-source",
-                  "open-source/examples/skills/qa",
-                  "open-source/examples/skills/remote-browser",
-                  "open-source/examples/skills/x402"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "Development",
-            "pages": [
-              {
-                "group": "Contribution",
+                "group": "Development",
                 "icon": "git-pull-request",
-                "isDefaultOpen": true,
+                "isDefaultOpen": false,
                 "pages": [
                   "open-source/legacy/0.x/development/setup/local-setup",
-                  "open-source/legacy/0.x/development/setup/contribution-guide"
-                ]
-              },
-              {
-                "group": "Advanced",
-                "icon": "settings",
-                "pages": [
-                  "open-source/legacy/0.x/customize/hooks"
-                ]
-              },
-              {
-                "group": "Monitoring",
-                "icon": "activity",
-                "pages": [
+                  "open-source/legacy/0.x/development/setup/contribution-guide",
                   "open-source/legacy/0.x/development/monitoring/observability",
                   "open-source/legacy/0.x/development/monitoring/openlit",
                   "open-source/legacy/0.x/development/monitoring/telemetry",
                   "open-source/legacy/0.x/development/monitoring/costs"
                 ]
-              },
-              "open-source/legacy/0.x/development/get-help"
+              }
             ]
           }
         ]
@@ -594,63 +602,63 @@
     },
     {
       "source": "/supported-models",
-      "destination": "/open-source/supported-models"
+      "destination": "/open-source/models"
     },
     {
       "source": "/customize/agent/basics",
-      "destination": "/open-source/customize/agent/basics"
+      "destination": "/open-source/agent"
     },
     {
       "source": "/customize/agent/prompting-guide",
-      "destination": "/open-source/customize/agent/prompting-guide"
+      "destination": "/open-source/agent"
     },
     {
       "source": "/customize/agent/output-format",
-      "destination": "/open-source/customize/agent/output-format"
+      "destination": "/open-source/output"
     },
     {
       "source": "/customize/agent/all-parameters",
-      "destination": "/open-source/customize/agent/all-parameters"
+      "destination": "/open-source/agent"
     },
     {
       "source": "/customize/browser/basics",
-      "destination": "/open-source/customize/browser/basics"
+      "destination": "/open-source/browsers"
     },
     {
       "source": "/customize/browser/authentication",
-      "destination": "/open-source/customize/browser/authentication"
+      "destination": "/open-source/browsers"
     },
     {
       "source": "/customize/browser/real-browser",
-      "destination": "/open-source/customize/browser/real-browser"
+      "destination": "/open-source/browsers"
     },
     {
       "source": "/customize/browser/remote",
-      "destination": "/open-source/customize/browser/remote"
+      "destination": "/open-source/browsers"
     },
     {
       "source": "/customize/browser/all-parameters",
-      "destination": "/open-source/customize/browser/all-parameters"
+      "destination": "/open-source/browsers"
     },
     {
       "source": "/customize/tools/basics",
-      "destination": "/open-source/customize/tools/basics"
+      "destination": "/open-source/tools"
     },
     {
       "source": "/customize/tools/available",
-      "destination": "/open-source/customize/tools/available"
+      "destination": "/open-source/tools"
     },
     {
       "source": "/customize/tools/add",
-      "destination": "/open-source/customize/tools/add"
+      "destination": "/open-source/tools"
     },
     {
       "source": "/customize/tools/remove",
-      "destination": "/open-source/customize/tools/remove"
+      "destination": "/open-source/tools"
     },
     {
       "source": "/customize/tools/response",
-      "destination": "/open-source/customize/tools/response"
+      "destination": "/open-source/tools"
     },
     {
       "source": "/customize/skills/basics",
@@ -662,115 +670,115 @@
     },
     {
       "source": "/customize/integrations/docs-mcp",
-      "destination": "/open-source/customize/integrations/mcp-server"
+      "destination": "/open-source/mcp"
     },
     {
       "source": "/open-source/customize/integrations/docs-mcp",
-      "destination": "/open-source/customize/integrations/mcp-server"
+      "destination": "/open-source/mcp"
     },
     {
       "source": "/customize/integrations/mcp-server",
-      "destination": "/open-source/customize/integrations/mcp-server"
+      "destination": "/open-source/mcp"
     },
     {
       "source": "/customize/hooks",
-      "destination": "/open-source/customize/hooks"
+      "destination": "/open-source/long-tasks"
     },
     {
       "source": "/legacy/actor/basics",
-      "destination": "/open-source/legacy/actor/basics"
+      "destination": "/open-source/legacy/0.x/actor/basics"
     },
     {
       "source": "/legacy/actor/examples",
-      "destination": "/open-source/legacy/actor/examples"
+      "destination": "/open-source/legacy/0.x/actor/examples"
     },
     {
       "source": "/legacy/actor/all-parameters",
-      "destination": "/open-source/legacy/actor/all-parameters"
+      "destination": "/open-source/legacy/0.x/actor/all-parameters"
     },
     {
       "source": "/legacy/sandbox/quickstart",
-      "destination": "/open-source/legacy/sandbox/quickstart"
+      "destination": "/open-source/legacy/0.x/sandbox/quickstart"
     },
     {
       "source": "/legacy/sandbox/events",
-      "destination": "/open-source/legacy/sandbox/events"
+      "destination": "/open-source/legacy/0.x/sandbox/events"
     },
     {
       "source": "/legacy/sandbox/all-parameters",
-      "destination": "/open-source/legacy/sandbox/all-parameters"
+      "destination": "/open-source/legacy/0.x/sandbox/all-parameters"
     },
     {
       "source": "/examples/templates/fast-agent",
-      "destination": "/open-source/examples/templates/fast-agent"
+      "destination": "/open-source/ultrafast"
     },
     {
       "source": "/examples/templates/follow-up-tasks",
-      "destination": "/open-source/examples/templates/follow-up-tasks"
+      "destination": "/open-source/long-tasks"
     },
     {
       "source": "/examples/templates/parallel-browser",
-      "destination": "/open-source/examples/templates/parallel-browser"
+      "destination": "/open-source/browsers"
     },
     {
       "source": "/examples/templates/playwright-integration",
-      "destination": "/open-source/examples/templates/playwright-integration"
+      "destination": "/open-source/legacy/0.x/examples/templates/playwright-integration"
     },
     {
       "source": "/examples/templates/sensitive-data",
-      "destination": "/open-source/examples/templates/sensitive-data"
+      "destination": "/open-source/secrets"
     },
     {
       "source": "/examples/templates/secure",
-      "destination": "/open-source/examples/templates/secure"
+      "destination": "/open-source/secrets"
     },
     {
       "source": "/examples/templates/more-examples",
-      "destination": "/open-source/examples/templates/more-examples"
+      "destination": "/open-source/quickstart"
     },
     {
       "source": "/examples/apps/ad-use",
-      "destination": "/open-source/examples/apps/ad-use"
+      "destination": "/open-source/legacy/0.x/examples/apps/ad-use"
     },
     {
       "source": "/examples/apps/vibetest-use",
-      "destination": "/open-source/examples/apps/vibetest-use"
+      "destination": "/open-source/legacy/0.x/examples/apps/vibetest-use"
     },
     {
       "source": "/examples/apps/news-use",
-      "destination": "/open-source/examples/apps/news-use"
+      "destination": "/open-source/legacy/0.x/examples/apps/news-use"
     },
     {
       "source": "/examples/apps/msg-use",
-      "destination": "/open-source/examples/apps/msg-use"
+      "destination": "/open-source/legacy/0.x/examples/apps/msg-use"
     },
     {
       "source": "/development/setup/local-setup",
-      "destination": "/open-source/development/setup/local-setup"
+      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
     },
     {
       "source": "/development/setup/contribution-guide",
-      "destination": "/open-source/development/setup/contribution-guide"
+      "destination": "/open-source/legacy/0.x/development/setup/contribution-guide"
     },
     {
       "source": "/development/get-help",
-      "destination": "/open-source/development/get-help"
+      "destination": "/open-source/get-help"
     },
     {
       "source": "/development/monitoring/observability",
-      "destination": "/open-source/development/monitoring/observability"
+      "destination": "/open-source/legacy/0.x/development/monitoring/observability"
     },
     {
       "source": "/development/monitoring/openlit",
-      "destination": "/open-source/development/monitoring/openlit"
+      "destination": "/open-source/legacy/0.x/development/monitoring/openlit"
     },
     {
       "source": "/development/monitoring/telemetry",
-      "destination": "/open-source/development/monitoring/telemetry"
+      "destination": "/open-source/telemetry"
     },
     {
       "source": "/development/monitoring/costs",
-      "destination": "/open-source/development/monitoring/costs"
+      "destination": "/open-source/models"
     },
     {
       "source": "/development/n8n-integration",
@@ -790,7 +798,7 @@
     },
     {
       "source": "/open-source/development",
-      "destination": "/open-source/development/setup/local-setup"
+      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
     },
     {
       "source": "/use-cloud",
@@ -806,59 +814,59 @@
     },
     {
       "source": "/production",
-      "destination": "/open-source/legacy/sandbox/quickstart"
+      "destination": "/open-source/legacy/0.x/sandbox/quickstart"
     },
     {
       "source": "/customize/actor/basics",
-      "destination": "/open-source/legacy/actor/basics"
+      "destination": "/open-source/legacy/0.x/actor/basics"
     },
     {
       "source": "/customize/actor/examples",
-      "destination": "/open-source/legacy/actor/examples"
+      "destination": "/open-source/legacy/0.x/actor/examples"
     },
     {
       "source": "/customize/actor/all-parameters",
-      "destination": "/open-source/legacy/actor/all-parameters"
+      "destination": "/open-source/legacy/0.x/actor/all-parameters"
     },
     {
       "source": "/customize/sandbox/quickstart",
-      "destination": "/open-source/legacy/sandbox/quickstart"
+      "destination": "/open-source/legacy/0.x/sandbox/quickstart"
     },
     {
       "source": "/customize/sandbox/events",
-      "destination": "/open-source/legacy/sandbox/events"
+      "destination": "/open-source/legacy/0.x/sandbox/events"
     },
     {
       "source": "/customize/sandbox/all-parameters",
-      "destination": "/open-source/legacy/sandbox/all-parameters"
+      "destination": "/open-source/legacy/0.x/sandbox/all-parameters"
     },
     {
       "source": "/customize/supported-models",
-      "destination": "/open-source/supported-models"
+      "destination": "/open-source/models"
     },
     {
       "source": "/customize/agent/supported-models",
-      "destination": "/open-source/supported-models"
+      "destination": "/open-source/models"
     },
     {
       "source": "/customize/agent-settings",
-      "destination": "/open-source/customize/agent/all-parameters"
+      "destination": "/open-source/agent"
     },
     {
       "source": "/customize/browser-settings",
-      "destination": "/open-source/customize/browser/all-parameters"
+      "destination": "/open-source/browsers"
     },
     {
       "source": "/customize/custom-functions",
-      "destination": "/open-source/customize/tools/add"
+      "destination": "/open-source/tools"
     },
     {
       "source": "/customize/system-prompt",
-      "destination": "/open-source/customize/agent/all-parameters"
+      "destination": "/open-source/agent"
     },
     {
       "source": "/development/evaluations",
-      "destination": "/open-source/development/setup/contribution-guide"
+      "destination": "/open-source/legacy/0.x/development/setup/contribution-guide"
     },
     {
       "source": "/cli",
@@ -866,71 +874,71 @@
     },
     {
       "source": "/development/local-setup",
-      "destination": "/open-source/development/setup/local-setup"
+      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
     },
     {
       "source": "/development/contribution-guide",
-      "destination": "/open-source/development/setup/contribution-guide"
+      "destination": "/open-source/legacy/0.x/development/setup/contribution-guide"
     },
     {
       "source": "/development/telemetry",
-      "destination": "/open-source/development/monitoring/telemetry"
+      "destination": "/open-source/telemetry"
     },
     {
       "source": "/development/observability",
-      "destination": "/open-source/development/monitoring/observability"
+      "destination": "/open-source/legacy/0.x/development/monitoring/observability"
     },
     {
       "source": "/development/hooks",
-      "destination": "/open-source/customize/hooks"
+      "destination": "/open-source/long-tasks"
     },
     {
       "source": "/customize/mcp-server",
-      "destination": "/open-source/customize/integrations/mcp-server"
+      "destination": "/open-source/mcp"
     },
     {
       "source": "/customize/examples/chain-agents",
-      "destination": "/open-source/examples/templates/follow-up-tasks"
+      "destination": "/open-source/long-tasks"
     },
     {
       "source": "/customize/examples/fast-agent",
-      "destination": "/open-source/examples/templates/fast-agent"
+      "destination": "/open-source/ultrafast"
     },
     {
       "source": "/customize/examples/follow-up-tasks",
-      "destination": "/open-source/examples/templates/follow-up-tasks"
+      "destination": "/open-source/long-tasks"
     },
     {
       "source": "/customize/examples/parallel-browser",
-      "destination": "/open-source/examples/templates/parallel-browser"
+      "destination": "/open-source/browsers"
     },
     {
       "source": "/customize/examples/playwright-integration",
-      "destination": "/open-source/examples/templates/playwright-integration"
+      "destination": "/open-source/legacy/0.x/examples/templates/playwright-integration"
     },
     {
       "source": "/customize/examples/sensitive-data",
-      "destination": "/open-source/examples/templates/sensitive-data"
+      "destination": "/open-source/secrets"
     },
     {
       "source": "/customize/examples/secure",
-      "destination": "/open-source/examples/templates/secure"
+      "destination": "/open-source/secrets"
     },
     {
       "source": "/customize/examples/more-examples",
-      "destination": "/open-source/examples/templates/more-examples"
+      "destination": "/open-source/quickstart"
     },
     {
       "source": "/customize/examples/ad-use",
-      "destination": "/open-source/examples/apps/ad-use"
+      "destination": "/open-source/legacy/0.x/examples/apps/ad-use"
     },
     {
       "source": "/customize/examples/vibetest-use",
-      "destination": "/open-source/examples/apps/vibetest-use"
+      "destination": "/open-source/legacy/0.x/examples/apps/vibetest-use"
     },
     {
       "source": "/customize/examples/prompting-guide",
-      "destination": "/open-source/customize/agent/prompting-guide"
+      "destination": "/open-source/agent"
     },
     {
       "source": "/pricing",
@@ -1226,11 +1234,219 @@
     },
     {
       "source": "/open-source/customize/integrations/anthropic",
-      "destination": "/open-source/customize/integrations/toolsets-for-claude"
+      "destination": "/open-source/legacy/0.x/customize/integrations/toolsets-for-claude"
     },
     {
       "source": "/integrations/agentcard",
       "destination": "/cloud/tutorials/integrations/agentcard"
+    },
+    {
+      "source": "/open-source/supported-models",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/open-source/bu-2-0-model-card",
+      "destination": "/open-source/legacy/0.x/bu-2-0-model-card"
+    },
+    {
+      "source": "/open-source/browser-use-terminal",
+      "destination": "/open-source/legacy/0.x/browser-use-terminal"
+    },
+    {
+      "source": "/open-source/customize/agent/basics",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/customize/agent/all-parameters",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/customize/agent/prompting-guide",
+      "destination": "/open-source/agent"
+    },
+    {
+      "source": "/open-source/customize/agent/output-format",
+      "destination": "/open-source/output"
+    },
+    {
+      "source": "/open-source/customize/browser/basics",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/all-parameters",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/real-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/remote",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/browser/authentication",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/customize/tools/basics",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/tools/add",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/tools/response",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/tools/remove",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/tools/available",
+      "destination": "/open-source/tools"
+    },
+    {
+      "source": "/open-source/customize/hooks",
+      "destination": "/open-source/long-tasks"
+    },
+    {
+      "source": "/open-source/customize/integrations/mcp-server",
+      "destination": "/open-source/mcp"
+    },
+    {
+      "source": "/open-source/customize/integrations/openai",
+      "destination": "/open-source/legacy/0.x/customize/integrations/openai"
+    },
+    {
+      "source": "/open-source/customize/integrations/toolsets-for-claude",
+      "destination": "/open-source/legacy/0.x/customize/integrations/toolsets-for-claude"
+    },
+    {
+      "source": "/open-source/legacy/actor/basics",
+      "destination": "/open-source/legacy/0.x/actor/basics"
+    },
+    {
+      "source": "/open-source/legacy/actor/examples",
+      "destination": "/open-source/legacy/0.x/actor/examples"
+    },
+    {
+      "source": "/open-source/legacy/actor/all-parameters",
+      "destination": "/open-source/legacy/0.x/actor/all-parameters"
+    },
+    {
+      "source": "/open-source/legacy/sandbox/quickstart",
+      "destination": "/open-source/legacy/0.x/sandbox/quickstart"
+    },
+    {
+      "source": "/open-source/legacy/sandbox/events",
+      "destination": "/open-source/legacy/0.x/sandbox/events"
+    },
+    {
+      "source": "/open-source/legacy/sandbox/all-parameters",
+      "destination": "/open-source/legacy/0.x/sandbox/all-parameters"
+    },
+    {
+      "source": "/open-source/examples/templates/fast-agent",
+      "destination": "/open-source/ultrafast"
+    },
+    {
+      "source": "/open-source/examples/templates/follow-up-tasks",
+      "destination": "/open-source/long-tasks"
+    },
+    {
+      "source": "/open-source/examples/templates/parallel-browser",
+      "destination": "/open-source/browsers"
+    },
+    {
+      "source": "/open-source/examples/templates/sensitive-data",
+      "destination": "/open-source/secrets"
+    },
+    {
+      "source": "/open-source/examples/templates/secure",
+      "destination": "/open-source/secrets"
+    },
+    {
+      "source": "/open-source/examples/templates/playwright-integration",
+      "destination": "/open-source/legacy/0.x/examples/templates/playwright-integration"
+    },
+    {
+      "source": "/open-source/examples/templates/more-examples",
+      "destination": "/open-source/quickstart"
+    },
+    {
+      "source": "/open-source/examples/apps/ad-use",
+      "destination": "/open-source/legacy/0.x/examples/apps/ad-use"
+    },
+    {
+      "source": "/open-source/examples/apps/msg-use",
+      "destination": "/open-source/legacy/0.x/examples/apps/msg-use"
+    },
+    {
+      "source": "/open-source/examples/apps/news-use",
+      "destination": "/open-source/legacy/0.x/examples/apps/news-use"
+    },
+    {
+      "source": "/open-source/examples/apps/vibetest-use",
+      "destination": "/open-source/legacy/0.x/examples/apps/vibetest-use"
+    },
+    {
+      "source": "/open-source/examples/skills/overview",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/open-source/examples/skills/browser-use",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/open-source/examples/skills/cloud",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/open-source/examples/skills/open-source",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/open-source/examples/skills/qa",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/open-source/examples/skills/remote-browser",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/open-source/examples/skills/x402",
+      "destination": "/open-source/skills"
+    },
+    {
+      "source": "/open-source/development/monitoring/telemetry",
+      "destination": "/open-source/telemetry"
+    },
+    {
+      "source": "/open-source/development/monitoring/costs",
+      "destination": "/open-source/models"
+    },
+    {
+      "source": "/open-source/development/monitoring/observability",
+      "destination": "/open-source/legacy/0.x/development/monitoring/observability"
+    },
+    {
+      "source": "/open-source/development/monitoring/openlit",
+      "destination": "/open-source/legacy/0.x/development/monitoring/openlit"
+    },
+    {
+      "source": "/open-source/development/setup/local-setup",
+      "destination": "/open-source/legacy/0.x/development/setup/local-setup"
+    },
+    {
+      "source": "/open-source/development/setup/contribution-guide",
+      "destination": "/open-source/legacy/0.x/development/setup/contribution-guide"
+    },
+    {
+      "source": "/open-source/development/get-help",
+      "destination": "/open-source/get-help"
     }
   ],
   "description": "Browser Use Cloud hosts stealth browsers for AI agents: a custom Chromium you drive over CDP with Playwright, Puppeteer, or the browser-use library. From $0.02 per browser-hour, with residential proxies and CAPTCHA solving. These docs also cover the Cloud Agent API and the open-source browser-use Python library.",
@@ -1252,7 +1468,7 @@
       "A V4 session holds conversation history, a workspace holds files, and a profile holds browser state. These IDs and V3/V4 workspace namespaces are not interchangeable. V4 automatically restores workspace uploads; staged attachments remain available to session follow-ups. Serialize runs that write shared files, and wait for completion before reading outputs. See https://docs.browser-use.com/cloud/agent/workspaces.md.",
       "API browser recording defaults to off. Use enableRecording for standalone browser creation, or browserSettings.record for an agent run. Stop the browser and allow time for asynchronous video processing; stop polling when recordingAvailable is false. Live preview is for an active browser. Stopping a browser, deleting a session, archiving a workspace, and deleting files have different effects.",
       "Use model-specific reasoning values. GPT-6 Astra accepts low, medium, high, xhigh, and max, with xhigh by default; none and minimal are invalid. Use the public REST schema when installed SDK types lag new fields. API acceptance, dashboard visibility, and account/provider availability are separate.",
-      "For open-source browser-use, is_done only reports a terminal done action. is_successful is the agent-reported outcome; verify important external actions independently. Cloud timeout, API client timeout, model timeout, and task completion are separate concepts.",
+      "For open-source browser-use 1.0, result.is_done() means the run completed (status completed); result.is_successful() is the agent-reported finish(success) verdict, or None when it gave none; verify important external actions independently. Cloud timeout, API client timeout, model timeout, and task completion are separate concepts.",
       "For failed requests, use https://docs.browser-use.com/cloud/guides/troubleshooting.md. Inspect the full error and project before retrying or adding credits. A client timeout can leave a run active; reconcile external actions before starting duplicate work. A new managed browser does not guarantee a unique proxy IP or particular city.",
       "V4 secretBindings.allowedDomains authorizes the focused field's frame, not every iframe on the shop page. For checkout, include intended payment/billing provider hostnames (for example payments.bigcommerce.com). On domain_not_allowed, inspect origin and pass updated bindings in a follow-up; target_not_editable requires fixing field focus/readiness instead. See https://docs.browser-use.com/cloud/guides/secrets.md.",
       "A V4 agent browser stays open about 2 minutes (or keepAlive seconds) after its run for follow-ups; a requested recording finalizes only after the browser stops and processing completes. Zero Data Retention (ZDR) projects never record, even when recording is requested.",
