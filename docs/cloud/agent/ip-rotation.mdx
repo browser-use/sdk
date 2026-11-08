@@ -8,7 +8,8 @@ Let your Cloud agent request a fresh connection when a website stops responding 
 The agent can continue the same task without starting the whole workflow again.
 
 <Note>
-Connection recovery must be enabled for your project.
+Connection recovery currently uses a staged rollout.
+The rollout flag controls release safety; customers do not need a permanent project opt-in.
 The agent tool is `refresh_connection`; it is not a method on the client SDK.
 </Note>
 
@@ -143,7 +144,9 @@ Keep failed attempts in your evaluation results.
 ## Regional availability
 
 Global sessions can request supported proxy countries, including Japan.
-EU sessions restrict managed proxy countries to EU member states.
+The current EU deployment uses direct egress, so connection refresh does not yet change its public IP.
+Residential IP rotation needs EU proxy configuration before general release.
+EU sessions restrict managed proxy country requests to EU member states.
 Use `de` or another supported EU country on the EU endpoint; `jp`, `us`, and `gb` are not accepted.
 
 EU sessions do not run automatic CAPTCHA solving.
