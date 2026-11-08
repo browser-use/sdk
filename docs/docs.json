@@ -94,6 +94,7 @@
                       "cloud/agent/thinking-levels",
                       "cloud/agent/structured-output",
                       "cloud/agent/sessions",
+                      "cloud/agent/ip-rotation",
                       "cloud/agent/workspaces",
                       "cloud/agent/scripts",
                       "cloud/agent/human-in-the-loop",

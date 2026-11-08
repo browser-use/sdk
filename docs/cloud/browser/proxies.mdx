@@ -4,10 +4,14 @@ description: "Configure residential or custom proxies for API V4 browsers and ag
 icon: "map-pin"
 ---
 
-A US residential proxy is enabled by default. The browser's traffic passes
+A US residential proxy is the standard default. Fast agent modes can start without a proxy.
+The browser's traffic passes
 through that residential IP before reaching the website, so the website sees
 the proxy's location—not your server's. To allow or block domains, see
 [Network policies](/cloud/browser/network-policies).
+
+For recovery inside a hosted agent run, see [agent IP rotation](/cloud/agent/ip-rotation).
+The agent can refresh its connection without restarting the whole task.
 
 <picture className="block dark:hidden">
   <source media="(max-width: 600px)" srcSet="/cloud/images/browser-proxy-light-mobile.svg" />

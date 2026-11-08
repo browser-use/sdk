@@ -4,8 +4,9 @@ description: "Cloud browsers solve supported CAPTCHA challenges automatically."
 icon: "shield-check"
 ---
 
-Automatic CAPTCHA solving is enabled by default for API V4 Agent runs and
-standalone Cloud Browser sessions.
+The global deployment enables automatic CAPTCHA solving for standard V4 agents and standalone browsers.
+Fast agent modes use the on-demand `solve_captcha` tool.
+The [EU deployment](/cloud/eu-deployment) disables automatic CAPTCHA solving.
 
 For a standalone browser created with `POST /api/v4/browsers`, set
 `"solveCaptchas": false` to handle challenges yourself. This standalone-browser

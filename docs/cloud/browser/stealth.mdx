@@ -14,13 +14,17 @@ Every cloud browser session runs in a hardened Chromium fork with stealth enable
 - **Ad and cookie banner blocking** — Banners are dismissed automatically so the agent sees clean pages and executes faster.
 - **Anti-bot protections** — Help with sites protected by Cloudflare, PerimeterX, and other detection services. Access to every site is not guaranteed.
 
-Cloud browsers also solve CAPTCHAs automatically.
+Standard global Cloud browsers also solve CAPTCHAs automatically.
+Fast agent modes use an on-demand solver.
+The [EU deployment](/cloud/eu-deployment) disables automatic CAPTCHA solving.
 See [CAPTCHA handling](/cloud/browser/captcha-handling) for what to do when a
 solver is still working or a site has a specific anti-bot issue.
 
 ## Residential proxies
 
-Residential proxies are enabled by default across 195+ countries. This makes browser sessions appear as real users from the target geography. See [Proxies](/cloud/browser/proxies) for details on geo-targeting and custom proxy configuration.
+Managed residential proxies support country selection. Standard global sessions use a US proxy by default.
+Fast agent modes can start without a proxy, and EU sessions restrict country selection. See [Proxies](/cloud/browser/proxies) for geo-targeting and custom configuration.
+Use [agent IP rotation](/cloud/agent/ip-rotation) to recover within an agent task.
 
 Stealth is included in the managed browser. It is not a separate subscription
 upgrade you must buy to enable these protections. A target site can still

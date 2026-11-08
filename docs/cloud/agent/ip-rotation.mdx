@@ -1,0 +1,163 @@
+---
+title: Agent IP rotation
+description: "Rotate residential IPs during Cloud agent runs. Change proxy countries and recover browsers without exposing credentials."
+icon: "refresh-cw"
+---
+
+Let your Cloud agent request a fresh connection when a website stops responding or rejects an IP.
+The agent can continue the same task without starting the whole workflow again.
+
+<Note>
+Connection recovery currently uses a staged rollout.
+The rollout flag controls release safety; customers do not need a permanent project opt-in.
+The agent tool is `refresh_connection`; it is not a method on the client SDK.
+</Note>
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/agent-ip-rotation-light-mobile.svg" />
+  <img src="/cloud/images/agent-ip-rotation-light.svg" alt="One agent task keeps its browser state while refresh_connection requests a fresh residential connection." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/agent-ip-rotation-dark-mobile.svg" />
+  <img src="/cloud/images/agent-ip-rotation-dark.svg" alt="One agent task keeps its browser state while refresh_connection requests a fresh residential connection." noZoom />
+</picture>
+
+## Why rotate an IP during a task?
+
+IP reputation changes. A website can blacklist an address, reject a location, or stop accepting an existing connection.
+We maintain the residential proxy network, but individual addresses can still face restrictions.
+
+A new connection can help the agent continue with its existing tabs, cart, and login state.
+Like a local browser, a cloud browser can also hang or crash.
+That case can require a replacement browser.
+
+Measure the complete task, including recovery.
+A fresh IP cannot guarantee access or a successful checkout.
+See [stealth protections](/cloud/browser/stealth) and [troubleshooting](/cloud/guides/troubleshooting) for other causes.
+
+## Start one agent run
+
+Send the task normally. The agent receives the recovery tool when your project has access.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+run = client.runs.create(
+    "Find the price of a cotton T-shirt on https://www.uniqlo.com/jp/ja/.",
+    browser_settings={"proxyCountryCode": "jp"},
+)
+result = client.runs.wait_for_completion(run.id)
+print(result.result)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const run = await client.runs.create({
+  task: "Find the price of a cotton T-shirt on https://www.uniqlo.com/jp/ja/.",
+  browserSettings: { proxyCountryCode: "jp" },
+});
+const result = await client.runs.waitForCompletion(run.id);
+console.log(result.result);
+```
+</CodeGroup>
+
+You can specify a starting country.
+The agent can choose another supported country during the run when the task requires it.
+
+## Agent tool calls
+
+These examples show calls inside the agent, not client SDK methods.
+
+```javascript
+refresh_connection({})
+refresh_connection({ country: "jp" })
+refresh_connection({ new_browser: true, country: "jp" })
+```
+
+| Parameter | Default | Purpose |
+| --- | --- | --- |
+| `country` | Current country | Request a supported country for a managed proxy. |
+| `new_browser` | `false` | Replace the browser when it crashes or remains unreachable. |
+| `reason` | Optional | Describe the observed problem. |
+
+The parameters can be combined.
+Customers do not supply an extra proxy-session ID or put proxy passwords in the tool call.
+Without an existing managed proxy, refresh selects the regional default country.
+
+## Refresh a connection or replace the browser?
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/connection-recovery-light-mobile.svg" />
+  <img src="/cloud/images/connection-recovery-light.svg" alt="Connection refresh preserves browser state. Browser replacement starts another browser and can reset page state." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/cloud/images/connection-recovery-dark-mobile.svg" />
+  <img src="/cloud/images/connection-recovery-dark.svg" alt="Connection refresh preserves browser state. Browser replacement starts another browser and can reset page state." noZoom />
+</picture>
+
+| Observed problem | First action |
+| --- | --- |
+| Access denied, connection failure, or a persistent stall | Refresh the connection and check the page again. |
+| Content requires another country | Request that supported country. |
+| Browser crash or an unreachable browser | Set `new_browser: true`, then follow the tool's reconnect instructions. |
+| An active CAPTCHA solver | Let it finish before refreshing. See [CAPTCHA handling](/cloud/browser/captcha-handling). |
+
+Connection refresh preserves browser storage.
+A website can still request sign-in or verification after an IP change.
+Browser replacement can lose tabs, page state, and logins.
+Saved profiles can preserve some login data; do not assume the current page survives.
+
+## Custom proxies and Evervault
+
+With a custom proxy, the tool reconnects using the existing credentials.
+The upstream provider decides whether that new connection receives another IP.
+An upstream session that pins an IP can keep the same address.
+
+Evervault uses this same custom-proxy path.
+Reconnecting preserves the existing Evervault proxy credentials.
+Configure your residential egress in Evervault when creating its browser token.
+
+Custom-proxy country changes require new proxy settings.
+The tool cannot rewrite a country inside an opaque Evervault credential.
+A replacement custom browser also needs the current browser driver to remain reachable.
+
+Keep credentials in browser settings, outside the task prompt.
+The recovery response does not return proxy passwords.
+See [custom proxy configuration](/cloud/browser/proxies#custom-proxy) and [Evervault Browser Tokens](https://docs.evervault.com/browser-tokens).
+
+## Read a failed refresh correctly
+
+A failed refresh does not confirm a new IP.
+The agent must inspect the tool result and verify website access before continuing.
+
+- A rejected country needs a supported value.
+- An expired custom credential needs renewal from its owner.
+- An upstream HTTP `407` means proxy authentication failed; changing the website URL does not fix it.
+- A timeout can leave the outcome uncertain. Check the existing browser before requesting another replacement.
+
+Use the run's [event stream](/cloud/agent/observability) to inspect recovery calls and their results.
+Keep failed attempts in your evaluation results.
+
+## Regional availability
+
+Global sessions can request supported proxy countries, including Japan.
+The current EU deployment uses direct egress, so connection refresh does not yet change its public IP.
+Residential IP rotation needs EU proxy configuration before general release.
+EU sessions restrict managed proxy country requests to EU member states.
+Use `de` or another supported EU country on the EU endpoint; `jp`, `us`, and `gb` are not accepted.
+
+EU sessions do not run automatic CAPTCHA solving.
+See [EU deployment](/cloud/eu-deployment) for the full regional limits.
+
+## What happened to new_browser?
+
+Older compatibility paths can still expose `new_browser`.
+Projects with connection recovery enabled use `refresh_connection` instead.
+Its `new_browser` parameter requests a replacement through the same tool.
+
+For browsers that you control directly, use the separate
+[standalone browser proxy API](/cloud/browser/proxies#change-the-proxy-of-a-running-browser).
+
