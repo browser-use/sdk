@@ -1,0 +1,253 @@
+---
+title: "Examples"
+description: "Runnable browser-use 1.0 scripts: extraction to Pydantic, forms, logins with secrets, parallel agents, files, custom tools, cloud browsers and Playwright."
+icon: "square-code"
+---
+
+Each script runs as is after the [Quickstart](/open-source/quickstart) (`uv add browser-use` and `browser-use login`). Save it as a file and run it with `uv run <file>.py`. They use the default model, `bu-fast`, and a Browser Use Cloud browser unless they say otherwise. Every one was run end to end against browser-use 1.0; the outputs shown are from those runs.
+
+## Extract data into a Pydantic model
+
+Pass a type as `output_model_schema` and read a typed instance back. See [Output](/open-source/output).
+
+```python extract.py
+from pydantic import BaseModel
+
+from browser_use import Agent
+
+
+class Story(BaseModel):
+    title: str
+    url: str
+    points: int
+
+
+class Stories(BaseModel):
+    stories: list[Story]
+
+
+agent = Agent('Open https://news.ycombinator.com and return the top 5 stories', output_model_schema=Stories)
+result = agent.run_sync()
+if result.structured_output is None:
+    raise SystemExit(f'{result.status}: {result.error}')
+for story in result.structured_output.stories:
+    print(story.points, story.title, story.url)
+```
+
+```text Output
+196 Goldman Sachs Is Pulling Claude Code from Its Bankers and Traders https://www.thestateofai.com/...
+8 Outlook.com Is Quietly Rejecting Email from Domains Without DMARC https://mailroute.net/...
+...
+```
+
+## Fill and submit a form
+
+Describe every field in the task. The agent finds the inputs, fills them and submits.
+
+```python form.py
+from browser_use import Agent
+
+task = """Open https://httpbin.org/forms/post and submit the form with:
+customer name Ada Lovelace, telephone 555-0100, email ada@example.com,
+a large pizza with bacon and mushroom, delivery time 19:30, instructions "Ring twice".
+Return the JSON the page shows after submitting."""
+
+result = Agent(task).run_sync()
+print(result.final_result())
+```
+
+```text Output
+{ ..., "form": { "comments": "Ring twice", "custemail": "ada@example.com", "custname": "Ada Lovelace",
+  "custtel": "555-0100", "delivery": "19:30", "size": "large", "topping": ["bacon", "mushroom"] } }
+```
+
+## Log in with secrets
+
+The model sees the names `username` and `password`, never the values, and they are typed only on the site you scope them to. See [Secrets](/open-source/secrets).
+
+```python login.py
+import os
+
+from browser_use import Agent
+
+agent = Agent(
+    'Log in on https://the-internet.herokuapp.com/login, then return the message the page shows',
+    sensitive_data={
+        # typed only on this site; the model sees the names, never the values
+        'the-internet.herokuapp.com': {
+            'username': os.environ.get('APP_USER', 'tomsmith'),
+            'password': os.environ.get('APP_PASSWORD', 'SuperSecretPassword!'),
+        },
+    },
+)
+print(agent.run_sync().final_result())
+```
+
+```text Output
+You logged into a secure area!
+```
+
+For logins you don't want typed at all, reuse a logged-in profile: `Browser(cloud_profile_id=...)` or `Browser('chrome', profile='Work')`. See [Browsers](/open-source/browsers).
+
+## Run agents in parallel
+
+One `Browser()` per agent, then `asyncio.gather`. Two agents on one browser at once raise `RuntimeError`.
+
+```python parallel.py
+import asyncio
+
+from browser_use import Agent, Browser
+
+
+async def main():
+    sites = ['https://example.com', 'https://www.python.org', 'https://news.ycombinator.com']
+    agents = [Agent(f'Return the page title of {url}', browser=Browser()) for url in sites]  # one browser each
+    results = await asyncio.gather(*(agent.run(max_steps=10) for agent in agents))
+    for url, result in zip(sites, results):
+        print(url, '->', result.final_result())
+
+
+asyncio.run(main())
+```
+
+```text Output
+https://example.com -> Example Domain
+https://www.python.org -> Welcome to Python.org
+https://news.ycombinator.com -> Hacker News
+```
+
+## Upload and download files
+
+Put the file in the agent's workspace and name it in the task. Downloads land in `workspace/downloads` and are listed in `result.downloads`. This one uses a local Chromium. See [Files](/open-source/files).
+
+```python files.py
+import tempfile
+from pathlib import Path
+
+from browser_use import Agent, Browser
+
+workspace = Path(tempfile.mkdtemp())
+(workspace / 'invoice.txt').write_text('Invoice 42: 3 widgets')
+
+agent = Agent(
+    'Upload invoice.txt on https://the-internet.herokuapp.com/upload and note the file name the page confirms. '
+    'Then download any one .txt file from https://the-internet.herokuapp.com/download.',
+    workspace=workspace,
+    browser=Browser('chromium'),
+)
+result = agent.run_sync()
+print(result.final_result())
+print('downloaded:', result.downloads)  # files in workspace/downloads
+```
+
+```text Output
+Upload confirmed: invoice.txt. Download completed: HUH.txt.
+downloaded: [PosixPath('/tmp/tmpnwb43_ht/downloads/HUH.txt')]
+```
+
+## Give the agent your own tool
+
+A decorated function runs in your process with the arguments the model passes: write to your database, call an internal API, ask for a 2FA code. See [Tools](/open-source/tools).
+
+```python custom_tool.py
+import sqlite3
+
+from browser_use import Agent, Tools
+
+db = sqlite3.connect('jobs.db')
+db.execute('CREATE TABLE IF NOT EXISTS jobs (title TEXT, url TEXT)')
+tools = Tools()
+
+
+@tools.action('Save one job posting to our database')
+async def save_job(title: str, url: str) -> str:
+    db.execute('INSERT INTO jobs VALUES (?, ?)', (title, url))
+    db.commit()
+    return f'saved: {title}'
+
+
+agent = Agent('Open https://news.ycombinator.com/jobs and save the first 3 job postings with save_job', tools=tools)
+print(agent.run_sync().final_result())
+print(db.execute('SELECT title FROM jobs').fetchall())
+```
+
+```text Output
+Saved the first 3 Hacker News job postings: UpCodes, Mbodi AI, and Bild AI.
+[("UpCodes (YC S17) is hiring SDR's to sell AI compliance software",), ('Mbodi AI (YC P25) Is Hiring Research and Robotic Engineers',), ...]
+```
+
+## Use a cloud browser in another country
+
+Cloud browsers come with a residential proxy (`'us'` by default), CAPTCHA solving and stealth. `live_view=True` opens a live view you can watch; `cloud_profile_id=...` keeps logins between runs. See [Browsers](/open-source/browsers#cloud-browser).
+
+```python cloud.py
+from browser_use import Agent, Browser
+
+browser = Browser(
+    cloud_proxy_country_code='de',  # residential proxy in Germany
+    cloud_timeout=10,  # minutes; the server stops the browser after this
+)
+agent = Agent('Open https://ipinfo.io/json and return the country and city it shows', browser=browser)
+print(agent.run_sync().final_result())
+```
+
+```text Output
+Country: Germany (DE)
+City: Duisburg
+```
+
+## Combine with Playwright
+
+Playwright and the agent can share one browser over CDP. Here Playwright logs in deterministically, and the agent picks up in the same session. Install Playwright first: `uv add playwright && uv run playwright install chromium`.
+
+```python with_playwright.py
+import asyncio
+import tempfile
+
+from playwright.async_api import async_playwright
+
+from browser_use import Agent, Browser
+
+
+async def main():
+    async with async_playwright() as p:
+        # a persistent context: Playwright's pages and the agent's tabs share cookies
+        context = await p.chromium.launch_persistent_context(
+            tempfile.mkdtemp(), headless=True, args=['--remote-debugging-port=9242']
+        )
+        page = context.pages[0]
+        await page.goto('https://the-internet.herokuapp.com/login')  # the scripted part
+        await page.fill('#username', 'tomsmith')
+        await page.fill('#password', 'SuperSecretPassword!')
+        await page.click('button[type=submit]')
+        await page.wait_for_url('**/secure')
+
+        agent = Agent(  # the part that needs judgment
+            'Open https://the-internet.herokuapp.com/secure and return the heading and the message it shows',
+            browser=Browser(cdp_url='http://127.0.0.1:9242'),
+        )
+        result = await agent.run()
+        print(result.final_result())
+        await context.close()
+
+
+asyncio.run(main())
+```
+
+```text Output
+Heading: Secure Area
+Message: Welcome to the Secure Area. When you are done click logout below.
+```
+
+The agent connects with `Browser(cdp_url=...)` and leaves the browser running when it ends, so Playwright can keep going. Use `launch_persistent_context`: a plain `launch()` + `new_page()` opens an isolated context whose cookies the agent's tabs would not see.
+
+## More
+
+- Follow-up tasks on the same page: [Long tasks](/open-source/long-tasks#follow-up-tasks).
+- A local model with Ollama: [Models](/open-source/models#ollama).
+- Faster runs with `bu-ultrafast`: [Ultrafast](/open-source/ultrafast).
+- Restrict where the browser can go: [Domains](/open-source/domains).
+
+## Older example apps
+
+`ad-use`, `vibetest-use`, `news-use` and `msg-use` were built on browser-use 0.x and need `browser-use<1`. Their pages are kept in the 0.x docs: [ad-use](/open-source/legacy/0.x/examples/apps/ad-use), [vibetest-use](/open-source/legacy/0.x/examples/apps/vibetest-use), [news-use](/open-source/legacy/0.x/examples/apps/news-use), [msg-use](/open-source/legacy/0.x/examples/apps/msg-use). The 0.x templates are under [legacy templates](/open-source/legacy/0.x/examples/templates/more-examples).

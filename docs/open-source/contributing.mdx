@@ -1,0 +1,58 @@
+---
+title: "Contributing"
+description: "Set up the browser-use repo locally, run the tests and the linters, and open a pull request."
+icon: "git-pull-request"
+---
+
+## Set up
+
+You need [uv](https://docs.astral.sh/uv/) and Python 3.11 or newer. Chrome (or Chromium) is needed only for the browser tests.
+
+```bash
+git clone https://github.com/browser-use/browser-use
+cd browser-use
+uv sync --all-extras
+```
+
+`uv sync` creates `.venv` with the library and the dev tools (pytest, ruff, pyright, pre-commit). Try the library from your checkout with `uv run python your_script.py`.
+
+## Test
+
+```bash
+uv run pytest tests/ci                  # everything; tests that need Chrome skip without it
+uv run pytest tests/ci -m "not chrome"  # what the Windows, macOS and Linux matrix runs
+```
+
+The tests never call a model provider or create a cloud browser. They run a real REPL worker and a real headless Chrome with a temp profile, and a scripted Pydantic AI `FunctionModel` plays the model. Cloud HTTP calls are mocked. Point `CHROME=/path/to/chrome` at a browser if it isn't found.
+
+## Lint and type-check
+
+```bash
+uv run pre-commit run --all-files  # codespell, pyupgrade, ruff check + format, pyright
+uv run pre-commit install          # optional: run them on every commit
+```
+
+The code uses tabs, `uv`, and modern typing (`str | None`). CI runs the same pre-commit hooks and `uv run pyright`.
+
+## How the code is laid out
+
+```text
+Agent(task, llm, browser).run()   browser_use/agent/service.py   public API, lifecycle, telemetry
+  -> model                        browser_use/llm/__init__.py    bu-fast gateway default, ChatOpenAI/Anthropic/Google
+  -> Browser.start()              browser_use/browser/browser.py cloud (default), 'chromium', 'chrome', cdp_url
+  -> agent loop                   browser_use/agent/loop.py      Pydantic AI loop, python tool, finish, budgets
+       python(code)               browser_use/repl/              the REPL worker that runs the model's cells
+  <- AgentHistoryList             browser_use/agent/views.py     the result
+```
+
+The full map, with the CLI, MCP server and skills, is in [AGENTS.md](https://github.com/browser-use/browser-use/blob/main/AGENTS.md).
+
+## Pull requests
+
+- One regression test per bug, failing before your fix.
+- Don't replace model names in code or tests: people use models you may not know yet.
+- The system prompt (`browser_use/agent/prompt.py`) is evaluated on a benchmark. Don't change it casually.
+- A 0.x option that 1.0 cannot honor raises a `TypeError` that names it. Keep [MIGRATING.md](https://github.com/browser-use/browser-use/blob/main/MIGRATING.md) in sync when you add or remove one.
+- Don't add example files to show off a feature.
+
+Questions: [GitHub issues](https://github.com/browser-use/browser-use/issues) or [Discord](https://link.browser-use.com/discord). For these docs, open a pull request on [browser-use/sdk](https://github.com/browser-use/sdk) (the `docs/` folder).

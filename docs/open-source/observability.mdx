@@ -1,0 +1,75 @@
+---
+title: "Observability"
+description: "What a browser-use 1.0 run tells you: step logs, the result's usage, cost and transcript, the workspace files, and OpenTelemetry traces through Pydantic AI."
+icon: "activity"
+---
+
+| What | Where |
+|---|---|
+| Live progress | One INFO log line per step on `logging.getLogger('browser_use')` |
+| Tokens and cost | `result.usage`, `result.cost_usd` |
+| Every message, cell and output | `result.messages`, and the files in `agent.workspace` |
+| Traces in your observability tool | OpenTelemetry spans from Pydantic AI |
+
+## Logs
+
+Each step logs `step N: <first line of the cell>`, plus the error if the cell failed, and the run ends with `completed in N steps, Ns`. Stream it to your UI with a logging handler: [Long tasks: Live progress](/open-source/long-tasks#live-progress). `BROWSER_USE_LOGGING_LEVEL=warning` turns the step lines off.
+
+## Usage and cost
+
+```python
+from browser_use import Agent
+
+result = Agent('What is the title of https://example.com?').run_sync()
+print(result.steps, result.duration_s)
+print(result.usage)  # {'input': ..., 'output': ..., 'cache_read': ..., 'cache_write': ..., 'requests': ...}
+print(result.cost_usd)  # model cost in USD, plus web searches; None when the price is unknown
+```
+
+`cost_usd` covers the model and [web searches](/open-source/web-search), not cloud browser time. See [Models: Usage and cost](/open-source/models#usage-and-cost) and [Output](/open-source/output).
+
+## Transcript and workspace
+
+- `result.messages` is the full conversation as Pydantic AI messages: every cell the model wrote and what it returned, with secrets redacted.
+- `agent.workspace` keeps each cell's output in `.browser-use/cells/`, plus screenshots and files the agent saved. It is not deleted after the run. See [Files](/open-source/files).
+
+## OpenTelemetry traces
+
+browser-use runs on Pydantic AI, so Pydantic AI's instrumentation traces it: one span per run, per model request (`chat bu-fast`, with tokens and the messages) and per tool call (`execute_tool python`, with the code and its output). Send them to any OpenTelemetry (OTLP) backend:
+
+```bash
+uv add opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
+```
+
+```python
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from pydantic_ai import Agent as PydanticAgent
+from pydantic_ai.models.instrumented import InstrumentationSettings
+
+from browser_use import Agent
+
+provider = TracerProvider()
+provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))  # reads OTEL_EXPORTER_OTLP_ENDPOINT
+PydanticAgent.instrument_all(InstrumentationSettings(tracer_provider=provider))
+
+print(Agent('What is the title of https://example.com?').run_sync().final_result())
+```
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 uv run agent.py
+```
+
+To trace to Logfire, follow [Pydantic AI's Logfire guide](https://ai.pydantic.dev/logfire/) (`logfire.instrument_pydantic_ai()`).
+
+<Warning>
+Spans carry the task, the code the model writes and what it reads from pages. Typed `sensitive_data` values are redacted from cell output, but screenshots and page text are not. Pass `InstrumentationSettings(..., include_content=False)` to keep message content out of the spans.
+</Warning>
+
+## Not in 1.0
+
+- **Laminar and OpenLIT integrations.** 0.x shipped Laminar hooks and an OpenLIT guide. 1.0 has neither; use the OpenTelemetry spans above, which any OTLP backend accepts. The 0.x pages: [observability (0.x)](/open-source/legacy/0.x/development/monitoring/observability), [OpenLIT (0.x)](/open-source/legacy/0.x/development/monitoring/openlit).
+- **Per-step hooks and per-action history.** 0.x `on_step_start` / `on_step_end` and `history.action_names()` are gone. Use the log handler and `result.messages`.
+
+browser-use's own anonymized usage events are a separate thing: see [Telemetry](/open-source/telemetry).

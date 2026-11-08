@@ -1,0 +1,24 @@
+---
+title: "Browser Use Terminal"
+description: "Browser Use Terminal is a separate terminal app (TUI) for browser agents. How to install it, and what changed for its Python API in browser-use 1.0."
+icon: "square-terminal"
+---
+
+Browser Use Terminal is a terminal UI for browser agents: you type a task, watch the agent work in your Chrome, a headless Chromium or a Browser Use cloud browser, and steer, stop or resume it. It is a separate Rust app with its own agent loop, not part of the `browser-use` Python package, so browser-use 1.0 does not change it.
+
+```bash
+curl -fsSL https://browser-use.com/terminal/install.sh | sh
+browser
+```
+
+Inside the app, `/auth` signs in, `/model` picks the model, `/browser` picks local, headless or cloud, and `/update` updates it. Source and releases: [github.com/browser-use/terminal](https://github.com/browser-use/terminal).
+
+## What changed in browser-use 1.0
+
+| 0.x | 1.0 |
+|---|---|
+| `from browser_use.beta import Agent`: Terminal's runtime from Python | Removed from the library. Keep it with `uv add 'browser-use<1'`; see [Terminal (0.x)](/open-source/legacy/0.x/browser-use-terminal#python). |
+| An agent from Python | The 1.0 [`Agent`](/open-source/quickstart). |
+| Terminal commands for coding agents (`browser-use-terminal browser ...`) | Still in Terminal. The `browser-use` CLI does the same for Claude Code, Codex and others: [Browser Use CLI](/open-source/browser-use-cli). |
+
+The full 0.x Terminal guide (TUI commands, CLI, Python settings) is kept at [Browser Use Terminal (0.x)](/open-source/legacy/0.x/browser-use-terminal).
