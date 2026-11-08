@@ -885,6 +885,18 @@
       "destination": "/open-source/telemetry"
     },
     {
+      "source": "/development/monitoring/telemetry.",
+      "destination": "/open-source/telemetry"
+    },
+    {
+      "source": "/development/monitoring/telemetry.ft",
+      "destination": "/open-source/telemetry"
+    },
+    {
+      "source": "/development/telemetry.",
+      "destination": "/open-source/telemetry"
+    },
+    {
       "source": "/development/observability",
       "destination": "/open-source/legacy/0.x/development/monitoring/observability"
     },
