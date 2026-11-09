@@ -9,6 +9,7 @@ icon: "folder"
 Every agent has a workspace directory: the REPL's working directory. It holds the files the agent saves, page text, screenshots and cell output (in `.browser-use/cells/`). The agent is told to save deliverables there.
 
 - Default: a new temp directory named `browser-use-*`, created on first use. `agent.workspace` gives its path.
+- `workspace=` is kept as you pass it, made absolute; symlinks are not resolved. `agent.workspace` and `result.downloads` use that spelling, so `result.downloads[0].relative_to(agent.workspace)` works (on macOS, `/var/...` stays `/var/...`).
 - It is kept after the run, so files the result points to stay readable. Delete it when you are done, or pass your own `workspace=`.
 
 ## Upload files
@@ -31,7 +32,7 @@ agent = Agent(
 print(agent.run_sync().final_result())
 ```
 
-The agent sets it on the file input with `upload_file(selector, path)`. On a cloud browser, the file's bytes are sent through the page, so local paths work there too.
+The agent uploads that file as it is with `upload_file(selector, path)`; it never creates or overwrites the file you name. On a cloud browser, the file's bytes are sent through the page, so local paths work there too.
 
 <Note>
 There is no file allowlist: the agent runs Python as your user and can read any file you can. Run untrusted tasks in a container or VM.

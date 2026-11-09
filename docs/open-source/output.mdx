@@ -61,7 +61,7 @@ print(result.error)  # what ended the run, or None
 | `duration_s` | Seconds. |
 | `usage` | Tokens: `input`, `output`, `cache_read`, `cache_write`, plus `requests`. |
 | `cost_usd` | USD. `None` when the model's price is unknown. See [Models](/open-source/models#usage-and-cost). |
-| `error` | The error that ended the run, or `None`. |
+| `error` | The error that ended the run, or `None`. `run()` returns errors here instead of raising once the browser start begins; see [Agent: run()](/open-source/agent#run). |
 | `downloads` | Files this run added to `agent.workspace/downloads`. Empty with your Chrome and `cdp_url`. See [Files](/open-source/files#downloads). |
 | `messages` | The full transcript as Pydantic AI messages, with secrets redacted. |
 

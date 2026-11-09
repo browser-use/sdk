@@ -65,6 +65,7 @@ except TypeError as e:
 - A run that hits either budget gets one delivery turn. If the agent delivers, `status` is `'completed'` and `success` is `False` when it reports the task unfinished. If not, `status` is `'max_steps'` or `'timeout'`; read `result.partial`. See [Long tasks](/open-source/long-tasks).
 - `max_steps < 1` or `timeout <= 0` raises `ValueError` before any browser starts.
 - One `run()` at a time per `Agent`, and one running `Agent` per `Browser`. Otherwise `run()` raises `RuntimeError`.
+- Configuration errors raise before any browser starts: a missing key (`MissingAPIKeyError`), a removed option or bad argument (`TypeError`, `ValueError`), a Chrome or cloud profile name that matches none (`browser_use.exceptions.BrowserConfigError`, a `ValueError`). After that, `run()` does not raise. A rejected key or model, a browser that fails to start (cloud create 402, 5xx or timeout) and failures inside the run return `status='error'` with the reason in `result.error`. Cancelling the task still raises `CancelledError`.
 
 The browser stops when `run()` ends, unless you pass `Browser(keep_alive=True)`.
 

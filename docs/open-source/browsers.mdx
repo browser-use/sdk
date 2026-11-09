@@ -40,7 +40,7 @@ print(agent.run_sync().final_result())
 
 | Option | Default | What it does |
 |---|---|---|
-| `cloud_profile_id` | none | A cloud profile id, or a unique profile name. Logins persist in it. See [profile sync](/cloud/guides/profile-sync). |
+| `cloud_profile_id` | none | A cloud profile id, or a unique profile name. Logins persist in it. A name that matches no profile, or several, raises `BrowserConfigError` from `run()` before a browser is created. See [profile sync](/cloud/guides/profile-sync). |
 | `cloud_proxy_country_code` | `'us'` | Two-letter country code for the residential proxy. `None` turns it off. |
 | `cloud_timeout` | `60` | Minutes, 1 to 240. The server stops the browser after this either way. |
 | `live_view` | `False` | `True` prints the live view URL and opens it. Anyone with that URL can drive the browser. |
@@ -78,7 +78,7 @@ Files the browser downloads land in `agent.workspace/downloads`. See [Files](/op
 
 It goes through the shared browser-harness daemon, so only one `Browser('chrome')` runs at a time.
 
-`Browser('chrome', profile='Work')` launches a new Chrome on a temporary copy of the profile `Work` (its display name or directory, such as `'Profile 1'`). You get its logins; sync is off and nothing is written back. Your Chrome can stay open, except on Windows, where you must quit it first. `headless` and `executable_path` work here too.
+`Browser('chrome', profile='Work')` launches a new Chrome on a temporary copy of the profile `Work` (its display name or directory, such as `'Profile 1'`). A name that matches none raises `BrowserConfigError` (a `ValueError`) from `run()`, listing your profiles. You get its logins; sync is off and nothing is written back. Your Chrome can stay open, except on Windows, where you must quit it first. `headless` and `executable_path` work here too.
 
 <Warning>
 Your Chrome and your profiles carry your real logins. Code the model writes can read their cookies, and with `Browser('chrome')` your open tabs. Run untrusted tasks in a container or VM.
@@ -143,6 +143,8 @@ asyncio.run(main())
 ```
 
 In a server (FastAPI and the like), create a `Browser()` per request, not one at module level. `Browser('chrome')` can't run in parallel: every one in a process shares one daemon and one attached tab.
+
+Each agent holds a few open files (model connection, REPL socket, worker pipe). `run()` raises the process's soft open-file limit to 10240, or the hard limit if lower, so 100 agents in one process fit on macOS, which starts at 256. It never lowers a limit.
 
 ## Options that raise
 

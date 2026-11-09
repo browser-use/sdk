@@ -72,6 +72,9 @@ Long runs outgrow the model's context window. The agent compacts its history:
 ## Retries
 
 - A rate limit, overload, 5xx or dropped connection from the provider is retried once per run, after the provider's `Retry-After` (at most 60 seconds). Providers whose SDK already retries (OpenAI, Anthropic, OpenAI-compatible) are left to their SDK.
+- A failure inside an HTTP 200 (a failed or cut-off stream, or a `status=failed` body with `server_error`, `overloaded` or `request_timeout`) gets the same one retry.
+- Gateway and OpenAI (Responses API) requests are streamed: 300 seconds for the first event, then up to 930 seconds in all. Other models get 300 seconds per request. A request that gets no answer in time is asked again, and none runs past the start of the delivery turn.
+- A dropped connection's `result.error` names its cause, for example `(OSError: [Errno 24] Too many open files)`.
 - A failed cell is not retried automatically. The model reads the error and decides, within `max_steps`.
 
 ## Live progress

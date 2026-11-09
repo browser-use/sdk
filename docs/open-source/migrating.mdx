@@ -6,7 +6,7 @@ icon: "arrow-up-right"
 
 1.0 replaces the engine. The agent no longer picks one action per step from a DOM dump: it writes Python in a persistent REPL with browser helpers and raw CDP, on Pydantic AI. The common surface (`Agent`, `Browser`, `Tools`, `run()`, `final_result()`) still works.
 
-Anything 1.0 can't honor raises a clear error before a browser starts or anything is billed. Each removed feature raises `<feature> was removed in browser-use 1.0`, plus the 1.0 alternative when there is one. The exception: a few tuning knobs that can't change the result (`use_vision=True`, `flash_mode`, `use_thinking`, ...) log one warning and are ignored.
+Anything 1.0 can't honor raises a clear error before a browser starts or anything is billed. Each removed feature raises `<feature> was removed in browser-use 1.0`, plus the 1.0 alternative when there is one and a link to the migration guide. The exception: a few tuning knobs that can't change the result (`use_vision=True`, `flash_mode`, `use_thinking`, ...) log one warning and are ignored.
 
 <picture className="block dark:hidden">
   <source media="(max-width: 600px)" srcSet="/open-source/images/oss-migrating-light-mobile.svg" />
@@ -44,6 +44,8 @@ asyncio.run(main())
 - **`ValueError: Browser() (a cloud browser) does not take headless=`**: `headless`, `executable_path` and `user_data_dir` are for local browsers. Use `Browser('chromium', headless=True)`.
 - **`TypeError: Agent(<option>=...) was removed in browser-use 1.0`**: an option 1.0 dropped. The message names the replacement when there is one; the tables below list them all.
 - **`TypeError: Agent(max_steps=...) is not an option`**: pass it to `agent.run(max_steps=...)`.
+- **`BrowserConfigError: No Chrome profiles match 'Gaming'. Your profiles: ...`**: `profile=` (or `cloud_profile_id=`) names no profile. It is a `ValueError`, raised from `run()` before a browser starts.
+- **`ModuleNotFoundError` / `ImportError` on a 0.x import**: the message names the 1.0 replacement. Import from the top level: `from browser_use import Agent, Browser, Tools, ActionResult, ChatOpenAI, ...`.
 
 ## What changes by default
 
@@ -141,12 +143,13 @@ See [Models](/open-source/models).
 | `@tools.action(domains=...)` | `Browser(allowed_domains=...)` |
 | built-in actions, `exclude_actions` | removed: the agent writes Python |
 | `ActionResult(is_done=, success=, attachments=)` | removed: the model ends the run with `finish` |
+| `ActionResult(include_in_memory=, include_extracted_content_only_once=)` | ignored, one warning: every result stays in the conversation |
 
 See [Tools](/open-source/tools).
 
 ## Removed modules
 
-`browser_use.dom`, `actor`, `beta`, `sandbox`, `sync`, `filesystem`, `screenshots`, `tokens`, `mcp.client`, and the Anthropic / OpenAI hosted-browser integrations (`browser_use.integrations`, planned for a later release). Import from the top level: `from browser_use import Agent, Browser, Tools, ChatOpenAI, ...`.
+`browser_use.dom`, `actor`, `beta`, `sandbox`, `sync`, `filesystem`, `screenshots`, `tokens`, `mcp.client`, and the Anthropic / OpenAI hosted-browser integrations (`browser_use.integrations`, planned for a later release). Every 0.x module path 1.0 does not have, and every 0.x name a kept module lost, raises an error naming the replacement: `ModuleNotFoundError` for a module, `ImportError` for a name. Both are `ImportError`, so `except ImportError` fallbacks still work. Import from the top level: `from browser_use import Agent, Browser, Tools, ChatOpenAI, ...`.
 
 ## CLI and MCP
 
