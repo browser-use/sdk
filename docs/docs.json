@@ -314,119 +314,121 @@
               "open-source/observability",
               "open-source/telemetry",
               "open-source/contributing",
-              "open-source/get-help"
-            ]
-          },
-          {
-            "group": "Legacy (0.x)",
-            "pages": [
+              "open-source/get-help",
               {
-                "group": "Get Started",
+                "group": "Legacy (0.x)",
                 "icon": "archive",
                 "isDefaultOpen": false,
                 "pages": [
-                  "open-source/legacy/0.x/introduction",
-                  "open-source/legacy/0.x/quickstart",
-                  "open-source/legacy/0.x/supported-models",
-                  "open-source/legacy/0.x/bu-2-0-model-card",
-                  "open-source/legacy/0.x/browser-use-terminal"
-                ]
-              },
-              {
-                "group": "Agent",
-                "icon": "bot",
-                "isDefaultOpen": false,
-                "pages": [
-                  "open-source/legacy/0.x/customize/agent/basics",
-                  "open-source/legacy/0.x/customize/agent/prompting-guide",
-                  "open-source/legacy/0.x/customize/agent/output-format",
-                  "open-source/legacy/0.x/customize/agent/all-parameters"
-                ]
-              },
-              {
-                "group": "Browser",
-                "icon": "app-window",
-                "isDefaultOpen": false,
-                "pages": [
-                  "open-source/legacy/0.x/customize/browser/basics",
-                  "open-source/legacy/0.x/customize/browser/authentication",
-                  "open-source/legacy/0.x/customize/browser/real-browser",
-                  "open-source/legacy/0.x/customize/browser/remote",
-                  "open-source/legacy/0.x/customize/browser/all-parameters"
-                ]
-              },
-              {
-                "group": "Tools",
-                "icon": "wrench",
-                "isDefaultOpen": false,
-                "pages": [
-                  "open-source/legacy/0.x/customize/tools/basics",
-                  "open-source/legacy/0.x/customize/tools/available",
-                  "open-source/legacy/0.x/customize/tools/add",
-                  "open-source/legacy/0.x/customize/tools/remove",
-                  "open-source/legacy/0.x/customize/tools/response",
-                  "open-source/legacy/0.x/customize/hooks"
-                ]
-              },
-              {
-                "group": "Integrations",
-                "icon": "plug",
-                "isDefaultOpen": false,
-                "pages": [
-                  "open-source/legacy/0.x/customize/integrations/toolsets-for-claude",
-                  "open-source/legacy/0.x/customize/integrations/openai",
-                  "open-source/legacy/0.x/customize/integrations/mcp-server"
-                ]
-              },
-              {
-                "group": "Actor",
-                "icon": "mouse-pointer-click",
-                "isDefaultOpen": false,
-                "pages": [
-                  "open-source/legacy/0.x/actor/basics",
-                  "open-source/legacy/0.x/actor/examples",
-                  "open-source/legacy/0.x/actor/all-parameters"
-                ]
-              },
-              {
-                "group": "Sandbox",
-                "icon": "box",
-                "isDefaultOpen": false,
-                "pages": [
-                  "open-source/legacy/0.x/sandbox/quickstart",
-                  "open-source/legacy/0.x/sandbox/events",
-                  "open-source/legacy/0.x/sandbox/all-parameters"
-                ]
-              },
-              {
-                "group": "Examples",
-                "icon": "layout-template",
-                "isDefaultOpen": false,
-                "pages": [
-                  "open-source/legacy/0.x/examples/templates/fast-agent",
-                  "open-source/legacy/0.x/examples/templates/follow-up-tasks",
-                  "open-source/legacy/0.x/examples/templates/parallel-browser",
-                  "open-source/legacy/0.x/examples/templates/playwright-integration",
-                  "open-source/legacy/0.x/examples/templates/sensitive-data",
-                  "open-source/legacy/0.x/examples/templates/secure",
-                  "open-source/legacy/0.x/examples/templates/more-examples",
-                  "open-source/legacy/0.x/examples/apps/ad-use",
-                  "open-source/legacy/0.x/examples/apps/vibetest-use",
-                  "open-source/legacy/0.x/examples/apps/news-use",
-                  "open-source/legacy/0.x/examples/apps/msg-use"
-                ]
-              },
-              {
-                "group": "Development",
-                "icon": "git-pull-request",
-                "isDefaultOpen": false,
-                "pages": [
-                  "open-source/legacy/0.x/development/setup/local-setup",
-                  "open-source/legacy/0.x/development/setup/contribution-guide",
-                  "open-source/legacy/0.x/development/monitoring/observability",
-                  "open-source/legacy/0.x/development/monitoring/openlit",
-                  "open-source/legacy/0.x/development/monitoring/telemetry",
-                  "open-source/legacy/0.x/development/monitoring/costs"
+                  {
+                    "group": "Get Started",
+                    "icon": "archive",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "open-source/legacy/0.x/introduction",
+                      "open-source/legacy/0.x/quickstart",
+                      "open-source/legacy/0.x/supported-models",
+                      "open-source/legacy/0.x/bu-2-0-model-card",
+                      "open-source/legacy/0.x/browser-use-terminal"
+                    ]
+                  },
+                  {
+                    "group": "Agent",
+                    "icon": "bot",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "open-source/legacy/0.x/customize/agent/basics",
+                      "open-source/legacy/0.x/customize/agent/prompting-guide",
+                      "open-source/legacy/0.x/customize/agent/output-format",
+                      "open-source/legacy/0.x/customize/agent/all-parameters"
+                    ]
+                  },
+                  {
+                    "group": "Browser",
+                    "icon": "app-window",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "open-source/legacy/0.x/customize/browser/basics",
+                      "open-source/legacy/0.x/customize/browser/authentication",
+                      "open-source/legacy/0.x/customize/browser/real-browser",
+                      "open-source/legacy/0.x/customize/browser/remote",
+                      "open-source/legacy/0.x/customize/browser/all-parameters"
+                    ]
+                  },
+                  {
+                    "group": "Tools",
+                    "icon": "wrench",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "open-source/legacy/0.x/customize/tools/basics",
+                      "open-source/legacy/0.x/customize/tools/available",
+                      "open-source/legacy/0.x/customize/tools/add",
+                      "open-source/legacy/0.x/customize/tools/remove",
+                      "open-source/legacy/0.x/customize/tools/response",
+                      "open-source/legacy/0.x/customize/hooks"
+                    ]
+                  },
+                  {
+                    "group": "Integrations",
+                    "icon": "plug",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "open-source/legacy/0.x/customize/integrations/toolsets-for-claude",
+                      "open-source/legacy/0.x/customize/integrations/openai",
+                      "open-source/legacy/0.x/customize/integrations/mcp-server"
+                    ]
+                  },
+                  {
+                    "group": "Actor",
+                    "icon": "mouse-pointer-click",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "open-source/legacy/0.x/actor/basics",
+                      "open-source/legacy/0.x/actor/examples",
+                      "open-source/legacy/0.x/actor/all-parameters"
+                    ]
+                  },
+                  {
+                    "group": "Sandbox",
+                    "icon": "box",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "open-source/legacy/0.x/sandbox/quickstart",
+                      "open-source/legacy/0.x/sandbox/events",
+                      "open-source/legacy/0.x/sandbox/all-parameters"
+                    ]
+                  },
+                  {
+                    "group": "Examples",
+                    "icon": "layout-template",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "open-source/legacy/0.x/examples/templates/fast-agent",
+                      "open-source/legacy/0.x/examples/templates/follow-up-tasks",
+                      "open-source/legacy/0.x/examples/templates/parallel-browser",
+                      "open-source/legacy/0.x/examples/templates/playwright-integration",
+                      "open-source/legacy/0.x/examples/templates/sensitive-data",
+                      "open-source/legacy/0.x/examples/templates/secure",
+                      "open-source/legacy/0.x/examples/templates/more-examples",
+                      "open-source/legacy/0.x/examples/apps/ad-use",
+                      "open-source/legacy/0.x/examples/apps/vibetest-use",
+                      "open-source/legacy/0.x/examples/apps/news-use",
+                      "open-source/legacy/0.x/examples/apps/msg-use"
+                    ]
+                  },
+                  {
+                    "group": "Development",
+                    "icon": "git-pull-request",
+                    "isDefaultOpen": false,
+                    "pages": [
+                      "open-source/legacy/0.x/development/setup/local-setup",
+                      "open-source/legacy/0.x/development/setup/contribution-guide",
+                      "open-source/legacy/0.x/development/monitoring/observability",
+                      "open-source/legacy/0.x/development/monitoring/openlit",
+                      "open-source/legacy/0.x/development/monitoring/telemetry",
+                      "open-source/legacy/0.x/development/monitoring/costs"
+                    ]
+                  }
                 ]
               }
             ]
