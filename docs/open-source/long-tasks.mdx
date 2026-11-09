@@ -24,7 +24,7 @@ print(result.status, result.success)
 print(result.final_result() or result.partial)
 ```
 
-To nudge it, ask in the task: "Checkpoint the records you have after each page."
+A plain `checkpoint()` is scratch and does not set `result.partial`. To ask for a partial result, name the flag in the task: "After each page, save the titles you have with `checkpoint('titles.json', titles, partial=True)`."
 
 ## Follow-up tasks
 
