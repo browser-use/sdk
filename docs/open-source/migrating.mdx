@@ -43,7 +43,7 @@ With uv: `uv add 'browser-use<1'`. In `requirements.txt` or `pyproject.toml`: `b
 
 ## Common errors
 
-- **`MissingAPIKeyError: Browser() (a Browser Use Cloud browser) needs a Browser Use API key`**: `Browser()` and the default model are Browser Use Cloud now. Set `BROWSER_USE_API_KEY` (create a key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key)) or run `browser-use login`, or stay local: `Agent(task, llm=ChatOpenAI(...), browser=Browser('chromium'))`.
+- **`MissingAPIKeyError: The default model (bu-fast) needs a Browser Use API key`** (or `Browser() (a Browser Use Cloud browser) needs a Browser Use API key`): the default model and `Browser()` are Browser Use Cloud now. Set `BROWSER_USE_API_KEY` (create a key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key)) or run `browser-use login`, or stay local: `Agent(task, llm=ChatOpenAI(...), browser=Browser('chromium'))`.
 - **`ValueError: Browser() (a cloud browser) does not take headless=`**: `headless`, `executable_path` and `user_data_dir` are for local browsers. Use `Browser('chromium', headless=True)`.
 - **`TypeError: Agent(<option>=...) was removed in browser-use 1.0`**: an option 1.0 dropped. The message names the replacement when there is one; the tables below list them all.
 - **`TypeError: Agent(max_steps=...) is not an option`**: pass it to `agent.run(max_steps=...)`.
