@@ -4,7 +4,7 @@ Run: python3 -I scripts/diagrams/oss-quickstart.py   (writes docs/open-source/im
 
 Mechanism: the Agent loop and its Python REPL run in your process (browser_use/agent/loop.py, repl/). Model requests go
 to the Browser Use gateway (llm default 'bu-fast'); the REPL drives a Browser Use Cloud browser over CDP (Browser()
-default, browser/browser.py). The key from `browser-use login` (or BROWSER_USE_API_KEY) authorizes both.
+default, browser/browser.py). One Browser Use key (BROWSER_USE_API_KEY, or the one `browser-use login` stored) authorizes both.
 """
 import pathlib, sys
 
@@ -13,8 +13,8 @@ from oss_kit import new, terminal, agent_stack, windows, cable, name, bracket  #
 
 TITLE = "First run: your code in the middle, the gateway model and a cloud browser on either side"
 DESC = ("agent.py runs the agent loop and its Python REPL on your machine. Model requests go to the Browser Use gateway "
-        "(bu-fast), and the REPL drives a Browser Use Cloud browser over CDP. One Browser Use key from browser-use login "
-        "runs both.")
+        "(bu-fast), and the REPL drives a Browser Use Cloud browser over CDP. One Browser Use key "
+        "(BROWSER_USE_API_KEY) runs both.")
 
 
 def build(theme):
@@ -46,7 +46,7 @@ def build(theme):
     for x, title, key in ((GX, "Gateway model", "llm='bu-fast'"), (CX, "Your code", "python agent.py"),
                           (bx, "Cloud browser", "Browser()")):
         name(d, x, NY, title, key)
-    bracket(d, GX - 60, bx + 66, NY + 46, "one Browser Use key: browser-use login")
+    bracket(d, GX - 60, bx + 66, NY + 46, "one Browser Use key: BROWSER_USE_API_KEY")
     d.save(f"oss-quickstart-{theme}")
 
 
@@ -77,7 +77,7 @@ def build_mobile(theme):
     y0, y1 = code["floor"] + 6, win["top"] - 2
     cable(d, (XC, y0), (XC, y1))
     d.text(XC + 14, (y0 + y1) / 2 + 4, "CDP", 11, ot, 500, mono=True)
-    bracket(d, 28, W - 28, BY + BH + 36, "one key: browser-use login")
+    bracket(d, 28, W - 28, BY + BH + 36, "one key: BROWSER_USE_API_KEY")
     d.save(f"oss-quickstart-{theme}-mobile")
 
 

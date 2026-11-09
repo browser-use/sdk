@@ -35,7 +35,7 @@ With uv: `uv add 'browser-use<1'`. In `requirements.txt` or `pyproject.toml`: `b
 | Agent loop | browser-use's own | [Pydantic AI](https://ai.pydantic.dev) | Any Pydantic AI model works, and you get its OpenTelemetry traces. |
 | Model (`llm=None`) | required | `bu-fast` on the Browser Use gateway | The configuration we evaluate. No provider account needed. |
 | Browser (`Browser()`) | local Chromium | a Browser Use Cloud browser | Stealth, proxies and CAPTCHA solving, nothing to install. A local browser is `Browser('chromium')`. |
-| Key | one per provider | one Browser Use key: `browser-use login` or `BROWSER_USE_API_KEY` | One key runs the model, cloud browsers, web search, the CLI and the MCP server. |
+| Key | one per provider | one Browser Use key: `BROWSER_USE_API_KEY` (or `browser-use login`) | One key runs the model, cloud browsers, web search, the CLI and the MCP server. |
 | `run(max_steps=)` | 500 | 100 | One step is now one model request, and a cell does more than one 0.x action. |
 | A removed option | often ignored | raises before a browser starts | You find out before anything is billed. |
 | Tasks with localhost / private IPs | worked | a cloud browser can't reach them: one warning; use `Browser('chromium')` | |
@@ -43,7 +43,7 @@ With uv: `uv add 'browser-use<1'`. In `requirements.txt` or `pyproject.toml`: `b
 
 ## Common errors
 
-- **`MissingAPIKeyError: Browser() (a Browser Use Cloud browser) needs a Browser Use API key`**: `Browser()` and the default model are Browser Use Cloud now. Run `browser-use login`, or stay local: `Agent(task, llm=ChatOpenAI(...), browser=Browser('chromium'))`.
+- **`MissingAPIKeyError: Browser() (a Browser Use Cloud browser) needs a Browser Use API key`**: `Browser()` and the default model are Browser Use Cloud now. Set `BROWSER_USE_API_KEY` (create a key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key)) or run `browser-use login`, or stay local: `Agent(task, llm=ChatOpenAI(...), browser=Browser('chromium'))`.
 - **`ValueError: Browser() (a cloud browser) does not take headless=`**: `headless`, `executable_path` and `user_data_dir` are for local browsers. Use `Browser('chromium', headless=True)`.
 - **`TypeError: Agent(<option>=...) was removed in browser-use 1.0`**: an option 1.0 dropped. The message names the replacement when there is one; the tables below list them all.
 - **`TypeError: Agent(max_steps=...) is not an option`**: pass it to `agent.run(max_steps=...)`.

@@ -1,16 +1,16 @@
 ---
 title: "Quickstart"
-description: "Install browser-use, sign in once, and run your first agent."
+description: "Install browser-use, set your API key, and run your first agent."
 icon: "rocket"
 ---
 
 <picture className="block dark:hidden">
   <source media="(max-width: 600px)" srcSet="/open-source/images/oss-quickstart-light-mobile.svg" />
-  <img src="/open-source/images/oss-quickstart-light.svg" alt="agent.py runs the agent loop and its Python REPL on your machine. Model requests go to the Browser Use gateway (bu-fast), and the REPL drives a Browser Use Cloud browser over CDP. One Browser Use key from browser-use login runs both." noZoom />
+  <img src="/open-source/images/oss-quickstart-light.svg" alt="agent.py runs the agent loop and its Python REPL on your machine. Model requests go to the Browser Use gateway (bu-fast), and the REPL drives a Browser Use Cloud browser over CDP. One Browser Use key (BROWSER_USE_API_KEY) runs both." noZoom />
 </picture>
 <picture className="hidden dark:block">
   <source media="(max-width: 600px)" srcSet="/open-source/images/oss-quickstart-dark-mobile.svg" />
-  <img src="/open-source/images/oss-quickstart-dark.svg" alt="agent.py runs the agent loop and its Python REPL on your machine. Model requests go to the Browser Use gateway (bu-fast), and the REPL drives a Browser Use Cloud browser over CDP. One Browser Use key from browser-use login runs both." noZoom />
+  <img src="/open-source/images/oss-quickstart-dark.svg" alt="agent.py runs the agent loop and its Python REPL on your machine. Model requests go to the Browser Use gateway (bu-fast), and the REPL drives a Browser Use Cloud browser over CDP. One Browser Use key (BROWSER_USE_API_KEY) runs both." noZoom />
 </picture>
 
 ## 1. Install
@@ -28,21 +28,17 @@ pip install browser-use
 ```
 </CodeGroup>
 
-## 2. Sign in
+## 2. Set your API key
 
-<CodeGroup>
-```bash uv
-uv run browser-use login
+[Create a key](https://cloud.browser-use.com/new-api-key) in Browser Use Cloud and export it:
+
+```bash
+export BROWSER_USE_API_KEY=bu_...    # get one at https://cloud.browser-use.com/new-api-key
 ```
-```bash pip
-browser-use login
-```
-</CodeGroup>
 
-This opens your browser and stores one Browser Use key in `~/.config/browser-harness/auth.json`. The key runs the default model, cloud browsers, web search, the CLI and the MCP server.
+The key runs the default model, cloud browsers, web search, the CLI and the MCP server. A `.env` file in the working directory is read on import, so `BROWSER_USE_API_KEY=bu_...` there works too.
 
-- Over SSH: `browser-use login --device-code`.
-- In CI or Docker: set `BROWSER_USE_API_KEY` instead. When it is set, it wins over the stored key. A `.env` file in the working directory is read on import.
+Prefer to sign in from the terminal? Run `browser-use login` (with uv: `uv run browser-use login`). It opens your browser and stores the key in `~/.config/browser-harness/auth.json` (over SSH, add `--device-code`). When `BROWSER_USE_API_KEY` is set, it wins over the stored key.
 
 ## 3. Run an agent
 

@@ -1,13 +1,13 @@
 ---
 title: "Models"
-description: "The Browser Use gateway models, OpenAI, Anthropic, Google, any Pydantic AI model, and OpenAI-compatible servers."
+description: "bu-fast on the Browser Use gateway, any OpenAI-compatible server with ChatOpenAI, OpenAI, Anthropic, Google, and Pydantic AI model strings."
 icon: "brain"
 ---
 
 ```python
 from browser_use import Agent
 
-agent = Agent('What is the title of https://example.com?', llm='bu-ultrafast')
+agent = Agent('What is the title of https://example.com?', llm='bu-fast')
 result = agent.run_sync()
 print(result.final_result(), result.cost_usd, result.usage)
 ```
@@ -87,7 +87,7 @@ print(agent.run_sync().final_result())
 | `ChatAnthropic` | `model, *, api_key=None` |
 | `ChatGoogle` | `model, *, api_key=None` |
 
-Any other argument raises a `TypeError`. For other model settings, pass a Pydantic AI `Model` built with `settings=...`. `ChatAnthropic(temperature=...)` raises too: Anthropic's API rejects `temperature` on Claude 4.x models.
+Any other argument raises a `TypeError`. For other model settings, pass a [Pydantic AI `Model`](#advanced-a-pydantic-ai-model-object) built with `settings=...`. `ChatAnthropic(temperature=...)` raises too: Anthropic's API rejects `temperature` on Claude 4.x models.
 
 - `ChatOpenAI` on api.openai.com uses the Responses API. With `base_url` set to any other server, it uses chat completions.
 - `ChatAnthropic` turns on Anthropic prompt caching.
@@ -95,24 +95,22 @@ Any other argument raises a `TypeError`. For other model settings, pass a Pydant
 - Whitespace around a key (a trailing newline from a file) is stripped. A key with a space, line break, control or non-ASCII character inside raises a `ValueError` before any browser starts, without printing the key.
 - On the official OpenAI, Anthropic and Google endpoints, the agent first looks the model up (free). A rejected key or unknown model ends the run with `result.error`, and no browser is started.
 
-## Any Pydantic AI model
+## OpenAI-compatible servers
 
-Pass a [Pydantic AI model string](https://ai.pydantic.dev/models/overview/) or a `Model` object:
+vLLM, DeepSeek, OpenRouter, LM Studio, Ollama or any other server with a chat completions API: `ChatOpenAI(model, base_url=..., api_key=...)`.
 
 ```python
-from browser_use import Agent
+from browser_use import Agent, ChatOpenAI
 
-agent = Agent('What is the title of https://example.com?', llm='anthropic:claude-haiku-5-5')
+llm = ChatOpenAI('deepseek-chat', base_url='https://api.deepseek.com/v1', api_key='sk-...')
+agent = Agent('What is the title of https://example.com?', llm=llm)
 print(agent.run_sync().final_result())
 ```
 
-A bare name without its provider, such as `llm='gpt-6-luna'`, raises before any browser starts, naming the 1.0 form: `ChatOpenAI('gpt-6-luna')` or `'openai:gpt-6-luna'`.
+- With `base_url` set to a server other than api.openai.com, `ChatOpenAI` uses chat completions and leaves out OpenAI-only request options that such servers reject.
+- These servers get no reasoning setting from `Agent(reasoning=...)`; pass `ChatOpenAI(..., reasoning_effort=...)` to send one.
 
-This covers `'bedrock:...'`, `'azure:...'`, `'groq:...'`, `'mistral:...'`, `'openrouter:...'`, `'deepseek:...'`, `'cerebras:...'`, `'vercel:...'` and the rest. Some need Pydantic AI's extra, for example `pip install 'pydantic-ai-slim[groq]'`; the error says which. `'openai/<model>'` is read as `'openai-responses:<model>'`.
-
-LangChain chat models are not supported: `Agent(llm=...)` raises a `TypeError`.
-
-## Ollama
+### Ollama
 
 Run a local model with [Ollama](https://ollama.com) through its OpenAI-compatible API. Pull a model that supports tool calling first, for example `ollama pull qwen2.5:7b`:
 
@@ -128,11 +126,22 @@ print(agent.run_sync().final_result())
 - `Browser('chromium')` keeps the whole run on your machine.
 - `ChatOllama` from 0.x is replaced by this; importing it raises an `ImportError` that says so.
 
-## OpenAI-compatible servers
+## Pydantic AI model strings
 
-vLLM, DeepSeek, OpenRouter, LM Studio or any other server with a chat completions API work the same way: `ChatOpenAI(model, base_url=..., api_key=...)`.
+Any [Pydantic AI model string](https://ai.pydantic.dev/models/overview/) works as `llm=`:
 
-These servers get no reasoning setting from `Agent(reasoning=...)`; pass `ChatOpenAI(..., reasoning_effort=...)` to send one.
+```python
+from browser_use import Agent
+
+agent = Agent('What is the title of https://example.com?', llm='anthropic:claude-haiku-5-5')
+print(agent.run_sync().final_result())
+```
+
+A bare name without its provider, such as `llm='gpt-6-luna'`, raises before any browser starts, naming the 1.0 form: `ChatOpenAI('gpt-6-luna')` or `'openai:gpt-6-luna'`.
+
+This covers `'bedrock:...'`, `'azure:...'`, `'groq:...'`, `'mistral:...'`, `'openrouter:...'`, `'deepseek:...'`, `'cerebras:...'`, `'vercel:...'` and the rest. Some need Pydantic AI's extra, for example `pip install 'pydantic-ai-slim[groq]'`; the error says which. `'openai/<model>'` is read as `'openai-responses:<model>'`.
+
+LangChain chat models are not supported: `Agent(llm=...)` raises a `TypeError`.
 
 ## Reasoning
 
@@ -166,3 +175,24 @@ Every result carries `result.usage` (`input`, `output`, `cache_read`, `cache_wri
 | `ChatLiteLLM` and other OpenAI-compatible wrappers | `ChatOpenAI(model, base_url=...)` |
 
 Importing a removed class raises an `ImportError` that names its replacement.
+
+## Advanced: a Pydantic AI Model object
+
+`llm=` also takes a Pydantic AI `Model`. Use it only when you need a setting the forms above don't expose:
+
+```python
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
+
+from browser_use import Agent, Browser
+
+model = OpenAIChatModel(
+    'qwen2.5:7b',
+    provider=OpenAIProvider(base_url='http://localhost:11434/v1', api_key='ollama'),
+    settings={'top_p': 0.9, 'seed': 7},
+)
+agent = Agent('What is the title of https://example.com?', llm=model, browser=Browser('chromium'))
+print(agent.run_sync().final_result())
+```
+
+This ties your code to Pydantic AI's API, which can change between its releases. browser-use sends the model as you built it, without the OpenAI-compatible adjustments `ChatOpenAI(base_url=...)` makes. Prefer `ChatOpenAI(model, base_url=..., api_key=...)` when it covers what you need.
