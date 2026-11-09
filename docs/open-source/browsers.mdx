@@ -50,6 +50,8 @@ A cloud browser bills until it stops. browser-use stops it when the run ends, wh
 
 A cloud browser cannot reach `localhost` or your private network. When the task mentions one, the agent logs a warning that suggests `Browser('chromium')`.
 
+The proxy applies to the browser only. Python networking in the agent's cells (`http_get`, `urllib`, `requests`) runs on your machine. When the location matters, say "in the browser" in the task.
+
 ## Local Chromium
 
 ```python
@@ -165,7 +167,7 @@ except ValueError as e:
 
 | 0.x option | In 1.0 |
 |---|---|
-| `window_size`, `viewport`, `user_agent`, `permissions` | Say it in the task: the agent can send the CDP commands itself. Headless launches use 1440x900. |
+| `window_size`, `viewport`, `user_agent`, `permissions` | Say it in the task: the agent can send the CDP commands itself. Headless launches use 1440x900. A cloud browser keeps its own 1440x900 viewport; use `Browser('chromium')` for another size. |
 | `proxy` | Cloud: `cloud_proxy_country_code`. Local: not yet. |
 | `storage_state`, `cookie_whitelist_domains` | Cloud: `cloud_profile_id`. Local: `Browser('chrome', profile=...)` or `Browser('chromium', user_data_dir=...)`. |
 | `downloads_path` | Downloads land in `agent.workspace/downloads`. |

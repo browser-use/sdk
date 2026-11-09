@@ -27,12 +27,13 @@ A `'bu-*'` string is the same as `ChatBrowserUse('bu-...')`. The full form is `C
 - **Preflight:** before any browser starts, the agent reads the gateway's model list (free). A rejected key, no credits, or an unknown model ends the run with one line in `result.error`, and no browser is created.
 - **Cost:** `result.cost_usd` is what the gateway charged.
 - **0.x models:** `bu-2-0`, `bu-1-0`, `bu-2-0-mini-preview` and `bu-latest` raise a `ValueError` that says they need `browser-use<1.0`. Use `bu-fast`.
+- **0.x model names:** `'openai/gpt-5.5'` is sent as `gpt-5.5`. The 0.x gateway also served Anthropic and Google models (`'anthropic/claude-...'`); in 1.0 the preflight error names `ChatAnthropic(...)` / `ChatGoogle(...)` with your own key.
 
 Benchmarks: [browser-use.com/benchmarks](https://browser-use.com/benchmarks) and the open [benchmark repo](https://github.com/browser-use/benchmark).
 
 ## Model card
 
-What each gateway model runs and costs, from the gateway's model list on 2026-11-08. Prices are USD per 1M tokens.
+What each gateway model runs and costs, from the gateway's model list on 2026-11-09. Prices are USD per 1M tokens.
 
 | | `bu-fast` | `bu-ultrafast` | `bu-smart` |
 |---|---|---|---|
@@ -86,11 +87,12 @@ print(agent.run_sync().final_result())
 | `ChatAnthropic` | `model, *, api_key=None` |
 | `ChatGoogle` | `model, *, api_key=None` |
 
-Any other argument raises a `TypeError`. For other model settings, pass a Pydantic AI `Model` built with `settings=...`.
+Any other argument raises a `TypeError`. For other model settings, pass a Pydantic AI `Model` built with `settings=...`. `ChatAnthropic(temperature=...)` raises too: Anthropic's API rejects `temperature` on Claude 4.x models.
 
 - `ChatOpenAI` on api.openai.com uses the Responses API. With `base_url` set to any other server, it uses chat completions.
 - `ChatAnthropic` turns on Anthropic prompt caching.
 - A missing key fails before any browser starts: `OPENAI_API_KEY is not set: export it, put it in .env, or pass api_key=... to the model.`
+- Whitespace around a key (a trailing newline from a file) is stripped. A key with a space, line break, control or non-ASCII character inside raises a `ValueError` before any browser starts, without printing the key.
 - On the official OpenAI, Anthropic and Google endpoints, the agent first looks the model up (free). A rejected key or unknown model ends the run with `result.error`, and no browser is started.
 
 ## Any Pydantic AI model
@@ -103,6 +105,8 @@ from browser_use import Agent
 agent = Agent('What is the title of https://example.com?', llm='anthropic:claude-haiku-5-5')
 print(agent.run_sync().final_result())
 ```
+
+A bare name without its provider, such as `llm='gpt-6-luna'`, raises before any browser starts, naming the 1.0 form: `ChatOpenAI('gpt-6-luna')` or `'openai:gpt-6-luna'`.
 
 This covers `'bedrock:...'`, `'azure:...'`, `'groq:...'`, `'mistral:...'`, `'openrouter:...'`, `'deepseek:...'`, `'cerebras:...'`, `'vercel:...'` and the rest. Some need Pydantic AI's extra, for example `pip install 'pydantic-ai-slim[groq]'`; the error says which. `'openai/<model>'` is read as `'openai-responses:<model>'`.
 
@@ -141,7 +145,7 @@ agent = Agent('What is the title of https://example.com?', llm='bu-smart', reaso
 print(agent.run_sync().final_result())
 ```
 
-Default: the gateway alias's own effort (see the table above), else `'medium'`. A model without a reasoning setting logs a warning and ignores it.
+Default: a `bu-*` alias's own effort (see the table above), else `'medium'`, including an OpenAI model on the gateway. A model without a reasoning setting logs a warning and ignores it.
 
 ## Usage and cost
 

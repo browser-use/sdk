@@ -49,7 +49,7 @@ print(result.downloads)  # e.g. [PosixPath('/tmp/browser-use-.../downloads/<file
 print(agent.workspace)
 ```
 
-`result.downloads` lists the files this run added to `agent.workspace/downloads`. Where they land depends on the browser:
+`result.downloads` lists the files this run added to `agent.workspace/downloads`. A file with a name that is already there gets ` (1)`, ` (2)`, ... and never overwrites one. Where they land depends on the browser:
 
 | Browser | Downloads |
 |---|---|

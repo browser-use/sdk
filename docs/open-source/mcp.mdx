@@ -32,6 +32,8 @@ These are the same helpers as the [CLI](/open-source/browser-use-cli). The clien
 - **Local:** `browser_exec` drives the Chrome you have open, with your logins.
 - **Cloud:** call `start_remote_daemon()` in `browser_exec` (after `browser_login` if you are not signed in). Every later call drives that cloud browser. It lives 30 minutes unless you pass `timeout=<minutes>` (up to 240), and the server stops it when it exits.
 
+If the browser can't attach, the tool returns one error line with the reason and the cloud browser alternative.
+
 The live view and CDP URLs grant control of the browser, so the server neither opens nor returns them unless `BH_OPEN_LIVE_URL=1` is set.
 
 ## Migrating from 0.x --mcp

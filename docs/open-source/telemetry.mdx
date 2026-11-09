@@ -1,44 +1,67 @@
 ---
 title: "Telemetry"
-description: "What anonymized usage data browser-use sends, what it never sends, and how to turn it off."
+description: "What anonymized usage data browser-use sends, what it never sends, where it goes, and how to turn it off."
 icon: "chart-no-axes-column"
 ---
 
-Turn it off, for the library and the CLI:
+Turn it off, for the library, the CLI and the MCP server:
 
 ```bash
 export ANONYMIZED_TELEMETRY=false
 ```
 
-Any value that does not start with `t`, `y` or `1` turns it off.
+Any value that does not start with `t`, `y` or `1` turns it off. Off means off: no event, no background thread, no file written.
 
-browser-use sends anonymized usage events to PostHog so we can see which models, browsers and helpers work and where runs fail: one `agent_event` per `Agent.run()`, and a scrubbed `cli_event` per CLI call.
+browser-use sends anonymized usage events to PostHog so we can see which models, browsers and helpers work, where runs spend their time and where they fail. There are no feature flags or remote settings: telemetry only sends, it never changes what the library does.
+
+| Event | When |
+|---|---|
+| `agent_event` | One per `Agent.run()`. |
+| `cli_event` | One per `browser-use` CLI call, scrubbed (below). |
+| `mcp_server_event` | One per MCP tool call (`browser-use --cli-mcp` and `--mcp`). |
 
 ## Never sent
 
 - The task, follow-up tasks and `extend_system_message`.
 - The result, structured output, partial results and the model's text.
-- Code the model writes.
+- Code the model writes. Repeated code is detected by a hash that never leaves the process.
 - Text typed into pages, and `sensitive_data` names or values.
-- Page content: titles, HTML, screenshots, extracted data, file names.
-- Full URLs. Only the hostname is kept.
+- Page content: titles, HTML, screenshots, extracted data, file names, `js()` expressions, `cdp()` parameters.
+- Full URLs. Only the hostname of an http(s) page is kept. Hostnames that alone grant access (tunnels such as `*.ngrok-free.app` and `*.trycloudflare.com`, cloud IDE ports, Lambda function URLs, preview deploys) are sent as the provider's pattern, not the name.
 - CDP endpoints. Only their kind (`browser-use-cloud`, `localhost`, `private`, `public-other`).
-- Error messages and tracebacks. Only the exception class.
+- Error messages and tracebacks. Only the exception class, and a provider's short error code such as `rate_limit_exceeded`.
+- Paths and endpoints: never your `base_url`, `user_data_dir` or executable path.
+- Uncaught exceptions from your process. There is no exception autocapture.
 
 ## What is sent
 
-Every field is a number, a bool, an enum, a hostname, or a name chosen by browser-use, the developer, Python or an installed package:
+Every field is a number, a bool, an enum, a hostname, or a name chosen by browser-use, the developer, Python or an installed package (model id, helper, tool, module, exception class, CDP method). `agent_event` holds:
 
 - **Install and environment:** browser-use, Python, Pydantic AI and browser-harness versions; OS; whether it runs in Docker, CI or a notebook.
 - **Configuration:** model id and provider, reasoning, mode, `max_steps`, timeout, whether structured output, custom tools (their names), secrets (a count) or a custom workspace are used, and the task's length.
-- **Browser:** the mode (cloud, chromium, chrome, cdp), keep-alive, cloud proxy country and timeout, and start time.
-- **Outcome:** status, success, how the result was delivered, exception class, duration.
-- **Model:** steps, requests, tokens, cost, calls per tool.
-- **REPL:** cells, cell errors by class, helper and CDP method counts, imported module names, screenshots.
-- **Browsing:** hostnames the agent navigated to, navigation and download counts, CAPTCHA solver events, domain-restriction blocks.
+- **Browser:** the mode (cloud, chromium, chrome, cdp), keep-alive, cloud proxy country and timeout, domain restrictions (counts, never the domains) and start time.
+- **Outcome:** status, success, how the result was delivered, the exception class and the phase it happened in.
+- **Time:** where the run spent it: browser start, model requests, cells, helpers, waits, compaction, shutdown.
+- **Model:** steps, requests, tokens, cost, calls per tool, retries by cause.
+- **REPL:** cells, cell errors by class, helper and CDP method counts and timings, imported module names, screenshots.
+- **Browsing:** hostnames the agent navigated to, navigation and download counts, Chrome net error codes, CAPTCHA solver events, domain-restriction blocks.
+- **Per step:** for the first 50 and last 150 steps, timings, token counts, tool names, the helpers used and the hostname the step ended on.
+
+A run whose process was killed (out of memory, `SIGKILL`, a notebook kernel restart) is reported the next time browser-use runs on that machine, with status `crashed` and only its configuration, step count and time.
+
+`cli_event` keeps the command, exit code, duration, helper names and counts, browser kind and client. browser-harness's own event would include the piped code, its output and error text; the `browser-use` CLI removes those before sending. `mcp_server_event` keeps the tool name, duration, whether it failed and the exception class. Neither ever includes the code, its output, arguments or error text.
 
 The full field list is in [TELEMETRY.md](https://github.com/browser-use/browser-use/blob/main/TELEMETRY.md).
 
+## How it is sent
+
+- A run never waits on the network. Recording is an in-memory counter; a background thread builds the event, gzips it and posts it to `https://eu.i.posthog.com/batch/` with Python's standard library.
+- At process exit, events still queued are handed to a short-lived background process, so exit does not wait either.
+- Files, all under `~/.config/browseruse` (`BROWSER_USE_CONFIG_DIR` moves it), and only while telemetry is on: `device_id`; `telemetry/inflight/` for a run in progress (deleted when its event is sent); `telemetry/outbox/` for events not sent yet (at most 20 files and 512 KB, deleted after 7 days).
+- The `browser-use` CLI sends `cli_event` to the same place under the same id, and creates no browser-harness install id.
+
 ## Identity
 
-One anonymous id per machine: `BROWSER_USE_DEVICE_ID` if set, else a random id stored in `~/.config/browseruse/device_id` (`BROWSER_USE_CONFIG_DIR` moves it). If that file can't be written, a hash of the machine's MAC address and hostname. PostHog derives a location from the request IP.
+One anonymous id per machine: `BROWSER_USE_DEVICE_ID` if set, else a random id stored in `~/.config/browseruse/device_id`. If that file can't be written, a hash of the machine's MAC address and hostname. PostHog derives a location from the request IP.
+
+`BROWSER_USE_TELEMETRY_INTERNAL=1` marks events as internal (`is_internal`). We set it in our own tests and evals, so they don't count as usage.

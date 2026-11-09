@@ -37,7 +37,7 @@ Each step is one model request. In a step, the agent writes one Python cell that
 | `output_model_schema` | `str` | A type for the result: a Pydantic model, `list[Model]`, `Literal[...]`. See [Output](/open-source/output). |
 | `sensitive_data` | none | Secrets the agent types without seeing them. See [Secrets](/open-source/secrets). |
 | `extend_system_message` | none | Text appended to the system prompt. The core prompt is fixed. |
-| `reasoning` | per model | `'low'`, `'medium'` or `'high'`. On the gateway the default is the alias's own (`bu-fast` medium, `bu-ultrafast` low, `bu-smart` high); elsewhere `'medium'`. Models without a reasoning setting ignore it with a warning. |
+| `reasoning` | per model | `'low'`, `'medium'` or `'high'`. A `bu-*` alias's own by default (`bu-fast` medium, `bu-ultrafast` low, `bu-smart` high), else `'medium'`. Models without a reasoning setting ignore it with a warning. |
 | `mode` | per model | `'ultrafast'` or `'default'`. `'ultrafast'` on `bu-fast` and `bu-ultrafast`, `'default'` otherwise. See [Ultrafast](/open-source/ultrafast). |
 | `workspace` | new temp dir | The agent's working directory. See [Files](/open-source/files). |
 | `web_search` | `False` | Gives the agent a `search()` helper. See [Web search](/open-source/web-search). |

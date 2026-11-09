@@ -24,7 +24,7 @@ A parameter that is not on this page raises a `TypeError` before any browser sta
 | `output_model_schema` | `None` | The result type: a Pydantic model, `list[Model]`, `Literal[...]`, or `pydantic_ai.StructuredDict(schema)`. `None` is `str`. See [Output](/open-source/output). |
 | `sensitive_data` | `None` | Secrets the agent types without seeing: `{'name': 'value'}` or `{'https://site': {'name': 'value'}}`. See [Secrets](/open-source/secrets). |
 | `extend_system_message` | `None` | Text appended to the system prompt. |
-| `reasoning` | `None` | `'low'`, `'medium'` or `'high'`. `None` is the gateway alias's own (`bu-fast` medium, `bu-ultrafast` low, `bu-smart` high), else `'medium'`. |
+| `reasoning` | `None` | `'low'`, `'medium'` or `'high'`. `None` is a `bu-*` alias's own (`bu-fast` medium, `bu-ultrafast` low, `bu-smart` high), else `'medium'`. |
 | `mode` | `None` | `'ultrafast'` or `'default'`. `None` is `'ultrafast'` on `bu-fast` and `bu-ultrafast`, else `'default'`. See [Ultrafast](/open-source/ultrafast). |
 | `workspace` | `None` | The agent's working directory. `None` is a new temp dir, kept after the run. See [Files](/open-source/files). |
 | `web_search` | `False` | `True` gives the agent a `search()` helper, billed per search. See [Web search](/open-source/web-search). |
@@ -161,4 +161,4 @@ What a tool can return. The model sees it as JSON.
 | `extracted_content` | `None` | The text the model gets. |
 | `error` | `None` | An error message the model gets. |
 
-`is_done`, `success` and `attachments` are 0.x fields that raise; `include_in_memory` and `include_extracted_content_only_once` are ignored with a warning. See [Tools: Rules](/open-source/tools#rules).
+`is_done`, `success`, `attachments` and `images` are 0.x fields that raise; `include_in_memory` and `include_extracted_content_only_once` are ignored with a warning. See [Tools: Rules](/open-source/tools#rules).
