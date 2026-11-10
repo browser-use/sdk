@@ -51,8 +51,6 @@ A run whose process was killed (out of memory, `SIGKILL`, a notebook kernel rest
 
 `cli_event` keeps the command, exit code, duration, helper names and counts, browser kind and client. browser-harness's own event would include the piped code, its output and error text; the `browser-use` CLI removes those before sending. `mcp_server_event` keeps the tool name, duration, whether it failed and the exception class. Neither ever includes the code, its output, arguments or error text.
 
-The full field list is in [TELEMETRY.md](https://github.com/browser-use/browser-use/blob/main/TELEMETRY.md).
-
 ## How it is sent
 
 - A run never waits on the network. Recording is an in-memory counter; a background thread builds the event, gzips it and posts it to `https://eu.i.posthog.com/batch/` with Python's standard library.

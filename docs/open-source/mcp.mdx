@@ -11,13 +11,13 @@ Add this to your MCP client's config (Claude Desktop, Cursor, ...):
   "mcpServers": {
     "browser-use": {
       "command": "uvx",
-      "args": ["browser-use", "--cli-mcp"]
+      "args": ["--from", "browser-use==1.0.0", "browser-use", "--cli-mcp"]
     }
   }
 }
 ```
 
-For cloud browsers, sign in with the `browser_login` tool, or add `"env": {"BROWSER_USE_API_KEY": "bu_..."}` next to `"args"`. MCP clients don't read your shell's exports.
+For cloud browsers, sign in with the `browser_login` tool, or add `"env": {"BROWSER_USE_API_KEY": "bu_..."}` next to `"args"`. MCP clients don't read your shell's exports. Keep the exact `==1.0.0` pin: browser-use moves fast, and a new release can break your setup.
 
 ## Tools
 

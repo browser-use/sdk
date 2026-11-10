@@ -11,18 +11,18 @@ The CLI runs Python, not agent tasks: there is no `browser-use run "<task>"`. To
 ## Install
 
 ```bash
-uv tool install browser-use
+uv tool install 'browser-use==1.0.0'
 browser-use --help
 ```
 
-For one-off runs without installing, use `uvx browser-use`.
+For one-off runs without installing, use `uvx --from 'browser-use==1.0.0' browser-use`. Pin the exact version with `==`, never `>=`: browser-use moves fast, and a new release can break your setup.
 
 ## Set up your coding agent
 
 Paste this into Claude Code, Codex or another coding agent:
 
 ```text
-Install browser-use with `uv tool install browser-use`, run `browser-use skill install` to register the skill, and connect it to my browser. If setup or connection fails, follow https://github.com/browser-use/browser-harness/blob/main/install.md.
+Install browser-use with `uv tool install 'browser-use==1.0.0'`, run `browser-use skill install` to register the skill, and connect it to my browser. If setup or connection fails, follow https://github.com/browser-use/browser-harness/blob/main/install.md.
 ```
 
 `browser-use skill install` writes the skill to `~/.agents` and to each supported agent you have installed: `claude`, `codex`, `copilot`, `cursor`, `gemini`, `openclaw`, `opencode`. Use `--target NAME` for one, or `--path DIR` for a custom location. `browser-use skill show` prints it. More skills: [Agent skills](/open-source/skills).
@@ -107,6 +107,6 @@ Each name is its own browser, so parallel agents use different names. A cloud br
 | `browser-use --cli-mcp` | Run the [MCP server](/open-source/mcp). |
 | `browser-use --version` | Print the versions. |
 
-Update with `uv tool upgrade browser-use`. The 0.x subcommands (`open`, `state`, `click`, `run`, ...) print what replaced them.
+Update by installing the new exact version: `uv tool install 'browser-use==<version>'`. The 0.x subcommands (`open`, `state`, `click`, `run`, ...) print what replaced them.
 
 Try the same agent behind the CLI fully hosted in [Browser Use Cloud](https://cloud.browser-use.com?utm_source=docs&utm_medium=browser-use-cli&utm_campaign=v4).

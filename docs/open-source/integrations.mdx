@@ -49,7 +49,7 @@ The coding agent writes the browser code itself, against your Chrome or a cloud 
 The CLI with its skill is the most direct:
 
 ```bash
-uv tool install browser-use
+uv tool install 'browser-use==1.0.0'
 browser-use skill install
 ```
 
@@ -58,7 +58,7 @@ browser-use skill install
 Or add the MCP server:
 
 ```bash
-claude mcp add browser-use -- uvx browser-use --cli-mcp
+claude mcp add browser-use -- uvx --from 'browser-use==1.0.0' browser-use --cli-mcp
 ```
 
 ### Claude Desktop and Cursor
@@ -70,7 +70,7 @@ Add the MCP server to `claude_desktop_config.json` (Claude Desktop: Settings > D
   "mcpServers": {
     "browser-use": {
       "command": "uvx",
-      "args": ["browser-use", "--cli-mcp"]
+      "args": ["--from", "browser-use==1.0.0", "browser-use", "--cli-mcp"]
     }
   }
 }
@@ -83,7 +83,7 @@ Add the MCP server to `claude_desktop_config.json` (Claude Desktop: Settings > D
 ```toml
 [mcp_servers.browser-use]
 command = "uvx"
-args = ["browser-use", "--cli-mcp"]
+args = ["--from", "browser-use==1.0.0", "browser-use", "--cli-mcp"]
 ```
 
 The server gives the client three tools: `browser_exec`, `browser_screenshot` and `browser_login`. Local or cloud browser, and what the tools do: [MCP server](/open-source/mcp).
