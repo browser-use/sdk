@@ -302,8 +302,7 @@
               "open-source/browser-use-cli",
               "open-source/mcp",
               "open-source/skills",
-              "open-source/integrations",
-              "open-source/browser-use-terminal"
+              "open-source/integrations"
             ]
           },
           {
@@ -328,8 +327,7 @@
                       "open-source/legacy/0.x/introduction",
                       "open-source/legacy/0.x/quickstart",
                       "open-source/legacy/0.x/supported-models",
-                      "open-source/legacy/0.x/bu-2-0-model-card",
-                      "open-source/legacy/0.x/browser-use-terminal"
+                      "open-source/legacy/0.x/bu-2-0-model-card"
                     ]
                   },
                   {
@@ -2615,6 +2613,14 @@
     {
       "source": "/cloud/tutorials/integrations/ai-sdk",
       "destination": "/cloud/tutorials/integrations/vercel"
+    },
+    {
+      "source": "/open-source/browser-use-terminal",
+      "destination": "/open-source/browser-use-cli"
+    },
+    {
+      "source": "/open-source/legacy/0.x/browser-use-terminal",
+      "destination": "/open-source/browser-use-cli"
     }
   ],
   "description": "Browser Use Cloud hosts stealth browsers for AI agents: a custom Chromium you drive over CDP with Playwright, Puppeteer, or the browser-use library. From $0.02 per browser-hour, with residential proxies and CAPTCHA solving. These docs also cover the Cloud Agent API and the open-source browser-use Python library.",
