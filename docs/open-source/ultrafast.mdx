@@ -1,0 +1,49 @@
+---
+title: "Ultrafast"
+description: "Ultrafast mode: the agent acts on accessibility-tree ids with the bu helpers. The default on bu-fast and bu-ultrafast."
+icon: "zap"
+---
+
+```python
+from browser_use import Agent, ChatOpenAI
+
+agent = Agent('What is the title of https://example.com?', llm=ChatOpenAI('gpt-6-luna'), mode='ultrafast')
+print(agent.mode, agent.run_sync().final_result())
+```
+
+`mode='ultrafast'` gives the agent a `bu` object next to the usual helpers:
+
+| Helper | What it does |
+|---|---|
+| `bu.state()` | Prints the page in order: `[id] role "name"` plus values, states, headings and visible text. New ids since the last look are marked. |
+| `bu.click(id)` | Clicks the element. |
+| `bu.type(id, text, enter=False)` | Replaces the field's text. Also picks a native `<select>` option. |
+
+Ids are Chrome `backendNodeId`s, so they also work in raw CDP DOM commands. After a cell whose `bu` actions reached the page, the new state is printed automatically, so the agent needs fewer steps. JavaScript `alert`, `confirm`, `prompt` and `beforeunload` dialogs are accepted automatically and their text is printed.
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-ultrafast-light-mobile.svg" />
+  <img src="/open-source/images/oss-ultrafast-light.svg" alt={"The model writes bu.click(41). The REPL clicks accessibility-tree id 41 over CDP and prints one line: [ok] click [41] link \"Next\" -> page changed. Because the cell acted on the page, bu.state() runs after it and prints the page as [id] role \"name\" lines, with * on new ids. The output returns with the same python call."} noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-ultrafast-dark-mobile.svg" />
+  <img src="/open-source/images/oss-ultrafast-dark.svg" alt={"The model writes bu.click(41). The REPL clicks accessibility-tree id 41 over CDP and prints one line: [ok] click [41] link \"Next\" -> page changed. Because the cell acted on the page, bu.state() runs after it and prints the page as [id] role \"name\" lines, with * on new ids. The output returns with the same python call."} noZoom />
+</picture>
+
+## Default
+
+| Model | Default `mode` |
+|---|---|
+| `bu-fast`, `bu-ultrafast` | `'ultrafast'` |
+| everything else | `'default'` |
+
+`bu-fast` and `bu-ultrafast` are evaluated in this mode. To opt out:
+
+```python
+from browser_use import Agent
+
+agent = Agent('What is the title of https://example.com?', llm='bu-ultrafast', mode='default')
+print(agent.mode, agent.run_sync().final_result())
+```
+
+For the lowest latency, combine `llm='bu-ultrafast'` (low reasoning, priority tier) with the default ultrafast mode. See [Models](/open-source/models).

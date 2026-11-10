@@ -21,7 +21,7 @@ This example exposes `read_page`, `click`, `type`, and `select_option`.
 OpenAI shared the small adapter used here; it is not a general Playwright driver.
 Playwright methods become model tools only when the adapter implements them.
 
-For all 28 browser tools and Bash, use the [Browser Use library driver](/open-source/customize/integrations/openai).
+For all 28 browser tools and Bash, use the [Browser Use library driver](/open-source/legacy/0.x/customize/integrations/openai) (browser-use 0.x only: `pip install 'browser-use<1'`).
 
 ## Connect your remote browser
 
@@ -150,7 +150,7 @@ Use tasks you authorize, and change the callback for your application's permissi
 
 | Your application | Integration |
 | --- | --- |
-| Needs all browser tools, JavaScript, coordinate actions, file tools, and Bash | [Browser Use driver](/open-source/customize/integrations/openai) |
+| Needs all browser tools, JavaScript, coordinate actions, file tools, and Bash | [Browser Use driver](/open-source/legacy/0.x/customize/integrations/openai) (browser-use 0.x only) |
 | Already uses Playwright and needs a small adapter | This example |
 
 Both integrations use Browser Use Cloud infrastructure.

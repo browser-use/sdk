@@ -1,0 +1,76 @@
+---
+title: "Domains"
+description: "Limit where the browser navigates with allowed_domains, prohibited_domains and block_ip_addresses."
+icon: "shield"
+---
+
+```python
+from browser_use import Agent, Browser
+
+browser = Browser(allowed_domains=['example.com'])
+agent = Agent('Open https://example.com, then open https://wikipedia.org. Report what happened.', browser=browser)
+print(agent.run_sync().final_result())
+```
+
+| Option | What it does |
+|---|---|
+| `allowed_domains=[...]` | Only these. |
+| `prohibited_domains=[...]` | Everything but these. Ignored, with a warning, when `allowed_domains` is also set. |
+| `block_ip_addresses=True` | Blocks IP-literal hosts (also forms like `http://0x7f.1/`), even if allowed. |
+
+They work in every browser mode. `[]` means no restriction. `about:blank`, the new tab page, `data:` and `blob:` URLs are always allowed; URLs without a host (`file:`, `javascript:`) are blocked.
+
+## Patterns
+
+| Pattern | Matches |
+|---|---|
+| `'example.com'` | example.com and www.example.com (www only for a one-dot domain), http and https, any port. In `prohibited_domains`, also every subdomain. |
+| `'mail.example.com'` | Exactly that host. |
+| `'*.example.com'` | example.com and every subdomain, http and https. |
+| `'https://example.com'` | That scheme and host on the default port; in `prohibited_domains`, on every port. A path in the pattern is a path prefix. |
+| `'https://*.example.com'`, `'http*://example.com/*'` | Globs on scheme, host and path. |
+| `'localhost:8080'` | That host and port. |
+
+Hosts compare case-insensitively, and international domains match in either form (`münchen.de` = `xn--mnchen-3ya.de`).
+
+## How it is enforced
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-domains-light-mobile.svg" />
+  <img src="/open-source/images/oss-domains-light.svg" alt="A navigation to an allowed domain passes all three layers to the browser. A disallowed URL is caught by the first layer that sees it: the REPL helpers raise PermissionError; the browser's own CDP guard fails a link click, redirect, popup or JavaScript navigation; after each cell, any tab still on a disallowed page is reset to about:blank. Browser('chrome') uses layers 1 and 3 only." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-domains-dark-mobile.svg" />
+  <img src="/open-source/images/oss-domains-dark.svg" alt="A navigation to an allowed domain passes all three layers to the browser. A disallowed URL is caught by the first layer that sees it: the REPL helpers raise PermissionError; the browser's own CDP guard fails a link click, redirect, popup or JavaScript navigation; after each cell, any tab still on a disallowed page is reset to about:blank. Browser('chrome') uses layers 1 and 3 only." noZoom />
+</picture>
+
+1. **Helpers refuse.** `goto_url`, `new_tab`, `http_get` (and each redirect it follows) and the agent's raw `Page.navigate` / `Target.createTarget` refuse a disallowed URL. The model sees `PermissionError: blocked: wikipedia.org is not in allowed_domains (example.com)`.
+2. **The browser blocks.** browser-use holds its own CDP connection that fails every main-frame navigation to a disallowed host, whoever starts it: link clicks, redirects, popups, JavaScript. The request never leaves the browser.
+3. **Tabs are reset.** After each cell, any tab still on a disallowed page goes to `about:blank`.
+
+| Mode | 1. Helpers | 2. Browser | 3. Tab reset |
+|---|---|---|---|
+| `Browser()` (cloud) | yes | yes | yes |
+| `Browser('chromium')`, `Browser('chrome', profile=...)` | yes | yes | yes |
+| `Browser(cdp_url=...)` | yes | yes | yes, every tab |
+| `Browser('chrome')` (your Chrome) | yes | no | yes, the agent's tabs only |
+
+`Browser('chrome')` skips layer 2 because a second debugging connection would make Chrome ask you to allow it again.
+
+## Not blocked
+
+It is a guard for an aligned model, not a sandbox:
+
+- Subresources: `fetch()`/XHR, images, scripts, iframes and websockets that an allowed page loads from other hosts.
+- An iframe of a disallowed site inside an allowed page.
+- The agent's own Python networking other than `http_get` (`requests`, sockets, `subprocess`).
+- Speculative prefetches a page makes. If the agent then opens one, layer 2 resets the tab.
+- Code that goes around browser-use on purpose, such as opening its own CDP connection.
+
+**Run untrusted tasks in a container or VM.**
+
+## Notes
+
+- `Agent(web_search=True)` together with `allowed_domains` raises a `ValueError` when the run starts, before any browser: search would reach sites the browser may not open.
+- The 0.x `BROWSER_USE_ALLOWED_DOMAINS` environment variable is not read; `Browser()` raises while it is set.
+- Domain-scoped [secrets](/open-source/secrets) limit where each secret is typed, independently of these lists.

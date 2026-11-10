@@ -1,0 +1,676 @@
+---
+title: "Migrating from 0.x"
+description: "What changed in browser-use 1.0 and why, before and after code for the ten most common 0.x patterns, every removed option with its replacement, and how to stay on 0.x."
+icon: "arrow-up-right"
+---
+
+1.0 replaces the engine. The agent no longer picks one action per step from a DOM dump: it writes Python in a persistent REPL with [browser-harness](https://github.com/browser-use/browser-harness) helpers and raw CDP, on [Pydantic AI](https://ai.pydantic.dev). The common surface (`Agent`, `Browser`, `Tools`, `run()`, `final_result()`) still works.
+
+Anything 1.0 can't honor raises a clear error before a browser starts or anything is billed, never a silent no-op. A removed feature raises `<feature> was removed in browser-use 1.0`, plus the 1.0 alternative when there is one and a link to the migration guide. The exception: a few tuning knobs that can't change the result (`use_vision=True`, `flash_mode`, `use_thinking`, ...) log one warning and are ignored.
+
+## Stay on 0.x
+
+Pin it:
+
+```bash
+pip install 'browser-use<1'
+```
+
+With uv: `uv add 'browser-use<1'`. In `requirements.txt` or `pyproject.toml`: `browser-use<1`. The 0.x docs are under [Legacy (0.x)](/open-source/legacy/0.x/introduction).
+
+## What changed and why
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-migrating-light-mobile.svg" />
+  <img src="/open-source/images/oss-migrating-light.svg" alt="In 0.x the model read an indexed DOM dump and picked one action, like click(index=12), for a local Chromium. In 1.0 the model reads the output of its last cell and writes the next Python cell, which the REPL runs with browser helpers and raw CDP against a cloud browser by default. Agent, Browser, Tools, run() and final_result() keep working." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-migrating-dark-mobile.svg" />
+  <img src="/open-source/images/oss-migrating-dark.svg" alt="In 0.x the model read an indexed DOM dump and picked one action, like click(index=12), for a local Chromium. In 1.0 the model reads the output of its last cell and writes the next Python cell, which the REPL runs with browser helpers and raw CDP against a cloud browser by default. Agent, Browser, Tools, run() and final_result() keep working." noZoom />
+</picture>
+
+| | 0.x | 1.0 | Why |
+|---|---|---|---|
+| Each step | The model reads an indexed DOM dump and picks actions like `click(index=12)`. | The model writes one Python cell; a persistent REPL runs it with browser helpers and raw CDP. | One cell can click, type, read and loop. Anything Chrome DevTools can do, the agent can do, without a built-in action for it. |
+| Agent loop | browser-use's own | [Pydantic AI](https://ai.pydantic.dev) | Any Pydantic AI model works, and you get its OpenTelemetry traces. |
+| Model (`llm=None`) | required | `bu-fast` on the Browser Use gateway | The configuration we evaluate. No provider account needed. |
+| Browser (`Browser()`) | local Chromium | a Browser Use Cloud browser | Stealth, proxies and CAPTCHA solving, nothing to install. A local browser is `Browser('chromium')`. |
+| Key | one per provider | one Browser Use key: `BROWSER_USE_API_KEY` (or `browser-use login`) | One key runs the model, cloud browsers, web search, the CLI and the MCP server. |
+| `run(max_steps=)` | 500 | 100 | One step is now one model request, and a cell does more than one 0.x action. |
+| A removed option | often ignored | raises before a browser starts | You find out before anything is billed. |
+| Tasks with localhost / private IPs | worked | a cloud browser can't reach them: one warning; use `Browser('chromium')` | |
+| Cloud proxy | the API's default, `us` | `us`; `cloud_proxy_country_code=None` turns it off | |
+
+## Common errors
+
+- **`MissingAPIKeyError: The default model (bu-fast) needs a Browser Use API key`** (or `Browser() (a Browser Use Cloud browser) needs a Browser Use API key`): the default model and `Browser()` are Browser Use Cloud now. Set `BROWSER_USE_API_KEY` (create a key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key)) or run `browser-use login`, or stay local: `Agent(task, llm=ChatOpenAI(...), browser=Browser('chromium'))`.
+- **`ValueError: Browser() (a cloud browser) does not take headless=`**: `headless`, `executable_path` and `user_data_dir` are for local browsers. Use `Browser('chromium', headless=True)`.
+- **`TypeError: Agent(<option>=...) was removed in browser-use 1.0`**: an option 1.0 dropped. The message names the replacement when there is one; the tables below list them all.
+- **`TypeError: Agent(max_steps=...) is not an option`**: pass it to `agent.run(max_steps=...)`.
+- **`ValueError: bu-2-0 needs browser-use<1.0`**: the 0.x gateway models are gone. Use `bu-fast`, or stay on 0.x.
+- **`BrowserConfigError: No Chrome profiles match 'Gaming'. Your profiles: ...`**: `profile=` (or `cloud_profile_id=`) names no profile. It is a `ValueError`, raised from `run()` before a browser starts.
+- **`ModuleNotFoundError` / `ImportError` on a 0.x import**: the message names the 1.0 replacement. Import from the top level: `from browser_use import Agent, Browser, Tools, ActionResult, ChatOpenAI, ...`.
+
+## The ten most common 0.x patterns
+
+The 0.x snippets are written for browser-use 0.13.14. Run as is on 1.0, each one either works or raises before a browser starts, naming the fix.
+
+### 1. Your own model
+
+0.x launched a local browser by default. 1.0 starts a cloud browser, so add `Browser('chromium')` to stay local. `max_steps` still goes to `run()`.
+
+<CodeGroup>
+```python 0.x
+import asyncio
+
+from browser_use import Agent, ChatOpenAI
+
+
+async def main():
+    agent = Agent(task='Find the top story on Hacker News', llm=ChatOpenAI(model='gpt-4.1-mini'))
+    history = await agent.run(max_steps=20)
+    print(history.final_result())
+
+
+asyncio.run(main())
+```
+```python 1.0
+from browser_use import Agent, Browser, ChatOpenAI
+
+agent = Agent(
+    'Find the top story on Hacker News',
+    llm=ChatOpenAI('gpt-6-luna'),
+    browser=Browser('chromium'),  # 0.x launched a local browser by default; 1.0's default is a cloud browser
+)
+result = agent.run_sync(max_steps=20)
+print(result.final_result())
+```
+</CodeGroup>
+
+### 2. The Browser Use model
+
+`ChatBrowserUse()` meant `bu-2-0` on the 0.x gateway. On 1.0 it is `bu-fast` on the new gateway, and it is the default, so you can drop `llm=`. `bu-2-0`, `bu-1-0`, `bu-2-0-mini-preview` and `bu-latest` raise: they need 0.x.
+
+<CodeGroup>
+```python 0.x
+import asyncio
+
+from browser_use import Agent, ChatBrowserUse
+
+
+async def main():
+    agent = Agent(task='Find the top story on Hacker News', llm=ChatBrowserUse())  # bu-2-0
+    history = await agent.run()
+    print(history.final_result())
+
+
+asyncio.run(main())
+```
+```python 1.0
+from browser_use import Agent
+
+result = Agent('Find the top story on Hacker News').run_sync()  # bu-fast on a cloud browser, one Browser Use key
+print(result.final_result())
+```
+</CodeGroup>
+
+### 3. BrowserProfile and BrowserSession
+
+Pass the options to `Browser(...)`. `headless`, `user_data_dir`, `executable_path` and the domain lists are kept. Window size, viewport and user agent are said in the task.
+
+<CodeGroup>
+```python 0.x
+import asyncio
+
+from browser_use import Agent, BrowserProfile, BrowserSession, ChatOpenAI
+
+
+async def main():
+    profile = BrowserProfile(
+        headless=True,
+        user_data_dir='~/.config/browseruse/profiles/work',
+        window_size={'width': 1280, 'height': 800},
+        allowed_domains=['example.com'],
+    )
+    agent = Agent(
+        task='What is the title of https://example.com?',
+        llm=ChatOpenAI(model='gpt-4.1-mini'),
+        browser_session=BrowserSession(browser_profile=profile),
+    )
+    history = await agent.run()
+    print(history.final_result())
+
+
+asyncio.run(main())
+```
+```python 1.0
+from browser_use import Agent, Browser, ChatOpenAI
+
+browser = Browser(
+    'chromium',
+    headless=True,
+    user_data_dir='~/.config/browseruse/profiles/work',
+    allowed_domains=['example.com'],
+)
+agent = Agent(
+    'What is the title of https://example.com?',  # window_size: say it in the task if the page needs it
+    llm=ChatOpenAI('gpt-6-luna'),
+    browser=browser,
+)
+print(agent.run_sync().final_result())
+```
+</CodeGroup>
+
+### 4. Your Chrome profile
+
+`Browser('chrome', profile='Default')` launches a new Chrome on a temporary copy of that profile (its display name or directory): your logins, sync off, nothing written back. `Browser('chrome')` attaches to the Chrome you have open instead (turn on `chrome://inspect/#remote-debugging` once and click **Allow**). See [Browsers](/open-source/browsers#your-chrome).
+
+<CodeGroup>
+```python 0.x
+import asyncio
+
+from browser_use import Agent, Browser, ChatOpenAI
+
+
+async def main():
+    browser = Browser(
+        executable_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        user_data_dir='~/Library/Application Support/Google/Chrome',
+        profile_directory='Default',
+    )
+    agent = Agent(
+        task='What is the title of https://example.com?', llm=ChatOpenAI(model='gpt-4.1-mini'), browser=browser
+    )
+    history = await agent.run()
+    print(history.final_result())
+
+
+asyncio.run(main())
+```
+```python 1.0
+from browser_use import Agent, Browser, ChatOpenAI
+
+browser = Browser('chrome', profile='Default')  # a new Chrome on a temporary copy of that profile
+agent = Agent('What is the title of https://example.com?', llm=ChatOpenAI('gpt-6-luna'), browser=browser)
+print(agent.run_sync().final_result())
+```
+</CodeGroup>
+
+### 5. Cloud browsers
+
+`Browser()` is a cloud browser now; `use_cloud=True` still works. `cloud_profile_id`, `cloud_proxy_country_code` and `cloud_timeout` are kept.
+
+<CodeGroup>
+```python 0.x
+import asyncio
+
+from browser_use import Agent, Browser, ChatOpenAI
+
+
+async def main():
+    browser = Browser(use_cloud=True, cloud_proxy_country_code='de', cloud_timeout=15)
+    agent = Agent(
+        task='Open https://ipinfo.io/json in the browser and tell me which country it shows',
+        llm=ChatOpenAI(model='gpt-4.1-mini'),
+        browser=browser,
+    )
+    history = await agent.run()
+    print(history.final_result())
+
+
+asyncio.run(main())
+```
+```python 1.0
+from browser_use import Agent, Browser, ChatOpenAI
+
+browser = Browser(cloud_proxy_country_code='de', cloud_timeout=15)  # use_cloud=True is the default now
+agent = Agent(
+    'Open https://ipinfo.io/json in the browser and tell me which country it shows',
+    llm=ChatOpenAI('gpt-6-luna'),
+    browser=browser,
+)
+print(agent.run_sync().final_result())
+```
+</CodeGroup>
+
+### 6. Custom tools
+
+`@tools.action` is kept. Injected parameters (`browser_session`, `page_extraction_llm`, `file_system`, ...) are gone: a tool gets only what the model passes, and the model drives the browser itself. Return a string, any JSON-able value or `ActionResult(extracted_content=...)`.
+
+<CodeGroup>
+```python 0.x
+import asyncio
+
+from browser_use import ActionResult, Agent, BrowserSession, ChatOpenAI, Tools
+
+tools = Tools()
+
+
+@tools.action('Save a note about the current page')
+async def save_note(note: str, browser_session: BrowserSession) -> ActionResult:
+    url = await browser_session.get_current_page_url()
+    with open('notes.txt', 'a') as f:
+        f.write(f'{url}: {note}\n')
+    return ActionResult(extracted_content='saved', include_in_memory=True)
+
+
+async def main():
+    agent = Agent(
+        task='Open https://example.com and save a note about what the page says',
+        llm=ChatOpenAI(model='gpt-4.1-mini'),
+        tools=tools,
+    )
+    await agent.run()
+    print(open('notes.txt').read())
+
+
+asyncio.run(main())
+```
+```python 1.0
+from browser_use import Agent, ChatOpenAI, Tools
+
+tools = Tools()
+
+
+@tools.action('Save a note about a page. Pass the page URL and the note.')
+def save_note(url: str, note: str) -> str:
+    with open('notes.txt', 'a') as f:
+        f.write(f'{url}: {note}\n')
+    return 'saved'
+
+
+agent = Agent(
+    'Open https://example.com and save a note about what the page says',
+    llm=ChatOpenAI('gpt-6-luna'),
+    tools=tools,
+)
+agent.run_sync()
+print(open('notes.txt').read())
+```
+</CodeGroup>
+
+### 7. Structured output
+
+`output_model_schema` is kept. Read the typed instance from `result.structured_output` instead of parsing `final_result()`.
+
+<CodeGroup>
+```python 0.x
+import asyncio
+
+from pydantic import BaseModel
+
+from browser_use import Agent, ChatOpenAI
+
+
+class Story(BaseModel):
+    title: str
+    points: int
+
+
+class Stories(BaseModel):
+    stories: list[Story]
+
+
+async def main():
+    agent = Agent(
+        task='Top 3 stories on https://news.ycombinator.com',
+        llm=ChatOpenAI(model='gpt-4.1-mini'),
+        output_model_schema=Stories,
+    )
+    history = await agent.run()
+    stories = Stories.model_validate_json(history.final_result())
+    for s in stories.stories:
+        print(s.points, s.title)
+
+
+asyncio.run(main())
+```
+```python 1.0
+from pydantic import BaseModel
+
+from browser_use import Agent, ChatOpenAI
+
+
+class Story(BaseModel):
+    title: str
+    points: int
+
+
+class Stories(BaseModel):
+    stories: list[Story]
+
+
+agent = Agent(
+    'Top 3 stories on https://news.ycombinator.com', llm=ChatOpenAI('gpt-6-luna'), output_model_schema=Stories
+)
+result = agent.run_sync()
+stories = result.structured_output  # a Stories instance; None if the run did not complete
+if stories:
+    for s in stories.stories:
+        print(s.points, s.title)
+```
+</CodeGroup>
+
+### 8. Logins with sensitive_data
+
+Unchanged. The model types a value with `type_secret('x_pass')` and never sees it. The 0.x `<secret>x_pass</secret>` placeholder is no longer replaced: code that sends it to a page raises, naming `type_secret`. See [Secrets](/open-source/secrets).
+
+<CodeGroup>
+```python 0.x
+import asyncio
+
+from browser_use import Agent, ChatOpenAI
+
+
+async def main():
+    agent = Agent(
+        task='Log in on https://the-internet.herokuapp.com/login with x_user and x_pass, then return the message the page shows',
+        llm=ChatOpenAI(model='gpt-4.1-mini'),
+        sensitive_data={'https://the-internet.herokuapp.com': {'x_user': 'tomsmith', 'x_pass': 'SuperSecretPassword!'}},
+        use_vision=False,
+    )
+    history = await agent.run()
+    print(history.final_result())
+
+
+asyncio.run(main())
+```
+```python 1.0
+from browser_use import Agent, ChatOpenAI
+
+agent = Agent(
+    'Log in on https://the-internet.herokuapp.com/login with x_user and x_pass, then return the message the page shows',
+    llm=ChatOpenAI('gpt-6-luna'),
+    sensitive_data={'https://the-internet.herokuapp.com': {'x_user': 'tomsmith', 'x_pass': 'SuperSecretPassword!'}},
+    use_vision=False,  # kept: no screenshot reaches the model
+)
+print(agent.run_sync().final_result())
+```
+</CodeGroup>
+
+### 9. Follow-up tasks on one browser
+
+`keep_alive=True` and `add_new_task()` are kept. Stop the browser with `await browser.stop()`; `kill()` and `close()` do the same.
+
+<CodeGroup>
+```python 0.x
+import asyncio
+
+from browser_use import Agent, Browser, ChatOpenAI
+
+
+async def main():
+    browser = Browser(keep_alive=True)
+    agent = Agent(
+        task='Open https://news.ycombinator.com and return the top story title',
+        llm=ChatOpenAI(model='gpt-4.1-mini'),
+        browser=browser,
+    )
+    print((await agent.run()).final_result())
+    agent.add_new_task('Now open its comments and return the number of comments')
+    print((await agent.run()).final_result())
+    await browser.kill()
+
+
+asyncio.run(main())
+```
+```python 1.0
+import asyncio
+
+from browser_use import Agent, Browser, ChatOpenAI
+
+
+async def main():
+    browser = Browser(keep_alive=True)
+    agent = Agent(
+        'Open https://news.ycombinator.com and return the top story title',
+        llm=ChatOpenAI('gpt-6-luna'),
+        browser=browser,
+    )
+    try:
+        print((await agent.run()).final_result())
+        agent.add_new_task('Now open its comments and return the number of comments')
+        print((await agent.run()).final_result())
+    finally:
+        await browser.stop()  # browser.kill() and browser.close() also work
+
+
+asyncio.run(main())
+```
+</CodeGroup>
+
+### 10. Step hooks and history
+
+There are no per-step actions in 1.0, so `on_step_start` / `on_step_end` and `history.urls()`, `action_names()` and the like are gone. Each step logs one line to `logging.getLogger('browser_use')`, and `result.messages` holds the full transcript. See [Long tasks: Live progress](/open-source/long-tasks#live-progress).
+
+<CodeGroup>
+```python 0.x
+import asyncio
+
+from browser_use import Agent, ChatOpenAI
+
+
+async def on_step_end(agent):
+    print('step', agent.state.n_steps, await agent.browser_session.get_current_page_url())
+
+
+async def main():
+    agent = Agent(task='What is the title of https://example.com?', llm=ChatOpenAI(model='gpt-4.1-mini'))
+    history = await agent.run(max_steps=10, on_step_end=on_step_end)
+    print(history.urls())
+    print(history.action_names())
+    print(history.number_of_steps(), history.total_duration_seconds())
+
+
+asyncio.run(main())
+```
+```python 1.0
+import logging
+
+from browser_use import Agent, ChatOpenAI
+
+
+class Progress(logging.Handler):
+    def emit(self, record):
+        print('progress:', record.getMessage())  # one line per step: step N: <first line of the cell>
+
+
+logging.getLogger('browser_use').addHandler(Progress())
+
+agent = Agent('What is the title of https://example.com?', llm=ChatOpenAI('gpt-6-luna'))
+result = agent.run_sync(max_steps=10)
+print(result.number_of_steps(), result.total_duration_seconds(), result.cost_usd)
+print(len(result.messages), 'messages in the transcript')
+```
+</CodeGroup>
+
+## Agent
+
+Every 0.x `Agent(...)` argument, method and attribute. Removed arguments raise `TypeError`, removed methods and attributes raise `AttributeError`, both naming the 1.0 replacement. "Dropped" means there is none.
+
+| 0.x | 1.0 |
+|---|---|
+| `task`, `llm`, `browser`, `browser_session`, `tools`, `controller`, `output_model_schema`, `sensitive_data`, `extend_system_message` | kept |
+| `use_vision=False` | kept: no screenshot reaches the model |
+| `use_vision=True` / `'auto'`, `vision_detail_level`, `llm_screenshot_size`, `max_actions_per_step`, `flash_mode`, `use_thinking`, `use_judge`, `max_failures`, `final_response_after_failure`, `calculate_cost`, `highlight_elements` | ignored, one warning each. Instead of `use_thinking`: `reasoning='low' / 'medium' / 'high'`; of `flash_mode`: `mode='ultrafast'`; of `highlight_elements`: `highlight_actions` |
+| `max_steps` on `Agent` | not an option: `agent.run(max_steps=...)` |
+| `override_system_message` | `extend_system_message` |
+| `llm_timeout`, `step_timeout` | `agent.run(timeout=seconds)` |
+| `file_system_path`, `available_file_paths` | `workspace=`: put the files in it and name them in the task. See [Files](/open-source/files) |
+| `initial_actions`, `directly_open_url` | say it in the task |
+| `browser_profile`, `browser_context`, `context`, `page` | `browser=Browser(...)` |
+| `page_extraction_llm`, `extraction_schema` | dropped: the agent extracts with Python |
+| `register_new_step_callback`, `register_done_callback`, `register_external_agent_status_raise_error_callback`, `register_should_stop_callback`, `run(on_step_start=...)`, `run(on_step_end=...)` | a `logging.Handler` on `browser_use`; see [Long tasks](/open-source/long-tasks#live-progress) |
+| `save_conversation_path`, `save_conversation_path_encoding` | `result.messages` |
+| `generate_gif`, `demo_mode` | dropped. `live_view=True` shows a cloud browser live |
+| `judge_llm`, `ground_truth` | `result.success`, the agent's own verdict |
+| `fallback_llm`, `skill_ids`, `skills`, `skill_service`, `pricing_url` | dropped |
+| `sample_images`, `enable_planning`, `planning_replan_on_stall`, `planning_exploration_limit`, `planner_llm`, `planner_interval`, `is_planner_reasoning`, `extend_planner_system_message`, `use_vision_for_planner` | dropped: each step is one Python cell; the agent takes screenshots when it needs them |
+| `loop_detection_window`, `loop_detection_enabled`, `message_compaction`, `max_history_items`, `include_attributes`, `max_clickable_elements_length`, `include_recent_events`, `include_tool_call_examples`, `display_files_in_done_text`, `injected_agent_state`, `source`, `task_id`, `enable_signal_handler`, `_url_shortening_limit` | dropped: the model retries failed cells within `max_steps`, and history is compacted on its own (`max_context_chars`) |
+| 0.1 to 0.8: `validate_output`, `system_prompt_class`, `message_context`, `enable_memory`, `memory_config`, `memory_interval`, `max_input_tokens`, `images_per_step`, `retry_delay`, `save_playwright_script_path`, `cloud_sync`, `preload`, `max_error_length`, `tool_calling_method`, `tool_call_in_content` | dropped (`result.success` for `validate_output`, `extend_system_message` for the prompt ones) |
+| `pause()`, `resume()`, `stop()`, `step()`, `take_step()`, `multi_act()` | cancel the task awaiting `run()`; see [Agent](/open-source/agent#cancel). For a partial result, bound the run with `max_steps` and `timeout` |
+| `save_history()`, `load_and_rerun()`, `rerun_history()`, `detect_variables()` | dropped: `result.messages` holds the transcript; run the task again |
+| `set_task()` | `add_new_task(task)` |
+| `wait_until_resumed()`, `get_next_action()`, `get_model_output()`, `set_tool_calling_method()`, `create_history_gif()`, `get_trace_object()`, `authenticate_cloud_sync()`, `save_file_system_state()`, `log_completion()` | dropped: 0.x loop internals |
+| `logger` | `logging.getLogger('browser_use')` |
+| `current_llm_model`, `is_using_fallback_llm` | `agent.llm` |
+| `state`, `history`, `message_manager`, `settings`, `file_system` | dropped: read the result `run()` returns, and `agent.workspace` |
+| `browser_session`, `browser_profile`, `browser_context`, `controller` (attributes) | `agent.browser`, `agent.tools` |
+| new | `reasoning`, `mode`, `workspace`, `web_search`, `max_context_chars`, `highlight_actions`. See [Agent](/open-source/agent) |
+
+## Result
+
+`run()` still returns an `AgentHistoryList`.
+
+| 0.x | 1.0 |
+|---|---|
+| `final_result()`, `is_done()`, `structured_output`, `number_of_steps()`, `total_duration_seconds()` | kept |
+| `is_successful()` | the agent's verdict, `None` when it gave none (0.x defaulted to `True`). For the 0.x behavior: `r.is_done() and r.success is not False` |
+| `errors()`, `has_errors()` | only the error that ended the run. Cell errors the agent recovered from are in `result.messages` |
+| `history`, `urls()`, `screenshots()`, `screenshot_paths()`, `action_names()`, `action_history()`, `action_results()`, `model_thoughts()`, `model_outputs()`, `model_actions()`, `model_actions_filtered()`, `extracted_content()`, `agent_steps()`, `last_action()`, `add_item()` | dropped (`AttributeError`): there are no per-step actions. Use `result.messages`, `result.partial` and the files in `agent.workspace` |
+| `save_to_file()`, `load_from_file()`, `load_from_dict()`, `model_dump()`, `model_dump_json()`, `save_as_playwright_script()` | dropped |
+| `get_structured_output()` | `result.structured_output` |
+| `judgement()`, `is_judged()`, `is_validated()` | `result.success` |
+| `input_token_usage()`, `total_input_tokens`, `result.usage.total_cost` | `result.usage['input']`, `result.cost_usd` |
+| new | `status`, `success`, `partial`, `usage`, `cost_usd`, `messages`, `downloads`. See [Output](/open-source/output) |
+
+## Browser
+
+`Browser`, `BrowserSession` and `BrowserProfile` are one class now: `Browser`. Importing `BrowserSession`, `BrowserProfile`, `BrowserConfig`, `BrowserContext` or `BrowserContextConfig` raises.
+
+| 0.x | 1.0 |
+|---|---|
+| `Browser()`, `BrowserSession()` | `Browser()` is a cloud browser |
+| `Browser(use_cloud=True)` | `Browser()`; `use_cloud=True` still works. `cloud_browser=True` raises: use `Browser()` |
+| `Browser(use_cloud=False)` | `Browser('chromium')` (or `local=True`): a fresh local Chrome, Chromium or Edge with a temp profile |
+| `headless`, `executable_path` | kept for browsers 1.0 launches; on `Browser()` they raise `ValueError` |
+| `user_data_dir` | kept with `Browser('chromium', user_data_dir=...)`. Chrome's own default directory raises: Chrome 136+ refuses remote debugging on it |
+| `Browser.from_system_chrome()`, `profile_directory` | `Browser('chrome')` (your open Chrome) or `Browser('chrome', profile='Work')` |
+| `keep_alive`, `cdp_url` | kept |
+| `cloud_profile_id`, `cloud_proxy_country_code`, `cloud_timeout` | kept. The aliases `profile_id`, `proxy_country_code` and `timeout` raise, naming these |
+| `cloud_browser_params` | `cloud_profile_id`, `cloud_proxy_country_code`, `cloud_timeout` |
+| `await browser.close()`, `await browser.kill()` | kept: they stop the browser, as `await browser.stop()` does |
+| `stop_session()` | `await browser.stop()` |
+| `allowed_domains`, `prohibited_domains`, `block_ip_addresses` | kept, in every mode; see [Domains](/open-source/domains) |
+| `captcha_solver` | kept for cloud browsers; `False` raises on a local one |
+| `headers` (with `cdp_url`) | raises: use a `cdp_url` that needs no headers |
+| `window_size`, `window_width`, `window_height`, `window_position`, `viewport`, `no_viewport`, `screen`, `device_scale_factor`, `user_agent` | say it in the task: the agent can send `Emulation.setUserAgentOverride` and, on a local browser, `Emulation.setDeviceMetricsOverride`. A cloud browser keeps its own 1440x900 viewport; use `Browser('chromium')` for another. Headless launches use a 1440x900 window |
+| `locale`, `timezone_id`, `color_scheme`, `contrast`, `forced_colors`, `reduced_motion`, `is_mobile`, `has_touch`, `extra_http_headers`, `offline`, `java_script_enabled`, `bypass_csp`, `ignore_https_errors`, `service_workers`, `base_url` (0.6 Playwright options) | say it in the task: the agent sends the CDP commands itself |
+| `permissions` | say it in the task: the agent can send `Browser.grantPermissions` |
+| `proxy` | cloud: `cloud_proxy_country_code`. Local: dropped for now |
+| `storage_state`, `cookie_whitelist_domains`, `cookies_file` | cloud: `cloud_profile_id`. Local: `Browser('chrome', profile=...)` or `Browser('chromium', user_data_dir=...)` |
+| `downloads_path`, `accept_downloads`, `auto_download_pdfs` | downloads land in `agent.workspace/downloads`; see [Files](/open-source/files#downloads) |
+| `highlight_elements`, `interaction_highlight_color`, `interaction_highlight_duration` | actions are highlighted by default; `Agent(highlight_actions=False)` turns it off |
+| `channel` | `executable_path=` |
+| `args`, `ignore_default_args`, `env`, `chromium_sandbox`, `devtools`, `enable_default_extensions`, `disable_security`, `is_local`, `id`, `config`, `browser_profile`, `context` | dropped (`--no-sandbox` is added on Linux as root or in a container) |
+| `record_video_dir`, `record_video_size`, `record_video_framerate`, `record_har_path`, `record_har_content`, `record_har_mode`, `record_har_omit_content`, `record_har_url_filter`, `traces_dir` | dropped. `result.messages` is the transcript; `live_view=True` shows a cloud browser live |
+| `dom_highlight_elements`, `filter_highlight_ids`, `paint_order_filtering`, `cross_origin_iframes`, `max_iframes`, `max_iframe_depth`, `minimum_wait_page_load_time`, `wait_for_network_idle_page_load_time`, `maximum_wait_page_load_time`, `wait_between_actions`, `deterministic_rendering`, `demo_mode`, `viewport_expansion`, `include_dynamic_attributes`, `cached_state`, `default_timeout`, `default_navigation_timeout`, `slow_mo`, `strict_selectors` | dropped: they tuned the 0.x DOM engine |
+| `handle_sigint`, `handle_sigterm`, `handle_sighup` | dropped: a browser 1.0 started is stopped when the process exits |
+| `stealth` | dropped: cloud browsers run with stealth settings |
+| `get_current_page()`, `new_page()`, `navigate_to()`, `navigate()`, `get_tabs()`, `switch_tab()`, `close_tab()`, `take_screenshot()`, `get_browser_state_summary()`, `get_page_html()`, `get_cookies()`, `export_storage_state()`, `cdp_client`, `event_bus`, and the other 0.x `BrowserSession` / `BrowserContext` methods | dropped (`AttributeError`): the agent drives pages in Python with browser helpers and raw CDP |
+| `Browser.list_chrome_profiles()` | `Browser('chrome', profile='Work')` takes a display or directory name; one that matches none raises with your profiles listed |
+
+See [Browsers](/open-source/browsers).
+
+## Models
+
+| 0.x | 1.0 |
+|---|---|
+| `ChatBrowserUse()` | kept: `bu-fast` (default), `bu-ultrafast`, `bu-smart` or an OpenAI model the gateway lists. `'openai/gpt-5.5'` is sent as `gpt-5.5` |
+| `ChatBrowserUse('bu-2-0')`, `'bu-1-0'`, `'bu-2-0-mini-preview'`, `'bu-latest'` | raise `ValueError`: they need `browser-use<1`. Use `bu-fast` |
+| `ChatBrowserUse('anthropic/...')`, `ChatBrowserUse('google/...')` | the 0.x gateway served other vendors; the 1.0 error names `ChatAnthropic(...)` / `ChatGoogle(...)` with your own key |
+| `ChatOpenAI(model, api_key, base_url, temperature, reasoning_effort)` | kept. api.openai.com uses the Responses API; any other `base_url` uses chat completions |
+| `ChatAnthropic(model, api_key)`, `ChatGoogle(model, api_key)` | kept, built in. `ChatAnthropic(temperature=...)` raises: delete it (Anthropic rejects it on Claude 4.x) |
+| other `ChatOpenAI` / `ChatAnthropic` / `ChatGoogle` arguments | raise `TypeError`: pass a Pydantic AI model built with `settings=...`, e.g. `GoogleModel('gemini-flash-latest', settings={'temperature': 0.5})` |
+| `ChatAzureOpenAI` | `llm='azure:<deployment>'` with `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY` (0.x read `AZURE_OPENAI_KEY`) and `OPENAI_API_VERSION` (now required) |
+| `ChatAWSBedrock`, `ChatAnthropicBedrock` | `llm='bedrock:<model id>'` after `pip install 'pydantic-ai-slim[bedrock]'` |
+| `ChatGroq`, `ChatMistral` | `llm='groq:<model>'` / `'mistral:<model>'` after `pip install 'pydantic-ai-slim[groq]'` (or `[mistral]`) |
+| `ChatDeepSeek`, `ChatOpenRouter`, `ChatCerebras`, `ChatVercel` | `'deepseek:deepseek-chat'`, `'openrouter:<vendor>/<model>'`, `'cerebras:<model>'`, `'vercel:<vendor>/<model>'` |
+| `ChatOllama` | `ChatOpenAI('<model>', base_url='http://localhost:11434/v1', api_key='ollama')` |
+| `ChatLiteLLM`, `ChatOCIRaw`, `ChatOrcaRouter` | `ChatOpenAI(model, base_url=...)` for its OpenAI-compatible endpoint |
+| `browser_use.llm.models`, `openai_gpt_4o` and the other 0.x model instances, `get_llm_by_name()` | a model string or Chat class; each error names it (`ChatOpenAI('gpt-4o')` for `openai_gpt_4o`) |
+| `llm.ainvoke(...)`, `UserMessage`, `SystemMessage`, `BaseChatModel` | dropped: the agent calls the model. To call one yourself: `await pydantic_ai.Agent(llm.pydantic_model()).run(prompt)` |
+| LangChain chat models | not supported: `Agent(llm=...)` raises `TypeError`. Use `from browser_use import ChatOpenAI` |
+| a bare model name such as `llm='gpt-4o'` | raises naming its 1.0 form: `ChatOpenAI('gpt-4o')` or `'openai:gpt-4o'` |
+
+Importing a removed class raises an `ImportError` that names its replacement. See [Models](/open-source/models).
+
+## Tools
+
+| 0.x | 1.0 |
+|---|---|
+| `Tools()`, `Controller()`, `@tools.action('...')`, `param_model` | kept. `Controller` is `Tools` |
+| returning `ActionResult(extracted_content=..., error=...)` or any value | kept |
+| an action that raises | kept: the model gets the error and can recover |
+| injected parameters (`browser_session`, `page_extraction_llm`, `file_system`, `available_file_paths`, `has_sensitive_data`, `cdp_client`, `page_url`, ...) | dropped: actions get only what the model passes |
+| `@tools.action(domains=...)`, `allowed_domains=`, `page_filter=` | `Browser(allowed_domains=...)` |
+| `@tools.action(requires_browser=...)`, `terminates_sequence=` | dropped: delete them |
+| `Tools(exclude_actions=...)` | dropped: there are no built-in actions; the agent writes Python |
+| `Tools(output_model=...)` | `Agent(output_model_schema=...)` |
+| `Tools(display_files_in_done_text=...)`; 0.1 `Controller(headless=, keep_open=, disable_security=, cookies_path=, browser_config=)` | dropped; browser options go to `Browser(...)` |
+| `act()`, `exclude_action()`, `get_output_model()`, `use_structured_output_action()`, `set_coordinate_clicking()` | dropped (`AttributeError` naming the answer) |
+| `ActionResult(is_done=True)`, `success=`, `attachments=[...]`, `images=[...]` | dropped: the model ends the run with `finish`; save files in the workspace. An action that returns one raises `TypeError` when `@tools.action` registers it |
+| `ActionResult(include_in_memory=...)`, `include_extracted_content_only_once=` | ignored, one warning: every result stays in the conversation |
+| `<secret>name</secret>` in an action's arguments | dropped: the action is not run and the model gets an error. Secrets are typed in the browser with `type_secret(name)` |
+
+See [Tools](/open-source/tools).
+
+## Removed modules
+
+Every 0.x module 1.0 does not have, and every 0.x name a kept module lost, raises an error naming the replacement: `ModuleNotFoundError` for a module, `ImportError` for a name. Both are `ImportError`, so `except ImportError` fallbacks still work. Import from the top level: `from browser_use import Agent, Browser, Tools, ActionResult, ChatBrowserUse, ChatOpenAI, ChatAnthropic, ChatGoogle`.
+
+| 0.x | 1.0 |
+|---|---|
+| `browser_use.llm.openai`, `.anthropic`, `.google`, `.browser_use` | the top-level `Chat*` classes |
+| `browser_use.llm.aws`, `.azure`, `.deepseek`, `.groq`, `.mistral`, `.openrouter`, `.cerebras`, `.vercel`, `.ollama`, `.litellm`, `.oci_raw`, `.orcarouter` | the model strings in [Models](#models) |
+| `browser_use.llm.messages`, `.base`, `.views`, `.schema`, `.exceptions` | dropped: the agent calls the model |
+| `browser_use.browser.session`, `.profile`, `.views`, `.watchdogs`, `.session_manager`, `.context`, `.cloud`, `ProxySettings` | `from browser_use import Browser` |
+| `browser_use.browser.events`, `AgentHookFunc` | a `logging.Handler` on `browser_use` |
+| `browser_use.controller`, `browser_use.tools.service`, `.registry`, `.views` | `from browser_use import Tools, ActionResult` |
+| `browser_use.agent.views`: `AgentOutput`, `AgentBrain`, `AgentState`, `AgentHistory`, `AgentStepInfo`, `StepMetadata`, `AgentError`, `AgentStructuredOutput` | `AgentHistoryList` and `ActionResult` are kept; the rest is dropped |
+| `browser_use.agent.prompts`, `.message_manager`, `.memory`, `.judge`, `.gif`, `.variable_detector`, `SystemPrompt` | `Agent(extend_system_message=...)` |
+| `CodeAgent`, `browser_use.code_use` | `Agent(...)`: the 1.0 agent writes Python itself |
+| `ActionModel` | `@tools.action(...)` on a plain function |
+| `browser_use.dom`, `DomService`, `browser_use.actor` (`Page`, `Element`, `Mouse`) | dropped: the agent drives pages with Python and raw CDP |
+| `browser_use.filesystem` | `Agent(workspace=...)` |
+| `browser_use.tokens` | `result.usage`, `result.cost_usd` |
+| `browser_use.observability` (Laminar `observe`) | Pydantic AI's OpenTelemetry spans; see [Observability](/open-source/observability) |
+| `browser_use.mcp.client`, `browser_use.mcp.controller` | call the MCP server from a plain `@tools.action` function |
+| `browser_use.mcp.server`, `browser_use.skill_cli` | `browser-use --cli-mcp` and the `browser-use` CLI |
+| `browser_use.config`, `browser_use.utils`, `browser_use.logging_config` | 0.x internals: `Agent(...)` / `Browser(...)` arguments, `BROWSER_USE_LOGGING_LEVEL` |
+| `browser_use.beta`, `browser_use.sandbox`, `browser_use.sync`, `browser_use.screenshots`, `browser_use.skills.service`, `browser_use.init_cmd` | dropped (`screenshot()` in the agent's REPL replaces `screenshots`) |
+| `browser_use.integrations` (Anthropic and OpenAI hosted-browser tools, Gmail) | not yet: planned on the new `Browser` in a later release. Stay on 0.x for them; see [Claude, OpenAI and Gemini](/open-source/integrations#0-x-integrations) |
+
+## CLI and MCP
+
+The CLI still runs piped Python, and `browser-use skill install` and `browser-use --cli-mcp` work as before. New: `browser-use login` / `logout` and a `browser_login` MCP tool. `browser-use run`, `init` and the 0.x subcommands (`open`, `state`, `click`, ...) print what replaced them.
+
+The 0.x `browser-use --mcp` server ran the removed engine. `--mcp` now prints a deprecation notice and serves the `--cli-mcp` tools (`browser_exec`, `browser_screenshot`, `browser_login`) on its own temporary Chromium. The old tool names (`browser_navigate`, `browser_click`, `browser_type`, `browser_get_state`, `browser_extract_content`, `browser_get_html`, `browser_scroll`, `browser_go_back`, `browser_list_tabs`, `browser_switch_tab`, `browser_close_tab`, `retry_with_browser_use_agent`, `browser_list_sessions`, `browser_close_session`, `browser_close_all`) return an error that points to `browser_exec`. Switch clients to `--cli-mcp`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "command": "uvx",
+      "args": ["--from", "browser-use==1.0.0", "browser-use", "--cli-mcp"]
+    }
+  }
+}
+```
+
+See [Browser Use CLI](/open-source/browser-use-cli) and [MCP server](/open-source/mcp).
+
+## Environment variables
+
+| Variable | 1.0 |
+|---|---|
+| `BROWSER_USE_API_KEY` | read; wins over `browser-use login` |
+| `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY` | read |
+| `ANONYMIZED_TELEMETRY` | read; see [Telemetry](/open-source/telemetry) |
+| `BROWSER_USE_LOGGING_LEVEL` | read |
+| `DEFAULT_LLM`, `BROWSER_USE_HEADLESS` | not read, with a warning |
+| `BROWSER_USE_ALLOWED_DOMAINS` | not read: `Browser()` raises while it is set |
+| `BROWSER_USE_LLM_URL` | not read: `ChatBrowserUse(base_url=...)` |
+| `AZURE_OPENAI_KEY` | not read: `AZURE_OPENAI_API_KEY` |
+
+The same guide, with every detail of domain restrictions and the secrets trust model, is [MIGRATING.md](https://github.com/browser-use/browser-use/blob/main/MIGRATING.md) in the repo.

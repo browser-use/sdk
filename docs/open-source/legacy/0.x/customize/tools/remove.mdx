@@ -1,0 +1,20 @@
+---
+title: "Remove Tools (0.x)"
+sidebarTitle: "Remove Tools"
+description: "Exclude default tools to restrict agent capabilities."
+icon: "minus"
+mode: "wide"
+noindex: true
+---
+
+import Legacy0x from '/snippets/legacy-0x.mdx';
+
+<Legacy0x />
+
+
+```python
+from browser_use import Tools
+
+tools = Tools(exclude_actions=['search', 'wait'])
+agent = Agent(task='...', llm=llm, tools=tools)
+```

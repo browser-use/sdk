@@ -1,0 +1,136 @@
+---
+title: "Claude, OpenAI and Gemini"
+sidebarTitle: "Claude, OpenAI, Gemini"
+description: "Run browser-use on Claude, GPT or Gemini, give Claude Code, Claude Desktop, Codex or Cursor a browser, and call a browser agent from your own Claude or OpenAI agent."
+icon: "sparkle"
+---
+
+Three ways to combine browser-use with Anthropic, OpenAI and Google:
+
+| You want | Use |
+|---|---|
+| browser-use's agent, running on Claude, GPT or Gemini | [Their models](#use-claude-gpt-or-gemini-as-the-model) |
+| Claude Code, Claude Desktop, Codex or Cursor to drive a browser | [The CLI skill or the MCP server](#give-your-coding-agent-a-browser) |
+| Your own Claude or OpenAI agent to delegate browser work | [A browse tool](#call-a-browser-agent-from-your-own-agent) |
+
+## Use Claude, GPT or Gemini as the model
+
+Pass the provider's model class. Each reads its own API key from the environment. Anthropic and Google are built in; no extra install.
+
+<CodeGroup>
+```python Anthropic
+from browser_use import Agent, ChatAnthropic
+
+agent = Agent('What is the title of https://example.com?', llm=ChatAnthropic('claude-sonnet-5-5'))  # ANTHROPIC_API_KEY
+print(agent.run_sync().final_result())
+```
+```python OpenAI
+from browser_use import Agent, ChatOpenAI
+
+agent = Agent('What is the title of https://example.com?', llm=ChatOpenAI('gpt-6-luna'))  # OPENAI_API_KEY
+print(agent.run_sync().final_result())
+```
+```python Google
+from browser_use import Agent, ChatGoogle
+
+agent = Agent('What is the title of https://example.com?', llm=ChatGoogle('gemini-3.5-flash'))  # GOOGLE_API_KEY
+print(agent.run_sync().final_result())
+```
+</CodeGroup>
+
+Claude on Bedrock, GPT on Azure and Gemini on Vertex work through Pydantic AI model strings, such as `llm='bedrock:<model id>'` or `llm='azure:<deployment>'`. Options, reasoning effort and cost: [Models](/open-source/models).
+
+## Give your coding agent a browser
+
+The coding agent writes the browser code itself, against your Chrome or a cloud browser. There are two ways in; both use the same helpers.
+
+### Claude Code
+
+The CLI with its skill is the most direct:
+
+```bash
+uv tool install 'browser-use==1.0.0'
+browser-use skill install
+```
+
+`skill install` writes the skill for every agent it finds: Claude Code, Codex, Copilot, Cursor, Gemini, OpenClaw and OpenCode. See [Browser Use CLI](/open-source/browser-use-cli).
+
+Or add the MCP server:
+
+```bash
+claude mcp add browser-use -- uvx --from 'browser-use==1.0.0' browser-use --cli-mcp
+```
+
+### Claude Desktop and Cursor
+
+Add the MCP server to `claude_desktop_config.json` (Claude Desktop: Settings > Developer > Edit Config) or to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "command": "uvx",
+      "args": ["--from", "browser-use==1.0.0", "browser-use", "--cli-mcp"]
+    }
+  }
+}
+```
+
+### Codex
+
+`browser-use skill install` covers Codex too. For the MCP server, add this to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.browser-use]
+command = "uvx"
+args = ["--from", "browser-use==1.0.0", "browser-use", "--cli-mcp"]
+```
+
+The server gives the client three tools: `browser_exec`, `browser_screenshot` and `browser_login`. Local or cloud browser, and what the tools do: [MCP server](/open-source/mcp).
+
+## Call a browser agent from your own agent
+
+Wrap a browser-use `Agent` in a tool. Your agent decides when it needs the web; browser-use does the browsing and returns the answer.
+
+<CodeGroup>
+```python Claude (Pydantic AI)
+from pydantic_ai import Agent as PydanticAgent
+
+from browser_use import Agent
+
+
+async def browse(task: str) -> str:
+    """Do a task in a real web browser and return what it found."""
+    result = await Agent(task).run(max_steps=30)
+    return result.final_result() or f'{result.status}: {result.error}'
+
+
+assistant = PydanticAgent('anthropic:claude-sonnet-5-5', tools=[browse])
+print(assistant.run_sync('What is the title of the top story on Hacker News right now?').output)
+```
+```python OpenAI Agents SDK
+from agents import Agent as OpenAIAgent
+from agents import Runner, function_tool
+
+from browser_use import Agent
+
+
+@function_tool
+async def browse(task: str) -> str:
+    """Do a task in a real web browser and return what it found."""
+    result = await Agent(task).run(max_steps=30)
+    return result.final_result() or f'{result.status}: {result.error}'
+
+
+assistant = OpenAIAgent(name='assistant', model='gpt-6-luna', tools=[browse])
+print(Runner.run_sync(assistant, 'What is the title of the top story on Hacker News right now?').final_output)
+```
+</CodeGroup>
+
+The OpenAI version needs `uv add openai-agents`. The same `browse` function works as a tool in the Anthropic SDK, LangGraph or any framework that calls Python functions. Each call starts a cloud browser and stops it when the inner run ends; to reuse one browser across calls that run one at a time, pass `browser=Browser(keep_alive=True)` and stop it yourself.
+
+To have Browser Use host the whole agent instead, use the [Cloud API](/cloud/agent/quickstart). Cloud guides: [Claude Code](/cloud/tutorials/integrations/claude-code), [OpenAI](/cloud/tutorials/integrations/openai).
+
+## 0.x integrations
+
+The 0.x Anthropic and OpenAI hosted-browser integrations (`browser_use.integrations`, including Browser Use toolsets for Claude) are not in 1.0. They come back on the new `Browser` in a later release. To use them now, stay on 0.x (`uv add 'browser-use>=0.13.11,<1'`) and follow [toolsets for Claude (0.x)](/open-source/legacy/0.x/customize/integrations/toolsets-for-claude) or [OpenAI (0.x)](/open-source/legacy/0.x/customize/integrations/openai).

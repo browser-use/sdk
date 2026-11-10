@@ -1,0 +1,177 @@
+---
+title: "Browsers"
+description: "Browser Use Cloud browsers (the default), a fresh local Chromium, your own Chrome, or any CDP endpoint."
+icon: "app-window"
+---
+
+| `Browser(...)` | What the agent drives |
+|---|---|
+| `Browser()` | A Browser Use Cloud browser. The default. |
+| `Browser('chromium')` | A fresh local Chrome, Chromium or Edge with its own temp profile, deleted afterwards. `Browser(local=True)` is the same. |
+| `Browser('chrome')` | The Chrome you have open, with your logins. |
+| `Browser('chrome', profile='Work')` | A new Chrome on a temporary copy of your Chrome profile `Work`. |
+| `Browser(cdp_url=...)` | Any browser with a CDP endpoint. |
+
+`Agent.run()` starts the browser and stops it when the run ends, unless `keep_alive=True`. Every `Browser(...)` parameter with its default: [All parameters](/open-source/all-parameters#browser).
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-browsers-light-mobile.svg" />
+  <img src="/open-source/images/oss-browsers-light.svg" alt="Browser() creates a Browser Use Cloud browser, the default. Browser('chromium') launches a fresh local browser with a temp profile. Browser('chrome') attaches to the Chrome you have open, with your logins. Browser(cdp_url=...) connects to any CDP endpoint. All four reach the same Python REPL through a browser-harness daemon over CDP." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-browsers-dark-mobile.svg" />
+  <img src="/open-source/images/oss-browsers-dark.svg" alt="Browser() creates a Browser Use Cloud browser, the default. Browser('chromium') launches a fresh local browser with a temp profile. Browser('chrome') attaches to the Chrome you have open, with your logins. Browser(cdp_url=...) connects to any CDP endpoint. All four reach the same Python REPL through a browser-harness daemon over CDP." noZoom />
+</picture>
+
+## Cloud browser
+
+`Browser()` creates a Browser Use Cloud browser through API v4, with a 1440x900 screen. It needs your Browser Use key (see [Quickstart](/open-source/quickstart)).
+
+```python
+from browser_use import Agent, Browser
+
+browser = Browser(
+    cloud_proxy_country_code='de',  # default 'us'; None turns the proxy off
+    cloud_timeout=15,  # minutes, 1-240 (default 60)
+)
+agent = Agent('Open https://www.whatismyip.com and tell me which country it shows', browser=browser)
+print(agent.run_sync().final_result())
+```
+
+| Option | Default | What it does |
+|---|---|---|
+| `cloud_profile_id` | none | A cloud profile id, or a unique profile name. Logins persist in it. A name that matches no profile, or several, raises `BrowserConfigError` from `run()` before a browser is created. See [profile sync](/cloud/guides/profile-sync). |
+| `cloud_proxy_country_code` | `'us'` | Two-letter country code for the residential proxy. `None` turns it off. |
+| `cloud_timeout` | `60` | Minutes, 1 to 240. The server stops the browser after this either way. |
+| `live_view` | `False` | `True` prints the live view URL and opens it. Anyone with that URL can drive the browser. |
+| `captcha_solver` | `True` | Cloud browsers solve CAPTCHAs automatically; the agent waits for the solver for up to 95 seconds. `False` turns the solver off, and the agent handles CAPTCHAs itself. |
+
+A cloud browser bills until it stops. browser-use stops it when the run ends, when your process exits, or on SIGTERM or SIGHUP. See [pricing](https://browser-use.com/pricing) and [Cloud browser features](/cloud/browser/quickstart).
+
+A cloud browser cannot reach `localhost` or your private network. When the task mentions one, the agent logs a warning that suggests `Browser('chromium')`.
+
+The proxy applies to the browser only. Python networking in the agent's cells (`http_get`, `urllib`, `requests`) runs on your machine. When the location matters, say "in the browser" in the task.
+
+## Local Chromium
+
+```python
+from browser_use import Agent, Browser
+
+agent = Agent('What is the title of https://example.com?', browser=Browser('chromium', headless=True))
+print(agent.run_sync().final_result())
+```
+
+| Option | Default | What it does |
+|---|---|---|
+| `headless` | `None` | `None` is headless only when there is no display (Docker, CI). |
+| `executable_path` | auto | Whichever of Chrome, Chromium or Edge is installed. `BH_CHROME_PATH` or `CHROME_PATH` also work. |
+| `user_data_dir` | temp dir | A profile directory kept between runs. Chrome's own default profile directory raises: Chrome 136 and newer refuse remote debugging on it. |
+
+No Chrome installed (servers, CI)? Run `browser-use install` once to download Playwright's Chromium.
+
+Files the browser downloads land in `agent.workspace/downloads`. See [Files](/open-source/files).
+
+## Your Chrome
+
+`Browser('chrome')` attaches to the Chrome you have open: your tabs, cookies and logins.
+
+1. Open `chrome://inspect/#remote-debugging` and turn remote debugging on (once).
+2. Run the agent and click **Allow** when Chrome asks.
+
+It goes through the shared browser-harness daemon, so only one `Browser('chrome')` runs at a time.
+
+`Browser('chrome', profile='Work')` launches a new Chrome on a temporary copy of the profile `Work` (its display name or directory, such as `'Profile 1'`). A name that matches none raises `BrowserConfigError` (a `ValueError`) from `run()`, listing your profiles. You get its logins; sync is off and nothing is written back. Your Chrome can stay open, except on Windows, where you must quit it first. `headless` and `executable_path` work here too.
+
+<Warning>
+Your Chrome and your profiles carry your real logins. Code the model writes can read their cookies, and with `Browser('chrome')` your open tabs. Run untrusted tasks in a container or VM.
+</Warning>
+
+## Any CDP endpoint
+
+```python
+import os
+
+from browser_use import Agent, Browser
+
+browser = Browser(cdp_url=os.environ['CDP_URL'])  # http://host:9222 or ws://...
+agent = Agent('What is the title of https://example.com?', browser=browser)
+print(agent.run_sync().final_result())
+```
+
+An `http://` URL is resolved through `/json/version`. Custom connection headers are not supported yet (`headers=` raises): use a `cdp_url` that needs no headers. Downloads stay in that browser's own download folder.
+
+## Keep a browser between runs
+
+`keep_alive=True` leaves the browser running after `run()`. One `keep_alive` browser can serve several agents, one after another. Stop it yourself:
+
+```python
+import asyncio
+
+from browser_use import Agent, Browser
+
+
+async def main():
+    browser = Browser(keep_alive=True)
+    try:
+        await Agent('Open https://news.ycombinator.com', browser=browser).run()
+        result = await Agent('Return the title of the top story on the open page', browser=browser).run()
+        print(result.final_result())
+    finally:
+        await browser.stop()
+
+
+asyncio.run(main())
+```
+
+## Parallel agents
+
+Give each agent its own browser. Two agents running on one `Browser` at once raise `RuntimeError`.
+
+```python
+import asyncio
+
+from browser_use import Agent, Browser
+
+
+async def main():
+    tasks = ['Title of https://example.com?', 'Title of https://example.org?']
+    agents = [Agent(t, browser=Browser()) for t in tasks]  # one browser per agent
+    results = await asyncio.gather(*(a.run() for a in agents))
+    for r in results:
+        print(r.final_result())
+
+
+asyncio.run(main())
+```
+
+In a server (FastAPI and the like), create a `Browser()` per request, not one at module level. `Browser('chrome')` can't run in parallel: every one in a process shares one daemon and one attached tab.
+
+Each agent holds a few open files (model connection, REPL socket, worker pipe). `run()` raises the process's soft open-file limit to 10240, or the hard limit if lower, so 100 agents in one process fit on macOS, which starts at 256. It never lowers a limit.
+
+## Options that raise
+
+Options that don't fit the browser raise a `ValueError` that names the right call, for example `headless` on a cloud browser or `profile` on `'chromium'`. Removed 0.x options raise a `TypeError` with the replacement:
+
+```python
+from browser_use import Browser
+
+try:
+    Browser(window_size={'width': 1280, 'height': 800})
+except TypeError as e:
+    print(e)
+try:
+    Browser(headless=True)  # headless is for browsers 1.0 launches, not the cloud
+except ValueError as e:
+    print(e)
+```
+
+| 0.x option | In 1.0 |
+|---|---|
+| `window_size`, `viewport`, `user_agent`, `permissions` | Say it in the task: the agent can send the CDP commands itself. Headless launches use 1440x900. A cloud browser keeps its own 1440x900 viewport; use `Browser('chromium')` for another size. |
+| `proxy` | Cloud: `cloud_proxy_country_code`. Local: not yet. |
+| `storage_state`, `cookie_whitelist_domains` | Cloud: `cloud_profile_id`. Local: `Browser('chrome', profile=...)` or `Browser('chromium', user_data_dir=...)`. |
+| `downloads_path` | Downloads land in `agent.workspace/downloads`. |
+| `highlight_elements` | `Agent(highlight_actions=False)`. See [Agent](/open-source/agent#highlights). |
+| `allowed_domains`, `prohibited_domains` | Kept. See [Domains](/open-source/domains). |
+
+The full list is in [Migrating](/open-source/migrating).

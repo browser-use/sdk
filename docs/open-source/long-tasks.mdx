@@ -1,0 +1,107 @@
+---
+title: "Long tasks"
+description: "Budgets, the delivery turn, partial results, follow-up tasks, context compaction, retries and live progress."
+icon: "timer"
+---
+
+## Budgets
+
+`agent.run(max_steps=100, timeout=1700)`. What each budget counts and when the delivery-only turn starts: [Agent: run()](/open-source/agent#run).
+
+- In the delivery-only turn, the agent is told to stop browsing and hand in what it has, with `success=False` if the task is unfinished.
+- Each Python cell has a 120-second limit. A cell that runs over restarts the agent's Python worker: files and browser state survive, Python variables do not.
+
+## Partial results
+
+The agent saves progress with `checkpoint(filename, value, partial=True)` when the task asks for it. A plain `checkpoint()` is scratch and does not set `result.partial`, so name the flag in the task:
+
+```python
+from browser_use import Agent
+
+agent = Agent(
+    'List the titles of the first 150 stories on Hacker News, one page at a time. '
+    "After each page, save the titles you have with checkpoint('titles.json', titles, partial=True)."
+)
+result = agent.run_sync(max_steps=3, timeout=600)
+print(result.status, result.success)  # usually 'completed False': the delivery turn handed in what it had
+print(result.final_result() or result.partial)
+```
+
+When the budget runs out, the delivery turn usually hands in the titles so far, with `success=False`. `result.partial` is for a run that ends without any delivery (`status` `'max_steps'`, `'timeout'` or `'error'`).
+
+## Follow-up tasks
+
+`add_new_task()` continues the same conversation on the next `run()`. Use `Browser(keep_alive=True)` to keep the same page between runs:
+
+```python
+import asyncio
+
+from browser_use import Agent, Browser
+
+
+async def main():
+    browser = Browser(keep_alive=True)
+    agent = Agent('Open https://news.ycombinator.com and return the top story title', browser=browser)
+    try:
+        print((await agent.run()).final_result())
+        agent.add_new_task('Now open its comments and return the number of comments')
+        print((await agent.run()).final_result())
+    finally:
+        await agent.close()
+        await browser.stop()
+
+
+asyncio.run(main())
+```
+
+## Context
+
+Long runs outgrow the model's context window. The agent compacts its history:
+
+- **Gateway and OpenAI (Responses API):** server-side, once a request passes 150k tokens.
+- **Everything else:** past 75% of `max_context_chars` (default: 4 characters per token of the model's context window, or 240k when unknown) or 65% of the window in tokens, older turns are replaced by a summary checkpoint written by the same model. If the provider still rejects a request as over its context window, the agent compacts once and sends it again. An evidence archive in the workspace keeps the earlier messages (secrets redacted, images omitted).
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-long-tasks-light-mobile.svg" />
+  <img src="/open-source/images/oss-long-tasks-light.svg" alt="When the history passes 75% of max_context_chars, or 65% of the model's window in tokens, everything before the last two steps is replaced in the next request by one checkpoint: a summary by the same model, the original task verbatim, and the path of an evidence archive in the workspace. The last two steps are sent unchanged. Gateway and OpenAI models compact server-side past 150k tokens instead." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-long-tasks-dark-mobile.svg" />
+  <img src="/open-source/images/oss-long-tasks-dark.svg" alt="When the history passes 75% of max_context_chars, or 65% of the model's window in tokens, everything before the last two steps is replaced in the next request by one checkpoint: a summary by the same model, the original task verbatim, and the path of an evidence archive in the workspace. The last two steps are sent unchanged. Gateway and OpenAI models compact server-side past 150k tokens instead." noZoom />
+</picture>
+
+`Agent(max_context_chars=...)` has no effect where compaction is server-side. Only the last 2 screenshots stay in context.
+
+## Retries
+
+- A rate limit, overload, 5xx or dropped connection from the provider is retried once per run, after the provider's `Retry-After` (at most 60 seconds). Providers whose SDK already retries (OpenAI, Anthropic, OpenAI-compatible) are left to their SDK.
+- A failure inside an HTTP 200 (a failed or cut-off stream, or a `status=failed` body with `server_error`, `overloaded` or `request_timeout`) gets the same one retry.
+- Gateway and OpenAI (Responses API) requests are streamed: 300 seconds for the first event, then up to 930 seconds in all. Other models get 300 seconds per request. A request that gets no answer in time is asked again, and none runs past the start of the delivery turn.
+- A dropped connection's `result.error` names its cause, for example `(OSError: [Errno 24] Too many open files)`.
+- A failed cell is not retried automatically. The model reads the error and decides, within `max_steps`.
+
+## Live progress
+
+Each step logs one INFO line to `logging.getLogger('browser_use')`: `step N: <first line of the cell>`, plus the error if the cell failed. Add a handler to stream it to your UI:
+
+```python
+import logging
+
+from browser_use import Agent
+
+
+class Progress(logging.Handler):
+    def emit(self, record):
+        print('progress:', record.getMessage())  # send to your UI, a websocket, an MCP client...
+
+
+logging.getLogger('browser_use').addHandler(Progress())
+
+Agent('What is the title of https://example.com?').run_sync()
+```
+
+`BROWSER_USE_LOGGING_LEVEL=warning` turns these lines off. After the run, `result.messages` holds the full transcript. This replaces the 0.x step hooks.
+
+## Stop early
+
+Cancel the task that awaits `run()`; see [Agent](/open-source/agent#cancel).

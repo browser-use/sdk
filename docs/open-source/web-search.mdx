@@ -1,0 +1,35 @@
+---
+title: "Web search"
+description: "Give the agent a search() helper with Agent(web_search=True)."
+icon: "search"
+---
+
+```python
+from browser_use import Agent
+
+agent = Agent('Find the current version of the browser-use package on PyPI', web_search=True)
+result = agent.run_sync()
+print(result.final_result(), result.cost_usd)  # cost_usd includes the searches
+```
+
+Searching in the browser takes many steps and trips anti-bot checks. With `web_search=True` the agent gets a Browser Use web search helper instead:
+
+```text
+search(query, num_results=None, category=None) -> {'query', 'count', 'results'}
+```
+
+- `results` holds one text entry per hit: title, URL and matching excerpts. The agent opens pages in the browser for their full content.
+- `num_results`: default 8, max 20.
+- `category`: `'company'`, `'people'`, `'news'` or `'publication'`.
+
+## Billing and keys
+
+- Billed per search to your Browser Use key. Each charge is added to `result.cost_usd`.
+- It uses the gateway model's key, else your Browser Use key. Without one, `run()` raises before any browser starts.
+- Before the browser starts, a free check confirms the search endpoint answers.
+- The key never enters the agent's Python worker: the parent process makes the request.
+
+## Notes
+
+- Off by default. When off, the system prompt is unchanged.
+- It can't be combined with `Browser(allowed_domains=...)`: `run()` raises a `ValueError` before any browser starts, because search would reach sites the browser may not open.

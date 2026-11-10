@@ -1,79 +1,78 @@
 ---
 title: "Browser Use CLI"
-description: "Direct browser control for coding agents."
+description: "Let Claude Code, Codex and other coding agents drive a browser with Python piped to the CLI."
 icon: "terminal"
 ---
 
-The Browser Use CLI (`browser-use`) gives coding agents a direct browser-control surface backed by [Browser Harness](https://github.com/browser-use/browser-harness):
+The `browser-use` CLI is for coding agents. The agent pipes Python to it, and the CLI runs it against a browser with [Browser Harness](https://github.com/browser-use/browser-harness) helpers and raw CDP. It drives your Chrome by default, or a Browser Use cloud browser, or any CDP endpoint.
 
-- **Direct browser control** — agents run Python to do actions in the browser.
-- **Three browser modes** — you can use with local Chrome or Chromium with your existing tabs, cookies, extensions, and logins; Browser Use cloud browsers; or any browser reachable through a CDP endpoint.
-- **Agent-ready setup** — install the skill into Claude Code, Codex, and other coding agents so they know when and how to call the CLI.
+The CLI runs Python, not agent tasks: there is no `browser-use run "<task>"`. To run an agent from your code, use the [library](/open-source/quickstart).
 
-Try out Browser Use CLI with an agent in [Browser Use Cloud](https://cloud.browser-use.com?utm_source=docs&utm_medium=browser-use-cli&utm_campaign=v4), or install the skill to try it yourself locally.
-
-## Install the CLI
+## Install
 
 ```bash
-uv tool install browser-use
+uv tool install 'browser-use==1.0.0'
 browser-use --help
 ```
 
-For one-off runs without a permanent tool install, use `uvx browser-use`.
+For one-off runs without installing, use `uvx --from 'browser-use==1.0.0' browser-use`. Pin the exact version with `==`, never `>=`: browser-use moves fast, and a new release can break your setup.
 
-## Set Up Your Agent
+## Set up your coding agent
 
-Paste this setup prompt into Claude Code, Codex, or another coding agent:
+Paste this into Claude Code, Codex or another coding agent:
 
 ```text
-Install or upgrade browser-use with `uv tool install --python 3.12 --upgrade --force 'browser-use @ git+https://github.com/browser-use/browser-use.git'`, run `browser-use skill install`, and connect it to my browser. Follow https://github.com/browser-use/browser-use if setup or connection fails.
+Install browser-use with `uv tool install 'browser-use==1.0.0'`, run `browser-use skill install` to register the skill, and connect it to my browser. If setup or connection fails, follow https://github.com/browser-use/browser-harness/blob/main/install.md.
 ```
 
-The skill is discoverable from [skills.sh](https://skills.sh/browser-use/browser-use/browser-use).
+`browser-use skill install` writes the skill to `~/.agents` and to each supported agent you have installed: `claude`, `codex`, `copilot`, `cursor`, `gemini`, `openclaw`, `opencode`. Use `--target NAME` for one, or `--path DIR` for a custom location. `browser-use skill show` prints it. More skills: [Agent skills](/open-source/skills).
 
-## Use Python Directly
-
-Pass Python to the CLI. Use `uvx browser-use` for one-off runs, or `browser-use` if you installed it:
+## Run Python
 
 ```bash
-uvx browser-use <<'PY'
+browser-use <<'PY'
 new_tab("https://example.com")
 print(page_info())
 PY
 ```
 
-The `<<'PY'` form is for Unix-compatible shells such as bash, zsh, Git Bash, or WSL. In PowerShell, pipe a here-string instead:
+Helpers are pre-imported, and the daemon starts and attaches by itself. The `<<'PY'` form is for bash, zsh, Git Bash or WSL. In PowerShell, pipe a here-string:
 
 ```powershell
 @'
 new_tab("https://example.com")
 print(page_info())
-'@ | uvx browser-use
+'@ | browser-use
 ```
 
-## Local Browser Setup
+## Your Chrome
 
-The default local flow attaches to your running Chrome or Chromium through CDP. This preserves the browser state the user already has locally: open tabs, cookies, extensions, and logged-in sessions. It is the right default for desktop work where the user can approve Chrome's remote-debugging prompt.
-
-You can also point the CLI at any existing CDP browser by setting `BU_CDP_URL` or `BU_CDP_WS` before running `browser-use`. Use that for managed Chrome instances, Playwright-launched browsers, or infrastructure that already exposes a DevTools endpoint.
-
-If the CLI cannot connect, run:
+By default the CLI attaches to the Chrome you have open, with its tabs, cookies and logins. The first time, Chrome asks whether to allow remote debugging: click **Allow**, or on macOS run `browser-use mac-approve`. If it can't connect:
 
 ```bash
 browser-use --doctor
 ```
 
-If Chrome asks whether to allow remote debugging, approve it and rerun the command.
-
-## Cloud Browsers
-
-Use Browser Use cloud browsers when the agent runs on a headless machine, needs an isolated browser, needs parallel browser sessions, or needs Browser Use Cloud features such as persistent cloud profiles, proxy routing, CAPTCHA handling, and live browser viewing.
-
-The Browser Harness-backed CLI keeps cloud sessions explicit. You authenticate once, start a named cloud browser, then use that name for later commands:
+To use another browser with a DevTools endpoint, set `BU_CDP_URL` (or `BU_CDP_WS`), with a `BU_NAME` so it doesn't reuse the daemon attached to your Chrome:
 
 ```bash
-browser-use auth login
+BU_NAME=ci BU_CDP_URL=http://127.0.0.1:9334 browser-use <<'PY'
+new_tab("https://example.com")
+print(page_info())
+PY
 ```
+
+## Cloud browsers
+
+Use a cloud browser on a headless machine, for parallel agents, or for stealth, proxies, CAPTCHA solving and cloud profiles. Sign in once:
+
+```bash
+browser-use login
+```
+
+Or set `BROWSER_USE_API_KEY` instead (create a key at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key)). When it is set, it wins over the stored key.
+
+Then start a named cloud browser and use the name for later calls:
 
 ```bash
 browser-use <<'PY'
@@ -84,25 +83,30 @@ BU_NAME=work browser-use <<'PY'
 new_tab("https://example.com")
 print(page_info())
 PY
-```
 
-Use short, task-specific names when you have multiple agents or sub-agents running in parallel. Each name maps to its own remote browser daemon.
-
-Remote browsers bill until they stop or time out. When the task is done, ask whether to close the browser; if yes, run:
-
-```bash
 BU_NAME=work browser-use <<'PY'
 stop_remote_daemon("work")
 PY
 ```
 
-## Useful Commands
+Each name is its own browser, so parallel agents use different names. A cloud browser bills until it stops or times out. Once a name has run a cloud browser, it never falls back to your local Chrome; `BU_NAME=<name> browser-use --reload` resets it.
 
-```bash
-browser-use --help
-browser-use --doctor
-browser-use auth login
-browser-use auth status
-browser-use skill show
-browser-use telemetry status
-```
+## Commands
+
+| Command | What it does |
+|---|---|
+| `browser-use login` | Sign in to Browser Use Cloud. `--device-code` over SSH, `--api-key-stdin` to import a key. |
+| `browser-use logout` | Remove the stored key. |
+| `browser-use auth status` | Show the sign-in state. |
+| `browser-use --doctor` | Check install, daemon and browser. |
+| `browser-use doctor --fix-snap` | How to fix Snap Chromium blocking CDP (Linux). |
+| `browser-use mac-approve` | Approve Chrome's macOS remote-debugging prompt. |
+| `browser-use --reload` | Restart the daemon. |
+| `browser-use install` | Download Chromium for the library's `Browser('chromium')`. |
+| `browser-use skill [show \| install]` | Print or install the agent skill. |
+| `browser-use --cli-mcp` | Run the [MCP server](/open-source/mcp). |
+| `browser-use --version` | Print the versions. |
+
+Update by installing the new exact version: `uv tool install 'browser-use==<version>'`. The 0.x subcommands (`open`, `state`, `click`, `run`, ...) print what replaced them.
+
+Try the same agent behind the CLI fully hosted in [Browser Use Cloud](https://cloud.browser-use.com?utm_source=docs&utm_medium=browser-use-cli&utm_campaign=v4).

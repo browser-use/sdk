@@ -1,0 +1,42 @@
+---
+title: "Events (0.x)"
+sidebarTitle: "Events"
+description: "Monitor execution with callbacks"
+icon: "bell"
+noindex: true
+---
+
+import Legacy0x from '/snippets/legacy-0x.mdx';
+
+<Legacy0x />
+
+<Info>
+`@sandbox` is removed in browser-use 1.0. In 1.0, run the agent anywhere with a cloud browser (`Browser()`, the default; see [Browsers](/open-source/browsers)), or have Browser Use host the whole agent with the [Cloud API](/cloud/agent/quickstart).
+</Info>
+
+## Live Browser View
+
+```python
+@sandbox(on_browser_created=lambda data: print(f'👁️  {data.live_url}'))
+async def task(browser: Browser):
+    agent = Agent(task="your task", browser=browser, llm=ChatBrowserUse())
+    await agent.run()
+```
+
+## All Events
+
+```python
+from browser_use.sandbox import BrowserCreatedData, LogData, ResultData, ErrorData
+
+@sandbox(
+    on_browser_created=lambda data: print(f'Live: {data.live_url}'),
+    on_log=lambda log: print(f'{log.level}: {log.message}'),
+    on_result=lambda result: print('Done!'),
+    on_error=lambda error: print(f'Error: {error.error}'),
+)
+async def task(browser: Browser):
+    # Your code
+    pass
+```
+
+All callbacks can be sync or async.

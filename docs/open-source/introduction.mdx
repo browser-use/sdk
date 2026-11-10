@@ -1,22 +1,49 @@
 ---
 title: "Browser Use Open Source"
 sidebarTitle: "Introduction"
-description: "Python library for AI browser automation with 79k+ GitHub stars. Connect any LLM and run locally or self-hosted."
+description: "browser-use 1.0: an open-source Python browser agent. It writes Python against raw CDP in a persistent REPL, on Pydantic AI."
 icon: "house"
 ---
 
-<img src="/images/intro-oss-light.svg" alt="Browser Use Open Source" noZoom className="block dark:hidden" />
-<img src="/images/intro-oss-dark.svg" alt="Browser Use Open Source" noZoom className="hidden dark:block" />
+```python
+from browser_use import Agent
+
+result = Agent('Find the number of stars of the browser-use repo').run_sync()
+print(result.final_result())
+```
+
+browser-use is an MIT-licensed Python library. You give it a task, and the agent completes it in a real browser by writing Python: [browser-harness](https://github.com/browser-use/browser-harness) helpers and raw Chrome DevTools Protocol (CDP) calls in a persistent REPL. It runs on [Pydantic AI](https://ai.pydantic.dev).
+
+<picture className="block dark:hidden">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-intro-light-mobile.svg" />
+  <img src="/open-source/images/oss-intro-light.svg" alt="Your code calls Agent(task).run(). Each step, the model writes one Python cell, the REPL runs it with browser-harness helpers and raw CDP against the browser, and the output goes back to the model. When the model calls finish, run() returns the result to your code." noZoom />
+</picture>
+<picture className="hidden dark:block">
+  <source media="(max-width: 600px)" srcSet="/open-source/images/oss-intro-dark-mobile.svg" />
+  <img src="/open-source/images/oss-intro-dark.svg" alt="Your code calls Agent(task).run(). Each step, the model writes one Python cell, the REPL runs it with browser-harness helpers and raw CDP against the browser, and the output goes back to the model. When the model calls finish, run() returns the result to your code." noZoom />
+</picture>
+
+Defaults:
+
+- **Model:** `bu-fast` on the Browser Use gateway.
+- **Browser:** a Browser Use Cloud browser, stopped when the run ends.
+- **Key:** one Browser Use key runs both. Create one at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key) and set `BROWSER_USE_API_KEY`, or run `browser-use login`.
+
+Every default can be swapped. Use `Browser('chromium')` for a local browser, and `ChatOpenAI`, `ChatAnthropic`, `ChatGoogle` or any Pydantic AI model string for your own model.
 
 <CardGroup cols={2}>
-  <Card title="Human Quickstart" icon="rocket" href="/open-source/quickstart">
+  <Card title="Quickstart" icon="rocket" href="/open-source/quickstart">
     Install and run your first agent.
   </Card>
-  <Card title="Prompts for Vibecoders" icon="cpu" href="/open-source/vibecoding">
-    Full SDK reference in a single page.
+  <Card title="Agent" icon="bot" href="/open-source/agent">
+    Every `Agent` option, `run()` and how to write tasks.
+  </Card>
+  <Card title="Browsers" icon="app-window" href="/open-source/browsers">
+    Cloud, local Chromium, your Chrome, or any CDP endpoint.
+  </Card>
+  <Card title="Migrating from 0.x" icon="arrow-up-right" href="/open-source/migrating">
+    What changed in 1.0 and what replaced each removed option.
   </Card>
 </CardGroup>
 
-<Tip>
-  Try [Browser Use Cloud](/cloud/introduction) for our SOTA model, stealth browsers, CAPTCHA solving, and managed infrastructure.
-</Tip>
+Not sure which Browser Use you need? See [Which product](/cloud/which-product). Coding agents can drive a browser directly with the [Browser Use CLI](/open-source/browser-use-cli).

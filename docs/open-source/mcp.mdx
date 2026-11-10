@@ -1,0 +1,43 @@
+---
+title: "MCP server"
+description: "Give Claude Desktop, Cursor or any MCP client a browser with browser-use --cli-mcp."
+icon: "plug"
+---
+
+Add this to your MCP client's config (Claude Desktop, Cursor, ...):
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "command": "uvx",
+      "args": ["--from", "browser-use==1.0.0", "browser-use", "--cli-mcp"]
+    }
+  }
+}
+```
+
+For cloud browsers, sign in with the `browser_login` tool, or add `"env": {"BROWSER_USE_API_KEY": "bu_..."}` next to `"args"`. MCP clients don't read your shell's exports. Keep the exact `==1.0.0` pin: browser-use moves fast, and a new release can break your setup.
+
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `browser_exec(code)` | Runs Python with the Browser Harness helpers (`new_tab`, `goto_url`, `page_info`, `click_at_xy`, `type_text`, `js`, `cdp`, ...). The namespace persists across calls. Returns what the code prints. |
+| `browser_screenshot(full, max_dim)` | Returns the current page as an image. `full` captures beyond the viewport; `max_dim` downscales. |
+| `browser_login(force)` | Signs in to Browser Use Cloud: opens your browser to approve and stores the key. |
+
+These are the same helpers as the [CLI](/open-source/browser-use-cli). The client's model writes the code; there is no MCP tool that runs the full browser-use `Agent`.
+
+## Local or cloud
+
+- **Local:** `browser_exec` drives the Chrome you have open, with your logins.
+- **Cloud:** call `start_remote_daemon()` in `browser_exec` (after `browser_login` if you are not signed in). Every later call drives that cloud browser. It lives 30 minutes unless you pass `timeout=<minutes>` (up to 240), and the server stops it when it exits.
+
+If the browser can't attach, the tool returns one error line with the reason and the cloud browser alternative.
+
+The live view and CDP URLs grant control of the browser, so the server neither opens nor returns them unless `BH_OPEN_LIVE_URL=1` is set.
+
+## Migrating from 0.x --mcp
+
+The 0.x `browser-use --mcp` server ran the removed engine. `--mcp` now prints a deprecation notice and serves the same three tools on its own temporary Chromium. Old tool names (`browser_navigate`, `browser_click`, `retry_with_browser_use_agent`, ...) return an error that points to `browser_exec`. Switch clients to `--cli-mcp`.

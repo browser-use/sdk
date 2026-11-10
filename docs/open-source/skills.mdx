@@ -1,0 +1,91 @@
+---
+title: "Agent skills"
+description: "SKILL.md bundles that teach Claude Code, Cursor, Codex and other coding agents to drive a browser, write browser-use code, use Browser Use Cloud, QA-test a site, and pay with x402."
+icon: "wand-sparkles"
+---
+
+Browser Use ships [agent skills](https://www.skills.sh/browser-use/browser-use): `SKILL.md` files your coding agent (Claude Code, Cursor, Codex, Gemini CLI, OpenCode and any agent that reads `SKILL.md`) loads when a task needs them. Install one with the [skills CLI](https://www.skills.sh):
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill <name>
+```
+
+| Skill | What it teaches your agent |
+|---|---|
+| [`browser-use`](#browser-use) | Drive a browser with the Browser Use CLI: your Chrome, a cloud browser, or any CDP endpoint. |
+| [`open-source`](#open-source) | Write Python against the browser-use 1.0 library. |
+| [`cloud`](#cloud) | Use the Browser Use Cloud API and SDKs. |
+| [`qa`](#qa) | QA-test a site or local dev server and return a 1 to 5 score with evidence. |
+| [`remote-browser`](#remote-browser) | Control an isolated cloud browser from a sandbox with no Chrome. |
+| [`x402`](#x402) | Pay for Browser Use Cloud per request from a crypto wallet, without an API key. |
+
+All skills live in the [`skills/` directory](https://github.com/browser-use/browser-use/tree/main/skills) of the browser-use repo.
+
+## browser-use
+
+Direct browser control for your coding agent. The agent pipes Python to the `browser-use` CLI, which runs it with [Browser Harness](https://github.com/browser-use/browser-harness) helpers and raw CDP against the Chrome you have open (with your logins), a Browser Use cloud browser, or any CDP endpoint. Use it for automation, scraping, testing, screenshots and work on your own app.
+
+This skill comes with the CLI:
+
+```bash
+uv tool install 'browser-use==1.0.0'
+browser-use skill install  # Claude Code, Codex, Copilot, Cursor, Gemini, OpenClaw, OpenCode
+```
+
+Or `npx skills add https://github.com/browser-use/browser-use --skill browser-use`. Then ask your agent things like "open localhost:3000 and check the signup form works". Setup and commands: [Browser Use CLI](/open-source/browser-use-cli). [Source](https://github.com/browser-use/browser-use/tree/main/skills/browser-use) · [skills.sh](https://www.skills.sh/browser-use/browser-use/browser-use)
+
+## open-source
+
+A reference for writing Python against browser-use 1.0: `Agent`, `Browser`, `Tools`, models, secrets, results, and migrating from 0.x. Your agent loads it when you ask it to build something with `from browser_use import Agent`, so it writes 1.0 code instead of the 0.x API it may remember.
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill open-source
+```
+
+[Source](https://github.com/browser-use/browser-use/tree/main/skills/open-source) · [skills.sh](https://www.skills.sh/browser-use/browser-use/open-source)
+
+## cloud
+
+A reference for the Browser Use Cloud REST API (v2, v3, v4) and the `browser-use-sdk` packages for Python and TypeScript: API keys, sessions, profiles and profile sync, CDP connections, stealth, proxies, CAPTCHAs, webhooks and pricing. For when your agent integrates Browser Use Cloud into your product.
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill cloud
+```
+
+Docs: [Cloud quickstart](/cloud/quickstart). [Source](https://github.com/browser-use/browser-use/tree/main/skills/cloud) · [skills.sh](https://www.skills.sh/browser-use/browser-use/cloud)
+
+## qa
+
+QA-tests a website or web app and returns a score from 1 (broken) to 5 (flawless) with evidence: a verdict, not a pile of screenshots. Give it a URL or a local dev server (`localhost:5173`, which it tunnels out) and optionally a flow ("the signup", "search and filters").
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill qa
+```
+
+Then: `/qa localhost:5173 the checkout flow`.
+
+- It runs on a Browser Use cloud browser, never your local Chrome, and installs Browser Harness itself if it is missing.
+- One flow: your agent drives the browser and judges the screenshots. Many flows: it fans out one subagent per flow, either Browser Use Cloud agents (they spend Browser Use credits) or your agent's own subagents.
+- An agent without image input hands the visual judgment to Browser Use Cloud agents.
+
+[Source](https://github.com/browser-use/browser-use/tree/main/skills/qa) · [skills.sh](https://www.skills.sh/browser-use/browser-use/qa)
+
+## remote-browser
+
+For an agent on a machine with no usable Chrome (a sandbox, a CI runner, a remote dev box). It signs in once, starts a named Browser Use cloud browser with the CLI, drives it with the same helpers as the `browser-use` skill, and stops it when done.
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill remote-browser
+```
+
+Under the hood: [Browser Use CLI: Cloud browsers](/open-source/browser-use-cli#cloud-browsers). [Source](https://github.com/browser-use/browser-use/tree/main/skills/remote-browser) · [skills.sh](https://www.skills.sh/browser-use/browser-use/remote-browser)
+
+## x402
+
+Sets up Browser Use Cloud payments with [x402](/cloud/guides/x402): pay per request in USDC on Base from a crypto wallet, with no signup or API key. It asks whether you want to just use it (your agent runs throwaway scripts paid from the wallet) or build it in (it adds the SDK, key and code to your project), then walks through the wallet, funding, `.env` and a test run of about $1.
+
+```bash
+npx skills add https://github.com/browser-use/browser-use --skill x402
+```
+
+x402 works through the `browser-use-sdk` (Python) or `browser-use` (npm) SDK, not the CLI. For an API key instead, create one at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key) and set `BROWSER_USE_API_KEY`. More: [x402 agent wallets](/cloud/guides/x402-agent-wallets). [Source](https://github.com/browser-use/browser-use/tree/main/skills/x402) · [skills.sh](https://www.skills.sh/browser-use/browser-use/x402)
