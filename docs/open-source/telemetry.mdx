@@ -4,7 +4,7 @@ description: "What anonymized usage data browser-use sends, what it never sends,
 icon: "chart-no-axes-column"
 ---
 
-Turn it off, for the library, the CLI and the MCP server:
+browser-use sends anonymized usage telemetry: model, steps, cost, timing, helper names, the URLs visited (without query strings), error messages and the final result. Never the task text, typed text, code or secrets. `ANONYMIZED_TELEMETRY=false` turns it off, for the library, the CLI and the MCP server:
 
 ```bash
 export ANONYMIZED_TELEMETRY=false
@@ -12,7 +12,7 @@ export ANONYMIZED_TELEMETRY=false
 
 Any value that does not start with `t`, `y` or `1` turns it off. Off means off: no event, no background thread, no file written.
 
-browser-use sends anonymized usage events to PostHog so we can see which models, browsers and helpers work, where runs spend their time and where they fail. There are no feature flags or remote settings: telemetry only sends, it never changes what the library does.
+The events go to PostHog so we can see which models, browsers and helpers work, where runs spend their time and why they fail. There are no feature flags or remote settings: telemetry only sends, it never changes what the library does.
 
 | Event | When |
 |---|---|
@@ -22,34 +22,45 @@ browser-use sends anonymized usage events to PostHog so we can see which models,
 
 ## Never sent
 
-- The task, follow-up tasks and `extend_system_message`.
-- The result, structured output, partial results and the model's text.
-- Code the model writes. Repeated code is detected by a hash that never leaves the process.
-- Text typed into pages, and `sensitive_data` names or values.
-- Page content: titles, HTML, screenshots, extracted data, file names, `js()` expressions, `cdp()` parameters.
-- Full URLs. Only the hostname of an http(s) page is kept. Hostnames that alone grant access (tunnels such as `*.ngrok-free.app` and `*.trycloudflare.com`, cloud IDE ports, Lambda function URLs, preview deploys) are sent as the provider's pattern, not the name.
+- The task text, follow-up tasks and `extend_system_message`. Where a URL, error message or result quotes the whole task, it is sent as `<task>`.
+- Text typed into pages.
+- The model's messages and thinking, and partial results.
+- Code the model writes, and tracebacks (their frames quote the code). Repeated code is detected by a hash that never leaves the process.
+- `sensitive_data` values. Where one appears in a URL, error message or result, it is sent as `<secret:name>`.
+- API keys and credentials: `sk-...`, `sk-ant-...`, `bu_...`, `AIza...` and similar keys, JWTs, `Bearer` / `Basic` tokens and `password=...`, `token=...`, `api_key=...` values are sent as `<credential>`. Email addresses, anywhere, are sent as `<email>`.
+- Query strings and fragments, and a URL's user, password and port. Hostnames that alone grant access (tunnels such as `*.ngrok-free.app` and `*.trycloudflare.com`, cloud IDE ports, Lambda function URLs, preview deploys) are sent as the provider's pattern, not the name.
+- Page content: titles, HTML, screenshots, file names, `js()` expressions, `cdp()` parameters. The final result is sent, so text the agent extracted into it is too.
 - CDP endpoints. Only their kind (`browser-use-cloud`, `localhost`, `private`, `public-other`).
-- Error messages and tracebacks. Only the exception class, and a provider's short error code such as `rate_limit_exceeded`.
 - Paths and endpoints: never your `base_url`, `user_data_dir` or executable path.
 - Uncaught exceptions from your process. There is no exception autocapture.
 
 ## What is sent
 
-Every field is a number, a bool, an enum, a hostname, or a name chosen by browser-use, the developer, Python or an installed package (model id, helper, tool, module, exception class, CDP method). `agent_event` holds:
+`agent_event` holds:
 
 - **Install and environment:** browser-use, Python, Pydantic AI and browser-harness versions; OS; whether it runs in Docker, CI or a notebook.
 - **Configuration:** model id and provider, reasoning, mode, `max_steps`, timeout, whether structured output, custom tools (their names), secrets (a count) or a custom workspace are used, and the task's length.
 - **Browser:** the mode (cloud, chromium, chrome, cdp), keep-alive, cloud proxy country and timeout, domain restrictions (counts, never the domains) and start time.
-- **Outcome:** status, success, how the result was delivered, the exception class and the phase it happened in.
+- **Outcome:** status, success, how the result was delivered, the exception class and the phase it happened in, the error messages and the final result (below).
 - **Time:** where the run spent it: browser start, model requests, cells, helpers, waits, compaction, shutdown.
 - **Model:** steps, requests, tokens, cost, calls per tool, retries by cause.
 - **REPL:** cells, cell errors by class, helper and CDP method counts and timings, imported module names, screenshots.
-- **Browsing:** hostnames the agent navigated to, navigation and download counts, Chrome net error codes, CAPTCHA solver events, domain-restriction blocks.
+- **Browsing:** the URLs visited (below), hostnames the agent navigated to, navigation and download counts, Chrome net error codes, CAPTCHA solver events, domain-restriction blocks.
 - **Per step:** for the first 50 and last 150 steps, timings, token counts, tool names, the helpers used and the hostname the step ended on.
+
+The text fields, each scrubbed as in [Never sent](#never-sent) before it is cut:
+
+| Field | What | Limit |
+|---|---|---|
+| `urls_visited` | Pages the agent navigated to, in order, each once, as `scheme://host/path` (http, https, ws, wss). | 50 URLs, 200 characters each |
+| `error_messages` | The run's error (`result.error`), then each failed cell's exception line (`ValueError: message`), each once. | 20 messages, 300 characters each |
+| `final_result` | The result text, or a structured result as JSON. | 500 characters |
+
+The other fields are numbers, bools, enums, hostnames, or names chosen by browser-use, the developer, Python or an installed package (model id, helper, tool, module, exception class, CDP method).
 
 A run whose process was killed (out of memory, `SIGKILL`, a notebook kernel restart) is reported the next time browser-use runs on that machine, with status `crashed` and only its configuration, step count and time.
 
-`cli_event` keeps the command, exit code, duration, helper names and counts, browser kind and client. browser-harness's own event would include the piped code, its output and error text; the `browser-use` CLI removes those before sending. `mcp_server_event` keeps the tool name, duration, whether it failed and the exception class. Neither ever includes the code, its output, arguments or error text.
+`cli_event` keeps the command, exit code, duration, helper names and counts, browser kind, client, and `error_message`: the exception line of the error, scrubbed, at most 300 characters. browser-harness's own event would include the piped code, its output and the full error text; the `browser-use` CLI removes those before sending. `mcp_server_event` keeps the tool name, duration, whether it failed, the exception class and `error_message`: the exception's message, scrubbed, at most 300 characters. Neither ever includes the code, its output or arguments.
 
 ## How it is sent
 
