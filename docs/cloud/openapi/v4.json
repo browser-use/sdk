@@ -2316,7 +2316,7 @@
                         }
                     },
                     "403": {
-                        "description": "Extensions are not available for Zero Data Retention projects"
+                        "description": "Extensions are not available for Zero Data Retention projects unless they keep profiles"
                     },
                     "413": {
                         "description": "The upload is larger than 100 MiB"

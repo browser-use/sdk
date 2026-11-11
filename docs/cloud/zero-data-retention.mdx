@@ -28,8 +28,8 @@ Read the [EU deployment guide](/cloud/eu-deployment) before planning a regional 
   <Step title="Choose your profile policy">
     Select **Enable** beside **Zero Data Retention**.
 
-    - **Full Zero Data Retention:** cleanup deletes existing profiles and saved logins, and blocks new profiles.
-    - **Zero Data Retention, except profiles:** keep profiles and saved logins until you delete each profile.
+    - **Full Zero Data Retention:** cleanup deletes existing profiles, saved logins, and uploaded extensions, and blocks new ones.
+    - **Zero Data Retention, except profiles and extensions:** keep profiles, saved logins, and uploaded extensions until you delete them.
 
     Both choices apply automatic cleanup to covered US and EU session data.
   </Step>
@@ -103,7 +103,7 @@ Cleanup deletes existing profiles, and the project cannot create new profiles.
 | Session sharing | Unavailable |
 | Cloud workspace and skill pages | Unavailable in the dashboard |
 | New schedules | Unavailable |
-| Browser extensions | Unavailable |
+| Browser extensions | Available only when you choose the profile exception |
 | New integration connections | Unavailable; you can still disconnect existing connections |
 | Billing and account records | Remain available |
 
@@ -157,8 +157,13 @@ A project owner enables it in the US Cloud dashboard.
 
 ### Can I keep saved logins?
 
-Yes. Choose **Zero Data Retention, except profiles**.
+Yes. Choose **Zero Data Retention, except profiles and extensions**.
 Delete each profile when you no longer need its saved login.
+
+### Can I use browser extensions?
+
+Yes, with **Zero Data Retention, except profiles and extensions**.
+We keep the extension files you upload until you delete them. Full Zero Data Retention blocks extensions.
 
 ### Does activation delete everything immediately?
 
