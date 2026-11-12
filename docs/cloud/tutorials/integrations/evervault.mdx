@@ -1,45 +1,91 @@
 ---
 title: "Evervault"
-description: "Route a cloud browser through Evervault Relay so card data stays encrypted until it reaches the payment processor."
+description: "Let an agent fill card data and passwords with Evervault tokens, so the real values never reach the agent or the browser."
 icon: "lock"
 ---
 
-[Evervault](https://evervault.com) keeps card data encrypted in your systems. Its
-[Relay forward proxy](https://docs.evervault.com/relay#forward-proxy-mode)
-decrypts `ev:` values only on the way to the destinations you set up in
-Evervault. Use it with a Browser Use browser: the agent and the page work with
-encrypted values, and Relay decrypts them in the request to the payment
-processor.
+[Evervault](https://evervault.com) keeps card data and credentials encrypted.
+With Evervault in front of a Browser Use browser, the agent types stand-in
+values, and Evervault swaps in the real ones only in the request to a website
+you allow.
 
-Browser Use connects to Relay as a [custom proxy](/cloud/browser/proxies#custom-proxy)
-over TLS and trusts the Evervault CA, so Relay can read the traffic. All other sites keep full certificate checks.
+Browser Use connects to Evervault as a [custom proxy](/cloud/browser/proxies#custom-proxy)
+over TLS and trusts the Evervault CA, so Evervault can read that traffic. All
+other sites keep full certificate checks.
 
-## What you need
+## Browser Tokens for checkout and login forms
 
-- A Browser Use API key in `BROWSER_USE_API_KEY`.
-- Your Evervault **App ID** and an **API key** from the
-  [Evervault dashboard](https://app.evervault.com).
-- A Relay in your Evervault app for each host that should receive decrypted
-  data, for example the payment processor's API host. Relay forwards only to
-  hosts set up in your app. See
-  [Relay](https://docs.evervault.com/relay).
-- Card data encrypted with Evervault (`ev:...` strings).
+[Browser Tokens](https://docs.evervault.com/browser-tokens) are Evervault's
+flow for agents. Evervault returns tokens that keep the format of the real
+value: a Luhn-valid card number with the same length and BIN, a CVV with the
+same number of digits. Checkout forms accept them like real values. When the
+browser sends a token to a host you allowed, Evervault replaces it with the
+real value on the way there.
 
-## Relay settings
+<Note>
+  Browser Tokens are in preview at Evervault. Ask Evervault support for access.
+</Note>
 
-| `customProxy` field | Value |
+### 1. Create tokens on your server
+
+Call Evervault from your backend, never from the agent. `permissions` lists
+the hosts that may receive the real values, for example the payment
+processor's host:
+
+```bash curl
+curl https://api.evervault.com/browser-tokens \
+  --user "$EVERVAULT_APP_ID:$EVERVAULT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": [
+      {"id": "pan", "category": "card.number", "value": "ev:..."},
+      {"id": "cvv", "category": "card.cvv", "value": "ev:..."}
+    ],
+    "permissions": [
+      {"action": "decrypt", "target": "api.payments.example.com"}
+    ],
+    "ttl": 300
+  }'
+```
+
+The response has the tokens in `data` and the proxy login in
+`proxyConfiguration`:
+
+```json
+{
+  "data": [
+    {"id": "pan", "category": "card.number", "value": "4242424242424242"},
+    {"id": "cvv", "category": "card.cvv", "value": "123"}
+  ],
+  "proxyConfiguration": {
+    "hostname": "us-va.browser.relay.evervault.app",
+    "port": 443,
+    "username": "app_...",
+    "password": "eyJ..."
+  }
+}
+```
+
+The proxy password expires with the tokens after `ttl` seconds. See
+Evervault's [API reference](https://docs.evervault.com/api) for all fields,
+including EU sessions (`eu-ie.browser.relay.evervault.app`).
+
+### 2. Map `proxyConfiguration` to `customProxy`
+
+| `proxyConfiguration` | `customProxy` |
 | --- | --- |
-| `host` | `relay.evervault.com` |
-| `port` | `443` |
-| `protocol` | `https` (the default for port 443) |
-| `username` | Your Evervault App ID |
-| `password` | Your Evervault API key |
-| `caBundleUrl` | `https://ca.evervault.com` |
+| `hostname` | `host` |
+| `port` | `port` |
+| `username` | `username` |
+| `password` | `password` |
+| (none) | `caBundleUrl: "https://ca.evervault.com"` |
 
-`caBundleUrl` makes the browser trust the Evervault CA. Do not use
+The port is 443, so `protocol` defaults to `https`. Do not use
 `ignoreCertErrors`; it turns off certificate checks for every site.
 
-## Start a browser on Relay
+### 3. Start the browser or run
+
+A standalone browser:
 
 ```bash curl
 curl https://api.browser-use.com/api/v4/browsers \
@@ -47,23 +93,32 @@ curl https://api.browser-use.com/api/v4/browsers \
   -H "Content-Type: application/json" \
   -d '{
     "customProxy": {
-      "host": "relay.evervault.com",
+      "host": "us-va.browser.relay.evervault.app",
       "port": 443,
-      "username": "YOUR_EVERVAULT_APP_ID",
-      "password": "YOUR_EVERVAULT_API_KEY",
+      "username": "PROXY_USERNAME",
+      "password": "PROXY_PASSWORD",
       "caBundleUrl": "https://ca.evervault.com"
     }
   }'
 ```
 
 For a hosted agent, pass the same object as `browserSettings.customProxy` on
-`POST /api/v4/runs`.
+`POST /api/v4/runs`, and give the agent the token values in the task, never
+the real ones. Keep the run inside the token `ttl`.
 
-## Switch to Relay at the payment step
+By default Evervault sends the traffic from its own IP addresses, not from a
+Browser Use residential IP. Evervault's `proxySettings` chooses other egress.
 
-Relay only forwards to hosts set up in your Evervault app. To browse other sites
-on the residential proxy, keep the browser on the managed proxy and change
-to Relay only for the payment. The browser keeps its tabs and cookies:
+### 4. Switch only at the payment step (standalone browsers)
+
+This step works only for standalone browsers you create with
+`POST /api/v4/browsers`. Browsers that belong to an agent run cannot change
+their proxy (`409`), so start a hosted run with its final
+`browserSettings.customProxy`.
+
+Save the `id` from the create-browser response as `BROWSER_ID`. Shop on the
+residential proxy, create the tokens when the agent reaches the payment form,
+then change the running browser to Evervault. Tabs and cookies stay:
 
 ```bash curl
 curl -X PATCH https://api.browser-use.com/api/v4/browsers/$BROWSER_ID/proxy \
@@ -72,23 +127,42 @@ curl -X PATCH https://api.browser-use.com/api/v4/browsers/$BROWSER_ID/proxy \
   -d '{
     "mode": "custom",
     "customProxy": {
-      "host": "relay.evervault.com",
+      "host": "us-va.browser.relay.evervault.app",
       "port": 443,
-      "username": "YOUR_EVERVAULT_APP_ID",
-      "password": "YOUR_EVERVAULT_API_KEY",
+      "username": "PROXY_USERNAME",
+      "password": "PROXY_PASSWORD",
       "caBundleUrl": "https://ca.evervault.com"
     }
   }'
 ```
 
-The first change with the Evervault CA takes about 5 seconds. After the payment,
-change back with `{"mode": "managed", "country": "us"}`. See
+The first change with the Evervault CA takes about 5 seconds. After the
+payment, change back with `{"mode": "managed", "country": "us"}`. See
 [Change the proxy of a running browser](/cloud/browser/proxies#change-the-proxy-of-a-running-browser)
 for all rules and error codes.
 
+## Relay for requests with `ev:` values
+
+Evervault's [Relay forward proxy](https://docs.evervault.com/relay#forward-proxy-mode)
+decrypts `ev:...` strings in requests to hosts set up as Relays in your
+Evervault app. `ev:` strings do not look like card numbers, so checkout forms
+usually reject them before any request is sent. Use Relay only when the page
+sends the `ev:` values in a request itself, for example a script that calls
+your payment API. For forms, use Browser Tokens.
+
+| `customProxy` field | Value |
+| --- | --- |
+| `host` | `relay.evervault.com` |
+| `port` | `443` |
+| `username` | Your Evervault App ID |
+| `password` | Your Evervault API key |
+| `caBundleUrl` | `https://ca.evervault.com` |
+
 ## Good to know
 
-- API responses never include the password or the CA settings.
-- `exitIp` is `null` while the browser is on Relay.
-- EU accounts can use Relay too, on browsers you create or change through the
-  API.
+- API responses never include the proxy password or the CA settings.
+- `exitIp` is `null` while the browser is on Evervault.
+- EU accounts can use Evervault too. Send the requests to
+  `https://api.eu.browser-use.com/api/v4` with your EU API key, and use
+  Evervault's EU proxy host. See [EU deployment](/cloud/eu-deployment).
+- The proxy password can have up to 8192 characters.
