@@ -181,6 +181,8 @@ CA, such as a card-vault proxy. The browser trusts that CA, and all other
 sites keep full certificate checks. API responses never include the password,
 `caBundle` or `caBundleUrl`.
 
+For Evervault Relay, see the [Evervault guide](/cloud/tutorials/integrations/evervault).
+
 ## Change the proxy of a running browser
 
 `PATCH /api/v4/browsers/{id}/proxy` changes the proxy of a running standalone
@@ -234,7 +236,6 @@ The response has the new state:
 - Custom mode does not accept `country`, `target` or `rotate` (`422`).
 - A browser on a custom proxy needs `mode` in each change. Else the change
   returns `409`.
-- Custom mode is not available on the EU route (`422`).
 - `409` also means the browser is stopped, belongs to an agent run, or has
   the agentic autofill extension (custom mode only).
 

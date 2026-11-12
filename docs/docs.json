@@ -147,6 +147,7 @@
                       "cloud/tutorials/integrations/openai",
                       "cloud/tutorials/integrations/fireworks",
                       "cloud/tutorials/integrations/agentcard",
+                      "cloud/tutorials/integrations/evervault",
                       "cloud/tutorials/integrations/openclaw",
                       "cloud/tutorials/integrations/hermes-agent",
                       "cloud/tutorials/integrations/vercel",
@@ -1257,6 +1258,10 @@
     {
       "source": "/integrations/agentcard",
       "destination": "/cloud/tutorials/integrations/agentcard"
+    },
+    {
+      "source": "/integrations/evervault",
+      "destination": "/cloud/tutorials/integrations/evervault"
     },
     {
       "source": "/open-source/supported-models",
