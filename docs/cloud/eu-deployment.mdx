@@ -178,10 +178,11 @@ security team before sending sensitive data.
   and GLM agent models are unavailable on this deployment.
 - **Marketplace and Vercel-managed billing projects are unavailable.** Use a
   project billed directly through Browser Use.
-- **Managed proxy countries must be EU member states.** New browsers default
-  to Germany (`de`); `us`, `gb` and `ch` are not accepted. Setting
-  `proxyCountryCode` to `null` disables the managed proxy. Custom proxies for
-  standalone browsers and V4 agent runs are customer-managed.
+- **Managed proxies default to Germany (`de`).** You can choose another
+  `proxyCountryCode`, including outside the EU, or set it to `null` to disable
+  the managed proxy. Custom proxies for standalone browsers and V4 agent runs
+  are customer-managed. Only country changes the agent makes on its own must
+  stay in EU member states.
 - **Automatic CAPTCHA solving and browser response caching are disabled.**
 - **Some optional agent features are unavailable**, including AgentMail,
   connected integrations, external browser attachment, payment tools,
