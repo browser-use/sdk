@@ -1,0 +1,94 @@
+---
+title: "Evervault"
+description: "Route a cloud browser through Evervault Relay so card data stays encrypted until it reaches the payment processor."
+icon: "lock"
+---
+
+[Evervault](https://evervault.com) keeps card data encrypted in your systems. Its
+[Relay forward proxy](https://docs.evervault.com/relay#forward-proxy-mode)
+decrypts `ev:` values only on the way to the destinations you set up in
+Evervault. Use it with a Browser Use browser: the agent and the page work with
+encrypted values, and Relay decrypts them in the request to the payment
+processor.
+
+Browser Use connects to Relay as a [custom proxy](/cloud/browser/proxies#custom-proxy)
+over TLS and trusts the Evervault CA, so Relay can read the traffic. All other sites keep full certificate checks.
+
+## What you need
+
+- A Browser Use API key in `BROWSER_USE_API_KEY`.
+- Your Evervault **App ID** and an **API key** from the
+  [Evervault dashboard](https://app.evervault.com).
+- A Relay in your Evervault app for each host that should receive decrypted
+  data, for example the payment processor's API host. Relay forwards only to
+  hosts set up in your app. See
+  [Relay](https://docs.evervault.com/relay).
+- Card data encrypted with Evervault (`ev:...` strings).
+
+## Relay settings
+
+| `customProxy` field | Value |
+| --- | --- |
+| `host` | `relay.evervault.com` |
+| `port` | `443` |
+| `protocol` | `https` (the default for port 443) |
+| `username` | Your Evervault App ID |
+| `password` | Your Evervault API key |
+| `caBundleUrl` | `https://ca.evervault.com` |
+
+`caBundleUrl` makes the browser trust the Evervault CA. Do not use
+`ignoreCertErrors`; it turns off certificate checks for every site.
+
+## Start a browser on Relay
+
+```bash curl
+curl https://api.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customProxy": {
+      "host": "relay.evervault.com",
+      "port": 443,
+      "username": "YOUR_EVERVAULT_APP_ID",
+      "password": "YOUR_EVERVAULT_API_KEY",
+      "caBundleUrl": "https://ca.evervault.com"
+    }
+  }'
+```
+
+For a hosted agent, pass the same object as `browserSettings.customProxy` on
+`POST /api/v4/runs`.
+
+## Switch to Relay at the payment step
+
+Relay only forwards to hosts set up in your Evervault app. To browse other sites
+on the residential proxy, keep the browser on the managed proxy and change
+to Relay only for the payment. The browser keeps its tabs and cookies:
+
+```bash curl
+curl -X PATCH https://api.browser-use.com/api/v4/browsers/$BROWSER_ID/proxy \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "custom",
+    "customProxy": {
+      "host": "relay.evervault.com",
+      "port": 443,
+      "username": "YOUR_EVERVAULT_APP_ID",
+      "password": "YOUR_EVERVAULT_API_KEY",
+      "caBundleUrl": "https://ca.evervault.com"
+    }
+  }'
+```
+
+The first change with the Evervault CA takes about 5 seconds. After the payment,
+change back with `{"mode": "managed", "country": "us"}`. See
+[Change the proxy of a running browser](/cloud/browser/proxies#change-the-proxy-of-a-running-browser)
+for all rules and error codes.
+
+## Good to know
+
+- API responses never include the password or the CA settings.
+- `exitIp` is `null` while the browser is on Relay.
+- EU accounts can use Relay too, on browsers you create or change through the
+  API.
