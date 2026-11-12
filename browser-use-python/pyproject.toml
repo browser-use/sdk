@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "browser-use-sdk"
 version = "3.12.1"
-description = "Official Python SDK for Browser Use Cloud: hosted cloud browsers for AI agents (CDP) and a browser agent API, from $0.02/browser-hour"
+description = "Official Python SDK for Browser Use Cloud: hosted cloud browsers for AI agents (CDP) and a browser agent API, from $0.06/browser-hour. For enterprise we offer cheaper prices; save with a commitment."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
