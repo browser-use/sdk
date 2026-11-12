@@ -181,8 +181,10 @@ security team before sending sensitive data.
 - **Managed proxies default to Germany (`de`).** You can choose another
   `proxyCountryCode`, including outside the EU, or set it to `null` to disable
   the managed proxy. Custom proxies for standalone browsers and V4 agent runs
-  are customer-managed. Only country changes the agent makes on its own must
-  stay in EU member states.
+  are customer-managed. A non-EU country or a custom proxy sends the browser's
+  traffic out through that location, so keep an EU country when traffic must
+  leave from the EU. When the agent changes its own browser's proxy country
+  during a run, it can choose only EU member states.
 - **Automatic CAPTCHA solving and browser response caching are disabled.**
 - **Some optional agent features are unavailable**, including AgentMail,
   connected integrations, external browser attachment, payment tools,
