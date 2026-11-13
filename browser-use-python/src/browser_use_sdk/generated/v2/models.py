@@ -1571,7 +1571,7 @@ class CreateBrowserSessionRequest(BaseModel):
     )
     timeout: int | None = Field(
         60,
-        description='The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged $0.02/hour.',
+        description='The timeout for the session in minutes. All users can use up to 240 minutes (4 hours). Browser sessions are charged per browser-hour at your account rate.',
         title='Timeout',
     )
     browser_screen_width: BrowserScreenWidth | None = Field(
