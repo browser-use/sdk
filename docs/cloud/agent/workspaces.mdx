@@ -117,15 +117,21 @@ short-lived download URL does not mean the stored file expires after 60 seconds.
 
 ## Large workspaces
 
-A new session restores at most the 2,000 newest workspace files, by
-last-modified time. Older files stay stored and still appear when you list the
-workspace, but the agent cannot read them in that run. When files were left
-out, the agent is told: "Only the 2,000 newest workspace files are here; older
-ones are not available". If the agent writes a new file at the path of an
-omitted file, the stored file is overwritten.
+A new session restores at most the 2,000 newest workspace files outside
+`uploads/`, by last-modified time. Older files stay stored and still appear when
+you list the workspace, but the agent cannot read them in that run. When files
+were left out, the agent is told: "Only the 2,000 newest workspace files are
+here; older ones are not available". If the agent writes a new file at the path
+of an omitted file, the stored file is overwritten. Uploaded inputs in
+`uploads/` do not count toward the 2,000; they are restored separately with
+their own limits. In very large workspaces (more than about 40,000 stored
+files), the session picks the newest files from the first 40,000 it reads, so a
+newer file beyond that point can be left out.
 
-Restored files share the session's 1 GiB disk with files the agent writes. When
-less than 1 MiB is free, the agent is told before it starts, and a completed
-run's result text ends with "The session disk is full; files written now may
-not be saved" (not for runs with an output schema). Keep large or old files in a
+Restored files share the session's 1 GiB disk with files the agent writes. Two
+separate checks look for less than 1 MiB free. If the disk is full when the run
+starts, the agent is told before it begins. If the disk is full when a run
+completes, its result text ends with "The session disk is full; files written
+now may not be saved" (not for runs with an output schema), even if it was not
+full at the start. Keep large or old files in a
 separate workspace, or delete files the agent no longer needs.
