@@ -45,9 +45,9 @@ Keys in the same project share its capacity and balance. Creating more keys does
 
 ## How usage tiers work
 
-For projects on current pricing, concurrency increases with the project's net settled lifetime Stripe payments:
+For projects on current pricing, concurrency increases with the project's net settled lifetime Stripe payments or its available credit balance, whichever is higher:
 
-| Lifetime qualifying spend | Concurrent sessions |
+| Lifetime qualifying spend or available credit | Concurrent sessions |
 |---:|---:|
 | \$0 | 10 |
 | \$100 | 50 |
@@ -55,9 +55,11 @@ For projects on current pricing, concurrency increases with the project's net se
 | \$5,000 | 500 |
 | \$25,000 | 1,000 |
 
-Before any qualifying payment, the current spend-tier baseline is 10 concurrent sessions, subject to account-specific free-tier restrictions. A top-up raises concurrency only when cumulative qualifying payments cross a tier threshold; a small first purchase does not automatically grant 50 sessions.
+Before any qualifying payment, the current spend-tier baseline is 10 concurrent sessions, subject to account-specific free-tier restrictions. A top-up raises concurrency only when cumulative qualifying payments or the available credit balance cross a tier threshold; a small first purchase does not automatically grant 50 sessions.
 
-Payments count for the project that received them. Refunds and disputed payments do not contribute to qualifying spend. Signup credits and other credit grants are not qualifying purchases. Funding through other billing arrangements may follow different rules.
+Payments count for the project that received them. Refunds and disputed payments do not contribute to qualifying spend. Signup credits and other credit grants are not qualifying purchases.
+
+Available credit, including granted credit, counts toward the same thresholds once the project has paid or while it has an active subscription. For example, a paid project holding \$6,000 of credit qualifies for 500 concurrent sessions. Payments and credit are not added together: \$3,000 paid and \$3,000 of credit qualifies for 250, not 500. Spending the credit later does not lower the granted allowance. Signup credits on a project that has never paid do not raise concurrency. Funding through other billing arrangements may follow different rules.
 
 **Your higher concurrency allowance is preserved.** When a project participates in spend tiers, its limit takes the maximum of its applicable legacy-plan allowance, the current pricing floor, and its spend-tier allowance. An already-granted higher limit is not automatically lowered. For example, a legacy allowance of 250 remains 250 when the spend tier would grant 50.
 
