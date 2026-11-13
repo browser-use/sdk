@@ -116,7 +116,7 @@ When the agent is ready to pay, it creates a spend request and waits for you:
 }
 ```
 
-`status` moves through `pending_approval` → `approved` → `succeeded` for a completed payment. You can also see `denied` (you declined), `expired` (nobody approved in time), `canceled` (the agent cancelled an unused request) and `requires_action` (for example a 3-D Secure check). If you decline, the agent stops instead of trying again.
+`status` moves through `pending_approval` → `approved` → `succeeded` for a completed payment. You can also see `denied` (you declined), `expired` (nobody approved in time), `canceled` (the agent cancelled an unused request) and `requires_action` (for example a 3-D Secure check). If you decline, the agent stops instead of trying again. While the agent waits, it re-checks the request every few seconds, so the same `pending_approval` event can arrive many times: key on `spend_request_id` and `status`.
 
 ## Cards vs Shared Payment Tokens
 
