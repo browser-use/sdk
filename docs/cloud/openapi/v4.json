@@ -138,6 +138,27 @@
                             ],
                             "title": "Sessionid"
                         }
+                    },
+                    {
+                        "name": "metadata",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND).",
+                            "title": "Metadata"
+                        },
+                        "description": "Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND)."
                     }
                 ],
                 "responses": {
@@ -5746,6 +5767,21 @@
                         ],
                         "title": "Maxcostusd",
                         "description": "This budget limits model and search charges in USD. New API sessions default to $25. Use $25 as a starting budget unless the user specifies another amount. Follow-ups keep the current budget when you omit this field. An explicit value replaces the current budget. Account credits do not lower this budget."
+                    },
+                    "metadata": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Metadata",
+                        "description": "Labels for this run. Up to 10 key-value pairs. Filterable on the runs list and in the dashboard history."
                     }
                 },
                 "additionalProperties": false,
@@ -5807,6 +5843,14 @@
                         "type": "array",
                         "title": "Skippedvaultitems",
                         "description": "Titles of opVaultId items that hold a credential but no 1Password website, so deriving their domains left them with nowhere to be typed. The run still starts without them; add a website to the item or pass opVaultAllowedDomains."
+                    },
+                    "metadata": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object",
+                        "title": "Metadata",
+                        "description": "Caller-supplied labels set on this run. Omitted when there are none."
                     }
                 },
                 "type": "object",
@@ -6149,6 +6193,14 @@
                         "type": "string",
                         "format": "date-time",
                         "title": "Updatedat"
+                    },
+                    "metadata": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object",
+                        "title": "Metadata",
+                        "description": "Caller-supplied labels set on this run. Omitted when there are none."
                     }
                 },
                 "type": "object",
