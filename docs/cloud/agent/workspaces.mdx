@@ -129,9 +129,9 @@ files), the session picks the newest files from the first 40,000 it reads, so a
 newer file beyond that point can be left out.
 
 Restored files share the session's 1 GiB disk with files the agent writes. Two
-separate checks look for less than 1 MiB free. If the disk is full when the run
-starts, the agent is told before it begins. If the disk is full when a run
-completes, its result text ends with "The session disk is full; files written
-now may not be saved" (not for runs with an output schema), even if it was not
-full at the start. Keep large or old files in a
+separate checks treat the disk as full when less than 1 MiB is free. If less
+than 1 MiB is free when the run starts, the agent is told before it begins. If
+less than 1 MiB is free when a run completes, its result text ends with "The
+session disk is full; files written now may not be saved" (not for runs with an
+output schema), even if there was room at the start. Keep large or old files in a
 separate workspace, or delete files the agent no longer needs.
