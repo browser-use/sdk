@@ -1,6 +1,6 @@
 ---
 title: Proxies
-description: "Configure residential or custom proxies for API V4 browsers and agent runs."
+description: "Configure residential proxies, or custom proxies on enterprise plans, for API V4 browsers and agent runs."
 icon: "map-pin"
 ---
 
@@ -80,9 +80,12 @@ const run = await client.runs.create({
 
 ## Custom proxy
 
-Custom proxies are available to all accounts, including free and pay-as-you-go
-accounts. No subscription is required. Normal credit, spend, and concurrency
-limits still apply.
+<Note>
+Custom proxies are an enterprise feature. Contact
+[sales@browser-use.com](mailto:sales@browser-use.com) to enable them for your
+project. A project without access gets `403` with that message when it sends a
+custom proxy. Normal credit, spend, and concurrency limits still apply.
+</Note>
 
 The request format depends on what you are creating:
 

@@ -30,7 +30,7 @@ async function main() {
   // Default proxy (US)
   console.log("US proxy:", await runTask(client));
 
-  // Custom proxy — Germany
+  // Custom proxy — Germany (enterprise feature: contact sales@browser-use.com)
   console.log("DE proxy:", await runTask(client, { proxyCountryCode: "de" }));
 }
 
