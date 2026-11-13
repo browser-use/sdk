@@ -4,7 +4,7 @@ description: "Let an agent pay with a user's own card through Agentcard Vault, o
 icon: "credit-card"
 ---
 
-[Agentcard](https://agentcard.sh) lets your agent shop with a user's card through the **Vault**. The agent submits a placeholder card, the SDK pauses a supported payment request, and the user approves on their own device with a passkey. Their device sends the real card to the payment processor; the real card stays out of the agent's task and browser.
+[Agentcard](https://agentcard.com/vault?utm_source=browser-use&utm_medium=partner_docs&utm_campaign=integration) lets your agent shop with a user's card through the **Vault**. The agent submits a placeholder card, the SDK pauses a supported payment request, and the user approves on their own device with a passkey. Their device sends the real card to the payment processor; the real card stays out of the agent's task and browser.
 
 <Note>
   Vault is Agentcard's current flow for paying with a user's own card, and it attaches over CDP without a wallet ID. Browser Use Cloud also has a separate [project wallet (beta)](#project-wallet-beta): the hosted agent spends from a Browser Use project wallet with single-use virtual cards, for runs started in the Cloud app.
@@ -14,7 +14,7 @@ icon: "credit-card"
 
 - A Browser Use API key in `BROWSER_USE_API_KEY`.
 - An Agentcard `client_id` and `client_secret` from the [Agentcard dashboard](https://app.agentcard.sh), in `AGENTCARD_CLIENT_ID` and `AGENTCARD_CLIENT_SECRET`.
-- A user with a stored Vault card, and their `user_id` in `AGENTCARD_USER_ID`. See [Adding a card](https://docs.agentcard.sh/vault/adding-a-card).
+- A user with a stored Vault card, and their `user_id` in `AGENTCARD_USER_ID`. See [Adding a card](https://docs.agentcard.com/vault/adding-a-card).
 - Your own app function to deliver an approval link privately to that user.
 
 Start with Agentcard sandbox credentials and its [demo store](https://shop.agentcard.sh). Validate the intended merchant and payment processor before using real cards.
@@ -24,7 +24,7 @@ Start with Agentcard sandbox credentials and its [demo store](https://shop.agent
 Install the Node packages alongside your app:
 
 ```bash
-npm install @agent-cards/checkout@0.17.0 browser-use-sdk playwright-core
+npm install @agent-cards/sdk browser-use-sdk playwright-core
 ```
 
 Create a standalone [Browser Use browser](/cloud/browser/quickstart), connect over its `cdpUrl`, and attach Agentcard before the agent reaches the payment form. Browser Use supports multiple CDP connections to the same browser.
@@ -32,7 +32,7 @@ Create a standalone [Browser Use browser](/cloud/browser/quickstart), connect ov
 ```ts
 import { BrowserUse } from 'browser-use-sdk/v4';
 import { chromium } from 'playwright-core';
-import { VaultClient, attachToPlaywright } from '@agent-cards/checkout';
+import { VaultClient, attachToPlaywright } from '@agent-cards/sdk';
 import { sendToUser } from './notifications.js'; // Implement in your app.
 
 const bu = new BrowserUse({ apiKey: process.env.BROWSER_USE_API_KEY! });
@@ -99,7 +99,7 @@ Give the agent a placeholder from [Stripe's published test cards](https://docs.s
 
 ## Confirm the order and stop the browser
 
-User approval is not proof that the merchant created an order. Verify the merchant's confirmation page or API and follow Agentcard's [purchase reconciliation guide](https://docs.agentcard.sh/vault/completing-a-purchase). If the result is pending or unknown, preserve the browser for follow-up and reconcile before retrying payment.
+User approval is not proof that the merchant created an order. Verify the merchant's confirmation page or API and follow Agentcard's [purchase reconciliation guide](https://docs.agentcard.com/vault/completing-a-purchase). If the result is pending or unknown, preserve the browser for follow-up and reconcile before retrying payment.
 
 `keep_alive=True` leaves the browser available after the Python agent finishes. Once the order is confirmed and no follow-up is needed, stop the owned browser from your Node app:
 
@@ -115,9 +115,9 @@ Stop the browser on setup failure or abandonment too, once you have established 
 
 ## Hosted agents and full guide
 
-For Browser Use hosted agents, see [Agentcard's Browser Use integration guide](https://docs.agentcard.sh/vault/integrations/agent-browsers/browser-use). A hosted run starts executing when created. Attach Vault before the shopping task begins, and account for session expiry or browser replacement. Observing a dispatch event and then cancelling is not a synchronous gate before the agent's first action.
+For Browser Use hosted agents, see [Agentcard's Browser Use integration guide](https://docs.agentcard.com/vault/integrations/agent-browsers/browser-use). A hosted run starts executing when created. Attach Vault before the shopping task begins, and account for session expiry or browser replacement. Observing a dispatch event and then cancelling is not a synchronous gate before the agent's first action.
 
-The [Vault quickstart](https://docs.agentcard.sh/vault/quickstart) covers card enrollment, approval, and the complete purchase flow.
+The [Vault quickstart](https://docs.agentcard.com/vault/quickstart) covers card enrollment, approval, and the complete purchase flow.
 
 ## Project wallet (beta)
 
