@@ -114,3 +114,18 @@ workspace are different operations; archiving is not a file-deletion request.
 
 Download a file promptly or request a fresh URL when its link expires. A
 short-lived download URL does not mean the stored file expires after 60 seconds.
+
+## Large workspaces
+
+A new session restores at most the 2,000 newest workspace files, by
+last-modified time. Older files stay stored and still appear when you list the
+workspace, but the agent cannot read them in that run. When files were left
+out, the agent is told: "Only the 2,000 newest workspace files are here; older
+ones are not available". If the agent writes a new file at the path of an
+omitted file, the stored file is overwritten.
+
+Restored files share the session's 1 GiB disk with files the agent writes. When
+less than 1 MiB is free, the agent is told before it starts, and a completed
+run's result text ends with "The session disk is full; files written now may
+not be saved" (not for runs with an output schema). Keep large or old files in a
+separate workspace, or delete files the agent no longer needs.
