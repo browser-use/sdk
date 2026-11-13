@@ -106,8 +106,38 @@ For a hosted agent, pass the same object as `browserSettings.customProxy` on
 `POST /api/v4/runs`, and give the agent the token values in the task, never
 the real ones. Keep the run inside the token `ttl`.
 
-By default Evervault sends the traffic from its own IP addresses, not from a
-Browser Use residential IP. Evervault's `proxySettings` chooses other egress.
+### Use Browser Use residential IPs
+
+By default, traffic leaves Evervault from Evervault's own IP addresses.
+To use Browser Use residential IPs, add this `proxySettings` object to your
+Evervault Browser Tokens request:
+
+```json
+{
+  "proxySettings": {
+    "type": "custom",
+    "scheme": "https",
+    "hostname": "proxy.browser-use.com",
+    "port": 443,
+    "username": "user-country-uk-session-00000000-0000-4000-8000-000000000001",
+    "password": "YOUR_BROWSER_USE_API_KEY"
+  }
+}
+```
+
+The upstream proxy is `https://proxy.browser-use.com:443`.
+The username format is `user[-country-XX][-session-ID]`; country and session
+are optional. Replace the example session ID with your own proxy session ID.
+The password is your Browser Use API key, not your Evervault API key.
+
+Traffic follows this path: browser → Evervault → Browser Use residential
+proxy → destination website.
+
+Keep passing Evervault's returned `proxyConfiguration` to the Browser Use
+`customProxy` fields above. Its password remains the Evervault proxy password;
+the Browser Use API key above authenticates only the upstream connection.
+See Evervault's [custom egress proxy settings](https://docs.evervault.com/browser-tokens#custom-egress-proxy)
+for the request fields.
 
 ### 4. Switch only at the payment step (standalone browsers)
 
