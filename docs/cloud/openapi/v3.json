@@ -2618,7 +2618,7 @@
                             }
                         ],
                         "title": "Custom Proxy",
-                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used."
+                        "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are an enterprise feature: contact sales@browser-use.com to enable them."
                     },
                     "enableRecording": {
                         "type": "boolean",
