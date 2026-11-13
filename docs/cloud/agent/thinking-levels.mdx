@@ -115,9 +115,12 @@ curl -X POST https://api.browser-use.com/api/v4/runs \
   }'
 ```
 
-If the project's OpenAI route cannot serve Fast mode, for example on the EU
-deployment without your own OpenAI key or on a Bedrock-only project, the run is
-rejected with `422 Fast mode is unavailable on this project’s OpenAI route`.
+If the project's OpenAI route cannot serve Fast mode, for example on a
+Bedrock-only project, the run is rejected with
+`422 Fast mode is unavailable on this project’s OpenAI route`. On the EU
+deployment, `gpt-6.1-sol` and `gpt-6.1-terra` support Fast mode without your
+own OpenAI key; other Fast-mode models there need your own OpenAI key, and
+`gpt-6-sol` and `gpt-6-astra` do not support Fast mode on the EU deployment.
 
 ## API V3 support
 
