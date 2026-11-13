@@ -117,3 +117,29 @@ problem, include the filename, size, and the operation that failed.
 Do not send API keys, passwords, card details, custom-proxy credentials, session cookies,
 or active CDP/live-view URLs. A screenshot alone often omits the identifier
 needed to trace a request.
+
+## Send feedback from a coding agent
+
+A coding agent that hits a confusing V4 error or a missing feature can report
+it directly with its API key:
+
+```bash
+curl -X POST https://api.browser-use.com/api/v4/feedback \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "The 422 from POST /api/v4/runs did not say which field was wrong."}'
+```
+
+| Response | Meaning |
+| --- | --- |
+| 204 | Stored for the Browser Use team. There is no reply through the API. |
+| 422 | `message` is missing, empty, or longer than 5,000 characters. |
+| 403 | The project uses [Zero Data Retention](/cloud/zero-data-retention); feedback is unavailable. |
+| 429 | The project sent more than 60 feedback messages in the last hour. |
+| 503 | Feedback is temporarily unavailable. |
+
+Known credential shapes (API keys, tokens, JWTs, private keys, cookies, URL
+credentials, and CDP or live-view links) are replaced with `[redacted]` before
+the message is stored. A password written as plain prose is not detected, so
+still leave secrets out. For anything that needs an answer, email
+contact@browser-use.com as described above.
