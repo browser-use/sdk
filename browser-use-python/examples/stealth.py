@@ -37,7 +37,7 @@ async def main():
         # Default proxy (US)
         print(f"US proxy: {await run_task(client)}")
 
-        # Custom proxy -- Germany (enterprise feature: contact sales@browser-use.com)
+        # Residential proxy -- Germany
         print(f"DE proxy: {await run_task(client, browser_settings={'proxyCountryCode': 'de'})}")
 
 
