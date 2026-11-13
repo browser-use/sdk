@@ -135,7 +135,7 @@ curl -X POST https://api.browser-use.com/api/v4/feedback \
 | 204 | Stored for the Browser Use team. There is no reply through the API. |
 | 422 | `message` is missing, empty, or longer than 5,000 characters. |
 | 403 | The project uses [Zero Data Retention](/cloud/zero-data-retention); feedback is unavailable. |
-| 429 | The project sent more than 60 feedback messages in the last hour. |
+| 429 | Rate limited: either the shared API request limit (`error: rate_limited`, with `Retry-After`) or the 60-per-project feedback limit for the current fixed one-hour window was reached. |
 | 503 | Feedback is temporarily unavailable. |
 
 Known credential shapes (API keys, tokens, JWTs, private keys, cookies, URL
