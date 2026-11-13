@@ -61,7 +61,7 @@ curl https://api.browser-use.com/api/v4/stripe-link \
 }
 ```
 
-- `connectionId` is what you pass to runs. It stays the same until you reconnect or remove the wallet.
+- `connectionId` is what you pass to runs. Reconnecting usually keeps the same id, but don't cache it forever: read `GET /api/v4/stripe-link` before a run and use the `connectionId` and `isConnected` it returns.
 - `mode` is `live` on `api.browser-use.com`: approved purchases are **real charges**.
 - If `isConnected` is `false`, connect (or reconnect) the wallet in the dashboard first.
 
@@ -116,7 +116,7 @@ When the agent is ready to pay, it creates a spend request and waits for you:
 }
 ```
 
-`status` moves through `pending_approval` → `approved` → `succeeded` for a completed payment. You can also see `denied` (you declined), `expired` (nobody approved in time), `canceled` (the agent cancelled an unused request) and `requires_action` (for example a 3-D Secure check). If you decline, the agent stops instead of trying again. While the agent waits, it re-checks the request every few seconds, so the same `pending_approval` event can arrive many times: key on `spend_request_id` and `status`.
+`status` moves through `pending_approval` → `approved` → `succeeded` for a completed payment. You can also see `denied` (you declined), `expired` (nobody approved in time), `canceled` (the agent cancelled an unused request) and `requires_action` (for example a 3-D Secure check). If you decline, the agent stops instead of trying again. While the agent waits, it re-checks the request every few seconds. Unchanged polls are usually collapsed into one event, but the same status can still arrive more than once (we saw repeated `pending_approval` events in testing), so key on `spend_request_id` and `status`.
 
 ## Cards vs Shared Payment Tokens
 
@@ -135,7 +135,7 @@ Some Stripe checkouts offer a Link payment button for AI agents; the agent uses 
 - **Approval every time.** There are no standing or pre-approved budgets: the proxy refuses delegated (pre-approved) spend requests.
 - **One wallet per project**, connected by a dashboard user. Wallets per end user of your product are not supported.
 - **Not available** in the EU deployment, or for zero-data-retention projects.
-- **Reconnect when asked.** If Link revokes access (for example after a long time without use), the dashboard shows **Reconnect**, `GET /api/v4/stripe-link` returns `isConnected: false`, and runs that send the old id get `422 stripe link connection not found`.
+- **Reconnect when asked.** Link can revoke access (for example after a long time without use). Browser Use may not notice right away: until it marks the connection as needing reauthentication, `GET /api/v4/stripe-link` can still report `isConnected: true` and runs still start, but the agent's Link calls fail at payment time with a `link_unauthorized` error. Once the connection is marked, the dashboard shows **Reconnect**, the status API returns `isConnected: false`, and new runs that send the id get `422 stripe link connection not found`. Reconnect in the dashboard in either case.
 - **Pricing.** Browser Use charges nothing extra for Link. You pay the merchant through Link as usual.
 
 ## Troubleshooting
@@ -144,6 +144,6 @@ Some Stripe checkouts offer a Link payment button for AI agents; the agent uses 
 |---|---|---|
 | `422 {"detail":"stripe link connection not found"}` on `POST /runs` | The id is not the project's active connection: wrong project, removed, or needs reconnecting | Call `GET /api/v4/stripe-link` with the same API key and use its `connectionId`, or reconnect in Integrations |
 | `403` on `GET /api/v4/stripe-link` | The API key lacks **Read** on runs | Use a key with runs read access |
-| The agent says the wallet is disconnected | The wallet was removed or Link revoked access during the run | Reconnect in Integrations and start a new run |
+| The agent says the wallet is disconnected, or its payment step fails with `link_unauthorized` | The wallet was removed, or Link revoked access (the status API may still say connected) | Reconnect in Integrations and start a new run |
 | No approval request arrives | The agent has not reached the payment step yet, or the run was started without `stripeLinkConnectionId` | Check the run's events for `stripe_link.spend_request`; send the field on the run |
 | "Not yet available in your region" when connecting | Link agent wallets are US-only for now | Use a US Link account |
