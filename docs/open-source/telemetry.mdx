@@ -4,7 +4,7 @@ description: "What anonymized usage data browser-use sends, what it never sends,
 icon: "chart-no-axes-column"
 ---
 
-browser-use sends anonymized usage telemetry: model, steps, cost, timing, helper names, the URLs visited (without query strings), error messages, the final result and the judge's verdict. Never the task text, `judge_context`, typed text, code or secrets. `ANONYMIZED_TELEMETRY=false` turns it off, for the library, the CLI and the MCP server:
+browser-use sends anonymized usage telemetry: model, steps, cost, timing, helper names, the URLs visited (without query strings), error messages, the final result and the judge's verdict. Never the task text, typed text, code or secrets. Of `judge_context`, only whether it is set is sent. `ANONYMIZED_TELEMETRY=false` turns it off, for the library, the CLI and the MCP server:
 
 ```bash
 export ANONYMIZED_TELEMETRY=false
@@ -22,7 +22,8 @@ The events go to PostHog so we can see which models, browsers and helpers work, 
 
 ## Never sent
 
-- The task text, follow-up tasks, `judge_context` and `extend_system_message`. Where a URL, error message or result quotes the whole task, it is sent as `<task>`.
+- The task text, follow-up tasks and `extend_system_message`. Where a URL, error message or result quotes the whole task, it is sent as `<task>`.
+- `judge_context` itself. Only whether it is set is sent as configuration. The judge's verdict is sent after text scrubbing, so short or partial quotes of the context may remain in it.
 - Text typed into pages.
 - The model's messages and thinking, and partial results.
 - Code the model writes, and tracebacks (their frames quote the code). Repeated code is detected by a hash that never leaves the process.
