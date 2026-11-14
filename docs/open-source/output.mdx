@@ -101,9 +101,11 @@ if result.judgement:
 | `description` | What the agent did and what came of it, in 1 to 3 sentences. |
 | `prompt_injection_detected` | A page, file or tool result tried to instruct the agent. |
 | `bot_block_or_captcha_detected` | The agent met a CAPTCHA, a bot check, an access block or a rate limit. |
-| `gotchas` | Up to 5 short, general lessons about the sites for the next agent, such as rate limits, a page order that avoids a block, or a field's required format. May be empty. |
+| `gotchas` | Up to 5 short, general lessons about the sites for the next agent, such as rate limits, a page order that avoids a block, or a field's required format. Written on a success too, when the site rejected input, errored, blocked or rate-limited the agent. May be empty. |
 
-- The judge reads the run as text, without screenshots, with secrets redacted, capped at 120k characters.
+- The judge reads the run as text, with secrets redacted, capped at 120k characters.
+- With vision on, it also gets up to 4 images: the run's last distinct screenshots and one of the final page, oldest first. Images are sent as they are, not redacted. `use_vision=False` sends text only.
+- A model that rejects the images is asked once more with the text alone.
 - Its tokens and cost are added to `result.usage` and `result.cost_usd`, also when the judge request fails.
 - A failed judge request logs a warning and leaves `result.judgement` `None`. It never changes the run's own result.
 - `judge_context=` passes your criteria or the expected answer. `judge=False` turns the judge off and sends no request.
