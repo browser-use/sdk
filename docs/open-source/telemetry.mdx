@@ -56,7 +56,7 @@ The text fields, each scrubbed as in [Never sent](#never-sent) before it is cut:
 | `urls_visited` | Pages the agent navigated to, in order, each once, as `scheme://host/path` (http, https, ws, wss). | 50 URLs, 200 characters each |
 | `error_messages` | The run's error (`result.error`), then each failed cell's exception line (`ValueError: message`), each once. | 20 messages, 300 characters each |
 | `final_result` | The result text, or a structured result as JSON. | 500 characters |
-| `judgement` | The [judge's](/open-source/output#judge) answer: `success`, `failure_reason`, `description`, `prompt_injection_detected`, `bot_block_or_captcha_detected`, `gotchas` and the judge's `cost_usd`. `None` when the run was not judged. | 5 gotchas; each text scrubbed and cut as error messages are |
+| `judgement` | The [judge's](/open-source/output#judge) answer: `success`, `failure_reason`, `description`, `prompt_injection_detected`, `bot_block_or_captcha_detected`, `gotchas`, plus the judge's `cost_usd`. `None` with `judge=False`, when the run took no step, or when the judge request failed. | 5 gotchas; `failure_reason`, `description` and each gotcha scrubbed and cut at 300 characters |
 
 The other fields are numbers, bools, enums, hostnames, or names chosen by browser-use, the developer, Python or an installed package (model id, helper, tool, module, exception class, CDP method).
 
