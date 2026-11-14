@@ -946,11 +946,39 @@ class Context(RootModel[str]):
     root: str = Field(..., max_length=10000, title='Context')
 
 
+class Model1(Enum):
+    gpt_5_5 = 'gpt-5.5'
+    gpt_5_6 = 'gpt-5.6'
+    gpt_6_astra = 'gpt-6-astra'
+    gpt_6_sol = 'gpt-6-sol'
+    gpt_6_1_sol = 'gpt-6.1-sol'
+    gpt_6_1_terra = 'gpt-6.1-terra'
+    gpt_6_luna = 'gpt-6-luna'
+    gpt_5_6_sol = 'gpt-5.6-sol'
+    gpt_5_6_terra = 'gpt-5.6-terra'
+    gpt_5_6_luna = 'gpt-5.6-luna'
+    gemini_3_6_flash = 'gemini-3.6-flash'
+    gemini_3_5_flash = 'gemini-3.5-flash'
+    gemini_3_1_pro = 'gemini-3.1-pro'
+    gemini_3_flash = 'gemini-3-flash'
+
+
 class RunJudgeSettings(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
     context: Context | None = Field(None, title='Context')
+    model: Model1 | None = Field(
+        None,
+        description='The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. Null means omitted.',
+        title='Model',
+    )
+    model_params: Dict[str, Any] | None = Field(
+        None,
+        alias='modelParams',
+        description="Optional provider-native request parameters for the judge model. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422. Once enabled, omitted or null applies reasoning effort high where supported, otherwise the model's default parameters; {} leaves provider defaults in place. Unsupported paths or values are rejected with 422. context and service_tier are not supported.",
+        title='Modelparams',
+    )
 
 
 class RunStatusResponse(BaseModel):
