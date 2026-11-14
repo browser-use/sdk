@@ -30,13 +30,15 @@ A parameter that is not on this page raises a `TypeError` before any browser sta
 | `web_search` | `False` | `True` gives the agent a `search()` helper, billed per search. See [Web search](/open-source/web-search). |
 | `max_context_chars` | `None` | Compact the history past 75% of this many characters. `None` is 4 per token of the model's context window (240k when unknown). No effect where compaction is server-side. See [Long tasks](/open-source/long-tasks#context). |
 | `highlight_actions` | `True` | Orange brackets around what the agent clicks or types into. See [Agent](/open-source/agent#highlights). |
+| `judge` | `True` | After each run that took a step, one more request to the agent's own model (a second, text-only one if the model rejects images with an HTTP 4xx error that mentions `image`) judges the run against the task and fills `result.judgement`. Its cost is added to `result.cost_usd`. `False` sends no judge request. 0.x `use_judge` is the same option. See [Output: Judge](/open-source/output#judge). |
+| `judge_context` | `None` | Your criteria or the expected answer, which the judge puts first. 0.x `ground_truth` is the same option. |
 
 ### Accepted from 0.x
 
-These 0.x options are accepted, log a warning and do nothing, so old code keeps running. The one exception is `use_vision=False`, which is honored: no screenshot reaches the model.
+These 0.x options are accepted, log a warning and do nothing, so old code keeps running. The one exception is `use_vision=False`, which is honored: no screenshot reaches the model or the judge.
 
 {/* ignored: Agent */}
-`use_vision`, `vision_detail_level`, `llm_screenshot_size`, `flash_mode`, `use_thinking`, `max_failures`, `max_actions_per_step`, `final_response_after_failure`, `highlight_elements`, `use_judge`, `calculate_cost`
+`use_vision`, `vision_detail_level`, `llm_screenshot_size`, `flash_mode`, `use_thinking`, `max_failures`, `max_actions_per_step`, `final_response_after_failure`, `highlight_elements`, `calculate_cost`
 
 ## run() and run_sync()
 
