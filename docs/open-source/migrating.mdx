@@ -492,7 +492,7 @@ Every 0.x `Agent(...)` argument, method and attribute. Removed arguments raise `
 |---|---|
 | `task`, `llm`, `browser`, `browser_session`, `tools`, `controller`, `output_model_schema`, `sensitive_data`, `extend_system_message` | kept |
 | `use_vision=False` | kept: no screenshot reaches the model |
-| `use_vision=True` / `'auto'`, `vision_detail_level`, `llm_screenshot_size`, `max_actions_per_step`, `flash_mode`, `use_thinking`, `use_judge`, `max_failures`, `final_response_after_failure`, `calculate_cost`, `highlight_elements` | ignored, one warning each. Instead of `use_thinking`: `reasoning='low' / 'medium' / 'high'`; of `flash_mode`: `mode='ultrafast'`; of `highlight_elements`: `highlight_actions` |
+| `use_vision=True` / `'auto'`, `vision_detail_level`, `llm_screenshot_size`, `max_actions_per_step`, `flash_mode`, `use_thinking`, `max_failures`, `final_response_after_failure`, `calculate_cost`, `highlight_elements` | ignored, one warning each. Instead of `use_thinking`: `reasoning='low' / 'medium' / 'high'`; of `flash_mode`: `mode='ultrafast'`; of `highlight_elements`: `highlight_actions` |
 | `max_steps` on `Agent` | not an option: `agent.run(max_steps=...)` |
 | `override_system_message` | `extend_system_message` |
 | `llm_timeout`, `step_timeout` | `agent.run(timeout=seconds)` |
@@ -503,7 +503,8 @@ Every 0.x `Agent(...)` argument, method and attribute. Removed arguments raise `
 | `register_new_step_callback`, `register_done_callback`, `register_external_agent_status_raise_error_callback`, `register_should_stop_callback`, `run(on_step_start=...)`, `run(on_step_end=...)` | a `logging.Handler` on `browser_use`; see [Long tasks](/open-source/long-tasks#live-progress) |
 | `save_conversation_path`, `save_conversation_path_encoding` | `result.messages` |
 | `generate_gif`, `demo_mode` | dropped. `live_view=True` shows a cloud browser live |
-| `judge_llm`, `ground_truth` | `result.success`, the agent's own verdict |
+| `use_judge`, `ground_truth` | kept as `judge` and `judge_context`. See [Output: Judge](/open-source/output#judge) |
+| `judge_llm` | dropped: the judge uses the agent's own `llm` |
 | `fallback_llm`, `skill_ids`, `skills`, `skill_service`, `pricing_url` | dropped |
 | `sample_images`, `enable_planning`, `planning_replan_on_stall`, `planning_exploration_limit`, `planner_llm`, `planner_interval`, `is_planner_reasoning`, `extend_planner_system_message`, `use_vision_for_planner` | dropped: each step is one Python cell; the agent takes screenshots when it needs them |
 | `loop_detection_window`, `loop_detection_enabled`, `message_compaction`, `max_history_items`, `include_attributes`, `max_clickable_elements_length`, `include_recent_events`, `include_tool_call_examples`, `display_files_in_done_text`, `injected_agent_state`, `source`, `task_id`, `enable_signal_handler`, `_url_shortening_limit` | dropped: the model retries failed cells within `max_steps`, and history is compacted on its own (`max_context_chars`) |
@@ -516,7 +517,7 @@ Every 0.x `Agent(...)` argument, method and attribute. Removed arguments raise `
 | `current_llm_model`, `is_using_fallback_llm` | `agent.llm` |
 | `state`, `history`, `message_manager`, `settings`, `file_system` | dropped: read the result `run()` returns, and `agent.workspace` |
 | `browser_session`, `browser_profile`, `browser_context`, `controller` (attributes) | `agent.browser`, `agent.tools` |
-| new | `reasoning`, `mode`, `workspace`, `web_search`, `max_context_chars`, `highlight_actions`. See [Agent](/open-source/agent) |
+| new | `reasoning`, `mode`, `workspace`, `web_search`, `max_context_chars`, `highlight_actions`, `judge`, `judge_context`. See [Agent](/open-source/agent) |
 
 ## Result
 
@@ -530,9 +531,10 @@ Every 0.x `Agent(...)` argument, method and attribute. Removed arguments raise `
 | `history`, `urls()`, `screenshots()`, `screenshot_paths()`, `action_names()`, `action_history()`, `action_results()`, `model_thoughts()`, `model_outputs()`, `model_actions()`, `model_actions_filtered()`, `extracted_content()`, `agent_steps()`, `last_action()`, `add_item()` | dropped (`AttributeError`): there are no per-step actions. Use `result.messages`, `result.partial` and the files in `agent.workspace` |
 | `save_to_file()`, `load_from_file()`, `load_from_dict()`, `model_dump()`, `model_dump_json()`, `save_as_playwright_script()` | dropped |
 | `get_structured_output()` | `result.structured_output` |
-| `judgement()`, `is_judged()`, `is_validated()` | `result.success` |
+| `judgement()` | `result.judgement`, now an attribute (`None` when the run was not judged) |
+| `is_judged()`, `is_validated()` | dropped (`AttributeError`): read `result.judgement` |
 | `input_token_usage()`, `total_input_tokens`, `result.usage.total_cost` | `result.usage['input']`, `result.cost_usd` |
-| new | `status`, `success`, `partial`, `usage`, `cost_usd`, `messages`, `downloads`. See [Output](/open-source/output) |
+| new | `status`, `success`, `partial`, `judgement`, `usage`, `cost_usd`, `messages`, `downloads`. See [Output](/open-source/output) |
 
 ## Browser
 
@@ -628,7 +630,8 @@ Every 0.x module 1.0 does not have, and every 0.x name a kept module lost, raise
 | `browser_use.browser.events`, `AgentHookFunc` | a `logging.Handler` on `browser_use` |
 | `browser_use.controller`, `browser_use.tools.service`, `.registry`, `.views` | `from browser_use import Tools, ActionResult` |
 | `browser_use.agent.views`: `AgentOutput`, `AgentBrain`, `AgentState`, `AgentHistory`, `AgentStepInfo`, `StepMetadata`, `AgentError`, `AgentStructuredOutput` | `AgentHistoryList` and `ActionResult` are kept; the rest is dropped |
-| `browser_use.agent.prompts`, `.message_manager`, `.memory`, `.judge`, `.gif`, `.variable_detector`, `SystemPrompt` | `Agent(extend_system_message=...)` |
+| `browser_use.agent.prompts`, `.message_manager`, `.memory`, `.gif`, `.variable_detector`, `SystemPrompt` | `Agent(extend_system_message=...)` |
+| `browser_use.agent.judge`: `JudgementResult`, `SimpleJudgeResult` | `result.judgement`, a `browser_use.agent.judge.Judgement` |
 | `CodeAgent`, `browser_use.code_use` | `Agent(...)`: the 1.0 agent writes Python itself |
 | `ActionModel` | `@tools.action(...)` on a plain function |
 | `browser_use.dom`, `DomService`, `browser_use.actor` (`Page`, `Element`, `Mouse`) | dropped: the agent drives pages with Python and raw CDP |

@@ -60,7 +60,8 @@ print(result.error)  # what ended the run, or None
 | `steps` | Model requests. |
 | `duration_s` | Seconds. |
 | `usage` | Tokens: `input`, `output`, `cache_read`, `cache_write`, plus `requests`. |
-| `cost_usd` | USD. `None` when the model's price is unknown. See [Models](/open-source/models#usage-and-cost). |
+| `cost_usd` | USD, including the judge request. `None` when the model's price is unknown. See [Models](/open-source/models#usage-and-cost). |
+| `judgement` | The judge's verdict on the run. `None` with `judge=False`, when the run took no step, or when the judge request failed. See [Judge](#judge). |
 | `error` | The error that ended the run, or `None`. `run()` returns errors here instead of raising once the browser start begins; see [Agent: run()](/open-source/agent#run). |
 | `downloads` | Files this run added to `agent.workspace/downloads`. Empty with your Chrome and `cdp_url`. See [Files](/open-source/files#downloads). |
 | `messages` | The full transcript as Pydantic AI messages, with secrets redacted. |
@@ -77,6 +78,37 @@ A run that reaches `max_steps` or the timeout gets one forced delivery turn. If 
 
 For the 0.x default (no verdict counts as success), use `result.is_done() and result.success is not False`.
 
+## Judge
+
+After each run that took a step, one more request to the agent's own model, at low effort, checks the run against the task. The verdict is in `result.judgement`, a `browser_use.agent.judge.Judgement`:
+
+```python
+from browser_use import Agent
+
+agent = Agent('What is the title of https://example.com?', judge_context='The answer is "Example Domain".')
+result = agent.run_sync()
+
+if result.judgement:
+    print(result.judgement.success, result.judgement.failure_reason)
+    for gotcha in result.judgement.gotchas:
+        print('gotcha:', gotcha)
+```
+
+| Field | What it holds |
+|---|---|
+| `success` | `True` when the whole task is done. |
+| `failure_reason` | Why the run failed, in one line. `None` on success. |
+| `description` | What the agent did and what came of it, in 1 to 3 sentences. |
+| `prompt_injection_detected` | A page, file or tool result tried to instruct the agent. |
+| `bot_block_or_captcha_detected` | The agent met a CAPTCHA, a bot check, an access block or a rate limit. |
+| `gotchas` | Up to 5 short, general lessons about the sites for the next agent, such as rate limits, a page order that avoids a block, or a field's required format. May be empty. |
+
+- The judge reads the run as text, without screenshots, with secrets redacted, capped at 120k characters.
+- Its tokens and cost are added to `result.usage` and `result.cost_usd`, also when the judge request fails.
+- A failed judge request logs a warning and leaves `result.judgement` `None`. It never changes the run's own result.
+- `judge_context=` passes your criteria or the expected answer. `judge=False` turns the judge off and sends no request.
+- `result.success` stays the agent's own verdict; `result.judgement.success` is the judge's.
+
 ## Removed from 0.x
 
-There are no per-step actions in 1.0, so `history`, `urls()`, `screenshots()`, `action_names()`, `model_thoughts()`, `extracted_content()`, `save_to_file()`, `load_from_file()`, `judgement()` and similar raise an `AttributeError` that points to the replacement. Use `final_result()`, `structured_output`, `messages`, `partial` and the files in `agent.workspace`.
+There are no per-step actions in 1.0, so `history`, `urls()`, `screenshots()`, `action_names()`, `model_thoughts()`, `extracted_content()`, `save_to_file()`, `load_from_file()`, `is_judged()` and similar raise an `AttributeError` that points to the replacement. Use `final_result()`, `structured_output`, `messages`, `partial` and the files in `agent.workspace`.

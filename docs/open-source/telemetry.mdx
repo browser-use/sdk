@@ -4,7 +4,7 @@ description: "What anonymized usage data browser-use sends, what it never sends,
 icon: "chart-no-axes-column"
 ---
 
-browser-use sends anonymized usage telemetry: model, steps, cost, timing, helper names, the URLs visited (without query strings), error messages and the final result. Never the task text, typed text, code or secrets. `ANONYMIZED_TELEMETRY=false` turns it off, for the library, the CLI and the MCP server:
+browser-use sends anonymized usage telemetry: model, steps, cost, timing, helper names, the URLs visited (without query strings), error messages, the final result and the judge's verdict. Never the task text, `judge_context`, typed text, code or secrets. `ANONYMIZED_TELEMETRY=false` turns it off, for the library, the CLI and the MCP server:
 
 ```bash
 export ANONYMIZED_TELEMETRY=false
@@ -22,7 +22,7 @@ The events go to PostHog so we can see which models, browsers and helpers work, 
 
 ## Never sent
 
-- The task text, follow-up tasks and `extend_system_message`. Where a URL, error message or result quotes the whole task, it is sent as `<task>`.
+- The task text, follow-up tasks, `judge_context` and `extend_system_message`. Where a URL, error message or result quotes the whole task, it is sent as `<task>`.
 - Text typed into pages.
 - The model's messages and thinking, and partial results.
 - Code the model writes, and tracebacks (their frames quote the code). Repeated code is detected by a hash that never leaves the process.
@@ -39,7 +39,7 @@ The events go to PostHog so we can see which models, browsers and helpers work, 
 `agent_event` holds:
 
 - **Install and environment:** browser-use, Python, Pydantic AI and browser-harness versions; OS; whether it runs in Docker, CI or a notebook.
-- **Configuration:** model id and provider, reasoning, mode, `max_steps`, timeout, whether structured output, custom tools (their names), secrets (a count) or a custom workspace are used, and the task's length.
+- **Configuration:** model id and provider, reasoning, mode, `max_steps`, timeout, whether the judge is on and whether `judge_context` is set (never its text), whether structured output, custom tools (their names), secrets (a count) or a custom workspace are used, and the task's length.
 - **Browser:** the mode (cloud, chromium, chrome, cdp), keep-alive, cloud proxy country and timeout, domain restrictions (counts, never the domains) and start time.
 - **Outcome:** status, success, how the result was delivered, the exception class and the phase it happened in, the error messages and the final result (below).
 - **Time:** where the run spent it: browser start, model requests, cells, helpers, waits, compaction, shutdown.
@@ -55,6 +55,7 @@ The text fields, each scrubbed as in [Never sent](#never-sent) before it is cut:
 | `urls_visited` | Pages the agent navigated to, in order, each once, as `scheme://host/path` (http, https, ws, wss). | 50 URLs, 200 characters each |
 | `error_messages` | The run's error (`result.error`), then each failed cell's exception line (`ValueError: message`), each once. | 20 messages, 300 characters each |
 | `final_result` | The result text, or a structured result as JSON. | 500 characters |
+| `judgement` | The [judge's](/open-source/output#judge) answer: `success`, `failure_reason`, `description`, `prompt_injection_detected`, `bot_block_or_captcha_detected`, `gotchas` and the judge's `cost_usd`. `None` when the run was not judged. | 5 gotchas; each text scrubbed and cut as error messages are |
 
 The other fields are numbers, bools, enums, hostnames, or names chosen by browser-use, the developer, Python or an installed package (model id, helper, tool, module, exception class, CDP method).
 
