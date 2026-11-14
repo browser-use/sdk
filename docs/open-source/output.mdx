@@ -104,7 +104,7 @@ if result.judgement:
 | `gotchas` | Up to 5 short, general lessons about the sites for the next agent, such as rate limits, a page order that avoids a block, or a field's required format. Written on a success too, when the site rejected input, errored, blocked or rate-limited the agent. May be empty. |
 
 - The judge reads the run as text, with secrets redacted, capped at 120k characters.
-- With vision on, it also gets up to 4 images: the run's last distinct screenshots and one of the final page, oldest first. Images are sent as they are, not redacted. `use_vision=False` sends text only.
+- With vision on, it also gets up to 4 images: the run's last distinct screenshots and a screenshot of the final page, oldest first. Images are sent as they are, not redacted. `use_vision=False` sends text only.
 - If the model rejects the images (an HTTP 4xx error that mentions `image`), the judge retries once with the text alone. Other failures are not retried.
 - Its tokens and cost are added to `result.usage` and `result.cost_usd`, also when the judge request fails.
 - A failed judge request logs a warning and leaves `result.judgement` `None`. It never changes the run's own result.
