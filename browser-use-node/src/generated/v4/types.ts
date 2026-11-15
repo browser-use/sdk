@@ -1961,11 +1961,25 @@ export interface components {
          * @description Opt-in LLM judgement of the finished run. Presence of this object turns
          *     the judge on (send {} for defaults); CP judges the run's trajectory after
          *     it goes terminal and surfaces the verdict as RunSummary.judgement (null
-         *     until it lands). The judge's LLM call is billed to the run.
+         *     until it lands). Judge model choice is being rolled out. Until it is enabled for a project, judge: {} uses gemini-3-flash and non-null model or modelParams return 422. Once enabled, the default is gpt-6.1-terra with {"reasoning":{"effort":"high"}}. Null means omitted. The judge call is billed to the run at the judge model's token prices.
          */
         RunJudgeSettings: {
             /** Context */
             context?: string | null;
+            /**
+             * Model
+             * @description The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. Null means omitted.
+             * @default null
+             */
+            model?: ("gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash") | null;
+            /**
+             * Modelparams
+             * @description Optional provider-native request parameters for the judge model. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422. Once enabled, omitted or null applies reasoning effort high where supported, otherwise the model's default parameters; {} leaves provider defaults in place. Unsupported paths or values are rejected with 422. context and service_tier are not supported.
+             * @default null
+             */
+            modelParams?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** RunListResponse */
         RunListResponse: {
