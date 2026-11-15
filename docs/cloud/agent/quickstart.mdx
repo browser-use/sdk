@@ -37,6 +37,11 @@ curl https://api.browser-use.com/api/v4/runs \
 ```
 </CodeGroup>
 
+These examples omit `model` and `modelParams`. US projects created on or after
+16 November 2026 use BU 4.0 with High reasoning. Older US projects keep their
+existing default, and EU defaults are unchanged. See
+[Models](/cloud/agent/models) for the full default and availability rules.
+
 Need speed? Set `model` to `bu-ultrafast`. See [BU Ultrafast](/cloud/agent/ultrafast).
 
 Install the latest SDK with `pip install --upgrade browser-use-sdk` or
