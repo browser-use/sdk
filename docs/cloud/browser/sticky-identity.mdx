@@ -1,6 +1,6 @@
 ---
 title: Sticky identity
-description: "Same profile = same fingerprint and same exit IP."
+description: "Same profile = same fingerprint and, best effort, the same exit IP."
 icon: "fingerprint"
 ---
 
@@ -11,7 +11,7 @@ each time: the same fingerprint, and usually the same exit IP.
 | | Without a profile | Same profile |
 | --- | --- | --- |
 | Fingerprint | New random one for each browser | The same one in every browser |
-| Exit IP | Sticky within that browser only | Shared by the profile's browsers (best effort) |
+| Exit IP | Sticky within that browser only | Shared by the profile's browsers with the same proxy country (best effort) |
 | Cookies and localStorage | Start empty | Loaded from the profile |
 
 This works for standalone browsers (`profileId` on `POST /api/v4/browsers`)
@@ -19,13 +19,13 @@ and for agent runs (`browserSettings.profileId`).
 
 ## Same fingerprint
 
-The first browser on a new profile picks a random, realistic fingerprint. When
-the browser stops, the fingerprint is saved to the profile together with
-cookies and localStorage. Every later browser on that profile loads it.
+The first browser on a new profile picks a random, realistic fingerprint. It is
+saved to the profile together with cookies and localStorage, and every later
+browser on that profile loads it.
 
 The saved fingerprint includes:
 
-- the user agent, platform, and other `navigator` values
+- the user agent, platform, and hardware values in `navigator`
 - the screen size
 - the GPU and WebGL vendor and renderer
 - memory, storage, battery, and media device details
@@ -37,9 +37,11 @@ These still change from browser to browser, even on the same profile:
   and checks it again while it runs.
 - **Language.** `navigator.language` and `navigator.languages` follow
   `proxyCountryCode`. Use the same country to keep them the same.
-- **Custom screen size.** Once the profile has a fingerprint,
-  `browserScreenWidth` and `browserScreenHeight` apply to that browser only.
-  The saved fingerprint keeps its screen size.
+- **Network info.** `navigator.connection` (`rtt`, `downlink`,
+  `effectiveType`) is picked again for each browser.
+- **Custom screen size.** A custom screen size (`browserScreenWidth` and
+  `browserScreenHeight`, or `screenWidth` and `screenHeight` in a run's
+  `browserSettings`) applies to that browser only. The profile never saves it.
 
 A profile gets a new fingerprint when:
 
@@ -49,8 +51,8 @@ A profile gets a new fingerprint when:
 - No browser has saved the profile yet, for example because the first browser
   crashed.
 
-If a browser cannot load the profile, it starts with a fresh fingerprint and
-does not save. The stored fingerprint stays for the next browser.
+If a browser cannot load the profile, it does not overwrite the stored
+profile. The stored fingerprint stays for the next browser.
 
 The API does not return the fingerprint, and you cannot set it yourself.
 
@@ -70,10 +72,12 @@ that run at the same time.
 The IP also changes when:
 
 - You change `proxyCountryCode`.
-- You change a running browser's proxy with `rotate`, a `target`, or a new
-  country ([Change the proxy of a running browser](/cloud/browser/proxies#change-the-proxy-of-a-running-browser)).
-  Only that browser moves to a new IP. The change is not saved to the profile,
-  so the next browser on the profile goes back to the profile's proxy session.
+- You change a running standalone browser's proxy: `rotate`, a `target`, a
+  new country, or switching the mode away from managed and back
+  ([Change the proxy of a running browser](/cloud/browser/proxies#change-the-proxy-of-a-running-browser)).
+  Only that browser moves to a new IP, and it does not return to the profile's
+  IP. The change is not saved to the profile, so the next browser on the
+  profile goes back to the profile's proxy session.
 
 Without a profile, each browser gets its own proxy session. Its IP is sticky
 for that browser only.
@@ -100,9 +104,17 @@ profile ID.
 A site that keeps its login token in IndexedDB may not stay logged in through
 a profile. Expired cookies are dropped when the profile is saved.
 
-The profile is saved once, when the browser stops. If a browser could not fully
-load or restore the profile, it does not save, so it cannot overwrite the
-stored profile with partial data.
+By default, changes are saved to the profile when the browser stops. The save
+can finish up to about 30 seconds after the stop call returns. If a
+browser could not fully load or restore the profile, it does not save, so it
+cannot overwrite the stored profile with partial data.
+
+<Note>
+  The save timing here and the parallel behavior below describe the default
+  profile mode. Some projects use a newer mode that syncs cookies and
+  localStorage while the browser runs. On those projects the behavior can
+  differ.
+</Note>
 
 ## Several browsers on one profile
 
@@ -112,18 +124,18 @@ and no error.
 - They share the profile's fingerprint, once the profile has been saved.
 - With the same `proxyCountryCode`, they share the exit IP.
 - By default, each browser loads the profile when it starts and saves it when
-  it stops. The last browser to stop overwrites the saved cookies and
-  localStorage. Changes from browsers that stopped earlier are lost if the last
-  browser did not have them.
+  it stops, so a later save can overwrite an earlier one. Do not rely on which
+  browser's cookies and localStorage are kept.
 
 The safe pattern is one writer, then many readers:
 
-1. Start one browser on the profile, log in, and stop it.
+1. Start one browser on the profile, log in, stop it, and wait about 30
+   seconds for the save.
 2. Then start the parallel browsers. Do not log in or out in them.
 
 On a brand-new profile, run and stop one browser before you start browsers in
-parallel. Otherwise each parallel browser picks its own random fingerprint, and
-only one of them is kept.
+parallel. Otherwise the parallel browsers may pick different fingerprints, and
+later browsers keep only one of them.
 
 `DELETE /api/v4/profiles/{id}` returns `409` with "Profile is in use. Stop its
 sessions and try again." while a browser or run still uses the profile.
@@ -165,7 +177,7 @@ def check(client, profile_id):
 with BrowserUse() as client:
     profile = client.profiles.create(name="sticky-identity-check")
     check(client, str(profile.id))
-    time.sleep(10)  # The first browser saves the profile when it stops.
+    time.sleep(30)  # Saving can take up to about 30 seconds after stop.
     check(client, str(profile.id))
     check(client, None)  # No profile: new fingerprint, new proxy session.
 ```
