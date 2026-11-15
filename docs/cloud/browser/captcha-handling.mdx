@@ -17,35 +17,44 @@ residential proxies, which is separate from automatic CAPTCHA solver coverage.
 
 ## Supported challenges
 
-The `vendor` value is what the [solver events](#solver-events) report. The time
-limit is how long one solve attempt may run before the solver gives up.
+The `vendor` value is what the [solver events](#solver-events) report.
 
-| `vendor` | Challenge | Time limit |
-| --- | --- | --- |
-| `cloudflare` | Cloudflare Turnstile | 55 s |
-| `recaptcha` | Google reCAPTCHA v2 and reCAPTCHA Enterprise | 120 s |
-| `perimeterx` | PerimeterX press-and-hold | 25 s |
-| `datadome` | DataDome | 25 s |
-| `hcaptcha` | hCaptcha | 120 s |
-| `geetest` | GeeTest v3 and v4 | 120 s |
-| `text` | Image-to-text CAPTCHA in a form | 60 s |
-| `amazon` | Amazon `validateCaptcha` page | 10 s |
-| `awswaf` | AWS WAF CAPTCHA | 120 s |
-| `temu` | Temu image-grid challenge | 120 s |
-| `akamai` | Akamai block page | 20 s |
+| `vendor` | Challenge |
+| --- | --- |
+| `cloudflare` | Cloudflare Turnstile, including Cloudflare challenge pages |
+| `recaptcha` | Google reCAPTCHA v2 and reCAPTCHA Enterprise |
+| `perimeterx` | PerimeterX press-and-hold |
+| `datadome` | DataDome |
+| `hcaptcha` | hCaptcha |
+| `geetest` | GeeTest v3 and v4 |
+| `text` | Image-to-text CAPTCHA in a form |
+| `amazon` | Amazon `validateCaptcha` page |
+| `awswaf` | AWS WAF CAPTCHA |
+| `temu` | Temu image-grid challenge |
+| `akamai` | Akamai block page |
 
-The `text` solver looks for a form that holds an image and a text field whose
-attributes contain "captcha". It types the answer but does not submit the form,
-so click submit yourself.
+The `text` solver looks for a form with an image whose `src`, `alt`, `id` or
+`class` contains "captcha" and a text field whose `name`, `id` or `placeholder`
+contains "captcha". It types the answer but does not submit the form, so click
+submit yourself. On Amazon's `validateCaptcha` page the `amazon` solver submits
+it for you. For `text`, `success: true` means the answer was typed, not that
+the site accepted it.
 
 CAPTCHA solving is not guaranteed.
 
 ## When a CAPTCHA appears
 
 Stop driving the page and let the solver work. Do not refresh, click the
-challenge, or replace the browser while a solve is running. A solve can take up
-to the time limit above, so do not give up after a few seconds. Use the
-[solver events](#solver-events) to know exactly when it finishes.
+challenge, or replace the browser while a solve is running. Most solves take
+seconds, and one attempt can take up to about 2 minutes, so do not give up
+after a few seconds. If an attempt fails and the challenge is still there, the
+solver tries again about 30 seconds later. These timings are internal and change
+without notice: wait for `captchaSolverFinished` from the
+[solver events](#solver-events) instead of sizing your timeouts from them.
+
+The open-source browser-use agent waits for the solver for up to 95 seconds
+(see `captcha_solver` in [Browser settings](/open-source/browsers)), so it can
+move on before a long solve finishes.
 
 If the challenge remains, open the [live preview](/cloud/browser/live-preview)
 for human control. If the whole site is blocking the browser rather than
@@ -140,7 +149,20 @@ class CaptchaWatcher:
 async def main():
     watcher = CaptchaWatcher()
     listener = asyncio.create_task(watcher.listen(CDP_URL))
-    await asyncio.wait_for(watcher.ready.wait(), 10)
+    # Report it if the listener socket drops later, since events stop arriving.
+    listener.add_done_callback(
+        lambda t: t.cancelled() or print("captcha listener stopped:", t.exception())
+    )
+    ready = asyncio.create_task(watcher.ready.wait())
+    done, _ = await asyncio.wait(
+        {ready, listener}, timeout=10, return_when=asyncio.FIRST_COMPLETED
+    )
+    if listener in done:
+        listener.result()  # raises the real connection error
+    if ready not in done:
+        ready.cancel()
+        listener.cancel()
+        raise TimeoutError("captcha listener did not connect within 10 s")
 
     async with async_playwright() as p:
         browser = await p.chromium.connect_over_cdp(CDP_URL)
@@ -226,6 +248,11 @@ await browser.disconnect();
 Two CDP commands control the solver while the browser runs. Send them on any
 CDP session or connection to the browser.
 
+`"solveCaptchas"` only sets the starting value.
+`BrowserUse.setCaptchaSolverEnabled` with `enabled: true` turns the solver on
+even for a browser created with `"solveCaptchas": false`. Turning it on is not
+supported on [EU browsers](#eu-deployment).
+
 | Command | Params | Returns |
 | --- | --- | --- |
 | `BrowserUse.setCaptchaSolverEnabled` | `{ "enabled": boolean }` | `{ "enabled": boolean }` |
@@ -233,7 +260,9 @@ CDP session or connection to the browser.
 
 - The switch covers the whole browser: every tab, every CDP connection, and
   tabs opened later. It is not per tab.
-- Turning it off stops the browser from looking for new challenges.
+- Turning it off stops the browser from looking for new challenges. A solve
+  that is already running keeps going and still sends `captchaSolverFinished`,
+  so wait for it.
 - If `enabled` is missing or not a boolean, the command fails with CDP error
   `-32602`.
 - `BrowserUse.captchaSolverStateChanged` is sent only when the value actually
@@ -242,7 +271,8 @@ CDP session or connection to the browser.
   value.
 
 <CodeGroup>
-```python Python
+```python Playwright (Python)
+# `browser` comes from p.chromium.connect_over_cdp(CDP_URL), as in the example above.
 cdp = await browser.new_browser_cdp_session()
 await cdp.send("BrowserUse.setCaptchaSolverEnabled", {"enabled": False})
 # ... handle the challenge yourself ...
@@ -258,9 +288,9 @@ await session.send("BrowserUse.setCaptchaSolverEnabled", { enabled: true });
 
 ## EU deployment
 
-Automatic CAPTCHA solving is not available on the
+Automatic CAPTCHA solving is not supported on the
 [EU route](/cloud/eu-deployment). Browsers there start with the solver off, and
-creating a browser with `"solveCaptchas": true` returns `422`. Leave the solver
-off on EU browsers.
+creating a browser with `"solveCaptchas": true` returns `422`. Do not call
+`BrowserUse.setCaptchaSolverEnabled` with `enabled: true` on EU browsers.
 
 For a specific CAPTCHA or anti-bot issue, email [contact@browser-use.com](mailto:contact@browser-use.com).
