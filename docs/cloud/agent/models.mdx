@@ -4,12 +4,23 @@ description: "Choose a V4 model and understand its token pricing."
 icon: "cpu"
 ---
 
-Omit `model` and `modelParams` to use **GPT-6 Luna with High reasoning**, or pass explicit settings when creating a run. EU uses the same task default through its regional provider route; Bedrock-only projects retain their compatible default.
+In the US, projects created on or after **16 November 2026** that omit `model`
+use **BU 4.0**; omitting `modelParams` applies **High reasoning**.
+In the web app, users without a saved model choice start on **BU 4.0**.
+
+Older US projects keep **GPT-6 Luna with High reasoning** when `model` and
+`modelParams` are omitted. EU defaults are unchanged: **GPT-6 Luna with High
+reasoning** through its regional provider route. Bedrock-only projects retain
+their compatible default. Explicit settings take precedence.
+
 The following Browser Use-hosted models have published token pricing:
 
 | Model | API string | Input | Cache read | Output | BYOK |
 | ----- | ---------- | ----: | ---------: | -----: | ---- |
-| GPT-6 Luna (default) | `gpt-6-luna` | \$0.12 | \$0.012 | \$0.60 | OpenAI |
+| BU 4.0 Mini | `bu-4.0-mini` | \$0.20 | \$0.02 | \$1.00 | — |
+| BU 4.0 (new US project default) | `bu-4.0` | \$1.80 | \$0.09 | \$9.00 | — |
+| BU 4.0 Pro | `bu-4.0-pro` | \$3.00 | \$0.15 | \$15.00 | — |
+| GPT-6 Luna | `gpt-6-luna` | \$0.12 | \$0.012 | \$0.60 | OpenAI |
 | GPT-5.6 Luna | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
 | Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
 | Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
@@ -28,10 +39,29 @@ See [Thinking levels](/cloud/agent/thinking-levels) for V4 `modelParams` and
 the normalized `thinkingLevel` values available in V2 and V3.
 
 <Tip>
-  Use **GPT-6 Luna with High reasoning** for the default V4 configuration.
-  Omit both `model` and `modelParams` to let the API apply it. For low latency,
-  set `model: "bu-ultrafast"` ([BU Ultrafast](/cloud/agent/ultrafast)).
+  Omit both `model` and `modelParams` to use your project's default described
+  above. To choose BU 4.0 explicitly, set `model: "bu-4.0"`; omitting
+  `modelParams` applies High reasoning. For low latency, set
+  `model: "bu-ultrafast"` ([BU Ultrafast](/cloud/agent/ultrafast)).
 </Tip>
+
+## BU 4.0 models
+
+Browser Use's own models share one adjustable reasoning setting:
+`modelParams.reasoning.effort` accepts `low`, `medium`, `high`, or `xhigh`,
+with `high` by default.
+
+- **BU 4.0 Mini** (`bu-4.0-mini`) is fast and low cost, available in the US and EU.
+- **BU 4.0** (`bu-4.0`) offers the best balance and is the new US project default.
+- **BU 4.0 Pro** (`bu-4.0-pro`) is the most capable.
+
+BU 4.0 and BU 4.0 Pro are US-only for now. All three use standard processing
+only, with no fast or priority service tiers. They always run on Browser Use's
+platform route; a project's own provider keys are not used for them.
+BU 4.0 and BU 4.0 Mini are available on the free plan; BU 4.0 Pro needs credits.
+
+Each model ID stays pinned with no silent upgrades. Future generations use
+versioned IDs such as `bu-5.0`, `bu-5.0-pro`, and `bu-5.0-mini`.
 
 ## All supported V4 model IDs
 
@@ -53,9 +83,12 @@ from the dashboard picker.
 | Xiaomi | `mimo-v2.6-pro`, `mimo-v2.6-flash` | — |
 | Moonshot AI | `kimi-k3` | — |
 | MiniMax | `minimax-m3` | — |
+| Browser Use | `bu-4.0-mini`, `bu-4.0`, `bu-4.0-pro` | — |
 | Browser Use | `bu-ultrafast`, `bu-fast` | OpenAI |
 
-Free-plan projects (no credits purchased yet) can use only `gpt-6-luna`,
+Free-plan projects (no credits purchased yet) can use `bu-4.0` and
+`bu-4.0-mini`, plus
+`gpt-6-luna`,
 `gpt-5.6-luna`, `deepseek-v4.1-flash`, `gemini-3-flash`, `minimax-m3`, and
 the `bu-ultrafast` and `bu-fast` presets; other models return 403
 until you buy credits. Zero Data Retention projects
@@ -65,9 +98,9 @@ cannot use `claude-fable-5`, `deepseek-v4.1-flash`, `mimo-v2.6-pro`, or
 See [Thinking levels](/cloud/agent/thinking-levels) for the reasoning controls
 accepted by each model. Not every model accepts `modelParams`.
 
-If your installed TypeScript SDK does not yet list `gpt-6-luna`, omit both
-`model` and `modelParams` as below to use the API default, or use REST to select
-that model explicitly. The API model catalog can advance before SDK type releases.
+The examples below omit both `model` and `modelParams` to use your project's
+default. If your installed SDK does not yet list a new model ID, use REST to
+select it explicitly. The API model catalog can advance before SDK type releases.
 
 <CodeGroup>
 ```python Python
@@ -101,3 +134,6 @@ API Keys → Bring Your Own Key**. V4 uses it automatically for matching models;
 no request flag is needed. You pay the provider directly, plus a 0.2× Browser
 Use orchestration fee. Models from other providers use Browser Use-managed
 keys.
+
+BU 4.0 models always use Browser Use's platform route, even when the project
+has its own provider keys.

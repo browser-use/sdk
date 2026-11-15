@@ -6,12 +6,17 @@ icon: "messages-square"
 
 ## Which model should I use?
 
-- **GPT-6 Luna** (`gpt-6-luna`, recommended) with High reasoning is the V4 default and the low-cost pick for simple and high-volume tasks. Omit `model` and `modelParams` to use it; Bedrock-only projects retain their compatible default.
+- **BU 4.0** (`bu-4.0`) with High reasoning offers the best balance. It is the default when `model` is omitted for US projects created on or after 16 November 2026; omit `modelParams` to apply High reasoning. Web app users without a saved model choice start on BU 4.0.
+- **BU 4.0 Mini** (`bu-4.0-mini`) is fast and low cost, available in the US and EU.
+- **BU 4.0 Pro** (`bu-4.0-pro`) is the most capable and needs credits. Like BU 4.0, it is US-only for now.
 - **GPT-6.1 Sol** (`gpt-6.1-sol`) — harder reasoning.
 - **Claude Opus 5** (`claude-opus-5`) — the hardest work.
 - **BU Ultrafast** (`bu-ultrafast`) for latency-sensitive tasks. See [BU Ultrafast](/cloud/agent/ultrafast).
 
-See [Models](/cloud/agent/models) for the complete V4 picker and pricing.
+Older US projects keep GPT-6 Luna with High reasoning when both fields are
+omitted. EU defaults are unchanged; Bedrock-only projects retain their
+compatible default. See [Models](/cloud/agent/models) for the complete V4
+picker, availability, and pricing.
 
 ## How do I get the live browser URL?
 
