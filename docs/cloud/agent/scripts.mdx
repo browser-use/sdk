@@ -1,176 +1,189 @@
 ---
-title: Rerunnable scripts
-description: "Save a Browser Use task as a rerunnable script for repeated live data extraction and self-healing runs."
+title: "Deterministic rerun: reusable browser automation scripts"
+sidebarTitle: "Deterministic rerun"
+description: "Prompt a Cloud agent once. It writes, tests and saves a script in its workspace. Later runs reuse it: 6-12x fewer steps, 4-6x faster, live data."
 icon: "file-code"
+keywords: ["deterministic rerun", "deterministic scripts", "browser automation script reuse", "rerunnable scripts", "reusable scraping script", "cache_script"]
 ---
 
-Teach a Cloud agent a repeated browser task once. It can save the working code
-in its [workspace](/cloud/agent/workspaces). Later runs reuse that script,
-fetch fresh data from the live site, and repair the code if the site changed.
+Deterministic rerun means you teach a Cloud agent a browser task once, and
+every later run replays a saved script instead of exploring the site again.
+The first run explores the site, writes a script, tests it, and saves it in its
+[workspace](/cloud/agent/workspaces). Later runs with the same `workspace_id`
+run that script against the live site and fix it if the site changed.
 
-This pattern works well for repeated data extraction, checks, and reports. The
-example below collects the top five Hacker News stories. The first run writes
-and tests the script. Every later run sends a new request to the live page.
+It suits work you repeat: scraping, monitoring, reports and checks.
+
+## Measured: first run vs rerun
+
+Same task text, same workspace, BU 4.0, 15 November 2026. Each number is the
+median of 3 runs. Steps are model calls, counted from each run's event log.
+
+| Task | One-off run (no script) | Rerun with saved script | Gain |
+| --- | --- | --- | --- |
+| Hacker News: 30 stories + each top comment | 13 steps, 55 s, \$0.097 LLM | 2 steps, 14 s, \$0.027 LLM | 6.5x fewer steps, 3.9x faster |
+| YC Summer 2025: every company + founders | 25 steps, 130 s, \$0.184 LLM | 2 steps, 28 s, \$0.025 LLM | 12.5x fewer steps, 4.7x faster |
+| GitHub trending: every repo page | 20 steps, 178 s, \$0.204 LLM | 2 steps, 30 s, \$0.026 LLM | 10x fewer steps, 5.9x faster |
+
+- **One-off run:** the task without the reuse instructions, in a new workspace.
+- **First run with reuse instructions** costs more than a one-off run because
+  it also writes and tests the script: 15, 24 and 32 steps on the three tasks.
+- **Total cost** (LLM + browser + proxy) fell 1.7-2.6x, not as much as the
+  LLM cost. Every run still starts a browser, and pages fetched through the
+  proxy still cost the same.
+- **New input:** a rerun with a new input used the same script too: Hacker News
+  page 2 and GitHub weekly trending took 2 steps each.
 
 <picture className="block dark:hidden">
   <source media="(max-width: 600px)" srcSet="/cloud/images/v4-scripts-light-mobile.svg" />
-  <img src="/cloud/images/v4-scripts-light.svg" alt="A first agent run writes and tests extract_top_stories.py in a workspace. Later runs pass workspace_id to reuse the script, send a fresh request to the live site each time, and repair the script if it breaks." noZoom />
+  <img src="/cloud/images/v4-scripts-light.svg" alt="A first agent run explores the site, then writes and tests scripts/gh_trending.py in a workspace and notes the command in AGENTS.md. Later runs pass the same workspace_id, run the saved script against the live site in 2 steps, and repair it if it breaks." noZoom />
 </picture>
 <picture className="hidden dark:block">
   <source media="(max-width: 600px)" srcSet="/cloud/images/v4-scripts-dark-mobile.svg" />
-  <img src="/cloud/images/v4-scripts-dark.svg" alt="A first agent run writes and tests extract_top_stories.py in a workspace. Later runs pass workspace_id to reuse the script, send a fresh request to the live site each time, and repair the script if it breaks." noZoom />
+  <img src="/cloud/images/v4-scripts-dark.svg" alt="A first agent run explores the site, then writes and tests scripts/gh_trending.py in a workspace and notes the command in AGENTS.md. Later runs pass the same workspace_id, run the saved script against the live site in 2 steps, and repair it if it breaks." noZoom />
 </picture>
 
-<Note>
-  The file stays. The running process does not. Each later run starts an agent
-  again, but it can reuse the code instead of rebuilding the browser workflow.
-</Note>
+## Run it
 
-## Save the working script
-
-Create one workspace, then ask the first run to do the job and save a tested
-script:
+Send the same task to the same workspace every time. Put the reuse
+instructions at the end of the task. These are the exact instructions behind
+the numbers above:
 
 <CodeGroup>
 ```python Python
 from browser_use_sdk.v4 import BrowserUse
 
-client = BrowserUse()
-workspace = client.workspaces.create(name="live-hn-data")
-
-first = client.runs.create(
-    """
-    Open https://news.ycombinator.com/ and return the top five story titles and
-    URLs as JSON.
-
-    Save a script at scripts/extract_top_stories.py that collects the same
-    fields. The script must send a fresh request to the live page every time it
-    runs. Do not hard-code story titles, save the page HTML, or read an old
-    result. Print JSON with source_url set to https://news.ycombinator.com/ and
-    include fetched_at, source_sha256, and stories.
-
-    Run the script twice and save the outputs as proof/run-1.json and
-    proof/run-2.json. Confirm both outputs have a fresh fetched_at value and
-    five stories. Add scripts/README.md with the command to run it again.
-    """,
-    model="gpt-5.6-luna",
-    model_params={"reasoning": {"effort": "xhigh"}},
-    workspace_id=workspace.id,
+TASK = (
+    "Open https://github.com/trending?since={since} and, for every trending "
+    "repository, open its repo page and get: owner/name, stars, forks, "
+    "license, latest release tag and date (or none), and the top 3 "
+    "contributors' usernames. Save the data to "
+    "outputs/gh-trending-{since}.json and reply with the repo count and the "
+    "first 3 rows."
+    " I run this regularly with different inputs. If AGENTS.md lists a saved "
+    "script for this task, run it directly (don't re-read or re-test it), "
+    "then reply. Only if it is missing or fails: do the task, save a tested "
+    "script under scripts/ that takes the input as an argument, and add one "
+    "line to AGENTS.md with the exact command."
 )
-client.runs.wait_for_completion(first.id)
 
-saved = client.workspaces.files(workspace.id, prefix="scripts/")
-print([file.path for file in saved.files])
-print(f"Keep this workspace ID: {workspace.id}")
+client = BrowserUse()
+workspace = client.workspaces.create(name="github-trending")
+
+
+def scrape(since: str):
+    run = client.runs.create(
+        TASK.format(since=since),
+        model="bu-4.0",
+        workspace_id=workspace.id,
+    )
+    return client.runs.wait_for_completion(run.id)
+
+
+first = scrape("daily")  # explores the site, saves scripts/gh_trending.py
+later = scrape("daily")  # runs the saved script
+weekly = scrape("weekly")  # new input, same script
+print(later.result, later.total_cost_usd)
 ```
 ```typescript TypeScript
 import { BrowserUse } from "browser-use-sdk/v4";
 
+const task = (since: string) =>
+  `Open https://github.com/trending?since=${since} and, for every trending ` +
+  "repository, open its repo page and get: owner/name, stars, forks, " +
+  "license, latest release tag and date (or none), and the top 3 " +
+  "contributors' usernames. Save the data to " +
+  `outputs/gh-trending-${since}.json and reply with the repo count and the ` +
+  "first 3 rows." +
+  " I run this regularly with different inputs. If AGENTS.md lists a saved " +
+  "script for this task, run it directly (don't re-read or re-test it), " +
+  "then reply. Only if it is missing or fails: do the task, save a tested " +
+  "script under scripts/ that takes the input as an argument, and add one " +
+  "line to AGENTS.md with the exact command.";
+
 const client = new BrowserUse();
-const workspace = await client.workspaces.create({ name: "live-hn-data" });
+const workspace = await client.workspaces.create({ name: "github-trending" });
 
-const first = await client.runs.create({
-  task: `
-    Open https://news.ycombinator.com/ and return the top five story titles and
-    URLs as JSON.
+async function scrape(since: string) {
+  const run = await client.runs.create({
+    task: task(since),
+    model: "bu-4.0",
+    workspaceId: workspace.id,
+  });
+  return client.runs.waitForCompletion(run.id);
+}
 
-    Save a script at scripts/extract_top_stories.py that collects the same
-    fields. The script must send a fresh request to the live page every time it
-    runs. Do not hard-code story titles, save the page HTML, or read an old
-    result. Print JSON with source_url set to https://news.ycombinator.com/ and
-    include fetched_at, source_sha256, and stories.
+const first = await scrape("daily"); // explores the site, saves scripts/gh_trending.py
+const later = await scrape("daily"); // runs the saved script
+const weekly = await scrape("weekly"); // new input, same script
+console.log(later.result, later.totalCostUsd);
+```
+</CodeGroup>
 
-    Run the script twice and save the outputs as proof/run-1.json and
-    proof/run-2.json. Confirm both outputs have a fresh fetched_at value and
-    five stories. Add scripts/README.md with the command to run it again.
-  `,
-  model: "gpt-5.6-luna",
-  modelParams: { reasoning: { effort: "xhigh" } },
-  workspaceId: workspace.id,
-});
-await client.runs.waitForCompletion(first.id);
+Keep the workspace ID. A rerun can come from another process days later: pass
+the same `workspace_id` / `workspaceId` and the same task.
 
-const saved = await client.workspaces.files(workspace.id, {
+## How it works
+
+1. **The first run** explores the site like any agent run. Then it writes a
+   script under `scripts/`, runs it to check the output, and adds one line to
+   `AGENTS.md` with the exact command.
+2. **The workspace keeps both files.** Every run in that workspace starts with
+   the workspace files restored, and every agent reads `AGENTS.md` first.
+3. **A rerun** sees the command in `AGENTS.md`, runs the script, and replies.
+   That is 2 model calls: one to run the script, one to answer.
+4. **If the script fails**, the agent sees the error, fixes the script, saves
+   it, and replies. In our YC test, a new input (Spring 2025) hit a company
+   with no one-liner. The agent patched the script and reran it: 17 steps,
+   still fewer than a run from scratch, and later runs reuse the fixed script.
+
+The script fetches the live site on every run. It is not a cached answer.
+
+## Tips for the biggest savings
+
+- **Write data to a file in `outputs/`** and reply with a short summary. A long
+  JSON reply costs model time on every run: in our first tests, typing 150
+  rows back took about 57 s of a rerun.
+- **Ask for the input as an argument** ("takes the input as an argument") so a
+  new page, date or keyword reuses the same script.
+- **Save scripts under `scripts/`.** You can list and download them, and they
+  persist across runs.
+- **Tell the agent not to re-read or re-test the script.** Without that line,
+  reruns took 7-11 steps instead of 2 because the agent checked its work.
+- **Use one workspace per job.** Two jobs that share a workspace share
+  `AGENTS.md`, which makes it harder for the agent to pick the right script.
+
+## Download the script
+
+The script is a normal file. Run it yourself, review it, or keep it in git:
+
+<CodeGroup>
+```python Python
+files = client.workspaces.files(workspace.id, prefix="scripts/", include_urls=True)
+for f in files.files:
+    print(f.path, f.url)
+```
+```typescript TypeScript
+const files = await client.workspaces.files(workspace.id, {
   prefix: "scripts/",
+  includeUrls: true,
 });
-console.log(saved.files.map((file) => file.path));
-console.log(`Keep this workspace ID: ${workspace.id}`);
+for (const f of files.files) console.log(f.path, f.url);
 ```
 </CodeGroup>
-
-## Rerun it later
-
-Copy the workspace ID from the first process. Pass that ID without a session ID
-to start a new conversation with the saved files:
-
-<CodeGroup>
-```python Python
-from browser_use_sdk.v4 import BrowserUse
-
-client = BrowserUse()
-workspace_id = "your-workspace-id"
-
-later = client.runs.create(
-    """
-    Run python scripts/extract_top_stories.py and return its JSON. Check that
-    fetched_at is current, source_url is https://news.ycombinator.com/, and it
-    has five stories. If the script fails or the result is malformed, inspect
-    the live page and repair the saved script before returning the new result.
-    """,
-    model="gpt-5.6-luna",
-    model_params={"reasoning": {"effort": "xhigh"}},
-    workspace_id=workspace_id,
-)
-result = client.runs.wait_for_completion(later.id)
-print(result.result)
-```
-```typescript TypeScript
-import { BrowserUse } from "browser-use-sdk/v4";
-
-const client = new BrowserUse();
-const workspaceId = "your-workspace-id";
-
-const later = await client.runs.create({
-  task: `
-    Run python scripts/extract_top_stories.py and return its JSON. Check that
-    fetched_at is current, source_url is https://news.ycombinator.com/, and it
-    has five stories. If the script fails or the result is malformed, inspect
-    the live page and repair the saved script before returning the new result.
-  `,
-  model: "gpt-5.6-luna",
-  modelParams: { reasoning: { effort: "xhigh" } },
-  workspaceId,
-});
-const result = await client.runs.waitForCompletion(later.id);
-console.log(result.result);
-```
-</CodeGroup>
-
-## Live data, not a cached answer
-
-The saved script must request the source page on every execution. `fetched_at`
-shows when the request ran, and `source_sha256` identifies the response body.
-The data can stay the same between two runs when the page has not changed. The
-script still fetched it again.
-
-Do not put old output, page HTML, or fixed values inside the script. Save output
-files only as optional history or proof.
-
-## Can rerunnable tasks be cheaper at scale?
-
-Reusing code can remove browser steps and model work that would otherwise be
-repeated on every extraction. Every later run still starts a model and uses
-tokens, so the savings depend on the task, site, and model. Compare the cost and
-duration of the first run with later runs in your own project before making a
-savings claim.
 
 ## Workspace or session?
 
 - Pass `workspace_id` / `workspaceId` for a new conversation with the same
-  files. The new run gets a new browser.
+  files. Use this for reruns: each run starts clean and reads `AGENTS.md`.
 - Pass `session_id` / `sessionId` to continue the old conversation and its
   workspace. Cloud can also reuse that session's browser while it is still
   alive.
 
-A saved script can break when a site changes. Ask the agent to check the live
-result and self-heal the script instead of trusting stale output.
+## Coming from V3 `cache_script`?
+
+V3 hashed a task template with `@{{params}}` and ran a cached script on the
+server with no model call. In V4 the agent itself writes, runs and repairs the
+script, so you get the same reuse plus repair when a site changes. Each rerun
+still makes about 2 model calls (\$0.02-0.03 in the tests above). The V3
+fields stay in the [V3 API reference](/cloud/api-v3/sessions/create-session).

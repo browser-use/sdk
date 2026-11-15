@@ -1109,6 +1109,14 @@
       "destination": "/cloud/agent/scripts"
     },
     {
+      "source": "/cloud/agent/deterministic-rerun",
+      "destination": "/cloud/agent/scripts"
+    },
+    {
+      "source": "/cloud/agent/rerunnable-scripts",
+      "destination": "/cloud/agent/scripts"
+    },
+    {
       "source": "/tips/integrations/playwright",
       "destination": "/cloud/browser/playwright-puppeteer-selenium"
     },
