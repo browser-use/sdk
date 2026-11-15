@@ -1,6 +1,6 @@
 ---
 title: CAPTCHA handling
-description: "Cloud browsers solve supported CAPTCHA challenges automatically."
+description: "Cloud browsers solve supported CAPTCHA challenges automatically. Listen for solver events over CDP and wait for a solve to finish."
 icon: "shield-check"
 ---
 
@@ -11,20 +11,256 @@ For a standalone browser created with `POST /api/v4/browsers`, set
 `"solveCaptchas": false` to handle challenges yourself. This standalone-browser
 field is not currently part of V4 run `browserSettings`.
 
-The automatic solver handles **CAPTCHAs**. Cloudflare and other bot walls are handled by the browser's stealth layer and residential proxies, not by the CAPTCHA solver.
+The solver handles the challenge types listed below. Blocks it does not
+recognize are left to the browser's [stealth layer](/cloud/browser/stealth) and
+residential proxies, which is separate from automatic CAPTCHA solver coverage.
 
-Other anti-bot pages may still be passed by the browser's stealth protections
-or residential proxy. That is separate from automatic CAPTCHA solver coverage.
+## Supported challenges
+
+The `vendor` value is what the [solver events](#solver-events) report. The time
+limit is how long one solve attempt may run before the solver gives up.
+
+| `vendor` | Challenge | Time limit |
+| --- | --- | --- |
+| `cloudflare` | Cloudflare Turnstile | 55 s |
+| `recaptcha` | Google reCAPTCHA v2 and reCAPTCHA Enterprise | 120 s |
+| `perimeterx` | PerimeterX press-and-hold | 25 s |
+| `datadome` | DataDome | 25 s |
+| `hcaptcha` | hCaptcha | 120 s |
+| `geetest` | GeeTest v3 and v4 | 120 s |
+| `text` | Image-to-text CAPTCHA in a form | 60 s |
+| `amazon` | Amazon `validateCaptcha` page | 10 s |
+| `awswaf` | AWS WAF CAPTCHA | 120 s |
+| `temu` | Temu image-grid challenge | 120 s |
+| `akamai` | Akamai block page | 20 s |
+
+The `text` solver looks for a form that holds an image and a text field whose
+attributes contain "captcha". It types the answer but does not submit the form,
+so click submit yourself.
+
+CAPTCHA solving is not guaranteed.
 
 ## When a CAPTCHA appears
 
-Stop driving the page, wait about 10 seconds, then inspect it again. Do not
-refresh, click the challenge, or replace the browser while the solver is
-working.
+Stop driving the page and let the solver work. Do not refresh, click the
+challenge, or replace the browser while a solve is running. A solve can take up
+to the time limit above, so do not give up after a few seconds. Use the
+[solver events](#solver-events) to know exactly when it finishes.
 
-CAPTCHA solving is not guaranteed. If the challenge remains, open the
-[live preview](/cloud/browser/live-preview) for human control. If the whole
-site is blocking the browser rather than showing a challenge, try a different
-[proxy country](/cloud/browser/proxies).
+If the challenge remains, open the [live preview](/cloud/browser/live-preview)
+for human control. If the whole site is blocking the browser rather than
+showing a challenge, try a different [proxy country](/cloud/browser/proxies).
+
+## Solver events
+
+Every cloud browser answers a custom `BrowserUse` CDP domain on its `cdpUrl`.
+It tells you when the solver starts and finishes, so your code can wait instead
+of guessing.
+
+| Event | Params |
+| --- | --- |
+| `BrowserUse.captchaSolverStarted` | `targetId`, `vendor`, `url`, `startedAt` |
+| `BrowserUse.captchaSolverFinished` | `targetId`, `vendor`, `url`, `durationMs`, `finishedAt`, `success` |
+| `BrowserUse.captchaSolverStateChanged` | `enabled`, `changedAt` |
+
+- `targetId` is the CDP target ID of the tab with the challenge. Match a
+  `captchaSolverFinished` to its `captchaSolverStarted` by `targetId`.
+- `startedAt`, `finishedAt` and `changedAt` are Unix times in milliseconds.
+- `success: false` means the solver stopped without solving the challenge.
+- `captchaSolverFinished` is sent only after a `captchaSolverStarted`.
+
+How the events arrive:
+
+- No enable call is needed. The browser sends them to every open CDP
+  connection.
+- They are browser-level messages with no `sessionId`, so a CDP session
+  attached to a page does not receive them.
+- They are not replayed. Start listening before you navigate or click
+  something that may show a challenge. Not seeing `captchaSolverStarted` does
+  not prove the solver is idle.
+
+### Playwright (Python)
+
+Playwright keeps browser-level messages on its own internal session, so a
+Playwright `CDPSession` never sees these events. Open a second WebSocket to the
+same browser to listen, and keep using Playwright to drive the page. CDP
+commands, like `BrowserUse.getCaptchaSolverEnabled` below, work on a
+Playwright `CDPSession`.
+
+This example waits for every running solve to finish before it continues:
+
+```python wait_for_captcha.py
+# pip install playwright websockets
+import asyncio
+import json
+import os
+import urllib.request
+
+import websockets
+from playwright.async_api import async_playwright
+
+CDP_URL = os.environ["BROWSER_USE_CDP_URL"]
+
+
+class CaptchaWatcher:
+    """Tracks BrowserUse.captchaSolver* events on a raw CDP socket."""
+
+    def __init__(self):
+        self.ready = asyncio.Event()
+        self.idle = asyncio.Event()
+        self.idle.set()
+        self.active = {}  # targetId -> captchaSolverStarted params
+        self.results = []  # captchaSolverFinished params
+
+    async def listen(self, cdp_url):
+        with urllib.request.urlopen(cdp_url.rstrip("/") + "/json/version") as r:
+            ws_url = json.load(r)["webSocketDebuggerUrl"]
+        async with websockets.connect(ws_url, max_size=None) as ws:
+            self.ready.set()
+            async for raw in ws:
+                msg = json.loads(raw)
+                method, params = msg.get("method"), msg.get("params", {})
+                if method == "BrowserUse.captchaSolverStarted":
+                    print("solving", params["vendor"], "on", params["url"])
+                    self.active[params["targetId"]] = params
+                    self.idle.clear()
+                elif method == "BrowserUse.captchaSolverFinished":
+                    print("finished", params["vendor"], "success:", params["success"])
+                    self.active.pop(params["targetId"], None)
+                    self.results.append(params)
+                    if not self.active:
+                        self.idle.set()
+
+    async def wait_until_idle(self, grace=3, timeout=150):
+        # Give the solver a moment to spot a challenge, then wait for it to finish.
+        await asyncio.sleep(grace)
+        await asyncio.wait_for(self.idle.wait(), timeout)
+
+
+async def main():
+    watcher = CaptchaWatcher()
+    listener = asyncio.create_task(watcher.listen(CDP_URL))
+    await asyncio.wait_for(watcher.ready.wait(), 10)
+
+    async with async_playwright() as p:
+        browser = await p.chromium.connect_over_cdp(CDP_URL)
+        page = browser.contexts[0].pages[0]
+
+        cdp = await browser.new_browser_cdp_session()
+        print(await cdp.send("BrowserUse.getCaptchaSolverEnabled"))  # {'enabled': True}
+
+        await page.goto("https://www.google.com/recaptcha/api2/demo")
+        await watcher.wait_until_idle()
+
+        if watcher.results and not watcher.results[-1]["success"]:
+            print("The solver gave up. Take over in the live preview.")
+        print(await page.title())
+
+    listener.cancel()
+
+
+asyncio.run(main())
+```
+
+The solver checks each tab for a challenge about once a second, which is why
+`wait_until_idle` waits a few seconds before it checks for a running solve.
+
+### Puppeteer
+
+Puppeteer emits browser-level messages on its connection object, so you can
+listen there without a second WebSocket:
+
+```javascript wait-for-captcha.mjs
+import puppeteer from "puppeteer-core";
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: process.env.BROWSER_USE_CDP_URL,
+});
+const session = await browser.target().createCDPSession();
+// BrowserUse events have no sessionId, so Puppeteer emits them on the connection.
+const cdp = session.connection();
+
+const active = new Map(); // targetId -> captchaSolverStarted params
+const results = []; // captchaSolverFinished params
+let onIdle = () => {};
+
+cdp.on("BrowserUse.captchaSolverStarted", (e) => {
+  console.log("solving", e.vendor, "on", e.url);
+  active.set(e.targetId, e);
+});
+cdp.on("BrowserUse.captchaSolverFinished", (e) => {
+  console.log("finished", e.vendor, "success:", e.success);
+  active.delete(e.targetId);
+  results.push(e);
+  if (active.size === 0) onIdle();
+});
+
+async function waitForCaptchaSolver(graceMs = 3000, timeoutMs = 150_000) {
+  // Give the solver a moment to spot a challenge, then wait for it to finish.
+  await new Promise((r) => setTimeout(r, graceMs));
+  if (active.size === 0) return;
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("solver still running")), timeoutMs);
+    onIdle = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+  });
+}
+
+console.log(await session.send("BrowserUse.getCaptchaSolverEnabled")); // { enabled: true }
+
+const [page] = await browser.pages();
+await page.goto("https://www.google.com/recaptcha/api2/demo");
+await waitForCaptchaSolver();
+
+if (results.at(-1)?.success === false) {
+  console.log("The solver gave up. Take over in the live preview.");
+}
+console.log(await page.title());
+await browser.disconnect();
+```
+
+## Turn the solver off or on
+
+Two CDP commands control the solver while the browser runs. Send them on any
+CDP session or connection to the browser.
+
+| Command | Params | Returns |
+| --- | --- | --- |
+| `BrowserUse.setCaptchaSolverEnabled` | `{ "enabled": boolean }` | `{ "enabled": boolean }` |
+| `BrowserUse.getCaptchaSolverEnabled` | none | `{ "enabled": boolean }` |
+
+- The switch covers the whole browser: every tab, every CDP connection, and
+  tabs opened later. It is not per tab.
+- Turning it off stops the browser from looking for new challenges.
+- If `enabled` is missing or not a boolean, the command fails with CDP error
+  `-32602`.
+- `BrowserUse.captchaSolverStateChanged` is sent only when the value actually
+  changes. Two clients toggling at the same time can see these events out of
+  order, so call `BrowserUse.getCaptchaSolverEnabled` when you need the current
+  value.
+
+<CodeGroup>
+```python Python
+cdp = await browser.new_browser_cdp_session()
+await cdp.send("BrowserUse.setCaptchaSolverEnabled", {"enabled": False})
+# ... handle the challenge yourself ...
+await cdp.send("BrowserUse.setCaptchaSolverEnabled", {"enabled": True})
+```
+```javascript Puppeteer
+const session = await browser.target().createCDPSession();
+await session.send("BrowserUse.setCaptchaSolverEnabled", { enabled: false });
+// ... handle the challenge yourself ...
+await session.send("BrowserUse.setCaptchaSolverEnabled", { enabled: true });
+```
+</CodeGroup>
+
+## EU deployment
+
+Automatic CAPTCHA solving is not available on the
+[EU route](/cloud/eu-deployment). Browsers there start with the solver off, and
+creating a browser with `"solveCaptchas": true` returns `422`. Leave the solver
+off on EU browsers.
 
 For a specific CAPTCHA or anti-bot issue, email [contact@browser-use.com](mailto:contact@browser-use.com).
