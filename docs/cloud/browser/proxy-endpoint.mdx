@@ -51,8 +51,8 @@ can appear once.
 
 | Parameter | Value | Without it |
 | --- | --- | --- |
-| `country` | A two-letter ISO 3166-1 country code, in any case, such as `de` or `DE`. `uk` means `gb`. | The IP is in the US. |
-| `session` | 1 to 36 letters and digits. Single hyphens may separate them, so a UUID works. | Each connection can use a different IP. |
+| `country` | A two-letter ISO 3166-1 country code, in any case, such as `de` or `DE`. `uk` means `gb`. Some countries have few or no residential IPs; then requests fail with `502` and `upstream`. | The IP is in the US. |
+| `session` | 1 to 36 characters: letters and digits, optionally separated by single hyphens, so a UUID works. | Each connection can use a different IP. |
 | `policy` | The ID of a [network policy](/cloud/browser/network-policies) in your project. | No network policy applies. |
 
 | Username | Result |
@@ -76,7 +76,7 @@ The proxy refuses these usernames with `407` and `bad_params`:
 ## Sticky sessions
 
 Send the same session ID to keep the same exit IP across requests and
-connections. Send a new session ID to get a new IP.
+connections. Send a new session ID to request a different IP.
 
 ```bash curl
 for i in 1 2 3; do
@@ -94,8 +94,9 @@ done
   these IPs for IP allowlisting.
 </Warning>
 
-- Session IDs belong to your project. Another project with the same session
-  ID does not get your IP.
+- Session IDs belong to your project: another project that uses the same
+  session ID gets its own session, not yours. Residential IPs are shared, so
+  other customers can still use the same IP.
 - Keep the same country for all requests of a session.
 - Without a session ID, each connection can use a different IP.
 
@@ -125,13 +126,17 @@ curl -x https://proxy.browser-use.com:443 \
 - A policy ID from another project gets `403` with `policy_not_found`.
 - If the proxy cannot load the policy, it refuses the request with `503` and
   `policy_unavailable`. It does not send the request without the policy.
+- If the policy is deleted, requests that still name its ID continue without
+  a network policy within a few seconds. The security blocklist still applies.
 - The Browser Use security blocklist always applies first.
 
 ## Billing
 
 Traffic is billed per GB to the project of the API key, at the same rate as
 the managed residential proxy of cloud browsers. It counts toward the key's
-monthly spend limit. See the [pricing page](https://browser-use.com/pricing)
+monthly spend limit. The proxy checks the key, balance and spend limit when a
+connection opens. Connections that are already open keep running, and keep
+billing, until they close. See the [pricing page](https://browser-use.com/pricing)
 for current rates and [Billing](/cloud/guides/billing) for how usage is
 charged.
 
@@ -199,8 +204,8 @@ quickstart](/cloud/browser/quickstart).
 
 ## Errors
 
-The proxy puts the reason in the `X-Proxy-Error` header and at the end of the
-status line, for clients that hide proxy headers:
+Errors from the proxy usually carry the reason in the `X-Proxy-Error` header
+and at the end of the status line, for clients that hide proxy headers:
 
 ```text
 HTTP/1.1 407 Proxy Authentication Required (bad_params)
@@ -209,6 +214,7 @@ X-Proxy-Error: bad_params
 
 | Status | `X-Proxy-Error` | Meaning |
 | --- | --- | --- |
+| 400 | `use_connect` | A plain request named a target that is not `http://`. Use `CONNECT` for HTTPS. |
 | 407 | `auth_required` | The request has no proxy login. |
 | 407 | `bad_auth` | The login is not Basic auth in the form `username:password`. |
 | 407 | `bad_params` | The username is invalid. See [Username](#username). |
@@ -218,9 +224,15 @@ X-Proxy-Error: bad_params
 | 402 | `spend_limit` | The API key reached its monthly spend limit. |
 | 403 | `blocked` | The network policy or the security blocklist blocks the host. |
 | 403 | `policy_not_found` | The policy ID is not a policy of your project. |
-| 502 | `upstream` or `connection` | The proxy could not connect to the site. Retry the request. |
+| 403 | `invalid_project` | The project of the API key was not found. |
+| 502 | `upstream` or `connection` | The proxy could not connect to the site. Retry the request. If it keeps failing with a `country`, that country may have no residential IPs. |
+| 502 | (none) | The proxy lost a plain HTTP request on the way to or from the site. Retry the request. |
 | 523 | `dns` | The site's domain name did not resolve. |
 | 503 | `auth_unavailable` or `policy_unavailable` | A temporary problem on the Browser Use side. Retry the request. |
+
+For plain HTTP requests, the site's own responses pass through unchanged. A
+`403` without `X-Proxy-Error` came from the site. A `502` without it came from
+the site or from the proxy.
 
 See also [Proxies](/cloud/browser/proxies) and
 [Network policies](/cloud/browser/network-policies).
