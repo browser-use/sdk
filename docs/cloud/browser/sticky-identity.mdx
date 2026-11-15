@@ -1,0 +1,175 @@
+---
+title: Sticky identity
+description: "Same profile = same fingerprint and same exit IP."
+icon: "fingerprint"
+---
+
+Start every browser for one end user with the same
+[profile](/cloud/guides/authentication). The website then sees the same device
+each time: the same fingerprint, and usually the same exit IP.
+
+| | Without a profile | Same profile |
+| --- | --- | --- |
+| Fingerprint | New random one for each browser | The same one in every browser |
+| Exit IP | Sticky within that browser only | Shared by the profile's browsers (best effort) |
+| Cookies and localStorage | Start empty | Loaded from the profile |
+
+This works for standalone browsers (`profileId` on `POST /api/v4/browsers`)
+and for agent runs (`browserSettings.profileId`).
+
+## Same fingerprint
+
+The first browser on a new profile picks a random, realistic fingerprint. When
+the browser stops, the fingerprint is saved to the profile together with
+cookies and localStorage. Every later browser on that profile loads it.
+
+The saved fingerprint includes:
+
+- the user agent, platform, and other `navigator` values
+- the screen size
+- the GPU and WebGL vendor and renderer
+- memory, storage, battery, and media device details
+
+These still change from browser to browser, even on the same profile:
+
+- **WebGL noise.** Each browser uses a new noise seed.
+- **Timezone.** It follows the exit IP. The browser looks it up when it starts
+  and checks it again while it runs.
+- **Language.** `navigator.language` and `navigator.languages` follow
+  `proxyCountryCode`. Use the same country to keep them the same.
+- **Custom screen size.** Once the profile has a fingerprint,
+  `browserScreenWidth` and `browserScreenHeight` apply to that browser only.
+  The saved fingerprint keeps its screen size.
+
+A profile gets a new fingerprint when:
+
+- Browser Use upgrades Chromium to a new major version. The new fingerprint
+  keeps the same operating system.
+- The current browser no longer supports the saved fingerprint.
+- No browser has saved the profile yet, for example because the first browser
+  crashed.
+
+If a browser cannot load the profile, it starts with a fresh fingerprint and
+does not save. The stored fingerprint stays for the next browser.
+
+The API does not return the fingerprint, and you cannot set it yourself.
+
+## Same exit IP
+
+With the managed residential proxy, the proxy session is tied to the profile.
+Browsers with the same profile and the same `proxyCountryCode` use the same
+proxy session, so they usually get the same exit IP. This includes browsers
+that run at the same time.
+
+<Warning>
+  Sticky IPs are best effort. A residential IP can go offline or change at any
+  time, and proxy sessions expire, so a browser started much later can get a
+  new IP. Do not use this for IP allowlisting.
+</Warning>
+
+The IP also changes when:
+
+- You change `proxyCountryCode`.
+- You change a running browser's proxy with `rotate`, a `target`, or a new
+  country ([Change the proxy of a running browser](/cloud/browser/proxies#change-the-proxy-of-a-running-browser)).
+  Only that browser moves to a new IP. The change is not saved to the profile,
+  so the next browser on the profile goes back to the profile's proxy session.
+
+Without a profile, each browser gets its own proxy session. Its IP is sticky
+for that browser only.
+
+With `proxyCountryCode: null` or a [custom proxy](/cloud/browser/proxies#custom-proxy)
+(an enterprise feature), the managed proxy is not used, so its sticky session
+does not apply.
+
+## What a profile saves
+
+| Data | Saved |
+| --- | --- |
+| Cookies, including partitioned (CHIPS) cookies | Yes |
+| localStorage, for each origin | Yes |
+| Fingerprint | Yes |
+| IndexedDB | No |
+| sessionStorage | No |
+| HTTP cache and Cache Storage | No |
+| Saved passwords | No |
+
+The exit IP is not stored. It comes from the proxy session that is tied to the
+profile ID.
+
+A site that keeps its login token in IndexedDB may not stay logged in through
+a profile. Expired cookies are dropped when the profile is saved.
+
+The profile is saved once, when the browser stops. If a browser could not fully
+load or restore the profile, it does not save, so it cannot overwrite the
+stored profile with partial data.
+
+## Several browsers on one profile
+
+You can run several browsers on one profile at the same time. There is no lock
+and no error.
+
+- They share the profile's fingerprint, once the profile has been saved.
+- With the same `proxyCountryCode`, they share the exit IP.
+- By default, each browser loads the profile when it starts and saves it when
+  it stops. The last browser to stop overwrites the saved cookies and
+  localStorage. Changes from browsers that stopped earlier are lost if the last
+  browser did not have them.
+
+The safe pattern is one writer, then many readers:
+
+1. Start one browser on the profile, log in, and stop it.
+2. Then start the parallel browsers. Do not log in or out in them.
+
+On a brand-new profile, run and stop one browser before you start browsers in
+parallel. Otherwise each parallel browser picks its own random fingerprint, and
+only one of them is kept.
+
+`DELETE /api/v4/profiles/{id}` returns `409` with "Profile is in use. Stop its
+sessions and try again." while a browser or run still uses the profile.
+
+## Check it yourself
+
+This script starts two browsers, one after the other, on a new profile. Both
+print the same exit IP, user agent, and GPU. A third browser without a profile
+prints a different IP and usually a different GPU.
+
+```python Python
+import time
+
+from browser_use_sdk.v4 import BrowserUse
+from playwright.sync_api import sync_playwright
+
+GPU = """() => {
+  const gl = document.createElement("canvas").getContext("webgl");
+  const ext = gl && gl.getExtension("WEBGL_debug_renderer_info");
+  return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
+}"""
+
+
+def check(client, profile_id):
+    session = client.browsers.create(profile_id=profile_id, proxy_country_code="us")
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.connect_over_cdp(session.cdp_url)
+            context = browser.contexts[0]
+            page = context.pages[0] if context.pages else context.new_page()
+            page.goto("https://api.ipify.org")
+            print("IP: ", page.inner_text("body").strip())
+            print("UA: ", page.evaluate("navigator.userAgent"))
+            print("GPU:", page.evaluate(GPU))
+    finally:
+        client.browsers.stop(session.id)
+
+
+with BrowserUse() as client:
+    profile = client.profiles.create(name="sticky-identity-check")
+    check(client, str(profile.id))
+    time.sleep(10)  # The first browser saves the profile when it stops.
+    check(client, str(profile.id))
+    check(client, None)  # No profile: new fingerprint, new proxy session.
+```
+
+Run it with `pip install --upgrade browser-use-sdk playwright` and
+`BROWSER_USE_API_KEY` set. The script leaves the test profile in your project;
+delete it with `client.profiles.delete(profile.id)` when you are done.

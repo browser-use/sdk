@@ -96,10 +96,18 @@ A live preview is not a stored video. See [Live preview and recording](/cloud/br
 
 ## Does a new browser guarantee a new IP or a CAPTCHA bypass?
 
-No. Selecting a proxy country chooses a location; it does not promise a
-particular city or a unique IP on every launch. Websites can still block
-requests or require human verification. Let the automatic solver work before
-clicking or refreshing a challenge. See [proxies](/cloud/browser/proxies) and
+No. Selecting a proxy country chooses a location, not a particular city.
+
+- A browser without a profile gets its own proxy session, not tied to earlier
+  browsers.
+- Browsers with the same profile and the same proxy country share one proxy
+  session, so they usually get the same exit IP. This is best effort: a
+  residential IP can still change. See [Sticky identity](/cloud/browser/sticky-identity).
+- For a new IP in a running browser, send `{"rotate": true}` to
+  [the proxy endpoint](/cloud/browser/proxies#change-the-proxy-of-a-running-browser).
+
+Websites can still block requests or require human verification. Let the
+automatic solver work before clicking or refreshing a challenge. See
 [CAPTCHA handling](/cloud/browser/captcha-handling).
 
 ## What should I send support?
