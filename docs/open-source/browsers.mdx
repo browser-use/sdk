@@ -43,7 +43,7 @@ print(agent.run_sync().final_result())
 | `cloud_profile_id` | none | A cloud profile id, or a unique profile name. Logins persist in it. A name that matches no profile, or several, raises `BrowserConfigError` from `run()` before a browser is created. See [profile sync](/cloud/guides/profile-sync). |
 | `cloud_proxy_country_code` | `'us'` | Two-letter country code for the residential proxy. `None` turns it off. |
 | `cloud_timeout` | `60` | Minutes, 1 to 240. The server stops the browser after this either way. |
-| `live_view` | `False` | `True` prints the live view URL and opens it. Anyone with that URL can drive the browser. |
+| `live_view` | `None` | By default the live view URL is printed to stderr. `True` also opens it, `False` hides it. Anyone with that URL can drive the browser. |
 | `captcha_solver` | `True` | Cloud browsers solve CAPTCHAs automatically; the agent waits for the solver for up to 95 seconds. `False` turns the solver off, and the agent handles CAPTCHAs itself. |
 
 A cloud browser bills until it stops. browser-use stops it when the run ends, when your process exits, or on SIGTERM or SIGHUP. See [pricing](https://browser-use.com/pricing) and [Cloud browser features](/cloud/browser/quickstart).

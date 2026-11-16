@@ -42,6 +42,8 @@ The key runs the default model, cloud browsers, web search, the CLI and the MCP 
 
 Prefer to sign in from the terminal? Run `browser-use login` (with uv: `uv run browser-use login`). It opens your browser and stores the key in `~/.config/browser-harness/auth.json` (over SSH, add `--device-code`). When `BROWSER_USE_API_KEY` is set, it wins over the stored key.
 
+No key yet? An interactive run on a desktop (macOS, Windows, or Linux with a desktop session) opens the Browser Use sign-in once and continues the run after you approve; the key is saved to the same store as `browser-use login`. CI, notebooks, piped input and headless servers keep the missing-key error. Set `BROWSER_USE_AUTO_LOGIN=false` to turn automatic sign-in off.
+
 ## 3. Run an agent
 
 Save this as `agent.py`:
