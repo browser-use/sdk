@@ -172,7 +172,11 @@ curl -X POST https://api.browser-use.com/api/v4/link/connections/<connectionId>/
   -d '{"amount": 500, "currency": "usd", "merchant_name": "Example Store", "merchant_url": "https://example.com", "context": "One-time purchase of the item the user picked in our app; the user approves it in the Link app before any card is issued."}'
 ```
 
-The same limits apply as for runs: every purchase needs the user's approval in Link, pre-approved (delegated) spend requests are refused, and card details are returned only to your server, never stored by Browser Use.
+The same limits apply as for runs: every purchase needs the user's approval in Link, and pre-approved (delegated) spend requests are refused.
+
+<Warning>
+  If your server asks Link for the card on an approved spend request (for example `GET .../proxy/spend_requests/{id}?include=card`), the response contains the full card number, expiry and CVC. That card data is then yours to protect: keep it out of logs, databases and model prompts, and handle it as PCI cardholder data. Browser Use passes it through and never stores or logs it. If you only need to pay on a Stripe checkout or a machine-payment merchant, prefer a Link Pay Token or a Shared Payment Token, which are not card numbers.
+</Warning>
 
 ### 4. List, choose the default, disconnect
 
