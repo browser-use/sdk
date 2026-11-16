@@ -30,13 +30,15 @@ A parameter that is not on this page raises a `TypeError` before any browser sta
 | `web_search` | `False` | `True` gives the agent a `search()` helper, billed per search. See [Web search](/open-source/web-search). |
 | `max_context_chars` | `None` | Compact the history past 75% of this many characters. `None` is 4 per token of the model's context window (240k when unknown). No effect where compaction is server-side. See [Long tasks](/open-source/long-tasks#context). |
 | `highlight_actions` | `True` | Orange brackets around what the agent clicks or types into. See [Agent](/open-source/agent#highlights). |
+| `judge` | `True` | After each run, one more request to the same model judges it against the task and fills `result.judgement`. `False` turns it off; the 0.x `use_judge` still works. |
+| `judge_context` | `None` | Your criteria for the judge, e.g. `'the answer is 42'`; the 0.x `ground_truth` still works. |
 
 ### Accepted from 0.x
 
 These 0.x options are accepted, log a warning and do nothing, so old code keeps running. The one exception is `use_vision=False`, which is honored: no screenshot reaches the model.
 
 {/* ignored: Agent */}
-`use_vision`, `vision_detail_level`, `llm_screenshot_size`, `flash_mode`, `use_thinking`, `max_failures`, `max_actions_per_step`, `final_response_after_failure`, `highlight_elements`, `use_judge`, `calculate_cost`
+`use_vision`, `vision_detail_level`, `llm_screenshot_size`, `flash_mode`, `use_thinking`, `max_failures`, `max_actions_per_step`, `final_response_after_failure`, `highlight_elements`, `calculate_cost`
 
 ## run() and run_sync()
 
@@ -76,7 +78,7 @@ Other `Agent` methods:
 | `cloud_profile_id` | `None` | Cloud: a profile id or unique profile name. Logins persist in it. |
 | `cloud_proxy_country_code` | `'us'` | Cloud: two-letter country code of the residential proxy. `None` turns the proxy off. |
 | `cloud_timeout` | `None` | Cloud: minutes, 1 to 240. `None` is 60. The server stops the browser after this either way. |
-| `live_view` | `False` | Cloud: print and open the live view URL. Anyone with the URL can drive the browser. |
+| `live_view` | `None` | Cloud: `None` prints the live view URL, `True` also opens it, `False` hides it. Anyone with the URL can drive the browser. |
 | `captcha_solver` | `True` | Cloud: automatic CAPTCHA solving. `False` turns it off. |
 | `allowed_domains` | `None` | Only navigate to these. See [Domains](/open-source/domains). |
 | `prohibited_domains` | `None` | Never navigate to these. Ignored, with a warning, when `allowed_domains` is set. |
