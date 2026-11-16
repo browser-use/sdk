@@ -23,10 +23,10 @@ from browser_use import Agent
 result = Agent('What is the title of https://example.com?').run_sync()
 print(result.steps, result.duration_s)
 print(result.usage)  # {'input': ..., 'output': ..., 'cache_read': ..., 'cache_write': ..., 'requests': ...}
-print(result.cost_usd)  # model cost in USD, plus web searches; None when the price is unknown
+print(result.cost_usd)  # model cost in USD, plus the judge and web searches; None when the price is unknown
 ```
 
-`cost_usd` covers the model and [web searches](/open-source/web-search), not cloud browser time. See [Models: Usage and cost](/open-source/models#usage-and-cost) and [Output](/open-source/output).
+`cost_usd` covers the model, the [judge](/open-source/output#judge) request and [web searches](/open-source/web-search), not cloud browser time. See [Models: Usage and cost](/open-source/models#usage-and-cost) and [Output](/open-source/output).
 
 ## Transcript and workspace
 
