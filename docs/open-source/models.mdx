@@ -29,6 +29,7 @@ A `'bu-*'` string is the same as `ChatBrowserUse('bu-...')`. The full form is `C
 
 - **Preflight:** before any browser starts, the agent reads the gateway's model list (free). A rejected key, no credits, or an unknown model ends the run with one line in `result.error`, and no browser is created.
 - **Cost:** `result.cost_usd` is what the gateway charged.
+- **Signup credit:** a project that has not bought credits yet can spend its signup credit on `bu-4.0`, `bu-4.0-mini`, `bu-fast` and `bu-ultrafast`. `bu-4.0-pro` and `bu-smart` return 403 `free_model` until you buy credits. 402 `payment_required` means the signup credit is used up, or the gateway could not read the starting balance; add credits in [billing](https://cloud.browser-use.com/settings?tab=billing) when it is used up. A temporary verification failure returns 503 `billing_unavailable` (with `Retry-After: 5`) or 503 `gateway_unavailable`; retry those rather than assuming the credit is gone.
 - **0.x models:** `bu-2-0`, `bu-1-0`, `bu-2-0-mini-preview` and `bu-latest` raise a `ValueError` that says they need `browser-use<1.0`. Use `bu-4.0`.
 - **0.x model names:** `'openai/gpt-5.5'` is sent as `gpt-5.5`. The 0.x gateway also served Anthropic and Google models (`'anthropic/claude-...'`); in 1.0 the preflight error names `ChatAnthropic(...)` / `ChatGoogle(...)` with your own key.
 
