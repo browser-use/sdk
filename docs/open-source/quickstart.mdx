@@ -40,7 +40,7 @@ It opens Browser Use in your browser; approve, and the key is saved to `~/.confi
 
 Skipping this step works too: an interactive run without a key signs in the same way on first run and then continues. CI, notebooks, containers and servers keep the missing-key error; set `BROWSER_USE_AUTO_LOGIN=false` to turn automatic sign-in off. In a notebook, run `import browser_use; browser_use.login()` once.
 
-Prefer an environment variable? [Create a key](https://cloud.browser-use.com/new-api-key?ref=bu-docs) and set `BROWSER_USE_API_KEY=bu_...` (a `.env` file in the working directory works too). When it is set, it wins over the stored key. One key runs the default model, cloud browsers, web search, the CLI and the MCP server.
+Prefer an environment variable? [Create a key](https://cloud.browser-use.com/new-api-key?ref=bu-lib&gate=docs) and set `BROWSER_USE_API_KEY=bu_...` (a `.env` file in the working directory works too). When it is set, it wins over the stored key. One key runs the default model, cloud browsers, web search, the CLI and the MCP server.
 
 ## 3. Run an agent
 
