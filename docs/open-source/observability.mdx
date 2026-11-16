@@ -35,7 +35,7 @@ print(result.cost_usd)  # model cost in USD, plus web searches; None when the pr
 
 ## OpenTelemetry traces
 
-browser-use runs on Pydantic AI, so Pydantic AI's instrumentation traces it: one span per run, per model request (`chat bu-fast`, with tokens and the messages) and per tool call (`execute_tool python`, with the code and its output). Send them to any OpenTelemetry (OTLP) backend:
+browser-use runs on Pydantic AI, so Pydantic AI's instrumentation traces it: one span per run, per model request (`chat bu-4.0`, with tokens and the messages) and per tool call (`execute_tool python`, with the code and its output). Send them to any OpenTelemetry (OTLP) backend:
 
 ```bash
 uv add opentelemetry-sdk opentelemetry-exporter-otlp-proto-http

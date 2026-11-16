@@ -38,7 +38,7 @@ The code uses tabs, `uv`, and modern typing (`str | None`). CI runs the same pre
 
 ```text
 Agent(task, llm, browser).run()   browser_use/agent/service.py   public API, lifecycle, telemetry
-  -> model                        browser_use/llm/__init__.py    bu-fast gateway default, ChatOpenAI/Anthropic/Google
+  -> model                        browser_use/llm/__init__.py    bu-4.0 gateway default, ChatOpenAI/Anthropic/Google
   -> Browser.start()              browser_use/browser/browser.py cloud (default), 'chromium', 'chrome', cdp_url
   -> agent loop                   browser_use/agent/loop.py      Pydantic AI loop, python tool, finish, budgets
        python(code)               browser_use/repl/              the REPL worker that runs the model's cells

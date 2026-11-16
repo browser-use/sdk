@@ -16,7 +16,7 @@ A parameter that is not on this page raises a `TypeError` before any browser sta
 | Parameter | Default | What it does |
 |---|---|---|
 | `task` | required | What to do. A non-empty string, else `TypeError` / `ValueError`. |
-| `llm` | `None` | The model. `None` is `'bu-fast'` on the Browser Use gateway. Also `'bu-ultrafast'`, `'bu-smart'`, `ChatOpenAI(...)`, `ChatAnthropic(...)`, `ChatGoogle(...)`, a Pydantic AI model string or `Model`. See [Models](/open-source/models). |
+| `llm` | `None` | The model. `None` is `'bu-4.0'` on the Browser Use gateway. Also `'bu-4.0-mini'`, `'bu-4.0-pro'`, `'bu-fast'`, `'bu-ultrafast'`, `'bu-smart'`, `ChatOpenAI(...)`, `ChatAnthropic(...)`, `ChatGoogle(...)`, a Pydantic AI model string or `Model`. See [Models](/open-source/models). |
 | `browser` | `None` | The browser to drive. `None` is `Browser()`, a Browser Use Cloud browser. See [Browsers](/open-source/browsers). |
 | `browser_session` | `None` | 0.x name for `browser`. Passing both raises `ValueError`. |
 | `tools` | `None` | A `Tools()` with your own functions. See [Tools](/open-source/tools). |
@@ -24,19 +24,21 @@ A parameter that is not on this page raises a `TypeError` before any browser sta
 | `output_model_schema` | `None` | The result type: a Pydantic model, `list[Model]`, `Literal[...]`, or `pydantic_ai.StructuredDict(schema)`. `None` is `str`. See [Output](/open-source/output). |
 | `sensitive_data` | `None` | Secrets the agent types without seeing: `{'name': 'value'}` or `{'https://site': {'name': 'value'}}`. See [Secrets](/open-source/secrets). |
 | `extend_system_message` | `None` | Text appended to the system prompt. |
-| `reasoning` | `None` | `'low'`, `'medium'` or `'high'`. `None` is a `bu-*` alias's own (`bu-fast` medium, `bu-ultrafast` low, `bu-smart` high), else `'medium'`. |
+| `reasoning` | `None` | `'low'`, `'medium'` or `'high'`. `None` is a `bu-*` model's own (BU 4.0 models high, `bu-fast` medium, `bu-ultrafast` low, `bu-smart` high), else `'medium'`. |
 | `mode` | `None` | `'ultrafast'` or `'default'`. `None` is `'ultrafast'` on `bu-fast` and `bu-ultrafast`, else `'default'`. See [Ultrafast](/open-source/ultrafast). |
 | `workspace` | `None` | The agent's working directory. `None` is a new temp dir, kept after the run. See [Files](/open-source/files). |
 | `web_search` | `False` | `True` gives the agent a `search()` helper, billed per search. See [Web search](/open-source/web-search). |
 | `max_context_chars` | `None` | Compact the history past 75% of this many characters. `None` is 4 per token of the model's context window (240k when unknown). No effect where compaction is server-side. See [Long tasks](/open-source/long-tasks#context). |
 | `highlight_actions` | `True` | Orange brackets around what the agent clicks or types into. See [Agent](/open-source/agent#highlights). |
+| `judge` | `True` | After each run, one more request to the same model judges it against the task and fills `result.judgement`. `False` turns it off; the 0.x `use_judge` still works. |
+| `judge_context` | `None` | Your criteria for the judge, e.g. `'the answer is 42'`; the 0.x `ground_truth` still works. |
 
 ### Accepted from 0.x
 
 These 0.x options are accepted, log a warning and do nothing, so old code keeps running. The one exception is `use_vision=False`, which is honored: no screenshot reaches the model.
 
 {/* ignored: Agent */}
-`use_vision`, `vision_detail_level`, `llm_screenshot_size`, `flash_mode`, `use_thinking`, `max_failures`, `max_actions_per_step`, `final_response_after_failure`, `highlight_elements`, `use_judge`, `calculate_cost`
+`use_vision`, `vision_detail_level`, `llm_screenshot_size`, `flash_mode`, `use_thinking`, `max_failures`, `max_actions_per_step`, `final_response_after_failure`, `highlight_elements`, `calculate_cost`
 
 ## run() and run_sync()
 
@@ -76,7 +78,7 @@ Other `Agent` methods:
 | `cloud_profile_id` | `None` | Cloud: a profile id or unique profile name. Logins persist in it. |
 | `cloud_proxy_country_code` | `'us'` | Cloud: two-letter country code of the residential proxy. `None` turns the proxy off. |
 | `cloud_timeout` | `None` | Cloud: minutes, 1 to 240. `None` is 60. The server stops the browser after this either way. |
-| `live_view` | `False` | Cloud: print and open the live view URL. Anyone with the URL can drive the browser. |
+| `live_view` | `None` | Cloud: `None` prints the live view URL, `True` also opens it, `False` hides it. Anyone with the URL can drive the browser. |
 | `captcha_solver` | `True` | Cloud: automatic CAPTCHA solving. `False` turns it off. |
 | `allowed_domains` | `None` | Only navigate to these. See [Domains](/open-source/domains). |
 | `prohibited_domains` | `None` | Never navigate to these. Ignored, with a warning, when `allowed_domains` is set. |
@@ -97,12 +99,12 @@ Guide: [Models](/open-source/models).
 
 ### ChatBrowserUse
 
-`'bu-fast'` and the other `'bu-*'` strings are shorthand for `ChatBrowserUse('bu-...')`.
+`'bu-4.0'` and the other `'bu-*'` strings are shorthand for `ChatBrowserUse('bu-...')`.
 
 {/* signature: ChatBrowserUse.__init__ */}
 | Parameter | Default | What it does |
 |---|---|---|
-| `model` | `'bu-fast'` | `'bu-fast'`, `'bu-ultrafast'`, `'bu-smart'`, or an OpenAI model the gateway lists. |
+| `model` | `'bu-4.0'` | `'bu-4.0'`, `'bu-4.0-mini'`, `'bu-4.0-pro'`, `'bu-fast'`, `'bu-ultrafast'`, `'bu-smart'`, or an OpenAI model the gateway lists. |
 | `api_key` | `None` | `None` is `BROWSER_USE_API_KEY`, then the key from `browser-use login`. |
 | `base_url` | `'https://api.browser-use.com/api/v4/llm/v1'` | The gateway URL. |
 

@@ -31,13 +31,13 @@ Each step is one model request. In a step, the agent writes one Python cell that
 | Option | Default | What it does |
 |---|---|---|
 | `task` | required | What to do. A non-empty string, else `TypeError` / `ValueError` before anything starts. |
-| `llm` | `bu-fast` | The model: `'bu-fast'`, `'bu-ultrafast'`, `'bu-smart'`, `ChatOpenAI(...)`, `ChatAnthropic(...)`, `ChatGoogle(...)`, or a Pydantic AI model string or `Model`. See [Models](/open-source/models). |
+| `llm` | `bu-4.0` | The model: `'bu-4.0'`, `'bu-4.0-mini'`, `'bu-4.0-pro'`, `'bu-fast'`, `'bu-ultrafast'`, `'bu-smart'`, `ChatOpenAI(...)`, `ChatAnthropic(...)`, `ChatGoogle(...)`, or a Pydantic AI model string or `Model`. See [Models](/open-source/models). |
 | `browser` | `Browser()` (cloud) | Which browser to drive. See [Browsers](/open-source/browsers). `browser_session=` is an alias; passing both raises. |
 | `tools` | none | A `Tools()` with your own functions. See [Tools](/open-source/tools). `controller=` is an alias. |
 | `output_model_schema` | `str` | A type for the result: a Pydantic model, `list[Model]`, `Literal[...]`. See [Output](/open-source/output). |
 | `sensitive_data` | none | Secrets the agent types without seeing them. See [Secrets](/open-source/secrets). |
 | `extend_system_message` | none | Text appended to the system prompt. The core prompt is fixed. |
-| `reasoning` | per model | `'low'`, `'medium'` or `'high'`. A `bu-*` alias's own by default (`bu-fast` medium, `bu-ultrafast` low, `bu-smart` high), else `'medium'`. Models without a reasoning setting ignore it with a warning. |
+| `reasoning` | per model | `'low'`, `'medium'` or `'high'`. A `bu-*` model's own by default (BU 4.0 models high, `bu-fast` medium, `bu-ultrafast` low, `bu-smart` high), else `'medium'`. Models without a reasoning setting ignore it with a warning. |
 | `mode` | per model | `'ultrafast'` or `'default'`. `'ultrafast'` on `bu-fast` and `bu-ultrafast`, `'default'` otherwise. See [Ultrafast](/open-source/ultrafast). |
 | `workspace` | new temp dir | The agent's working directory. See [Files](/open-source/files). |
 | `web_search` | `False` | Gives the agent a `search()` helper. See [Web search](/open-source/web-search). |
