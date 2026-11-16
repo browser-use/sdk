@@ -101,7 +101,7 @@ if result.judgement:
 | `description` | What the agent did and what came of it, in 1 to 3 sentences. |
 | `prompt_injection_detected` | A page, file or tool result tried to instruct the agent. |
 | `bot_block_or_captcha_detected` | The agent met a CAPTCHA, a bot check, an access block or a rate limit. |
-| `gotchas` | Up to 5 short, general lessons about the sites for the next agent, such as rate limits, a page order that avoids a block, or a field's required format. Written on a success too, when the site rejected input, errored, blocked or rate-limited the agent. May be empty. |
+| `gotchas` | Up to 5 short lessons for the next agent, grounded in what the run actually showed about the website, the agent, a tool or the environment (such as a rate limit, a page order that avoids a block, or a field's required format). Written on successful and failed runs. A recovery is included only when the run shows it worked. May be empty. |
 
 - The judge reads the run as text, with secrets redacted, capped at 120k characters.
 - With vision on, it also gets up to 4 images: the run's last distinct screenshots and a screenshot of the final page, oldest first. Images are sent as they are, not redacted. `use_vision=False` sends text only.
