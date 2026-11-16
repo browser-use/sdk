@@ -1,6 +1,6 @@
 ---
 title: "Quickstart"
-description: "Install browser-use, set your API key, and run your first agent."
+description: "Install browser-use, sign in, and run your first agent."
 icon: "rocket"
 ---
 
@@ -30,19 +30,17 @@ pip install 'browser-use==1.0.0'
 
 Pin the exact version with `==`, never `>=`: browser-use moves fast, and a new release can break your code. Upgrade on purpose by changing the pin.
 
-## 2. Set your API key
-
-[Create a key](https://cloud.browser-use.com/new-api-key) in Browser Use Cloud and export it:
+## 2. Sign in
 
 ```bash
-export BROWSER_USE_API_KEY=bu_...    # get one at https://cloud.browser-use.com/new-api-key
+uv run browser-use login    # pip: browser-use login
 ```
 
-The key runs the default model, cloud browsers, web search, the CLI and the MCP server. A `.env` file in the working directory is read on import, so `BROWSER_USE_API_KEY=bu_...` there works too.
+It opens Browser Use in your browser; approve, and the key is saved to `~/.config/browser-harness/auth.json`. No copying. Over SSH or on a machine without a display it prints a link and a code you approve on any device instead.
 
-Prefer to sign in from the terminal? Run `browser-use login` (with uv: `uv run browser-use login`). It opens your browser and stores the key in `~/.config/browser-harness/auth.json` (over SSH, add `--device-code`). When `BROWSER_USE_API_KEY` is set, it wins over the stored key.
+Skipping this step works too: an interactive run without a key signs in the same way on first run and then continues. CI, notebooks, containers and servers keep the missing-key error; set `BROWSER_USE_AUTO_LOGIN=false` to turn automatic sign-in off. In a notebook, run `import browser_use; browser_use.login()` once.
 
-No key yet? An interactive run on a desktop (macOS, Windows, or Linux with a desktop session) opens the Browser Use sign-in once and continues the run after you approve; the key is saved to the same store as `browser-use login`. CI, notebooks, piped input and headless servers keep the missing-key error. Set `BROWSER_USE_AUTO_LOGIN=false` to turn automatic sign-in off.
+Prefer an environment variable? [Create a key](https://cloud.browser-use.com/new-api-key?ref=bu-lib&gate=docs) and set `BROWSER_USE_API_KEY=bu_...` (a `.env` file in the working directory works too). When it is set, it wins over the stored key. One key runs the default model, cloud browsers, web search, the CLI and the MCP server.
 
 ## 3. Run an agent
 
