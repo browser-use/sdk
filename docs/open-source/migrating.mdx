@@ -492,7 +492,7 @@ Every 0.x `Agent(...)` argument, method and attribute. Removed arguments raise `
 |---|---|
 | `task`, `llm`, `browser`, `browser_session`, `tools`, `controller`, `output_model_schema`, `sensitive_data`, `extend_system_message` | kept |
 | `use_vision=False` | kept: no screenshot reaches the model |
-| `use_vision=True` / `'auto'`, `vision_detail_level`, `llm_screenshot_size`, `max_actions_per_step`, `flash_mode`, `use_thinking`, `use_judge`, `max_failures`, `final_response_after_failure`, `calculate_cost`, `highlight_elements` | ignored, one warning each. Instead of `use_thinking`: `reasoning='low' / 'medium' / 'high'`; of `flash_mode`: `mode='ultrafast'`; of `highlight_elements`: `highlight_actions` |
+| `use_vision=True` / `'auto'`, `vision_detail_level`, `llm_screenshot_size`, `max_actions_per_step`, `flash_mode`, `use_thinking`, `max_failures`, `final_response_after_failure`, `calculate_cost`, `highlight_elements` | ignored, one warning each. Instead of `use_thinking`: `reasoning='low' / 'medium' / 'high'`; of `flash_mode`: `mode='ultrafast'`; of `highlight_elements`: `highlight_actions` |
 | `max_steps` on `Agent` | not an option: `agent.run(max_steps=...)` |
 | `override_system_message` | `extend_system_message` |
 | `llm_timeout`, `step_timeout` | `agent.run(timeout=seconds)` |
@@ -503,7 +503,8 @@ Every 0.x `Agent(...)` argument, method and attribute. Removed arguments raise `
 | `register_new_step_callback`, `register_done_callback`, `register_external_agent_status_raise_error_callback`, `register_should_stop_callback`, `run(on_step_start=...)`, `run(on_step_end=...)` | a `logging.Handler` on `browser_use`; see [Long tasks](/open-source/long-tasks#live-progress) |
 | `save_conversation_path`, `save_conversation_path_encoding` | `result.messages` |
 | `generate_gif`, `demo_mode` | dropped. `live_view=True` shows a cloud browser live |
-| `judge_llm`, `ground_truth` | `result.success`, the agent's own verdict |
+| `use_judge`, `ground_truth` | kept as `judge` and `judge_context`: the judge's verdict is in `result.judgement` |
+| `judge_llm` | removed: the judge uses the agent's own model |
 | `fallback_llm`, `skill_ids`, `skills`, `skill_service`, `pricing_url` | dropped |
 | `sample_images`, `enable_planning`, `planning_replan_on_stall`, `planning_exploration_limit`, `planner_llm`, `planner_interval`, `is_planner_reasoning`, `extend_planner_system_message`, `use_vision_for_planner` | dropped: each step is one Python cell; the agent takes screenshots when it needs them |
 | `loop_detection_window`, `loop_detection_enabled`, `message_compaction`, `max_history_items`, `include_attributes`, `max_clickable_elements_length`, `include_recent_events`, `include_tool_call_examples`, `display_files_in_done_text`, `injected_agent_state`, `source`, `task_id`, `enable_signal_handler`, `_url_shortening_limit` | dropped: the model retries failed cells within `max_steps`, and history is compacted on its own (`max_context_chars`) |
@@ -652,7 +653,7 @@ The 0.x `browser-use --mcp` server ran the removed engine. `--mcp` now prints a 
   "mcpServers": {
     "browser-use": {
       "command": "uvx",
-      "args": ["--from", "browser-use==1.0.0", "browser-use", "--cli-mcp"]
+      "args": ["--from", "browser-use==1.0.6", "browser-use", "--cli-mcp"]
     }
   }
 }
