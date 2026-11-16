@@ -78,7 +78,7 @@ Other `Agent` methods:
 | `cloud_profile_id` | `None` | Cloud: a profile id or unique profile name. Logins persist in it. |
 | `cloud_proxy_country_code` | `'us'` | Cloud: two-letter country code of the residential proxy. `None` turns the proxy off. |
 | `cloud_timeout` | `None` | Cloud: minutes, 1 to 240. `None` is 60. The server stops the browser after this either way. |
-| `live_view` | `None` | Cloud: `None` prints the live view URL, `True` also opens it, `False` hides it. Anyone with the URL can drive the browser. |
+| `live_view` | `None` | Cloud: `None` prints the live view URL to stderr, `True` also opens it, `False` hides it. Anyone with the URL can drive the browser. |
 | `captcha_solver` | `True` | Cloud: automatic CAPTCHA solving. `False` turns it off. |
 | `allowed_domains` | `None` | Only navigate to these. See [Domains](/open-source/domains). |
 | `prohibited_domains` | `None` | Never navigate to these. Ignored, with a warning, when `allowed_domains` is set. |
