@@ -18,6 +18,19 @@ model, token pricing, and BYOK routes.
 V4 forwards an allow-listed `modelParams` object to the selected provider. The
 field names and accepted values therefore differ by model family.
 
+### BU 4.0 reasoning
+
+| Model strings | Path | Accepted values |
+| --- | --- | --- |
+| `bu-4.0-mini`, `bu-4.0`, `bu-4.0-pro` | `reasoning.effort` | `low`, `medium`, `high`, `xhigh` |
+
+All three default to `high` and support standard processing only. They do not
+support fast or priority service tiers. Use
+`modelParams: {"reasoning": {"effort": "medium"}}` to select another effort.
+See [BU 4.0 models](/cloud/agent/models#bu-40-models) for availability and routing.
+
+### Other V4 models
+
 | Model strings | Path | Accepted values |
 | --- | --- | --- |
 | `gpt-6-luna`, `gpt-6-sol` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
@@ -45,8 +58,12 @@ presets also reject it; see [BU Ultrafast](/cloud/agent/ultrafast).
 request returns 422.
 
 <Note>
-  Omitting both `model` and `modelParams` uses `gpt-6-luna` with
-  `reasoning.effort: high`. For an explicit model, omitting `modelParams` applies
+  Omitting `model` uses your project's default: BU 4.0 for US projects created
+  on or after 16 November 2026. See [Models](/cloud/agent/models) for older
+  projects, EU and Bedrock-only defaults. Omitting `modelParams` applies
+  the selected model's defaults, including High reasoning for BU 4.0 models.
+
+  For an explicit model, omitting `modelParams` applies
   that model's defaults: `gpt-5.6-luna`, `gpt-5.6-sol`, `gpt-6-sol`,
   `gpt-6.1-sol`, and `gpt-6-astra` use `reasoning.effort: xhigh`;
   `claude-opus-5`, `claude-sonnet-5`, and `claude-opus-5-5` use
@@ -193,6 +210,9 @@ to the provider's native control.
   Bring Your Own Key**. V4 automatically uses a matching key; there is no
   request flag. `modelParams` works the same with Browser Use-managed and
   customer-managed keys.
+
+BU 4.0 models always use Browser Use's platform route; a project's own provider
+keys are not used for them.
 
 ## V2 and V3 examples
 

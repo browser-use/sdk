@@ -6,11 +6,11 @@ icon: "rocket"
 
 <picture className="block dark:hidden">
   <source media="(max-width: 600px)" srcSet="/open-source/images/oss-quickstart-light-mobile.svg" />
-  <img src="/open-source/images/oss-quickstart-light.svg" alt="agent.py runs the agent loop and its Python REPL on your machine. Model requests go to the Browser Use gateway (bu-fast), and the REPL drives a Browser Use Cloud browser over CDP. One Browser Use key (BROWSER_USE_API_KEY) runs both." noZoom />
+  <img src="/open-source/images/oss-quickstart-light.svg" alt="agent.py runs the agent loop and its Python REPL on your machine. Model requests go to the Browser Use gateway (bu-4.0), and the REPL drives a Browser Use Cloud browser over CDP. One Browser Use key (BROWSER_USE_API_KEY) runs both." noZoom />
 </picture>
 <picture className="hidden dark:block">
   <source media="(max-width: 600px)" srcSet="/open-source/images/oss-quickstart-dark-mobile.svg" />
-  <img src="/open-source/images/oss-quickstart-dark.svg" alt="agent.py runs the agent loop and its Python REPL on your machine. Model requests go to the Browser Use gateway (bu-fast), and the REPL drives a Browser Use Cloud browser over CDP. One Browser Use key (BROWSER_USE_API_KEY) runs both." noZoom />
+  <img src="/open-source/images/oss-quickstart-dark.svg" alt="agent.py runs the agent loop and its Python REPL on your machine. Model requests go to the Browser Use gateway (bu-4.0), and the REPL drives a Browser Use Cloud browser over CDP. One Browser Use key (BROWSER_USE_API_KEY) runs both." noZoom />
 </picture>
 
 ## 1. Install
@@ -20,11 +20,11 @@ Python 3.11 or newer.
 <CodeGroup>
 ```bash uv
 uv init --python 3.12 my-agent && cd my-agent
-uv add 'browser-use==1.0.0'
+uv add 'browser-use==1.0.6'
 ```
 ```bash pip
 python3 -m venv .venv && source .venv/bin/activate
-pip install 'browser-use==1.0.0'
+pip install 'browser-use==1.0.6'
 ```
 </CodeGroup>
 
@@ -62,7 +62,7 @@ python agent.py
 ```
 </CodeGroup>
 
-This runs `bu-fast` on the Browser Use gateway and drives a Browser Use Cloud browser, which stops when the run ends.
+This runs `bu-4.0` (BU 4.0) on the Browser Use gateway and drives a Browser Use Cloud browser, which stops when the run ends.
 
 In async code, use `await agent.run()`. In a script, start it with `asyncio.run(...)`; in Jupyter, `await agent.run()` directly in a cell.
 

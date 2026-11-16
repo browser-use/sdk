@@ -5569,11 +5569,13 @@
                             "gemini-3.1-pro",
                             "gemini-3-flash",
                             "bu-ultrafast",
-                            "bu-fast"
+                            "bu-fast",
+                            "bu-4.0-mini",
+                            "bu-4.0",
+                            "bu-4.0-pro"
                         ],
                         "title": "Model",
-                        "description": "bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.",
-                        "default": "gpt-6-luna"
+                        "description": "When omitted, US projects created on or after 16 November 2026 use BU 4.0 (High reasoning when modelParams is also omitted). Web app users without a saved model choice start on BU 4.0. Older US projects retain their previous default; EU and Bedrock-only defaults are unchanged. See https://docs.browser-use.com/cloud/agent/models for defaults and availability. bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams."
                     },
                     "modelParams": {
                         "anyOf": [
@@ -5926,12 +5928,55 @@
                             }
                         ],
                         "title": "Context"
+                    },
+                    "model": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "gpt-5.5",
+                                    "gpt-5.6",
+                                    "gpt-6-astra",
+                                    "gpt-6-sol",
+                                    "gpt-6.1-sol",
+                                    "gpt-6.1-terra",
+                                    "gpt-6-luna",
+                                    "gpt-5.6-sol",
+                                    "gpt-5.6-terra",
+                                    "gpt-5.6-luna",
+                                    "gemini-3.6-flash",
+                                    "gemini-3.5-flash",
+                                    "gemini-3.1-pro",
+                                    "gemini-3-flash"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "default": null,
+                        "title": "Model",
+                        "description": "The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. Null means omitted."
+                    },
+                    "modelParams": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Modelparams",
+                        "description": "Optional provider-native request parameters for the judge model. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422. Once enabled, omitted or null applies reasoning effort high where supported, otherwise the model's default parameters; {} leaves provider defaults in place. Unsupported paths or values are rejected with 422. context and service_tier are not supported.",
+                        "default": null
                     }
                 },
                 "additionalProperties": false,
                 "type": "object",
                 "title": "RunJudgeSettings",
-                "description": "Opt-in LLM judgement of the finished run. Presence of this object turns\nthe judge on (send {} for defaults); CP judges the run's trajectory after\nit goes terminal and surfaces the verdict as RunSummary.judgement (null\nuntil it lands). The judge's LLM call is billed to the run."
+                "description": "Opt-in LLM judgement of the finished run. Presence of this object turns\nthe judge on (send {} for defaults); CP judges the run's trajectory after\nit goes terminal and surfaces the verdict as RunSummary.judgement (null\nuntil it lands). Judge model choice is being rolled out. Until it is enabled for a project, judge: {} uses gemini-3-flash and non-null model or modelParams return 422. Once enabled, the default is gpt-6.1-terra with {\"reasoning\":{\"effort\":\"high\"}}. Null means omitted. The judge call is billed to the run at the judge model's token prices."
             },
             "RunListResponse": {
                 "properties": {
