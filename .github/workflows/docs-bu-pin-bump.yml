@@ -1,0 +1,36 @@
+name: docs-bu-pin-bump
+
+# Docs pin browser-use with == on purpose. This keeps those pins on the latest PyPI release:
+# daily, it bumps every pin in docs/ and opens (or updates) one PR. A human still reviews and merges.
+on:
+  schedule:
+    - cron: '41 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump pins
+        id: bump
+        run: echo "version=$(python3 scripts/bump_bu_pins.py)" >> "$GITHUB_OUTPUT"
+      - name: Open PR
+        if: steps.bump.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ steps.bump.outputs.version }}
+        run: |
+          branch="docs/bu-pins-$V"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git commit -qam "docs: pin browser-use==$V"
+          git push -q -f origin "$branch"
+          gh pr view "$branch" >/dev/null 2>&1 || gh pr create --head "$branch" --title "docs: pin browser-use==$V" \
+            --body "Bumps every \`browser-use==\` pin in docs/ to $V, the latest PyPI release. Opened by docs-bu-pin-bump."
