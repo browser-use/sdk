@@ -310,6 +310,7 @@
           {
             "group": "Reference",
             "pages": [
+              "open-source/advanced",
               "open-source/all-parameters",
               "open-source/migrating",
               "open-source/observability",
