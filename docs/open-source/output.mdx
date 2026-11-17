@@ -56,6 +56,7 @@ print(result.error)  # what ended the run, or None
 | `text` | The answer as text. |
 | `output` | The delivered value: a `str`, or an instance of your `output_model_schema`. |
 | `success` | The agent's own verdict from `finish(result, success)`. `None` when it gave none or the run did not complete. |
+| `judgement` | The judge's verdict, labels and lessons; `None` when judging is off, no step ran or judging failed. See [Judge](#judge). |
 | `partial` | The last partial result the agent saved. See [Long tasks](/open-source/long-tasks). |
 | `steps` | Model requests. |
 | `duration_s` | Seconds. |
@@ -77,6 +78,18 @@ A run that reaches `max_steps` or the timeout gets one forced delivery turn. If 
 
 For the 0.x default (no verdict counts as success), use `result.is_done() and result.success is not False`.
 
+## Judge
+
+By default, after a run that took a step, the same model judges the task and trace at low reasoning effort. `result.judgement` holds `success`, `failure_reason`, `description`, `prompt_injection_detected`, `bot_block_or_captcha_detected` and `gotchas`: up to five short lessons grounded in what happened, also on successful runs. This is separate from the agent's own `result.success`; it does not change the run's status.
+
+- `Agent(task, judge_context='the answer is 42')` supplies your criteria, which the judge puts first. The 0.x names `use_judge` and `ground_truth` still work.
+- The judge sees up to 120k characters of trace, with secrets redacted, and the last 4 distinct images available, including a final-page capture when possible. Images are sent as they are, without redaction. `use_vision=False` sends text only.
+- A model that rejects images gets one text-only retry. A judge failure logs a warning and leaves `result.judgement` as `None`.
+- Judge tokens and cost are included in `result.usage` and `result.cost_usd`. Judging and the final screenshot are outside the `run(timeout=...)` loop budget.
+- `Agent(task, judge=False)` sends no judge request.
+
 ## Removed from 0.x
 
-There are no per-step actions in 1.0, so `history`, `urls()`, `screenshots()`, `action_names()`, `model_thoughts()`, `extracted_content()`, `save_to_file()`, `load_from_file()`, `judgement()` and similar raise an `AttributeError` that points to the replacement. Use `final_result()`, `structured_output`, `messages`, `partial` and the files in `agent.workspace`.
+There are no per-step actions in 1.0, so `history`, `urls()`, `screenshots()`, `action_names()`, `model_thoughts()`, `extracted_content()`, `save_to_file()`, `load_from_file()` and similar raise an `AttributeError` that points to the replacement. Use `final_result()`, `structured_output`, `messages`, `partial` and the files in `agent.workspace`.
+
+`is_judged()` and `is_validated()` also raise; read `result.judgement` instead.
