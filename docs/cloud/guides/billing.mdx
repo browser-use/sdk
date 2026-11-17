@@ -115,7 +115,7 @@ Enabling auto recharge while already below the threshold can trigger a charge im
 Creating a run without enough usable credit returns HTTP 402. If a paid V4 run uses up the balance while it is running, a later model step is stopped once the exhausted balance is detected and confirmed. Billing settlement and balance checks can delay this, so it is not an instantaneous spending cap. The stopped run ends with `status` `failed` and an `error` that starts with `Out of credits. Buy credits:` followed by a link to add credits.
 
 - Adding credits does not resume the stopped run. Start a new run after the top-up.
-- Projects with auto recharge enabled, BYOK model calls, and free-tier runs are not stopped this way.
+- Projects with auto recharge enabled, BYOK model calls, and free-tier runs are not stopped this way. For auto recharge, this stop is skipped while the setting is on, whether or not a recharge succeeds, so a failed recharge does not top up the balance; check payment history if one fails.
 
 ## API-key monthly spending caps
 
