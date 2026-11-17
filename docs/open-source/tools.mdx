@@ -39,7 +39,7 @@ The model sees what the function returns: a `str`, a Pydantic model or other JSO
 
 ## Errors
 
-- Ordinary tool errors reach the model so it can recover. Removed `ActionResult` fields are configuration errors and end the run.
+- Ordinary tool errors reach the model so it can recover. Unsupported uses of removed `ActionResult` fields are fatal configuration errors and end the run; legacy defaults are dropped and `include_in_memory` and `include_extracted_content_only_once` are ignored (see Rules below).
 - Raise `pydantic_ai.ModelRetry('...')` to ask the model to call the tool again with better arguments.
 
 ## param_model

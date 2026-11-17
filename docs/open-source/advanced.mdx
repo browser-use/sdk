@@ -8,4 +8,4 @@ These options are off by default and meant for teams that need stricter control.
 
 ## Domains
 
-`Browser(allowed_domains=[...])` limits navigation to matching sites; `prohibited_domains=[...]` blocks matching sites. `block_ip_addresses=True` also blocks IP-literal hosts. Defaults are `None`, `None` and `False`. These are navigation guards, not a sandbox. Patterns, enforcement and limits: [Domains](/open-source/domains).
+`Browser(allowed_domains=[...])` limits navigation to matching sites; `prohibited_domains=[...]` blocks matching sites but is ignored when `allowed_domains` is non-empty. `block_ip_addresses=True` also blocks IP-literal hosts. Defaults are `None`, `None` and `False`. These are navigation guards, not a sandbox. Patterns, enforcement and limits: [Domains](/open-source/domains).
