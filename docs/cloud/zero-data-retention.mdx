@@ -108,6 +108,10 @@ Cleanup deletes existing profiles, and the project cannot create new profiles.
 | New integration connections | Unavailable; you can still disconnect existing connections |
 | Billing and account records | Remain available |
 
+Enabling ZDR does not delete your account.
+It does not remove billing records or undo processing that happened before activation.
+An **Active** badge confirms the project policy, not the completion of each physical deletion.
+
 ## Requests that ZDR refuses
 
 When a request uses a feature that the project's ZDR setting blocks, the API returns `403`.
@@ -122,10 +126,6 @@ For the run-creation refusals listed below, the `detail` says which field is ref
 | A run in a session that already uses a profile, under full ZDR | Profiles are not available for this project. | Start a new session without a profile. |
 
 Each of these `detail` messages ends with a reminder that ZDR stays on for the life of a project, and a link to this page.
-
-Enabling ZDR does not delete your account.
-It does not remove billing records or undo processing that happened before activation.
-An **Active** badge confirms the project policy, not the completion of each physical deletion.
 
 ## Regional and model-provider scope
 
