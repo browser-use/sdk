@@ -111,7 +111,7 @@ Cleanup deletes existing profiles, and the project cannot create new profiles.
 ## Requests that ZDR refuses
 
 When a request uses a feature that the project's ZDR setting blocks, the API returns `403`.
-The `detail` says which field is refused, why, and how to fix it.
+For the run-creation refusals listed below, the `detail` says which field is refused, why, and how to fix it.
 
 | Refused | `detail` starts with | Fix |
 | --- | --- | --- |
@@ -119,9 +119,9 @@ The `detail` says which field is refused, why, and how to fix it.
 | A model that requires data retention | This model is not available for Zero Data Retention projects. | Choose another model. |
 | `browserSettings.profileId` under full ZDR | Profiles are not available for Zero Data Retention projects. | Remove `browserSettings.profileId`, or use a project with **Zero Data Retention, except profiles and extensions**. |
 | `browserSettings.extensionIds` under full ZDR | Extensions are not available for Zero Data Retention projects. | Remove `browserSettings.extensionIds`, or use a project with **Zero Data Retention, except profiles and extensions**. |
-| A run in a session that already uses a profile | Profiles are not available for this project. | Start a new session without a profile. |
+| A run in a session that already uses a profile, under full ZDR | Profiles are not available for this project. | Start a new session without a profile. |
 
-Every `detail` ends with a reminder that ZDR stays on for the life of a project, and a link to this page.
+Each of these `detail` messages ends with a reminder that ZDR stays on for the life of a project, and a link to this page.
 
 Enabling ZDR does not delete your account.
 It does not remove billing records or undo processing that happened before activation.
