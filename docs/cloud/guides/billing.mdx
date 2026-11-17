@@ -110,6 +110,13 @@ For example, a \$10 threshold with a \$50 recharge amount purchases \$50 when th
 
 Enabling auto recharge while already below the threshold can trigger a charge immediately. Choose an amount that covers your expected workload and check payment history if a recharge fails. Funding and concurrent workloads can change the displayed balance while a payment is being processed.
 
+## When a run uses up your credits
+
+Creating a run with a \$0 balance returns HTTP 402. If a paid V4 run drains the balance while it is running, the run stops at its next step instead of continuing: it ends with `status` `failed` and an `error` that starts with `Out of credits. Buy credits:` followed by a link to add credits.
+
+- Adding credits does not resume the stopped run. Start a new run after the top-up.
+- Projects with auto recharge enabled, BYOK model calls, and free-tier runs are not stopped this way.
+
 ## API-key monthly spending caps
 
 An API key can have a monthly USD spending cap. It is a **soft limit** on Browser Use charges recorded for that key during the current UTC calendar month, shared across that key's applicable usage.
