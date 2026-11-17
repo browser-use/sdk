@@ -1,0 +1,32 @@
+  {
+    slug: 'browser-use',
+    name: 'Browser Use',
+    description:
+      'Browser Use gives your model a browser agent in a stealth cloud browser. Hand it a web task in plain language (read JavaScript-heavy pages, log in, fill forms, navigate multi-step flows, extract data) and get the result back, with residential proxies and CAPTCHA handling built in.',
+    packageName: 'browser-use-ai-sdk',
+    tags: ['browser', 'browser-automation', 'web', 'extraction', 'agent'],
+    apiKeyEnvName: 'BROWSER_USE_API_KEY',
+    installCommand: {
+      pnpm: 'pnpm add browser-use-ai-sdk',
+      npm: 'npm install browser-use-ai-sdk',
+      yarn: 'yarn add browser-use-ai-sdk',
+      bun: 'bun add browser-use-ai-sdk',
+    },
+    codeExample: `import { generateText, isStepCount } from 'ai';
+import { createBrowserUseTools } from 'browser-use-ai-sdk';
+
+const browserUse = createBrowserUseTools();
+
+const { text } = await generateText({
+  model: 'anthropic/claude-sonnet-5.5',
+  tools: browserUse.tools,
+  stopWhen: isStepCount(5),
+  prompt: 'Open https://news.ycombinator.com and summarize the top 3 stories.',
+});
+
+console.log(text);`,
+    docsUrl: 'https://docs.browser-use.com',
+    apiKeyUrl: 'https://cloud.browser-use.com/settings?tab=api-keys&new=1',
+    websiteUrl: 'https://browser-use.com',
+    npmUrl: 'https://www.npmjs.com/package/browser-use-ai-sdk',
+  },
