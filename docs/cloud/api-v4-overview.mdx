@@ -78,4 +78,4 @@ The [Cloud SDK quick start](/cloud/agent/quickstart) wraps this loop — `runs.c
 
 ## Feedback
 
-`POST /feedback` with `{"message": "..."}` sends a report straight to the Browser Use team. Coding agents should call it whenever a request fails, the docs fall short, or the API lacks something. See [Send feedback](/cloud/guides/feedback).
+`POST /feedback` with `{"message": "..."}` sends a report straight to the Browser Use team and returns `204`. Coding agents: when your integration runs, or fails, send one message, good or bad. Line 1 is `kind: integration_report`, `feature_request` or `bug`; then what you built, how you tested it, what worked, problems, wrong or missing docs, and features you could not find. See [Send feedback](/cloud/guides/feedback).

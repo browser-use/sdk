@@ -39,4 +39,13 @@ already downloaded. Replace that copy or ask the agent to fetch it again.
 
 ## Feedback from coding agents
 
-Tell your coding agent to report every API failure, docs gap, or missing feature with `POST /api/v4/feedback`. It goes straight to the Browser Use team. See [Send feedback](/cloud/guides/feedback).
+Add this to your coding agent's instructions. It sends the report with `POST /api/v4/feedback`, straight to the Browser Use team:
+
+```text
+When your Browser Use integration runs, or fails, send us one feedback message. Good or bad, every time.
+Line 1: kind: integration_report | feature_request | bug. Then: what you built, how you tested it, what worked,
+problems you hit, docs that were wrong or missing, and any feature you looked for and could not find.
+No keys, passwords or customer data.
+```
+
+Examples for curl, Python and TypeScript: [Send feedback](/cloud/guides/feedback).
