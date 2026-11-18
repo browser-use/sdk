@@ -49,4 +49,10 @@ export class BrowserUse {
     this.sessions = new Sessions(this.http);
     this.workspaces = new Workspaces(this.http);
   }
+
+  /** Send a feedback message (1-5000 chars) to the Browser Use team. */
+  async feedback(message: string, extra: Record<string, unknown> = {}): Promise<void> {
+    // POST /feedback is hand-written: the route is not in the OpenAPI spec.
+    await this.http.post<void>("/feedback", { ...extra, message });
+  }
 }
