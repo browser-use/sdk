@@ -99,12 +99,12 @@ growing until the browser stops. See the [session cost reference](/cloud/api-v4/
 
 ## Auto recharge
 
-Auto recharge requires a saved payment method. If it is not visible in Billing, first save a payment method through a manual credit purchase. Select the project that should receive the credits.
+For projects billed directly by Browser Use, Auto recharge is in [Settings → Billing](https://cloud.browser-use.com/settings?tab=billing), including before the project's first payment. Projects billed through a marketplace or Vercel do not show it. Select the project that should receive the credits. It needs a saved card: without one, turning on the **Auto recharge** switch opens card setup, and no credit purchase is required. Saving the card alone does not turn on Auto recharge: after card setup, confirm the recharge in the dialog that opens. If the balance is already below the threshold when you turn the switch on, a dialog asks you to confirm the immediate recharge first. Changes to the amounts need **Save**.
 
 Auto recharge has two separate settings:
 
-- **Threshold:** the balance below which another purchase is triggered.
-- **Recharge amount:** the amount of credits purchased by that recharge.
+- **Balance falls below** (threshold): the balance below which another purchase is triggered.
+- **Add to balance** (recharge amount): the amount of credits purchased by that recharge.
 
 For example, a \$10 threshold with a \$50 recharge amount purchases \$50 when the balance falls below \$10. It does not target a final balance of \$50.
 
