@@ -10,6 +10,12 @@ mode: "wide"
 2. Ask in our [Discord community](https://link.browser-use.com/discord)
 3. Get support for your enterprise with support@browser-use.com
 
+## Report a browser-use problem
+
+`browser-use feedback "what happened"` sends a report to the Browser Use team. Add `--category bug`, `docs`, `missing` or `other` (default: `bug`). In Python, use `browser_use.feedback(message, category='bug')`. These explicit reports are sent even with usage telemetry off; see [Telemetry](/open-source/telemetry#feedback).
+
+From an agent cell, `report_issue(message, category='bug')` reports a library problem. MCP clients use `browser_feedback`. Both respect the telemetry setting and send at most three reports per run or MCP process. Use these for browser-use issues, with no credentials or personal data.
+
 ## Contribute
 
 ```bash

@@ -25,9 +25,9 @@ browser-use is an MIT-licensed Python library. You give it a task, and the agent
 
 Defaults:
 
-- **Model:** `bu-fast` on the Browser Use gateway.
+- **Model:** `bu-4.0` (BU 4.0) on the Browser Use gateway.
 - **Browser:** a Browser Use Cloud browser, stopped when the run ends.
-- **Key:** one Browser Use key runs both. Create one at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key) and set `BROWSER_USE_API_KEY`, or run `browser-use login`.
+- **Key:** one Browser Use key runs both. An interactive desktop run without a key opens login and continues after approval. Or create one at [cloud.browser-use.com/new-api-key](https://cloud.browser-use.com/new-api-key) and set `BROWSER_USE_API_KEY`, or run `browser-use login`.
 
 Every default can be swapped. Use `Browser('chromium')` for a local browser, and `ChatOpenAI`, `ChatAnthropic`, `ChatGoogle` or any Pydantic AI model string for your own model.
 

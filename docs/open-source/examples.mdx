@@ -4,7 +4,7 @@ description: "Runnable browser-use 1.0 scripts: extraction to Pydantic, forms, l
 icon: "square-code"
 ---
 
-Each script runs as is after the [Quickstart](/open-source/quickstart) (`uv add 'browser-use==1.0.0'` and `export BROWSER_USE_API_KEY=bu_...`). Save it as a file and run it with `uv run <file>.py`. They use the default model, `bu-fast`, and a Browser Use Cloud browser unless they say otherwise. Every one was run end to end against browser-use 1.0; the outputs shown are from those runs.
+Each script runs as is after the [Quickstart](/open-source/quickstart) (`uv add 'browser-use==1.0.6'` and `export BROWSER_USE_API_KEY=bu_...`). Save it as a file and run it with `uv run <file>.py`. They use the default model (`bu-4.0` from 1.0.6) and a Browser Use Cloud browser unless they say otherwise. Every one was run end to end against browser-use 1.0; the outputs shown are from those runs, on `bu-fast`, the default before 1.0.6.
 
 ## Extract data into a Pydantic model
 
@@ -63,7 +63,7 @@ print(result.final_result())
 
 ## Log in with secrets
 
-The model sees the names `username` and `password`, never the values, and they are typed only on the site you scope them to. See [Secrets](/open-source/secrets).
+The model is told the names `username` and `password`; `type_secret` types their values only on the site you scope them to. Screenshots and page JavaScript can still reveal a typed value. See [Secrets](/open-source/secrets).
 
 ```python login.py
 import os
@@ -73,7 +73,7 @@ from browser_use import Agent
 agent = Agent(
     'Log in on https://the-internet.herokuapp.com/login, then return the message the page shows',
     sensitive_data={
-        # typed only on this site; the model sees the names, never the values
+        # type_secret types only on this site; the prompt lists names, not values
         'the-internet.herokuapp.com': {
             'username': os.environ.get('APP_USER', 'tomsmith'),
             'password': os.environ.get('APP_PASSWORD', 'SuperSecretPassword!'),

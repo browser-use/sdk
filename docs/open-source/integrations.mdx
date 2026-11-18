@@ -49,7 +49,7 @@ The coding agent writes the browser code itself, against your Chrome or a cloud 
 The CLI with its skill is the most direct:
 
 ```bash
-uv tool install 'browser-use==1.0.0'
+uv tool install 'browser-use==1.0.6'
 browser-use skill install
 ```
 
@@ -58,7 +58,7 @@ browser-use skill install
 Or add the MCP server:
 
 ```bash
-claude mcp add browser-use -- uvx --from 'browser-use==1.0.0' browser-use --cli-mcp
+claude mcp add browser-use -- uvx --from 'browser-use==1.0.6' browser-use --cli-mcp
 ```
 
 ### Claude Desktop and Cursor
@@ -70,7 +70,7 @@ Add the MCP server to `claude_desktop_config.json` (Claude Desktop: Settings > D
   "mcpServers": {
     "browser-use": {
       "command": "uvx",
-      "args": ["--from", "browser-use==1.0.0", "browser-use", "--cli-mcp"]
+      "args": ["--from", "browser-use==1.0.6", "browser-use", "--cli-mcp"]
     }
   }
 }
@@ -83,10 +83,10 @@ Add the MCP server to `claude_desktop_config.json` (Claude Desktop: Settings > D
 ```toml
 [mcp_servers.browser-use]
 command = "uvx"
-args = ["--from", "browser-use==1.0.0", "browser-use", "--cli-mcp"]
+args = ["--from", "browser-use==1.0.6", "browser-use", "--cli-mcp"]
 ```
 
-The server gives the client three tools: `browser_exec`, `browser_screenshot` and `browser_login`. Local or cloud browser, and what the tools do: [MCP server](/open-source/mcp).
+The server gives the client four tools: `browser_exec`, `browser_screenshot`, `browser_login` and `browser_feedback`. Local or cloud browser, and what the tools do: [MCP server](/open-source/mcp).
 
 ## Call a browser agent from your own agent
 
@@ -131,6 +131,6 @@ The OpenAI version needs `uv add openai-agents`. The same `browse` function work
 
 To have Browser Use host the whole agent instead, use the [Cloud API](/cloud/agent/quickstart). Cloud guides: [Claude Code](/cloud/tutorials/integrations/claude-code), [OpenAI](/cloud/tutorials/integrations/openai).
 
-## 0.x integrations
+## Legacy integrations
 
 The 0.x Anthropic and OpenAI hosted-browser integrations (`browser_use.integrations`, including Browser Use toolsets for Claude) are not in 1.0. They come back on the new `Browser` in a later release. To use them now, stay on 0.x (`uv add 'browser-use>=0.13.11,<1'`) and follow [toolsets for Claude (0.x)](/open-source/legacy/0.x/customize/integrations/toolsets-for-claude) or [OpenAI (0.x)](/open-source/legacy/0.x/customize/integrations/openai).

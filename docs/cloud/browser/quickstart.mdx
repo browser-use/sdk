@@ -200,6 +200,18 @@ files (`limit`, default 50); pass `nextCursor` as `cursor` while `hasMore` is
 Pass `networkPolicyId` to limit the domains that the browser can open. See
 [Network policies](/cloud/browser/network-policies).
 
+## Send feedback
+
+When your integration runs, or fails, have your coding agent send us one message, good or bad:
+
+```bash
+curl -s -X POST https://api.browser-use.com/api/v4/feedback \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" -H "Content-Type: application/json" \
+  -d '{"message":"kind: integration_report\nBuilt: ...\nTested: ...\nWorked: ...\nProblems: ...\nMissing: ..."}'
+```
+
+Use `kind: feature_request` or `kind: bug` when that fits better. No keys, passwords or customer data. See [Send feedback](/cloud/guides/feedback).
+
 <CardGroup cols={2}>
   <Card
     title="Playwright, Puppeteer, Selenium"

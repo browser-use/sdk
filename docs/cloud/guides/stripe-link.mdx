@@ -1,6 +1,6 @@
 ---
 title: "Pay with Stripe Link"
-description: "Let an agent buy things with your Link wallet: one-time cards and Shared Payment Tokens, and you approve every purchase in the Link app."
+description: "Let an agent buy things with a Link wallet: yours, or one per end user of your app. One-time cards and Shared Payment Tokens, and the wallet owner approves every purchase in the Link app."
 icon: "credit-card"
 ---
 
@@ -36,10 +36,10 @@ The agent works through a Browser Use proxy: it never sees your Link login or yo
 2. Under **Link**, click **Connect** and sign in to Link.
 3. Approve the connection in Link. The card now shows your Link email.
 
-Each project has one Link connection. Connecting again replaces it; **Remove** disconnects it, and runs that are still going lose access on their next payment step.
+The wallet you connect in the dashboard is the project's **default connection**. Connecting again in the dashboard replaces it; **Remove** disconnects it, and runs that are still going lose access on their next payment step. To connect wallets for your own users, see [Connect your users' wallets](#connect-your-users-wallets).
 
 <Note>
-  Connecting only works in the dashboard; there is no API for it. Link agent
+  Link agent
   wallets are currently available for **US Link accounts**. If Link says the
   service is not available in your region, your Link account (or network)
   is outside the supported region.
@@ -55,13 +55,13 @@ curl https://api.browser-use.com/api/v4/stripe-link \
 ```json
 {
   "isConnected": true,
-  "connectionId": "70eade20-64b9-4ac0-8087-61f66f412cab",
+  "connectionId": "1f0c6c4e-2b7a-4f7e-9a51-0d8c3a6e2b10",
   "linkEmail": "you@example.com",
   "mode": "live"
 }
 ```
 
-- `connectionId` is what you pass to runs. Reconnecting usually keeps the same id, but don't cache it forever: read `GET /api/v4/stripe-link` before a run and use the `connectionId` and `isConnected` it returns.
+- `connectionId` is the project's default connection, which you pass to runs. Reconnecting creates a new id, so don't cache it forever: read `GET /api/v4/stripe-link` before a run and use the `connectionId` and `isConnected` it returns.
 - `mode` is `live` on `api.browser-use.com`: approved purchases are **real charges**.
 - If `isConnected` is `false`, connect (or reconnect) the wallet in the dashboard first.
 
@@ -118,6 +118,77 @@ When the agent is ready to pay, it creates a spend request and waits for you:
 
 `status` moves through `pending_approval` → `approved` → `succeeded` for a completed payment. You can also see `denied` (you declined), `expired` (nobody approved in time), `canceled` (the agent cancelled an unused request) and `requires_action` (for example a 3-D Secure check). If you decline, the agent stops instead of trying again. While the agent waits, it re-checks the request every few seconds. Unchanged polls are usually collapsed into one event, but the same status can still arrive more than once (we saw repeated `pending_approval` events in testing), so key on `spend_request_id` and `status`.
 
+## Connect your users' wallets
+
+If you build an app on Browser Use, each of your end users can connect their own Link wallet. A project can hold many **connections**: one or more per end user, each with its own id, like a profile id. Your users don't need a Browser Use account; they only sign in to Link.
+
+### 1. Start a connect session
+
+From your server, create a session with your own reference for the user (any opaque string up to 200 characters, for example your user id; it is a label, not proof of identity):
+
+```bash
+curl -X POST https://api.browser-use.com/api/v4/link/connect-sessions \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"customerRef": "user_123", "returnUrl": "https://yourapp.com/settings/payments"}'
+```
+
+```json
+{
+  "id": "6c2e0a4b-5d7f-4c1e-8f3a-2b9d1e7c4a60",
+  "url": "https://api.browser-use.com/cloud/stripe-link/connect/6c2e0a4b-5d7f-4c1e-8f3a-2b9d1e7c4a60",
+  "customerRef": "user_123",
+  "status": "pending",
+  "connectionId": null,
+  "error": null,
+  "expiresAt": "2026-11-20T10:30:00Z"
+}
+```
+
+- Show `url` to that one user: as a link, a button, or a popup inside your chat. Treat it like a password-reset link: whoever opens it can connect their wallet to this session.
+- The link works for 30 minutes and can be opened again until the user finishes, so chat link previews don't use it up.
+- `returnUrl` is optional and must be `https`. Without it, the user lands on a small "Link connected" page; if you opened the link in a popup, that page posts `{"source": "browser-use-link", "status": "connected", "sessionId": "..."}` to your window and closes itself.
+
+### 2. Wait for the user
+
+After the user approves in Link, the session completes once. With `returnUrl`, the browser comes back with `link_session_id`, `link_status` (`connected` or `failed`) and, on failure, `link_error`. Either way, read the result from your server:
+
+```bash
+curl https://api.browser-use.com/api/v4/link/connect-sessions/<session id> \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+
+`status` is `pending`, `connected` (with `connectionId`), `failed` (with `error`, for example `link_declined`) or `expired`. Store the `connectionId` with your user.
+
+### 3. Use the connection
+
+- **In agent runs:** pass it as `stripeLinkConnectionId` on `POST /api/v4/runs`, exactly like the default connection above. The user approves each purchase in their Link app.
+- **Without an agent run:** call the Link API for that connection through Browser Use, for example to create a spend request from your own checkout code. Browser Use adds the user's Link token, so your server never sees it, and your Browser Use API key never reaches Link.
+
+```bash
+curl -X POST https://api.browser-use.com/api/v4/link/connections/<connectionId>/proxy/spend_requests \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 500, "currency": "usd", "merchant_name": "Example Store", "merchant_url": "https://example.com", "context": "One-time purchase of the item the user picked in our app; the user approves it in the Link app before any card is issued."}'
+```
+
+The same limits apply as for runs: every purchase needs the user's approval in Link, and pre-approved (delegated) spend requests are refused.
+
+<Warning>
+  If your server asks Link for the card on an approved spend request (for example `GET .../proxy/spend_requests/{id}?include=card`), the response contains the full card number, expiry and CVC. That card data is then yours to protect: keep it out of logs, databases and model prompts, and handle it as PCI cardholder data. Browser Use passes it through and never stores or logs it. If you only need to pay on a Stripe checkout or a machine-payment merchant, prefer a Link Pay Token or a Shared Payment Token, which are not card numbers.
+</Warning>
+
+### 4. List, choose the default, disconnect
+
+| Request | What it does |
+|---|---|
+| `GET /api/v4/link/connections?customerRef=user_123` | Lists connections, newest first, 100 per page; pass `cursor` with the previous page's `nextCursor`. Each item has `id`, `customerRef`, `default`, `status` and `reconnectRecommended`. |
+| `GET /api/v4/link/connections/{id}` | One connection. |
+| `POST /api/v4/link/connections/{id}/default` | Makes it the project's default, which `GET /api/v4/stripe-link` and the dashboard use. Connecting a user's wallet never changes the default on its own. |
+| `DELETE /api/v4/link/connections/{id}` | Disconnects it: Link revokes the access, and runs using it lose access on their next payment step. |
+
+A project only ever sees and uses its own connections: ids from another project return `404`. API keys need the matching scopes: `v4:link:read`, `v4:link:create`, `v4:link:delete`, and `v4:link:pay` for the proxy.
+
 ## Cards vs Shared Payment Tokens
 
 The agent picks the credential that fits the merchant:
@@ -133,7 +204,7 @@ Some Stripe checkouts offer a Link payment button for AI agents; the agent uses 
 ## Limits
 
 - **Approval every time.** There are no standing or pre-approved budgets: the proxy refuses delegated (pre-approved) spend requests.
-- **One wallet per project**, connected by a dashboard user. Wallets per end user of your product are not supported.
+- **Many wallets per project.** The dashboard connects the project's default wallet; your users' wallets connect through connect sessions. Each connection belongs to exactly one project.
 - **Not available** in the EU deployment, or for zero-data-retention projects.
 - **Reconnect when asked.** Link can revoke access (for example after a long time without use). Browser Use may not notice right away: until it marks the connection as needing reauthentication, `GET /api/v4/stripe-link` can still report `isConnected: true` and runs still start, but the agent's Link calls fail at payment time with a `link_unauthorized` error. Once the connection is marked, the dashboard shows **Reconnect**, the status API returns `isConnected: false`, and new runs that send the id get `422 stripe link connection not found`. Reconnect in the dashboard in either case.
 - **Pricing.** Browser Use charges nothing extra for Link. You pay the merchant through Link as usual.

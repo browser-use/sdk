@@ -4,28 +4,28 @@ description: "Let Claude Code, Codex and other coding agents drive a browser wit
 icon: "terminal"
 ---
 
-The `browser-use` CLI is for coding agents. The agent pipes Python to it, and the CLI runs it against a browser with [Browser Harness](https://github.com/browser-use/browser-harness) helpers and raw CDP. It drives your Chrome by default, or a Browser Use cloud browser, or any CDP endpoint.
+The `browser-use` CLI is for coding agents. The agent pipes Python to it, and the CLI runs it against a browser with [Browser Harness](https://github.com/browser-use/browser-harness) helpers and raw CDP. It attaches to your Chrome when available, or starts its own Chromium when it cannot (no display, remote debugging off, no usable Chrome). It also drives Browser Use cloud browsers or any CDP endpoint.
 
 The CLI runs Python, not agent tasks: there is no `browser-use run "<task>"`. To run an agent from your code, use the [library](/open-source/quickstart).
 
 ## Install
 
 ```bash
-uv tool install 'browser-use==1.0.0'
+uv tool install 'browser-use==1.0.6'
 browser-use --help
 ```
 
-For one-off runs without installing, use `uvx --from 'browser-use==1.0.0' browser-use`. Pin the exact version with `==`, never `>=`: browser-use moves fast, and a new release can break your setup.
+For one-off runs without installing, use `uvx --from 'browser-use==1.0.6' browser-use`. Pin the exact version with `==`, never `>=`: browser-use moves fast, and a new release can break your setup.
 
 ## Set up your coding agent
 
 Paste this into Claude Code, Codex or another coding agent:
 
 ```text
-Install browser-use with `uv tool install 'browser-use==1.0.0'`, run `browser-use skill install` to register the skill, and connect it to my browser. If setup or connection fails, follow https://github.com/browser-use/browser-harness/blob/main/install.md.
+Install browser-use with `uv tool install 'browser-use==1.0.6'`, run `browser-use skill install` to register the skill, and connect it to my browser. If setup or connection fails, run `browser-use --doctor` and follow its output and the error message.
 ```
 
-`browser-use skill install` writes the skill to `~/.agents` and to each supported agent you have installed: `claude`, `codex`, `copilot`, `cursor`, `gemini`, `openclaw`, `opencode`. Use `--target NAME` for one, or `--path DIR` for a custom location. `browser-use skill show` prints it. More skills: [Agent skills](/open-source/skills).
+`browser-use skill install` writes the skill to `~/.agents` and to each supported agent you have installed: `claude`, `codex`, `copilot`, `cursor`, `gemini`, `openclaw`, `opencode`. Use `--target NAME` for one, or `--path DIR` for a custom location. `browser-use skill show` prints it. Installation overwrites the selected `SKILL.md` files. `--install-cli` also installs this exact version as a uv tool; without it, installing the skill does not replace your CLI. More skills: [Agent skills](/open-source/skills).
 
 ## Run Python
 
@@ -47,7 +47,7 @@ print(page_info())
 
 ## Your Chrome
 
-By default the CLI attaches to the Chrome you have open, with its tabs, cookies and logins. The first time, Chrome asks whether to allow remote debugging: click **Allow**, or on macOS run `browser-use mac-approve`. If it can't connect:
+When your Chrome is available with remote debugging enabled, the CLI attaches to it with its tabs, cookies and logins. Otherwise it starts its own Chromium on a temporary profile (headless without a display) and reuses it on later calls. `browser-use --reload` closes that Chromium and tries your Chrome again. Explicit CDP endpoints and existing cloud daemons are used as configured. The first time, Chrome asks whether to allow remote debugging: click **Allow**, or on macOS run `browser-use mac-approve`. If it can't connect:
 
 ```bash
 browser-use --doctor
@@ -101,11 +101,16 @@ Each name is its own browser, so parallel agents use different names. A cloud br
 | `browser-use --doctor` | Check install, daemon and browser. |
 | `browser-use doctor --fix-snap` | How to fix Snap Chromium blocking CDP (Linux). |
 | `browser-use mac-approve` | Approve Chrome's macOS remote-debugging prompt. |
-| `browser-use --reload` | Restart the daemon. |
+| `browser-use --reload` | Restart the daemon and close the CLI's own Chromium. |
 | `browser-use install` | Download Chromium for the library's `Browser('chromium')`. |
 | `browser-use skill [show \| install]` | Print or install the agent skill. |
+| `browser-use feedback "what happened" [--category bug\|docs\|missing\|other]` | Send feedback about browser-use to the team. See [Get Help](/open-source/get-help). |
 | `browser-use --cli-mcp` | Run the [MCP server](/open-source/mcp). |
 | `browser-use --version` | Print the versions. |
+
+When a call cannot reach a browser, the CLI checks PyPI for a newer release at most once a day and names it. `BROWSER_USE_NO_UPDATE_CHECK=1` disables that check.
+
+`http_get()` runs from this machine, without the fetch-use proxy, even with a Browser Use key. The browser's proxy does not apply to Python networking.
 
 Update by installing the new exact version: `uv tool install 'browser-use==<version>'`. The 0.x subcommands (`open`, `state`, `click`, `run`, ...) print what replaced them.
 
