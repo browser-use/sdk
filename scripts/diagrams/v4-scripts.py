@@ -10,9 +10,9 @@ from core import C, NS, RJ, THEMES, Doc, P, pts, m_top, m_front  # noqa: E402
 
 
 TITLE = "Teach a task once, rerun the saved script later"
-DESC = ("A first run explores the site in a browser, then writes and tests extract_top_stories.py in a workspace. "
-        "Later runs pass workspace_id to reuse that file; every later run sends a fresh request to the live site, "
-        "and repairs the script in the workspace if it broke.")
+DESC = ("A first run explores the site in a browser, then writes and tests scripts/gh_trending.py in a workspace "
+        "and notes the command in AGENTS.md. Later runs pass the same workspace_id, run the saved script against "
+        "the live site in 2 steps, and repair it if it breaks.")
 
 
 # ---------------------------------------------------------------- objects
@@ -106,7 +106,7 @@ def cable(d, a, b):
 # ---------------------------------------------------------------- figure
 
 LOOP = 7.5  # s, one phase per later-run plate
-FILE = "extract_top_stories.py"
+FILE = "scripts/gh_trending.py"
 
 
 def workspace(d, X, T, k=1.0):
