@@ -127,3 +127,6 @@ The judge does not run for projects with
 [Zero Data Retention](/cloud/zero-data-retention) or projects restricted to AWS
 Bedrock model routing, because it would send the trajectory to another model
 provider. Their runs keep `judgement: null`.
+
+The judge is not available in the [EU deployment](/cloud/eu-deployment): a run
+created there with `judge` returns 422.
