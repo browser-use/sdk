@@ -5,7 +5,8 @@ icon: "gavel"
 ---
 
 The judge is an optional LLM check that runs after a V4 run finishes. It reads
-the task, the agent's full trajectory (steps, tool calls and results), the final
+the task, a summary of the agent's trajectory (its steps, tool calls and
+results, with long parts shortened and very long runs cut off), the final
 answer and up to 20 screenshots, and returns a verdict: did the agent complete
 the task, in full and in good faith?
 
@@ -17,7 +18,7 @@ defaults). Omitting `judge`, or setting it to `null`, leaves it off.
 The judge grades the outcome against what you asked for. There is no partial
 credit: a run that does only part of the task fails.
 
-It also looks for these failure modes and names them in `failure_reason`:
+It is told to look for these failure modes and name them in `failure_reason`:
 
 - The task was impossible, or the browser or agent crashed or stalled.
 - A captcha or anti-bot check blocked the agent.
@@ -30,8 +31,8 @@ It also looks for these failure modes and names them in `failure_reason`:
 
 Prompt injection shows up through these checks. If a page tells the agent to
 drop its task, open another site or report a different answer, and the agent
-does so, the result no longer matches your task and the judge fails the run.
-To have the judge name it, say so in `context` (below).
+does so, the result no longer matches your task, so the judge should fail the
+run. To have the judge name it, say so in `context` (below).
 
 <Note>
   The judge is an LLM, so its verdict is not deterministic and can be wrong. Use
@@ -43,10 +44,11 @@ To have the judge name it, say so in `context` (below).
 ## Add your own criteria
 
 `judge.context` (up to 10,000 characters) gives the judge your evaluation
-criteria, the expected answer or the failure reasons you want reported. It takes
-precedence over everything else: if the run does not satisfy it, the verdict is
-`false`. When one of your suggested failure reasons matches, the judge uses your
-wording, so results group cleanly.
+criteria, the expected answer or the failure reasons you want reported. The
+judge is told that it takes precedence over everything else: a run that does
+not satisfy it should get `verdict: false`. When one of your suggested failure
+reasons matches, the judge is asked to use your wording, so results group
+cleanly.
 
 <CodeGroup>
 ```python Python
@@ -110,9 +112,13 @@ A `judgement` that stays `null` is unavailable, not a pass or a fail.
 
 ## Model and cost
 
-The default judge model is `gpt-6.1-terra` with reasoning effort `high`. Set
-`judge.model` and `judge.modelParams` to choose another OpenAI or Google model;
-the [FAQ](/cloud/faq#how-do-i-get-a-v4-judge-verdict) covers the details. The
+Judge model choice is being rolled out. Once it is enabled for your project,
+the default judge model is `gpt-6.1-terra` with reasoning effort `high`, and
+`judge.model` and `judge.modelParams` choose another OpenAI or Google model.
+Until then, and for projects whose model routing cannot use `gpt-6.1-terra`
+(for example US-only routing), `judge: {}` uses `gemini-3-flash`; a non-null
+`judge.model` or `judge.modelParams` returns 422 before rollout. The
+[FAQ](/cloud/faq#how-do-i-get-a-v4-judge-verdict) covers the details. The
 judge's LLM call is billed to the run at the judge model's token prices.
 
 ## When the judge does not run
