@@ -149,6 +149,34 @@ message or cancel a run. `interrupt=True` / `interrupt: true` instead cancels
 the active run so the new instruction can run immediately. Keep it false
 to preserve the active work.
 
+## Label and find runs
+
+Attach up to 10 `metadata` labels when you create a run. Keys are up to 100
+characters and values up to 1,000. Labels belong to that one run: follow-up
+runs in the same session do not inherit them, so send them again on each run
+you want to find.
+
+```bash
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Open Hacker News", "metadata": {"customer": "acme", "env": "prod"}}'
+```
+
+The run response and `GET /api/v4/runs/{id}` return `metadata` only when the
+run has labels. Filter the run list the same way as the
+[browser list](/cloud/browser/quickstart#label-and-find-browsers): `key=value`
+matches exactly, `key` matches any value, and repeated terms must all match.
+
+```bash
+curl -G https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  --data-urlencode "metadata=customer=acme" \
+  --data-urlencode "metadata=env"
+```
+
+The dashboard history filters agent sessions and browsers by the same labels.
+
 ## Manage a session
 
 ### Rename
