@@ -63,3 +63,17 @@ run, or within the run's `keepAlive` seconds. Otherwise, and in later sessions,
 a fresh browser loads the same profile.
 
 For the fastest setup, [sync an existing local login](/cloud/guides/profile-sync).
+
+## What a profile saves
+
+| Data | Saved |
+| --- | --- |
+| Cookies, including partitioned (CHIPS) cookies | Yes |
+| localStorage | Yes |
+| Browser fingerprint | Yes |
+| IndexedDB, sessionStorage | No |
+| HTTP cache, saved passwords | No |
+
+Changes are saved to the profile when the browser stops. Browsers on the same
+profile also share one exit IP on a best-effort basis. See [Sticky identity](/cloud/browser/sticky-identity)
+for the details and for running several browsers on one profile.

@@ -10,7 +10,7 @@ See [how we perform in the hardest stealth benchmark](https://browser-use.com/po
 
 Every cloud browser session runs in a hardened Chromium fork with stealth enabled by default — no configuration needed.
 
-- **Anti-detect browser fingerprinting** — Canvas, WebGL, fonts, navigator, and other browser fingerprints are randomized per session to appear as a real user. Fingerprint test results vary with browser version and the target site.
+- **Anti-detect browser fingerprinting** — Each browser gets a realistic fingerprint: navigator, screen, GPU and WebGL, and more. A browser without a profile gets a new random one. Browsers on the same [profile](/cloud/browser/sticky-identity) reuse the profile's fingerprint, so a site sees the same device each time. Fingerprint test results vary with browser version and the target site.
 - **Ad and cookie banner blocking** — Banners are dismissed automatically so the agent sees clean pages and executes faster.
 - **Anti-bot protections** — Help with sites protected by Cloudflare, PerimeterX, and other detection services. Access to every site is not guaranteed.
 

@@ -3323,6 +3323,9 @@
                     "204": {
                         "description": "Successful Response"
                     },
+                    "409": {
+                        "description": "Profile is in use. Stop its sessions and try again."
+                    },
                     "422": {
                         "description": "Validation Error",
                         "content": {
