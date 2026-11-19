@@ -11,11 +11,11 @@ the proxy's location—not your server's. To allow or block domains, see
 
 <picture className="block dark:hidden">
   <source media="(max-width: 600px)" srcSet="/cloud/images/browser-proxy-light-mobile.svg" />
-  <img src="/cloud/images/browser-proxy-light.svg" alt="A cloud browser reaches a website by one of three routes: the default residential proxy, whose country is set by proxyCountryCode, your own proxy via customProxy, or directly with proxyCountryCode null." noZoom />
+  <img src="/cloud/images/browser-proxy-light.svg" alt="A cloud browser reaches a website by one of three routes: the default residential proxy, whose country is set by proxyCountryCode, your own proxy via customProxy (enterprise), or directly with proxyCountryCode null." noZoom />
 </picture>
 <picture className="hidden dark:block">
   <source media="(max-width: 600px)" srcSet="/cloud/images/browser-proxy-dark-mobile.svg" />
-  <img src="/cloud/images/browser-proxy-dark.svg" alt="A cloud browser reaches a website by one of three routes: the default residential proxy, whose country is set by proxyCountryCode, your own proxy via customProxy, or directly with proxyCountryCode null." noZoom />
+  <img src="/cloud/images/browser-proxy-dark.svg" alt="A cloud browser reaches a website by one of three routes: the default residential proxy, whose country is set by proxyCountryCode, your own proxy via customProxy (enterprise), or directly with proxyCountryCode null." noZoom />
 </picture>
 
 Set `browser_settings` / `browserSettings` when you create a V4 run to choose
@@ -203,7 +203,7 @@ endpoints need an API key with the `v4:browsers:create` scope (**Write** on
 | `{"rotate": true}` | New residential IP in the same country. On a direct browser, send `"mode": "managed"` instead. |
 | `{"target": "https://shop.example.com"}` | Residential proxy in the current country, with a new IP. |
 | `{"mode": "direct"}` | No proxy. |
-| `{"mode": "custom", "customProxy": {...}}` | Your proxy, with the fields above except `ignoreCertErrors`, which works only when the browser starts. |
+| `{"mode": "custom", "customProxy": {...}}` | Your proxy ([enterprise](#custom-proxy)), with the fields above except `ignoreCertErrors`, which works only when the browser starts. |
 
 For example, an agent can shop on the residential proxy and change to a
 card-vault proxy at the payment step:
