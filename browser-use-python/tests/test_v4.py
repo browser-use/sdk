@@ -1091,3 +1091,34 @@ def test_structured_output_generated_request_alias():
     request = RunCreateRequest.model_validate({"task": "Extract", "outputSchema": _OUTPUT_SCHEMA})
     assert request.output_schema == _OUTPUT_SCHEMA
     assert request.model_dump(by_alias=True, exclude_none=True)["outputSchema"] == _OUTPUT_SCHEMA
+
+
+def _ready_page(data: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "events": [
+            {"runId": RUN_ID, "id": 3, "ts": "2026-01-01T00:00:00Z", "type": "browser.ready", "data": data}
+        ],
+        "nextAfter": 3,
+        "hasMore": False,
+    }
+
+
+def test_live_url_returns_browser_live_view() -> None:
+    http = FakeSyncHttp([_ready_page({"live_view_url": "https://live"})])
+    assert Runs(http).live_url(RUN_ID, timeout=0) == "https://live"  # type: ignore[arg-type]
+
+
+def test_live_url_rejects_event_without_url() -> None:
+    http = FakeSyncHttp([_ready_page({})])
+    with pytest.raises(RuntimeError, match="without a live view URL"):
+        Runs(http).live_url(RUN_ID, timeout=0)  # type: ignore[arg-type]
+
+
+def test_payments_read_wallets_and_stripe_link() -> None:
+    from browser_use_sdk.v4.resources.payments import Payments
+
+    http = FakeSyncHttp([{"wallets": []}, {"isConnected": False}])
+    payments = Payments(http)  # type: ignore[arg-type]
+    assert payments.wallets().wallets == []
+    assert payments.stripe_link().is_connected is False
+    assert [c[1] for c in http.calls] == ["/agentcard/wallets", "/stripe-link"]

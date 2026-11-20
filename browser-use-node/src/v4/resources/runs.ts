@@ -14,14 +14,9 @@ type RunAttachmentsResponse = components["schemas"]["RunAttachmentsResponse"];
 /** Known V4 model ids; `RunCreateBody.model` also accepts ids added after this release. */
 export type RunModel = RunCreateRequest["model"];
 
-// Wallet ids stay off the SDK surface, which has no wallet resource to look them up.
+// Payment ids come from `client.payments.wallets()` and `client.payments.stripeLink()`.
 export type RunCreateBody = Pick<RunCreateRequest, "task"> &
-  Partial<
-    Omit<
-      RunCreateRequest,
-      "task" | "model" | "browserSettings" | "agentcardWalletId" | "stripeLinkConnectionId"
-    >
-  > & {
+  Partial<Omit<RunCreateRequest, "task" | "model" | "browserSettings">> & {
     // `string & {}` keeps autocomplete for known ids without rejecting new ones.
     model?: RunModel | (string & {});
     // Generated types mark defaulted fields (proxyCountryCode) required; the server fills them.
@@ -122,6 +117,19 @@ export class Runs {
       if (remaining <= 0) throw new Error(`Run ${runId} did not emit ${type} within ${timeout}ms`);
       await new Promise((resolve) => setTimeout(resolve, Math.min(interval, remaining)));
     }
+  }
+
+  /**
+   * Wait for the run's browser and return its live view URL, to show a user what the agent is doing.
+   * Same polling as `waitForEvent(runId, "browser.ready")`; throws if the run ends first.
+   */
+  async liveUrl(runId: string, options?: WaitOptions): Promise<string> {
+    const event = await this.waitForEvent(runId, "browser.ready", options);
+    const url = (event.data as Record<string, unknown> | undefined)?.["live_view_url"];
+    if (typeof url !== "string" || !url) {
+      throw new Error(`Run ${runId} emitted ${event.type} without a live view URL`);
+    }
+    return url;
   }
 
   /** Cancel a run. Returns the updated run summary. */
