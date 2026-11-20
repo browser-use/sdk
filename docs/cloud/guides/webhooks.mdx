@@ -1,6 +1,6 @@
 ---
 title: Webhooks
-description: "Receive V2 task and V3 session notifications and verify the webhook signature."
+description: "Receive V2 task, V3 session and V4 run notifications and verify the webhook signature."
 icon: "webhook"
 ---
 
@@ -12,9 +12,11 @@ Set up webhooks at [cloud.browser-use.com/settings?tab=webhooks](https://cloud.b
 |-------|-----|------|
 | `agent.task.status_update` | V2 | Task status changes (`started`, `finished`, `stopped`, or `failed`) |
 | `session.status.update` | V3 | Session status changes; inspect `payload.status` |
+| `run.terminal` | V4 | A run reaches `completed`, `failed`, or `cancelled`; sent once |
+| `run.needs_input` | V4 | A run [asks its caller](/cloud/agent/subagent) a question, approval, choice, or sign-in; sent once per request |
 | `test` | Dashboard | Webhook test ping |
 
-Match the event type to the API version you use. For V4 run monitoring, see [Observability](/cloud/agent/observability) and [polling guidance](/cloud/guides/concurrency#budget-http-requests-separately).
+Match the event type to the API version you use. V4 events go to the same endpoints and are enabled per project while they roll out; until your project has them, use [Observability](/cloud/agent/observability) and [polling guidance](/cloud/guides/concurrency#budget-http-requests-separately). V4 runs started from the dashboard do not send webhooks.
 
 ## Payload
 
@@ -47,7 +49,46 @@ A V3 event uses the session's `id` as `payload.session_id`. `output` is included
 }
 ```
 
-Status-change events are not all completion events. Check the status before continuing your workflow.
+A V4 `run.terminal` event carries ids and the final status. `totalChargeUsd` is a decimal string, and `hasResult` tells you whether to fetch the result with `GET /api/v4/runs/{runId}`:
+
+```json
+{
+  "type": "run.terminal",
+  "timestamp": "2026-11-16T12:00:00.123Z",
+  "payload": {
+    "runId": "6f0c...",
+    "sessionId": "1b2e...",
+    "status": "completed",
+    "totalChargeUsd": "0.0420",
+    "hasResult": true
+  }
+}
+```
+
+A V4 `run.needs_input` event carries the same fields as the run's `parent.request` event. Answer it with `POST /api/v4/runs/{runId}/requests/{request.id}` before `expiresAt`. It never includes credentials:
+
+```json
+{
+  "type": "run.needs_input",
+  "timestamp": "2026-11-16T12:00:00.123Z",
+  "payload": {
+    "runId": "6f0c...",
+    "sessionId": "1b2e...",
+    "request": {
+      "id": "9a4d...",
+      "kind": "choice",
+      "message": "Which plan should I buy?",
+      "domain": null,
+      "options": ["basic", "pro"],
+      "expiresAt": "2026-11-16T12:10:00Z"
+    }
+  }
+}
+```
+
+For zero-data-retention projects, V4 events contain only ids, `status`, and the request's `id`, `kind`, and `expiresAt`, and delivery logs store no payload.
+
+Status-change events are not all completion events. Check the status before continuing your workflow. V4 deliveries are best effort: keep a slow fallback poll for runs that never report back.
 
 ## Signature verification
 
@@ -130,6 +171,9 @@ async def handle_webhook(request: Request):
         # Persist or enqueue the verified event for your application to process.
         # Deduplicate before applying business side effects.
         print(f"Session {data['session_id']} is now {data['status']}")
+    elif event.get("type") == "run.terminal":
+        data = event["payload"]
+        print(f"Run {data['runId']} is {data['status']}")
 
     return {"status": "ok"}
 ```
