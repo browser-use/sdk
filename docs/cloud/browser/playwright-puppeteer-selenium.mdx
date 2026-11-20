@@ -71,6 +71,37 @@ console.log(await page.title());
 Selenium's `debugger_address` only supports local `host:port` connections.
 Use Playwright or Puppeteer for remote CDP over WebSocket.
 
+## Viewport and device emulation
+
+The browser's screen size is part of its fingerprint. To choose it, set
+`browserScreenWidth` and `browserScreenHeight` when you create the browser.
+
+By default the browser ignores CDP commands that resize the window or emulate a
+device, but still answers them with success. Playwright's `setViewportSize()`,
+`emulateMedia()` and context `viewport`, `isMobile` and `hasTouch` options, and
+Puppeteer's `setViewport()` and `emulate()`, run without errors and change
+nothing. The ignored commands are `Emulation.setDeviceMetricsOverride`,
+`Emulation.setTouchEmulationEnabled`, `Emulation.setEmulatedMedia`,
+`Emulation.setFocusEmulationEnabled`, `Emulation.setVisibleSize`,
+`Browser.setWindowBounds` and `Browser.setContentsSize`.
+
+To let them through, create the browser with `"allowResizing": true`:
+
+```bash
+curl -sS https://api.browser-use.com/api/v4/browsers \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"allowResizing": true}'
+```
+
+`allowResizing` can only be set when the browser is created. Resizing makes the
+browser easier to detect, so leave it off unless you need it. For V4 runs, the
+same setting is `browserSettings.allowResizing`.
+
+`Network.setUserAgentOverride` is always ignored, even with `allowResizing`, so
+Puppeteer's `setUserAgent()` has no effect and the browser keeps its own user
+agent.
+
 ## 3. Stop the browser
 
 ```bash

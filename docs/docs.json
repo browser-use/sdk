@@ -181,6 +181,7 @@
                     "icon": "archive",
                     "isDefaultOpen": false,
                     "pages": [
+                      "cloud/legacy/migrate-v2-to-v4",
                       "cloud/legacy/agent",
                       "cloud/legacy/public-share",
                       "cloud/legacy/skills"
