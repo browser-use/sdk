@@ -107,6 +107,15 @@ account, with 50 MiB per file. It leaves room for runtime files on the agent's
 1 GiB persistent disk. An upload quota is separate from the number of
 workspaces you can create, and from temporary disk used by a running agent.
 
+Files the agent writes during a run are saved to the workspace when the run
+ends. Files under `outputs/` can be up to 500 MiB each; other workspace files
+keep the 50 MiB per-file limit. A run saves at most 500 files and 500 MiB in
+total, and both caps apply. Files over these limits are not saved, and
+depending on the agent, an oversized output can also fail the run. Do not rely
+on a notice naming every skipped file. To keep large results, ask the agent to
+write them to `outputs/`, compress or reduce them, or produce them in smaller
+batches across separate runs, each within both caps.
+
 A 413 response means a file or workspace limit was exceeded. Remove unneeded
 files, split large files, or use a fresh workspace. Do not retry an unchanged
 oversized upload. Deleting a session, archiving a workspace, and deleting a
