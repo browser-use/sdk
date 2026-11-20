@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { HttpClient } from "../src/core/http.js";
 import { Browsers } from "../src/v4/resources/browsers.js";
 import { Extensions } from "../src/v4/resources/extensions.js";
+import { Payments } from "../src/v4/resources/payments.js";
 import { Runs } from "../src/v4/resources/runs.js";
 import { Sessions } from "../src/v4/resources/sessions.js";
 import { Workspaces } from "../src/v4/resources/workspaces.js";
@@ -139,6 +140,36 @@ describe("v4 runs.waitForCompletion", () => {
     await expect(
       runs.waitForCompletion(RUN_ID, { timeout: 10, interval: 1 }),
     ).rejects.toThrow(/did not complete/);
+  });
+});
+
+describe("v4 runs.liveUrl", () => {
+  it("returns the live view URL from browser.ready or browser.reattached", async () => {
+    for (const type of ["browser.ready", "browser.reattached"]) {
+      const http = { get: vi.fn(async () => ({
+        events: [{ runId: RUN_ID, id: 3, ts: "2026-01-01T00:00:00Z", type, data: { live_view_url: "https://live" } }],
+        nextAfter: 3, hasMore: false,
+      })) };
+      expect(await new Runs(http as any).liveUrl(RUN_ID, { timeout: 0 })).toBe("https://live");
+    }
+  });
+
+  it("throws when the event carries no URL", async () => {
+    const http = { get: vi.fn(async () => ({
+      events: [{ runId: RUN_ID, id: 3, ts: "2026-01-01T00:00:00Z", type: "browser.ready", data: {} }],
+      nextAfter: 3, hasMore: false,
+    })) };
+    await expect(new Runs(http as any).liveUrl(RUN_ID, { timeout: 0 })).rejects.toThrow("without a live view URL");
+  });
+});
+
+describe("v4 payments", () => {
+  it("reads AgentCard wallets and the Stripe Link connection", async () => {
+    const http = { get: vi.fn(async (path: string) => (path === "/agentcard/wallets" ? { wallets: [] } : { isConnected: false })) };
+    const payments = new Payments(http as any);
+    expect(await payments.wallets()).toEqual({ wallets: [] });
+    expect(await payments.stripeLink()).toEqual({ isConnected: false });
+    expect(http.get.mock.calls.map((c) => c[0])).toEqual(["/agentcard/wallets", "/stripe-link"]);
   });
 });
 
