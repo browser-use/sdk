@@ -116,6 +116,9 @@ __all__ = [
     "SessionUpdateRequest",
     # Integration models
     "IntegrationListResponse",
+    "AgentCardWalletListResponse",
+    "AgentCardWalletSummary",
+    "StripeLinkStatusResponse",
     "IntegrationResponse",
     "IntegrationCategoryResponse",
     "AuthorizeResponse",
