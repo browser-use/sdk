@@ -14,9 +14,10 @@ to `https://api.browser-use.com/api/v4`.
 - **V2:** a session is a browser. You create it (or let a task create it), then
   run tasks in it.
 - **V4:** a [session](/cloud/agent/sessions) is a conversation. Every run
-  creates one unless you pass `sessionId`, and it starts and reuses the browser
-  for you. There is no `POST /sessions`. Browser options go in each run's
-  `browserSettings`.
+  creates one unless you pass `sessionId`, and it starts the browser for you.
+  There is no `POST /sessions`. Browser options go in the run's
+  `browserSettings` and apply when the run starts a new browser. A follow-up run
+  can reuse the session's live browser, which keeps its settings.
 
 To control a browser yourself without an agent, use
 [`POST /browsers`](/cloud/browser/playwright-puppeteer-selenium), as in V2.
@@ -29,11 +30,11 @@ To control a browser yourself without an agent, use
 | `GET /tasks/{id}` | `GET /runs/{id}` |
 | `GET /tasks/{id}/status` | `GET /runs/{id}/status` |
 | `PATCH /tasks/{id}` with `{"action":"stop"}` | `POST /runs/{id}/cancel` |
-| `GET /tasks/{id}/logs` | `GET /runs/{id}/events` ([Observability](/cloud/agent/observability)) |
+| `GET /tasks/{id}/logs` | `GET /runs/{id}/events`, a different format ([Observability](/cloud/agent/observability)) |
 | `POST /sessions` | None: `POST /runs` creates the session |
 | `GET`, `PATCH`, `DELETE /sessions/{id}` | `GET`, `PATCH`, `DELETE /sessions/{id}` |
 | Follow-up task with `sessionId` | `POST /runs` with `sessionId`, or `POST /sessions/{id}/queue` |
-| `/files/...` presigned URLs, `outputFiles` | [Workspaces](/cloud/agent/workspaces) |
+| `/files/...` presigned URLs, `outputFiles` | Workspace files, a different API ([Workspaces](/cloud/agent/workspaces)) |
 | `/browsers`, `/profiles` | `/browsers`, `/profiles` (same paths) |
 | `/skills`, `/marketplace/skills` | Not in V4 |
 
@@ -43,7 +44,8 @@ To control a browser yourself without an agent, use
 | ---------------- | --------------- |
 | `task` | `task` |
 | `llm` | `model` (see [Models](/cloud/agent/models)) |
-| `thinking`, `thinkingLevel`, `flashMode` | `modelParams` (see [Thinking levels](/cloud/agent/thinking-levels)) |
+| `thinkingLevel` | Reasoning depth in `modelParams`, in the provider's own format (see [Thinking levels](/cloud/agent/thinking-levels)) |
+| `thinking`, `flashMode` | None: these were V2 agent modes. For speed, use `bu-fast` or `bu-ultrafast` ([BU Ultrafast](/cloud/agent/ultrafast)) |
 | `structuredOutput` (stringified JSON Schema) | `outputSchema` (a JSON Schema object) |
 | `sessionId` | `sessionId` |
 | `metadata` | `metadata` |
@@ -66,14 +68,16 @@ To control a browser yourself without an agent, use
 | `output` (text, or structured output as a string) | `result` (text) and `output` (parsed JSON when you sent `outputSchema`) |
 | `llm` | `model` |
 | `cost` | `totalCostUsd` |
-| `steps` | `stepCount`, and the run's events |
-| `isSuccess`, `judgeVerdict`, `judgement` | `judgement` |
+| `steps` | `stepCount` (number of LLM calls); step details are in the run's events |
+| `judgeVerdict`, `judgement` (a JSON string) | `judgement` (an object; see [Judge](/cloud/agent/judge)) |
+| `isSuccess` (the agent's own verdict) | None |
 
 ## Models
 
-V2 model names (`llm`, such as `browser-use-2.0`) are not valid in V4, and V2
-bills per step while V4 bills per token. Omit `model` to use your project's
-default, or pick one from [Models](/cloud/agent/models).
+Some V2 model names, such as `browser-use-2.0`, don't exist in V4. V2 bills
+the agent per step, while V4 bills the model per token. In V4, browser time is
+billed separately and is not in `totalCostUsd` ([Billing](/cloud/guides/billing)). Omit `model` to use your project's default, or pick one
+from [Models](/cloud/agent/models).
 
 ## SDK
 
@@ -90,11 +94,11 @@ result = client.run("Find the top Hacker News story")
 print(result.output)
 
 # V4
-from browser_use_sdk.v4 import BrowserUse
+from browser_use_sdk.v4 import BrowserUse as BrowserUseV4
 
-client = BrowserUse()
-run = client.runs.create("Find the top Hacker News story")
-run = client.runs.wait_for_completion(run.id)
+v4 = BrowserUseV4()
+run = v4.runs.create("Find the top Hacker News story")
+run = v4.runs.wait_for_completion(run.id)
 print(run.result)
 ```
 ```typescript TypeScript
@@ -106,9 +110,9 @@ const result = await client.run("Find the top Hacker News story");
 console.log(result.output);
 
 // V4
-import { BrowserUse } from "browser-use-sdk/v4";
+import { BrowserUse as BrowserUseV4 } from "browser-use-sdk/v4";
 
-const v4 = new BrowserUse();
+const v4 = new BrowserUseV4();
 const run = await v4.runs.create({ task: "Find the top Hacker News story" });
 const done = await v4.runs.waitForCompletion(run.id);
 console.log(done.result);

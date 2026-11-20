@@ -77,13 +77,15 @@ The browser's screen size is part of its fingerprint. To choose it, set
 `browserScreenWidth` and `browserScreenHeight` when you create the browser.
 
 By default the browser ignores CDP commands that resize the window or emulate a
-device, but still answers them with success. Playwright's `setViewportSize()`,
+device, but still answers them with success. So Playwright's `setViewportSize()`,
 `emulateMedia()` and context `viewport`, `isMobile` and `hasTouch` options, and
-Puppeteer's `setViewport()` and `emulate()`, run without errors and change
-nothing. The ignored commands are `Emulation.setDeviceMetricsOverride`,
-`Emulation.setTouchEmulationEnabled`, `Emulation.setEmulatedMedia`,
-`Emulation.setFocusEmulationEnabled`, `Emulation.setVisibleSize`,
-`Browser.setWindowBounds` and `Browser.setContentsSize`.
+Puppeteer's `setViewport()` and `emulate()`, don't report an error, but the page
+keeps its size, touch and media settings. The ignored commands are
+`Emulation.setDeviceMetricsOverride`, `Emulation.setTouchEmulationEnabled`,
+`Emulation.setEmulatedMedia`, `Emulation.setFocusEmulationEnabled`,
+`Emulation.setVisibleSize`, `Browser.setWindowBounds`,
+`Browser.setContentsSize`, and the deprecated aliases
+`Page.setDeviceMetricsOverride` and `Page.setTouchEmulationEnabled`.
 
 To let them through, create the browser with `"allowResizing": true`:
 
@@ -99,8 +101,8 @@ browser easier to detect, so leave it off unless you need it. For V4 runs, the
 same setting is `browserSettings.allowResizing`.
 
 `Network.setUserAgentOverride` is always ignored, even with `allowResizing`, so
-Puppeteer's `setUserAgent()` has no effect and the browser keeps its own user
-agent.
+Puppeteer's `setUserAgent()` (also called by `emulate()`) doesn't change the
+user agent.
 
 ## 3. Stop the browser
 
