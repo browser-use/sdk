@@ -526,6 +526,13 @@ body {
 }
 
 /* ---------- Footer ---------- */
+/* The one footer link is the "send feedback" line (docs.json footer.links): show it whole, not truncated to 9rem. */
+#footer a[href="/cloud/guides/feedback"] {
+  max-width: 34rem;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
 #pagination a {
   border-radius: 8px;
   border-color: var(--bu-border) !important;
