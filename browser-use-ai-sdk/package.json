@@ -1,0 +1,65 @@
+{
+  "name": "browser-use-ai-sdk",
+  "version": "0.1.0",
+  "description": "Browser Use tools for the Vercel AI SDK: give your model a stealth cloud browser agent that completes web tasks and returns the result.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/browser-use/sdk.git",
+    "directory": "browser-use-ai-sdk"
+  },
+  "homepage": "https://docs.browser-use.com",
+  "author": "Browser Use",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "ai",
+    "ai-sdk",
+    "vercel",
+    "browser",
+    "browser-automation",
+    "agent",
+    "browser-use",
+    "tools"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --exclude tests/live.test.ts",
+    "test:live": "tsx tests/live.test.ts"
+  },
+  "peerDependencies": {
+    "ai": ">=5",
+    "zod": "^3.25.0 || ^4.0.0"
+  },
+  "dependencies": {
+    "browser-use-sdk": "^3.12.1"
+  },
+  "devDependencies": {
+    "ai": "7.0.175",
+    "tsup": "8.5.1",
+    "tsx": "4.23.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10",
+    "zod": "4.4.3",
+    "@types/node": "26.1.2"
+  }
+}
