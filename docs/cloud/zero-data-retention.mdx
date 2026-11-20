@@ -17,6 +17,21 @@ Activation includes past sessions in both regions.
 Read the [EU deployment guide](/cloud/eu-deployment) before planning a regional data policy.
 </Note>
 
+## Default data retention
+
+Without Zero Data Retention, Browser Use keeps your project's data so you can inspect it later.
+
+| Data | Default retention | How to remove it |
+| --- | --- | --- |
+| Tasks, prompts, run history, messages and results | Kept | Turn on Zero Data Retention. Deleting a session hides it but keeps its records. |
+| Workspace files | Kept until you delete them | Delete each file. Deleting a workspace archives it and does not delete its files. |
+| Browser profiles and saved logins | Kept until you delete them (a website can still expire a login) | [Delete the profile](/cloud/guides/profile-sync#delete-a-browser-profile) |
+| Recordings | Off by default. When you turn recording on, US recordings expire after 7 days. EU recordings have no automatic expiry. | Turn on Zero Data Retention |
+| Billing and account records | Kept | Zero Data Retention does not remove them |
+
+For shorter retention, turn on Zero Data Retention.
+It turns recordings off and cleans up run content automatically after runs finish, as described in [How automatic cleanup works](#how-automatic-cleanup-works).
+
 ## Enable Zero Data Retention
 
 <Steps>
