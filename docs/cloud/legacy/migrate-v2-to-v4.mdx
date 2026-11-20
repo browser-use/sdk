@@ -99,6 +99,8 @@ from browser_use_sdk.v4 import BrowserUse as BrowserUseV4
 v4 = BrowserUseV4()
 run = v4.runs.create("Find the top Hacker News story")
 run = v4.runs.wait_for_completion(run.id)
+if run.status.value != "completed":
+    raise RuntimeError(run.error or run.status.value)
 print(run.result)
 ```
 ```typescript TypeScript
@@ -115,6 +117,7 @@ import { BrowserUse as BrowserUseV4 } from "browser-use-sdk/v4";
 const v4 = new BrowserUseV4();
 const run = await v4.runs.create({ task: "Find the top Hacker News story" });
 const done = await v4.runs.waitForCompletion(run.id);
+if (done.status !== "completed") throw new Error(done.error ?? done.status);
 console.log(done.result);
 ```
 </CodeGroup>
