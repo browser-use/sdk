@@ -87,12 +87,9 @@ keeps its size, touch and media settings. The ignored commands are
 `Browser.setContentsSize`, and the deprecated aliases
 `Page.setDeviceMetricsOverride` and `Page.setTouchEmulationEnabled`.
 
-To let them through, add `"allowResizing": true` to the create request in
-step 1, then connect to that browser:
-
-```bash
--d '{"proxyCountryCode":"us","allowResizing":true}'
-```
+To let them through, add `"allowResizing": true` to the JSON body of the create
+request in step 1, for example `{"proxyCountryCode":"us","allowResizing":true}`,
+then connect to that browser.
 
 `allowResizing` can only be set when the browser is created. Resizing makes the
 browser easier to detect, so leave it off unless you need it. For V4 runs, the
