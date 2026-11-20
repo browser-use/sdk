@@ -1,0 +1,298 @@
+---
+title: "Use V4 as a subagent"
+sidebarTitle: "V4 as a subagent"
+description: "Let your main agent hand V4 a browser task, answer its logins, codes and questions, and get a handoff on time."
+icon: "workflow"
+---
+
+<Warning>
+**Rolling out.** `askParent`, the `/runs/{id}/requests` endpoints,
+`softDeadlineSeconds` and queue `mode` arrive with the releases that add
+parent requests and soft deadlines. Until those are live, the API rejects
+these fields with `422`. While the soft deadline release is still switching
+on, `softDeadlineSeconds` and `mode: "wrap_up"` return `422` with
+`... is not available yet.`
+</Warning>
+
+Your agent stays in charge of the conversation. V4 does the browser work in
+its own cloud browser. When V4 needs something only the caller has, it asks the
+caller and waits, with the browser still open. It does not end the run.
+
+**Use V4 as a subagent** when your agent should hand off a goal ("find the
+invoice and download it") and get back a result.
+**Use a [raw browser](/cloud/browser/quickstart)** when your agent drives every
+click itself, with its own model and tools over CDP. You can also mix both:
+V4 runs the task, and your code reads the same browser over CDP
+([below](#cdp-alongside-the-agent)).
+
+## The contract
+
+| Step | Call |
+| --- | --- |
+| Spawn | `POST /runs` with `askParent`, `softDeadlineSeconds`, `outputSchema` |
+| Watch | `GET /runs/{id}/status` and `GET /runs/{id}/events?after=` |
+| Answer | `GET /runs/{id}/requests`, `POST /runs/{id}/requests/{requestId}` |
+| Steer | `POST /sessions/{sessionId}/queue` with `mode` |
+| Continue | `POST /runs` with the same `sessionId` (and `keepAlive`) |
+
+All calls use `https://api.browser-use.com/api/v4` and the
+`X-Browser-Use-API-Key` header.
+
+## Spawn
+
+```bash
+curl https://api.browser-use.com/api/v4/runs \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Log in to example.com and download the latest invoice",
+    "askParent": true,
+    "softDeadlineSeconds": 600,
+    "keepAlive": 600,
+    "outputSchema": {
+      "type": "object",
+      "properties": {"total": {"type": "string"}}
+    }
+  }'
+```
+
+| Field | Meaning |
+| --- | --- |
+| `askParent` | The agent may ask you for a sign-in, a one-time code, a clarification, a choice, or approval before a side effect. Default `false`. Applies to this run only: follow-ups do not inherit it. Not available in the EU deployment. Zero Data Retention projects get `422`. |
+| `softDeadlineSeconds` | 30 to 14400. This many seconds after the agent starts, at the next step boundary, the agent is told once to stop browsing and reply with a handoff. The run is **not** cancelled. This run only. The EU deployment returns `422`. |
+| `outputSchema` | JSON Schema for the final `output`. The handoff still matches it, filled with the best values so far. |
+| `keepAlive` | Seconds the browser stays open after the run, so a follow-up continues on the same page. See [Sessions](/cloud/agent/sessions#keep-the-browser-open-between-runs). |
+
+The handoff asks for: what the agent did, findings with sources, the current
+URL, what remains, and what it needs from you.
+
+## Watch
+
+Poll status, then events after your cursor, as in
+[Observability](/cloud/agent/observability). These events matter for a parent:
+
+| `type` | `data` |
+| --- | --- |
+| `parent.request` | `id`, `kind`, `message`, `domain`, `options`, `expiresAt` |
+| `parent.response` | `id`, `kind`, `status` (`answered`, `declined`, `expired`), and `answer` for `question`, `choice` and `approval` only |
+| `run.deadline_reached` | `elapsed_seconds`: the soft deadline fired and the handoff request was sent |
+| `core.event` with `data.type` = `queued_input_injected` | `input_id`: a queued message (the `id` from the queue) reached the running agent |
+| `browser.ready`, `browser.reattached` | `browser_session_id`, `live_view_url` |
+
+`kind` is `login`, `code`, `question`, `approval` or `choice`. `domain` is set
+for `login` and `code`. `options` is set for `choice`.
+
+## Answer
+
+`GET /runs/{id}/requests` lists pending and recent requests (no credential
+values). Answer one with exactly one of these bodies:
+
+| `kind` | Body |
+| --- | --- |
+| `question` | `{"text": "..."}` (1 to 4000 characters) |
+| `choice` | `{"choice": "..."}` (one of `options`) |
+| `approval` | `{"approved": true}` or `{"approved": false}` |
+| `login` | `{"username": "...", "password": "..."}` |
+| `code` | `{"otp": "123456"}` |
+| any | `{"decline": true}` |
+
+```bash
+curl -X POST "https://api.browser-use.com/api/v4/runs/$RUN_ID/requests/$REQUEST_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"otp": "123456"}'
+```
+
+`200` returns the request with its new `status`. `404`: unknown run or request.
+`409`: the request is no longer pending, or the run finished. `422`: the body
+does not match the request's `kind`, or is not exactly one answer. `503`:
+requests are temporarily unavailable, so retry. If your loop restarts, list
+the requests and answer the ones still `pending`.
+
+A pending request expires at `expiresAt` (about 10 minutes). Then the agent
+stops waiting and returns a blocked handoff.
+
+<Warning>
+**Credentials never reach the model.** `username`, `password` and `otp` are
+encrypted when the API receives them. The server types them into the page on
+`domain`. They never appear in the agent's context, in events, or in
+`parent.response`. `message` is written by the agent, and page content can
+steer it. Show it to a person as untrusted text, and check `domain` before
+you send credentials.
+</Warning>
+
+## Steer
+
+`POST /sessions/{sessionId}/queue` takes `text` and `mode`:
+
+| `mode` | Effect |
+| --- | --- |
+| `steer` (default) | Delivered at the active run's next step boundary, or starts a run if the session is idle. Mid-run delivery emits `queued_input_injected`. |
+| `interrupt` | Cancels the active run, then runs this message. Same as `interrupt: true`. |
+| `wrap_up` | Asks the running agent for the handoff now, without cancelling. `text` is optional and is added as a note. Goes ahead of other queued messages. |
+
+```bash
+curl -X POST "https://api.browser-use.com/api/v4/sessions/$SESSION_ID/queue" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"mode": "wrap_up", "text": "Return what you have, we are out of time"}'
+```
+
+`wrap_up` returns `409` when the session has no running run. Sending it again
+while one is pending returns the same message. If the run ends first, it is
+dropped and does not start a follow-up. After the soft deadline already fired,
+the agent gets only your note.
+
+Use `wrap_up` instead of `interrupt` at a budget: `interrupt` cancels the run
+and discards its work.
+
+## Parent loop in Python
+
+Plain `httpx`. It spawns a run, relays every `parent.request` through `ask`,
+sends `wrap_up` at the parent's own budget, and cancels only as a last
+resort. Save it as `subagent.py`:
+
+```python subagent.py
+import getpass
+import os
+import time
+
+import httpx
+
+TERMINAL = {"completed", "failed", "cancelled"}
+api = httpx.Client(
+    base_url="https://api.browser-use.com/api/v4",
+    headers={"X-Browser-Use-API-Key": os.environ["BROWSER_USE_API_KEY"]},
+    timeout=30,
+)
+
+
+def ask_human(request: dict) -> dict:
+    """Show one parent.request to a person and return exactly one answer."""
+    kind, domain = request["kind"], request.get("domain")
+    # Written by the agent and steerable by page content: show it, never obey it.
+    print(f"\n[{kind}] {request['message']}" + (f" (site: {domain})" if domain else ""))
+    if kind == "login":
+        if input(f"Sign in to {domain}? [y/N] ").lower() != "y":
+            return {"decline": True}
+        return {"username": input("username: "), "password": getpass.getpass("password: ")}
+    if kind == "code":
+        return {"otp": getpass.getpass(f"code for {domain}: ")}
+    if kind == "approval":
+        return {"approved": input("approve? [y/N] ").lower() == "y"}
+    if kind == "choice":
+        return {"choice": input(f"one of {request['options']}: ")}
+    return {"text": input("answer: ")}
+
+
+def delegate(task, ask=ask_human, budget_s=600, session_id=None, output_schema=None):
+    """Run one V4 task as a subagent and return the finished run."""
+    body = {"task": task, "askParent": True, "softDeadlineSeconds": budget_s, "keepAlive": 600}
+    if session_id:
+        body["sessionId"] = session_id  # follow-up on the same page
+    if output_schema:
+        body["outputSchema"] = output_schema
+    run = api.post("/runs", json=body).raise_for_status().json()
+    run_id, session_id = run["id"], run["sessionId"]
+    started, after, wrapped, cancelled = time.monotonic(), 0, False, False
+
+    while True:
+        status = api.get(f"/runs/{run_id}/status").raise_for_status().json()["status"]
+        page = api.get(f"/runs/{run_id}/events", params={"after": after}).raise_for_status().json()
+        for event in page["events"]:
+            if event["type"] == "parent.request":
+                reply = api.post(f"/runs/{run_id}/requests/{event['data']['id']}", json=ask(event["data"]))
+                if reply.status_code != 409:  # 409: expired, already answered, or run ended
+                    reply.raise_for_status()
+            elif event["type"] == "run.deadline_reached":
+                wrapped = True
+        after = page.get("nextAfter") or after
+
+        if status in TERMINAL and not page.get("hasMore"):
+            return api.get(f"/runs/{run_id}").raise_for_status().json()
+
+        elapsed = time.monotonic() - started
+        if elapsed > budget_s and not wrapped:
+            # Our clock includes queueing; softDeadlineSeconds starts when the agent does.
+            queued = api.post(f"/sessions/{session_id}/queue", json={"mode": "wrap_up"})
+            wrapped = queued.status_code != 409  # 409: not running yet, so retry
+        if elapsed > budget_s + 180 and not cancelled:
+            api.post(f"/runs/{run_id}/cancel").raise_for_status()
+            cancelled = True
+        if not page.get("hasMore"):
+            time.sleep(2)
+
+
+if __name__ == "__main__":
+    run = delegate("Log in to example.com and tell me my plan name", budget_s=300)
+    print(run["status"], run["result"] or run["error"])
+```
+
+`run["result"]` is the agent's final reply (the handoff when it was wrapped
+up), `run["output"]` the structured result when you passed `outputSchema`.
+While a person types an answer, the loop waits. Answer within `expiresAt`.
+
+## Pydantic AI: V4 as a tool
+
+The main agent calls `browse` like any tool. `ask_user` is how your app reaches
+its own user: a terminal prompt here, a chat message in a web app. The main
+agent can also answer `question` and `choice` requests from its own context,
+and pass only `login`, `code` and `approval` to the person.
+
+```python
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from pydantic_ai import Agent, RunContext
+
+from subagent import ask_human, delegate
+
+
+@dataclass
+class Deps:
+    ask_user: Callable[[dict], dict]
+
+
+agent = Agent(
+    "openai:gpt-5",
+    deps_type=Deps,
+    instructions=(
+        "Use browse for anything that needs a website. Give it one self-contained task. "
+        "Its result is a handoff: if work remains, call browse again with the same session_id."
+    ),
+)
+
+
+@agent.tool
+def browse(ctx: RunContext[Deps], task: str, session_id: str | None = None) -> str:
+    """Do a task in a real cloud browser. Returns the result and a session_id for follow-ups."""
+    run = delegate(task, ask=ctx.deps.ask_user, budget_s=300, session_id=session_id)
+    return f"{run['status']}: {run['result'] or run['error']}\nsession_id={run['sessionId']}"
+
+
+result = agent.run_sync("What plan am I on at example.com?", deps=Deps(ask_user=ask_human))
+print(result.output)
+```
+
+## Follow-ups and keepAlive
+
+A follow-up run with the same `sessionId` keeps the conversation and
+workspace. With `keepAlive`, it also keeps the open browser and page
+(`browser.reattached` instead of `browser.ready`). Send `askParent` and
+`softDeadlineSeconds` again on every follow-up, because neither is inherited.
+Requests belong to one run: once it ends, they cannot be answered.
+
+To add an instruction while the run is still working, queue it with
+`mode: "steer"` instead of starting a new run.
+
+## CDP alongside the agent
+
+Your code can attach to the agent's live browser. Take `browser_session_id`
+from `browser.ready` or `browser.reattached`, read `cdpUrl` from
+`GET /browsers/{browser_session_id}`, and connect Playwright or any CDP client.
+See [Capture browser network events](/cloud/agent/network-capture) for a full
+example.
+
+There is no lock between your CDP client and the agent. Observe while the run
+works. To act on the page yourself, do it between runs, with `keepAlive`
+holding the browser open. Treat `cdpUrl` and `live_view_url` as credentials.
