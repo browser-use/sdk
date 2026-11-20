@@ -93,6 +93,7 @@
                       "cloud/agent/ultrafast",
                       "cloud/agent/thinking-levels",
                       "cloud/agent/structured-output",
+                      "cloud/agent/judge",
                       "cloud/agent/sessions",
                       "cloud/agent/workspaces",
                       "cloud/agent/scripts",
