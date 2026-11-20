@@ -21,18 +21,16 @@ curl -s -X POST https://api.browser-use.com/api/v4/feedback \
   -d '{"message":"kind: integration_report\nBuilt: ...\nTested: ...\nWorked: ...\nProblems: ...\nMissing: ..."}'
 ```
 ```python Python
-import os, httpx
+from browser_use_sdk.v4 import BrowserUse
 
-httpx.post("https://api.browser-use.com/api/v4/feedback",
-    headers={"X-Browser-Use-API-Key": os.environ["BROWSER_USE_API_KEY"]},
-    json={"message": "kind: integration_report\nBuilt: ...\nTested: ...\nWorked: ...\nProblems: ...\nMissing: ..."}).raise_for_status()
+with BrowserUse() as client:  # reads BROWSER_USE_API_KEY
+    client.feedback("kind: integration_report\nBuilt: ...\nTested: ...\nWorked: ...\nProblems: ...\nMissing: ...")
 ```
 ```typescript TypeScript
-await fetch("https://api.browser-use.com/api/v4/feedback", {
-  method: "POST",
-  headers: { "X-Browser-Use-API-Key": process.env.BROWSER_USE_API_KEY!, "Content-Type": "application/json" },
-  body: JSON.stringify({ message: "kind: integration_report\nBuilt: ...\nTested: ...\nWorked: ...\nProblems: ...\nMissing: ..." }),
-});
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse(); // reads BROWSER_USE_API_KEY
+await client.feedback("kind: integration_report\nBuilt: ...\nTested: ...\nWorked: ...\nProblems: ...\nMissing: ...");
 ```
 </CodeGroup>
 
@@ -42,6 +40,6 @@ Use `kind: feature_request` when you looked for something and it was not there, 
 - `message` is 1 to 5,000 characters. Known credential formats are redacted before storage.
 - `403` for Zero Data Retention projects. `429` after 60 messages per project per hour.
 - EU projects use `https://api.eu.browser-use.com/api/v4/feedback`.
-- The SDKs have no feedback method yet; call the endpoint directly.
+- `client.feedback(...)` is in `browser-use-sdk` releases after 3.12.1 (Python `AsyncBrowserUse`: `await client.feedback(...)`); on 3.12.1 or older, use curl. A rejected message raises (Python) or throws (TypeScript) `BrowserUseError`.
 
 Using the open-source library, the Browser Use CLI or its MCP server instead? Send the same message with `browser-use feedback "..."`, `browser_use.feedback(...)` or the `browser_feedback` tool. See [Get help](/open-source/get-help).
