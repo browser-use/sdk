@@ -24,7 +24,7 @@ Read the complete error response before changing billing settings:
 | 413 | Check per-file and workspace limits. Retrying the same oversized payload does not make it smaller. |
 | 422 | Compare the request with the reference for that exact endpoint. Standalone-browser fields and V4 run `browserSettings` differ. |
 | 429 | Distinguish HTTP request-rate limits from occupied browser slots. Reduce polling for the first; stop unneeded browsers or reduce concurrent work for the second. |
-| 503 `Could not verify API key right now, please retry` | Browser Use could not check the key at that moment; the key itself is not wrong. Retry the request. A `401` still means the key is unknown or expired. |
+| 503 `Could not verify API key right now, please retry` | Browser Use could not verify the key at that moment. Retry the request; this response does not mean the key is invalid. For `401`, check the response detail for missing, invalid or expired credentials. |
 
 See [billing](/cloud/guides/billing), [concurrency](/cloud/guides/concurrency),
 and [workspaces](/cloud/agent/workspaces) for the relevant limits and remedies.
