@@ -1,0 +1,105 @@
+---
+title: Screenshots
+description: "Take website screenshots with Playwright, Puppeteer, or directly via Chrome DevTools Protocol (CDP)."
+icon: "camera"
+---
+
+Browser Use Cloud supports viewport, full-page, and element screenshots.
+Capture a website as PNG or JPEG, save it to a file, or pass the image to a
+model. Use your tool of choice.
+
+## Screenshot using Playwright
+
+[Create a cloud browser](/cloud/browser/quickstart#launch-and-connect)
+and [connect with Playwright](/cloud/browser/playwright-puppeteer-selenium#playwright)
+to get a `page` object.
+
+<CodeGroup>
+```python Python
+page.goto("https://www.python.org/", wait_until="load")
+page.evaluate("document.fonts.ready")
+
+# Capture the visible viewport
+page.screenshot(path="screenshot.png")
+
+# Capture the full scrollable page
+page.screenshot(path="full-page.png", full_page=True)
+
+# Capture a single element
+page.locator(".python-logo").first.screenshot(path="logo.png")
+```
+```typescript TypeScript
+await page.goto("https://www.python.org/", { waitUntil: "load" });
+await page.evaluate(() => document.fonts.ready);
+
+// Capture the visible viewport
+await page.screenshot({ path: "screenshot.png" });
+
+// Capture the full scrollable page
+await page.screenshot({ path: "full-page.png", fullPage: true });
+
+// Capture a single element
+await page.locator(".python-logo").first().screenshot({ path: "logo.png" });
+```
+</CodeGroup>
+
+Omit `path` to get image bytes in Python or a `Buffer` in TypeScript. To build
+a website screenshot API, return those bytes from your own endpoint. See
+[Playwright's screenshot options](https://playwright.dev/docs/api/class-page#page-screenshot)
+for JPEG quality, clipping, and masking.
+
+## Screenshot using Puppeteer
+
+Use the `page` object from your [Puppeteer connection](/cloud/browser/playwright-puppeteer-selenium#puppeteer)
+to capture the viewport, full page, or a single element.
+
+```typescript
+await page.goto("https://www.python.org/", { waitUntil: "load" });
+await page.evaluate(() => document.fonts.ready);
+
+// Capture the visible viewport
+await page.screenshot({ path: "screenshot.png" });
+
+// Capture the full scrollable page
+await page.screenshot({ path: "full-page.png", fullPage: true });
+
+// Capture a single element
+const logo = await page.waitForSelector(".python-logo");
+if (!logo) throw new Error("Logo not found");
+await logo.screenshot({ path: "logo.png" });
+```
+
+For direct CDP commands through Puppeteer, create a client with
+`await page.createCDPSession()`.
+
+## Screenshot using CDP
+
+Connect your CDP client to your [cloud browser](/cloud/browser/quickstart#launch-and-connect)
+and attach to the page you want to capture. These examples use
+[cdp-use](https://github.com/browser-use/cdp-use) in Python and
+[chrome-remote-interface](https://github.com/cyrus-and/chrome-remote-interface)
+in TypeScript to call `Page.captureScreenshot` and decode the Base64 image.
+
+<CodeGroup>
+```python Python
+import base64
+from pathlib import Path
+
+result = await client.send.Page.captureScreenshot({
+    "format": "jpeg",
+    "quality": 80,
+    "captureBeyondViewport": False,
+}, session_id=session_id)
+Path("screenshot.jpg").write_bytes(base64.b64decode(result["data"]))
+```
+```typescript TypeScript
+import { writeFile } from "node:fs/promises";
+
+const { data } = await client.send("Page.captureScreenshot", {
+  format: "jpeg",
+  quality: 80,
+  captureBeyondViewport: false,
+}, sessionId);
+await writeFile("screenshot.jpg", Buffer.from(data, "base64"));
+```
+</CodeGroup>
