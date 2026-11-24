@@ -19,7 +19,7 @@ export interface paths {
         put?: never;
         /**
          * Create Schedule
-         * @description Schedule a task to run once or on a recurring cron. Each fire uses the same session. If you omit the session ID, the first fire starts a new session. Requires the v4:schedules:create API key scope.
+         * @description Schedule a task to run once or on a recurring cron. Provide exactly one non-null timing field: cronExpr or runAt. Each fire uses the same session. If you omit the session ID, the first fire starts a new session. Requires the v4:schedules:create API key scope.
          */
         post: operations["create_schedule_schedules_post"];
         delete?: never;
@@ -2600,7 +2600,7 @@ export interface components {
         };
         /**
          * ScheduleCreateRequest
-         * @description Provide either a cron expression or a one-time date. Run settings are optional and apply to every fire.
+         * @description Provide exactly one non-null timing field: cronExpr or runAt. Run settings are optional and apply to every fire.
          */
         ScheduleCreateRequest: {
             /** @description Task to send on each fire. */
@@ -2617,7 +2617,6 @@ export interface components {
             /**
              * Model
              * @description bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.
-             * @default gpt-6-luna
              * @enum {string}
              */
             model?: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "claude-sonnet-5-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
@@ -2650,7 +2649,6 @@ export interface components {
             /**
              * Agentmail
              * @description If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.
-             * @default false
              */
             agentmail?: boolean;
             /**
@@ -2695,13 +2693,7 @@ export interface components {
             harness?: ("browsercode" | "bu-pi") | null;
             /** @description Run mode. Available values depend on your project. */
             mode?: ("default" | "ultrafast") | null;
-        } & ({
-            cronExpr: string;
-            runAt?: null;
-        } | {
-            runAt: string;
-            cronExpr?: null;
-        });
+        };
         /**
          * ScheduleUpdateRequest
          * @description Update any of these fields. To change the schedule type, provide the new cron expression or one-time date.
@@ -2759,7 +2751,6 @@ export interface components {
             /**
              * Model
              * @description bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.
-             * @default gpt-6-luna
              * @enum {string}
              */
             model?: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "claude-sonnet-5-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
@@ -2792,7 +2783,6 @@ export interface components {
             /**
              * Agentmail
              * @description If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.
-             * @default false
              */
             agentmail?: boolean;
             /**
@@ -2843,11 +2833,8 @@ export interface components {
          * @description Browser settings for scheduled runs. Custom proxies are unavailable for schedules.
          */
         ScheduleBrowserSettings: {
-            /**
-             * @description Solve CAPTCHAs on new browsers except ultrafast/EU; some projects cannot use this field yet and return 422.
-             * @default true
-             */
-            solveCaptchas?: boolean;
+            /** @description Solve CAPTCHAs on new browsers except ultrafast/EU; some projects cannot use this field yet and return 422. */
+            solveCaptchas?: boolean | null;
             /**
              * Profileid
              * @description ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions.
@@ -2858,10 +2845,7 @@ export interface components {
              * @description ID of a network policy that allows or blocks domains for this browser. Policy changes reach the browser within seconds. When the field is absent, the run keeps the policy of the session.
              */
             networkPolicyId?: string | null;
-            /**
-             * @description ISO country code to proxy the browser through. Defaults to US, or to no proxy for new bu-ultrafast and bu-fast sessions. Pass null to run without a proxy.
-             * @default us
-             */
+            /** @description ISO country code to proxy the browser through. Defaults to US, or to no proxy for new bu-ultrafast and bu-fast sessions. Pass null to run without a proxy. */
             proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
             /**
              * Screenwidth
@@ -3010,6 +2994,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ScheduleView"];
                 };
+            };
+            /** @description Invalid run settings for the project or session, such as an unavailable agent harness. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description The API key is missing or invalid. */
             401: {
@@ -3179,6 +3170,13 @@ export interface operations {
                     "application/json": components["schemas"]["ScheduleView"];
                 };
             };
+            /** @description Invalid run settings for the project or session, such as an unavailable agent harness. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description The API key is missing or invalid. */
             401: {
                 headers: {
@@ -3225,7 +3223,6 @@ export interface operations {
                 limit?: number;
                 /** @description Keyset cursor from a prior response. */
                 cursor?: string | null;
-                sessionId?: string | null;
                 /** @description Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND). */
                 metadata?: string[] | null;
             };

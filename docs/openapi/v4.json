@@ -12,6 +12,449 @@
     }
   ],
   "paths": {
+    "/schedules": {
+      "post": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Create Schedule",
+        "description": "Schedule a task to run once or on a recurring cron. Provide exactly one non-null timing field: cronExpr or runAt. Each fire uses the same session. If you omit the session ID, the first fire starts a new session. Requires the v4:schedules:create API key scope.",
+        "operationId": "create_schedule_schedules_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid run settings for the project or session, such as an unavailable agent harness."
+          },
+          "401": {
+            "description": "The API key is missing or invalid."
+          },
+          "403": {
+            "description": "This API key or project cannot perform this operation."
+          },
+          "404": {
+            "description": "API schedules are unavailable for this project or a referenced resource was not found."
+          },
+          "422": {
+            "description": "The request contains invalid data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "This project already has 50 enabled schedules."
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "List Schedules",
+        "description": "List schedules in the API key\u2019s project, newest first. Use the returned cursor to fetch the next page. Requires the v4:schedules:read API key scope.",
+        "operationId": "list_schedules_schedules_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of items to return. Values are clamped to between 1 and 200."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keyset cursor from a prior response.",
+              "title": "Cursor"
+            },
+            "description": "Keyset cursor from a prior response."
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Return only enabled or only disabled schedules."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The API key is missing or invalid."
+          },
+          "403": {
+            "description": "This API key or project cannot perform this operation."
+          },
+          "404": {
+            "description": "API schedules are unavailable for this project or a referenced resource was not found."
+          },
+          "422": {
+            "description": "The request contains invalid data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The pagination cursor is malformed."
+          }
+        }
+      }
+    },
+    "/schedules/{schedule_id}": {
+      "get": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Get Schedule",
+        "description": "Get a schedule in the API key\u2019s project. Requires the v4:schedules:read API key scope.",
+        "operationId": "get_schedule_schedules__schedule_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Schedule Id"
+            },
+            "description": "ID of the schedule."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The API key is missing or invalid."
+          },
+          "403": {
+            "description": "This API key or project cannot perform this operation."
+          },
+          "404": {
+            "description": "API schedules are unavailable for this project or a referenced resource was not found."
+          },
+          "422": {
+            "description": "The request contains invalid data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Update Schedule",
+        "description": "Change the task, timing, time zone, or enabled state. Omitted fields keep their values. Pausing an API-created schedule cancels its pending fires. To resume an expired one-time schedule, supply a new runAt. Requires the v4:schedules:create API key scope.",
+        "operationId": "update_schedule_schedules__schedule_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Schedule Id"
+            },
+            "description": "ID of the schedule."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid run settings for the project or session, such as an unavailable agent harness."
+          },
+          "401": {
+            "description": "The API key is missing or invalid."
+          },
+          "403": {
+            "description": "This API key or project cannot perform this operation."
+          },
+          "404": {
+            "description": "API schedules are unavailable for this project or a referenced resource was not found."
+          },
+          "422": {
+            "description": "The request contains invalid data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "This project already has 50 enabled schedules."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "Delete Schedule",
+        "description": "Delete a schedule and cancel pending fires for an API-created schedule. Runs that already started continue. Requires the v4:schedules:delete API key scope.",
+        "operationId": "delete_schedule_schedules__schedule_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Schedule Id"
+            },
+            "description": "ID of the schedule."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Schedule deleted."
+          },
+          "401": {
+            "description": "The API key is missing or invalid."
+          },
+          "403": {
+            "description": "This API key or project cannot perform this operation."
+          },
+          "404": {
+            "description": "API schedules are unavailable for this project or a referenced resource was not found."
+          },
+          "422": {
+            "description": "The request contains invalid data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schedules/{schedule_id}/runs": {
+      "get": {
+        "tags": [
+          "Schedules"
+        ],
+        "summary": "List Schedule Runs",
+        "description": "List recorded runs for this schedule, newest first. Runs recorded before schedule tracking was enabled may be absent. Requires the v4:schedules:read API key scope.",
+        "operationId": "list_schedule_runs_schedules__schedule_id__runs_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Schedule Id"
+            },
+            "description": "ID of the schedule."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of items to return. Values are clamped to between 1 and 200."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Keyset cursor from a prior response.",
+              "title": "Cursor"
+            },
+            "description": "Keyset cursor from a prior response."
+          },
+          {
+            "name": "metadata",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND).",
+              "title": "Metadata"
+            },
+            "description": "Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The API key is missing or invalid."
+          },
+          "403": {
+            "description": "This API key or project cannot perform this operation."
+          },
+          "404": {
+            "description": "API schedules are unavailable for this project or a referenced resource was not found."
+          },
+          "422": {
+            "description": "The request contains invalid data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The pagination cursor is malformed."
+          }
+        }
+      }
+    },
     "/runs": {
       "post": {
         "tags": [
@@ -3608,460 +4051,6 @@
           }
         }
       }
-    },
-    "/schedules": {
-      "post": {
-        "tags": [
-          "Schedules"
-        ],
-        "summary": "Create Schedule",
-        "description": "Schedule a task to run once or on a recurring cron. Each fire uses the same session. If you omit the session ID, the first fire starts a new session. Requires the v4:schedules:create API key scope.",
-        "operationId": "create_schedule_schedules_post",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ScheduleCreateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleView"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "The API key is missing or invalid."
-          },
-          "403": {
-            "description": "This API key or project cannot perform this operation."
-          },
-          "404": {
-            "description": "API schedules are unavailable for this project or a referenced resource was not found."
-          },
-          "422": {
-            "description": "The request contains invalid data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleValidationError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "This project already has 50 enabled schedules."
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Schedules"
-        ],
-        "summary": "List Schedules",
-        "description": "List schedules in the API key\u2019s project, newest first. Use the returned cursor to fetch the next page. Requires the v4:schedules:read API key scope.",
-        "operationId": "list_schedules_schedules_get",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 50,
-              "title": "Limit"
-            },
-            "description": "Maximum number of items to return. Values are clamped to between 1 and 200."
-          },
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Keyset cursor from a prior response.",
-              "title": "Cursor"
-            },
-            "description": "Keyset cursor from a prior response."
-          },
-          {
-            "name": "enabled",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            },
-            "description": "Return only enabled or only disabled schedules."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleListResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "The API key is missing or invalid."
-          },
-          "403": {
-            "description": "This API key or project cannot perform this operation."
-          },
-          "404": {
-            "description": "API schedules are unavailable for this project or a referenced resource was not found."
-          },
-          "422": {
-            "description": "The request contains invalid data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleValidationError"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The pagination cursor is malformed."
-          }
-        }
-      }
-    },
-    "/schedules/{schedule_id}": {
-      "get": {
-        "tags": [
-          "Schedules"
-        ],
-        "summary": "Get Schedule",
-        "description": "Get a schedule in the API key\u2019s project. Requires the v4:schedules:read API key scope.",
-        "operationId": "get_schedule_schedules__schedule_id__get",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "schedule_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Schedule Id"
-            },
-            "description": "ID of the schedule."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleView"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "The API key is missing or invalid."
-          },
-          "403": {
-            "description": "This API key or project cannot perform this operation."
-          },
-          "404": {
-            "description": "API schedules are unavailable for this project or a referenced resource was not found."
-          },
-          "422": {
-            "description": "The request contains invalid data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Schedules"
-        ],
-        "summary": "Update Schedule",
-        "description": "Change the task, timing, time zone, or enabled state. Omitted fields keep their values. Pausing an API-created schedule cancels its pending fires. To resume an expired one-time schedule, supply a new runAt. Requires the v4:schedules:create API key scope.",
-        "operationId": "update_schedule_schedules__schedule_id__patch",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "schedule_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Schedule Id"
-            },
-            "description": "ID of the schedule."
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ScheduleUpdateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleView"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "The API key is missing or invalid."
-          },
-          "403": {
-            "description": "This API key or project cannot perform this operation."
-          },
-          "404": {
-            "description": "API schedules are unavailable for this project or a referenced resource was not found."
-          },
-          "422": {
-            "description": "The request contains invalid data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleValidationError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "This project already has 50 enabled schedules."
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Schedules"
-        ],
-        "summary": "Delete Schedule",
-        "description": "Delete a schedule and cancel pending fires for an API-created schedule. Runs that already started continue. Requires the v4:schedules:delete API key scope.",
-        "operationId": "delete_schedule_schedules__schedule_id__delete",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "schedule_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Schedule Id"
-            },
-            "description": "ID of the schedule."
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Schedule deleted."
-          },
-          "401": {
-            "description": "The API key is missing or invalid."
-          },
-          "403": {
-            "description": "This API key or project cannot perform this operation."
-          },
-          "404": {
-            "description": "API schedules are unavailable for this project or a referenced resource was not found."
-          },
-          "422": {
-            "description": "The request contains invalid data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/schedules/{schedule_id}/runs": {
-      "get": {
-        "tags": [
-          "Schedules"
-        ],
-        "summary": "List Schedule Runs",
-        "description": "List recorded runs for this schedule, newest first. Runs recorded before schedule tracking was enabled may be absent. Requires the v4:schedules:read API key scope.",
-        "operationId": "list_schedule_runs_schedules__schedule_id__runs_get",
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "schedule_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Schedule Id"
-            },
-            "description": "ID of the schedule."
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 50,
-              "title": "Limit"
-            },
-            "description": "Maximum number of items to return. Values are clamped to between 1 and 200."
-          },
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Keyset cursor from a prior response.",
-              "title": "Cursor"
-            },
-            "description": "Keyset cursor from a prior response."
-          },
-          {
-            "name": "sessionId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Sessionid"
-            }
-          },
-          {
-            "name": "metadata",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND).",
-              "title": "Metadata"
-            },
-            "description": "Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND)."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RunListResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "The API key is missing or invalid."
-          },
-          "403": {
-            "description": "This API key or project cannot perform this operation."
-          },
-          "404": {
-            "description": "API schedules are unavailable for this project or a referenced resource was not found."
-          },
-          "422": {
-            "description": "The request contains invalid data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ScheduleValidationError"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The pagination cursor is malformed."
-          }
-        }
-      }
     }
   },
   "components": {
@@ -6488,6 +6477,11 @@
       },
       "RunSummary": {
         "properties": {
+          "scheduleId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the schedule that created this run. Omitted for runs without recorded schedule attribution."
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -6648,11 +6642,6 @@
             "type": "string",
             "format": "date-time",
             "title": "Updatedat"
-          },
-          "scheduleId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "ID of the schedule that created this run. Omitted for runs without recorded schedule attribution."
           }
         },
         "type": "object",
@@ -7742,28 +7731,17 @@
         "title": "NetworkPolicyListResponse",
         "description": "A page of network policies."
       },
-      "NetworkPolicyNotFoundError": {
-        "properties": {
-          "detail": {
-            "type": "string",
-            "title": "Detail",
-            "default": "Network policy not found"
-          }
-        },
-        "type": "object",
-        "title": "NetworkPolicyNotFoundError",
-        "description": "Error response when a network policy is not found"
-      },
       "ScheduleCreateRequest": {
         "type": "object",
         "title": "ScheduleCreateRequest",
-        "description": "Provide either a cron expression or a one-time date. Run settings are optional and apply to every fire.",
+        "description": "Provide exactly one non-null timing field: cronExpr or runAt. Run settings are optional and apply to every fire.",
         "additionalProperties": false,
         "properties": {
           "task": {
             "type": "string",
             "minLength": 1,
-            "description": "Task to send on each fire."
+            "description": "Task to send on each fire.",
+            "maxLength": 10000
           },
           "cronExpr": {
             "anyOf": [
@@ -7842,8 +7820,7 @@
               "bu-fast"
             ],
             "title": "Model",
-            "description": "bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.",
-            "default": "gpt-6-luna"
+            "description": "bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams."
           },
           "modelParams": {
             "anyOf": [
@@ -7912,8 +7889,7 @@
           "agentmail": {
             "type": "boolean",
             "title": "Agentmail",
-            "description": "If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.",
-            "default": false
+            "description": "If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run."
           },
           "stripeLinkConnectionId": {
             "anyOf": [
@@ -8060,34 +8036,6 @@
         },
         "required": [
           "task"
-        ],
-        "oneOf": [
-          {
-            "required": [
-              "cronExpr"
-            ],
-            "properties": {
-              "cronExpr": {
-                "type": "string"
-              },
-              "runAt": {
-                "type": "null"
-              }
-            }
-          },
-          {
-            "required": [
-              "runAt"
-            ],
-            "properties": {
-              "runAt": {
-                "type": "string"
-              },
-              "cronExpr": {
-                "type": "null"
-              }
-            }
-          }
         ]
       },
       "ScheduleUpdateRequest": {
@@ -8099,7 +8047,8 @@
           "task": {
             "type": "string",
             "minLength": 1,
-            "description": "Task to send on each fire."
+            "description": "Task to send on each fire.",
+            "maxLength": 10000
           },
           "cronExpr": {
             "type": "string",
@@ -8280,8 +8229,7 @@
               "bu-fast"
             ],
             "title": "Model",
-            "description": "bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.",
-            "default": "gpt-6-luna"
+            "description": "bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams."
           },
           "modelParams": {
             "anyOf": [
@@ -8350,8 +8298,7 @@
           "agentmail": {
             "type": "boolean",
             "title": "Agentmail",
-            "description": "If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.",
-            "default": false
+            "description": "If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run."
           },
           "stripeLinkConnectionId": {
             "anyOf": [
@@ -8500,8 +8447,14 @@
       "ScheduleBrowserSettings": {
         "properties": {
           "solveCaptchas": {
-            "type": "boolean",
-            "default": true,
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "description": "Solve CAPTCHAs on new browsers except ultrafast/EU; some projects cannot use this field yet and return 422."
           },
           "profileId": {
@@ -8539,8 +8492,7 @@
                 "type": "null"
               }
             ],
-            "description": "ISO country code to proxy the browser through. Defaults to US, or to no proxy for new bu-ultrafast and bu-fast sessions. Pass null to run without a proxy.",
-            "default": "us"
+            "description": "ISO country code to proxy the browser through. Defaults to US, or to no proxy for new bu-ultrafast and bu-fast sessions. Pass null to run without a proxy."
           },
           "screenWidth": {
             "anyOf": [
@@ -8665,6 +8617,18 @@
         ],
         "title": "ScheduleValidationError",
         "description": "A message or list of field errors for an invalid schedule request."
+      },
+      "NetworkPolicyNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Network policy not found"
+          }
+        },
+        "type": "object",
+        "title": "NetworkPolicyNotFoundError",
+        "description": "Error response when a network policy is not found"
       }
     },
     "securitySchemes": {

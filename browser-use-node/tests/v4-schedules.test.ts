@@ -60,7 +60,6 @@ it("creates, lists, reads, updates and deletes schedules and lists their runs", 
     expect(await client.schedules.get(id)).toEqual(schedule);
     expect(await client.schedules.update(id, updateBody)).toEqual(updated);
     const runs = await client.schedules.runs(id, {
-      sessionId,
       cursor: "prior",
       limit: 3,
       metadata: ["watch", "region=us"],
@@ -84,7 +83,6 @@ it("creates, lists, reads, updates and deletes schedules and lists their runs", 
     expect(update).toMatchObject({ method: "PATCH", path: `/api/v4/schedules/${id}`, body: updateBody });
     expect(listRuns).toMatchObject({ method: "GET", path: `/api/v4/schedules/${id}/runs` });
     expect([...listRuns!.params]).toEqual([
-      ["sessionId", sessionId],
       ["cursor", "prior"],
       ["limit", "3"],
       ["metadata", "watch"],

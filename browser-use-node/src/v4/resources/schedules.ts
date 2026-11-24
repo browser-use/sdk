@@ -1,6 +1,5 @@
 import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v4/types.js";
-import type { RunListParams } from "./runs.js";
 
 type ScheduleCreateRequest = components["schemas"]["ScheduleCreateRequest"];
 type ScheduleUpdateRequest = components["schemas"]["ScheduleUpdateRequest"];
@@ -24,7 +23,7 @@ export interface ScheduleListParams {
   enabled?: boolean;
 }
 
-export interface ScheduleRunsParams extends RunListParams {
+export interface ScheduleRunsParams extends Pick<ScheduleListParams, "cursor" | "limit"> {
   metadata?: string[] | null;
 }
 
@@ -56,7 +55,7 @@ export class Schedules {
     return this.http.delete<void>(`/schedules/${scheduleId}`);
   }
 
-  /** List the runs started by a schedule with cursor-based pagination. */
+  /** List the runs started by a schedule, newest first. */
   runs(scheduleId: string, params?: ScheduleRunsParams): Promise<RunListResponse> {
     return this.http.get<RunListResponse>(
       `/schedules/${scheduleId}/runs`,

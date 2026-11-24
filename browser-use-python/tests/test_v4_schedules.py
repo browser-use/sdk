@@ -35,7 +35,7 @@ SCHEDULE = {
     "nextRunAt": NEXT_RUN_AT,
     "enabled": True,
     "sessionId": SESSION_ID,
-    "settings": {"maxCostUsd": "2.50"},
+    "settings": {"maxCostUsd": "2.50", "browserSettings": {"screenWidth": 1280, "screenHeight": 720}},
     "createdAt": NEXT_RUN_AT,
     "updatedAt": NEXT_RUN_AT,
 }
@@ -109,6 +109,15 @@ def test_schedule_requests(async_client: bool, monkeypatch: pytest.MonkeyPatch) 
             assert isinstance(created, ScheduleView)
             assert created.id == UUID(SCHEDULE_ID)
             assert created.settings.max_cost_usd.root == "2.50"
+            assert created.settings.model is None
+            assert created.settings.agentmail is None
+            browser = created.settings.browser_settings
+            assert browser is not None
+            assert browser.proxy_country_code is None
+            assert browser.solve_captchas is None
+            assert browser.model_dump(by_alias=True, exclude_unset=True) == {
+                "screenWidth": 1280, "screenHeight": 720
+            }
 
             once = await call(
                 "create", "Check once", run_at="2027-03-15T09:00:00", output_schema=None
@@ -133,7 +142,7 @@ def test_schedule_requests(async_client: bool, monkeypatch: pytest.MonkeyPatch) 
             )
             assert updated.enabled is False
             runs = await call(
-                "runs", created.id, session_id=UUID(SESSION_ID), metadata=["watch", "region=us"]
+                "runs", created.id, cursor="prior", limit=3, metadata=["watch", "region=us"]
             )
             assert isinstance(runs, RunListResponse)
             assert runs.runs[0].schedule_id == created.id
@@ -183,5 +192,7 @@ def test_schedule_requests(async_client: bool, monkeypatch: pytest.MonkeyPatch) 
         "timezone": "UTC",
         "futureField": "pass through",
     }
-    assert requests[5].url.params["sessionId"] == SESSION_ID
+    assert set(requests[5].url.params.keys()) == {"cursor", "limit", "metadata"}
+    assert requests[5].url.params["cursor"] == "prior"
+    assert requests[5].url.params["limit"] == "3"
     assert requests[5].url.params.get_list("metadata") == ["watch", "region=us"]

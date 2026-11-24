@@ -99,4 +99,4 @@ curl -X DELETE "https://api.browser-use.com/api/v4/schedules/$SCHEDULE_ID" \
 - A project can have up to 50 enabled schedules. A schedule can fire at most once per minute.
 - Schedules are unavailable on [Zero Data Retention](/cloud/zero-data-retention) projects.
 - Use [1Password references](/cloud/guides/1password) for secrets.
-- If the queue is full or the run is refused, for example because the project is out of credits, that occurrence is skipped. Check the schedule's runs list to see which runs started.
+- A full queue skips that occurrence of a recurring schedule. A one-time schedule waits for space in the queue and starts late. If a run is refused, for example because the project is out of credits, that occurrence is skipped. Check the schedule's runs list to see which runs started.

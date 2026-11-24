@@ -5,6 +5,7 @@ import type {
   ScheduleBrowserSettings,
   ScheduleCreateBody,
   ScheduleSecretBinding,
+  ScheduleRunsParams,
   ScheduleSettings,
 } from "../src/v4.js";
 
@@ -19,5 +20,6 @@ test("schedule types preserve timing choices and optional settings", () => {
   expectTypeOf<{}>().toMatchTypeOf<ScheduleSettings>();
   expectTypeOf<Extract<keyof ScheduleBrowserSettings, "customProxy">>().toBeNever();
   expectTypeOf<ScheduleSecretBinding["source"]["type"]>().toEqualTypeOf<"onepassword">();
+  expectTypeOf<Extract<keyof ScheduleRunsParams, "sessionId">>().toBeNever();
   expectTypeOf<RunSummary["scheduleId"]>().toEqualTypeOf<string | undefined>();
 });

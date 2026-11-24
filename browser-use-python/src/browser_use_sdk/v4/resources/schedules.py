@@ -161,10 +161,9 @@ class Schedules:
         *,
         cursor: str | None = None,
         limit: int | None = None,
-        session_id: str | UUID | None = None,
         metadata: list[str] | None = None,
     ) -> RunListResponse:
-        """List the runs started by a schedule with cursor-based pagination."""
+        """List the runs started by a schedule, newest first."""
         return RunListResponse.model_validate(
             self._http.request(
                 "GET",
@@ -172,7 +171,6 @@ class Schedules:
                 params={
                     "cursor": cursor,
                     "limit": limit,
-                    "sessionId": session_id,
                     "metadata": metadata,
                 },
             )
@@ -298,10 +296,9 @@ class AsyncSchedules:
         *,
         cursor: str | None = None,
         limit: int | None = None,
-        session_id: str | UUID | None = None,
         metadata: list[str] | None = None,
     ) -> RunListResponse:
-        """List the runs started by a schedule with cursor-based pagination."""
+        """List the runs started by a schedule, newest first."""
         return RunListResponse.model_validate(
             await self._http.request(
                 "GET",
@@ -309,7 +306,6 @@ class AsyncSchedules:
                 params={
                     "cursor": cursor,
                     "limit": limit,
-                    "sessionId": session_id,
                     "metadata": metadata,
                 },
             )
