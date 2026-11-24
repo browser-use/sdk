@@ -1,4 +1,5 @@
 from .client import AsyncBrowserUse, BrowserUse
+from .resources.schedules import AsyncSchedules, Schedules
 from .._core.errors import APIKeySpendLimitError, BrowserUseError
 
 from ..generated.v4.models import (
@@ -16,11 +17,14 @@ from ..generated.v4.models import (
     DisconnectResponse,
     ExtensionListResponse,
     ExtensionView,
+    Harness as ScheduleHarness,
     InlineSecretSource,
     IntegrationCategoryResponse,
     IntegrationListResponse,
     IntegrationResponse,
     Model as RunModel,
+    Model2 as ScheduleModel,
+    Mode2 as ScheduleMode,
     OnePasswordSecretSource,
     ProfileCreateRequest,
     ProfileListResponse,
@@ -41,6 +45,14 @@ from ..generated.v4.models import (
     RunListResponse,
     RunStatusResponse,
     RunSummary,
+    ScheduleBrowserSettings,
+    ScheduleCreateRequest,
+    ScheduleListResponse,
+    ScheduleSecretBinding,
+    ScheduleSettings,
+    ScheduleUpdateRequest,
+    ScheduleValidationError,
+    ScheduleView,
     SecretBinding,
     SecretBindings,
     SessionCostCapRequest,
@@ -88,6 +100,20 @@ __all__ = [
     "OnePasswordSecretSource",
     "SecretBinding",
     "SecretBindings",
+    # Schedule models
+    "Schedules",
+    "AsyncSchedules",
+    "ScheduleBrowserSettings",
+    "ScheduleCreateRequest",
+    "ScheduleListResponse",
+    "ScheduleSecretBinding",
+    "ScheduleSettings",
+    "ScheduleUpdateRequest",
+    "ScheduleValidationError",
+    "ScheduleView",
+    "ScheduleHarness",
+    "ScheduleModel",
+    "ScheduleMode",
     # Browser models
     "BrowserSessionItemView",
     "BrowserSessionView",

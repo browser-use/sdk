@@ -183,6 +183,14 @@ function v4EndpointToSdkMethod(
   if (method === "post" && path === "/runs/{run_id}/cancel") return { resource: "runs", method: "cancel" };
   if (method === "get" && path === "/runs/{run_id}/attachments") return { resource: "runs", method: "attachments" };
 
+  // Schedules
+  if (method === "post" && path === "/schedules") return { resource: "schedules", method: "create" };
+  if (method === "get" && path === "/schedules") return { resource: "schedules", method: "list" };
+  if (method === "get" && path === "/schedules/{schedule_id}") return { resource: "schedules", method: "get" };
+  if (method === "patch" && path === "/schedules/{schedule_id}") return { resource: "schedules", method: "update" };
+  if (method === "delete" && path === "/schedules/{schedule_id}") return { resource: "schedules", method: "delete" };
+  if (method === "get" && path === "/schedules/{schedule_id}/runs") return { resource: "schedules", method: "runs" };
+
   // Sessions + queue
   if (method === "get" && path === "/sessions") return { resource: "sessions", method: "list" };
   if (method === "get" && path === "/sessions/{session_id}") return { resource: "sessions", method: "get" };

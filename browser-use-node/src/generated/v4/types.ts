@@ -4,6 +4,78 @@
  */
 
 export interface paths {
+    "/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Schedules
+         * @description List schedules in the API key’s project, newest first. Use the returned cursor to fetch the next page. Requires the v4:schedules:read API key scope.
+         */
+        get: operations["list_schedules_schedules_get"];
+        put?: never;
+        /**
+         * Create Schedule
+         * @description Schedule a task to run once or on a recurring cron. Each fire uses the same session. If you omit the session ID, the first fire starts a new session. Requires the v4:schedules:create API key scope.
+         */
+        post: operations["create_schedule_schedules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedules/{schedule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Schedule
+         * @description Get a schedule in the API key’s project. Requires the v4:schedules:read API key scope.
+         */
+        get: operations["get_schedule_schedules__schedule_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Schedule
+         * @description Delete a schedule and cancel pending fires for an API-created schedule. Runs that already started continue. Requires the v4:schedules:delete API key scope.
+         */
+        delete: operations["delete_schedule_schedules__schedule_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Schedule
+         * @description Change the task, timing, time zone, or enabled state. Omitted fields keep their values. Pausing an API-created schedule cancels its pending fires. To resume an expired one-time schedule, supply a new runAt. Requires the v4:schedules:create API key scope.
+         */
+        patch: operations["update_schedule_schedules__schedule_id__patch"];
+        trace?: never;
+    };
+    "/schedules/{schedule_id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Schedule Runs
+         * @description List recorded runs for this schedule, newest first. Runs recorded before schedule tracking was enabled may be absent. Requires the v4:schedules:read API key scope.
+         */
+        get: operations["list_schedule_runs_schedules__schedule_id__runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/runs": {
         parameters: {
             query?: never;
@@ -2070,6 +2142,11 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+            /**
+             * Format: uuid
+             * @description ID of the schedule that created this run. Omitted for runs without recorded schedule attribution.
+             */
+            scheduleId?: string;
         };
         /**
          * SecretBinding
@@ -2521,6 +2598,324 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /**
+         * ScheduleCreateRequest
+         * @description Provide either a cron expression or a one-time date. Run settings are optional and apply to every fire.
+         */
+        ScheduleCreateRequest: {
+            /** @description Task to send on each fire. */
+            task: string;
+            cronExpr?: string | null;
+            runAt?: string | null;
+            /**
+             * @description IANA time zone, for example America/New_York.
+             * @default UTC
+             */
+            timezone?: string;
+            /** @description An existing session in the project that has not been archived or purged. Omit to reserve a new session. */
+            sessionId?: string | null;
+            /**
+             * Model
+             * @description bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.
+             * @default gpt-6-luna
+             * @enum {string}
+             */
+            model?: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "claude-sonnet-5-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
+            /**
+             * Modelparams
+             * @description Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider's own defaults in place. On OpenAI models, {"service_tier": "priority"} (alias "fast") requests Fast processing at a higher token price; sent alone it keeps the model's default parameters. Beta: {"context": {"keepScreenshots": "2", "trimAtTokens": "80000", "compactAtTokens": "125000"}} controls what the agent keeps in context for the run: trimAtTokens clears old screenshots and tool output in one batch at that mark (keepScreenshots, which needs it, sets how many recent screenshots stay), and compactAtTokens compacts earlier. Values are strings from short per-model lists; like service_tier it keeps the model's default parameters.
+             */
+            modelParams?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Outputschema
+             * @description Optional JSON Schema for the final output (API runs only).
+             */
+            outputSchema?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Workspaceid
+             * @description Files workspace to use. Omitted on a new session creates one; omitted on a follow-up reuses the session's workspace.
+             */
+            workspaceId?: string | null;
+            /** @description Browser settings. Omitted or null on a follow-up keeps the session's browser. */
+            browserSettings?: components["schemas"]["ScheduleBrowserSettings"] | null;
+            /**
+             * Keepalive
+             * @description Seconds the session's browser stays open after its last run, so a follow-up run reuses the same page, never past the browser's 4 h lifetime. Default 120. Follow-up runs inherit the session's value; send a new value to change it or null to restore the default. Kept time is billed as browser time. Ignored (always 120) for free-tier and Zero Data Retention projects.
+             */
+            keepAlive?: number | null;
+            /**
+             * Agentmail
+             * @description If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.
+             * @default false
+             */
+            agentmail?: boolean;
+            /**
+             * Stripelinkconnectionid
+             * @description Stripe Link connection from this project that scheduled runs may use for payments.
+             */
+            stripeLinkConnectionId?: string | null;
+            /**
+             * Secretbindings
+             * @description 1Password references the run may use. Inline secret values are unavailable for schedules.
+             */
+            secretBindings?: components["schemas"]["ScheduleSecretBinding"][] | null;
+            /**
+             * Opvaultid
+             * @description A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.
+             *
+             *     Explicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.
+             */
+            opVaultId?: string | null;
+            /**
+             * Opvaultalloweddomains
+             * @description Hosts where the run may type credentials from opVaultId. If omitted, each item supplies its own hosts from its 1Password website entries and items without host entries are skipped.
+             */
+            opVaultAllowedDomains?: string[] | null;
+            /** @description LLM judge of the finished run; send {} for defaults. Omitted or null runs no judge. */
+            judge?: components["schemas"]["RunJudgeSettings"] | null;
+            /**
+             * Maxcostusd
+             * @description Budget in USD for model and search charges on each fire. If omitted, a new session uses the default budget and an existing session uses its current budget.
+             */
+            maxCostUsd?: number | string | null;
+            /**
+             * Metadata
+             * @description Labels for this run. Up to 10 key-value pairs. Filterable on the runs list and in the dashboard history.
+             */
+            metadata?: {
+                [key: string]: string;
+            } | null;
+            /** @description AgentCard wallet in this project. The project must have access to AgentCard. */
+            agentcardWalletId?: string | null;
+            /** @description Agent harness. Available values depend on your project. */
+            harness?: ("browsercode" | "bu-pi") | null;
+            /** @description Run mode. Available values depend on your project. */
+            mode?: ("default" | "ultrafast") | null;
+        } & ({
+            cronExpr: string;
+            runAt?: null;
+        } | {
+            runAt: string;
+            cronExpr?: null;
+        });
+        /**
+         * ScheduleUpdateRequest
+         * @description Update any of these fields. To change the schedule type, provide the new cron expression or one-time date.
+         */
+        ScheduleUpdateRequest: {
+            /** @description Task to send on each fire. */
+            task?: string;
+            /** @description Cron expression in the schedule time zone. Fires must be at least one minute apart. */
+            cronExpr?: string;
+            /** @description One-time date or timestamp. A value without an offset uses the schedule time zone. */
+            runAt?: string;
+            /** @description IANA time zone, for example America/New_York. */
+            timezone?: string;
+            /** @description Set false to pause or true to resume. */
+            enabled?: boolean;
+        };
+        /**
+         * ScheduleView
+         * @description A project schedule and the session it runs in.
+         */
+        ScheduleView: {
+            /** Format: uuid */
+            id: string;
+            /** @description Task to send on each fire. */
+            task: string;
+            cronExpr: string | null;
+            runAt: string | null;
+            /** @description IANA time zone, for example America/New_York. */
+            timezone: string;
+            /** Format: date-time */
+            nextRunAt: string;
+            enabled: boolean;
+            /** Format: uuid */
+            sessionId: string;
+            settings: components["schemas"]["ScheduleSettings"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /**
+         * ScheduleListResponse
+         * @description A page of project schedules.
+         */
+        ScheduleListResponse: {
+            schedules: components["schemas"]["ScheduleView"][];
+            nextCursor: string | null;
+            hasMore: boolean;
+        };
+        /**
+         * ScheduleSettings
+         * @description Explicit run settings saved with the schedule. Schedules created by the agent return an empty object.
+         */
+        ScheduleSettings: {
+            /**
+             * Model
+             * @description bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.
+             * @default gpt-6-luna
+             * @enum {string}
+             */
+            model?: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "claude-sonnet-5-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
+            /**
+             * Modelparams
+             * @description Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider's own defaults in place. On OpenAI models, {"service_tier": "priority"} (alias "fast") requests Fast processing at a higher token price; sent alone it keeps the model's default parameters. Beta: {"context": {"keepScreenshots": "2", "trimAtTokens": "80000", "compactAtTokens": "125000"}} controls what the agent keeps in context for the run: trimAtTokens clears old screenshots and tool output in one batch at that mark (keepScreenshots, which needs it, sets how many recent screenshots stay), and compactAtTokens compacts earlier. Values are strings from short per-model lists; like service_tier it keeps the model's default parameters.
+             */
+            modelParams?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Outputschema
+             * @description Optional JSON Schema for the final output (API runs only).
+             */
+            outputSchema?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Workspaceid
+             * @description Files workspace to use. Omitted on a new session creates one; omitted on a follow-up reuses the session's workspace.
+             */
+            workspaceId?: string | null;
+            /** @description Browser settings. Omitted or null on a follow-up keeps the session's browser. */
+            browserSettings?: components["schemas"]["ScheduleBrowserSettings"] | null;
+            /**
+             * Keepalive
+             * @description Seconds the session's browser stays open after its last run, so a follow-up run reuses the same page, never past the browser's 4 h lifetime. Default 120. Follow-up runs inherit the session's value; send a new value to change it or null to restore the default. Kept time is billed as browser time. Ignored (always 120) for free-tier and Zero Data Retention projects.
+             */
+            keepAlive?: number | null;
+            /**
+             * Agentmail
+             * @description If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.
+             * @default false
+             */
+            agentmail?: boolean;
+            /**
+             * Stripelinkconnectionid
+             * @description Stripe Link connection from this project that scheduled runs may use for payments.
+             */
+            stripeLinkConnectionId?: string | null;
+            /**
+             * Secretbindings
+             * @description 1Password references the run may use. Inline secret values are unavailable for schedules.
+             */
+            secretBindings?: components["schemas"]["ScheduleSecretBinding"][] | null;
+            /**
+             * Opvaultid
+             * @description A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.
+             *
+             *     Explicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.
+             */
+            opVaultId?: string | null;
+            /**
+             * Opvaultalloweddomains
+             * @description Hosts where the run may type credentials from opVaultId. If omitted, each item supplies its own hosts from its 1Password website entries and items without host entries are skipped.
+             */
+            opVaultAllowedDomains?: string[] | null;
+            /** @description LLM judge of the finished run; send {} for defaults. Omitted or null runs no judge. */
+            judge?: components["schemas"]["RunJudgeSettings"] | null;
+            /**
+             * Maxcostusd
+             * @description Budget in USD for model and search charges on each fire. If omitted, a new session uses the default budget and an existing session uses its current budget.
+             */
+            maxCostUsd?: number | string | null;
+            /**
+             * Metadata
+             * @description Labels for this run. Up to 10 key-value pairs. Filterable on the runs list and in the dashboard history.
+             */
+            metadata?: {
+                [key: string]: string;
+            } | null;
+            /** @description AgentCard wallet in this project. The project must have access to AgentCard. */
+            agentcardWalletId?: string | null;
+            /** @description Agent harness. Available values depend on your project. */
+            harness?: ("browsercode" | "bu-pi") | null;
+            /** @description Run mode. Available values depend on your project. */
+            mode?: ("default" | "ultrafast") | null;
+        };
+        /**
+         * ScheduleBrowserSettings
+         * @description Browser settings for scheduled runs. Custom proxies are unavailable for schedules.
+         */
+        ScheduleBrowserSettings: {
+            /**
+             * @description Solve CAPTCHAs on new browsers except ultrafast/EU; some projects cannot use this field yet and return 422.
+             * @default true
+             */
+            solveCaptchas?: boolean;
+            /**
+             * Profileid
+             * @description ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions.
+             */
+            profileId?: string | null;
+            /**
+             * Networkpolicyid
+             * @description ID of a network policy that allows or blocks domains for this browser. Policy changes reach the browser within seconds. When the field is absent, the run keeps the policy of the session.
+             */
+            networkPolicyId?: string | null;
+            /**
+             * @description ISO country code to proxy the browser through. Defaults to US, or to no proxy for new bu-ultrafast and bu-fast sessions. Pass null to run without a proxy.
+             * @default us
+             */
+            proxyCountryCode?: components["schemas"]["ProxyCountryCode"] | null;
+            /**
+             * Screenwidth
+             * @description Custom screen width in pixels for the browser.
+             */
+            screenWidth?: number | null;
+            /**
+             * Screenheight
+             * @description Custom screen height in pixels for the browser.
+             */
+            screenHeight?: number | null;
+            /**
+             * Allowresizing
+             * @description Let you or the agent resize the browser window over CDP. Resizing makes the browser easier to detect. API runs default to off. Follow-up runs inherit the value of the previous browser. The value applies only when the run starts a new browser.
+             */
+            allowResizing?: boolean | null;
+            /**
+             * Record
+             * @description Record the browser session to an mp4, retrievable via GET /browsers/{id} once the browser stops. API runs default to off; pass true to enable. Like other browser settings, this only applies when a new browser is provisioned: a follow-up that reuses the session's live browser keeps that browser's recording state. Ignored (always off) for Zero Data Retention projects.
+             */
+            record?: boolean | null;
+            /**
+             * Extensionids
+             * @description Up to 3 ready extensions from POST /api/v4/extensions to install in every browser of the session. Follow-up runs inherit the session's extensions; passing a different set returns 400. After you delete an extension, omit extensionIds or pass the reduced set; later browsers skip deleted extensions. The agent is not told about installed extensions, so name any extension pages in the task.
+             */
+            extensionIds?: string[];
+        };
+        /**
+         * ScheduleSecretBinding
+         * @description A 1Password credential reference for scheduled runs.
+         */
+        ScheduleSecretBinding: {
+            /**
+             * Alias
+             * @description Name the agent refers to this secret by, e.g. "github_password".
+             */
+            alias: string;
+            source: components["schemas"]["OnePasswordSecretSource"];
+            /**
+             * Alloweddomains
+             * @description Hosts the secret may be typed into, e.g. ["github.com"]. A host covers its subdomains. Bare hostnames only — no scheme, port, path, or wildcard.
+             */
+            allowedDomains: string[];
+        };
+        /**
+         * ScheduleValidationError
+         * @description A message or list of field errors for an invalid schedule request.
+         */
+        ScheduleValidationError: {
+            /** Detail */
+            detail: string | {
+                [key: string]: unknown;
+            }[];
+        };
     };
     responses: never;
     parameters: never;
@@ -2530,6 +2925,367 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_schedules_schedules_get: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of items to return. Values are clamped to between 1 and 200. */
+                limit?: number;
+                /** @description Keyset cursor from a prior response. */
+                cursor?: string | null;
+                /** @description Return only enabled or only disabled schedules. */
+                enabled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleListResponse"];
+                };
+            };
+            /** @description The pagination cursor is malformed. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The API key is missing or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This API key or project cannot perform this operation. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description API schedules are unavailable for this project or a referenced resource was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request contains invalid data. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleValidationError"];
+                };
+            };
+        };
+    };
+    create_schedule_schedules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleView"];
+                };
+            };
+            /** @description The API key is missing or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This API key or project cannot perform this operation. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description API schedules are unavailable for this project or a referenced resource was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request contains invalid data. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleValidationError"];
+                };
+            };
+            /** @description This project already has 50 enabled schedules. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_schedule_schedules__schedule_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the schedule. */
+                schedule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleView"];
+                };
+            };
+            /** @description The API key is missing or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This API key or project cannot perform this operation. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description API schedules are unavailable for this project or a referenced resource was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request contains invalid data. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleValidationError"];
+                };
+            };
+        };
+    };
+    delete_schedule_schedules__schedule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the schedule. */
+                schedule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Schedule deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The API key is missing or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This API key or project cannot perform this operation. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description API schedules are unavailable for this project or a referenced resource was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request contains invalid data. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleValidationError"];
+                };
+            };
+        };
+    };
+    update_schedule_schedules__schedule_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID of the schedule. */
+                schedule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleView"];
+                };
+            };
+            /** @description The API key is missing or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This API key or project cannot perform this operation. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description API schedules are unavailable for this project or a referenced resource was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request contains invalid data. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleValidationError"];
+                };
+            };
+            /** @description This project already has 50 enabled schedules. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_schedule_runs_schedules__schedule_id__runs_get: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of items to return. Values are clamped to between 1 and 200. */
+                limit?: number;
+                /** @description Keyset cursor from a prior response. */
+                cursor?: string | null;
+                sessionId?: string | null;
+                /** @description Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND). */
+                metadata?: string[] | null;
+            };
+            header?: never;
+            path: {
+                /** @description ID of the schedule. */
+                schedule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunListResponse"];
+                };
+            };
+            /** @description The pagination cursor is malformed. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The API key is missing or invalid. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This API key or project cannot perform this operation. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description API schedules are unavailable for this project or a referenced resource was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request contains invalid data. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleValidationError"];
+                };
+            };
+        };
+    };
     list_runs_runs_get: {
         parameters: {
             query?: {

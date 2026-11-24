@@ -3,6 +3,7 @@ from .integrations import AsyncIntegrations, Integrations
 from .profiles import AsyncProfiles, Profiles
 from .extensions import AsyncExtensions, Extensions
 from .runs import AsyncRuns, Runs
+from .schedules import AsyncSchedules, Schedules
 from .sessions import AsyncSessions, Sessions
 from .workspaces import AsyncWorkspaces, Workspaces
 
@@ -17,6 +18,8 @@ __all__ = [
     "AsyncExtensions",
     "Runs",
     "AsyncRuns",
+    "Schedules",
+    "AsyncSchedules",
     "Sessions",
     "AsyncSessions",
     "Workspaces",

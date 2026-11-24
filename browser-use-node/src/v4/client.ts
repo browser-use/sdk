@@ -4,6 +4,7 @@ import { Integrations } from "./resources/integrations.js";
 import { Profiles } from "./resources/profiles.js";
 import { Extensions } from "./resources/extensions.js";
 import { Runs } from "./resources/runs.js";
+import { Schedules } from "./resources/schedules.js";
 import { Sessions } from "./resources/sessions.js";
 import { Workspaces } from "./resources/workspaces.js";
 
@@ -22,6 +23,7 @@ export class BrowserUse {
   readonly profiles: Profiles;
   readonly extensions: Extensions;
   readonly runs: Runs;
+  readonly schedules: Schedules;
   readonly sessions: Sessions;
   readonly workspaces: Workspaces;
 
@@ -46,6 +48,7 @@ export class BrowserUse {
     this.profiles = new Profiles(this.http);
     this.extensions = new Extensions(this.http);
     this.runs = new Runs(this.http);
+    this.schedules = new Schedules(this.http);
     this.sessions = new Sessions(this.http);
     this.workspaces = new Workspaces(this.http);
   }

@@ -95,6 +95,7 @@
                       "cloud/agent/structured-output",
                       "cloud/agent/judge",
                       "cloud/agent/sessions",
+                      "cloud/agent/schedules",
                       "cloud/agent/workspaces",
                       "cloud/agent/scripts",
                       "cloud/agent/human-in-the-loop",

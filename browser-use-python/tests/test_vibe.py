@@ -143,6 +143,13 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/runs/{run_id}/events"): ("runs", "events"),
     ("post", "/runs/{run_id}/cancel"): ("runs", "cancel"),
     ("get", "/runs/{run_id}/attachments"): ("runs", "attachments"),
+    # schedules
+    ("post", "/schedules"): ("schedules", "create"),
+    ("get", "/schedules"): ("schedules", "list"),
+    ("get", "/schedules/{schedule_id}"): ("schedules", "get"),
+    ("patch", "/schedules/{schedule_id}"): ("schedules", "update"),
+    ("delete", "/schedules/{schedule_id}"): ("schedules", "delete"),
+    ("get", "/schedules/{schedule_id}/runs"): ("schedules", "runs"),
     # sessions + queue
     ("get", "/sessions"): ("sessions", "list"),
     ("get", "/sessions/{session_id}"): ("sessions", "get"),
@@ -348,6 +355,7 @@ class TestV4Coverage:
             integrations,
             profiles,
             runs,
+            schedules,
             sessions,
             workspaces,
         )
@@ -358,6 +366,7 @@ class TestV4Coverage:
             "profiles": profiles.Profiles,
             "extensions": extensions.Extensions,
             "runs": runs.Runs,
+            "schedules": schedules.Schedules,
             "sessions": sessions.Sessions,
             "workspaces": workspaces.Workspaces,
             "integrations": integrations.Integrations,
@@ -374,6 +383,7 @@ class TestV4Coverage:
             integrations,
             profiles,
             runs,
+            schedules,
             sessions,
             workspaces,
         )
@@ -384,6 +394,7 @@ class TestV4Coverage:
             "profiles": profiles.AsyncProfiles,
             "extensions": extensions.AsyncExtensions,
             "runs": runs.AsyncRuns,
+            "schedules": schedules.AsyncSchedules,
             "sessions": sessions.AsyncSessions,
             "workspaces": workspaces.AsyncWorkspaces,
             "integrations": integrations.AsyncIntegrations,
