@@ -661,7 +661,7 @@ The 0.x `browser-use --mcp` server ran the removed engine. `--mcp` now prints a 
 }
 ```
 
-`--cli-mcp` uses its own temporary Chromium when your Chrome cannot be used. The CLI does too, and reuses it until `browser-use --reload`. `--mcp` preserves the 0.x default profile's domain restrictions and `BROWSER_USE_ALLOWED_DOMAINS`; starting a cloud browser is disabled under these restrictions, and a configured local proxy raises.
+`--cli-mcp` uses its own temporary Chromium when your Chrome cannot be used. The CLI does too. Both switch to your Chrome once you turn on its remote debugging (`use_my_chrome()` when the temporary Chromium has pages open; `browser-use --reload` also works in the CLI). `--mcp` preserves the 0.x default profile's domain restrictions and `BROWSER_USE_ALLOWED_DOMAINS`; starting a cloud browser is disabled under these restrictions, and a configured local proxy raises.
 
 The command aliases `bu` and `browser` were removed; use `browser-use` or `browseruse`. The `[cli]`, `[mcp]`, `[anthropic]`, `[google]` and `[all]` extras still resolve; their dependencies are now included. Other 0.x extras were removed.
 
