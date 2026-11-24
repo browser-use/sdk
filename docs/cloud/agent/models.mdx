@@ -73,6 +73,9 @@ to every upstream provider. Experimental models are not recommended as a
 production default. MiniMax M3 remains an API option even where it is absent
 from the dashboard picker. GPT-6.2 Sol (`gpt-6.2-sol`) is available in the US
 only; it is not offered in the EU, and US-only Bedrock projects get a 422.
+The OpenAPI `model` enum does not list it yet, because the public schema leaves
+out models that sit behind a release switch. The API accepts it, and both SDKs
+take it as a plain string.
 
 | Provider | Model IDs | BYOK provider |
 | --- | --- | --- |
