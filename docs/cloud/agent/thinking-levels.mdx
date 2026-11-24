@@ -46,7 +46,7 @@ See [BU 4.0 models](/cloud/agent/models#bu-40-models) for availability and routi
 | `deepseek-v4.1-flash` | `thinking.type` | `enabled`, `disabled` |
 | `deepseek-v4.1-flash` | `reasoning_effort` | `low`, `high`, `max` |
 | `mimo-v2.6-pro`, `mimo-v2.6-flash` | `thinking.type` | `enabled`, `disabled` |
-| `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-astra`, `gpt-6-sol`, `gpt-6.1-sol`, `gpt-6-luna` | `service_tier` | `default`, `fast`, `priority` |
+| `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-astra`, `gpt-6-sol`, `gpt-6.1-sol`, `gpt-6.2-sol`, `gpt-6-luna` | `service_tier` | `default`, `fast`, `priority` |
 
 `glm-5.2`, `glm-5.3-flash`, `grok-4.5`, `grok-4.6`,
 `kimi-k3`, `minimax-m3`, and `claude-fable-5`
@@ -114,9 +114,9 @@ curl -X POST https://api.browser-use.com/api/v4/runs \
 
 Add `"service_tier": "priority"` (or its alias `"fast"`) to `modelParams` for
 faster OpenAI responses. It works with `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`,
-`gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-luna`, `gpt-6-sol`, `gpt-6-astra`, and
-`gpt-6.1-sol`. Fast mode bills tokens at 2x the model's Standard rate (2.5x
-for `gpt-5.5`).
+`gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-luna`, `gpt-6-sol`, `gpt-6-astra`,
+`gpt-6.1-sol`, and `gpt-6.2-sol`. Fast mode bills tokens at 2x the model's
+Standard rate (2.5x for `gpt-5.5`).
 
 `modelParams` replaces the model's default parameters, so include the reasoning
 effort you want:
