@@ -34,7 +34,7 @@ See [BU 4.0 models](/cloud/agent/models#bu-40-models) for availability and routi
 | Model strings | Path | Accepted values |
 | --- | --- | --- |
 | `gpt-6-luna`, `gpt-6-sol` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
-| `gpt-6-astra`, `gpt-6.1-sol` | `reasoning.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
+| `gpt-6-astra`, `gpt-6.1-sol`, `gpt-6.2-sol` | `reasoning.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
 | `gpt-5.5` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh` |
 | `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` | `reasoning.effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
 | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-opus-5-5`, `claude-sonnet-5` | `output_config.effort` | `low`, `medium`, `high`, `xhigh`, `max` |
@@ -65,11 +65,11 @@ request returns 422.
 
   For an explicit model, omitting `modelParams` applies
   that model's defaults: `gpt-5.6-luna`, `gpt-5.6-sol`, `gpt-6-sol`,
-  `gpt-6.1-sol`, and `gpt-6-astra` use `reasoning.effort: xhigh`;
+  `gpt-6.1-sol`, `gpt-6.2-sol`, and `gpt-6-astra` use `reasoning.effort: xhigh`;
   `claude-opus-5`, `claude-sonnet-5`, and `claude-opus-5-5` use
   `thinking: {type: adaptive, display: summarized}`; MiMo and
-  `deepseek-v4.1-flash` use `thinking.type: disabled`. Astra and GPT-6.1 Sol
-  do not accept `none` or `minimal`. Send an empty
+  `deepseek-v4.1-flash` use `thinking.type: disabled`. Astra, GPT-6.1 Sol and
+  GPT-6.2 Sol do not accept `none` or `minimal`. Send an empty
   object (`"modelParams": {}`) to opt out and use the provider's defaults.
 </Note>
 
