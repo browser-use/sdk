@@ -104,17 +104,12 @@ profile ID.
 A site that keeps its login token in IndexedDB may not stay logged in through
 a profile. Expired cookies are dropped when the profile is saved.
 
-By default, changes are saved to the profile when the browser stops. The save
-can finish up to about 30 seconds after the stop call returns. If a
-browser could not fully load or restore the profile, it does not save, so it
-cannot overwrite the stored profile with partial data.
-
-<Note>
-  The save timing here and the parallel behavior below describe the default
-  profile mode. Some projects use a newer mode that syncs cookies and
-  localStorage while the browser runs. On those projects the behavior can
-  differ.
-</Note>
+In the US, cookie and localStorage changes reach the profile while the browser
+runs, within about a second. In the [EU](/cloud/eu-deployment), they are
+saved when the browser stops, and the save can finish up to about 30 seconds
+after the stop call returns. If a browser could not fully load or restore the
+profile, it does not save, so it cannot overwrite the stored profile with
+partial data.
 
 ## Several browsers on one profile
 
@@ -123,15 +118,13 @@ and no error.
 
 - They share the profile's fingerprint, once the profile has been saved.
 - With the same `proxyCountryCode`, they share the exit IP.
-- By default, each browser loads the profile when it starts and saves it when
-  it stops, so a later save can overwrite an earlier one. Do not rely on which
-  browser's cookies and localStorage are kept.
-
-The safe pattern is one writer, then many readers:
-
-1. Start one browser on the profile, log in, stop it, and wait about 30
-   seconds for the save.
-2. Then start the parallel browsers. Do not log in or out in them.
+- In the US, a cookie or localStorage change in one browser reaches the others
+  within about a second, so a login in one browser carries over to the others.
+  Do not log in or out in several browsers at the same time.
+- In the EU, each browser loads the profile when it starts and saves it when it
+  stops, so a later save can overwrite an earlier one. There, log in with one
+  browser, stop it, and wait about 30 seconds. Then start the parallel browsers,
+  and do not log in or out in them.
 
 On a brand-new profile, run and stop one browser before you start browsers in
 parallel. Otherwise the parallel browsers may pick different fingerprints, and
