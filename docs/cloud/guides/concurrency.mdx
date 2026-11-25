@@ -134,7 +134,7 @@ The standard per-project application buckets both scale with your stored concurr
 
 | Requests | Default request budget |
 |---|---:|
-| Creates, lists, updates, deletes, event reads, and full run reads | `max(25, 2 × stored concurrency)` requests/second, capped at 100 |
+| Creates, lists, updates, deletes, event reads, and full run reads (except the V4 stop-window calls below) | `max(25, 2 × stored concurrency)` requests/second, capped at 100 |
 | Selected individual status reads | `max(25, 2 × stored concurrency)` requests/second |
 | V4 stop, cancel, and session delete calls | Same budget as the general bucket, counted in its own window |
 
