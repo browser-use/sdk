@@ -209,7 +209,7 @@ from browser_use import Agent, Browser, ChatOpenAI
 
 
 async def main():
-    browser = Browser(use_cloud=True, cloud_proxy_country_code='de', cloud_timeout=15)
+    browser = Browser(use_cloud=True, cloud_proxy_country_code='de', cloud_timeout=15)  # minutes
     agent = Agent(
         task='Open https://ipinfo.io/json in the browser and tell me which country it shows',
         llm=ChatOpenAI(model='gpt-4.1-mini'),
@@ -224,7 +224,7 @@ asyncio.run(main())
 ```python 1.0
 from browser_use import Agent, Browser, ChatOpenAI
 
-browser = Browser(cloud_proxy_country_code='de', cloud_timeout=15)  # use_cloud=True is the default now
+browser = Browser(cloud_proxy_country_code='de', cloud_timeout=15)  # minutes; use_cloud=True is the default now
 agent = Agent(
     'Open https://ipinfo.io/json in the browser and tell me which country it shows',
     llm=ChatOpenAI('gpt-6-luna'),
