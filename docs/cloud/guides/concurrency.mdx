@@ -136,6 +136,15 @@ The standard per-project application buckets both scale with your stored concurr
 |---|---:|
 | Creates, lists, updates, deletes, event reads, and full run reads | `max(25, 2 × stored concurrency)` requests/second, capped at 100 |
 | Selected individual status reads | `max(25, 2 × stored concurrency)` requests/second |
+| V4 stop, cancel, and session delete calls | Same budget as the general bucket, counted in its own window |
+
+Stop calls have their own window so a burst of creates cannot block cleanup. When your project is throttled for creating too fast, you can still stop browsers, cancel runs, and delete sessions. These V4 routes use the stop window:
+
+- `PATCH /api/v4/browsers/{browser_session_id}` (stop a browser)
+- `DELETE /api/v4/sessions/{session_id}`
+- `POST /api/v4/runs/{run_id}/cancel`
+
+The stop window has the same size as the general bucket; it does not add request capacity for other calls. V2 and V3 browser stops still count against the general bucket.
 
 The selected V4 polling endpoints include:
 
