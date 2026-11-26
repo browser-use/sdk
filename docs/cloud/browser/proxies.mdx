@@ -269,13 +269,17 @@ together with `mode: "managed"`.
 
 <CodeGroup>
 ```python Python
+import asyncio
 from playwright.async_api import async_playwright
 
-async with async_playwright() as p:
-    browser = await p.chromium.connect_over_cdp(cdp_url)
-    cdp = await browser.new_browser_cdp_session()
-    proxy = await cdp.send("BrowserUse.setProxy", {"rotate": True})
-    print(proxy)  # {"mode": "managed", "country": "us", "exitIp": "203.0.113.7"}
+async def main():
+    async with async_playwright() as p:
+        browser = await p.chromium.connect_over_cdp(cdp_url)
+        cdp = await browser.new_browser_cdp_session()
+        proxy = await cdp.send("BrowserUse.setProxy", {"rotate": True})
+        print(proxy)  # {"mode": "managed", "country": "us", "exitIp": "203.0.113.7"}
+
+asyncio.run(main())
 ```
 
 ```typescript TypeScript
@@ -298,5 +302,7 @@ console.log(proxy); // { mode: "managed", country: "us", exitIp: "203.0.113.7" }
   refuses it.
 - The command does not accept `mode: "custom"`, `customProxy` or `target`. A
   browser on a custom proxy refuses the command. Use the API for these changes.
+- Send one change at a time. A second command during the first returns the
+  CDP error `-32000`.
 - A direct browser does not accept `rotate` or `country` alone. Send
   `"mode": "managed"` with them.
