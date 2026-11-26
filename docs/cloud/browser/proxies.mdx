@@ -296,11 +296,10 @@ console.log(proxy); // { mode: "managed", country: "us", exitIp: "203.0.113.7" }
 - The result has the same fields as the API response. `exitIp` is `null` when
   the IP lookup fails.
 - The browser does not restart, so tabs, cookies and local storage stay.
-- A wrong param returns the CDP error `-32602`. A change that the browser
-  refuses returns the CDP error `-32000` with the reason.
-- The command does not accept `mode: "custom"`, `customProxy` or `target`. A
-  browser on a custom proxy refuses the command. Use the API for these changes.
-- Send one change at a time. A second command during the first returns the
-  CDP error `-32000`.
+- An unknown mode or country returns the CDP error `-32602`. A change that
+  the browser refuses returns the CDP error `-32000` with the reason.
+- The command has no `customProxy` or `target` param, and it refuses
+  `mode: "custom"`. A browser on a custom proxy refuses the command. Use the
+  API for these changes.
 - A direct browser does not accept `rotate` or `country` alone. Send
   `"mode": "managed"` with them.
