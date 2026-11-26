@@ -277,7 +277,7 @@ async def main():
         browser = await p.chromium.connect_over_cdp(cdp_url)
         cdp = await browser.new_browser_cdp_session()
         proxy = await cdp.send("BrowserUse.setProxy", {"rotate": True})
-        print(proxy)  # {"mode": "managed", "country": "us", "exitIp": "203.0.113.7"}
+        print(proxy)
 
 asyncio.run(main())
 ```
@@ -289,9 +289,15 @@ const browser = await chromium.connectOverCDP(cdpUrl);
 const cdp = await browser.newBrowserCDPSession();
 // The Playwright types do not know this command.
 const proxy = await cdp.send("BrowserUse.setProxy" as any, { rotate: true } as any);
-console.log(proxy); // { mode: "managed", country: "us", exitIp: "203.0.113.7" }
+console.log(proxy);
 ```
 </CodeGroup>
+
+The result has the new state:
+
+```json
+{"mode": "managed", "country": "us", "exitIp": "203.0.113.7"}
+```
 
 - The result has the same fields as the API response. `exitIp` is `null` when
   the IP lookup fails.
