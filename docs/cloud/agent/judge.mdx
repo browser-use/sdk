@@ -132,7 +132,7 @@ The judge is not available in the [EU deployment](/cloud/eu-deployment): a run
 created there with `judge` returns 422.
 
 On paid plans, a run that finishes after your credit balance has run out is not
-judged and keeps `judgement: null`, so no judge call is billed to an empty
-balance. If the judge model's provider has your own
-[provider key](/cloud/agent/models) (BYOK) on the project, the judge still runs
-on that key. Free-plan projects and projects with credit are unaffected.
+judged on Browser Use-managed keys and keeps `judgement: null`. If the judge
+model's provider has your own [provider key](/cloud/agent/models) (BYOK) on the
+project, the judge still runs on that key. Free-plan projects and projects with
+credit are unaffected.
