@@ -67,16 +67,18 @@ states. No project has a list by default, also in the EU deployment. Contact
 [support@browser-use.com](mailto:support@browser-use.com) to set or remove the
 list for your project.
 
-The list applies to each way that sets a managed proxy country: run create,
-agent browser changes during a run, standalone browser create, and
-`PATCH /browsers/{id}/proxy` in API v2, v3 and v4.
+The list applies to each way that a cloud browser gets a managed proxy
+country: run create, agent browser changes during a run, standalone browser
+create, and `PATCH /browsers/{id}/proxy` in API v2, v3 and v4.
 
 - A country outside the list returns `422` with "This project allows only
   these proxy countries: de, fr."
-- When a request does not set a country, and the default country is not in
-  the list, the browser uses the first allowed country in alphabetical order.
-- Custom proxies and `null` (no proxy) are not limited.
-- The `BrowserUse.setProxy` CDP command does not check the list yet.
+- When a request omits the country, and the default country is not in the
+  list, the browser uses the first allowed country in alphabetical order. A
+  rotation of a browser outside the list also moves it to that country.
+- Custom proxies and `proxyCountryCode: null` (no proxy) are not limited.
+- The [proxy endpoint](/cloud/browser/proxy-endpoint) and the
+  `BrowserUse.setProxy` CDP command do not check the list yet.
 
 ## Disable proxies
 
