@@ -54,7 +54,7 @@ The proxy applies to the browser only. Python networking in the agent's cells (`
 
 ### New exit IP when a site blocks the browser
 
-From browser-use 1.0.9, the agent gets `rotate_proxy(country=None)` on a Browser Use Cloud browser. It gives the same live browser a new exit IP without restarting it: tabs, cookies and logins stay. It returns `{'mode', 'country', 'exitIp'}`.
+From browser-use 1.0.9, the agent gets `rotate_proxy(country=None)` on a Browser Use Cloud browser. It gives the same live browser a new exit IP without restarting it: tabs, cookies and logins stay. It returns a dict with the keys `mode`, `country` and `exitIp`.
 
 - **Where:** `Browser()` (the default), and `Browser(cdp_url=...)` pointing at a cloud browser you created yourself (`https://<id>.cdp.browser-use.com`). Other browsers don't get it.
 - **How:** it sends `BrowserUse.setProxy` with `{"rotate": true}` over the browser's own CDP connection, which needs no API key (see [Proxies](/cloud/browser/proxies)). With `BROWSER_USE_API_KEY` set, [Update Browser Proxy](/cloud/api-v4/browsers/update-browser-proxy) is the fallback.
@@ -64,8 +64,22 @@ From browser-use 1.0.9, the agent gets `rotate_proxy(country=None)` on a Browser
 Your own code can call it too. Unlike the agent helper, `browser.rotate_proxy()` always goes through the REST API, so it needs Browser Use credentials such as `BROWSER_USE_API_KEY`. To rotate from your own code without a key, send `BrowserUse.setProxy` over the browser's CDP connection.
 
 ```python
-proxy = await browser.rotate_proxy('us')
-print(proxy['exitIp'])
+import asyncio
+
+from browser_use import Agent, Browser
+
+
+async def main():
+    browser = Browser(keep_alive=True)
+    try:
+        await Agent('Open https://example.com', browser=browser).run()
+        proxy = await browser.rotate_proxy('us')
+        print(proxy['exitIp'])
+    finally:
+        await browser.stop()
+
+
+asyncio.run(main())
 ```
 
 A browser that a Cloud agent session runs answers `409`, because that agent rotates its own proxy.
