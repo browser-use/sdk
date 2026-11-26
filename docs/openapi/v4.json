@@ -62,10 +62,10 @@
             "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
           },
           "404": {
-            "description": "Run, session, workspace, or profile not found."
+            "description": "Run, session, workspace, or profile not found, or a 1Password secret binding omits integrationId and the project has no active 1Password integration."
           },
           "409": {
-            "description": "The session already has an active run."
+            "description": "The session already has an active run, or a 1Password secret binding omits integrationId and the project has more than one active 1Password integration."
           },
           "429": {
             "description": "The project is at its concurrent-session limit."
