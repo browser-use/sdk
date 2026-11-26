@@ -298,8 +298,6 @@ console.log(proxy); // { mode: "managed", country: "us", exitIp: "203.0.113.7" }
 - The browser does not restart, so tabs, cookies and local storage stay.
 - A wrong param returns the CDP error `-32602`. A change that the browser
   refuses returns the CDP error `-32000` with the reason.
-- The command works on a standalone browser. The browser of an agent run
-  refuses it.
 - The command does not accept `mode: "custom"`, `customProxy` or `target`. A
   browser on a custom proxy refuses the command. Use the API for these changes.
 - Send one change at a time. A second command during the first returns the
