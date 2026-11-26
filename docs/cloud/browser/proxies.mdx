@@ -268,7 +268,21 @@ Send at least one of `rotate`, `country` and `mode`. You can send `country`
 together with `mode: "managed"`.
 
 <CodeGroup>
-```python Python
+```python cdp-use
+import asyncio, json, urllib.request
+from cdp_use.client import CDPClient
+
+async def main():
+    # cdp-use needs the WebSocket URL of the browser.
+    version = json.load(urllib.request.urlopen(cdp_url + "/json/version"))
+    async with CDPClient(version["webSocketDebuggerUrl"]) as cdp:
+        proxy = await cdp.send_raw("BrowserUse.setProxy", {"rotate": True})
+        print(proxy)
+
+asyncio.run(main())
+```
+
+```python Playwright (Python)
 import asyncio
 from playwright.async_api import async_playwright
 
@@ -282,12 +296,22 @@ async def main():
 asyncio.run(main())
 ```
 
-```typescript TypeScript
+```typescript Playwright (TypeScript)
 import { chromium } from "playwright";
 
 const browser = await chromium.connectOverCDP(cdpUrl);
 const cdp = await browser.newBrowserCDPSession();
 // The Playwright types do not know this command.
+const proxy = await cdp.send("BrowserUse.setProxy" as any, { rotate: true } as any);
+console.log(proxy);
+```
+
+```typescript Puppeteer
+import puppeteer from "puppeteer-core";
+
+const browser = await puppeteer.connect({ browserURL: cdpUrl });
+const cdp = await browser.target().createCDPSession();
+// The Puppeteer types do not know this command.
 const proxy = await cdp.send("BrowserUse.setProxy" as any, { rotate: true } as any);
 console.log(proxy);
 ```
