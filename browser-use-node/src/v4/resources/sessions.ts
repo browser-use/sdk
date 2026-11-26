@@ -19,11 +19,10 @@ export interface SessionListParams {
   limit?: number;
 }
 
-export type QueueMessageRequest = (
+export type QueueMessageRequest =
   | (Pick<Required<QueueMessageSchema>, "text"> &
       Partial<Pick<QueueMessageSchema, "interrupt" | "attachedFileIds">> & { confirmInputId?: never })
-  | { confirmInputId: number; text?: never; interrupt?: never; attachedFileIds?: never }
-) & Record<string, unknown>;
+  | { confirmInputId: number; text?: never; interrupt?: never; attachedFileIds?: never };
 
 export interface SendMessageOptions {
   /** Optional server-side deduplication strategy, such as `exact-text-v1`. */
