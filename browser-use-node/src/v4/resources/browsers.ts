@@ -1,6 +1,13 @@
 import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v4/types.js";
 
+type BrowserProxyUpdateRequest = components["schemas"]["BrowserProxyUpdateRequest"];
+type CustomProxy = components["schemas"]["CustomProxy"];
+
+export type UpdateBrowserProxyBody = Omit<BrowserProxyUpdateRequest, "customProxy"> & {
+  customProxy?: Omit<CustomProxy, "ignoreCertErrors"> & { ignoreCertErrors?: boolean };
+} & Record<string, unknown>;
+type BrowserProxyView = components["schemas"]["BrowserProxyView"];
 type BrowserSessionView = components["schemas"]["BrowserSessionView"];
 type BrowserSessionItemView = components["schemas"]["BrowserSessionItemView"];
 type BrowserSessionListResponse = components["schemas"]["BrowserSessionListResponse"];
@@ -48,6 +55,19 @@ export class Browsers {
   /** Get a browser session, including its recording URL when ready. */
   get(sessionId: string): Promise<BrowserSessionView> {
     return this.http.get<BrowserSessionView>(`/browsers/${sessionId}`);
+  }
+
+  /** Get the proxy for a browser session. */
+  getProxy(sessionId: string): Promise<BrowserProxyView> {
+    return this.http.get<BrowserProxyView>(`/browsers/${sessionId}/proxy`);
+  }
+
+  /** Update the proxy for a browser session. */
+  updateProxy(
+    sessionId: string,
+    body?: UpdateBrowserProxyBody,
+  ): Promise<BrowserProxyView> {
+    return this.http.patch<BrowserProxyView>(`/browsers/${sessionId}/proxy`, body);
   }
 
   /** List files the browser downloaded during the session. */

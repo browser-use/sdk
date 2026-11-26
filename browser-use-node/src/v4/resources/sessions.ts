@@ -1,9 +1,10 @@
 import type { HttpClient } from "../../core/http.js";
 import type { components } from "../../generated/v4/types.js";
 
+type SessionCompactResponse = components["schemas"]["SessionCompactResponse"];
 type SessionInfo = components["schemas"]["SessionInfo"];
 type SessionListResponse = components["schemas"]["SessionListResponse"];
-type QueueMessageRequest = components["schemas"]["QueueMessageRequest"];
+type QueueMessageSchema = components["schemas"]["QueueMessageRequest"];
 type QueuedMessage = components["schemas"]["QueuedMessage"];
 type QueueListResponse = components["schemas"]["QueueListResponse"];
 type SessionUpdateRequest = components["schemas"]["SessionUpdateRequest"];
@@ -17,6 +18,12 @@ export interface SessionListParams {
   cursor?: string | null;
   limit?: number;
 }
+
+export type QueueMessageRequest = (
+  | (Pick<Required<QueueMessageSchema>, "text"> &
+      Partial<Pick<QueueMessageSchema, "interrupt" | "attachedFileIds">> & { confirmInputId?: never })
+  | { confirmInputId: number; text?: never; interrupt?: never; attachedFileIds?: never }
+) & Record<string, unknown>;
 
 export interface SendMessageOptions {
   /** Optional server-side deduplication strategy, such as `exact-text-v1`. */
@@ -34,6 +41,11 @@ export class Sessions {
   /** Get session metadata (latest run id, status, ...). */
   get(sessionId: string): Promise<SessionInfo> {
     return this.http.get<SessionInfo>(`/sessions/${sessionId}`);
+  }
+
+  /** Request compaction of the session context. */
+  compact(sessionId: string): Promise<SessionCompactResponse> {
+    return this.http.post<SessionCompactResponse>(`/sessions/${sessionId}/compact`);
   }
 
   /** Immediately purge all data for a session on a ZDR-enabled project. */

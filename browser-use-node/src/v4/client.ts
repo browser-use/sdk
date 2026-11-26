@@ -1,6 +1,7 @@
 import { HttpClient } from "../core/http.js";
 import { Browsers } from "./resources/browsers.js";
 import { Integrations } from "./resources/integrations.js";
+import { NetworkPolicies } from "./resources/network-policies.js";
 import { Profiles } from "./resources/profiles.js";
 import { Extensions } from "./resources/extensions.js";
 import { Runs } from "./resources/runs.js";
@@ -19,6 +20,7 @@ export interface BrowserUseOptions {
 export class BrowserUse {
   readonly browsers: Browsers;
   readonly integrations: Integrations;
+  readonly networkPolicies: NetworkPolicies;
   readonly profiles: Profiles;
   readonly extensions: Extensions;
   readonly runs: Runs;
@@ -43,6 +45,7 @@ export class BrowserUse {
 
     this.browsers = new Browsers(this.http);
     this.integrations = new Integrations(this.http);
+    this.networkPolicies = new NetworkPolicies(this.http);
     this.profiles = new Profiles(this.http);
     this.extensions = new Extensions(this.http);
     this.runs = new Runs(this.http);

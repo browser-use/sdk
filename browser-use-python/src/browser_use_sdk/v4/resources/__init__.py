@@ -1,5 +1,6 @@
 from .browsers import AsyncBrowsers, Browsers
 from .integrations import AsyncIntegrations, Integrations
+from .network_policies import AsyncNetworkPolicies, NetworkPolicies
 from .profiles import AsyncProfiles, Profiles
 from .extensions import AsyncExtensions, Extensions
 from .runs import AsyncRuns, Runs
@@ -11,6 +12,8 @@ __all__ = [
     "AsyncBrowsers",
     "Integrations",
     "AsyncIntegrations",
+    "NetworkPolicies",
+    "AsyncNetworkPolicies",
     "Profiles",
     "AsyncProfiles",
     "Extensions",

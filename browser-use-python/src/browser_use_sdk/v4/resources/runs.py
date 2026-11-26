@@ -56,6 +56,7 @@ def _build_create_body(
     op_vault_id: str | None,
     op_vault_allowed_domains: list[str] | None,
     keep_alive: int | None,
+    metadata: dict[str, str] | None,
     extra: dict[str, Any],
 ) -> dict[str, Any]:
     body: dict[str, Any] = {"task": task}
@@ -71,14 +72,18 @@ def _build_create_body(
         body["workspaceId"] = str(workspace_id)
     if browser_settings is not None:
         if isinstance(browser_settings, RunBrowserSettings):
-            settings = browser_settings.model_dump(by_alias=True, exclude_none=True, mode="json")
-            # Send proxyCountryCode only when set (null means no proxy); otherwise the server default or session inherits.
-            if "proxy_country_code" in browser_settings.model_fields_set:
-                settings["proxyCountryCode"] = browser_settings.model_dump(
-                    by_alias=True, mode="json", include={"proxy_country_code"}
-                )["proxyCountryCode"]
-            else:
-                settings.pop("proxyCountryCode", None)
+            inherited_fields = {"proxy_country_code", "network_policy_id"}
+            explicit_fields = browser_settings.model_fields_set
+            settings = browser_settings.model_dump(
+                by_alias=True,
+                exclude_none=True,
+                exclude=(inherited_fields | {"solve_captchas"}) - explicit_fields,
+                mode="json",
+            )
+            # Explicit null clears the inherited proxy or network policy.
+            settings.update(browser_settings.model_dump(
+                by_alias=True, mode="json", include=inherited_fields & explicit_fields
+            ))
             body["browserSettings"] = settings
         else:
             body["browserSettings"] = browser_settings
@@ -121,6 +126,8 @@ def _build_create_body(
         body["opVaultAllowedDomains"] = op_vault_allowed_domains
     if keep_alive is not _UNSET:
         body["keepAlive"] = keep_alive
+    if metadata is not None:
+        body["metadata"] = metadata
     body.update(extra)
     return body
 
@@ -147,6 +154,7 @@ class Runs:
         op_vault_id: str | None = None,
         op_vault_allowed_domains: list[str] | None = None,
         keep_alive: int | None = _UNSET,  # type: ignore[assignment]
+        metadata: dict[str, str] | None = None,
         **extra: Any,
     ) -> RunCreateResponse:
         """Create a run (a new session, or a follow-up turn when session_id is set)."""
@@ -166,6 +174,7 @@ class Runs:
             op_vault_id,
             op_vault_allowed_domains,
             keep_alive,
+            metadata,
             extra,
         )
         return RunCreateResponse.model_validate(
@@ -178,6 +187,7 @@ class Runs:
         session_id: str | UUID | None = None,
         cursor: str | None = None,
         limit: int | None = None,
+        metadata: list[str] | None = None,
     ) -> RunListResponse:
         """List runs with cursor-based pagination, most recent first."""
         return RunListResponse.model_validate(
@@ -188,6 +198,7 @@ class Runs:
                     "sessionId": str(session_id) if session_id is not None else None,
                     "cursor": cursor,
                     "limit": limit,
+                    "metadata": metadata,
                 },
             )
         )
@@ -346,6 +357,7 @@ class AsyncRuns:
         op_vault_id: str | None = None,
         op_vault_allowed_domains: list[str] | None = None,
         keep_alive: int | None = _UNSET,  # type: ignore[assignment]
+        metadata: dict[str, str] | None = None,
         **extra: Any,
     ) -> RunCreateResponse:
         """Create a run (a new session, or a follow-up turn when session_id is set)."""
@@ -365,6 +377,7 @@ class AsyncRuns:
             op_vault_id,
             op_vault_allowed_domains,
             keep_alive,
+            metadata,
             extra,
         )
         return RunCreateResponse.model_validate(
@@ -377,6 +390,7 @@ class AsyncRuns:
         session_id: str | UUID | None = None,
         cursor: str | None = None,
         limit: int | None = None,
+        metadata: list[str] | None = None,
     ) -> RunListResponse:
         """List runs with cursor-based pagination, most recent first."""
         return RunListResponse.model_validate(
@@ -387,6 +401,7 @@ class AsyncRuns:
                     "sessionId": str(session_id) if session_id is not None else None,
                     "cursor": cursor,
                     "limit": limit,
+                    "metadata": metadata,
                 },
             )
         )

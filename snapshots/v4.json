@@ -138,6 +138,27 @@
               ],
               "title": "Sessionid"
             }
+          },
+          {
+            "name": "metadata",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND).",
+              "title": "Metadata"
+            },
+            "description": "Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND)."
           }
         ],
         "responses": {
@@ -882,6 +903,64 @@
           },
           "404": {
             "description": "Run, session, workspace, or profile not found."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{session_id}/compact": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Compact Session Context (beta)",
+        "description": "Beta. Ask the session's running agent to summarize its context before its next model call. Returns 409 when the session has no running run or that run did not start with modelParams.context.",
+        "operationId": "compact_session_sessions__session_id__compact_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionCompactResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
+          },
+          "404": {
+            "description": "Run, session, workspace, or profile not found."
+          },
+          "409": {
+            "description": "The session has no running run, or that run did not start with modelParams.context."
           },
           "422": {
             "description": "Validation Error",
@@ -1902,43 +1981,6 @@
         }
       }
     },
-    "/agentcard/wallets": {
-      "get": {
-        "tags": [
-          "Wallets"
-        ],
-        "summary": "List Agentcard Wallets",
-        "description": "The project's active AgentCard wallets, newest first.\n\nRead-only: funding is admin-only during the beta. The UI uses this to offer\na wallet on the composer, which is how a run opts into spending \u2014 the id\nthen rides RunCreateRequest.agentcard_wallet_id and is validated again there\nagainst this same project.",
-        "operationId": "list_agentcard_wallets_agentcard_wallets_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgentCardWalletListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyHeader": []
-          }
-        ]
-      }
-    },
     "/stripe-link": {
       "get": {
         "tags": [
@@ -2813,6 +2855,112 @@
         }
       }
     },
+    "/browsers/{session_id}/proxy": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Get Browser Proxy",
+        "operationId": "get_browser_session_proxy_browsers__session_id__proxy_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserProxyView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found"
+          },
+          "409": {
+            "description": "Browser proxy unavailable"
+          },
+          "422": {
+            "description": "Invalid request"
+          },
+          "502": {
+            "description": "Browser proxy driver failed"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Update Browser Proxy",
+        "operationId": "update_browser_session_proxy_browsers__session_id__proxy_patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserProxyView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found"
+          },
+          "409": {
+            "description": "Browser proxy unavailable"
+          },
+          "422": {
+            "description": "Invalid request"
+          },
+          "502": {
+            "description": "Browser proxy driver failed"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrowserProxyUpdateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/browsers/{session_id}/downloads": {
       "get": {
         "tags": [
@@ -3208,6 +3356,279 @@
           }
         }
       }
+    },
+    "/network-policies": {
+      "get": {
+        "tags": [
+          "Network Policies"
+        ],
+        "summary": "List Network Policies",
+        "description": "Get a paginated list of the project's network policies, newest first.",
+        "operationId": "list_network_policies_network_policies_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Pagesize"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagenumber"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkPolicyListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Network Policies"
+        ],
+        "summary": "Create Network Policy",
+        "description": "Create a network policy that allows or blocks domains for the browsers that reference it with networkPolicyId.\n\nA domain such as `example.com` matches the domain and all of its subdomains, and the most specific entry wins. Domains are trimmed, lower-cased and converted to punycode, a trailing dot and a leading `*.` are removed, and duplicates are dropped. URLs, paths, ports, IP addresses, other wildcards and a domain in both lists are rejected. A policy has at most 10,000 domains, and a project has at most 100 policies.",
+        "operationId": "create_network_policy_network_policies_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkPolicyCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkPolicyView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/network-policies/{policy_id}": {
+      "get": {
+        "tags": [
+          "Network Policies"
+        ],
+        "summary": "Get Network Policy",
+        "description": "Get a network policy.",
+        "operationId": "get_network_policy_network_policies__policy_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkPolicyView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Network policy not found, deleted, or owned by another project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkPolicyNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Network Policies"
+        ],
+        "summary": "Update Network Policy",
+        "description": "Replace each field that the request contains; a domain list replaces the whole list. Each update increases version by 1, and running browsers pick up the change within seconds.",
+        "operationId": "update_network_policy_network_policies__policy_id__patch",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkPolicyUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkPolicyView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Network policy not found, deleted, or owned by another project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkPolicyNotFoundError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Network Policies"
+        ],
+        "summary": "Delete Network Policy",
+        "description": "Delete a network policy. Browsers that use it continue without a customer network policy.",
+        "operationId": "delete_network_policy_network_policies__policy_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3261,57 +3682,6 @@
         ],
         "title": "APIKeySpendLimitError",
         "description": "FastAPI wraps endpoint errors in a top-level ``detail`` field."
-      },
-      "AgentCardWalletListResponse": {
-        "properties": {
-          "wallets": {
-            "items": {
-              "$ref": "#/components/schemas/AgentCardWalletSummary"
-            },
-            "type": "array",
-            "title": "Wallets"
-          }
-        },
-        "type": "object",
-        "required": [
-          "wallets"
-        ],
-        "title": "AgentCardWalletListResponse"
-      },
-      "AgentCardWalletSummary": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "currency": {
-            "type": "string",
-            "title": "Currency"
-          },
-          "availableCents": {
-            "type": "integer",
-            "title": "Availablecents"
-          },
-          "activeHoldCents": {
-            "type": "integer",
-            "title": "Activeholdcents"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "currency",
-          "availableCents",
-          "activeHoldCents"
-        ],
-        "title": "AgentCardWalletSummary",
-        "description": "A spendable project wallet as the composer needs to show it."
       },
       "AuthorizeResponse": {
         "properties": {
@@ -3438,6 +3808,21 @@
       },
       "BrowserSessionItemView": {
         "properties": {
+          "solveCaptchas": {
+            "type": "boolean",
+            "description": "Effective CAPTCHA solving setting."
+          },
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -3628,6 +4013,21 @@
       },
       "BrowserSessionView": {
         "properties": {
+          "solveCaptchas": {
+            "type": "boolean",
+            "description": "Effective CAPTCHA solving setting."
+          },
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -3803,6 +4203,19 @@
             "title": "Profile ID",
             "description": "The ID of the profile to use for the session"
           },
+          "networkPolicyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Networkpolicyid",
+            "description": "ID of a network policy that allows or blocks domains for this browser. Policy changes reach the browser within seconds."
+          },
           "proxyCountryCode": {
             "anyOf": [
               {
@@ -3895,7 +4308,7 @@
               }
             ],
             "title": "Custom Proxy",
-            "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used."
+            "description": "Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are an enterprise feature: contact sales@browser-use.com to enable them."
           },
           "enableRecording": {
             "type": "boolean",
@@ -3939,7 +4352,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 255,
+                "maxLength": 2048,
                 "minLength": 1
               },
               {
@@ -3953,7 +4366,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 255,
+                "maxLength": 8192,
                 "minLength": 1
               },
               {
@@ -3968,6 +4381,50 @@
             "title": "Ignore Certificate Errors",
             "description": "Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).",
             "default": false
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "http",
+                  "https"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol",
+            "description": "Protocol of the connection to the proxy. Use https for a proxy that accepts only TLS. Defaults to https on port 443 and to http on other ports."
+          },
+          "caBundle": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16384,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "CA Bundle",
+            "description": "PEM certificates that the browser and the proxy connection trust in addition to the public roots, such as the CA of a TLS-intercepting proxy. Other sites keep full certificate checks."
+          },
+          "caBundleUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "CA Bundle URL",
+            "description": "HTTPS URL of PEM certificates that Browser Use downloads and trusts in the same way as caBundle. Send either caBundle or caBundleUrl."
           }
         },
         "type": "object",
@@ -4792,15 +5249,54 @@
               }
             ],
             "title": "Attachedfileids"
+          },
+          "confirmInputId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647,
+            "description": "Explicitly authorize a new execution of this pending instruction. It may have run previously and the new execution may incur charges. Cannot be combined with text, interrupt, or attachedFileIds."
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "text"
-        ],
         "title": "QueueMessageRequest",
-        "description": "Send a message to a session. If the session is busy the message waits on\nthe queue and runs as the next turn; if idle it runs immediately.\n\nSet `interrupt` to make it take effect now: the session's active run is\ncancelled and this message drains straight after. Interrupt is a no-op when\nthe session is already idle, and BEST-EFFORT when busy \u2014 if the cancel can't\nbe delivered, the message stays queued and runs after the current turn."
+        "description": "Send a message to a session. If the session is busy the message waits on\nthe queue and runs as the next turn; if idle it runs immediately.\n\nSet `interrupt` to make it take effect now: the session's active run is\ncancelled and this message drains straight after. Interrupt is a no-op when\nthe session is already idle, and BEST-EFFORT when busy \u2014 if the cancel can't\nbe delivered, the message stays queued and runs after the current turn.",
+        "oneOf": [
+          {
+            "required": [
+              "text"
+            ],
+            "not": {
+              "required": [
+                "confirmInputId"
+              ]
+            }
+          },
+          {
+            "required": [
+              "confirmInputId"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "text"
+                  ]
+                },
+                {
+                  "required": [
+                    "interrupt"
+                  ]
+                },
+                {
+                  "required": [
+                    "attachedFileIds"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
       },
       "QueuedMessage": {
         "properties": {
@@ -4829,7 +5325,9 @@
             "type": "string",
             "enum": [
               "queue",
-              "interrupt"
+              "steer",
+              "interrupt",
+              "confirmed"
             ],
             "title": "Mode"
           },
@@ -4868,6 +5366,14 @@
             "type": "string",
             "format": "date-time",
             "title": "Createdat"
+          },
+          "needsConfirmation": {
+            "type": "boolean",
+            "description": "This pending instruction is held until explicitly reviewed and authorized for a new execution."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why the pending instruction needs confirmation."
           }
         },
         "type": "object",
@@ -4878,7 +5384,8 @@
           "mode",
           "status",
           "text",
-          "createdAt"
+          "createdAt",
+          "needsConfirmation"
         ],
         "title": "QueuedMessage",
         "description": "One message on a session's queue (a v4_session_input row)."
@@ -4941,6 +5448,11 @@
       },
       "RunBrowserSettings": {
         "properties": {
+          "solveCaptchas": {
+            "type": "boolean",
+            "default": true,
+            "description": "Solve CAPTCHAs on new browsers except ultrafast/EU; some projects cannot use this field yet and return 422."
+          },
           "profileId": {
             "anyOf": [
               {
@@ -4954,6 +5466,19 @@
             "title": "Profileid",
             "description": "ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions."
           },
+          "networkPolicyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Networkpolicyid",
+            "description": "ID of a network policy that allows or blocks domains for this browser. Policy changes reach the browser within seconds. When the field is absent, the run keeps the policy of the session."
+          },
           "proxyCountryCode": {
             "anyOf": [
               {
@@ -4963,7 +5488,7 @@
                 "type": "null"
               }
             ],
-            "description": "ISO country code to proxy the browser through. Defaults to US. Pass null to run without a proxy.",
+            "description": "ISO country code to proxy the browser through. Defaults to US, or to no proxy for new bu-ultrafast and bu-fast sessions. Pass null to run without a proxy.",
             "default": "us"
           },
           "customProxy": {
@@ -4975,7 +5500,7 @@
                 "type": "null"
               }
             ],
-            "description": "Custom proxy for the browser. Overrides proxyCountryCode. Never stored or inherited by follow-up runs; pass it on each run that should use it."
+            "description": "Custom proxy for the browser. Overrides proxyCountryCode. Custom proxies are an enterprise feature: contact sales@browser-use.com to enable them. Never stored or inherited by follow-up runs; pass it on each run that should use it."
           },
           "screenWidth": {
             "anyOf": [
@@ -5043,10 +5568,25 @@
         "additionalProperties": false,
         "type": "object",
         "title": "RunBrowserSettings",
-        "description": "Browser config, owned by the browser row (never the run). Follow-ups:\nomitted fields inherit the session's prior browser; explicit values apply\nonly to newly provisioned browsers (a live browser is reused as-is).\nProfile is the exception: a different profile \u2192 400; an explicit value\nmismatching the live browser's profile (incl. null vs a profiled browser)\ndeclines reuse and provisions fresh. A live browser already matching the\nrequested profile is reused. Extensions are session-wide: follow-ups\ninherit them, and a different set \u2192 400 (see extensionIds)."
+        "description": "Browser config, owned by the browser row (never the run). Follow-ups:\nomitted fields inherit the session's prior browser; explicit values apply\nonly to newly provisioned browsers (a live browser is reused as-is).\nProfile is the exception: a different profile \u2192 400; an explicit value\nmismatching the live browser's profile (incl. null vs a profiled browser)\ndeclines reuse and provisions fresh. A live browser already matching the\nrequested profile is reused. networkPolicyId follows the same rule: an\nexplicit or inherited policy that differs from the live browser's declines\nreuse. Extensions are session-wide: follow-ups\ninherit them, and a different set \u2192 400 (see extensionIds)."
       },
       "RunCreateRequest": {
         "properties": {
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Labels for this run. Up to 10 key-value pairs. Filterable on the runs list and in the dashboard history."
+          },
           "task": {
             "type": "string",
             "minLength": 1,
@@ -5076,7 +5616,6 @@
               "grok-4.5",
               "grok-4.6",
               "glm-5.3-flash",
-              "deepseek-v4-flash-vision",
               "kimi-k3",
               "minimax-m3",
               "claude-opus-4.7",
@@ -5091,6 +5630,7 @@
               "gpt-6-astra",
               "gpt-6-sol",
               "gpt-6.1-sol",
+              "gpt-6.1-terra",
               "gpt-6-luna",
               "gpt-5.6-sol",
               "gpt-5.6-terra",
@@ -5103,7 +5643,7 @@
               "bu-fast"
             ],
             "title": "Model",
-            "description": "bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.",
+            "description": "bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.",
             "default": "gpt-6-luna"
           },
           "modelParams": {
@@ -5117,7 +5657,7 @@
               }
             ],
             "title": "Modelparams",
-            "description": "Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {\"reasoning\": {\"effort\": \"high\"}} for OpenAI, {\"thinking\": {\"type\": \"adaptive\"}} for Anthropic, {\"thinkingConfig\": {\"thinkingLevel\": \"high\"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-6-luna defaults to {\"reasoning\": {\"effort\": \"high\"}}); passing {} opts out of that default and leaves the provider's own defaults in place."
+            "description": "Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {\"reasoning\": {\"effort\": \"high\"}} for OpenAI, {\"thinking\": {\"type\": \"adaptive\"}} for Anthropic, {\"thinkingConfig\": {\"thinkingLevel\": \"high\"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-6-luna defaults to {\"reasoning\": {\"effort\": \"high\"}}); passing {} opts out of that default and leaves the provider's own defaults in place. On OpenAI models, {\"service_tier\": \"priority\"} (alias \"fast\") requests Fast processing at a higher token price; sent alone it keeps the model's default parameters. Beta: {\"context\": {\"keepScreenshots\": \"2\", \"trimAtTokens\": \"80000\", \"compactAtTokens\": \"125000\"}} controls what the agent keeps in context for the run: trimAtTokens clears old screenshots and tool output in one batch at that mark (keepScreenshots, which needs it, sets how many recent screenshots stay), and compactAtTokens compacts earlier. Values are strings from short per-model lists; like service_tier it keeps the model's default parameters."
           },
           "sessionId": {
             "anyOf": [
@@ -5176,19 +5716,6 @@
             "description": "If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.",
             "default": false
           },
-          "agentcardWalletId": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Agentcardwalletid",
-            "description": "AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's grant."
-          },
           "stripeLinkConnectionId": {
             "anyOf": [
               {
@@ -5233,7 +5760,7 @@
               }
             ],
             "title": "Secretbindings",
-            "description": "Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run."
+            "description": "Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422."
           },
           "opVaultId": {
             "anyOf": [
@@ -5246,7 +5773,7 @@
               }
             ],
             "title": "Opvaultid",
-            "description": "A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed."
+            "description": "A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422."
           },
           "opVaultAllowedDomains": {
             "anyOf": [
@@ -5289,7 +5816,7 @@
               }
             ],
             "title": "Maxcostusd",
-            "description": "USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one."
+            "description": "This budget limits model and search charges in USD. New API sessions default to $25. Use $25 as a starting budget unless the user specifies another amount. Follow-ups keep the current budget when you omit this field. An explicit value replaces the current budget. Account credits do not lower this budget."
           }
         },
         "additionalProperties": false,
@@ -5301,6 +5828,14 @@
       },
       "RunCreateResponse": {
         "properties": {
+          "metadata": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Metadata",
+            "description": "Caller-supplied labels set on this run. Omitted when there are none."
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -5498,7 +6033,7 @@
             ],
             "default": null,
             "title": "Model",
-            "description": "The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. Null means omitted."
+            "description": "The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. When the project cannot use gpt-6.1-terra (for example US-only routing), judge: {} uses gemini-3-flash. Null means omitted."
           },
           "modelParams": {
             "anyOf": [
@@ -5518,7 +6053,7 @@
         "additionalProperties": false,
         "type": "object",
         "title": "RunJudgeSettings",
-        "description": "Opt-in LLM judgement of the finished run. Presence of this object turns\nthe judge on (send {} for defaults); CP judges the run's trajectory after\nit goes terminal and surfaces the verdict as RunSummary.judgement (null\nuntil it lands). Judge model choice is being rolled out. Until it is enabled for a project, judge: {} uses gemini-3-flash and non-null model or modelParams return 422. Once enabled, the default is gpt-6.1-terra with {\"reasoning\":{\"effort\":\"high\"}}. Null means omitted. The judge call is billed to the run at the judge model's token prices."
+        "description": "Opt-in LLM judgement of the finished run. Presence of this object turns\nthe judge on (send {} for defaults); CP judges the run's trajectory after\nit goes terminal and surfaces the verdict as RunSummary.judgement (null\nuntil it lands). Judge model choice is being rolled out. Until it is enabled for a project, judge: {} uses gemini-3-flash and non-null model or modelParams return 422. Once enabled, the default is gpt-6.1-terra with {\"reasoning\":{\"effort\":\"high\"}}. When the project cannot use gpt-6.1-terra (for example US-only routing), judge: {} uses gemini-3-flash. Null means omitted. The judge call is billed to the run at the judge model's token prices."
       },
       "RunListResponse": {
         "properties": {
@@ -5576,6 +6111,14 @@
       },
       "RunSummary": {
         "properties": {
+          "metadata": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Metadata",
+            "description": "Caller-supplied labels set on this run. Omitted when there are none."
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -5736,6 +6279,20 @@
             "type": "string",
             "format": "date-time",
             "title": "Updatedat"
+          },
+          "durationSeconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stepCount": {
+            "type": "integer",
+            "description": "Number of recorded LLM calls."
           }
         },
         "type": "object",
@@ -5856,7 +6413,7 @@
               }
             ],
             "title": "Maxcostusd",
-            "description": "New total USD budget for the session; spending so far counts against it."
+            "description": "This value replaces the session budget in USD. Spending so far counts against this budget. Use the user's chosen budget, or $25 as a starting budget. Preserve a higher existing budget unless the user requests a decrease."
           }
         },
         "additionalProperties": false,
@@ -5886,6 +6443,25 @@
           "maxCostUsd"
         ],
         "title": "SessionCostCapResponse"
+      },
+      "SessionCompactResponse": {
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sessionid"
+          },
+          "requested": {
+            "type": "boolean",
+            "title": "Requested"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sessionId",
+          "requested"
+        ],
+        "title": "SessionCompactResponse"
       },
       "SessionCostResponse": {
         "properties": {
@@ -5997,6 +6573,16 @@
             "type": "string",
             "format": "date-time",
             "title": "Updatedat"
+          },
+          "durationSeconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -6569,6 +7155,254 @@
         },
         "type": "object",
         "title": "WorkspaceUpdateRequest"
+      },
+      "BrowserProxyUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "direct",
+              "custom"
+            ]
+          },
+          "country": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "rotate": {
+            "type": "boolean"
+          },
+          "customProxy": {
+            "$ref": "#/components/schemas/CustomProxy"
+          }
+        },
+        "title": "BrowserProxyUpdateRequest"
+      },
+      "BrowserProxyView": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "managed",
+              "direct",
+              "custom"
+            ]
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exitIp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mode",
+          "country",
+          "exitIp"
+        ],
+        "title": "BrowserProxyView"
+      },
+      "NetworkPolicyDomainList": {
+        "properties": {
+          "domains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10000,
+            "title": "Domains",
+            "description": "Domains such as example.com; each entry also matches its subdomains."
+          }
+        },
+        "type": "object",
+        "additionalProperties": false,
+        "title": "NetworkPolicyDomainList",
+        "description": "A list of domains."
+      },
+      "NetworkPolicyCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "defaultAction": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "block"
+            ],
+            "title": "Defaultaction",
+            "description": "Action for a domain that no list entry matches.",
+            "default": "allow"
+          },
+          "allow": {
+            "$ref": "#/components/schemas/NetworkPolicyDomainList",
+            "description": "Domains to allow."
+          },
+          "block": {
+            "$ref": "#/components/schemas/NetworkPolicyDomainList",
+            "description": "Domains to block."
+          }
+        },
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "title": "NetworkPolicyCreateRequest",
+        "description": "Request body for creating a network policy."
+      },
+      "NetworkPolicyUpdateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "defaultAction": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "block"
+            ],
+            "title": "Defaultaction",
+            "description": "Action for a domain that no list entry matches."
+          },
+          "allow": {
+            "$ref": "#/components/schemas/NetworkPolicyDomainList",
+            "description": "Replaces the allowed domains."
+          },
+          "block": {
+            "$ref": "#/components/schemas/NetworkPolicyDomainList",
+            "description": "Replaces the blocked domains."
+          }
+        },
+        "type": "object",
+        "additionalProperties": false,
+        "title": "NetworkPolicyUpdateRequest",
+        "description": "Request body for updating a network policy; omitted fields keep their values."
+      },
+      "NetworkPolicyView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "defaultAction": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "block"
+            ],
+            "title": "Defaultaction",
+            "description": "Action for a domain that no list entry matches."
+          },
+          "allow": {
+            "$ref": "#/components/schemas/NetworkPolicyDomainList"
+          },
+          "block": {
+            "$ref": "#/components/schemas/NetworkPolicyDomainList"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Starts at 1 and increases by 1 with each update."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "defaultAction",
+          "allow",
+          "block",
+          "version",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "NetworkPolicyView",
+        "description": "A network policy with normalized domains."
+      },
+      "NetworkPolicyListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NetworkPolicyView"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "totalItems": {
+            "type": "integer",
+            "title": "Total Items"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "title": "Page Number"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "NetworkPolicyListResponse",
+        "description": "A page of network policies."
+      },
+      "NetworkPolicyNotFoundError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": "Network policy not found"
+          }
+        },
+        "type": "object",
+        "title": "NetworkPolicyNotFoundError",
+        "description": "Error response when a network policy is not found"
       }
     },
     "securitySchemes": {

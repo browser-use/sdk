@@ -6,7 +6,11 @@ export type {
   BrowserDownloadsParams,
   BrowserListParams,
   CreateBrowserBody,
+  UpdateBrowserProxyBody,
 } from "./v4/resources/browsers.js";
+
+export { NetworkPolicies } from "./v4/resources/network-policies.js";
+export type { NetworkPolicyListParams } from "./v4/resources/network-policies.js";
 
 export { Profiles } from "./v4/resources/profiles.js";
 export type { ProfileListParams } from "./v4/resources/profiles.js";
@@ -26,7 +30,7 @@ export type {
 } from "./v4/resources/runs.js";
 
 export { Sessions } from "./v4/resources/sessions.js";
-export type { SendMessageOptions, SessionListParams } from "./v4/resources/sessions.js";
+export type { QueueMessageRequest, SendMessageOptions, SessionListParams } from "./v4/resources/sessions.js";
 
 export { Workspaces } from "./v4/resources/workspaces.js";
 export type { WorkspaceFilesParams } from "./v4/resources/workspaces.js";
@@ -57,12 +61,21 @@ export type OnePasswordSecretSource = S["OnePasswordSecretSource"];
 export type SecretBinding = S["SecretBinding"];
 
 // Browser models
+export type BrowserProxyUpdateRequest = S["BrowserProxyUpdateRequest"];
+export type BrowserProxyView = S["BrowserProxyView"];
 export type BrowserSessionItemView = S["BrowserSessionItemView"];
 export type BrowserSessionView = S["BrowserSessionView"];
 export type BrowserSessionListResponse = S["BrowserSessionListResponse"];
 export type BrowserSessionStatus = S["BrowserSessionStatus"];
 export type BrowserDownloadFile = S["BrowserDownloadFile"];
 export type BrowserDownloadListResponse = S["BrowserDownloadListResponse"];
+
+export type NetworkPolicyCreateRequest = S["NetworkPolicyCreateRequest"];
+export type NetworkPolicyDomainList = S["NetworkPolicyDomainList"];
+export type NetworkPolicyListResponse = S["NetworkPolicyListResponse"];
+export type NetworkPolicyNotFoundError = S["NetworkPolicyNotFoundError"];
+export type NetworkPolicyUpdateRequest = S["NetworkPolicyUpdateRequest"];
+export type NetworkPolicyView = S["NetworkPolicyView"];
 
 // Profile models
 export type ProfileView = S["ProfileView"];
@@ -71,9 +84,9 @@ export type ProfileCreateRequest = S["ProfileCreateRequest"];
 export type ProfileUpdateRequest = S["ProfileUpdateRequest"];
 
 // Session models
+export type SessionCompactResponse = S["SessionCompactResponse"];
 export type SessionInfo = S["SessionInfo"];
 export type SessionListResponse = S["SessionListResponse"];
-export type QueueMessageRequest = S["QueueMessageRequest"];
 export type QueuedMessage = S["QueuedMessage"];
 export type QueueListResponse = S["QueueListResponse"];
 export type SessionUpdateRequest = S["SessionUpdateRequest"];

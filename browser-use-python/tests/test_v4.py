@@ -61,6 +61,7 @@ def _queued_message(status: str = "pending") -> dict[str, Any]:
         "sessionId": SESSION_ID,
         "runId": None,
         "mode": "queue",
+        "needsConfirmation": False,
         "status": status,
         "text": "also check the careers page",
         "createdAt": "2026-01-01T00:00:00Z",
@@ -150,6 +151,7 @@ def test_browsers_create() -> None:
 
     browser = browsers.create(
         proxy_country_code="DE",
+        network_policy_id=SESSION_ID,
         metadata={"flow": "quickstart"},
         pdf_renderer_enabled=False,
         solve_captchas=False,
@@ -161,6 +163,7 @@ def test_browsers_create() -> None:
         "/browsers",
         {
             "proxyCountryCode": "de",
+            "networkPolicyId": SESSION_ID,
             "metadata": {"flow": "quickstart"},
             "pdfRendererEnabled": False,
             "solveCaptchas": False,
@@ -520,6 +523,9 @@ def test_runs_create_sends_camel_case_body() -> None:
     ({"proxyCountryCode": None}, {"proxyCountryCode": None}),
     ({"proxyCountryCode": "de"}, {"proxyCountryCode": "de"}),
     ({"record": True}, {"record": True}),
+    ({"networkPolicyId": None}, {"networkPolicyId": None}),
+    ({"networkPolicyId": SESSION_ID, "solveCaptchas": False},
+     {"networkPolicyId": SESSION_ID, "solveCaptchas": False}),
     ({"profileId": None, "screenWidth": None, "extensionIds": None}, {}),
 ])
 def test_runs_create_typed_settings_send_only_set_fields(settings: dict[str, Any], wire: dict[str, Any]) -> None:
@@ -600,8 +606,8 @@ def test_runs_list_cursor_pagination() -> None:
     second = runs.list(session_id=SESSION_ID, cursor=first.next_cursor, limit=1)
     assert not second.has_more
 
-    assert http.calls[0][3] == {"sessionId": SESSION_ID, "cursor": None, "limit": 1}
-    assert http.calls[1][3] == {"sessionId": SESSION_ID, "cursor": "cur-2", "limit": 1}
+    assert http.calls[0][3] == {"sessionId": SESSION_ID, "cursor": None, "limit": 1, "metadata": None}
+    assert http.calls[1][3] == {"sessionId": SESSION_ID, "cursor": "cur-2", "limit": 1, "metadata": None}
 
 
 def test_runs_events_delta() -> None:

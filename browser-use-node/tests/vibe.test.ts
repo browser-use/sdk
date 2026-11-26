@@ -148,9 +148,7 @@ function v3EndpointToSdkMethod(
   return null;
 }
 
-// Wallets stay off the SDK surface and GET cost-cap is not in production yet; map every other v4 endpoint.
 const v4NotInSdk = new Set([
-  "GET /agentcard/wallets",
   "GET /stripe-link",
   "GET /sessions/{session_id}/cost-cap",
 ]);
@@ -166,6 +164,14 @@ function v4EndpointToSdkMethod(
   if (method === "get" && path === "/browsers/{session_id}") return { resource: "browsers", method: "get" };
   if (method === "patch" && path === "/browsers/{session_id}") return { resource: "browsers", method: "stop" };
   if (method === "get" && path === "/browsers/{session_id}/downloads") return { resource: "browsers", method: "downloads" };
+  if (method === "get" && path === "/browsers/{session_id}/proxy") return { resource: "browsers", method: "getProxy" };
+  if (method === "patch" && path === "/browsers/{session_id}/proxy") return { resource: "browsers", method: "updateProxy" };
+
+  if (method === "post" && path === "/network-policies") return { resource: "networkPolicies", method: "create" };
+  if (method === "get" && path === "/network-policies") return { resource: "networkPolicies", method: "list" };
+  if (method === "get" && path === "/network-policies/{policy_id}") return { resource: "networkPolicies", method: "get" };
+  if (method === "patch" && path === "/network-policies/{policy_id}") return { resource: "networkPolicies", method: "update" };
+  if (method === "delete" && path === "/network-policies/{policy_id}") return { resource: "networkPolicies", method: "delete" };
 
   // Profiles
   if (method === "post" && path === "/profiles") return { resource: "profiles", method: "create" };
@@ -186,6 +192,7 @@ function v4EndpointToSdkMethod(
   // Sessions + queue
   if (method === "get" && path === "/sessions") return { resource: "sessions", method: "list" };
   if (method === "get" && path === "/sessions/{session_id}") return { resource: "sessions", method: "get" };
+  if (method === "post" && path === "/sessions/{session_id}/compact") return { resource: "sessions", method: "compact" };
   if (method === "post" && path === "/sessions/{session_id}/purge") return { resource: "sessions", method: "purge" };
   if (method === "post" && path === "/sessions/{session_id}/queue") return { resource: "sessions", method: "sendMessage" };
   if (method === "get" && path === "/sessions/{session_id}/queue") return { resource: "sessions", method: "queue" };
