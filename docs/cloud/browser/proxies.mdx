@@ -250,3 +250,51 @@ The response has the new state:
 
 See the [Update browser proxy
 reference](/cloud/api-v4/browsers/update-browser-proxy).
+
+### Change the proxy over CDP
+
+An agent that controls the browser over CDP can change the proxy with the
+`BrowserUse.setProxy` command. The command needs no API key, because the CDP
+connection is the credential. So you do not give your API key to the agent.
+
+| Params | Result |
+| --- | --- |
+| `{"rotate": true}` | New residential IP in the same country. |
+| `{"country": "de"}` | Residential proxy in a country. |
+| `{"mode": "managed"}` | Residential proxy in the current country. |
+| `{"mode": "direct"}` | No proxy. |
+
+Send at least one of `rotate`, `country` and `mode`. You can send `country`
+together with `mode: "managed"`.
+
+<CodeGroup>
+```python Python
+from playwright.async_api import async_playwright
+
+async with async_playwright() as p:
+    browser = await p.chromium.connect_over_cdp(cdp_url)
+    cdp = await browser.new_browser_cdp_session()
+    proxy = await cdp.send("BrowserUse.setProxy", {"rotate": True})
+    print(proxy)  # {"mode": "managed", "country": "us", "exitIp": "203.0.113.7"}
+```
+
+```typescript TypeScript
+import { chromium } from "playwright";
+
+const browser = await chromium.connectOverCDP(cdpUrl);
+const cdp = await browser.newBrowserCDPSession();
+// The Playwright types do not know this command.
+const proxy = await cdp.send("BrowserUse.setProxy" as any, { rotate: true } as any);
+console.log(proxy); // { mode: "managed", country: "us", exitIp: "203.0.113.7" }
+```
+</CodeGroup>
+
+- The result has the same fields as the API response. `exitIp` is `null` when
+  the IP lookup fails.
+- The browser does not restart, so tabs, cookies and local storage stay.
+- A wrong param returns the CDP error `-32602`. A change that the browser
+  refuses returns the CDP error `-32000` with the reason.
+- The command does not accept `mode: "custom"`, `customProxy` or `target`. A
+  browser on a custom proxy refuses the command. Use the API for these changes.
+- A direct browser does not accept `rotate` or `country` alone. Send
+  `"mode": "managed"` with them.
