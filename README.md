@@ -12,10 +12,10 @@ Official SDKs for [Browser Use Cloud](https://browser-use.com).
 - **Browser Infrastructure:** use the explicit V4 SDK browser resource, or the
   V4 REST API, to create and control a managed browser.
 
-| Package | Language | Registry | Version |
-|---------|----------|----------|---------|
-| [browser-use-sdk](browser-use-python/) | Python | PyPI | 3.13.0 |
-| [browser-use-sdk](browser-use-node/) | TypeScript | npm | 3.13.0 |
+| Package | Language | Registry |
+|---------|----------|----------|
+| [browser-use-sdk](browser-use-python/) | Python | PyPI |
+| [browser-use-sdk](browser-use-node/) | TypeScript | npm |
 
 Start with the [Cloud quickstart](https://docs.browser-use.com/cloud/quickstart).
 
