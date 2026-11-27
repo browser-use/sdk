@@ -140,7 +140,7 @@ Spend checks use a cached snapshot, and running or simultaneous work can finish 
 
 HTTP 402 billing and admission errors that the V4 API creates itself carry a top-level `reason` next to `detail`. The existing payload is kept: `detail` has the same value and type as before. Branch on `reason` instead of parsing the `detail` text.
 
-Responses that V4 passes through keep their own format and may have no `reason`. This covers the `/api/v4/llm/` gateway, app and page proxies, and original-file uploads. AgentMail 402s use AgentMail's error shape (`success`, `upstream_error`, `reason`) with no `detail`; their `reason` is `payment_failed`. If `reason` is missing or not in the table, fall back to the full response body.
+Responses that V4 passes through keep their own format and may have no `reason`. This covers the `/api/v4/llm/` gateway, app and page proxies, and original-file uploads. AgentMail 402s use AgentMail's error shape (`success`, `upstream_error`, `reason`) with no `detail`; their `reason` is always `payment_failed`. If `reason` is missing or not in the table, fall back to the full response body.
 
 ```json
 {
@@ -154,7 +154,7 @@ Responses that V4 passes through keep their own format and may have no `reason`.
 | `insufficient_credits` | The project has insufficient credits. |
 | `profile_limit_reached` | The project reached its profile limit. |
 | `api_key_monthly_spend_limit_reached` | The API key reached its monthly spend limit. `detail.code` keeps the same value. |
-| `payment_failed` | The payment provider did not complete the request. |
+| `payment_failed` | The payment provider did not complete the request. Also the fallback for any other 402 without a more specific reason, so read `detail` before treating it as a card or provider problem. |
 | `cost_limit_reached` | The run reached its cost limit. |
 | `wallet_insufficient_balance` | The AgentCard wallet has insufficient available balance. |
 
