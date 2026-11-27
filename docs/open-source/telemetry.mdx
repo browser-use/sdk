@@ -85,6 +85,6 @@ Reports contain source, category and a message of at most 2000 characters, scrub
 
 ## Identity
 
-One anonymous id per machine: `BROWSER_USE_DEVICE_ID` if set, else a random id stored in `~/.config/browseruse/device_id`. If that file can't be written, a hash of the machine's MAC address and hostname. PostHog derives a location from the request IP.
+An anonymous id identifies an installation. Browser Use uses `BROWSER_USE_DEVICE_ID` when set to a nonempty value. Otherwise, it reads or creates an id in the config directory (`~/.config/browseruse` by default; `BROWSER_USE_CONFIG_DIR` can override it). If that file cannot be read or written, Browser Use generates a random id and reuses it for the life of the process. PostHog derives a location from the request IP.
 
 `BROWSER_USE_TELEMETRY_INTERNAL=1` marks events as internal (`is_internal`). We set it in our own tests and evals, so they don't count as usage.
