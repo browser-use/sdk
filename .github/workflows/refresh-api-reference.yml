@@ -1,0 +1,50 @@
+name: refresh-api-reference
+
+# Keeps docs/openapi and docs/cloud/openapi equal to production's served specs.
+# Opens (or updates) one PR when they differ; a human still reviews and merges it.
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [api-deployed]
+
+concurrency:
+  group: refresh-api-reference
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      BRANCH: bot/refresh-api-reference
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch production specs
+        run: python3 scripts/refresh_docs_openapi.py
+
+      - name: Open or update PR
+        run: |
+          if git diff --quiet -- docs/openapi docs/cloud/openapi; then
+            echo "API reference already matches production"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git add docs/openapi docs/cloud/openapi
+          git commit -m "docs: refresh API reference from production"
+          git push --force origin "$BRANCH"
+          if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr create --base main --head "$BRANCH" \
+              --title "docs: refresh API reference from production" \
+              --body "Automated by .github/workflows/refresh-api-reference.yml: docs/openapi and docs/cloud/openapi now match https://api.browser-use.com/api/v{2,3,4}/openapi.json."
+          fi
