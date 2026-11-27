@@ -72,6 +72,12 @@ to every upstream provider. Experimental models are not recommended as a
 production default. MiniMax M3 remains an API option even where it is absent
 from the dashboard picker.
 
+GPT-6.2 Sol (`gpt-6.2-sol`) and GPT-6.2 Astra (`gpt-6.2-astra`) are available
+in the US only: they are not offered in the EU, and US-only Bedrock projects get
+a 422. On the LLM gateway, send their tool calls to `/responses`:
+`/chat/completions` requests with tools get a 422. GPT-6.2 Astra has no fast or
+priority service tier and is not in the dashboard picker yet.
+
 | Provider | Model IDs | BYOK provider |
 | --- | --- | --- |
 | Anthropic | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-opus-5-5`, `claude-fable-5`, `claude-sonnet-5` | Anthropic |
