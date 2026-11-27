@@ -25,6 +25,14 @@ export type {
   WaitOptions,
 } from "./v4/resources/runs.js";
 
+export { Schedules } from "./v4/resources/schedules.js";
+export type {
+  ScheduleCreateBody,
+  ScheduleListParams,
+  ScheduleModel,
+  ScheduleRunsParams,
+} from "./v4/resources/schedules.js";
+
 export { Sessions } from "./v4/resources/sessions.js";
 export type { SendMessageOptions, SessionListParams } from "./v4/resources/sessions.js";
 
@@ -55,6 +63,16 @@ export type RunJudgeSettings = S["RunJudgeSettings"];
 export type InlineSecretSource = S["InlineSecretSource"];
 export type OnePasswordSecretSource = S["OnePasswordSecretSource"];
 export type SecretBinding = S["SecretBinding"];
+
+// Schedule models
+export type ScheduleCreateRequest = S["ScheduleCreateRequest"];
+export type ScheduleUpdateRequest = S["ScheduleUpdateRequest"];
+export type ScheduleView = S["ScheduleView"];
+export type ScheduleListResponse = S["ScheduleListResponse"];
+export type ScheduleSettings = S["ScheduleSettings"];
+export type ScheduleBrowserSettings = S["ScheduleBrowserSettings"];
+export type ScheduleSecretBinding = S["ScheduleSecretBinding"];
+export type ScheduleValidationError = S["ScheduleValidationError"];
 
 // Browser models
 export type BrowserSessionItemView = S["BrowserSessionItemView"];

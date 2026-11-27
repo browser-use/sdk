@@ -1020,6 +1020,11 @@ class RunSummary(BaseModel):
     total_cost_usd: str = Field(..., alias='totalCostUsd', title='Totalcostusd')
     created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
     updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
+    schedule_id: UUID | None = Field(
+        None,
+        alias='scheduleId',
+        description='ID of the schedule that created this run. Omitted for runs without recorded schedule attribution.',
+    )
 
 
 class SecretBinding(BaseModel):
@@ -1321,6 +1326,209 @@ class WorkspaceSizeInfo(BaseModel):
 
 class WorkspaceUpdateRequest(BaseModel):
     name: Name2 | None = Field(None, title='Name')
+
+
+class Model2(Enum):
+    mimo_v2_6_pro = 'mimo-v2.6-pro'
+    mimo_v2_6_flash = 'mimo-v2.6-flash'
+    deepseek_v4_1_flash = 'deepseek-v4.1-flash'
+    glm_5_2 = 'glm-5.2'
+    grok_4_5 = 'grok-4.5'
+    grok_4_6 = 'grok-4.6'
+    glm_5_3_flash = 'glm-5.3-flash'
+    kimi_k3 = 'kimi-k3'
+    minimax_m3 = 'minimax-m3'
+    claude_opus_4_7 = 'claude-opus-4.7'
+    claude_opus_4_8 = 'claude-opus-4.8'
+    claude_opus_5 = 'claude-opus-5'
+    claude_opus_5_5 = 'claude-opus-5-5'
+    claude_fable_5 = 'claude-fable-5'
+    claude_sonnet_5 = 'claude-sonnet-5'
+    claude_sonnet_5_5 = 'claude-sonnet-5-5'
+    gpt_5_5 = 'gpt-5.5'
+    gpt_5_6 = 'gpt-5.6'
+    gpt_6_astra = 'gpt-6-astra'
+    gpt_6_sol = 'gpt-6-sol'
+    gpt_6_1_sol = 'gpt-6.1-sol'
+    gpt_6_1_terra = 'gpt-6.1-terra'
+    gpt_6_luna = 'gpt-6-luna'
+    gpt_5_6_sol = 'gpt-5.6-sol'
+    gpt_5_6_terra = 'gpt-5.6-terra'
+    gpt_5_6_luna = 'gpt-5.6-luna'
+    gemini_3_6_flash = 'gemini-3.6-flash'
+    gemini_3_5_flash = 'gemini-3.5-flash'
+    gemini_3_1_pro = 'gemini-3.1-pro'
+    gemini_3_flash = 'gemini-3-flash'
+    bu_ultrafast = 'bu-ultrafast'
+    bu_fast = 'bu-fast'
+
+
+class OpVaultId1(RootModel[str]):
+    root: str = Field(
+        ...,
+        description="A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.",
+        max_length=64,
+        title='Opvaultid',
+    )
+
+
+class MaxCostUsd4(RootModel[float]):
+    root: float = Field(
+        ...,
+        description='Budget in USD for model and search charges on each fire. If omitted, a new session uses the default budget and an existing session uses its current budget.',
+        gt=0.0,
+        title='Maxcostusd',
+    )
+
+
+class MaxCostUsd5(RootModel[str]):
+    model_config = ConfigDict(
+        regex_engine="python-re",
+    )
+    root: str = Field(
+        ...,
+        description='Budget in USD for model and search charges on each fire. If omitted, a new session uses the default budget and an existing session uses its current budget.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Maxcostusd',
+    )
+
+
+class Harness(Enum):
+    browsercode = 'browsercode'
+    bu_pi = 'bu-pi'
+
+
+class Mode2(Enum):
+    default = 'default'
+    ultrafast = 'ultrafast'
+
+
+class ScheduleUpdateRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    task: str | None = Field(
+        None, description='Task to send on each fire.', max_length=10000, min_length=1
+    )
+    cron_expr: str | None = Field(
+        None,
+        alias='cronExpr',
+        description='Cron expression in the schedule time zone. Fires must be at least one minute apart.',
+    )
+    run_at: str | None = Field(
+        None,
+        alias='runAt',
+        description='One-time date or timestamp. A value without an offset uses the schedule time zone.',
+    )
+    timezone: str | None = Field(
+        None, description='IANA time zone, for example America/New_York.', min_length=1
+    )
+    enabled: bool | None = Field(
+        None, description='Set false to pause or true to resume.'
+    )
+
+
+class MaxCostUsd6(RootModel[float]):
+    root: float = Field(
+        ...,
+        description='Budget in USD for model and search charges on each fire. If omitted, a new session uses the default budget and an existing session uses its current budget.',
+        gt=0.0,
+        title='Maxcostusd',
+    )
+
+
+class MaxCostUsd7(RootModel[str]):
+    model_config = ConfigDict(
+        regex_engine="python-re",
+    )
+    root: str = Field(
+        ...,
+        description='Budget in USD for model and search charges on each fire. If omitted, a new session uses the default budget and an existing session uses its current budget.',
+        pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
+        title='Maxcostusd',
+    )
+
+
+class ScheduleBrowserSettings(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    solve_captchas: bool | None = Field(
+        None,
+        alias='solveCaptchas',
+        description='Solve CAPTCHAs on new browsers except ultrafast/EU; some projects cannot use this field yet and return 422.',
+    )
+    profile_id: UUID | None = Field(
+        None,
+        alias='profileId',
+        description='ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions.',
+        title='Profileid',
+    )
+    network_policy_id: UUID | None = Field(
+        None,
+        alias='networkPolicyId',
+        description='ID of a network policy that allows or blocks domains for this browser. Policy changes reach the browser within seconds. When the field is absent, the run keeps the policy of the session.',
+        title='Networkpolicyid',
+    )
+    proxy_country_code: ProxyCountryCode | None = Field(
+        None,
+        alias='proxyCountryCode',
+        description='ISO country code to proxy the browser through. Defaults to US, or to no proxy for new bu-ultrafast and bu-fast sessions. Pass null to run without a proxy.',
+    )
+    screen_width: ScreenWidth | None = Field(
+        None,
+        alias='screenWidth',
+        description='Custom screen width in pixels for the browser.',
+        title='Screenwidth',
+    )
+    screen_height: ScreenHeight | None = Field(
+        None,
+        alias='screenHeight',
+        description='Custom screen height in pixels for the browser.',
+        title='Screenheight',
+    )
+    allow_resizing: bool | None = Field(
+        None,
+        alias='allowResizing',
+        description='Let you or the agent resize the browser window over CDP. Resizing makes the browser easier to detect. API runs default to off. Follow-up runs inherit the value of the previous browser. The value applies only when the run starts a new browser.',
+        title='Allowresizing',
+    )
+    record: bool | None = Field(
+        None,
+        description="Record the browser session to an mp4, retrievable via GET /browsers/{id} once the browser stops. API runs default to off; pass true to enable. Like other browser settings, this only applies when a new browser is provisioned: a follow-up that reuses the session's live browser keeps that browser's recording state. Ignored (always off) for Zero Data Retention projects.",
+        title='Record',
+    )
+    extension_ids: List[UUID] | None = Field(
+        None,
+        alias='extensionIds',
+        description="Up to 3 ready extensions from POST /api/v4/extensions to install in every browser of the session. Follow-up runs inherit the session's extensions; passing a different set returns 400. After you delete an extension, omit extensionIds or pass the reduced set; later browsers skip deleted extensions. The agent is not told about installed extensions, so name any extension pages in the task.",
+        max_length=3,
+        title='Extensionids',
+    )
+
+
+class ScheduleSecretBinding(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    alias: str = Field(
+        ...,
+        description='Name the agent refers to this secret by, e.g. "github_password".',
+        title='Alias',
+    )
+    source: OnePasswordSecretSource
+    allowed_domains: List[str] = Field(
+        ...,
+        alias='allowedDomains',
+        description='Hosts the secret may be typed into, e.g. ["github.com"]. A host covers its subdomains. Bare hostnames only — no scheme, port, path, or wildcard.',
+        max_length=20,
+        min_length=1,
+        title='Alloweddomains',
+    )
+
+
+class ScheduleValidationError(BaseModel):
+    detail: str | List[Dict[str, Any]] = Field(..., title='Detail')
 
 
 class AgentCardWalletListResponse(BaseModel):
@@ -1678,3 +1886,243 @@ class RunListResponse(BaseModel):
 
 class WorkspaceFileUploadResponse(BaseModel):
     files: List[WorkspaceFileUploadResponseItem] = Field(..., title='Files')
+
+
+class SecretBindings1(RootModel[List[ScheduleSecretBinding]]):
+    root: List[ScheduleSecretBinding] = Field(
+        ...,
+        description='1Password references the run may use. Inline secret values are unavailable for schedules.',
+        max_length=20,
+        title='Secretbindings',
+    )
+
+
+class ScheduleCreateRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    task: str = Field(
+        ..., description='Task to send on each fire.', max_length=10000, min_length=1
+    )
+    cron_expr: str | None = Field(None, alias='cronExpr')
+    run_at: str | None = Field(None, alias='runAt')
+    timezone: str | None = Field(
+        'UTC', description='IANA time zone, for example America/New_York.', min_length=1
+    )
+    session_id: UUID | None = Field(
+        None,
+        alias='sessionId',
+        description='An existing session in the project that has not been archived or purged. Omit to reserve a new session.',
+    )
+    model: Model2 | None = Field(
+        None,
+        description='bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.',
+        title='Model',
+    )
+    model_params: Dict[str, Any] | None = Field(
+        None,
+        alias='modelParams',
+        description='Optional provider-native request parameters for the selected model, written with the provider\'s own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model\'s default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider\'s own defaults in place. On OpenAI models, {"service_tier": "priority"} (alias "fast") requests Fast processing at a higher token price; sent alone it keeps the model\'s default parameters. Beta: {"context": {"keepScreenshots": "2", "trimAtTokens": "80000", "compactAtTokens": "125000"}} controls what the agent keeps in context for the run: trimAtTokens clears old screenshots and tool output in one batch at that mark (keepScreenshots, which needs it, sets how many recent screenshots stay), and compactAtTokens compacts earlier. Values are strings from short per-model lists; like service_tier it keeps the model\'s default parameters.',
+        title='Modelparams',
+    )
+    output_schema: Dict[str, Any] | None = Field(
+        None,
+        alias='outputSchema',
+        description='Optional JSON Schema for the final output (API runs only).',
+        title='Outputschema',
+    )
+    workspace_id: UUID | None = Field(
+        None,
+        alias='workspaceId',
+        description="Files workspace to use. Omitted on a new session creates one; omitted on a follow-up reuses the session's workspace.",
+        title='Workspaceid',
+    )
+    browser_settings: ScheduleBrowserSettings | None = Field(
+        None,
+        alias='browserSettings',
+        description="Browser settings. Omitted or null on a follow-up keeps the session's browser.",
+    )
+    keep_alive: KeepAlive | None = Field(
+        None,
+        alias='keepAlive',
+        description="Seconds the session's browser stays open after its last run, so a follow-up run reuses the same page, never past the browser's 4 h lifetime. Default 120. Follow-up runs inherit the session's value; send a new value to change it or null to restore the default. Kept time is billed as browser time. Ignored (always 120) for free-tier and Zero Data Retention projects.",
+        title='Keepalive',
+    )
+    agentmail: bool | None = Field(
+        None,
+        description='If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.',
+        title='Agentmail',
+    )
+    stripe_link_connection_id: UUID | None = Field(
+        None,
+        alias='stripeLinkConnectionId',
+        description='Stripe Link connection from this project that scheduled runs may use for payments.',
+        title='Stripelinkconnectionid',
+    )
+    secret_bindings: SecretBindings1 | None = Field(
+        None,
+        alias='secretBindings',
+        description='1Password references the run may use. Inline secret values are unavailable for schedules.',
+        title='Secretbindings',
+    )
+    op_vault_id: OpVaultId1 | None = Field(
+        None,
+        alias='opVaultId',
+        description="A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.",
+        title='Opvaultid',
+    )
+    op_vault_allowed_domains: List[str] | None = Field(
+        None,
+        alias='opVaultAllowedDomains',
+        description='Hosts where the run may type credentials from opVaultId. If omitted, each item supplies its own hosts from its 1Password website entries and items without host entries are skipped.',
+        title='Opvaultalloweddomains',
+    )
+    judge: RunJudgeSettings | None = Field(
+        None,
+        description='LLM judge of the finished run; send {} for defaults. Omitted or null runs no judge.',
+    )
+    max_cost_usd: MaxCostUsd4 | MaxCostUsd5 | None = Field(
+        None,
+        alias='maxCostUsd',
+        description='Budget in USD for model and search charges on each fire. If omitted, a new session uses the default budget and an existing session uses its current budget.',
+        title='Maxcostusd',
+    )
+    metadata: Dict[str, str] | None = Field(
+        None,
+        description='Labels for this run. Up to 10 key-value pairs. Filterable on the runs list and in the dashboard history.',
+        title='Metadata',
+    )
+    agentcard_wallet_id: UUID | None = Field(
+        None,
+        alias='agentcardWalletId',
+        description='AgentCard wallet in this project. The project must have access to AgentCard.',
+    )
+    harness: Harness | None = Field(
+        None, description='Agent harness. Available values depend on your project.'
+    )
+    mode: Mode2 | None = Field(
+        None, description='Run mode. Available values depend on your project.'
+    )
+
+
+class ScheduleSettings(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    model: Model2 | None = Field(
+        None,
+        description='bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.',
+        title='Model',
+    )
+    model_params: Dict[str, Any] | None = Field(
+        None,
+        alias='modelParams',
+        description='Optional provider-native request parameters for the selected model, written with the provider\'s own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model\'s default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider\'s own defaults in place. On OpenAI models, {"service_tier": "priority"} (alias "fast") requests Fast processing at a higher token price; sent alone it keeps the model\'s default parameters. Beta: {"context": {"keepScreenshots": "2", "trimAtTokens": "80000", "compactAtTokens": "125000"}} controls what the agent keeps in context for the run: trimAtTokens clears old screenshots and tool output in one batch at that mark (keepScreenshots, which needs it, sets how many recent screenshots stay), and compactAtTokens compacts earlier. Values are strings from short per-model lists; like service_tier it keeps the model\'s default parameters.',
+        title='Modelparams',
+    )
+    output_schema: Dict[str, Any] | None = Field(
+        None,
+        alias='outputSchema',
+        description='Optional JSON Schema for the final output (API runs only).',
+        title='Outputschema',
+    )
+    workspace_id: UUID | None = Field(
+        None,
+        alias='workspaceId',
+        description="Files workspace to use. Omitted on a new session creates one; omitted on a follow-up reuses the session's workspace.",
+        title='Workspaceid',
+    )
+    browser_settings: ScheduleBrowserSettings | None = Field(
+        None,
+        alias='browserSettings',
+        description="Browser settings. Omitted or null on a follow-up keeps the session's browser.",
+    )
+    keep_alive: KeepAlive | None = Field(
+        None,
+        alias='keepAlive',
+        description="Seconds the session's browser stays open after its last run, so a follow-up run reuses the same page, never past the browser's 4 h lifetime. Default 120. Follow-up runs inherit the session's value; send a new value to change it or null to restore the default. Kept time is billed as browser time. Ignored (always 120) for free-tier and Zero Data Retention projects.",
+        title='Keepalive',
+    )
+    agentmail: bool | None = Field(
+        None,
+        description='If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.',
+        title='Agentmail',
+    )
+    stripe_link_connection_id: UUID | None = Field(
+        None,
+        alias='stripeLinkConnectionId',
+        description='Stripe Link connection from this project that scheduled runs may use for payments.',
+        title='Stripelinkconnectionid',
+    )
+    secret_bindings: SecretBindings1 | None = Field(
+        None,
+        alias='secretBindings',
+        description='1Password references the run may use. Inline secret values are unavailable for schedules.',
+        title='Secretbindings',
+    )
+    op_vault_id: OpVaultId1 | None = Field(
+        None,
+        alias='opVaultId',
+        description="A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.",
+        title='Opvaultid',
+    )
+    op_vault_allowed_domains: List[str] | None = Field(
+        None,
+        alias='opVaultAllowedDomains',
+        description='Hosts where the run may type credentials from opVaultId. If omitted, each item supplies its own hosts from its 1Password website entries and items without host entries are skipped.',
+        title='Opvaultalloweddomains',
+    )
+    judge: RunJudgeSettings | None = Field(
+        None,
+        description='LLM judge of the finished run; send {} for defaults. Omitted or null runs no judge.',
+    )
+    max_cost_usd: MaxCostUsd6 | MaxCostUsd7 | None = Field(
+        None,
+        alias='maxCostUsd',
+        description='Budget in USD for model and search charges on each fire. If omitted, a new session uses the default budget and an existing session uses its current budget.',
+        title='Maxcostusd',
+    )
+    metadata: Dict[str, str] | None = Field(
+        None,
+        description='Labels for this run. Up to 10 key-value pairs. Filterable on the runs list and in the dashboard history.',
+        title='Metadata',
+    )
+    agentcard_wallet_id: UUID | None = Field(
+        None,
+        alias='agentcardWalletId',
+        description='AgentCard wallet in this project. The project must have access to AgentCard.',
+    )
+    harness: Harness | None = Field(
+        None, description='Agent harness. Available values depend on your project.'
+    )
+    mode: Mode2 | None = Field(
+        None, description='Run mode. Available values depend on your project.'
+    )
+
+
+class ScheduleView(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: UUID
+    task: str = Field(..., description='Task to send on each fire.', min_length=1)
+    cron_expr: str | None = Field(..., alias='cronExpr')
+    run_at: AwareDatetime | None = Field(..., alias='runAt')
+    timezone: str = Field(
+        ..., description='IANA time zone, for example America/New_York.', min_length=1
+    )
+    next_run_at: AwareDatetime = Field(..., alias='nextRunAt')
+    enabled: bool
+    session_id: UUID = Field(..., alias='sessionId')
+    settings: ScheduleSettings
+    created_at: AwareDatetime = Field(..., alias='createdAt')
+    updated_at: AwareDatetime = Field(..., alias='updatedAt')
+
+
+class ScheduleListResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    schedules: List[ScheduleView]
+    next_cursor: str | None = Field(..., alias='nextCursor')
+    has_more: bool = Field(..., alias='hasMore')

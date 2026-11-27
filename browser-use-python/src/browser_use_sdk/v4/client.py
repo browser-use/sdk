@@ -8,6 +8,7 @@ from .resources.integrations import AsyncIntegrations, Integrations
 from .resources.profiles import AsyncProfiles, Profiles
 from .resources.extensions import AsyncExtensions, Extensions
 from .resources.runs import AsyncRuns, Runs
+from .resources.schedules import AsyncSchedules, Schedules
 from .resources.sessions import AsyncSessions, Sessions
 from .resources.workspaces import AsyncWorkspaces, Workspaces
 
@@ -46,6 +47,7 @@ class BrowserUse:
         self.profiles = Profiles(self._http)
         self.extensions = Extensions(self._http)
         self.runs = Runs(self._http)
+        self.schedules = Schedules(self._http)
         self.sessions = Sessions(self._http)
         self.workspaces = Workspaces(self._http)
 
@@ -92,6 +94,7 @@ class AsyncBrowserUse:
         self.profiles = AsyncProfiles(self._http)
         self.extensions = AsyncExtensions(self._http)
         self.runs = AsyncRuns(self._http)
+        self.schedules = AsyncSchedules(self._http)
         self.sessions = AsyncSessions(self._http)
         self.workspaces = AsyncWorkspaces(self._http)
 

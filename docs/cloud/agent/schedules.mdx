@@ -1,0 +1,102 @@
+---
+title: Schedules
+description: "Run a V4 agent task once or on a recurring schedule."
+icon: "calendar"
+---
+
+A schedule starts a V4 run at a specific time or on a recurring cron. Every
+run from the schedule uses the same [session](/cloud/agent/sessions).
+
+## Monitor a page daily
+
+Read the title of a page every day at 9 a.m. in New York and return it as
+[structured output](/cloud/agent/structured-output). After the first run
+finishes, list the runs to see the output. Pause the schedule to stop future
+runs, or delete it when you're done.
+
+<CodeGroup>
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+schedule = client.schedules.create(
+    "Open https://www.python.org/ and return the page title.",
+    cron_expr="0 9 * * *",
+    timezone="America/New_York",
+    output_schema={
+        "type": "object",
+        "properties": {"title": {"type": "string"}},
+        "required": ["title"],
+    },
+)
+
+# After the schedule fires
+for run in client.schedules.runs(schedule.id).runs:
+    if run.status.value == "completed":
+        print(run.output)
+
+client.schedules.update(schedule.id, enabled=False)
+client.schedules.delete(schedule.id)
+```
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+const schedule = await client.schedules.create({
+  task: "Open https://www.python.org/ and return the page title.",
+  cronExpr: "0 9 * * *",
+  timezone: "America/New_York",
+  outputSchema: {
+    type: "object",
+    properties: { title: { type: "string" } },
+    required: ["title"],
+  },
+});
+
+// After the schedule fires
+const { runs } = await client.schedules.runs(schedule.id);
+for (const run of runs) {
+  if (run.status === "completed") console.log(run.output);
+}
+
+await client.schedules.update(schedule.id, { enabled: false });
+await client.schedules.delete(schedule.id);
+```
+```bash curl
+curl https://api.browser-use.com/api/v4/schedules \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"Open https://www.python.org/ and return the page title.",
+       "cronExpr":"0 9 * * *",
+       "timezone":"America/New_York",
+       "outputSchema":{"type":"object",
+         "properties":{"title":{"type":"string"}},"required":["title"]}}'
+
+# Set SCHEDULE_ID to the id from the create response.
+# After the schedule fires, read output on completed runs.
+curl "https://api.browser-use.com/api/v4/schedules/$SCHEDULE_ID/runs" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+
+curl -X PATCH "https://api.browser-use.com/api/v4/schedules/$SCHEDULE_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled":false}'
+
+curl -X DELETE "https://api.browser-use.com/api/v4/schedules/$SCHEDULE_ID" \
+  -H "X-Browser-Use-API-Key: $BROWSER_USE_API_KEY"
+```
+</CodeGroup>
+
+## Choose when and where it runs
+
+- For a one-time schedule, use `run_at` (Python) or `runAt` (TypeScript and REST) in place of the cron. A timestamp such as `2027-03-15T09:00:00-04:00` includes its own offset. A timestamp without an offset uses the schedule's time zone, which defaults to UTC. To resume a one-time schedule after that time has passed, set a new time.
+- Pass `session_id` / `sessionId` to continue an existing session. Otherwise, the first run starts the reserved session.
+- For a daily cron, a time skipped by daylight saving runs at the first valid local time. A repeated time runs at its first occurrence.
+- Deleting the API key that owns a schedule pauses it. To resume, set `enabled` to `true` using another key for the same project.
+
+## Limits
+
+- A project can have up to 50 enabled schedules. A schedule can fire at most once per minute.
+- Schedules are unavailable on [Zero Data Retention](/cloud/zero-data-retention) projects.
+- Use [1Password references](/cloud/guides/1password) for secrets.
+- A full queue skips that occurrence of a recurring schedule. A one-time schedule waits for space in the queue and starts late. If a run is refused, for example because the project is out of credits, that occurrence is skipped. Check the schedule's runs list to see which runs started.
