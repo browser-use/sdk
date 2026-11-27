@@ -7,6 +7,7 @@ from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
     QueuedMessage,
     QueueListResponse,
+    SessionCompactResponse,
     SessionCostCapResponse,
     SessionCostResponse,
     SessionInfo,
@@ -19,12 +20,17 @@ if TYPE_CHECKING:
 
 
 def _build_message_body(
-    text: str,
+    text: str | None,
     interrupt: bool | None,
     attached_file_ids: list[str | UUID] | None,
+    confirm_input_id: int | None,
     extra: dict[str, Any],
 ) -> dict[str, Any]:
-    body: dict[str, Any] = {"text": text}
+    body: dict[str, Any] = {}
+    if text is not None:
+        body["text"] = text
+    if confirm_input_id is not None:
+        body["confirmInputId"] = confirm_input_id
     if interrupt is not None:
         body["interrupt"] = interrupt
     if attached_file_ids is not None:
@@ -59,6 +65,12 @@ class Sessions:
         """Get session metadata (latest run id, status, ...)."""
         return SessionInfo.model_validate(
             self._http.request("GET", f"/sessions/{session_id}")
+        )
+
+    def compact(self, session_id: str | UUID) -> SessionCompactResponse:
+        """Request compaction of the session context."""
+        return SessionCompactResponse.model_validate(
+            self._http.request("POST", f"/sessions/{session_id}/compact")
         )
 
     def purge(self, session_id: str | UUID) -> None:
@@ -129,11 +141,12 @@ class Sessions:
     def send_message(
         self,
         session_id: str | UUID,
-        text: str,
+        text: str | None = None,
         *,
         interrupt: bool | None = None,
         attached_file_ids: list[str | UUID] | None = None,
         deduplicate: str | None = None,
+        confirm_input_id: int | None = None,
         **extra: Any,
     ) -> QueuedMessage:
         """Send a message to the session.
@@ -143,7 +156,7 @@ class Sessions:
         ``deduplicate="exact-text-v1"`` to reuse an equivalent queued message.
         """
         request_kwargs: dict[str, Any] = {
-            "json": _build_message_body(text, interrupt, attached_file_ids, extra)
+            "json": _build_message_body(text, interrupt, attached_file_ids, confirm_input_id, extra)
         }
         if deduplicate is not None:
             request_kwargs["headers"] = {"X-V4-Queue-Deduplicate": deduplicate}
@@ -196,6 +209,12 @@ class AsyncSessions:
         """Get session metadata (latest run id, status, ...)."""
         return SessionInfo.model_validate(
             await self._http.request("GET", f"/sessions/{session_id}")
+        )
+
+    async def compact(self, session_id: str | UUID) -> SessionCompactResponse:
+        """Request compaction of the session context."""
+        return SessionCompactResponse.model_validate(
+            await self._http.request("POST", f"/sessions/{session_id}/compact")
         )
 
     async def purge(self, session_id: str | UUID) -> None:
@@ -266,11 +285,12 @@ class AsyncSessions:
     async def send_message(
         self,
         session_id: str | UUID,
-        text: str,
+        text: str | None = None,
         *,
         interrupt: bool | None = None,
         attached_file_ids: list[str | UUID] | None = None,
         deduplicate: str | None = None,
+        confirm_input_id: int | None = None,
         **extra: Any,
     ) -> QueuedMessage:
         """Send a message to the session.
@@ -280,7 +300,7 @@ class AsyncSessions:
         ``deduplicate="exact-text-v1"`` to reuse an equivalent queued message.
         """
         request_kwargs: dict[str, Any] = {
-            "json": _build_message_body(text, interrupt, attached_file_ids, extra)
+            "json": _build_message_body(text, interrupt, attached_file_ids, confirm_input_id, extra)
         }
         if deduplicate is not None:
             request_kwargs["headers"] = {"X-V4-Queue-Deduplicate": deduplicate}

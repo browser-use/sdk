@@ -129,6 +129,14 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("get", "/browsers/{session_id}"): ("browsers", "get"),
     ("patch", "/browsers/{session_id}"): ("browsers", "stop"),
     ("get", "/browsers/{session_id}/downloads"): ("browsers", "downloads"),
+    ("get", "/browsers/{session_id}/proxy"): ("browsers", "get_proxy"),
+    ("patch", "/browsers/{session_id}/proxy"): ("browsers", "update_proxy"),
+    # network policies
+    ("post", "/network-policies"): ("network_policies", "create"),
+    ("get", "/network-policies"): ("network_policies", "list"),
+    ("get", "/network-policies/{policy_id}"): ("network_policies", "get"),
+    ("patch", "/network-policies/{policy_id}"): ("network_policies", "update"),
+    ("delete", "/network-policies/{policy_id}"): ("network_policies", "delete"),
     # profiles
     ("post", "/profiles"): ("profiles", "create"),
     ("get", "/profiles"): ("profiles", "list"),
@@ -146,6 +154,7 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     # sessions + queue
     ("get", "/sessions"): ("sessions", "list"),
     ("get", "/sessions/{session_id}"): ("sessions", "get"),
+    ("post", "/sessions/{session_id}/compact"): ("sessions", "compact"),
     ("post", "/sessions/{session_id}/purge"): ("sessions", "purge"),
     ("post", "/sessions/{session_id}/queue"): ("sessions", "send_message"),
     ("get", "/sessions/{session_id}/queue"): ("sessions", "queue"),
@@ -180,9 +189,7 @@ _V4_MAP: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("delete", "/extensions/{extension_id}"): ("extensions", "delete"),
 }
 
-# Wallets stay off the SDK surface and GET cost-cap is not in production yet; map every other v4 endpoint.
 _V4_NOT_IN_SDK: Set[Tuple[str, str]] = {
-    ("get", "/agentcard/wallets"),
     ("get", "/stripe-link"),
     ("get", "/sessions/{session_id}/cost-cap"),
 }
@@ -346,6 +353,7 @@ class TestV4Coverage:
         from browser_use_sdk.v4.resources import (
             browsers,
             integrations,
+            network_policies,
             profiles,
             runs,
             sessions,
@@ -355,6 +363,7 @@ class TestV4Coverage:
 
         resource_classes = {
             "browsers": browsers.Browsers,
+            "network_policies": network_policies.NetworkPolicies,
             "profiles": profiles.Profiles,
             "extensions": extensions.Extensions,
             "runs": runs.Runs,
@@ -372,6 +381,7 @@ class TestV4Coverage:
         from browser_use_sdk.v4.resources import (
             browsers,
             integrations,
+            network_policies,
             profiles,
             runs,
             sessions,
@@ -381,6 +391,7 @@ class TestV4Coverage:
 
         async_classes = {
             "browsers": browsers.AsyncBrowsers,
+            "network_policies": network_policies.AsyncNetworkPolicies,
             "profiles": profiles.AsyncProfiles,
             "extensions": extensions.AsyncExtensions,
             "runs": runs.AsyncRuns,

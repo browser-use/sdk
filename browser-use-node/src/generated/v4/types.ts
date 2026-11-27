@@ -267,6 +267,26 @@ export interface paths {
         patch: operations["update_session_cost_cap_sessions__session_id__cost_cap_patch"];
         trace?: never;
     };
+    "/sessions/{session_id}/compact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Compact Session Context (beta)
+         * @description Beta. Ask the session's running agent to summarize its context before its next model call. Returns 409 when the session has no running run or that run did not start with modelParams.context.
+         */
+        post: operations["compact_session_sessions__session_id__compact_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/{session_id}/cost": {
         parameters: {
             query?: never;
@@ -505,31 +525,6 @@ export interface paths {
          * @description Delete one exact path from a workspace and remove matching upload metadata.
          */
         delete: operations["delete_workspace_file_workspaces__workspace_id__files_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/agentcard/wallets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Agentcard Wallets
-         * @description The project's active AgentCard wallets, newest first.
-         *
-         *     Read-only: funding is admin-only during the beta. The UI uses this to offer
-         *     a wallet on the composer, which is how a run opts into spending — the id
-         *     then rides RunCreateRequest.agentcard_wallet_id and is validated again there
-         *     against this same project.
-         */
-        get: operations["list_agentcard_wallets_agentcard_wallets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -793,6 +788,24 @@ export interface paths {
         patch: operations["update_browser_session_browsers__session_id__patch"];
         trace?: never;
     };
+    "/browsers/{session_id}/proxy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Browser Proxy */
+        get: operations["get_browser_session_proxy_browsers__session_id__proxy_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Browser Proxy */
+        patch: operations["update_browser_session_proxy_browsers__session_id__proxy_patch"];
+        trace?: never;
+    };
     "/browsers/{session_id}/downloads": {
         parameters: {
             query?: never;
@@ -881,6 +894,60 @@ export interface paths {
         patch: operations["update_profile_profiles__profile_id__patch"];
         trace?: never;
     };
+    "/network-policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Network Policies
+         * @description Get a paginated list of the project's network policies, newest first.
+         */
+        get: operations["list_network_policies_network_policies_get"];
+        put?: never;
+        /**
+         * Create Network Policy
+         * @description Create a network policy that allows or blocks domains for the browsers that reference it with networkPolicyId.
+         *
+         *     A domain such as `example.com` matches the domain and all of its subdomains, and the most specific entry wins. Domains are trimmed, lower-cased and converted to punycode, a trailing dot and a leading `*.` are removed, and duplicates are dropped. URLs, paths, ports, IP addresses, other wildcards and a domain in both lists are rejected. A policy has at most 10,000 domains, and a project has at most 100 policies.
+         */
+        post: operations["create_network_policy_network_policies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/network-policies/{policy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Network Policy
+         * @description Get a network policy.
+         */
+        get: operations["get_network_policy_network_policies__policy_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Network Policy
+         * @description Delete a network policy. Browsers that use it continue without a customer network policy.
+         */
+        delete: operations["delete_network_policy_network_policies__policy_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Network Policy
+         * @description Replace each field that the request contains; a domain list replaces the whole list. Each update increases version by 1, and running browsers pick up the change within seconds.
+         */
+        patch: operations["update_network_policy_network_policies__policy_id__patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -909,30 +976,6 @@ export interface components {
         APIKeySpendLimitError: {
             /** Detail */
             detail: string | components["schemas"]["APIKeySpendLimitDetail"];
-        };
-        /** AgentCardWalletListResponse */
-        AgentCardWalletListResponse: {
-            /** Wallets */
-            wallets: components["schemas"]["AgentCardWalletSummary"][];
-        };
-        /**
-         * AgentCardWalletSummary
-         * @description A spendable project wallet as the composer needs to show it.
-         */
-        AgentCardWalletSummary: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Name */
-            name: string;
-            /** Currency */
-            currency: string;
-            /** Availablecents */
-            availableCents: number;
-            /** Activeholdcents */
-            activeHoldCents: number;
         };
         /**
          * AuthorizeResponse
@@ -1020,6 +1063,9 @@ export interface components {
          * @description View model for representing a browser session in list views.
          */
         BrowserSessionItemView: {
+            /** @description Effective CAPTCHA solving setting. */
+            solveCaptchas?: boolean;
+            profileId?: string | null;
             /**
              * ID
              * Format: uuid
@@ -1151,6 +1197,9 @@ export interface components {
          * @description View model for representing a browser session.
          */
         BrowserSessionView: {
+            /** @description Effective CAPTCHA solving setting. */
+            solveCaptchas?: boolean;
+            profileId?: string | null;
             /**
              * ID
              * Format: uuid
@@ -1259,6 +1308,11 @@ export interface components {
              */
             profileId?: string | null;
             /**
+             * Networkpolicyid
+             * @description ID of a network policy that allows or blocks domains for this browser. Policy changes reach the browser within seconds.
+             */
+            networkPolicyId?: string | null;
+            /**
              * Proxy Country Code
              * @description Country code for proxy location. Defaults to US. Set to null to disable proxy.
              * @default us
@@ -1307,7 +1361,7 @@ export interface components {
             solveCaptchas: boolean;
             /**
              * Custom Proxy
-             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used.
+             * @description Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are an enterprise feature: contact sales@browser-use.com to enable them.
              */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
@@ -1354,6 +1408,21 @@ export interface components {
              * @default false
              */
             ignoreCertErrors: boolean;
+            /**
+             * Protocol
+             * @description Protocol of the connection to the proxy. Use https for a proxy that accepts only TLS. Defaults to https on port 443 and to http on other ports.
+             */
+            protocol?: ("http" | "https") | null;
+            /**
+             * CA Bundle
+             * @description PEM certificates that the browser and the proxy connection trust in addition to the public roots, such as the CA of a TLS-intercepting proxy. Other sites keep full certificate checks.
+             */
+            caBundle?: string | null;
+            /**
+             * CA Bundle URL
+             * @description HTTPS URL of PEM certificates that Browser Use downloads and trusts in the same way as caBundle. Send either caBundle or caBundleUrl.
+             */
+            caBundleUrl?: string | null;
         };
         /**
          * DisconnectResponse
@@ -1516,9 +1585,9 @@ export interface components {
             /**
              * Integrationid
              * Format: uuid
-             * @description 1Password integration to resolve through. Must belong to this project.
+             * @description 1Password integration to resolve through. Must belong to this project. Optional when the project has exactly one active 1Password integration.
              */
-            integrationId: string;
+            integrationId?: string;
             /** Vaultid */
             vaultId: string;
             /** Itemid */
@@ -1669,7 +1738,7 @@ export interface components {
          */
         QueueMessageRequest: {
             /** Text */
-            text: string;
+            text?: string;
             /**
              * Interrupt
              * @default false
@@ -1677,7 +1746,9 @@ export interface components {
             interrupt: boolean;
             /** Attachedfileids */
             attachedFileIds?: string[] | null;
-        };
+            /** @description Explicitly authorize a new execution of this pending instruction. It may have run previously and the new execution may incur charges. Cannot be combined with text, interrupt, or attachedFileIds. */
+            confirmInputId?: number;
+        } & (unknown | unknown);
         /**
          * QueuedMessage
          * @description One message on a session's queue (a v4_session_input row).
@@ -1696,7 +1767,7 @@ export interface components {
              * Mode
              * @enum {string}
              */
-            mode: "queue" | "interrupt";
+            mode: "queue" | "steer" | "interrupt" | "confirmed";
             /**
              * Status
              * @enum {string}
@@ -1711,6 +1782,10 @@ export interface components {
              * Format: date-time
              */
             createdAt: string;
+            /** @description This pending instruction is held until explicitly reviewed and authorized for a new execution. */
+            needsConfirmation: boolean;
+            /** @description Why the pending instruction needs confirmation. */
+            reason?: string;
         };
         /** RunAttachment */
         RunAttachment: {
@@ -1748,21 +1823,33 @@ export interface components {
          *     Profile is the exception: a different profile → 400; an explicit value
          *     mismatching the live browser's profile (incl. null vs a profiled browser)
          *     declines reuse and provisions fresh. A live browser already matching the
-         *     requested profile is reused. Extensions are session-wide: follow-ups
+         *     requested profile is reused. networkPolicyId follows the same rule: an
+         *     explicit or inherited policy that differs from the live browser's declines
+         *     reuse. Extensions are session-wide: follow-ups
          *     inherit them, and a different set → 400 (see extensionIds).
          */
         RunBrowserSettings: {
+            /**
+             * @description Solve CAPTCHAs on new browsers except ultrafast/EU; some projects cannot use this field yet and return 422.
+             * @default true
+             */
+            solveCaptchas: boolean;
             /**
              * Profileid
              * @description ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions.
              */
             profileId?: string | null;
             /**
-             * @description ISO country code to proxy the browser through. Defaults to US. Pass null to run without a proxy.
+             * Networkpolicyid
+             * @description ID of a network policy that allows or blocks domains for this browser. Policy changes reach the browser within seconds. When the field is absent, the run keeps the policy of the session.
+             */
+            networkPolicyId?: string | null;
+            /**
+             * @description ISO country code to proxy the browser through. Defaults to US, or to no proxy for new bu-ultrafast and bu-fast sessions. Pass null to run without a proxy.
              * @default us
              */
             proxyCountryCode: components["schemas"]["ProxyCountryCode"] | null;
-            /** @description Custom proxy for the browser. Overrides proxyCountryCode. Never stored or inherited by follow-up runs; pass it on each run that should use it. */
+            /** @description Custom proxy for the browser. Overrides proxyCountryCode. Custom proxies are an enterprise feature: contact sales@browser-use.com to enable them. Never stored or inherited by follow-up runs; pass it on each run that should use it. */
             customProxy?: components["schemas"]["CustomProxy"] | null;
             /**
              * Screenwidth
@@ -1793,6 +1880,13 @@ export interface components {
         /** RunCreateRequest */
         RunCreateRequest: {
             /**
+             * Metadata
+             * @description Labels for this run. Up to 10 key-value pairs. Filterable on the runs list and in the dashboard history.
+             */
+            metadata?: {
+                [key: string]: string;
+            } | null;
+            /**
              * Task
              * @description What the agent should do in this run.
              */
@@ -1806,14 +1900,14 @@ export interface components {
             } | null;
             /**
              * Model
-             * @description bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.
+             * @description bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams. gpt-6.2-astra and gpt-6.2-sol run in the US region only.
              * @default gpt-6-luna
              * @enum {string}
              */
-            model: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "deepseek-v4-flash-vision" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "claude-sonnet-5-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.2-astra" | "gpt-6.2-sol" | "gpt-6.1-sol" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
+            model: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "claude-sonnet-5-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.2-astra" | "gpt-6.2-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
             /**
              * Modelparams
-             * @description Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider's own defaults in place.
+             * @description Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider's own defaults in place. On OpenAI models, {"service_tier": "priority"} (alias "fast") requests Fast processing at a higher token price; sent alone it keeps the model's default parameters. Beta: {"context": {"keepScreenshots": "2", "trimAtTokens": "80000", "compactAtTokens": "125000"}} controls what the agent keeps in context for the run: trimAtTokens clears old screenshots and tool output in one batch at that mark (keepScreenshots, which needs it, sets how many recent screenshots stay), and compactAtTokens compacts earlier. Values are strings from short per-model lists; like service_tier it keeps the model's default parameters.
              */
             modelParams?: {
                 [key: string]: unknown;
@@ -1842,11 +1936,6 @@ export interface components {
              */
             agentmail: boolean;
             /**
-             * Agentcardwalletid
-             * @description AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's grant.
-             */
-            agentcardWalletId?: string | null;
-            /**
              * Stripelinkconnectionid
              * @description Stripe Link connection (from GET /stripe-link) this run may pay with. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's connection.
              */
@@ -1859,11 +1948,15 @@ export interface components {
             /**
              * Secretbindings
              * @description Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run.
+             *
+             *     Explicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.
              */
             secretBindings?: components["schemas"]["SecretBinding"][] | null;
             /**
              * Opvaultid
              * @description A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.
+             *
+             *     Explicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.
              */
             opVaultId?: string | null;
             /**
@@ -1875,12 +1968,19 @@ export interface components {
             judge?: components["schemas"]["RunJudgeSettings"] | null;
             /**
              * Maxcostusd
-             * @description USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.
+             * @description This budget limits model and search charges in USD. New API sessions default to $25. Use $25 as a starting budget unless the user specifies another amount. Follow-ups keep the current budget when you omit this field. An explicit value replaces the current budget. Account credits do not lower this budget.
              */
             maxCostUsd?: number | string | null;
         };
         /** RunCreateResponse */
         RunCreateResponse: {
+            /**
+             * Metadata
+             * @description Caller-supplied labels set on this run. Omitted when there are none.
+             */
+            metadata?: {
+                [key: string]: string;
+            };
             /**
              * Id
              * Format: uuid
@@ -1961,23 +2061,23 @@ export interface components {
          * @description Opt-in LLM judgement of the finished run. Presence of this object turns
          *     the judge on (send {} for defaults); CP judges the run's trajectory after
          *     it goes terminal and surfaces the verdict as RunSummary.judgement (null
-         *     until it lands). Judge model choice is being rolled out. Until it is enabled for a project, judge: {} uses gemini-3-flash and non-null model or modelParams return 422. Once enabled, the default is gpt-6.1-terra with {"reasoning":{"effort":"high"}}. Null means omitted. The judge call is billed to the run at the judge model's token prices.
+         *     until it lands). Judge model choice is being rolled out. Until it is enabled for a project, judge: {} uses gemini-3-flash and non-null model or modelParams return 422. Once enabled, the default is gpt-6.1-terra with {"reasoning":{"effort":"high"}}. When the project cannot use gpt-6.1-terra (for example US-only routing), judge: {} uses gemini-3-flash. Null means omitted. The judge call is billed to the run at the judge model's token prices.
          */
         RunJudgeSettings: {
             /** Context */
             context?: string | null;
             /**
              * Model
-             * @description The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. Null means omitted.
+             * @description The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. When the project cannot use gpt-6.1-terra (for example US-only routing), judge: {} uses gemini-3-flash. Null means omitted.
              * @default null
              */
-            model?: ("gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.2-astra" | "gpt-6.2-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash") | null;
+            model: ("gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.2-astra" | "gpt-6.2-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash") | null;
             /**
              * Modelparams
              * @description Optional provider-native request parameters for the judge model. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422. Once enabled, omitted or null applies reasoning effort high where supported, otherwise the model's default parameters; {} leaves provider defaults in place. Unsupported paths or values are rejected with 422. context and service_tier are not supported.
              * @default null
              */
-            modelParams?: {
+            modelParams: {
                 [key: string]: unknown;
             } | null;
         };
@@ -2009,6 +2109,13 @@ export interface components {
         };
         /** RunSummary */
         RunSummary: {
+            /**
+             * Metadata
+             * @description Caller-supplied labels set on this run. Omitted when there are none.
+             */
+            metadata?: {
+                [key: string]: string;
+            };
             /**
              * Id
              * Format: uuid
@@ -2070,6 +2177,9 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+            durationSeconds?: number | null;
+            /** @description Number of recorded LLM calls. */
+            stepCount?: number;
         };
         /**
          * SecretBinding
@@ -2124,7 +2234,7 @@ export interface components {
         SessionCostCapRequest: {
             /**
              * Maxcostusd
-             * @description New total USD budget for the session; spending so far counts against it.
+             * @description This value replaces the session budget in USD. Spending so far counts against this budget. Use the user's chosen budget, or $25 as a starting budget. Preserve a higher existing budget unless the user requests a decrease.
              */
             maxCostUsd: number | string;
         };
@@ -2140,6 +2250,16 @@ export interface components {
              * @description The session budget now applied, in USD.
              */
             maxCostUsd: string;
+        };
+        /** SessionCompactResponse */
+        SessionCompactResponse: {
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Requested */
+            requested: boolean;
         };
         /**
          * SessionCostResponse
@@ -2216,6 +2336,7 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+            durationSeconds?: number | null;
         };
         /**
          * SessionListResponse
@@ -2521,6 +2642,131 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /** BrowserProxyUpdateRequest */
+        BrowserProxyUpdateRequest: {
+            /** @enum {string} */
+            mode?: "managed" | "direct" | "custom";
+            country?: string;
+            target?: string;
+            rotate?: boolean;
+            customProxy?: components["schemas"]["CustomProxy"];
+        };
+        /** BrowserProxyView */
+        BrowserProxyView: {
+            /** @enum {string} */
+            mode: "managed" | "direct" | "custom";
+            country: string | null;
+            exitIp: string | null;
+        };
+        /**
+         * NetworkPolicyDomainList
+         * @description A list of domains.
+         */
+        NetworkPolicyDomainList: {
+            /**
+             * Domains
+             * @description Domains such as example.com; each entry also matches its subdomains.
+             */
+            domains?: string[];
+        };
+        /**
+         * NetworkPolicyCreateRequest
+         * @description Request body for creating a network policy.
+         */
+        NetworkPolicyCreateRequest: {
+            /** Name */
+            name: string;
+            /**
+             * Defaultaction
+             * @description Action for a domain that no list entry matches.
+             * @default allow
+             * @enum {string}
+             */
+            defaultAction: "allow" | "block";
+            /** @description Domains to allow. */
+            allow?: components["schemas"]["NetworkPolicyDomainList"];
+            /** @description Domains to block. */
+            block?: components["schemas"]["NetworkPolicyDomainList"];
+        };
+        /**
+         * NetworkPolicyUpdateRequest
+         * @description Request body for updating a network policy; omitted fields keep their values.
+         */
+        NetworkPolicyUpdateRequest: {
+            /** Name */
+            name?: string;
+            /**
+             * Defaultaction
+             * @description Action for a domain that no list entry matches.
+             * @enum {string}
+             */
+            defaultAction?: "allow" | "block";
+            /** @description Replaces the allowed domains. */
+            allow?: components["schemas"]["NetworkPolicyDomainList"];
+            /** @description Replaces the blocked domains. */
+            block?: components["schemas"]["NetworkPolicyDomainList"];
+        };
+        /**
+         * NetworkPolicyView
+         * @description A network policy with normalized domains.
+         */
+        NetworkPolicyView: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Defaultaction
+             * @description Action for a domain that no list entry matches.
+             * @enum {string}
+             */
+            defaultAction: "allow" | "block";
+            allow: components["schemas"]["NetworkPolicyDomainList"];
+            block: components["schemas"]["NetworkPolicyDomainList"];
+            /**
+             * Version
+             * @description Starts at 1 and increases by 1 with each update.
+             */
+            version: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /**
+         * NetworkPolicyListResponse
+         * @description A page of network policies.
+         */
+        NetworkPolicyListResponse: {
+            /** Items */
+            items: components["schemas"]["NetworkPolicyView"][];
+            /** Total Items */
+            totalItems: number;
+            /** Page Number */
+            pageNumber: number;
+            /** Page Size */
+            pageSize: number;
+        };
+        /**
+         * NetworkPolicyNotFoundError
+         * @description Error response when a network policy is not found
+         */
+        NetworkPolicyNotFoundError: {
+            /**
+             * Detail
+             * @default Network policy not found
+             */
+            detail: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -2537,6 +2783,8 @@ export interface operations {
                 /** @description Keyset cursor from a prior response. */
                 cursor?: string | null;
                 sessionId?: string | null;
+                /** @description Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND). */
+                metadata?: string[] | null;
             };
             header?: never;
             path?: never;
@@ -3225,6 +3473,58 @@ export interface operations {
             };
             /** @description Run, session, workspace, or profile not found. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compact_session_sessions__session_id__compact_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionCompactResponse"];
+                };
+            };
+            /** @description Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Run, session, workspace, or profile not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The session has no running run, or that run did not start with modelParams.context. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3969,35 +4269,6 @@ export interface operations {
             };
         };
     };
-    list_agentcard_wallets_agentcard_wallets_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AgentCardWalletListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     get_stripe_link_status_stripe_link_get: {
         parameters: {
             query?: never;
@@ -4546,6 +4817,110 @@ export interface operations {
             };
         };
     };
+    get_browser_session_proxy_browsers__session_id__proxy_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserProxyView"];
+                };
+            };
+            /** @description Browser not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Browser proxy unavailable */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Browser proxy driver failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_browser_session_proxy_browsers__session_id__proxy_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BrowserProxyUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserProxyView"];
+                };
+            };
+            /** @description Browser not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Browser proxy unavailable */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Browser proxy driver failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     list_browser_session_downloads_browsers__session_id__downloads_get: {
         parameters: {
             query?: {
@@ -4765,6 +5140,184 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileNotFoundError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_network_policies_network_policies_get: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                pageNumber?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkPolicyListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_network_policy_network_policies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NetworkPolicyCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkPolicyView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_network_policy_network_policies__policy_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkPolicyView"];
+                };
+            };
+            /** @description Network policy not found, deleted, or owned by another project. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkPolicyNotFoundError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_network_policy_network_policies__policy_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_network_policy_network_policies__policy_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NetworkPolicyUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkPolicyView"];
+                };
+            };
+            /** @description Network policy not found, deleted, or owned by another project. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkPolicyNotFoundError"];
                 };
             };
             /** @description Validation Error */

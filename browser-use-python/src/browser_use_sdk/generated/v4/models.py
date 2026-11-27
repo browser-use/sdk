@@ -29,16 +29,6 @@ class APIKeySpendLimitError(BaseModel):
     detail: str | APIKeySpendLimitDetail = Field(..., title='Detail')
 
 
-class AgentCardWalletSummary(BaseModel):
-    id: UUID = Field(..., title='Id')
-    name: str = Field(..., title='Name')
-    currency: str = Field(..., title='Currency')
-    available_cents: int = Field(..., alias='availableCents', title='Availablecents')
-    active_hold_cents: int = Field(
-        ..., alias='activeHoldCents', title='Activeholdcents'
-    )
-
-
 class AuthorizeResponse(BaseModel):
     redirect_url: str = Field(..., title='Redirect Url')
     provider: str = Field(..., title='Provider')
@@ -110,6 +100,10 @@ class BrowserSessionView(BaseModel):
     model_config = ConfigDict(
         regex_engine="python-re",
     )
+    solve_captchas: bool | None = Field(
+        None, alias='solveCaptchas', description='Effective CAPTCHA solving setting.'
+    )
+    profile_id: UUID | None = Field(None, alias='profileId')
     id: UUID = Field(..., description='Unique identifier for the session', title='ID')
     status: BrowserSessionStatus = Field(
         ...,
@@ -226,7 +220,7 @@ class Username(RootModel[str]):
     root: str = Field(
         ...,
         description='Username for proxy authentication.',
-        max_length=255,
+        max_length=2048,
         min_length=1,
         title='Username',
     )
@@ -236,9 +230,34 @@ class Password(RootModel[str]):
     root: str = Field(
         ...,
         description='Password for proxy authentication.',
-        max_length=255,
+        max_length=8192,
         min_length=1,
         title='Password',
+    )
+
+
+class Protocol(Enum):
+    http = 'http'
+    https = 'https'
+
+
+class CaBundle(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='PEM certificates that the browser and the proxy connection trust in addition to the public roots, such as the CA of a TLS-intercepting proxy. Other sites keep full certificate checks.',
+        max_length=16384,
+        min_length=1,
+        title='CA Bundle',
+    )
+
+
+class CaBundleUrl(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='HTTPS URL of PEM certificates that Browser Use downloads and trusts in the same way as caBundle. Send either caBundle or caBundleUrl.',
+        max_length=2048,
+        min_length=1,
+        title='CA Bundle URL',
     )
 
 
@@ -264,6 +283,23 @@ class CustomProxy(BaseModel):
         alias='ignoreCertErrors',
         description='Ignore TLS certificate errors. Enable this if your proxy uses a self-signed or untrusted certificate (e.g. Burp Suite, corporate proxies).',
         title='Ignore Certificate Errors',
+    )
+    protocol: Protocol | None = Field(
+        None,
+        description='Protocol of the connection to the proxy. Use https for a proxy that accepts only TLS. Defaults to https on port 443 and to http on other ports.',
+        title='Protocol',
+    )
+    ca_bundle: CaBundle | None = Field(
+        None,
+        alias='caBundle',
+        description='PEM certificates that the browser and the proxy connection trust in addition to the public roots, such as the CA of a TLS-intercepting proxy. Other sites keep full certificate checks.',
+        title='CA Bundle',
+    )
+    ca_bundle_url: CaBundleUrl | None = Field(
+        None,
+        alias='caBundleUrl',
+        description='HTTPS URL of PEM certificates that Browser Use downloads and trusts in the same way as caBundle. Send either caBundle or caBundleUrl.',
+        title='CA Bundle URL',
     )
 
 
@@ -327,10 +363,10 @@ class OnePasswordSecretSource(BaseModel):
         extra='forbid',
     )
     type: Literal['onepassword'] = Field(..., title='Type')
-    integration_id: UUID = Field(
-        ...,
+    integration_id: UUID | None = Field(
+        None,
         alias='integrationId',
-        description='1Password integration to resolve through. Must belong to this project.',
+        description='1Password integration to resolve through. Must belong to this project. Optional when the project has exactly one active 1Password integration.',
         title='Integrationid',
     )
     vault_id: str = Field(
@@ -684,7 +720,7 @@ class AttachedFileIds(RootModel[List[UUID]]):
     root: List[UUID] = Field(..., max_length=20, title='Attachedfileids')
 
 
-class QueueMessageRequest(BaseModel):
+class QueueMessageRequest1(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
@@ -693,11 +729,46 @@ class QueueMessageRequest(BaseModel):
     attached_file_ids: AttachedFileIds | None = Field(
         None, alias='attachedFileIds', title='Attachedfileids'
     )
+    confirm_input_id: int | None = Field(
+        None,
+        alias='confirmInputId',
+        description='Explicitly authorize a new execution of this pending instruction. It may have run previously and the new execution may incur charges. Cannot be combined with text, interrupt, or attachedFileIds.',
+        ge=1,
+        le=2147483647,
+    )
+
+
+class QueueMessageRequest2(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    text: str | None = Field(None, min_length=1, title='Text')
+    interrupt: bool | None = Field(False, title='Interrupt')
+    attached_file_ids: AttachedFileIds | None = Field(
+        None, alias='attachedFileIds', title='Attachedfileids'
+    )
+    confirm_input_id: int = Field(
+        ...,
+        alias='confirmInputId',
+        description='Explicitly authorize a new execution of this pending instruction. It may have run previously and the new execution may incur charges. Cannot be combined with text, interrupt, or attachedFileIds.',
+        ge=1,
+        le=2147483647,
+    )
+
+
+class QueueMessageRequest(RootModel[QueueMessageRequest1 | QueueMessageRequest2]):
+    root: QueueMessageRequest1 | QueueMessageRequest2 = Field(
+        ...,
+        description="Send a message to a session. If the session is busy the message waits on\nthe queue and runs as the next turn; if idle it runs immediately.\n\nSet `interrupt` to make it take effect now: the session's active run is\ncancelled and this message drains straight after. Interrupt is a no-op when\nthe session is already idle, and BEST-EFFORT when busy — if the cancel can't\nbe delivered, the message stays queued and runs after the current turn.",
+        title='QueueMessageRequest',
+    )
 
 
 class Mode(Enum):
     queue = 'queue'
+    steer = 'steer'
     interrupt = 'interrupt'
+    confirmed = 'confirmed'
 
 
 class Status(Enum):
@@ -720,6 +791,14 @@ class QueuedMessage(BaseModel):
         None, alias='attachedFileIds', title='Attachedfileids'
     )
     created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
+    needs_confirmation: bool = Field(
+        ...,
+        alias='needsConfirmation',
+        description='This pending instruction is held until explicitly reviewed and authorized for a new execution.',
+    )
+    reason: str | None = Field(
+        None, description='Why the pending instruction needs confirmation.'
+    )
 
 
 class Status1(Enum):
@@ -765,21 +844,32 @@ class RunBrowserSettings(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
+    solve_captchas: bool | None = Field(
+        True,
+        alias='solveCaptchas',
+        description='Solve CAPTCHAs on new browsers except ultrafast/EU; some projects cannot use this field yet and return 422.',
+    )
     profile_id: UUID | None = Field(
         None,
         alias='profileId',
         description='ID of a browser profile to load into the session. Profiles persist cookies, local storage, and other browser state across sessions.',
         title='Profileid',
     )
+    network_policy_id: UUID | None = Field(
+        None,
+        alias='networkPolicyId',
+        description='ID of a network policy that allows or blocks domains for this browser. Policy changes reach the browser within seconds. When the field is absent, the run keeps the policy of the session.',
+        title='Networkpolicyid',
+    )
     proxy_country_code: ProxyCountryCode | None = Field(
         ProxyCountryCode.us,
         alias='proxyCountryCode',
-        description='ISO country code to proxy the browser through. Defaults to US. Pass null to run without a proxy.',
+        description='ISO country code to proxy the browser through. Defaults to US, or to no proxy for new bu-ultrafast and bu-fast sessions. Pass null to run without a proxy.',
     )
     custom_proxy: CustomProxy | None = Field(
         None,
         alias='customProxy',
-        description='Custom proxy for the browser. Overrides proxyCountryCode. Never stored or inherited by follow-up runs; pass it on each run that should use it.',
+        description='Custom proxy for the browser. Overrides proxyCountryCode. Custom proxies are an enterprise feature: contact sales@browser-use.com to enable them. Never stored or inherited by follow-up runs; pass it on each run that should use it.',
     )
     screen_width: ScreenWidth | None = Field(
         None,
@@ -821,7 +911,6 @@ class Model(Enum):
     grok_4_5 = 'grok-4.5'
     grok_4_6 = 'grok-4.6'
     glm_5_3_flash = 'glm-5.3-flash'
-    deepseek_v4_flash_vision = 'deepseek-v4-flash-vision'
     kimi_k3 = 'kimi-k3'
     minimax_m3 = 'minimax-m3'
     claude_opus_4_7 = 'claude-opus-4.7'
@@ -838,6 +927,7 @@ class Model(Enum):
     gpt_6_2_astra = 'gpt-6.2-astra'
     gpt_6_2_sol = 'gpt-6.2-sol'
     gpt_6_1_sol = 'gpt-6.1-sol'
+    gpt_6_1_terra = 'gpt-6.1-terra'
     gpt_6_luna = 'gpt-6-luna'
     gpt_5_6_sol = 'gpt-5.6-sol'
     gpt_5_6_terra = 'gpt-5.6-terra'
@@ -860,7 +950,7 @@ class KeepAlive(RootModel[int]):
     )
 
 
-class AttachedFileIds1(RootModel[List[UUID]]):
+class AttachedFileIds2(RootModel[List[UUID]]):
     root: List[UUID] = Field(
         ...,
         description='Upload ids from POST /workspaces/{workspace_id}/files/upload to show the agent in this run only. Ids that cannot be confirmed are reported, not fatal.',
@@ -872,7 +962,7 @@ class AttachedFileIds1(RootModel[List[UUID]]):
 class OpVaultId(RootModel[str]):
     root: str = Field(
         ...,
-        description="A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.",
+        description="A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.",
         max_length=64,
         title='Opvaultid',
     )
@@ -881,7 +971,7 @@ class OpVaultId(RootModel[str]):
 class MaxCostUsd(RootModel[float]):
     root: float = Field(
         ...,
-        description='USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.',
+        description='This budget limits model and search charges in USD. New API sessions default to $25. Use $25 as a starting budget unless the user specifies another amount. Follow-ups keep the current budget when you omit this field. An explicit value replaces the current budget. Account credits do not lower this budget.',
         gt=0.0,
         title='Maxcostusd',
     )
@@ -893,7 +983,7 @@ class MaxCostUsd1(RootModel[str]):
     )
     root: str = Field(
         ...,
-        description='USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.',
+        description='This budget limits model and search charges in USD. New API sessions default to $25. Use $25 as a starting budget unless the user specifies another amount. Follow-ups keep the current budget when you omit this field. An explicit value replaces the current budget. Account credits do not lower this budget.',
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Maxcostusd',
     )
@@ -909,6 +999,11 @@ class Status2(Enum):
 
 
 class RunCreateResponse(BaseModel):
+    metadata: Dict[str, str] | None = Field(
+        None,
+        description='Caller-supplied labels set on this run. Omitted when there are none.',
+        title='Metadata',
+    )
     id: UUID = Field(..., title='Id')
     status: Status2 = Field(..., title='Status')
     model: str = Field(..., title='Model')
@@ -974,7 +1069,7 @@ class RunJudgeSettings(BaseModel):
     context: Context | None = Field(None, title='Context')
     model: Model1 | None = Field(
         None,
-        description='The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. Null means omitted.',
+        description='The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. When the project cannot use gpt-6.1-terra (for example US-only routing), judge: {} uses gemini-3-flash. Null means omitted.',
         title='Model',
     )
     model_params: Dict[str, Any] | None = Field(
@@ -990,6 +1085,11 @@ class RunStatusResponse(BaseModel):
 
 
 class RunSummary(BaseModel):
+    metadata: Dict[str, str] | None = Field(
+        None,
+        description='Caller-supplied labels set on this run. Omitted when there are none.',
+        title='Metadata',
+    )
     id: UUID = Field(..., title='Id')
     task: str = Field(..., title='Task')
     title: str | None = Field(..., title='Title')
@@ -1020,6 +1120,10 @@ class RunSummary(BaseModel):
     total_cost_usd: str = Field(..., alias='totalCostUsd', title='Totalcostusd')
     created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
     updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
+    duration_seconds: float | None = Field(None, alias='durationSeconds')
+    step_count: int | None = Field(
+        None, alias='stepCount', description='Number of recorded LLM calls.'
+    )
 
 
 class SecretBinding(BaseModel):
@@ -1056,7 +1160,7 @@ class SessionBudgetResponse(BaseModel):
 class MaxCostUsd2(RootModel[float]):
     root: float = Field(
         ...,
-        description='New total USD budget for the session; spending so far counts against it.',
+        description="This value replaces the session budget in USD. Spending so far counts against this budget. Use the user's chosen budget, or $25 as a starting budget. Preserve a higher existing budget unless the user requests a decrease.",
         gt=0.0,
         title='Maxcostusd',
     )
@@ -1068,7 +1172,7 @@ class MaxCostUsd3(RootModel[str]):
     )
     root: str = Field(
         ...,
-        description='New total USD budget for the session; spending so far counts against it.',
+        description="This value replaces the session budget in USD. Spending so far counts against this budget. Use the user's chosen budget, or $25 as a starting budget. Preserve a higher existing budget unless the user requests a decrease.",
         pattern='^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$',
         title='Maxcostusd',
     )
@@ -1081,7 +1185,7 @@ class SessionCostCapRequest(BaseModel):
     max_cost_usd: MaxCostUsd2 | MaxCostUsd3 = Field(
         ...,
         alias='maxCostUsd',
-        description='New total USD budget for the session; spending so far counts against it.',
+        description="This value replaces the session budget in USD. Spending so far counts against this budget. Use the user's chosen budget, or $25 as a starting budget. Preserve a higher existing budget unless the user requests a decrease.",
         title='Maxcostusd',
     )
 
@@ -1094,6 +1198,11 @@ class SessionCostCapResponse(BaseModel):
         description='The session budget now applied, in USD.',
         title='Maxcostusd',
     )
+
+
+class SessionCompactResponse(BaseModel):
+    session_id: UUID = Field(..., alias='sessionId', title='Sessionid')
+    requested: bool = Field(..., title='Requested')
 
 
 class SessionCostResponse(BaseModel):
@@ -1116,6 +1225,7 @@ class SessionInfo(BaseModel):
     status: Status2 = Field(..., title='Status')
     created_at: AwareDatetime = Field(..., alias='createdAt', title='Createdat')
     updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updatedat')
+    duration_seconds: float | None = Field(None, alias='durationSeconds')
 
 
 class SessionListResponse(BaseModel):
@@ -1323,14 +1433,116 @@ class WorkspaceUpdateRequest(BaseModel):
     name: Name2 | None = Field(None, title='Name')
 
 
-class AgentCardWalletListResponse(BaseModel):
-    wallets: List[AgentCardWalletSummary] = Field(..., title='Wallets')
+class Mode2(Enum):
+    managed = 'managed'
+    direct = 'direct'
+    custom = 'custom'
+
+
+class BrowserProxyUpdateRequest(BaseModel):
+    mode: Mode2 | None = None
+    country: str | None = None
+    target: str | None = None
+    rotate: bool | None = None
+    custom_proxy: CustomProxy | None = Field(None, alias='customProxy')
+
+
+class BrowserProxyView(BaseModel):
+    mode: Mode2
+    country: str | None = None
+    exit_ip: str | None = Field(..., alias='exitIp')
+
+
+class NetworkPolicyDomainList(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    domains: List[str] | None = Field(
+        None,
+        description='Domains such as example.com; each entry also matches its subdomains.',
+        max_length=10000,
+        title='Domains',
+    )
+
+
+class DefaultAction(Enum):
+    allow = 'allow'
+    block = 'block'
+
+
+class NetworkPolicyCreateRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    name: str = Field(..., max_length=100, min_length=1, title='Name')
+    default_action: DefaultAction | None = Field(
+        DefaultAction.allow,
+        alias='defaultAction',
+        description='Action for a domain that no list entry matches.',
+        title='Defaultaction',
+    )
+    allow: NetworkPolicyDomainList | None = Field(None, description='Domains to allow.')
+    block: NetworkPolicyDomainList | None = Field(None, description='Domains to block.')
+
+
+class NetworkPolicyUpdateRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    name: str | None = Field(None, max_length=100, min_length=1, title='Name')
+    default_action: DefaultAction | None = Field(
+        DefaultAction.allow,
+        alias='defaultAction',
+        description='Action for a domain that no list entry matches.',
+        title='Defaultaction',
+    )
+    allow: NetworkPolicyDomainList | None = Field(
+        None, description='Replaces the allowed domains.'
+    )
+    block: NetworkPolicyDomainList | None = Field(
+        None, description='Replaces the blocked domains.'
+    )
+
+
+class NetworkPolicyView(BaseModel):
+    id: UUID = Field(..., title='Id')
+    name: str = Field(..., title='Name')
+    default_action: DefaultAction = Field(
+        ...,
+        alias='defaultAction',
+        description='Action for a domain that no list entry matches.',
+        title='Defaultaction',
+    )
+    allow: NetworkPolicyDomainList
+    block: NetworkPolicyDomainList
+    version: int = Field(
+        ...,
+        description='Starts at 1 and increases by 1 with each update.',
+        title='Version',
+    )
+    created_at: AwareDatetime = Field(..., alias='createdAt', title='Created At')
+    updated_at: AwareDatetime = Field(..., alias='updatedAt', title='Updated At')
+
+
+class NetworkPolicyListResponse(BaseModel):
+    items: List[NetworkPolicyView] = Field(..., title='Items')
+    total_items: int = Field(..., alias='totalItems', title='Total Items')
+    page_number: int = Field(..., alias='pageNumber', title='Page Number')
+    page_size: int = Field(..., alias='pageSize', title='Page Size')
+
+
+class NetworkPolicyNotFoundError(BaseModel):
+    detail: str | None = Field('Network policy not found', title='Detail')
 
 
 class BrowserSessionItemView(BaseModel):
     model_config = ConfigDict(
         regex_engine="python-re",
     )
+    solve_captchas: bool | None = Field(
+        None, alias='solveCaptchas', description='Effective CAPTCHA solving setting.'
+    )
+    profile_id: UUID | None = Field(None, alias='profileId')
     id: UUID = Field(..., description='Unique identifier for the session', title='ID')
     status: BrowserSessionStatus = Field(
         ...,
@@ -1439,6 +1651,12 @@ class CreateBrowserSessionRequest(BaseModel):
         description='The ID of the profile to use for the session',
         title='Profile ID',
     )
+    network_policy_id: UUID | None = Field(
+        None,
+        alias='networkPolicyId',
+        description='ID of a network policy that allows or blocks domains for this browser. Policy changes reach the browser within seconds.',
+        title='Networkpolicyid',
+    )
     proxy_country_code: ProxyCountryCode | None = Field(
         ProxyCountryCode.us,
         alias='proxyCountryCode',
@@ -1488,7 +1706,7 @@ class CreateBrowserSessionRequest(BaseModel):
     custom_proxy: CustomProxy | None = Field(
         None,
         alias='customProxy',
-        description='Custom proxy settings to use for the session. If not provided, our proxies will be used.',
+        description='Custom proxy settings to use for the session. If not provided, our proxies will be used. Custom proxies are an enterprise feature: contact sales@browser-use.com to enable them.',
         title='Custom Proxy',
     )
     enable_recording: bool | None = Field(
@@ -1561,7 +1779,7 @@ class QueueListResponse(BaseModel):
 class SecretBindings(RootModel[List[SecretBinding]]):
     root: List[SecretBinding] = Field(
         ...,
-        description='Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run.',
+        description='Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.',
         max_length=20,
         title='Secretbindings',
     )
@@ -1570,6 +1788,11 @@ class SecretBindings(RootModel[List[SecretBinding]]):
 class RunCreateRequest(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
+    )
+    metadata: Dict[str, str] | None = Field(
+        None,
+        description='Labels for this run. Up to 10 key-value pairs. Filterable on the runs list and in the dashboard history.',
+        title='Metadata',
     )
     task: str = Field(
         ...,
@@ -1585,13 +1808,13 @@ class RunCreateRequest(BaseModel):
     )
     model: Model | None = Field(
         Model.gpt_6_luna,
-        description='bu-ultrafast and bu-fast are early-access ultrafast presets; they take no modelParams and are rejected for projects without access.',
+        description='bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams. gpt-6.2-astra and gpt-6.2-sol run in the US region only.',
         title='Model',
     )
     model_params: Dict[str, Any] | None = Field(
         None,
         alias='modelParams',
-        description='Optional provider-native request parameters for the selected model, written with the provider\'s own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model\'s default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider\'s own defaults in place.',
+        description='Optional provider-native request parameters for the selected model, written with the provider\'s own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model\'s default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider\'s own defaults in place. On OpenAI models, {"service_tier": "priority"} (alias "fast") requests Fast processing at a higher token price; sent alone it keeps the model\'s default parameters. Beta: {"context": {"keepScreenshots": "2", "trimAtTokens": "80000", "compactAtTokens": "125000"}} controls what the agent keeps in context for the run: trimAtTokens clears old screenshots and tool output in one batch at that mark (keepScreenshots, which needs it, sets how many recent screenshots stay), and compactAtTokens compacts earlier. Values are strings from short per-model lists; like service_tier it keeps the model\'s default parameters.',
         title='Modelparams',
     )
     session_id: UUID | None = Field(
@@ -1622,19 +1845,13 @@ class RunCreateRequest(BaseModel):
         description='If true, provisions a persistent temporary email inbox (via AgentMail) for the run workspace. The agent receives the email address in its context and can send, receive, read, and reply to email. Set false to disable AgentMail for this run.',
         title='Agentmail',
     )
-    agentcard_wallet_id: UUID | None = Field(
-        None,
-        alias='agentcardWalletId',
-        description="AgentCard wallet this run may spend from via single-use virtual cards. Must be an active wallet in your project. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's grant.",
-        title='Agentcardwalletid',
-    )
     stripe_link_connection_id: UUID | None = Field(
         None,
         alias='stripeLinkConnectionId',
         description="Stripe Link connection (from GET /stripe-link) this run may pay with. A follow-up POST /runs must send it again; queued messages (POST /sessions/{session_id}/queue) keep the previous run's connection.",
         title='Stripelinkconnectionid',
     )
-    attached_file_ids: AttachedFileIds1 | None = Field(
+    attached_file_ids: AttachedFileIds2 | None = Field(
         None,
         alias='attachedFileIds',
         description='Upload ids from POST /workspaces/{workspace_id}/files/upload to show the agent in this run only. Ids that cannot be confirmed are reported, not fatal.',
@@ -1643,13 +1860,13 @@ class RunCreateRequest(BaseModel):
     secret_bindings: SecretBindings | None = Field(
         None,
         alias='secretBindings',
-        description='Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run.',
+        description='Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.',
         title='Secretbindings',
     )
     op_vault_id: OpVaultId | None = Field(
         None,
         alias='opVaultId',
-        description="A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.",
+        description="A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422.",
         title='Opvaultid',
     )
     op_vault_allowed_domains: List[str] | None = Field(
@@ -1665,7 +1882,7 @@ class RunCreateRequest(BaseModel):
     max_cost_usd: MaxCostUsd | MaxCostUsd1 | None = Field(
         None,
         alias='maxCostUsd',
-        description='USD spend budget for the session (default 25). The unspent part is capped at your available balance when it can be checked. On a follow-up, a value replaces the session budget and omitting it keeps the current one.',
+        description='This budget limits model and search charges in USD. New API sessions default to $25. Use $25 as a starting budget unless the user specifies another amount. Follow-ups keep the current budget when you omit this field. An explicit value replaces the current budget. Account credits do not lower this budget.',
         title='Maxcostusd',
     )
 

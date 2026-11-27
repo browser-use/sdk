@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
     BrowserDownloadListResponse,
+    BrowserProxyView,
     BrowserSessionItemView,
     BrowserSessionListResponse,
     BrowserSessionView,
     CustomProxy,
+    Mode2 as BrowserProxyMode,
 )
 
 if TYPE_CHECKING:
@@ -19,6 +21,7 @@ if TYPE_CHECKING:
 def _build_create_body(
     *,
     profile_id: str | None = None,
+    network_policy_id: str | UUID | None = None,
     proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
     metadata: dict[str, str] | None = None,
     timeout: int | None = None,
@@ -38,6 +41,8 @@ def _build_create_body(
     body: dict[str, Any] = {}
     if profile_id is not None:
         body["profileId"] = profile_id
+    if network_policy_id is not None:
+        body["networkPolicyId"] = str(network_policy_id)
     if proxy_country_code is not _UNSET:
         body["proxyCountryCode"] = (
             proxy_country_code.lower()
@@ -59,13 +64,36 @@ def _build_create_body(
     if solve_captchas is not None:
         body["solveCaptchas"] = solve_captchas
     if custom_proxy is not None:
-        body["customProxy"] = custom_proxy.model_dump(by_alias=True, exclude_none=True)
+        body["customProxy"] = custom_proxy.model_dump(by_alias=True, exclude_none=True, mode="json")
     if enable_recording is not None:
         body["enableRecording"] = enable_recording
     if extension_ids is not None:
         body["extensionIds"] = extension_ids
     body.update(extra)
     return body
+
+
+def _build_proxy_body(
+    mode: BrowserProxyMode | Literal["managed", "direct", "custom"] | None,
+    country: str | None,
+    target: str | None,
+    rotate: bool | None,
+    custom_proxy: CustomProxy | None,
+    extra: dict[str, Any],
+) -> dict[str, Any] | None:
+    body: dict[str, Any] = {}
+    if mode is not None:
+        body["mode"] = mode.value if isinstance(mode, BrowserProxyMode) else mode
+    if country is not None:
+        body["country"] = country
+    if target is not None:
+        body["target"] = target
+    if rotate is not None:
+        body["rotate"] = rotate
+    if custom_proxy is not None:
+        body["customProxy"] = custom_proxy.model_dump(by_alias=True, exclude_none=True, mode="json")
+    body.update(extra)
+    return body or None
 
 
 class Browsers:
@@ -76,6 +104,7 @@ class Browsers:
         self,
         *,
         profile_id: str | None = None,
+        network_policy_id: str | UUID | None = None,
         proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         metadata: dict[str, str] | None = None,
         timeout: int | None = None,
@@ -92,6 +121,7 @@ class Browsers:
         """Create a new standalone browser session."""
         body = _build_create_body(
             profile_id=profile_id,
+            network_policy_id=network_policy_id,
             proxy_country_code=proxy_country_code,
             metadata=metadata,
             timeout=timeout,
@@ -149,6 +179,29 @@ class Browsers:
             self._http.request("GET", f"/browsers/{session_id}")
         )
 
+    def get_proxy(self, session_id: str | UUID) -> BrowserProxyView:
+        """Get the proxy for a browser session."""
+        return BrowserProxyView.model_validate(
+            self._http.request("GET", f"/browsers/{session_id}/proxy")
+        )
+
+    def update_proxy(
+        self,
+        session_id: str | UUID,
+        *,
+        mode: BrowserProxyMode | Literal["managed", "direct", "custom"] | None = None,
+        country: str | None = None,
+        target: str | None = None,
+        rotate: bool | None = None,
+        custom_proxy: CustomProxy | None = None,
+        **extra: Any,
+    ) -> BrowserProxyView:
+        """Update the proxy for a browser session."""
+        body = _build_proxy_body(mode, country, target, rotate, custom_proxy, extra)
+        return BrowserProxyView.model_validate(
+            self._http.request("PATCH", f"/browsers/{session_id}/proxy", json=body)
+        )
+
     def downloads(
         self,
         session_id: str | UUID,
@@ -179,6 +232,7 @@ class AsyncBrowsers:
         self,
         *,
         profile_id: str | None = None,
+        network_policy_id: str | UUID | None = None,
         proxy_country_code: str | None = _UNSET,  # type: ignore[assignment]
         metadata: dict[str, str] | None = None,
         timeout: int | None = None,
@@ -195,6 +249,7 @@ class AsyncBrowsers:
         """Create a new standalone browser session."""
         body = _build_create_body(
             profile_id=profile_id,
+            network_policy_id=network_policy_id,
             proxy_country_code=proxy_country_code,
             metadata=metadata,
             timeout=timeout,
@@ -250,6 +305,29 @@ class AsyncBrowsers:
         """Get a browser session, including its recording URL when ready."""
         return BrowserSessionView.model_validate(
             await self._http.request("GET", f"/browsers/{session_id}")
+        )
+
+    async def get_proxy(self, session_id: str | UUID) -> BrowserProxyView:
+        """Get the proxy for a browser session."""
+        return BrowserProxyView.model_validate(
+            await self._http.request("GET", f"/browsers/{session_id}/proxy")
+        )
+
+    async def update_proxy(
+        self,
+        session_id: str | UUID,
+        *,
+        mode: BrowserProxyMode | Literal["managed", "direct", "custom"] | None = None,
+        country: str | None = None,
+        target: str | None = None,
+        rotate: bool | None = None,
+        custom_proxy: CustomProxy | None = None,
+        **extra: Any,
+    ) -> BrowserProxyView:
+        """Update the proxy for a browser session."""
+        body = _build_proxy_body(mode, country, target, rotate, custom_proxy, extra)
+        return BrowserProxyView.model_validate(
+            await self._http.request("PATCH", f"/browsers/{session_id}/proxy", json=body)
         )
 
     async def downloads(
