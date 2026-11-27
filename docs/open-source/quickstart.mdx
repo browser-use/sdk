@@ -42,7 +42,7 @@ The key runs the default model, cloud browsers, web search, the CLI and the MCP 
 
 Prefer to sign in from the terminal? Run `browser-use login` (with uv: `uv run browser-use login`). It opens your browser and stores the key in `~/.config/browser-harness/auth.json` (over SSH, add `--device-code`). When `BROWSER_USE_API_KEY` is set, it wins over the stored key.
 
-No key yet? An interactive run on a desktop (macOS, Windows, or Linux with a desktop session) opens the Browser Use sign-in once and continues the run after you approve; the key is saved to the same store as `browser-use login`. CI, notebooks, piped input and headless servers keep the missing-key error. Set `BROWSER_USE_AUTO_LOGIN=false` to turn automatic sign-in off.
+Without a key, an interactive desktop run opens Browser Use login and continues after approval. Login creates and saves the key automatically. Set `BROWSER_USE_AUTO_LOGIN=false` to disable this. Servers, CI, notebooks and piped input keep the missing-key error and terminal login instructions.
 
 ## 3. Run an agent
 
@@ -64,7 +64,7 @@ python agent.py
 ```
 </CodeGroup>
 
-This runs `bu-4.0` (BU 4.0) on the Browser Use gateway and drives a Browser Use Cloud browser, which stops when the run ends.
+This runs `bu-4.0` (BU 4.0) on the Browser Use gateway and drives a Browser Use Cloud browser, which stops when the run ends. The browser prints its live view URL to stderr; `Browser(live_view=True)` also opens it, and `Browser(live_view=False)` hides it. Anyone with that URL can control the browser.
 
 In async code, use `await agent.run()`. In a script, start it with `asyncio.run(...)`; in Jupyter, `await agent.run()` directly in a cell.
 
@@ -108,7 +108,7 @@ asyncio.run(main())
 
 ## What it costs
 
-The library is free. The Browser Use model and cloud browsers bill to your Browser Use account; see [pricing](https://browser-use.com/pricing). Every run reports its model cost in `result.cost_usd`.
+The library is free. The Browser Use model and cloud browsers bill to your Browser Use account; see [pricing](https://browser-use.com/pricing). Runs report model and judge costs, plus any web searches, in `result.cost_usd` when model pricing is known; otherwise it is `None`. Cloud browser and proxy charges are separate.
 
 ## Next
 
@@ -126,7 +126,7 @@ The library is free. The Browser Use model and cloud browsers bill to your Brows
     Typed results with `output_model_schema`.
   </Card>
   <Card title="Secrets" icon="key-round" href="/open-source/secrets">
-    Log in without showing passwords to the model.
+    Pass login secrets by name and scope where they can be typed.
   </Card>
   <Card title="Migrating from 0.x" icon="arrow-up-right" href="/open-source/migrating">
     What changed in 1.0.

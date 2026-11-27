@@ -70,7 +70,7 @@ Long runs outgrow the model's context window. The agent compacts its history:
   <img src="/open-source/images/oss-long-tasks-dark.svg" alt="When the history passes 75% of max_context_chars, or 65% of the model's window in tokens, everything before the last two steps is replaced in the next request by one checkpoint: a summary by the same model, the original task verbatim, and the path of an evidence archive in the workspace. The last two steps are sent unchanged. Gateway and OpenAI models compact server-side past 150k tokens instead." noZoom />
 </picture>
 
-`Agent(max_context_chars=...)` has no effect where compaction is server-side. Only the last 2 screenshots stay in context.
+`Agent(max_context_chars=...)` has no effect where compaction is server-side. Once more than 20 tool results contain images, the agent removes images from all but the newest 2 results in one batch. Between batches, images accumulate so the provider can reuse its prompt cache.
 
 ## Retries
 

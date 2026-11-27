@@ -61,6 +61,9 @@ Pass `judge: {}` when creating a run to ask an LLM to evaluate its completed
 trajectory. Add `context` with your evaluation criteria when needed. Omitting
 `judge` or setting it to `null` disables judging.
 
+See [Judge](/cloud/agent/judge) for what the judge checks, including prompt
+injection and reward hacking, and how to read its verdict.
+
 Set `judge.model` to an OpenAI or Google model from the [model list](/cloud/agent/models).
 The default judge model is `gpt-6.1-terra`. Model choice is being rolled out:
 until enabled for your project, `judge: {}` uses `gemini-3-flash`, and non-null

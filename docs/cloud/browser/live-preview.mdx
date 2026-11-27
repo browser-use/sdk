@@ -110,6 +110,20 @@ Omitting it or setting it to `false` keeps
 the viewer interactive, and `/session/{id}` links preserve it when redirecting.
 Like the wrapper, it prevents UI input without changing CDP access permissions.
 
+### Fit the browser to a phone
+
+Add `fit=1` to a `live.browser-use.com` URL to resize the remote browser to the
+preview while it is open, so a phone-sized embed gives responsive sites a phone-width
+viewport (the user agent stays desktop). Create the browser with `allowResizing: true`
+(`browserSettings.allowResizing` on a V4 run): it is off by default because resizing
+makes the browser easier to detect, and without it `fit=1` does nothing.
+
+```javascript
+const previewUrl = new URL(liveViewUrl);
+previewUrl.searchParams.set("fit", "1");
+iframe.src = previewUrl.toString();
+```
+
 ## Recording
 
 Enable recording when the run creates its browser:
