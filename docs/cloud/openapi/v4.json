@@ -62,10 +62,10 @@
                         "description": "Forbidden: the API key lacks the required scope, or the project blocks this request (for example Zero Data Retention or an unavailable model)."
                     },
                     "404": {
-                        "description": "Run, session, workspace, or profile not found."
+                        "description": "Run, session, workspace, or profile not found, or a 1Password secret binding omits integrationId and the project has no active 1Password integration."
                     },
                     "409": {
-                        "description": "The session already has an active run."
+                        "description": "The session already has an active run, or a 1Password secret binding omits integrationId and the project has more than one active 1Password integration."
                     },
                     "429": {
                         "description": "The project is at its concurrent-session limit."
@@ -138,27 +138,6 @@
                             ],
                             "title": "Sessionid"
                         }
-                    },
-                    {
-                        "name": "metadata",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "anyOf": [
-                                {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "description": "Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND).",
-                            "title": "Metadata"
-                        },
-                        "description": "Only runs tagged with every one of these terms. `key` matches any value; `key=value` matches exactly. Repeat the param to require more than one (AND)."
                     }
                 ],
                 "responses": {
@@ -2337,7 +2316,7 @@
                         }
                     },
                     "403": {
-                        "description": "Extensions are not available for Zero Data Retention projects"
+                        "description": "Extensions are not available for Zero Data Retention projects unless they keep profiles"
                     },
                     "413": {
                         "description": "The upload is larger than 100 MiB"
@@ -3808,21 +3787,6 @@
             },
             "BrowserSessionItemView": {
                 "properties": {
-                    "solveCaptchas": {
-                        "type": "boolean",
-                        "description": "Effective CAPTCHA solving setting."
-                    },
-                    "profileId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "format": "uuid"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    },
                     "id": {
                         "type": "string",
                         "format": "uuid",
@@ -4013,21 +3977,6 @@
             },
             "BrowserSessionView": {
                 "properties": {
-                    "solveCaptchas": {
-                        "type": "boolean",
-                        "description": "Effective CAPTCHA solving setting."
-                    },
-                    "profileId": {
-                        "anyOf": [
-                            {
-                                "type": "string",
-                                "format": "uuid"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    },
                     "id": {
                         "type": "string",
                         "format": "uuid",
@@ -5447,11 +5396,6 @@
             },
             "RunBrowserSettings": {
                 "properties": {
-                    "solveCaptchas": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Solve CAPTCHAs on new browsers except ultrafast/EU; some projects cannot use this field yet and return 422."
-                    },
                     "profileId": {
                         "anyOf": [
                             {
@@ -5571,21 +5515,6 @@
             },
             "RunCreateRequest": {
                 "properties": {
-                    "metadata": {
-                        "anyOf": [
-                            {
-                                "additionalProperties": {
-                                    "type": "string"
-                                },
-                                "type": "object"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Metadata",
-                        "description": "Labels for this run. Up to 10 key-value pairs. Filterable on the runs list and in the dashboard history."
-                    },
                     "task": {
                         "type": "string",
                         "minLength": 1,
@@ -5641,11 +5570,13 @@
                             "gemini-3.1-pro",
                             "gemini-3-flash",
                             "bu-ultrafast",
-                            "bu-fast"
+                            "bu-fast",
+                            "bu-4.0-mini",
+                            "bu-4.0",
+                            "bu-4.0-pro"
                         ],
                         "title": "Model",
-                        "description": "bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams. gpt-6.2-astra and gpt-6.2-sol run in the US region only.",
-                        "default": "gpt-6-luna"
+                        "description": "When omitted, US projects created on or after 16 November 2026 use BU 4.0 (High reasoning when modelParams is also omitted). Web app users without a saved model choice start on BU 4.0. Older US projects retain their previous default; EU and Bedrock-only defaults are unchanged. See https://docs.browser-use.com/cloud/agent/models for defaults and availability. bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams."
                     },
                     "modelParams": {
                         "anyOf": [
@@ -5695,7 +5626,7 @@
                                 "type": "null"
                             }
                         ],
-                        "description": "Browser settings. Omitted or null on a follow-up keeps the session's browser."
+                        "description": "Browser settings. Omitted or null on a follow-up keeps the session's browser. For CAPTCHA options, see [CAPTCHA handling](/cloud/browser/captcha-handling)."
                     },
                     "keepAlive": {
                         "anyOf": [
@@ -5761,7 +5692,7 @@
                             }
                         ],
                         "title": "Secretbindings",
-                        "description": "Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422."
+                        "description": "Credentials this run may use without ever seeing them. The agent can ask the server to type a binding by alias on one of its allowed domains; it cannot read the value. Bindings are not persisted past the run."
                     },
                     "opVaultId": {
                         "anyOf": [
@@ -5774,7 +5705,7 @@
                             }
                         ],
                         "title": "Opvaultid",
-                        "description": "A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed.\n\nExplicit secretBindings and fields from opVaultId share a limit of 20 bindings per run. Each credential field counts as one binding. A username, password, and one-time password from one item count as three bindings. The API rejects requests above this limit with HTTP 422."
+                        "description": "A 1Password vault id whose items become typed secrets for this run. The project's connected 1Password integration is resolved server-side; no per-item ids are needed."
                     },
                     "opVaultAllowedDomains": {
                         "anyOf": [
@@ -5829,14 +5760,6 @@
             },
             "RunCreateResponse": {
                 "properties": {
-                    "metadata": {
-                        "additionalProperties": {
-                            "type": "string"
-                        },
-                        "type": "object",
-                        "title": "Metadata",
-                        "description": "Caller-supplied labels set on this run. Omitted when there are none."
-                    },
                     "id": {
                         "type": "string",
                         "format": "uuid",
@@ -6036,7 +5959,7 @@
                         ],
                         "default": null,
                         "title": "Model",
-                        "description": "The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. When the project cannot use gpt-6.1-terra (for example US-only routing), judge: {} uses gemini-3-flash. Null means omitted."
+                        "description": "The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. Null means omitted."
                     },
                     "modelParams": {
                         "anyOf": [
@@ -6056,7 +5979,7 @@
                 "additionalProperties": false,
                 "type": "object",
                 "title": "RunJudgeSettings",
-                "description": "Opt-in LLM judgement of the finished run. Presence of this object turns\nthe judge on (send {} for defaults); CP judges the run's trajectory after\nit goes terminal and surfaces the verdict as RunSummary.judgement (null\nuntil it lands). Judge model choice is being rolled out. Until it is enabled for a project, judge: {} uses gemini-3-flash and non-null model or modelParams return 422. Once enabled, the default is gpt-6.1-terra with {\"reasoning\":{\"effort\":\"high\"}}. When the project cannot use gpt-6.1-terra (for example US-only routing), judge: {} uses gemini-3-flash. Null means omitted. The judge call is billed to the run at the judge model's token prices."
+                "description": "Opt-in LLM judgement of the finished run. Presence of this object turns\nthe judge on (send {} for defaults); CP judges the run's trajectory after\nit goes terminal and surfaces the verdict as RunSummary.judgement (null\nuntil it lands). Judge model choice is being rolled out. Until it is enabled for a project, judge: {} uses gemini-3-flash and non-null model or modelParams return 422. Once enabled, the default is gpt-6.1-terra with {\"reasoning\":{\"effort\":\"high\"}}. Null means omitted. The judge call is billed to the run at the judge model's token prices."
             },
             "RunListResponse": {
                 "properties": {
@@ -6114,14 +6037,6 @@
             },
             "RunSummary": {
                 "properties": {
-                    "metadata": {
-                        "additionalProperties": {
-                            "type": "string"
-                        },
-                        "type": "object",
-                        "title": "Metadata",
-                        "description": "Caller-supplied labels set on this run. Omitted when there are none."
-                    },
                     "id": {
                         "type": "string",
                         "format": "uuid",
@@ -6282,20 +6197,6 @@
                         "type": "string",
                         "format": "date-time",
                         "title": "Updatedat"
-                    },
-                    "durationSeconds": {
-                        "anyOf": [
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
-                    },
-                    "stepCount": {
-                        "type": "integer",
-                        "description": "Number of recorded LLM calls."
                     }
                 },
                 "type": "object",
@@ -6576,16 +6477,6 @@
                         "type": "string",
                         "format": "date-time",
                         "title": "Updatedat"
-                    },
-                    "durationSeconds": {
-                        "anyOf": [
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
                     }
                 },
                 "type": "object",
