@@ -17,6 +17,7 @@ Read the complete error response before changing billing settings:
 | --- | --- |
 | 401 | Send `X-Browser-Use-API-Key`; do not put the API key in a Bearer header. |
 | 402 | Distinguish insufficient project credits from `api_key_monthly_spend_limit_reached`. A top-up does not raise a key's spending cap. |
+| 403 `Custom proxies are an enterprise feature` | The project has no custom proxy access. Email [sales@browser-use.com](mailto:sales@browser-use.com) to enable it, or drop `customProxy` to use the managed proxy. See [Custom proxy](/cloud/browser/proxies#custom-proxy). |
 | 403 `API key is missing required scope: v4:runs:create` | The key is restricted. Create a key that includes that resource, or use a full-access key. See [restricted API keys](#restricted-api-keys). |
 | 404 for a profile/workspace/session | Check the ID type, API version, and owning project. An ID visible in one dashboard project may be inaccessible to another key. |
 | 409 | Check the detail: a busy conversation and a workspace-file overwrite conflict require different actions. |
@@ -47,8 +48,8 @@ a new key with the permissions you need.
 ## Why am I charged when I bring my own key or proxy?
 
 BYOK means your model provider bills its tokens. Browser Use still charges
-orchestration plus browser and network usage. A custom proxy has its own
-provider charges and does not remove Browser Use browser/network charges.
+orchestration plus browser and network usage. A custom proxy (an enterprise
+feature) has its own provider charges and does not remove Browser Use browser/network charges.
 A Claude or ChatGPT consumer subscription is not a provider API key.
 See the [billing breakdown](/cloud/guides/billing).
 
@@ -117,3 +118,5 @@ problem, include the filename, size, and the operation that failed.
 Do not send API keys, passwords, card details, custom-proxy credentials, session cookies,
 or active CDP/live-view URLs. A screenshot alone often omits the identifier
 needed to trace a request.
+
+Coding agents can report what failed directly with [`POST /api/v4/feedback`](/cloud/guides/feedback).

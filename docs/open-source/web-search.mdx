@@ -24,9 +24,9 @@ search(query, num_results=None, category=None) -> {'query', 'count', 'results'}
 
 ## Billing and keys
 
-- Billed per search to your Browser Use key. Each charge is added to `result.cost_usd`.
+- Billed per search to your Browser Use key. Each charge reported as `browser_use.charge_usd` in a response is added to `result.cost_usd`; a response without it adds nothing, and an unknown model cost stays `None`.
 - It uses the gateway model's key, else your Browser Use key. Without one, `run()` raises before any browser starts.
-- Before the browser starts, a free check confirms the search endpoint answers.
+- Before the browser starts, a free check detects a missing endpoint, rejected key or exhausted budget. Transient errors do not block the run; an individual search can still fail.
 - The key never enters the agent's Python worker: the parent process makes the request.
 
 ## Notes

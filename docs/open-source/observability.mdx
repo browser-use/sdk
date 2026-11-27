@@ -7,6 +7,7 @@ icon: "activity"
 | What | Where |
 |---|---|
 | Live progress | One INFO log line per step on `logging.getLogger('browser_use')` |
+| Independent verdict and site lessons | `result.judgement`; see [Judge](/open-source/output#judge) |
 | Tokens and cost | `result.usage`, `result.cost_usd` |
 | Every message, cell and output | `result.messages`, and the files in `agent.workspace` |
 | Traces in your observability tool | OpenTelemetry spans from Pydantic AI |
@@ -26,7 +27,7 @@ print(result.usage)  # {'input': ..., 'output': ..., 'cache_read': ..., 'cache_w
 print(result.cost_usd)  # model cost in USD, plus the judge and web searches; None when the price is unknown
 ```
 
-`cost_usd` covers the model, the [judge](/open-source/output#judge) request and [web searches](/open-source/web-search), not cloud browser time. See [Models: Usage and cost](/open-source/models#usage-and-cost) and [Output](/open-source/output).
+`cost_usd` covers model requests, including the [judge](/open-source/output#judge), and [web searches](/open-source/web-search). Cloud browser and proxy charges are separate (`browserCost` and `proxyCost` in `GET /api/v4/browsers/{browser.id}`). See [Models: Usage and cost](/open-source/models#usage-and-cost) and [Output](/open-source/output).
 
 ## Transcript and workspace
 

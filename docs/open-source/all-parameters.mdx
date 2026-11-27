@@ -6,7 +6,7 @@ icon: "list"
 
 Every parameter browser-use 1.0 takes, in signature order, with its exact default. CI checks these tables against the library's signatures (`scripts/check_oss_params.py` in the docs repo), so a parameter added, removed or changed in the library fails that check until this page matches.
 
-A parameter that is not on this page raises a `TypeError` before any browser starts. When it was a 0.x option, the error names the replacement. See [Migrating](/open-source/migrating).
+Unsupported `Agent`, `Browser`, model-class and `Tools` options raise a `TypeError` before any browser starts. When it was a 0.x option, the error names the replacement. See [Migrating](/open-source/migrating).
 
 ## Agent
 
@@ -22,7 +22,7 @@ A parameter that is not on this page raises a `TypeError` before any browser sta
 | `tools` | `None` | A `Tools()` with your own functions. See [Tools](/open-source/tools). |
 | `controller` | `None` | 0.x name for `tools`. |
 | `output_model_schema` | `None` | The result type: a Pydantic model, `list[Model]`, `Literal[...]`, or `pydantic_ai.StructuredDict(schema)`. `None` is `str`. See [Output](/open-source/output). |
-| `sensitive_data` | `None` | Secrets the agent types without seeing: `{'name': 'value'}` or `{'https://site': {'name': 'value'}}`. See [Secrets](/open-source/secrets). |
+| `sensitive_data` | `None` | Secrets typed with `type_secret`: `{'name': 'value'}` or `{'https://site': {'name': 'value'}}`. See [Secrets](/open-source/secrets). |
 | `extend_system_message` | `None` | Text appended to the system prompt. |
 | `reasoning` | `None` | `'low'`, `'medium'` or `'high'`. `None` is a `bu-*` model's own (BU 4.0 models high, `bu-fast` medium, `bu-ultrafast` low, `bu-smart` high), else `'medium'`. |
 | `mode` | `None` | `'ultrafast'` or `'default'`. `None` is `'ultrafast'` on `bu-fast` and `bu-ultrafast`, else `'default'`. See [Ultrafast](/open-source/ultrafast). |
@@ -48,7 +48,7 @@ These 0.x options are accepted, log a warning and do nothing, so old code keeps 
 | Parameter | Default | What it does |
 |---|---|---|
 | `max_steps` | `100` | Model requests. The last one is a delivery-only turn. Below 1 raises `ValueError`. |
-| `timeout` | `1700` | Seconds for the agent loop. Starting and stopping the browser are not counted. 0 or less raises `ValueError`. |
+| `timeout` | `1700` | Seconds for the agent loop. Browser start/stop, the final screenshot and judging are not counted. 0 or less raises `ValueError`. |
 
 Other `Agent` methods:
 
@@ -77,8 +77,8 @@ Other `Agent` methods:
 | `keep_alive` | `False` | `True` leaves the browser running after `run()`. Stop it with `await browser.stop()`. |
 | `cloud_profile_id` | `None` | Cloud: a profile id or unique profile name. Logins persist in it. |
 | `cloud_proxy_country_code` | `'us'` | Cloud: two-letter country code of the residential proxy. `None` turns the proxy off. |
-| `cloud_timeout` | `None` | Cloud: minutes, 1 to 240. `None` is 60. The server stops the browser after this either way. |
-| `live_view` | `None` | Cloud: `None` prints the live view URL, `True` also opens it, `False` hides it. Anyone with the URL can drive the browser. |
+| `cloud_timeout` | `None` | Cloud: minutes, 1 to 240, sent as `timeout` to API v4 `POST /browsers`. `None` is 60. The server stops the browser after this either way. |
+| `live_view` | `None` | Cloud: `None` prints the live view URL to stderr, `True` also opens it, `False` hides it. Anyone with the URL can drive the browser. |
 | `captcha_solver` | `True` | Cloud: automatic CAPTCHA solving. `False` turns it off. |
 | `allowed_domains` | `None` | Only navigate to these. See [Domains](/open-source/domains). |
 | `prohibited_domains` | `None` | Never navigate to these. Ignored, with a warning, when `allowed_domains` is set. |
@@ -150,8 +150,8 @@ Guide: [Tools](/open-source/tools).
 |---|---|---|
 | `description` | `''` | Tells the model when to use the tool. |
 | `param_model` | `None` | A Pydantic model for a 0.x action that takes one model argument. |
-| `domains` | `None` | 0.x. Raises `TypeError`: use `Browser(allowed_domains=...)`. |
-| `allowed_domains` | `None` | 0.x. Raises `TypeError`: use `Browser(allowed_domains=...)`. |
+| `domains` | `None` | 0.x. A non-empty list raises `TypeError`: use `Browser(allowed_domains=...)`. |
+| `allowed_domains` | `None` | 0.x. A non-empty list raises `TypeError`: use `Browser(allowed_domains=...)`. |
 
 ### ActionResult
 
@@ -163,4 +163,4 @@ What a tool can return. The model sees it as JSON.
 | `extracted_content` | `None` | The text the model gets. |
 | `error` | `None` | An error message the model gets. |
 
-`is_done`, `success`, `attachments` and `images` are 0.x fields that raise; `include_in_memory` and `include_extracted_content_only_once` are ignored with a warning. See [Tools: Rules](/open-source/tools#rules).
+`is_done=True`, non-empty `attachments` and non-empty `images` raise. Spelled-out 0.x defaults (`is_done=False`, `success=True`, empty attachments/images) are dropped when `is_done` is false or absent; `include_in_memory` and `include_extracted_content_only_once` are ignored with a warning. See [Tools: Rules](/open-source/tools#rules).

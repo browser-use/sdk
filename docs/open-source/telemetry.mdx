@@ -10,20 +10,24 @@ browser-use sends anonymized usage telemetry: model, steps, cost, timing, helper
 export ANONYMIZED_TELEMETRY=false
 ```
 
-Any value that does not start with `t`, `y` or `1` turns it off. Off means off: no event, no background thread, no file written.
+Any value that does not start with `t`, `y` or `1` turns it off. With usage telemetry off, no usage event, background thread or telemetry file is created. An explicit feedback report is an exception; see [Feedback](#feedback).
 
 The events go to PostHog so we can see which models, browsers and helpers work, where runs spend their time and why they fail. There are no feature flags or remote settings: telemetry only sends, it never changes what the library does.
 
 | Event | When |
 |---|---|
 | `agent_event` | One per `Agent.run()`. |
+| `library_auth` | Missing keys, login progress, key availability and cloud browser starts. |
+| `library_feedback` | A report about browser-use from you, an agent cell or an MCP client; see [Feedback](#feedback). |
 | `cli_event` | One per `browser-use` CLI call, scrubbed (below). |
 | `mcp_server_event` | One per MCP tool call (`browser-use --cli-mcp` and `--mcp`). |
 
 ## Never sent
 
-- The task text, follow-up tasks and `extend_system_message`. Where a URL, error message or result quotes the whole task, it is sent as `<task>`.
-- `judge_context` itself. Only whether it is set is sent as configuration. The judge's verdict is sent after text scrubbing, so short or partial quotes of the context may remain in it.
+For usage events and agent-generated reports (explicit user feedback is described [below](#feedback)):
+
+- The task text, follow-up tasks, `judge_context` and `extend_system_message`. Where a URL, error message or result quotes the whole task, it is sent as `<task>`.
+- The judge's verdict is sent after text scrubbing, so short or partial quotes of `judge_context` may remain in it.
 - Text typed into pages.
 - The model's messages and thinking, and partial results.
 - Code the model writes, and tracebacks (their frames quote the code). Repeated code is detected by a hash that never leaves the process.
@@ -42,7 +46,7 @@ The events go to PostHog so we can see which models, browsers and helpers work, 
 - **Install and environment:** browser-use, Python, Pydantic AI and browser-harness versions; OS; whether it runs in Docker, CI or a notebook.
 - **Configuration:** model id and provider, reasoning, mode, `max_steps`, timeout, whether the judge is on and whether `judge_context` is set (never its text), whether structured output, custom tools (their names), secrets (a count) or a custom workspace are used, and the task's length.
 - **Browser:** the mode (cloud, chromium, chrome, cdp), keep-alive, cloud proxy country and timeout, domain restrictions (counts, never the domains) and start time.
-- **Outcome:** status, success, how the result was delivered, the exception class and the phase it happened in, the error messages and the final result (below).
+- **Outcome:** status, success, the judge's verdict and scrubbed description, failure reason and gotchas, how the result was delivered, the exception class and the phase it happened in, the error messages and the final result (below).
 - **Time:** where the run spent it: browser start, model requests, cells, helpers, waits, compaction, shutdown.
 - **Model:** steps, requests, tokens, cost, calls per tool, retries by cause.
 - **REPL:** cells, cell errors by class, helper and CDP method counts and timings, imported module names, screenshots.
@@ -64,11 +68,19 @@ A run whose process was killed (out of memory, `SIGKILL`, a notebook kernel rest
 
 `cli_event` keeps the command, exit code, duration, helper names and counts, browser kind, client, and `error_message`: the exception line of the error, scrubbed, at most 300 characters. browser-harness's own event would include the piped code, its output and the full error text; the `browser-use` CLI removes those before sending. `mcp_server_event` keeps the tool name, duration, whether it failed, the exception class and `error_message`: the exception's message, scrubbed, at most 300 characters. Neither ever includes the code, its output or arguments.
 
+`library_auth` uses the same anonymous installation id and records stage, method and whether login was automatic. It contains no keys, login URLs or account identifiers. Key availability does not prove the server accepts it; a cloud browser start confirms authentication.
+
+## Feedback
+
+Explicit `browser-use feedback` and `browser_use.feedback(...)` calls send a `library_feedback` report even with usage telemetry off: the call asks to send it. `report_issue(...)` in agent cells and the MCP `browser_feedback` tool respect the telemetry setting, with at most three reports per run or MCP process.
+
+Reports contain source, category and a message of at most 2000 characters, scrubbed of secrets, credentials, emails, URL queries and home folders. Agent reports also remove the task and typed text, and include model, run id, step and last error class. Model-written code is directed to `report_issue` or `browser_feedback` instead of the explicit user feedback path.
+
 ## How it is sent
 
 - A run never waits on the network. Recording is an in-memory counter; a background thread builds the event, gzips it and posts it to `https://eu.i.posthog.com/batch/` with Python's standard library.
 - At process exit, events still queued are handed to a short-lived background process, so exit does not wait either.
-- Files, all under `~/.config/browseruse` (`BROWSER_USE_CONFIG_DIR` moves it), and only while telemetry is on: `device_id`; `telemetry/inflight/` for a run in progress (deleted when its event is sent); `telemetry/outbox/` for events not sent yet (at most 20 files and 512 KB, deleted after 7 days).
+- Files, all under `~/.config/browseruse` (`BROWSER_USE_CONFIG_DIR` moves it), and only while usage telemetry is on: `device_id`; `telemetry/inflight/` for a run in progress (deleted when its event is sent); `telemetry/outbox/` for events not sent yet (at most 20 files and 512 KB, deleted after 7 days).
 - The `browser-use` CLI sends `cli_event` to the same place under the same id, and creates no browser-harness install id.
 
 ## Identity

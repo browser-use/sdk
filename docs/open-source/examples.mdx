@@ -63,7 +63,7 @@ print(result.final_result())
 
 ## Log in with secrets
 
-The model sees the names `username` and `password`, never the values, and they are typed only on the site you scope them to. See [Secrets](/open-source/secrets).
+The model is told the names `username` and `password`; `type_secret` types their values only on the site you scope them to. Screenshots and page JavaScript can still reveal a typed value. See [Secrets](/open-source/secrets).
 
 ```python login.py
 import os
@@ -73,7 +73,7 @@ from browser_use import Agent
 agent = Agent(
     'Log in on https://the-internet.herokuapp.com/login, then return the message the page shows',
     sensitive_data={
-        # typed only on this site; the model sees the names, never the values
+        # type_secret types only on this site; the prompt lists names, not values
         'the-internet.herokuapp.com': {
             'username': os.environ.get('APP_USER', 'tomsmith'),
             'password': os.environ.get('APP_PASSWORD', 'SuperSecretPassword!'),

@@ -56,12 +56,12 @@ print(result.error)  # what ended the run, or None
 | `text` | The answer as text. |
 | `output` | The delivered value: a `str`, or an instance of your `output_model_schema`. |
 | `success` | The agent's own verdict from `finish(result, success)`. `None` when it gave none or the run did not complete. |
+| `judgement` | The judge's verdict, labels and lessons; `None` when judging is off, no step ran or judging failed. See [Judge](#judge). |
 | `partial` | The last partial result the agent saved. See [Long tasks](/open-source/long-tasks). |
 | `steps` | Model requests. |
 | `duration_s` | Seconds. |
 | `usage` | Tokens: `input`, `output`, `cache_read`, `cache_write`, plus `requests`. |
 | `cost_usd` | USD, including the judge request. `None` when the model's price is unknown. See [Models](/open-source/models#usage-and-cost). |
-| `judgement` | The judge's verdict on the run. `None` with `judge=False`, when the run took no step, or when the judge request failed. See [Judge](#judge). |
 | `error` | The error that ended the run, or `None`. `run()` returns errors here instead of raising once the browser start begins; see [Agent: run()](/open-source/agent#run). |
 | `downloads` | Files this run added to `agent.workspace/downloads`. Empty with your Chrome and `cdp_url`. See [Files](/open-source/files#downloads). |
 | `messages` | The full transcript as Pydantic AI messages, with secrets redacted. |
@@ -108,9 +108,12 @@ if result.judgement:
 - If the model rejects the images (an HTTP 4xx error that mentions `image`), the judge retries once with the text alone. Other failures are not retried.
 - Its tokens and cost are added to `result.usage` and `result.cost_usd`, also when the judge request fails.
 - A failed judge request logs a warning and leaves `result.judgement` `None`. It never changes the run's own result.
+- Judging and the final screenshot are outside the `run(timeout=...)` loop budget.
 - `judge_context=` passes your criteria or the expected answer. `judge=False` turns the judge off and sends no request.
 - `result.success` stays the agent's own verdict; `result.judgement.success` is the judge's.
 
 ## Removed from 0.x
 
-There are no per-step actions in 1.0, so `history`, `urls()`, `screenshots()`, `action_names()`, `model_thoughts()`, `extracted_content()`, `save_to_file()`, `load_from_file()`, `is_judged()` and similar raise an `AttributeError` that points to the replacement. Use `final_result()`, `structured_output`, `messages`, `partial` and the files in `agent.workspace`.
+There are no per-step actions in 1.0, so `history`, `urls()`, `screenshots()`, `action_names()`, `model_thoughts()`, `extracted_content()`, `save_to_file()`, `load_from_file()` and similar raise an `AttributeError` that points to the replacement. Use `final_result()`, `structured_output`, `messages`, `partial` and the files in `agent.workspace`.
+
+`is_judged()` and `is_validated()` also raise; read `result.judgement` instead.

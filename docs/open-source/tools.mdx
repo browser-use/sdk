@@ -39,7 +39,7 @@ The model sees what the function returns: a `str`, a Pydantic model or other JSO
 
 ## Errors
 
-- A tool that raises does not end the run. The model gets the error and can recover.
+- Ordinary tool errors reach the model so it can recover. Unsupported uses of removed `ActionResult` fields are fatal configuration errors and end the run; legacy defaults are dropped and `include_in_memory` and `include_extracted_content_only_once` are ignored (see Rules below).
 - Raise `pydantic_ai.ModelRetry('...')` to ask the model to call the tool again with better arguments.
 
 ## param_model
@@ -73,9 +73,9 @@ print(agent.run_sync().final_result())
 - Use `@tools.action('description')` with parentheses.
 - Names must match `[a-zA-Z0-9_-]{1,64}`. `python`, `finish` and `finish_from_repl` are taken.
 - A tool gets only the arguments the model passes. The 0.x injected parameters (`browser_session`, `page_extraction_llm`, `file_system`, ...) raise.
-- `ActionResult(is_done=True, ...)`, `success=`, `attachments=[...]` and `images=[...]` raise: the model ends the run with `finish`, and saves files in the workspace. A function that returns one raises a `TypeError` when `@tools.action` registers it, before any browser starts. `include_in_memory` and `include_extracted_content_only_once` log a warning and are ignored: every result stays in the conversation.
+- `ActionResult(is_done=True, ...)`, non-empty `attachments` and non-empty `images` raise: the model ends the run with `finish`, and saves files in the workspace. Readable function source is checked when `@tools.action` registers it; otherwise it fails when called. Spelled-out 0.x defaults (`is_done=False`, `success=True`, empty attachments/images) are dropped when `is_done` is false or absent. `include_in_memory` and `include_extracted_content_only_once` log a warning and are ignored: every result stays in the conversation.
 - Registering a name again replaces the earlier tool, as in 0.x.
-- `domains=`, `allowed_domains=`, `page_filter=`, `requires_browser=` and `terminates_sequence=` raise. Limit navigation with `Browser(allowed_domains=...)`.
+- Non-empty `domains=` or `allowed_domains=` lists raise, as do `page_filter=`, `requires_browser=` and `terminates_sequence=`. Limit navigation with `Browser(allowed_domains=...)`.
 - A `<secret>name</secret>` placeholder in a tool's arguments is not replaced: the tool does not run and the model gets an error. Secrets are typed in the browser with `type_secret(name)`.
 - `Controller` is an alias of `Tools`.
 

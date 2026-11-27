@@ -1,0 +1,125 @@
+---
+title: "Migrate from V2 to V4"
+sidebarTitle: "Migrate to V4"
+description: "Move V2 tasks and sessions to V4 runs: endpoints, fields and models."
+icon: "arrow-right-left"
+---
+
+V4 is the current API. A V2 **task** becomes a V4 **run**. V2 and V4 use the
+same API key; only the base URL changes, from `https://api.browser-use.com/api/v2`
+to `https://api.browser-use.com/api/v4`.
+
+## Sessions and tasks
+
+- **V2:** a session is a browser. You create it (or let a task create it), then
+  run tasks in it.
+- **V4:** a [session](/cloud/agent/sessions) is a conversation. Every run
+  creates one unless you pass `sessionId`, and it starts the browser for you.
+  There is no `POST /sessions`. Browser options go in the run's
+  `browserSettings` and apply when the run starts a new browser. A follow-up run
+  can reuse the session's live browser, which keeps its settings.
+
+To control a browser yourself without an agent, use
+[`POST /browsers`](/cloud/browser/playwright-puppeteer-selenium), as in V2.
+
+## Endpoints
+
+| V2 | V4 |
+| -- | -- |
+| `POST /tasks` | `POST /runs` |
+| `GET /tasks/{id}` | `GET /runs/{id}` |
+| `GET /tasks/{id}/status` | `GET /runs/{id}/status` |
+| `PATCH /tasks/{id}` with `{"action":"stop"}` | `POST /runs/{id}/cancel` |
+| `GET /tasks/{id}/logs` | `GET /runs/{id}/events`, a different format ([Observability](/cloud/agent/observability)) |
+| `POST /sessions` | None: `POST /runs` creates the session |
+| `GET`, `PATCH`, `DELETE /sessions/{id}` | `GET`, `PATCH`, `DELETE /sessions/{id}` |
+| Follow-up task with `sessionId` | `POST /runs` with `sessionId`, or `POST /sessions/{id}/queue` |
+| `/files/...` presigned URLs, `outputFiles` | Workspace files, a different API ([Workspaces](/cloud/agent/workspaces)) |
+| `/browsers`, `/profiles` | `/browsers`, `/profiles` (same paths) |
+| `/skills`, `/marketplace/skills` | Not in V4 |
+
+## Create-request fields
+
+| V2 `POST /tasks` | V4 `POST /runs` |
+| ---------------- | --------------- |
+| `task` | `task` |
+| `llm` | `model` (see [Models](/cloud/agent/models)) |
+| `thinkingLevel` | Reasoning depth in `modelParams`, in the provider's own format (see [Thinking levels](/cloud/agent/thinking-levels)) |
+| `thinking`, `flashMode` | None: these were V2 agent modes. For speed, use `bu-fast` or `bu-ultrafast` ([BU Ultrafast](/cloud/agent/ultrafast)) |
+| `structuredOutput` (stringified JSON Schema) | `outputSchema` (a JSON Schema object) |
+| `sessionId` | `sessionId` |
+| `metadata` | `metadata` |
+| `secrets` and `allowedDomains` | `secretBindings`, each with its own `allowedDomains` (see [Secrets](/cloud/guides/secrets)) |
+| `opVaultId` | `opVaultId` |
+| `judge`, `judgeGroundTruth`, `judgeLlm` | `judge` object (see [Judge](/cloud/agent/judge)) |
+| `sessionSettings.profileId` | `browserSettings.profileId` |
+| `sessionSettings.proxyCountryCode` | `browserSettings.proxyCountryCode` |
+| `sessionSettings.browserScreenWidth` / `browserScreenHeight` | `browserSettings.screenWidth` / `screenHeight` |
+| `sessionSettings.enableRecording` | `browserSettings.record` |
+| `startUrl` | None: put the URL in `task` |
+| `maxSteps` | None: `maxCostUsd` caps model and search spend per session |
+| `vision`, `highlightElements`, `systemPromptExtension`, `skillIds` | None |
+
+## Response fields
+
+| V2 task | V4 run |
+| ------- | ------ |
+| `status`: `created`, `started`, `finished`, `failed`, `stopped` | `status`: `queued`, `dispatching`, `running`, `completed`, `failed`, `cancelled` |
+| `output` (text, or structured output as a string) | `result` (text) and `output` (parsed JSON when you sent `outputSchema`) |
+| `llm` | `model` |
+| `cost` | `totalCostUsd` |
+| `steps` | `stepCount` (number of LLM calls); step details are in the run's events |
+| `judgeVerdict`, `judgement` (a JSON string) | `judgement` (an object; see [Judge](/cloud/agent/judge)) |
+| `isSuccess` (the agent's own verdict) | None |
+
+## Models
+
+Some V2 model names, such as `browser-use-2.0`, don't exist in V4. V2 bills
+the agent per step, while V4 bills the model per token. In V4, browser time is
+billed separately and is not in `totalCostUsd` ([Billing](/cloud/guides/billing)). Omit `model` to use your project's default, or pick one
+from [Models](/cloud/agent/models).
+
+## SDK
+
+The `browser-use-sdk` package holds both versions. Change the import and the
+call:
+
+<CodeGroup>
+```python Python
+# V2
+from browser_use_sdk import BrowserUse
+
+client = BrowserUse()
+result = client.run("Find the top Hacker News story")
+print(result.output)
+
+# V4
+from browser_use_sdk.v4 import BrowserUse as BrowserUseV4
+
+v4 = BrowserUseV4()
+run = v4.runs.create("Find the top Hacker News story")
+run = v4.runs.wait_for_completion(run.id)
+if run.status.value != "completed":
+    raise RuntimeError(run.error or run.status.value)
+print(run.result)
+```
+```typescript TypeScript
+// V2
+import { BrowserUse } from "browser-use-sdk";
+
+const client = new BrowserUse();
+const result = await client.run("Find the top Hacker News story");
+console.log(result.output);
+
+// V4
+import { BrowserUse as BrowserUseV4 } from "browser-use-sdk/v4";
+
+const v4 = new BrowserUseV4();
+const run = await v4.runs.create({ task: "Find the top Hacker News story" });
+const done = await v4.runs.waitForCompletion(run.id);
+if (done.status !== "completed") throw new Error(done.error ?? done.status);
+console.log(done.result);
+```
+</CodeGroup>
+
+Next: [Run a task](/cloud/agent/quickstart).

@@ -39,6 +39,7 @@ With uv: `uv add 'browser-use<1'`. In `requirements.txt` or `pyproject.toml`: `b
 | `run(max_steps=)` | 500 | 100 | One step is now one model request, and a cell does more than one 0.x action. |
 | A removed option | often ignored | raises before a browser starts | You find out before anything is billed. |
 | Tasks with localhost / private IPs | worked | a cloud browser can't reach them: one warning; use `Browser('chromium')` | |
+| Cloud live view | | URL printed to stderr by default; `live_view=True` also opens it, `False` hides it | Anyone with the link can control the browser. |
 | Cloud proxy | the API's default, `us` | `us`; `cloud_proxy_country_code=None` turns it off | |
 
 ## Common errors
@@ -208,7 +209,7 @@ from browser_use import Agent, Browser, ChatOpenAI
 
 
 async def main():
-    browser = Browser(use_cloud=True, cloud_proxy_country_code='de', cloud_timeout=15)
+    browser = Browser(use_cloud=True, cloud_proxy_country_code='de', cloud_timeout=15)  # minutes
     agent = Agent(
         task='Open https://ipinfo.io/json in the browser and tell me which country it shows',
         llm=ChatOpenAI(model='gpt-4.1-mini'),
@@ -223,7 +224,7 @@ asyncio.run(main())
 ```python 1.0
 from browser_use import Agent, Browser, ChatOpenAI
 
-browser = Browser(cloud_proxy_country_code='de', cloud_timeout=15)  # use_cloud=True is the default now
+browser = Browser(cloud_proxy_country_code='de', cloud_timeout=15)  # minutes; use_cloud=True is the default now
 agent = Agent(
     'Open https://ipinfo.io/json in the browser and tell me which country it shows',
     llm=ChatOpenAI('gpt-6-luna'),
@@ -353,7 +354,7 @@ if stories:
 
 ### 8. Logins with sensitive_data
 
-Unchanged. The model types a value with `type_secret('x_pass')` and never sees it. The 0.x `<secret>x_pass</secret>` placeholder is no longer replaced: code that sends it to a page raises, naming `type_secret`. See [Secrets](/open-source/secrets).
+The model is told the secret names and types a value with `type_secret('x_pass')`. Screenshots and page JavaScript can still reveal a typed value. The 0.x `<secret>x_pass</secret>` placeholder is no longer replaced: code that sends it to a page raises, naming `type_secret`. See [Secrets](/open-source/secrets).
 
 <CodeGroup>
 ```python 0.x
@@ -611,7 +612,7 @@ Importing a removed class raises an `ImportError` that names its replacement. Se
 | `Tools(output_model=...)` | `Agent(output_model_schema=...)` |
 | `Tools(display_files_in_done_text=...)`; 0.1 `Controller(headless=, keep_open=, disable_security=, cookies_path=, browser_config=)` | dropped; browser options go to `Browser(...)` |
 | `act()`, `exclude_action()`, `get_output_model()`, `use_structured_output_action()`, `set_coordinate_clicking()` | dropped (`AttributeError` naming the answer) |
-| `ActionResult(is_done=True)`, `success=`, `attachments=[...]`, `images=[...]` | dropped: the model ends the run with `finish`; save files in the workspace. An action that returns one raises `TypeError` when `@tools.action` registers it |
+| `ActionResult(is_done=True)`, non-empty `attachments=[...]`, `images=[...]` | raise: the model ends the run with `finish`; save files in the workspace. Readable source is checked at registration, otherwise the action fails when called. Spelled-out defaults (`is_done=False`, `success=True`, empty attachments/images) are dropped when `is_done` is false or absent |
 | `ActionResult(include_in_memory=...)`, `include_extracted_content_only_once=` | ignored, one warning: every result stays in the conversation |
 | `<secret>name</secret>` in an action's arguments | dropped: the action is not run and the model gets an error. Secrets are typed in the browser with `type_secret(name)` |
 
@@ -642,13 +643,13 @@ Every 0.x module 1.0 does not have, and every 0.x name a kept module lost, raise
 | `browser_use.mcp.server`, `browser_use.skill_cli` | `browser-use --cli-mcp` and the `browser-use` CLI |
 | `browser_use.config`, `browser_use.utils`, `browser_use.logging_config` | 0.x internals: `Agent(...)` / `Browser(...)` arguments, `BROWSER_USE_LOGGING_LEVEL` |
 | `browser_use.beta`, `browser_use.sandbox`, `browser_use.sync`, `browser_use.screenshots`, `browser_use.skills.service`, `browser_use.init_cmd` | dropped (`screenshot()` in the agent's REPL replaces `screenshots`) |
-| `browser_use.integrations` (Anthropic and OpenAI hosted-browser tools, Gmail) | not yet: planned on the new `Browser` in a later release. Stay on 0.x for them; see [Claude, OpenAI and Gemini](/open-source/integrations#0-x-integrations) |
+| `browser_use.integrations` (Anthropic and OpenAI hosted-browser tools, Gmail) | not yet: planned on the new `Browser` in a later release. Stay on 0.x for them; see [Claude, OpenAI and Gemini](/open-source/integrations#legacy-integrations) |
 
 ## CLI and MCP
 
 The CLI still runs piped Python, and `browser-use skill install` and `browser-use --cli-mcp` work as before. New: `browser-use login` / `logout` and a `browser_login` MCP tool. `browser-use run`, `init` and the 0.x subcommands (`open`, `state`, `click`, ...) print what replaced them.
 
-The 0.x `browser-use --mcp` server ran the removed engine. `--mcp` now prints a deprecation notice and serves the `--cli-mcp` tools (`browser_exec`, `browser_screenshot`, `browser_login`) on its own temporary Chromium. The old tool names (`browser_navigate`, `browser_click`, `browser_type`, `browser_get_state`, `browser_extract_content`, `browser_get_html`, `browser_scroll`, `browser_go_back`, `browser_list_tabs`, `browser_switch_tab`, `browser_close_tab`, `retry_with_browser_use_agent`, `browser_list_sessions`, `browser_close_session`, `browser_close_all`) return an error that points to `browser_exec`. Switch clients to `--cli-mcp`:
+The 0.x `browser-use --mcp` server ran the removed engine. `--mcp` now prints a deprecation notice and serves the `--cli-mcp` tools (`browser_exec`, `browser_screenshot`, `browser_login`, `browser_feedback`) on its own temporary Chromium. The old tool names (`browser_navigate`, `browser_click`, `browser_type`, `browser_get_state`, `browser_extract_content`, `browser_get_html`, `browser_scroll`, `browser_go_back`, `browser_list_tabs`, `browser_switch_tab`, `browser_close_tab`, `retry_with_browser_use_agent`, `browser_list_sessions`, `browser_close_session`, `browser_close_all`) return an error that points to `browser_exec`. Switch clients to `--cli-mcp`:
 
 ```json
 {
@@ -661,6 +662,10 @@ The 0.x `browser-use --mcp` server ran the removed engine. `--mcp` now prints a 
 }
 ```
 
+`--cli-mcp` uses its own temporary Chromium when your Chrome cannot be used. The CLI does too, and reuses it until `browser-use --reload`. `--mcp` preserves the 0.x default profile's domain restrictions and `BROWSER_USE_ALLOWED_DOMAINS`; starting a cloud browser is disabled under these restrictions, and a configured local proxy raises.
+
+The command aliases `bu` and `browser` were removed; use `browser-use` or `browseruse`. The `[cli]`, `[mcp]`, `[anthropic]`, `[google]` and `[all]` extras still resolve; their dependencies are now included. Other 0.x extras were removed.
+
 See [Browser Use CLI](/open-source/browser-use-cli) and [MCP server](/open-source/mcp).
 
 ## Environment variables
@@ -668,6 +673,7 @@ See [Browser Use CLI](/open-source/browser-use-cli) and [MCP server](/open-sourc
 | Variable | 1.0 |
 |---|---|
 | `BROWSER_USE_API_KEY` | read; wins over `browser-use login` |
+| `BROWSER_USE_AUTO_LOGIN` | `false` disables automatic login on interactive desktop runs without a key; servers, CI, notebooks and piped input do not open it |
 | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY` | read |
 | `ANONYMIZED_TELEMETRY` | read; see [Telemetry](/open-source/telemetry) |
 | `BROWSER_USE_LOGGING_LEVEL` | read |
