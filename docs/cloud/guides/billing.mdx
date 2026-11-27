@@ -140,7 +140,7 @@ Spend checks use a cached snapshot, and running or simultaneous work can finish 
 
 HTTP 402 billing and admission errors that the V4 API creates itself carry a top-level `reason` next to `detail`. The existing payload is kept: `detail` has the same value and type as before. Branch on `reason` instead of parsing the `detail` text.
 
-Responses that V4 passes through keep their own format and may have no `reason`. This covers the `/api/v4/llm/` gateway, app and page proxies, and original-file uploads. AgentMail 402s pass through as `success`, `upstream_error`, and `reason` with no `detail`; there, `reason` is AgentMail's value, not one from the table below. If `reason` is missing or not in the table, fall back to the full response body.
+Responses that V4 passes through keep their own format and may have no `reason`. This covers the `/api/v4/llm/` gateway, app and page proxies, and original-file uploads. AgentMail 402s use AgentMail's error shape (`success`, `upstream_error`, `reason`) with no `detail`; their `reason` is `payment_failed`. If `reason` is missing or not in the table, fall back to the full response body.
 
 ```json
 {
