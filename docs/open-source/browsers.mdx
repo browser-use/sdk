@@ -32,7 +32,7 @@ from browser_use import Agent, Browser
 
 browser = Browser(
     cloud_proxy_country_code='de',  # default 'us'; None turns the proxy off
-    cloud_timeout=15,  # minutes, 1-240 (default 60)
+    cloud_timeout=15,  # minutes, 1-240 (default 60); 15 is only an example
 )
 agent = Agent('Open https://www.whatismyip.com and tell me which country it shows', browser=browser)
 print(agent.run_sync().final_result())
@@ -42,8 +42,8 @@ print(agent.run_sync().final_result())
 |---|---|---|
 | `cloud_profile_id` | none | A cloud profile id, or a unique profile name. Logins persist in it. A name that matches no profile, or several, raises `BrowserConfigError` from `run()` before a browser is created. See [profile sync](/cloud/guides/profile-sync). |
 | `cloud_proxy_country_code` | `'us'` | Two-letter country code for the residential proxy. `None` turns it off. |
-| `cloud_timeout` | `60` | Minutes, 1 to 240. The server stops the browser after this either way. |
-| `live_view` | `None` | Cloud: `None` prints the live view URL, `True` also opens it, `False` hides it. Anyone with that URL can drive the browser. |
+| `cloud_timeout` | `None` (60 minutes) | Minutes, 1 to 240, sent as `timeout` to API v4 `POST /browsers`. The server stops the browser after this either way. |
+| `live_view` | `None` | Cloud: `None` prints the live view URL to stderr, `True` also opens it, `False` hides it. Anyone with that URL can drive the browser. |
 | `captcha_solver` | `True` | Cloud browsers solve CAPTCHAs automatically; the agent waits for the solver for up to 95 seconds. `False` turns the solver off, and the agent handles CAPTCHAs itself. |
 
 A cloud browser bills until it stops. browser-use stops it when the run ends, when your process exits, or on SIGTERM or SIGHUP. See [pricing](https://browser-use.com/pricing) and [Cloud browser features](/cloud/browser/quickstart).
@@ -70,6 +70,8 @@ print(agent.run_sync().final_result())
 No Chrome installed (servers, CI)? Run `browser-use install` once to download Playwright's Chromium.
 
 Files the browser downloads land in `agent.workspace/downloads`. See [Files](/open-source/files).
+
+Fresh local browsers and Chrome profile copies expose an unauthenticated debugging port on `127.0.0.1`. Other users on the same machine can attach and access the browser and its logins; use a container or cloud browser on shared machines.
 
 ## Your Chrome
 

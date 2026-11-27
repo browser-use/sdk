@@ -125,10 +125,11 @@ Evervault Browser Tokens request:
 }
 ```
 
-The upstream proxy is `https://proxy.browser-use.com:443`.
-The username format is `user[-country-XX][-session-ID]`; country and session
-are optional. Replace the example session ID with your own proxy session ID.
-The password is your Browser Use API key, not your Evervault API key.
+Replace the example session ID with your own, one per job, or all your
+Evervault traffic shares one sticky IP. The password is your Browser Use API
+key, not your Evervault API key. For
+the username format, sticky sessions and network policies, see
+[Proxy endpoint](/cloud/browser/proxy-endpoint).
 
 Traffic follows this path: browser → Evervault → Browser Use residential
 proxy → destination website.

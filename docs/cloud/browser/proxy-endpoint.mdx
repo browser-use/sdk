@@ -1,0 +1,238 @@
+---
+title: Proxy endpoint
+description: "Send traffic from any HTTP client or your own browser through Browser Use residential proxies, with your API key."
+icon: "route"
+---
+
+`proxy.browser-use.com` gives you the Browser Use residential proxy outside
+Browser Use browsers. Use it from curl, an HTTP library, or a browser you run
+yourself. You log in with your Browser Use API key.
+
+```bash curl
+curl -x https://proxy.browser-use.com:443 \
+  --proxy-user "user-country-de:$BROWSER_USE_API_KEY" \
+  https://api.ipify.org
+```
+
+The response is a German residential IP address.
+
+<Note>
+  Cloud browsers already use the residential proxy. To set their country, see
+  [Proxies](/cloud/browser/proxies). This page is for traffic that does not
+  come from a cloud browser.
+</Note>
+
+## Connection
+
+| Setting | Value |
+| --- | --- |
+| Proxy URL | `https://proxy.browser-use.com:443` |
+| Protocol | HTTPS proxy: your client connects to the proxy over TLS |
+| Username | `user`, plus optional parameters. See [Username](#username). |
+| Password | Your Browser Use API key (`bu_...`) |
+
+The proxy tunnels HTTPS sites with `CONNECT` and also forwards plain HTTP
+requests.
+
+<Warning>
+  If your client cannot connect to an HTTPS proxy, use
+  `http://proxy.browser-use.com:8080`. On that port, your API key travels
+  without encryption. Use port 443 when you can.
+</Warning>
+
+## Username
+
+```text
+user[-country-XX][-session-ID][-policy-UUID]
+```
+
+Start with `user`. Add the parameters you need, in any order. Each parameter
+can appear once.
+
+| Parameter | Value | Without it |
+| --- | --- | --- |
+| `country` | A two-letter ISO 3166-1 country code, in any case, such as `de` or `DE`. `uk` means `gb`. Some countries have few or no residential IPs; then requests fail with `502` and `upstream`. | The IP is in the US. |
+| `session` | 1 to 36 characters: letters and digits, optionally separated by single hyphens, so a UUID works. | Each connection can use a different IP. |
+| `policy` | The ID of a [network policy](/cloud/browser/network-policies) in your project. | No network policy applies. |
+
+| Username | Result |
+| --- | --- |
+| `user` | A US IP. |
+| `user-country-de` | A German IP. |
+| `user-country-de-session-job42` | A German IP that stays the same for `job42` when possible. |
+| `user-session-job42-country-de` | The same as the line above. |
+| `user-country-us-policy-6f1c2a4e-8b0d-4e7a-9f3c-2d5b7e9a1c40` | A US IP with that network policy. |
+
+The proxy refuses these usernames with `407` and `bad_params`:
+
+- An unknown parameter, or a parameter that appears twice.
+- A country code that is not on the ISO list.
+- A session ID that is longer than 36 characters, contains other characters,
+  or has two hyphens in a row.
+- A session ID that contains `country`, `session` or `policy` between hyphens,
+  such as `job-session-1`.
+- A policy ID that is not a UUID.
+
+## Sticky sessions
+
+Send the same session ID to keep the same exit IP across requests and
+connections. Send a new session ID to request a different IP.
+
+```bash curl
+for i in 1 2 3; do
+  curl -x https://proxy.browser-use.com:443 \
+    --proxy-user "user-country-de-session-job42:$BROWSER_USE_API_KEY" \
+    https://api.ipify.org
+  echo
+done
+```
+
+<Warning>
+  Sticky sessions are best effort. A residential IP can go offline, so the IP
+  of a session can change at any time, also in the middle of a session.
+  Browser Use does not guarantee how long a session keeps its IP. Do not use
+  these IPs for IP allowlisting.
+</Warning>
+
+- Session IDs belong to your project: another project that uses the same
+  session ID gets its own session, not yours. Residential IPs are shared, so
+  other customers can still use the same IP.
+- Keep the same country for all requests of a session.
+- Without a session ID, each connection can use a different IP.
+
+## API key
+
+The password is a Browser Use API key. A full-access key works. A
+[restricted key](/cloud/guides/troubleshooting#restricted-api-keys) needs
+**Write** on `proxy` (scope `v4:proxy:create`). With only **Read**, the proxy
+answers `407` with `key_not_allowed`.
+
+The proxy endpoint belongs to the US deployment, so use an API key from the
+[US dashboard](https://cloud.browser-use.com/settings?tab=api-keys). The
+[EU deployment](/cloud/eu-deployment) has no proxy endpoint.
+
+## Network policies
+
+Add `-policy-<id>` to the username to apply a
+[network policy](/cloud/browser/network-policies) to every request:
+
+```bash curl
+curl -x https://proxy.browser-use.com:443 \
+  --proxy-user "user-country-us-policy-$POLICY_ID:$BROWSER_USE_API_KEY" \
+  https://example.com
+```
+
+- A host that the policy blocks gets `403` with `blocked`.
+- A policy ID from another project gets `403` with `policy_not_found`.
+- If the proxy cannot load the policy, it refuses the request with `503` and
+  `policy_unavailable`. It does not send the request without the policy.
+- If the policy is deleted, requests that still name its ID continue without
+  a network policy within a few seconds. The security blocklist still applies.
+- The Browser Use security blocklist always applies first.
+
+## Billing
+
+Traffic is billed per GB to the project of the API key, at the same rate as
+the managed residential proxy of cloud browsers. It counts toward the key's
+monthly spend limit. The proxy checks the key, balance and spend limit when a
+connection opens. Connections that are already open keep running, and keep
+billing, until they close. See the [pricing page](https://browser-use.com/pricing)
+for current rates and [Billing](/cloud/guides/billing) for how usage is
+charged.
+
+## Examples
+
+### Python requests
+
+HTTPS proxies need `urllib3` 1.26 or later, which current `requests` installs.
+
+```python Python
+import os
+import requests
+
+key = os.environ["BROWSER_USE_API_KEY"]
+proxy = f"https://user-country-de-session-job42:{key}@proxy.browser-use.com:443"
+
+response = requests.get(
+    "https://api.ipify.org",
+    proxies={"http": proxy, "https": proxy},
+    timeout=30,
+)
+print(response.text)
+```
+
+### Playwright
+
+Pass the proxy when you launch Chromium. Every page of that browser uses it.
+
+<CodeGroup>
+```python Python
+import os
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(proxy={
+        "server": "https://proxy.browser-use.com:443",
+        "username": "user-country-de-session-job42",
+        "password": os.environ["BROWSER_USE_API_KEY"],
+    })
+    page = browser.new_page()
+    page.goto("https://api.ipify.org")
+    print(page.text_content("body"))
+    browser.close()
+```
+```typescript TypeScript
+import { chromium } from "playwright";
+
+const browser = await chromium.launch({
+  proxy: {
+    server: "https://proxy.browser-use.com:443",
+    username: "user-country-de-session-job42",
+    password: process.env.BROWSER_USE_API_KEY!,
+  },
+});
+const page = await browser.newPage();
+await page.goto("https://api.ipify.org");
+console.log(await page.textContent("body"));
+await browser.close();
+```
+</CodeGroup>
+
+This is your own browser on your own machine. For a managed cloud browser with
+stealth and the proxy already set up, see the [Browser
+quickstart](/cloud/browser/quickstart).
+
+## Errors
+
+Errors from the proxy usually carry the reason in the `X-Proxy-Error` header
+and at the end of the status line, for clients that hide proxy headers:
+
+```text
+HTTP/1.1 407 Proxy Authentication Required (bad_params)
+X-Proxy-Error: bad_params
+```
+
+| Status | `X-Proxy-Error` | Meaning |
+| --- | --- | --- |
+| 400 | `use_connect` | A plain request named a target that is not `http://`. Use `CONNECT` for HTTPS. |
+| 407 | `auth_required` | The request has no proxy login. |
+| 407 | `bad_auth` | The login is not Basic auth in the form `username:password`. |
+| 407 | `bad_params` | The username is invalid. See [Username](#username). |
+| 407 | `invalid_api_key` | The API key is unknown, expired, revoked or malformed. |
+| 407 | `key_not_allowed` | The API key lacks **Write** on `proxy`. |
+| 402 | `no_balance` | The project has no credits. |
+| 402 | `spend_limit` | The API key reached its monthly spend limit. |
+| 403 | `blocked` | The network policy or the security blocklist blocks the host. |
+| 403 | `policy_not_found` | The policy ID is not a policy of your project. |
+| 403 | `invalid_project` | The project of the API key was not found. |
+| 502 | `upstream` or `connection` | The proxy could not connect to the site. Retry the request. If it keeps failing with a `country`, that country may have no residential IPs. |
+| 502 | (none) | The proxy lost a plain HTTP request on the way to or from the site. Retry the request. |
+| 523 | `dns` | The site's domain name did not resolve. |
+| 503 | `auth_unavailable` or `policy_unavailable` | A temporary problem on the Browser Use side. Retry the request. |
+
+For plain HTTP requests, the site's own responses pass through unchanged. A
+`403` without `X-Proxy-Error` came from the site. A `502` without it came from
+the site or from the proxy.
+
+See also [Proxies](/cloud/browser/proxies) and
+[Network policies](/cloud/browser/network-policies).
