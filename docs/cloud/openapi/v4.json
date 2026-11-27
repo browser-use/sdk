@@ -3641,8 +3641,27 @@
                 "title": "APIKeySpendLimitDetail",
                 "description": "Machine-readable 402 detail shared by run and browser creation."
             },
+            "PaymentRequiredReason": {
+                "type": "string",
+                "enum": [
+                    "insufficient_credits",
+                    "profile_limit_reached",
+                    "api_key_monthly_spend_limit_reached",
+                    "payment_failed",
+                    "cost_limit_reached",
+                    "wallet_insufficient_balance"
+                ],
+                "description": "insufficient_credits: The project has insufficient credits.\nprofile_limit_reached: The project reached its profile limit.\napi_key_monthly_spend_limit_reached: The API key reached its monthly spend limit.\npayment_failed: The payment provider did not complete the request.\ncost_limit_reached: The run reached its cost limit.\nwallet_insufficient_balance: The AgentCard wallet has insufficient available balance."
+            },
             "APIKeySpendLimitError": {
                 "properties": {
+                    "reason": {
+                        "$ref": "#/components/schemas/PaymentRequiredReason",
+                        "enum": [
+                            "insufficient_credits",
+                            "api_key_monthly_spend_limit_reached"
+                        ]
+                    },
                     "detail": {
                         "anyOf": [
                             {
@@ -3657,7 +3676,8 @@
                 },
                 "type": "object",
                 "required": [
-                    "detail"
+                    "detail",
+                    "reason"
                 ],
                 "title": "APIKeySpendLimitError",
                 "description": "FastAPI wraps endpoint errors in a top-level ``detail`` field."
@@ -4537,16 +4557,25 @@
                 "description": "A value the caller supplies directly with the run."
             },
             "InsufficientCreditsError": {
+                "required": [
+                    "reason"
+                ],
                 "properties": {
+                    "reason": {
+                        "$ref": "#/components/schemas/PaymentRequiredReason",
+                        "enum": [
+                            "profile_limit_reached"
+                        ]
+                    },
                     "detail": {
                         "type": "string",
                         "title": "Detail",
-                        "default": "Insufficient credits"
+                        "default": "Profile limit reached. Delete unused profiles to create new ones."
                     }
                 },
                 "type": "object",
                 "title": "InsufficientCreditsError",
-                "description": "Error response when there are insufficient credits"
+                "description": "Profile limit error: reason is profile_limit_reached."
             },
             "IntegrationCategoryResponse": {
                 "properties": {
