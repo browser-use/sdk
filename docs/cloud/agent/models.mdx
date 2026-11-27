@@ -76,10 +76,7 @@ from the dashboard picker.
 GPT-6.2 Astra (`gpt-6.2-astra`) is rolling out project by project; if it is
 not enabled for your project yet, use another model. It is available in the US
 only: EU projects and US-only Bedrock projects get a 422. It has no fast or
-priority service tier and is not in the dashboard picker yet. The OpenAPI
-`model` enum does not list it, because the public schema leaves out models that
-sit behind a release switch; the API accepts it, and both SDKs take it as a
-plain string. On the LLM gateway, send tool calls to `/responses`:
+priority service tier and is not in the dashboard picker yet. On the LLM gateway, send tool calls to `/responses`:
 `/chat/completions` requests with tools get a 422.
 
 | Provider | Model IDs | BYOK provider |
