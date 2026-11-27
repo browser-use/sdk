@@ -1,0 +1,96 @@
+---
+title: Vercel AI SDK
+description: Give an AI SDK agent a real cloud browser with the browserUse tool from browser-use-sdk.
+---
+
+`browser-use-sdk/ai-sdk` exports `browserUse()`, a [Vercel AI SDK](https://ai-sdk.dev) tool. When the model calls it, Browser Use runs the task in a cloud browser and returns the agent's final answer to the model. It works with `generateText`, `streamText`, and `ToolLoopAgent` in AI SDK 6 and 7.
+
+## Setup
+
+```bash
+npm install browser-use-sdk ai
+```
+
+Set `BROWSER_USE_API_KEY`. Get a key at [cloud.browser-use.com](https://cloud.browser-use.com/settings?tab=api-keys&new=1), or install the [Vercel Marketplace integration](/cloud/tutorials/integrations/vercel), which adds the variable to your Vercel project.
+
+The examples use AI Gateway model strings such as `"openai/gpt-5.6-luna"`, so they also need AI Gateway credentials: set `AI_GATEWAY_API_KEY` locally. To call a provider directly instead, pass a model from its AI SDK provider package, such as `@ai-sdk/openai`.
+
+## Use the tool
+
+```typescript
+import { generateText, isStepCount } from "ai";
+import { browserUse } from "browser-use-sdk/ai-sdk";
+
+const { text } = await generateText({
+  model: "openai/gpt-5.6-luna",
+  tools: { browserUse: browserUse() },
+  stopWhen: isStepCount(5),
+  prompt: "Open https://news.ycombinator.com and summarize the top 3 stories.",
+});
+
+console.log(text);
+```
+
+In AI SDK 6, import `stepCountIs` instead of `isStepCount`.
+
+The model sends a `task` in plain language. The tool returns:
+
+```json
+{
+  "runId": "…",
+  "sessionId": "…",
+  "status": "completed",
+  "result": "1. …",
+  "output": null,
+  "error": null
+}
+```
+
+`output` holds the parsed result when you set `outputSchema` in `runOptions`. A failed run comes back with `status: "failed"` and `error` set, and a cancelled one with `status: "cancelled"`, so the model can retry or explain what happened. To keep working in the same browser, with its open pages and logins, the model passes the `sessionId` from an earlier result.
+
+## Next.js route
+
+Browser tasks take seconds to minutes, and every tool call in one request has to finish inside the route's `maxDuration`. Every step can run a browser call, and each call also spends time creating and, on timeout, cancelling its run. Keep `steps × waitTimeout` well under `maxDuration`: with `maxDuration = 300`, `isStepCount(3)` and `waitTimeout: 60_000` leave two minutes for run creation, cancellation, and the model. If Vercel stops the function first, the run keeps going on Browser Use until it ends, so set `maxCostUsd` in `runOptions`. For longer tasks, start the run in one route and poll it from another, as in the [Vercel guide](/cloud/tutorials/integrations/vercel).
+
+```typescript app/api/chat/route.ts
+import { convertToModelMessages, isStepCount, streamText, type UIMessage } from "ai";
+import { browserUse } from "browser-use-sdk/ai-sdk";
+
+export const maxDuration = 300;
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  const result = streamText({
+    model: "openai/gpt-5.6-luna",
+    messages: await convertToModelMessages(messages),
+    tools: { browserUse: browserUse({ waitTimeout: 60_000 }) },
+    stopWhen: isStepCount(3),
+    abortSignal: req.signal,
+  });
+
+  return result.toUIMessageStreamResponse();
+}
+```
+
+## Options
+
+| Option | Default | What it does |
+| --- | --- | --- |
+| `apiKey` | `BROWSER_USE_API_KEY` | API key for the V4 client. |
+| `client` | new client | Reuse an existing `BrowserUse` client from `browser-use-sdk/v4`. |
+| `runOptions` | none | Extra [V4 run fields](/cloud/api-v4/runs/create-run) sent with every call, such as `model`, `maxCostUsd`, `browserSettings`, or `outputSchema`. |
+| `waitTimeout` | `300000` | Milliseconds one tool call waits for its run. |
+| `pollInterval` | `2000` | Milliseconds between status polls. |
+| `description` | built-in | The tool description the model sees. |
+
+```typescript
+browserUse({
+  runOptions: { maxCostUsd: 0.5, browserSettings: { proxyCountryCode: "de" } },
+  waitTimeout: 120_000,
+});
+```
+
+## Cancellation and cost
+
+If `waitTimeout` passes, the tool tries to cancel the run and throws, and the AI SDK passes that tool error to the model. If the AI SDK call is aborted (for example `req.signal` when the user closes the page), the tool tries to cancel the run and the call rejects. Cancelling is best effort: it cannot happen if the platform stops the function first or the cancel request fails. Set `maxCostUsd` in `runOptions` to cap spend per run. See [Billing](/cloud/guides/billing) for rates.

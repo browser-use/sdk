@@ -5,6 +5,7 @@ export default defineConfig({
     index: "src/index.ts",
     v3: "src/v3.ts",
     v4: "src/v4.ts",
+    "ai-sdk": "src/ai-sdk.ts",
   },
   format: ["cjs", "esm"],
   dts: true,
