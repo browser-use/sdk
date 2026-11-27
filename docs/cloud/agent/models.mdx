@@ -24,17 +24,16 @@ The following Browser Use-hosted models have published token pricing:
 | GPT-5.6 Luna | `gpt-5.6-luna` | \$0.24 | \$0.024 | \$1.44 | OpenAI |
 | Claude Opus 5 | `claude-opus-5` | \$6.00 | \$0.60 | \$30.00 | Anthropic |
 | Grok 4.5 | `grok-4.5` | \$2.40 | \$0.36 | \$7.20 | — |
+| GPT-6.2 Astra | `gpt-6.2-astra` | \$9.60 | \$0.48 | \$48.00 | OpenAI |
+| GPT-6.2 Sol | `gpt-6.2-sol` | \$2.40 | \$0.12 | \$12.00 | OpenAI |
 | GPT-6.1 Sol | `gpt-6.1-sol` | \$2.40 | \$0.12 | \$12.00 | OpenAI |
 | Claude Opus 5.5 | `claude-opus-5-5` | \$4.80 | \$0.24 | \$24.00 | Anthropic |
 | GPT-5.6 Sol | `gpt-5.6-sol` | \$6.00 | \$0.60 | \$36.00 | OpenAI |
-| GPT-6.2 Astra | `gpt-6.2-astra` | \$9.60 | \$0.48 | \$48.00 | OpenAI |
 | MiniMax M3 | `minimax-m3` | \$0.36 | \$0.072 | \$1.44 | — |
 
 Token prices are USD per 1 million tokens. Browser sessions
 (\$0.06/hour) and network traffic (\$5/GB managed proxy or \$0.20/GB
 proxyless/BYOP) are charged separately. See [full pricing](https://browser-use.com/pricing).
-
-[For enterprise we offer cheaper prices; save with a commitment.](https://browser-use.com/enterprise#talk-to-sales)
 
 See [Thinking levels](/cloud/agent/thinking-levels) for V4 `modelParams` and
 the normalized `thinkingLevel` values available in V2 and V3.
@@ -73,14 +72,16 @@ to every upstream provider. Experimental models are not recommended as a
 production default. MiniMax M3 remains an API option even where it is absent
 from the dashboard picker.
 
-GPT-6.2 Astra (`gpt-6.2-astra`) is available in the US only: EU projects and US-only Bedrock projects get a 422. It has no fast or
-priority service tier and is not in the dashboard picker yet. On the LLM gateway, send tool calls to `/responses`:
-`/chat/completions` requests with tools get a 422.
+GPT-6.2 Sol (`gpt-6.2-sol`) and GPT-6.2 Astra (`gpt-6.2-astra`) are available
+in the US only: they are not offered in the EU, and US-only Bedrock projects get
+a 422. On the LLM gateway, send their tool calls to `/responses`:
+`/chat/completions` requests with tools get a 422. GPT-6.2 Astra has no fast or
+priority service tier and is not in the dashboard picker yet.
 
 | Provider | Model IDs | BYOK provider |
 | --- | --- | --- |
 | Anthropic | `claude-opus-4.7`, `claude-opus-4.8`, `claude-opus-5`, `claude-opus-5-5`, `claude-fable-5`, `claude-sonnet-5` | Anthropic |
-| OpenAI | `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-astra`, `gpt-6-sol`, `gpt-6.1-sol`, `gpt-6.2-astra`, `gpt-6.1-terra`, `gpt-6-luna` | OpenAI |
+| OpenAI | `gpt-5.5`, `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-6-astra`, `gpt-6-sol`, `gpt-6.2-astra`, `gpt-6.2-sol`, `gpt-6.1-sol`, `gpt-6.1-terra`, `gpt-6-luna` | OpenAI |
 | Google | `gemini-3-flash`, `gemini-3.1-pro`, `gemini-3.5-flash`, `gemini-3.6-flash` | Google |
 | xAI | `grok-4.5`, `grok-4.6` | — |
 | Z.ai | `glm-5.2`, `glm-5.3-flash` | — |
