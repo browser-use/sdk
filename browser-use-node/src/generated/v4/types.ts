@@ -1585,9 +1585,9 @@ export interface components {
             /**
              * Integrationid
              * Format: uuid
-             * @description 1Password integration to resolve through. Must belong to this project.
+             * @description 1Password integration to resolve through. Must belong to this project. Optional when the project has exactly one active 1Password integration.
              */
-            integrationId: string;
+            integrationId?: string;
             /** Vaultid */
             vaultId: string;
             /** Itemid */
@@ -1900,11 +1900,11 @@ export interface components {
             } | null;
             /**
              * Model
-             * @description bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams.
+             * @description bu-ultrafast and bu-fast are ultrafast presets; they take no modelParams. gpt-6.2-astra and gpt-6.2-sol run in the US region only.
              * @default gpt-6-luna
              * @enum {string}
              */
-            model: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "claude-sonnet-5-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
+            model: "mimo-v2.6-pro" | "mimo-v2.6-flash" | "deepseek-v4.1-flash" | "glm-5.2" | "grok-4.5" | "grok-4.6" | "glm-5.3-flash" | "kimi-k3" | "minimax-m3" | "claude-opus-4.7" | "claude-opus-4.8" | "claude-opus-5" | "claude-opus-5-5" | "claude-fable-5" | "claude-sonnet-5" | "claude-sonnet-5-5" | "gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.2-astra" | "gpt-6.2-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash" | "bu-ultrafast" | "bu-fast";
             /**
              * Modelparams
              * @description Optional provider-native request parameters for the selected model, written with the provider's own field names and values and forwarded unchanged (e.g. {"reasoning": {"effort": "high"}} for OpenAI, {"thinking": {"type": "adaptive"}} for Anthropic, {"thinkingConfig": {"thinkingLevel": "high"}} for Google). Supported paths and values are per-model; an unsupported path, value, or a model that accepts no parameters at all is rejected with 422. Omitting this field applies the model's default parameters (gpt-6-luna defaults to {"reasoning": {"effort": "high"}}); passing {} opts out of that default and leaves the provider's own defaults in place. On OpenAI models, {"service_tier": "priority"} (alias "fast") requests Fast processing at a higher token price; sent alone it keeps the model's default parameters. Beta: {"context": {"keepScreenshots": "2", "trimAtTokens": "80000", "compactAtTokens": "125000"}} controls what the agent keeps in context for the run: trimAtTokens clears old screenshots and tool output in one batch at that mark (keepScreenshots, which needs it, sets how many recent screenshots stay), and compactAtTokens compacts earlier. Values are strings from short per-model lists; like service_tier it keeps the model's default parameters.
@@ -2071,7 +2071,7 @@ export interface components {
              * @description The judge model, an OpenAI or Google model from this list. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422 and judge: {} uses gemini-3-flash. Once enabled, the default is gpt-6.1-terra with reasoning effort high. When the project cannot use gpt-6.1-terra (for example US-only routing), judge: {} uses gemini-3-flash. Null means omitted.
              * @default null
              */
-            model: ("gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash") | null;
+            model: ("gpt-5.5" | "gpt-5.6" | "gpt-6-astra" | "gpt-6-sol" | "gpt-6.2-astra" | "gpt-6.2-sol" | "gpt-6.1-sol" | "gpt-6.1-terra" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3.6-flash" | "gemini-3.5-flash" | "gemini-3.1-pro" | "gemini-3-flash") | null;
             /**
              * Modelparams
              * @description Optional provider-native request parameters for the judge model. Model choice is being rolled out: until enabled for a project, non-null model or modelParams return 422. Once enabled, omitted or null applies reasoning effort high where supported, otherwise the model's default parameters; {} leaves provider defaults in place. Unsupported paths or values are rejected with 422. context and service_tier are not supported.

@@ -6,8 +6,6 @@ icon: "gauge"
 
 **50 parallel browsers:** a \$100 one-time top-up (non-expiring credits, no subscription) unlocks 50 concurrent sessions at \$0.06 per browser-hour, so 50 browsers for one hour cost \$3 plus traffic. New projects start at 10 concurrent at \$0; \$1,000 total paid unlocks 250 and \$25,000 unlocks 1,000. See [How usage tiers work](#how-usage-tiers-work).
 
-[For enterprise we offer cheaper prices; save with a commitment.](https://browser-use.com/enterprise#talk-to-sales)
-
 Browser Use has separate limits for simultaneous browser work and API request frequency. A project can have available browser capacity and still receive a rate-limit response if it sends too many HTTP requests.
 
 <picture className="block dark:hidden">
@@ -130,12 +128,21 @@ special endpoints can have different limits.
 
 ### Project limits
 
-The standard per-project application buckets both scale with your stored concurrency grant. The general bucket is capped at 100 RPS; higher general budgets are account overrides:
+All three standard per-project application buckets scale with your stored concurrency grant. The general bucket is capped at 100 RPS; higher general budgets are account overrides:
 
 | Requests | Default request budget |
 |---|---:|
-| Creates, lists, updates, deletes, event reads, and full run reads | `max(25, 2 × stored concurrency)` requests/second, capped at 100 |
+| Creates, lists, updates, deletes, event reads, and full run reads (except the V4 stop-window calls below) | `max(25, 2 × stored concurrency)` requests/second, capped at 100 |
 | Selected individual status reads | `max(25, 2 × stored concurrency)` requests/second |
+| V4 stop, cancel, and session delete calls | Same budget as the general bucket, counted in its own window |
+
+Stop calls have their own window so a burst of creates cannot block cleanup. When your project is throttled for creating too fast, you can still stop browsers, cancel runs, and delete sessions. These V4 routes use the stop window:
+
+- `PATCH /api/v4/browsers/{browser_session_id}` (stop a browser)
+- `DELETE /api/v4/sessions/{session_id}`
+- `POST /api/v4/runs/{run_id}/cancel`
+
+The stop window has the same size as the general bucket; it does not add request capacity for other calls. V2 and V3 browser stops still count against the general bucket.
 
 The selected V4 polling endpoints include:
 

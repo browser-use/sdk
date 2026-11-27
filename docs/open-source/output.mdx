@@ -61,7 +61,7 @@ print(result.error)  # what ended the run, or None
 | `steps` | Model requests. |
 | `duration_s` | Seconds. |
 | `usage` | Tokens: `input`, `output`, `cache_read`, `cache_write`, plus `requests`. |
-| `cost_usd` | USD. `None` when the model's price is unknown. See [Models](/open-source/models#usage-and-cost). |
+| `cost_usd` | USD, including the judge request. `None` when the model's price is unknown. See [Models](/open-source/models#usage-and-cost). |
 | `error` | The error that ended the run, or `None`. `run()` returns errors here instead of raising once the browser start begins; see [Agent: run()](/open-source/agent#run). |
 | `downloads` | Files this run added to `agent.workspace/downloads`. Empty with your Chrome and `cdp_url`. See [Files](/open-source/files#downloads). |
 | `messages` | The full transcript as Pydantic AI messages, with secrets redacted. |
@@ -80,13 +80,37 @@ For the 0.x default (no verdict counts as success), use `result.is_done() and re
 
 ## Judge
 
-By default, after a run that took a step, the same model judges the task and trace at low reasoning effort. `result.judgement` holds `success`, `failure_reason`, `description`, `prompt_injection_detected`, `bot_block_or_captcha_detected` and `gotchas`: up to five short lessons grounded in what happened, also on successful runs. This is separate from the agent's own `result.success`; it does not change the run's status.
+After each run that took a step, one more request to the agent's own model, at low effort, checks the run against the task (two if the model rejects the images, see below). The verdict is in `result.judgement`, a `browser_use.agent.judge.Judgement`:
 
-- `Agent(task, judge_context='the answer is 42')` supplies your criteria, which the judge puts first. The 0.x names `use_judge` and `ground_truth` still work.
-- The judge sees up to 120k characters of trace, with secrets redacted, and the last 4 distinct images available, including a final-page capture when possible. Images are sent as they are, without redaction. `use_vision=False` sends text only.
-- A model that rejects images gets one text-only retry. A judge failure logs a warning and leaves `result.judgement` as `None`.
-- Judge tokens and cost are included in `result.usage` and `result.cost_usd`. Judging and the final screenshot are outside the `run(timeout=...)` loop budget.
-- `Agent(task, judge=False)` sends no judge request.
+```python
+from browser_use import Agent
+
+agent = Agent('What is the title of https://example.com?', judge_context='The answer is "Example Domain".')
+result = agent.run_sync()
+
+if result.judgement:
+    print(result.judgement.success, result.judgement.failure_reason)
+    for gotcha in result.judgement.gotchas:
+        print('gotcha:', gotcha)
+```
+
+| Field | What it holds |
+|---|---|
+| `success` | `True` when the whole task is done. |
+| `failure_reason` | Why the run failed, in one line. `None` on success. |
+| `description` | What the agent did and what came of it, in 1 to 3 sentences. |
+| `prompt_injection_detected` | A page, file or tool result tried to instruct the agent. |
+| `bot_block_or_captcha_detected` | The agent met a CAPTCHA, a bot check, an access block or a rate limit. |
+| `gotchas` | Up to 5 short lessons for the next agent, grounded in what the run actually showed about the website, the agent, a tool or the environment (such as a rate limit, a page order that avoids a block, or a field's required format). Written on successful and failed runs. A recovery is included only when the run shows it worked. May be empty. |
+
+- The judge reads the run as text, with secrets redacted, capped at 120k characters.
+- With vision on, it also gets up to 4 images: the run's last distinct screenshots and a screenshot of the final page, oldest first. Images are sent as they are, not redacted. `use_vision=False` sends text only.
+- If the model rejects the images (an HTTP 4xx error that mentions `image`), the judge retries once with the text alone. Other failures are not retried.
+- Its tokens and cost are added to `result.usage` and `result.cost_usd`, also when the judge request fails.
+- A failed judge request logs a warning and leaves `result.judgement` `None`. It never changes the run's own result.
+- Judging and the final screenshot are outside the `run(timeout=...)` loop budget.
+- `judge_context=` passes your criteria or the expected answer. `judge=False` turns the judge off and sends no request.
+- `result.success` stays the agent's own verdict; `result.judgement.success` is the judge's.
 
 ## Removed from 0.x
 

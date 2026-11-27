@@ -53,8 +53,6 @@ The browser-time estimate is not the total session price: network usage is bille
 
 For example, at a browser rate of \$0.06/hour billed by the minute, 12 minutes 13 seconds rounds to 13 billable minutes (\$0.013). At \$0.20/GB, 74.13 MB of direct/custom-proxy traffic adds about \$0.01448 (74.13 / 1024 × 0.20). The combined \$0.02748 rounds to **\$0.03** in a two-decimal display; this does not mean browser time alone cost three cents.
 
-[For enterprise we offer cheaper prices; save with a commitment.](https://browser-use.com/enterprise#talk-to-sales)
-
 A [custom proxy](/cloud/browser/proxies), an enterprise feature (contact sales@browser-use.com), replaces the Browser Use managed proxy. Your proxy provider bills its own usage, and Browser Use browser/network charges still apply. Disabling the managed proxy also leaves browser and direct network usage billable.
 
 Run completion does not stop the browser immediately. A V4 agent browser stays open about 2 minutes after the session's last run activity, or for the run's [`keepAlive`](/cloud/agent/sessions#keep-the-browser-open-between-runs) seconds, and that time is billed as browser time. When your application no longer needs it, explicitly stop the owned browser with `PATCH /api/v4/browsers/{id}` and `{"action":"stop"}`. Disconnecting Playwright/CDP or closing the SDK client is not the cloud stop operation. See [browser lifetime](/cloud/guides/concurrency#keep-track-of-browser-lifetime).
@@ -109,6 +107,13 @@ Auto recharge has two separate settings:
 For example, a \$10 threshold with a \$50 recharge amount purchases \$50 when the balance falls below \$10. It does not target a final balance of \$50.
 
 Enabling auto recharge while already below the threshold can trigger a charge immediately. Choose an amount that covers your expected workload and check payment history if a recharge fails. Funding and concurrent workloads can change the displayed balance while a payment is being processed.
+
+## When a run uses up your credits
+
+Creating a run without enough usable credit returns HTTP 402. If a paid V4 run uses up the balance while it is running, a later model step is stopped once the exhausted balance is detected and confirmed. Billing settlement and balance checks can delay this, so it is not an instantaneous spending cap. The stopped run ends with `status` `failed` and an `error` that starts with `Out of credits. Buy credits:` followed by a link to add credits.
+
+- Adding credits does not resume the stopped run. Start a new run after the top-up.
+- Projects with auto recharge enabled, BYOK model calls, and free-tier runs are not stopped this way. For auto recharge, this stop is skipped while the setting is on, whether or not a recharge succeeds, so a failed recharge does not top up the balance; check payment history if one fails.
 
 ## API-key monthly spending caps
 

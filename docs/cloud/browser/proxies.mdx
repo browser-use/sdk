@@ -60,6 +60,10 @@ curl https://api.browser-use.com/api/v4/runs \
 ```
 </CodeGroup>
 
+China (`cn`) is not offered as a proxy country. A request with
+`"proxyCountryCode": "cn"` returns `422`, and the error message ends with
+"China (cn) is not offered as a proxy country".
+
 ## Disable proxies
 
 Pass `null` for QA or internal sites that do not need a residential proxy:
