@@ -103,7 +103,7 @@
   ],
   "dependencies": {
     "dotenv": "17.4.2",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "peerDependencies": {
     "@x402/evm": "^2.20.0",
