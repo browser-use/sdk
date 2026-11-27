@@ -263,6 +263,18 @@ class Runs:
                 )
             time.sleep(min(interval, remaining))
 
+    def live_url(
+        self, run_id: str | UUID, *, timeout: float = 300, interval: float = 3
+    ) -> str:
+        """Wait for the run's browser and return its live view URL, to show a user the agent."""
+        event = self.wait_for_event(
+            run_id, "browser.ready", timeout=timeout, interval=interval
+        )
+        url = event.data.get("live_view_url")
+        if not isinstance(url, str) or not url:
+            raise RuntimeError(f"Run {run_id} emitted {event.type} without a live view URL")
+        return url
+
     def cancel(self, run_id: str | UUID) -> RunSummary:
         """Cancel a run. Returns the updated run summary."""
         return RunSummary.model_validate(
@@ -463,6 +475,18 @@ class AsyncRuns:
                     f"Run {run_id} did not emit {event_type} within {timeout}s"
                 )
             await asyncio.sleep(min(interval, remaining))
+
+    async def live_url(
+        self, run_id: str | UUID, *, timeout: float = 300, interval: float = 3
+    ) -> str:
+        """Wait for the run's browser and return its live view URL, to show a user the agent."""
+        event = await self.wait_for_event(
+            run_id, "browser.ready", timeout=timeout, interval=interval
+        )
+        url = event.data.get("live_view_url")
+        if not isinstance(url, str) or not url:
+            raise RuntimeError(f"Run {run_id} emitted {event.type} without a live view URL")
+        return url
 
     async def cancel(self, run_id: str | UUID) -> RunSummary:
         """Cancel a run. Returns the updated run summary."""

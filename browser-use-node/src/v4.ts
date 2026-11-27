@@ -33,6 +33,7 @@ export type { WorkspaceFilesParams } from "./v4/resources/workspaces.js";
 
 export { Integrations } from "./v4/resources/integrations.js";
 export type { IntegrationListParams } from "./v4/resources/integrations.js";
+export { Payments } from "./v4/resources/payments.js";
 
 export type { components as V4Types } from "./generated/v4/types.js";
 
@@ -85,6 +86,9 @@ export type SessionShareUpdateRequest = S["SessionShareUpdateRequest"];
 
 // Integration models
 export type IntegrationListResponse = S["IntegrationListResponse"];
+export type AgentCardWalletListResponse = S["AgentCardWalletListResponse"];
+export type AgentCardWalletSummary = S["AgentCardWalletSummary"];
+export type StripeLinkStatusResponse = S["StripeLinkStatusResponse"];
 export type IntegrationResponse = S["IntegrationResponse"];
 export type IntegrationCategoryResponse = S["IntegrationCategoryResponse"];
 export type AuthorizeResponse = S["AuthorizeResponse"];
