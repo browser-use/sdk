@@ -155,8 +155,10 @@ viewers get `429`.
 
 | Status | Cause |
 | --- | --- |
+| `403` | The API key does not have the `browsers:tokens` scope of its API version. |
 | `404` | The browser does not exist, or it is in a different project. For a revoke of 1 token: the token does not exist. Or the service does not give access tokens yet. |
 | `409` | The browser is stopped. Or the browser is protected (agentic autofill). Or the browser started before access tokens were available. Or you tried to revoke 1 viewer token. |
+| `422` | A field is not valid, such as `ttlSeconds` or `label`. Or a create sends `cdpTokenTtlSeconds` or `closeConnectionsOnExpiry` before the service gives access tokens. |
 | `429` | The browser has the most tokens or live viewers that it allows. |
 | `503` | The token service is not available. Try again. |
 
@@ -169,7 +171,8 @@ events of a browser, newest first. The response has `items`, `totalItems`,
 | Field | Description |
 | --- | --- |
 | `event` | `token_created`, `token_revoked`, or `tokens_revoked` (revoke of all). |
-| `tokenId`, `tokenKind` | The token of a `token_created` or `token_revoked` event. |
+| `tokenId` | The token of a `token_created` or `token_revoked` event. |
+| `tokenKind` | The kind of the token of a `token_created` event. It is null for the other events. |
 | `revokedKinds` | The token kinds of a `tokens_revoked` event. |
 | `actor` | `type` is `api_key`, `user`, or `service`. `id` is the API key ID, the user ID, or the service name. `runId` is the run of a service, or `null`. |
 | `createdAt` | The time of the event. |
