@@ -803,6 +803,336 @@
         }
       }
     },
+    "/browsers/{session_id}/access-tokens": {
+      "post": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Create Browser Access Token",
+        "description": "Makes a customer token for the CDP URL of a running browser. The token, cdpUrl, and liveUrl appear only in this answer. Without ttlSeconds the token is valid until the browser stops. A browser has at most 16 live customer tokens and 512 customer tokens between 2 revokes of all tokens. A browser allows at most 64 viewers for each 5 minutes. This route answers 404 while the feature is off.",
+        "operationId": "create_browser_access_token_browsers__session_id__access_tokens_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBrowserAccessTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserAccessTokenCreated"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found, or the feature is off"
+          },
+          "409": {
+            "description": "Browser stopped or protected, or it has no access token control"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The browser has the most tokens that it allows"
+          },
+          "503": {
+            "description": "Token service unavailable"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "List Browser Access Tokens",
+        "description": "Lists the live tokens of a browser without their secret values: customer, viewer, and system tokens. Expired tokens are not in the list. A browser allows at most 64 viewers for each 5 minutes. This route answers 404 while the feature is off.",
+        "operationId": "list_browser_access_tokens_browsers__session_id__access_tokens_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserAccessTokenList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found, or the feature is off"
+          },
+          "409": {
+            "description": "Browser stopped or protected, or it has no access token control"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Token service unavailable"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Revoke Browser Access Tokens",
+        "description": "Revokes each customer and viewer token of a browser and closes their open connections, also the connections of tokens that expired. A revoke is complete inside 2 seconds in the normal case and inside 100 seconds in each case; effectiveBy is the latest time. This route answers 404 while the feature is off.",
+        "operationId": "revoke_browser_access_tokens_browsers__session_id__access_tokens_delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserAccessTokenRevoked"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found, or the feature is off"
+          },
+          "409": {
+            "description": "Browser stopped or protected, or it has no access token control"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Token service unavailable"
+          }
+        }
+      }
+    },
+    "/browsers/{session_id}/access-tokens/{token_id}": {
+      "delete": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "Revoke Browser Access Token",
+        "description": "Revokes one token by its id, also an expired one, and closes its open connections. A viewer token answers 409: viewer tokens end only with a revoke of all tokens. A revoke of a system token stops our services for this browser, for example agent tasks, secure tokens, and uploads. A revoke is complete inside 2 seconds in the normal case and inside 100 seconds in each case; effectiveBy is the latest time. This route answers 404 while the feature is off.",
+        "operationId": "revoke_browser_access_token_browsers__session_id__access_tokens__token_id__delete",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "token_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Token Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserAccessTokenRevoked"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser or token not found, or the feature is off"
+          },
+          "409": {
+            "description": "Browser stopped or protected, or it has no access token control"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Token service unavailable"
+          }
+        }
+      }
+    },
+    "/browsers/{session_id}/access-log": {
+      "get": {
+        "tags": [
+          "Browsers"
+        ],
+        "summary": "List Browser Access Events",
+        "description": "Lists the token changes of a browser, newest first: each made and each revoked token, with its actor. This route answers 404 while the feature is off.",
+        "operationId": "list_browser_access_events_browsers__session_id__access_log_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserAccessEventList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Browser not found, or the feature is off"
+          },
+          "409": {
+            "description": "Browser stopped or protected, or it has no access token control"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Token service unavailable"
+          }
+        }
+      }
+    },
     "/profiles": {
       "get": {
         "tags": [
@@ -1879,6 +2209,284 @@
         "title": "AccountView",
         "description": "View model for account information."
       },
+      "BrowserAccessEventActor": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "api_key",
+              "user",
+              "service"
+            ]
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "API key ID, user ID, or service name."
+          },
+          "runId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "id",
+          "runId"
+        ],
+        "title": "BrowserAccessEventActor"
+      },
+      "BrowserAccessEventItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "token_created",
+              "token_revoked",
+              "tokens_revoked"
+            ]
+          },
+          "tokenId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tokenKind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "customer",
+                  "viewer",
+                  "system"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revokedKinds": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "customer",
+                    "viewer",
+                    "system"
+                  ]
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actor": {
+            "$ref": "#/components/schemas/BrowserAccessEventActor"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event",
+          "tokenId",
+          "tokenKind",
+          "revokedKinds",
+          "actor",
+          "createdAt"
+        ],
+        "title": "BrowserAccessEventItem"
+      },
+      "BrowserAccessEventList": {
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BrowserAccessEventItem"
+            }
+          },
+          "totalItems": {
+            "type": "integer"
+          },
+          "pageNumber": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalItems",
+          "pageNumber",
+          "pageSize"
+        ],
+        "title": "BrowserAccessEventList"
+      },
+      "BrowserAccessTokenCreated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token": {
+            "type": "string",
+            "description": "Secret token. It appears only in this answer."
+          },
+          "cdpUrl": {
+            "type": "string",
+            "description": "CDP URL with this token."
+          },
+          "liveUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Live view URL with this token; null when the project hides the live view."
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Expiry of the token; null when it is valid until the browser stops."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "token",
+          "cdpUrl",
+          "liveUrl",
+          "expiresAt"
+        ],
+        "title": "BrowserAccessTokenCreated"
+      },
+      "BrowserAccessTokenItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "viewer",
+              "system"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastUsedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Always null for now."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "kind",
+          "createdAt",
+          "expiresAt",
+          "lastUsedAt"
+        ],
+        "title": "BrowserAccessTokenItem"
+      },
+      "BrowserAccessTokenList": {
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BrowserAccessTokenItem"
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "BrowserAccessTokenList"
+      },
+      "BrowserAccessTokenRevoked": {
+        "properties": {
+          "effectiveBy": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Latest time when the revoke is complete."
+          }
+        },
+        "type": "object",
+        "required": [
+          "effectiveBy"
+        ],
+        "title": "BrowserAccessTokenRevoked"
+      },
       "BrowserDownloadFile": {
         "properties": {
           "path": {
@@ -2360,6 +2968,42 @@
         "title": "BuModel",
         "description": "The model to use for the agent. Each model has different capabilities and pricing.\n\n- `bu-mini` / `gemini-3-flash`: Gemini 3 Flash \u2014 fast and cost-effective. Best for simple, well-defined tasks like form filling or data extraction.\n- `bu-max` / `claude-sonnet-4.6` (legacy aliases) / `claude-sonnet-5`: Claude Sonnet 5 \u2014 balanced performance. Best for multi-step workflows that require reasoning and decision-making.\n- `bu-ultra` / `claude-opus-4.6`: Claude Opus 4.6 \u2014 capable general-purpose Opus tier.\n- `claude-opus-4.7`: Claude Opus 4.7 \u2014 most capable. Best for complex tasks that require advanced reasoning, long-horizon planning, or handling ambiguous instructions.\n- `claude-opus-4.8`: Claude Opus 4.8 \u2014 most capable Opus-tier model, state-of-the-art on long-horizon agentic work.\n- `gpt-5.4-mini`: GPT-5.4 mini \u2014 OpenAI's fast and efficient model. Best for tasks that benefit from OpenAI's capabilities.\n- `glm-5.2`: Z.ai GLM 5.2 \u2014 capable, low-cost open model. Best for cost-sensitive agentic tasks.\n- `minimax-m3`: MiniMax M3 \u2014 fast, very low-cost model. Best for simple, high-volume tasks.\n- `grok-4.6`: xAI Grok 4.6. Fast frontier model with a large context window.\n- `glm-5.3-flash`: Z.ai GLM 5.3 Flash. Multimodal, very low cost, served by Fireworks.\n- `deepseek-v4-flash-vision`: DeepSeek V4 Flash Vision. Experimental, very low cost.\n\nAdditional provider models (e.g. `gemini-3.5-flash`, `gpt-5.2`, and `gpt-5-mini`)\nare selectable only with `use_own_key=true`, where your own provider key serves\nthem. The GPT-5.6 family is native when either Browser Use's direct OpenAI key\nor Amazon Bedrock route is configured. GPT-5.5 becomes native only through the\nBedrock rollout."
       },
+      "CreateBrowserAccessTokenRequest": {
+        "properties": {
+          "ttlSeconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 60,
+                "maximum": 86400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Life of the token in seconds. Null: valid until the browser stops."
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Printable ASCII label for the token list."
+          },
+          "closeConnectionsOnExpiry": {
+            "type": "boolean",
+            "default": false,
+            "description": "Close the open connections of the token when it expires. Else expiry stops only new connections."
+          }
+        },
+        "type": "object",
+        "title": "CreateBrowserAccessTokenRequest"
+      },
       "CreateBrowserSessionRequest": {
         "properties": {
           "profileId": {
@@ -2485,6 +3129,24 @@
             "title": "Extension IDs",
             "description": "Up to 3 ready extensions from POST /api/v4/extensions to install before the browser starts.",
             "default": []
+          },
+          "cdpTokenTtlSeconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 60,
+                "maximum": 86400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Life in seconds of the customer token in cdpUrl and liveUrl. Null: valid until the browser stops. The create answers 422 while the feature is off."
+          },
+          "closeConnectionsOnExpiry": {
+            "type": "boolean",
+            "default": false,
+            "description": "Close the open connections of the customer token when it expires. The create answers 422 while the feature is off."
           }
         },
         "type": "object",

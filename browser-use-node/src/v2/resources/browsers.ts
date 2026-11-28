@@ -8,6 +8,11 @@ type BrowserSessionListResponse = components["schemas"]["BrowserSessionListRespo
 type BrowserSessionView = components["schemas"]["BrowserSessionView"];
 type UpdateBrowserSessionRequest = components["schemas"]["UpdateBrowserSessionRequest"];
 type BrowserDownloadListResponse = components["schemas"]["BrowserDownloadListResponse"];
+type BrowserAccessTokenCreated = components["schemas"]["BrowserAccessTokenCreated"];
+type BrowserAccessTokenList = components["schemas"]["BrowserAccessTokenList"];
+type BrowserAccessTokenRevoked = components["schemas"]["BrowserAccessTokenRevoked"];
+type BrowserAccessEventList = components["schemas"]["BrowserAccessEventList"];
+export type CreateAccessTokenBody = Partial<components["schemas"]["CreateBrowserAccessTokenRequest"]> & Record<string, unknown>;
 
 export interface BrowserListParams {
   metadata?: string[];
@@ -21,6 +26,11 @@ export interface BrowserDownloadsParams {
   limit?: number;
   cursor?: string;
   includeUrls?: boolean;
+}
+
+export interface BrowserAccessLogParams {
+  pageSize?: number;
+  pageNumber?: number;
 }
 
 export class Browsers {
@@ -64,6 +74,34 @@ export class Browsers {
   downloads(sessionId: string, params?: BrowserDownloadsParams): Promise<BrowserDownloadListResponse> {
     return this.http.get<BrowserDownloadListResponse>(
       `/browsers/${sessionId}/downloads`,
+      params as Record<string, unknown>,
+    );
+  }
+
+  /** Create an access token and a CDP URL that holds it; only this answer shows the token. */
+  createAccessToken(sessionId: string, body?: CreateAccessTokenBody): Promise<BrowserAccessTokenCreated> {
+    return this.http.post<BrowserAccessTokenCreated>(`/browsers/${sessionId}/access-tokens`, body);
+  }
+
+  /** List the access tokens of a browser session, without the secret values. */
+  listAccessTokens(sessionId: string): Promise<BrowserAccessTokenList> {
+    return this.http.get<BrowserAccessTokenList>(`/browsers/${sessionId}/access-tokens`);
+  }
+
+  /** Revoke one access token and close its open connections. */
+  revokeAccessToken(sessionId: string, tokenId: string): Promise<BrowserAccessTokenRevoked> {
+    return this.http.delete<BrowserAccessTokenRevoked>(`/browsers/${sessionId}/access-tokens/${tokenId}`);
+  }
+
+  /** Revoke all customer and viewer tokens of a browser session and close their connections. */
+  revokeAllAccessTokens(sessionId: string): Promise<BrowserAccessTokenRevoked> {
+    return this.http.delete<BrowserAccessTokenRevoked>(`/browsers/${sessionId}/access-tokens`);
+  }
+
+  /** List the access token events of a browser session, newest first. */
+  getAccessLog(sessionId: string, params?: BrowserAccessLogParams): Promise<BrowserAccessEventList> {
+    return this.http.get<BrowserAccessEventList>(
+      `/browsers/${sessionId}/access-log`,
       params as Record<string, unknown>,
     );
   }

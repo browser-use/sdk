@@ -82,6 +82,11 @@ function v2EndpointToSdkMethod(
   if (method === "get" && path === "/browsers/{session_id}") return { resource: "browsers", method: "get" };
   if (method === "patch" && path === "/browsers/{session_id}") return { resource: "browsers", method: "stop" };
   if (method === "get" && path === "/browsers/{session_id}/downloads") return { resource: "browsers", method: "downloads" };
+  if (method === "post" && path === "/browsers/{session_id}/access-tokens") return { resource: "browsers", method: "createAccessToken" };
+  if (method === "get" && path === "/browsers/{session_id}/access-tokens") return { resource: "browsers", method: "listAccessTokens" };
+  if (method === "delete" && path === "/browsers/{session_id}/access-tokens") return { resource: "browsers", method: "revokeAllAccessTokens" };
+  if (method === "delete" && path === "/browsers/{session_id}/access-tokens/{token_id}") return { resource: "browsers", method: "revokeAccessToken" };
+  if (method === "get" && path === "/browsers/{session_id}/access-log") return { resource: "browsers", method: "getAccessLog" };
 
   // Skills
   if (method === "post" && path === "/skills") return { resource: "skills", method: "create" };
@@ -126,6 +131,11 @@ function v3EndpointToSdkMethod(
   if (method === "get" && path === "/browsers/{session_id}") return { resource: "browsers", method: "get" };
   if (method === "patch" && path === "/browsers/{session_id}") return { resource: "browsers", method: "stop" };
   if (method === "get" && path === "/browsers/{session_id}/downloads") return { resource: "browsers", method: "downloads" };
+  if (method === "post" && path === "/browsers/{session_id}/access-tokens") return { resource: "browsers", method: "createAccessToken" };
+  if (method === "get" && path === "/browsers/{session_id}/access-tokens") return { resource: "browsers", method: "listAccessTokens" };
+  if (method === "delete" && path === "/browsers/{session_id}/access-tokens") return { resource: "browsers", method: "revokeAllAccessTokens" };
+  if (method === "delete" && path === "/browsers/{session_id}/access-tokens/{token_id}") return { resource: "browsers", method: "revokeAccessToken" };
+  if (method === "get" && path === "/browsers/{session_id}/access-log") return { resource: "browsers", method: "getAccessLog" };
 
   // Profiles
   if (method === "post" && path === "/profiles") return { resource: "profiles", method: "create" };
@@ -164,6 +174,11 @@ function v4EndpointToSdkMethod(
   if (method === "get" && path === "/browsers/{session_id}") return { resource: "browsers", method: "get" };
   if (method === "patch" && path === "/browsers/{session_id}") return { resource: "browsers", method: "stop" };
   if (method === "get" && path === "/browsers/{session_id}/downloads") return { resource: "browsers", method: "downloads" };
+  if (method === "post" && path === "/browsers/{session_id}/access-tokens") return { resource: "browsers", method: "createAccessToken" };
+  if (method === "get" && path === "/browsers/{session_id}/access-tokens") return { resource: "browsers", method: "listAccessTokens" };
+  if (method === "delete" && path === "/browsers/{session_id}/access-tokens") return { resource: "browsers", method: "revokeAllAccessTokens" };
+  if (method === "delete" && path === "/browsers/{session_id}/access-tokens/{token_id}") return { resource: "browsers", method: "revokeAccessToken" };
+  if (method === "get" && path === "/browsers/{session_id}/access-log") return { resource: "browsers", method: "getAccessLog" };
   if (method === "get" && path === "/browsers/{session_id}/proxy") return { resource: "browsers", method: "getProxy" };
   if (method === "patch" && path === "/browsers/{session_id}/proxy") return { resource: "browsers", method: "updateProxy" };
 

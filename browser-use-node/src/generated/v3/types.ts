@@ -207,6 +207,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/browsers/{session_id}/access-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Browser Access Tokens
+         * @description Lists the live tokens of a browser without their secret values: customer, viewer, and system tokens. Expired tokens are not in the list. A browser allows at most 64 viewers for each 5 minutes. This route answers 404 while the feature is off.
+         */
+        get: operations["list_browser_access_tokens_browsers__session_id__access_tokens_get"];
+        put?: never;
+        /**
+         * Create Browser Access Token
+         * @description Makes a customer token for the CDP URL of a running browser. The token, cdpUrl, and liveUrl appear only in this answer. Without ttlSeconds the token is valid until the browser stops. A browser has at most 16 live customer tokens and 512 customer tokens between 2 revokes of all tokens. A browser allows at most 64 viewers for each 5 minutes. This route answers 404 while the feature is off.
+         */
+        post: operations["create_browser_access_token_browsers__session_id__access_tokens_post"];
+        /**
+         * Revoke Browser Access Tokens
+         * @description Revokes each customer and viewer token of a browser and closes their open connections, also the connections of tokens that expired. A revoke is complete inside 2 seconds in the normal case and inside 100 seconds in each case; effectiveBy is the latest time. This route answers 404 while the feature is off.
+         */
+        delete: operations["revoke_browser_access_tokens_browsers__session_id__access_tokens_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/browsers/{session_id}/access-tokens/{token_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke Browser Access Token
+         * @description Revokes one token by its id, also an expired one, and closes its open connections. A viewer token answers 409: viewer tokens end only with a revoke of all tokens. A revoke of a system token stops our services for this browser, for example agent tasks, secure tokens, and uploads. A revoke is complete inside 2 seconds in the normal case and inside 100 seconds in each case; effectiveBy is the latest time. This route answers 404 while the feature is off.
+         */
+        delete: operations["revoke_browser_access_token_browsers__session_id__access_tokens__token_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/browsers/{session_id}/access-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Browser Access Events
+         * @description Lists the token changes of a browser, newest first: each made and each revoked token, with its actor. This route answers 404 while the feature is off.
+         */
+        get: operations["list_browser_access_events_browsers__session_id__access_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/profiles": {
         parameters: {
             query?: never;
@@ -535,6 +603,72 @@ export interface components {
              * @default false
              */
             tracingDisabled: boolean;
+        };
+        /** BrowserAccessEventActor */
+        BrowserAccessEventActor: {
+            /** @enum {string} */
+            type: "api_key" | "user" | "service";
+            /** @description API key ID, user ID, or service name. */
+            id: string | null;
+            runId: string | null;
+        };
+        /** BrowserAccessEventItem */
+        BrowserAccessEventItem: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            event: "token_created" | "token_revoked" | "tokens_revoked";
+            tokenId: string | null;
+            tokenKind: ("customer" | "viewer" | "system") | null;
+            revokedKinds: ("customer" | "viewer" | "system")[] | null;
+            actor: components["schemas"]["BrowserAccessEventActor"];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** BrowserAccessEventList */
+        BrowserAccessEventList: {
+            items: components["schemas"]["BrowserAccessEventItem"][];
+            totalItems: number;
+            pageNumber: number;
+            pageSize: number;
+        };
+        /** BrowserAccessTokenCreated */
+        BrowserAccessTokenCreated: {
+            /** Format: uuid */
+            id: string;
+            /** @description Secret token. It appears only in this answer. */
+            token: string;
+            /** @description CDP URL with this token. */
+            cdpUrl: string;
+            /** @description Live view URL with this token; null when the project hides the live view. */
+            liveUrl: string | null;
+            /** @description Expiry of the token; null when it is valid until the browser stops. */
+            expiresAt: string | null;
+        };
+        /** BrowserAccessTokenItem */
+        BrowserAccessTokenItem: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            /** @enum {string} */
+            kind: "customer" | "viewer" | "system";
+            /** Format: date-time */
+            createdAt: string;
+            expiresAt: string | null;
+            /** @description Always null for now. */
+            lastUsedAt: string | null;
+        };
+        /** BrowserAccessTokenList */
+        BrowserAccessTokenList: {
+            items: components["schemas"]["BrowserAccessTokenItem"][];
+        };
+        /** BrowserAccessTokenRevoked */
+        BrowserAccessTokenRevoked: {
+            /**
+             * Format: date-time
+             * @description Latest time when the revoke is complete.
+             */
+            effectiveBy: string;
         };
         /**
          * BrowserDownloadFile
@@ -867,6 +1001,18 @@ export interface components {
          * @enum {string}
          */
         BuModel: "bu-mini" | "bu-max" | "bu-ultra" | "gemini-3-flash" | "claude-opus-4.6" | "claude-opus-4.7" | "claude-sonnet-5" | "claude-opus-4.8" | "gpt-5.4-mini" | "glm-5.2" | "minimax-m3" | "grok-4.6" | "glm-5.3-flash" | "deepseek-v4-flash-vision" | "claude-haiku-4.5" | "gpt-5.2" | "gpt-5-mini" | "gpt-5.5" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" | "gemini-3-pro" | "gemini-3.1-pro" | "gemini-3.5-flash";
+        /** CreateBrowserAccessTokenRequest */
+        CreateBrowserAccessTokenRequest: {
+            /** @description Life of the token in seconds. Null: valid until the browser stops. */
+            ttlSeconds?: number | null;
+            /** @description Printable ASCII label for the token list. */
+            label?: string | null;
+            /**
+             * @description Close the open connections of the token when it expires. Else expiry stops only new connections.
+             * @default false
+             */
+            closeConnectionsOnExpiry: boolean;
+        };
         /**
          * CreateBrowserSessionRequest
          * @description Request model for creating a browser session.
@@ -941,6 +1087,13 @@ export interface components {
              * @default []
              */
             extensionIds: string[];
+            /** @description Life in seconds of the customer token in cdpUrl and liveUrl. Null: valid until the browser stops. The create answers 422 while the feature is off. */
+            cdpTokenTtlSeconds?: number | null;
+            /**
+             * @description Close the open connections of the customer token when it expires. The create answers 422 while the feature is off.
+             * @default false
+             */
+            closeConnectionsOnExpiry: boolean;
         };
         /**
          * CustomProxy
@@ -2275,6 +2428,281 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    list_browser_access_tokens_browsers__session_id__access_tokens_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserAccessTokenList"];
+                };
+            };
+            /** @description Browser not found, or the feature is off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Browser stopped or protected, or it has no access token control */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Token service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    create_browser_access_token_browsers__session_id__access_tokens_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CreateBrowserAccessTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserAccessTokenCreated"];
+                };
+            };
+            /** @description Browser not found, or the feature is off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Browser stopped or protected, or it has no access token control */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The browser has the most tokens that it allows */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revoke_browser_access_tokens_browsers__session_id__access_tokens_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserAccessTokenRevoked"];
+                };
+            };
+            /** @description Browser not found, or the feature is off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Browser stopped or protected, or it has no access token control */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Token service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revoke_browser_access_token_browsers__session_id__access_tokens__token_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+                token_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserAccessTokenRevoked"];
+                };
+            };
+            /** @description Browser or token not found, or the feature is off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Browser stopped or protected, or it has no access token control */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Token service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_browser_access_events_browsers__session_id__access_log_get: {
+        parameters: {
+            query?: {
+                pageNumber?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserAccessEventList"];
+                };
+            };
+            /** @description Browser not found, or the feature is off */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Browser stopped or protected, or it has no access token control */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Token service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

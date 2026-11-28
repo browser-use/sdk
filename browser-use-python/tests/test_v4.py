@@ -156,6 +156,8 @@ def test_browsers_create() -> None:
         pdf_renderer_enabled=False,
         solve_captchas=False,
         extension_ids=[EXTENSION_ID],
+        cdp_token_ttl_seconds=300,
+        close_connections_on_expiry=True,
     )
 
     assert http.calls[0][:3] == (
@@ -168,6 +170,8 @@ def test_browsers_create() -> None:
             "pdfRendererEnabled": False,
             "solveCaptchas": False,
             "extensionIds": [EXTENSION_ID],
+            "cdpTokenTtlSeconds": 300,
+            "closeConnectionsOnExpiry": True,
         },
     )
     assert browser.cdp_url == "wss://connect.browser-use.com/devtools/browser/test"

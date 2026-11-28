@@ -4,6 +4,7 @@ import { HttpClient } from "../src/core/http.js";
 import { Browsers, Integrations, NetworkPolicies, Profiles, Runs, Sessions } from "../src/v4.js";
 
 const SESSION_ID = "00000000-0000-0000-0000-000000000002";
+const TOKEN_ID = "00000000-0000-0000-0000-000000000003";
 
 // Request shaping the wire depends on: query renames, a null body field and the PUT verb.
 // Plain path passthroughs are covered by vibe.test.ts's endpoint map.
@@ -119,6 +120,46 @@ it.each([
     call: (http: HttpClient) => new Runs(http).list({ metadata: ["flow", "source=api"] }),
     method: "GET",
     url: "/runs?metadata=flow&metadata=source%3Dapi",
+    body: undefined,
+  },
+  {
+    name: "browsers.createAccessToken forwards token settings and extra fields",
+    call: (http: HttpClient) => new Browsers(http).createAccessToken(SESSION_ID, {
+      ttlSeconds: 300,
+      label: "ci",
+      closeConnectionsOnExpiry: true,
+      future: true,
+    }),
+    method: "POST",
+    url: `/browsers/${SESSION_ID}/access-tokens`,
+    body: '{"ttlSeconds":300,"label":"ci","closeConnectionsOnExpiry":true,"future":true}',
+  },
+  {
+    name: "browsers.listAccessTokens reads the tokens",
+    call: (http: HttpClient) => new Browsers(http).listAccessTokens(SESSION_ID),
+    method: "GET",
+    url: `/browsers/${SESSION_ID}/access-tokens`,
+    body: undefined,
+  },
+  {
+    name: "browsers.revokeAccessToken deletes one token",
+    call: (http: HttpClient) => new Browsers(http).revokeAccessToken(SESSION_ID, TOKEN_ID),
+    method: "DELETE",
+    url: `/browsers/${SESSION_ID}/access-tokens/${TOKEN_ID}`,
+    body: undefined,
+  },
+  {
+    name: "browsers.revokeAllAccessTokens deletes all tokens",
+    call: (http: HttpClient) => new Browsers(http).revokeAllAccessTokens(SESSION_ID),
+    method: "DELETE",
+    url: `/browsers/${SESSION_ID}/access-tokens`,
+    body: undefined,
+  },
+  {
+    name: "browsers.getAccessLog passes page params",
+    call: (http: HttpClient) => new Browsers(http).getAccessLog(SESSION_ID, { pageSize: 5, pageNumber: 2 }),
+    method: "GET",
+    url: `/browsers/${SESSION_ID}/access-log?pageSize=5&pageNumber=2`,
     body: undefined,
   },
 ])("v4 request shaping: $name", async ({ call, method, url, body }) => {

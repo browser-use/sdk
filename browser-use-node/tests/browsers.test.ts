@@ -45,4 +45,22 @@ describe.each([
     );
     expect(http.post).not.toHaveBeenCalled();
   });
+
+  it("calls the access token routes", async () => {
+    const http = { post: vi.fn(async () => ({})), get: vi.fn(async () => ({})), delete: vi.fn(async () => ({})) };
+    const browsers = new Browsers(http as any);
+
+    await browsers.createAccessToken("b1", { ttlSeconds: 300 });
+    await browsers.listAccessTokens("b1");
+    await browsers.revokeAccessToken("b1", "t1");
+    await browsers.revokeAllAccessTokens("b1");
+    await browsers.getAccessLog("b1", { pageSize: 5 });
+
+    expect(http.post.mock.calls).toEqual([["/browsers/b1/access-tokens", { ttlSeconds: 300 }]]);
+    expect(http.get.mock.calls).toEqual([
+      ["/browsers/b1/access-tokens"],
+      ["/browsers/b1/access-log", { pageSize: 5 }],
+    ]);
+    expect(http.delete.mock.calls).toEqual([["/browsers/b1/access-tokens/t1"], ["/browsers/b1/access-tokens"]]);
+  });
 });

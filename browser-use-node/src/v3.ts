@@ -12,7 +12,7 @@ export type { RunOptions, SessionResult } from "./v3/helpers.js";
 export { Billing } from "./v3/resources/billing.js";
 
 export { Browsers } from "./v3/resources/browsers.js";
-export type { BrowserListParams, BrowserDownloadsParams } from "./v3/resources/browsers.js";
+export type { BrowserListParams, BrowserAccessLogParams, BrowserDownloadsParams, CreateAccessTokenBody } from "./v3/resources/browsers.js";
 
 export { Profiles } from "./v3/resources/profiles.js";
 export type { ProfileListParams } from "./v3/resources/profiles.js";
@@ -52,6 +52,15 @@ export type WorkspaceUpdateRequest = S["WorkspaceUpdateRequest"];
 // Browser types
 export type BrowserDownloadFile = S["BrowserDownloadFile"];
 export type BrowserDownloadListResponse = S["BrowserDownloadListResponse"];
+export type BrowserAccessEventActor = S["BrowserAccessEventActor"];
+export type BrowserAccessEventItem = S["BrowserAccessEventItem"];
+export type BrowserAccessEventList = S["BrowserAccessEventList"];
+export type BrowserAccessTokenRevoked = S["BrowserAccessTokenRevoked"];
+export type CreateBrowserAccessTokenRequest = S["CreateBrowserAccessTokenRequest"];
+export type BrowserAccessTokenCreated = S["BrowserAccessTokenCreated"];
+export type BrowserAccessTokenKind = S["BrowserAccessTokenItem"]["kind"];
+export type BrowserAccessTokenList = S["BrowserAccessTokenList"];
+export type BrowserAccessTokenItem = S["BrowserAccessTokenItem"];
 export type BrowserSessionItemView = S["BrowserSessionItemView"];
 export type BrowserExtensionView = S["BrowserExtensionView"];
 export type BrowserSessionView = S["BrowserSessionView"];
