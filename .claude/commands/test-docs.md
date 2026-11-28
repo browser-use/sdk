@@ -106,11 +106,11 @@ Launch **all** of these agents in parallel. Each agent works in an isolated work
 - Check: Does the llms.txt match the actual docs structure in `docs.json`?
 - Verify the "Always use v3" guidance is prominent enough
 
-### Persona 11: "Deterministic Rerun User" (cache_script)
-**Goal:** Use cache_script for $0 LLM cost reruns.
-- Read `docs/cloud/agent/cache-script.mdx`
-- Test: Run a task, get the cache_script, rerun with it
-- Check: Are the docs clear about what cache_script is and when to use it?
+### Persona 11: "Deterministic Rerun User" (saved scripts)
+**Goal:** Run a scraping task once, then rerun it from the saved script in the same workspace.
+- Read `docs/cloud/agent/scripts.mdx`
+- Test: Run the page's task twice with the same `workspace_id`; the rerun should take about 2 steps
+- Check: Do the measured numbers and the prompt on the page match what you see?
 
 ### Persona 12: "Human-in-the-Loop Builder"
 **Goal:** Build a flow where a human can interact with the browser mid-task.
