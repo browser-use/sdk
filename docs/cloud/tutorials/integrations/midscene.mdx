@@ -1,0 +1,121 @@
+---
+title: Midscene
+description: Run natural-language UI tests on Browser Use cloud browsers through Playwright and CDP.
+icon: "flask"
+---
+
+[Midscene](https://midscenejs.com/) provides natural-language UI actions and
+assertions. Browser Use Cloud provides the browser; Midscene calls your chosen
+vision model from the test process. This integration uses Playwright over CDP,
+without the Browser Use SDK or hosted Agent API.
+
+## Install
+
+Use Node.js 22.12 or newer and create a directory for the example:
+
+```bash
+pnpm init
+pnpm add -D @midscene/web@1.17.8 @playwright/test@1.65.0 dotenv
+```
+
+Configure a Browser Use API key with available Cloud credits and a separate
+[Midscene-supported model](https://midscenejs.com/model-api-setup.html) in `.env`:
+
+```bash .env
+BROWSER_USE_API_KEY=your-browser-use-api-key
+MIDSCENE_MODEL_BASE_URL=your-model-base-url
+MIDSCENE_MODEL_API_KEY=your-model-api-key
+MIDSCENE_MODEL_NAME=your-model-name
+MIDSCENE_MODEL_FAMILY=your-model-family
+```
+
+Add `.env` and `midscene_run/` to `.gitignore`. Model calls and cloud browser
+usage are billed separately.
+
+## Write a test
+
+This self-contained fixture lets you try the integration without deploying an
+app or exposing a local server. Midscene enters a task and clicks the button,
+then checks the visible result. A Playwright assertion independently checks
+the resulting list.
+
+```typescript midscene.spec.ts
+import 'dotenv/config';
+import { chromium, expect, test } from '@playwright/test';
+import { PlaywrightAgent } from '@midscene/web/playwright';
+
+test('add a task with Midscene', async () => {
+  test.setTimeout(180_000);
+  const apiKey = process.env.BROWSER_USE_API_KEY;
+  if (!apiKey) throw new Error('Set BROWSER_USE_API_KEY in .env');
+
+  const endpoint = new URL('wss://connect.browser-use.com');
+  endpoint.searchParams.set('apiKey', apiKey);
+  endpoint.searchParams.set('timeout', '5');
+  endpoint.searchParams.set('browserScreenWidth', '1280');
+  endpoint.searchParams.set('browserScreenHeight', '800');
+  const browser = await chromium.connectOverCDP(endpoint.toString(), {
+    timeout: 30_000,
+  }).catch(() => {
+    // Connection errors can contain the authenticated CDP URL.
+    throw new Error('Cloud connection failed. Check your key and project credits.');
+  });
+
+  try {
+    const context = browser.contexts()[0];
+    if (!context) throw new Error('Cloud browser did not provide a context');
+    const page = context.pages()[0] ?? await context.newPage();
+    await page.setContent(`
+      <html lang="en"><title>Task list</title>
+      <style>body { font: 24px sans-serif; padding: 64px; }
+      input, button { font: inherit; padding: 12px; }</style>
+      <h1>Team tasks</h1>
+      <label for="task">New task</label>
+      <input id="task"><button id="add">Add task</button><ul></ul>
+      <script>
+        document.querySelector('#add').onclick = () => {
+          const input = document.querySelector('#task');
+          const item = document.createElement('li');
+          item.textContent = input.value;
+          document.querySelector('ul').append(item);
+          input.value = '';
+        };
+      </script></html>
+    `);
+
+    const agent = new PlaywrightAgent(page, { cache: false });
+    try {
+      await agent.aiInput('Ship the release', 'the New task input');
+      await agent.aiTap('the Add task button');
+      await agent.aiAssert('The task list contains "Ship the release".');
+      await expect(page.getByRole('listitem')).toHaveText(['Ship the release']);
+    } finally {
+      await agent.destroy();
+    }
+  } finally {
+    await browser.close();
+  }
+});
+```
+
+The direct `connect.browser-use.com` endpoint starts a browser on connection
+and stops it on disconnect. The five-minute timeout also bounds the session.
+This is different from a browser created with REST or an SDK, which requires
+an explicit [stop request](/cloud/browser/playwright-puppeteer-selenium#3-stop-the-browser).
+Keep the authenticated CDP URL out of logs and shared reports.
+
+## Run and inspect
+
+```bash
+pnpm exec playwright test midscene.spec.ts --workers=1 --retries=0
+```
+
+Midscene writes an HTML report under `midscene_run/report/` with screenshots
+and AI execution details. Failed assertions make the test command exit with
+a nonzero status.
+
+To test your application, replace `page.setContent(...)` with
+`page.goto('https://your-reachable-test-deployment.example')` and update the
+actions and assertions. The cloud browser cannot reach your laptop's localhost
+directly. The included fixture demonstrates UI testing; it does not exercise
+an application backend or authentication.
