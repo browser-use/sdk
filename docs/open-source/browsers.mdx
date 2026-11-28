@@ -56,7 +56,7 @@ The proxy applies to the browser only. Python networking in the agent's cells (`
 
 From browser-use 1.0.9, the agent gets `rotate_proxy(country=None)` on a Browser Use Cloud browser. It gives the same live browser a new exit IP without restarting it: tabs, cookies and logins stay. It returns a dict with the keys `mode`, `country` and `exitIp`.
 
-- **Where:** `Browser()` (the default), and `Browser(cdp_url=...)` pointing at a cloud browser you created yourself (`https://<id>.cdp.browser-use.com`). Other browsers don't get it.
+- **Where:** `Browser()` (the default), and `Browser(cdp_url=...)` with the `cdpUrl` of a cloud browser you created yourself. Pass `cdpUrl` exactly as the API returned it. Other browsers don't get it.
 - **How:** it sends `BrowserUse.setProxy` with `{"rotate": true}` over the browser's own CDP connection, which needs no API key (see [Proxies](/cloud/browser/proxies)). With `BROWSER_USE_API_KEY` set, [Update Browser Proxy](/cloud/api-v4/browsers/update-browser-proxy) is the fallback.
 - **When the agent uses it:** the system prompt is unchanged. When a cell's output looks like a block page ("Access Denied", a 429 page, a captcha the solver did not solve), the agent gets one hint pointing to `help(rotate_proxy)`, at most once per site. The helper tells the agent to rotate only if the block is still there after one wait and reload, at most once per site, never in the middle of a login or checkout, and not for API rate limits.
 - **Country:** `rotate_proxy('de')` also moves the exit to Germany; the default keeps the current country. A site that serves one country (a `.ru`, `.de`, `.co.uk` or `.kr` site) blocks far less from an exit in that country, and the helper tells the agent to pass it.

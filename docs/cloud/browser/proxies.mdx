@@ -273,12 +273,13 @@ together with `mode: "managed"`.
 
 <CodeGroup>
 ```python cdp-use
-import asyncio, json, urllib.request
+import asyncio, json, urllib.parse, urllib.request
 from cdp_use.client import CDPClient
 
 async def main():
-    # cdp-use needs the WebSocket URL of the browser.
-    version = json.load(urllib.request.urlopen(cdp_url + "/json/version"))
+    # cdp-use needs the WebSocket URL of the browser, so read /json/version with the query of cdp_url.
+    version_url = urllib.parse.urlsplit(cdp_url)._replace(path="/json/version").geturl()
+    version = json.load(urllib.request.urlopen(version_url))
     async with CDPClient(version["webSocketDebuggerUrl"]) as cdp:
         proxy = await cdp.send_raw("BrowserUse.setProxy", {"rotate": True})
         print(proxy)
@@ -313,7 +314,7 @@ console.log(proxy);
 ```typescript Puppeteer
 import puppeteer from "puppeteer-core";
 
-const browser = await puppeteer.connect({ browserURL: cdpUrl });
+const browser = await puppeteer.connect({ browserWSEndpoint: cdpUrl });
 const cdp = await browser.target().createCDPSession();
 // The Puppeteer types do not know this command.
 const proxy = await cdp.send("BrowserUse.setProxy" as any, { rotate: true } as any);

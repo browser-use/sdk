@@ -26,6 +26,13 @@ export BROWSER_SESSION_ID=$(echo "$session" | jq -r .id)
 export BROWSER_USE_CDP_URL=$(echo "$session" | jq -r .cdpUrl)
 ```
 
+<Warning>
+  `cdpUrl` is a secret. It holds an access token in its query, and anyone with
+  the URL can control the browser. Use it exactly as the API returns it. Do
+  not build a CDP URL from the browser ID, and do not remove its query. Keep it
+  out of logs and source control.
+</Warning>
+
 ## 2. Connect over CDP
 
 ### Playwright
@@ -68,7 +75,8 @@ console.log(await page.title());
 
 ### Selenium
 
-Selenium's `debugger_address` only supports local `host:port` connections.
+Selenium's `debugger_address` takes only `host:port` over plain HTTP, so it
+cannot carry the token of a cloud CDP URL.
 Use Playwright or Puppeteer for remote CDP over WebSocket.
 
 ## Viewport and device emulation
