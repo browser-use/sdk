@@ -277,7 +277,7 @@ import asyncio, json, urllib.parse, urllib.request
 from cdp_use.client import CDPClient
 
 async def main():
-    # cdp-use needs the WebSocket URL of the browser. Keep the query of cdp_url.
+    # cdp-use needs the WebSocket URL of the browser, so read /json/version with the query of cdp_url.
     version_url = urllib.parse.urlsplit(cdp_url)._replace(path="/json/version").geturl()
     version = json.load(urllib.request.urlopen(version_url))
     async with CDPClient(version["webSocketDebuggerUrl"]) as cdp:

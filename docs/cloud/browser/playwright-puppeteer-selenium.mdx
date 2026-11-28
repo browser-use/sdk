@@ -75,7 +75,8 @@ console.log(await page.title());
 
 ### Selenium
 
-Selenium's `debugger_address` only supports local `host:port` connections.
+Selenium's `debugger_address` takes only `host:port` over plain HTTP, so it
+cannot carry the token of a cloud CDP URL.
 Use Playwright or Puppeteer for remote CDP over WebSocket.
 
 ## Viewport and device emulation
