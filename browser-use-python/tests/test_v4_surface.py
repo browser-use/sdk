@@ -9,6 +9,10 @@ import pytest
 
 from browser_use_sdk.v4 import (
     AsyncBrowserUse,
+    BrowserAccessEventList,
+    BrowserAccessTokenRevoked,
+    BrowserAccessTokenCreated,
+    BrowserAccessTokenList,
     BrowserProxyMode,
     BrowserProxyView,
     BrowserUse,
@@ -197,6 +201,18 @@ _POLICY = {
 _PROXY = {"mode": "custom", "country": None, "exitIp": "192.0.2.1"}
 _POLICY_PATH = f"/network-policies/{SESSION_ID}"
 _PROXY_PATH = f"/browsers/{SESSION_ID}/proxy"
+_TOKEN_ID = "00000000-0000-0000-0000-000000000031"
+_TOKENS_PATH = f"/browsers/{SESSION_ID}/access-tokens"
+_REVOKED = {"effectiveBy": "2026-01-01T00:00:02Z"}
+_ACCESS_EVENT = {
+    "id": "00000000-0000-0000-0000-000000000032",
+    "event": "tokens_revoked",
+    "tokenId": None,
+    "tokenKind": None,
+    "revokedKinds": ["customer", "viewer"],
+    "actor": {"type": "api_key", "id": "key-1", "runId": None},
+    "createdAt": "2026-01-01T00:00:00Z",
+}
 
 
 @pytest.mark.parametrize(
@@ -271,6 +287,57 @@ _PROXY_PATH = f"/browsers/{SESSION_ID}/proxy"
             ),
             BrowserProxyView,
             id="browsers-update-proxy",
+        ),
+        pytest.param(
+            lambda c: c.browsers.create_access_token(
+                SESSION_ID, ttl_seconds=300, label="ci", close_connections_on_expiry=True, future=True
+            ),
+            {
+                "id": _TOKEN_ID,
+                "token": "secret",
+                "cdpUrl": "wss://cdp.example.com/?token=secret",
+                "liveUrl": None,
+                "expiresAt": "2026-01-01T00:05:00Z",
+            },
+            (
+                "POST",
+                _TOKENS_PATH,
+                {"ttlSeconds": 300, "label": "ci", "closeConnectionsOnExpiry": True, "future": True},
+                None,
+            ),
+            BrowserAccessTokenCreated,
+            id="browsers-create-access-token",
+        ),
+        pytest.param(
+            lambda c: c.browsers.list_access_tokens(SESSION_ID),
+            {"items": [{
+                "id": _TOKEN_ID, "label": "", "kind": "system", "createdAt": "2026-01-01T00:00:00Z",
+                "expiresAt": None, "lastUsedAt": None,
+            }]},
+            ("GET", _TOKENS_PATH, None, None),
+            BrowserAccessTokenList,
+            id="browsers-list-access-tokens",
+        ),
+        pytest.param(
+            lambda c: c.browsers.revoke_access_token(SESSION_ID, _TOKEN_ID),
+            _REVOKED,
+            ("DELETE", f"{_TOKENS_PATH}/{_TOKEN_ID}", None, None),
+            BrowserAccessTokenRevoked,
+            id="browsers-revoke-access-token",
+        ),
+        pytest.param(
+            lambda c: c.browsers.revoke_all_access_tokens(SESSION_ID),
+            _REVOKED,
+            ("DELETE", _TOKENS_PATH, None, None),
+            BrowserAccessTokenRevoked,
+            id="browsers-revoke-all-access-tokens",
+        ),
+        pytest.param(
+            lambda c: c.browsers.get_access_log(SESSION_ID, page_size=5, page_number=2),
+            {"items": [_ACCESS_EVENT], "totalItems": 1, "pageNumber": 2, "pageSize": 5},
+            ("GET", f"/browsers/{SESSION_ID}/access-log", None, {"pageSize": 5, "pageNumber": 2}),
+            BrowserAccessEventList,
+            id="browsers-get-access-log",
         ),
         pytest.param(
             lambda c: c.sessions.compact(SESSION_ID),

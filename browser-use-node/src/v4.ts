@@ -3,8 +3,10 @@ export type { BrowserUseOptions } from "./v4/client.js";
 
 export { Browsers } from "./v4/resources/browsers.js";
 export type {
+  BrowserAccessLogParams,
   BrowserDownloadsParams,
   BrowserListParams,
+  CreateAccessTokenBody,
   CreateBrowserBody,
   UpdateBrowserProxyBody,
 } from "./v4/resources/browsers.js";
@@ -69,6 +71,15 @@ export type BrowserSessionListResponse = S["BrowserSessionListResponse"];
 export type BrowserSessionStatus = S["BrowserSessionStatus"];
 export type BrowserDownloadFile = S["BrowserDownloadFile"];
 export type BrowserDownloadListResponse = S["BrowserDownloadListResponse"];
+export type BrowserAccessEventActor = S["BrowserAccessEventActor"];
+export type BrowserAccessEventItem = S["BrowserAccessEventItem"];
+export type BrowserAccessEventList = S["BrowserAccessEventList"];
+export type BrowserAccessTokenRevoked = S["BrowserAccessTokenRevoked"];
+export type CreateBrowserAccessTokenRequest = S["CreateBrowserAccessTokenRequest"];
+export type BrowserAccessTokenCreated = S["BrowserAccessTokenCreated"];
+export type BrowserAccessTokenKind = S["BrowserAccessTokenItem"]["kind"];
+export type BrowserAccessTokenList = S["BrowserAccessTokenList"];
+export type BrowserAccessTokenItem = S["BrowserAccessTokenItem"];
 
 export type NetworkPolicyCreateRequest = S["NetworkPolicyCreateRequest"];
 export type NetworkPolicyDomainList = S["NetworkPolicyDomainList"];

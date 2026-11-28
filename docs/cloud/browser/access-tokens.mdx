@@ -1,0 +1,194 @@
+---
+title: Access tokens
+description: "Set the life of the CDP URL token, make more tokens, revoke them, and read the access log."
+icon: "key"
+---
+
+The `cdpUrl` and `liveUrl` of a browser hold an access token. Each person or
+program with the token can control the browser. Use access tokens to limit the
+life of a token, to give a separate token to each person, and to stop access.
+
+## Example
+
+<CodeGroup>
+
+```python Python
+from browser_use_sdk.v4 import BrowserUse
+
+client = BrowserUse()
+
+# The token in cdpUrl stops new connections after 1 hour.
+browser = client.browsers.create(cdp_token_ttl_seconds=3600)
+
+# Make a token for a teammate. Only this response shows the token.
+shared = client.browsers.create_access_token(
+    browser.id, ttl_seconds=600, label="support", close_connections_on_expiry=True
+)
+# Give shared.cdp_url to your teammate.
+
+for token in client.browsers.list_access_tokens(browser.id).items:
+    print(token.id, token.kind.value, token.label, token.expires_at)
+
+revoked = client.browsers.revoke_access_token(browser.id, shared.id)
+print("Revoke is complete by", revoked.effective_by)
+
+client.browsers.revoke_all_access_tokens(browser.id)
+
+for event in client.browsers.get_access_log(browser.id).items:
+    print(event.created_at, event.event.value, event.actor.type.value, event.actor.id)
+
+# Stop the browser, so it stops billing.
+client.browsers.stop(browser.id)
+```
+
+```typescript TypeScript
+import { BrowserUse } from "browser-use-sdk/v4";
+
+const client = new BrowserUse();
+
+// The token in cdpUrl stops new connections after 1 hour.
+const browser = await client.browsers.create({ cdpTokenTtlSeconds: 3600 });
+
+// Make a token for a teammate. Only this response shows the token.
+const shared = await client.browsers.createAccessToken(browser.id, {
+  ttlSeconds: 600,
+  label: "support",
+  closeConnectionsOnExpiry: true,
+});
+// Give shared.cdpUrl to your teammate.
+
+const { items } = await client.browsers.listAccessTokens(browser.id);
+for (const token of items) console.log(token.id, token.kind, token.label, token.expiresAt);
+
+const { effectiveBy } = await client.browsers.revokeAccessToken(browser.id, shared.id);
+console.log("Revoke is complete by", effectiveBy);
+
+await client.browsers.revokeAllAccessTokens(browser.id);
+
+const log = await client.browsers.getAccessLog(browser.id);
+for (const event of log.items) console.log(event.createdAt, event.event, event.actor.type, event.actor.id);
+
+// Stop the browser, so it stops billing.
+await client.browsers.stop(browser.id);
+```
+
+</CodeGroup>
+
+## Token life at create
+
+`POST /browsers` has 2 fields for the token in `cdpUrl` and `liveUrl`.
+
+| Field | Default | Description |
+| --- | --- | --- |
+| `cdpTokenTtlSeconds` | `null` | Life of the token in seconds, 60 to 86400. With `null`, the token is valid until the browser stops. |
+| `closeConnectionsOnExpiry` | `false` | With `false`, expiry stops new connections, and open connections continue. With `true`, expiry also closes open connections. |
+
+A short token life does not stop Browser Use agents or other Browser Use
+services for the browser. They use a separate system token.
+
+## Make a token
+
+`POST /browsers/{id}/access-tokens` makes a new customer token. All body fields
+are optional.
+
+| Field | Description |
+| --- | --- |
+| `ttlSeconds` | Life of the token in seconds, 60 to 86400. With `null` or no value, the token is valid until the browser stops. |
+| `label` | Name for the token, up to 64 printable ASCII characters. |
+| `closeConnectionsOnExpiry` | Same as the create field. The default is `false`. |
+
+The response is `201` with `id`, `token`, `cdpUrl`, `liveUrl`, and `expiresAt`.
+Only this response shows the token. `liveUrl` is `null` if the project hides
+the live view. `expiresAt` is `null` for a token that is valid until the browser
+stops.
+
+A browser has at most 16 customer tokens that are not expired. Between 2
+revokes of all tokens, a browser can have at most 512 customer tokens. Above a
+limit, the API returns `429`.
+
+## List tokens
+
+`GET /browsers/{id}/access-tokens` returns `items`. Each item has `id`, `label`,
+`kind`, `createdAt`, `expiresAt`, and `lastUsedAt`. The response shows no
+token values. Expired tokens are not in the list. `lastUsedAt` is always `null`
+for now.
+
+| `kind` | Use |
+| --- | --- |
+| `customer` | The token of the create response, and the tokens that you make. |
+| `viewer` | A live view token of the dashboard or of a v3 live link. |
+| `system` | The token of Browser Use services for this browser. |
+
+## Revoke tokens
+
+- `DELETE /browsers/{id}/access-tokens/{tokenId}` revokes 1 token. It also
+  revokes an expired token.
+- `DELETE /browsers/{id}/access-tokens` revokes all customer and viewer tokens.
+  It also closes the open connections of expired tokens. It does not revoke the
+  system token.
+
+A revoke stops new connections and closes the open connections of the revoked
+tokens. A revoke is complete in 2 seconds in the normal case, and in 100 seconds
+in all cases. The response is `200` with `effectiveBy`, the time by which the
+revoke is complete:
+
+```json
+{ "effectiveBy": "2026-11-28T10:00:02Z" }
+```
+
+<Warning>
+  You can revoke the system token by its `id`. Then Browser Use services stop
+  working for that browser, for example agent tasks, autofill, secure tokens,
+  uploads, and the cleanup when the browser stops.
+</Warning>
+
+## Viewer tokens
+
+The dashboard live view and v3 live links use viewer tokens. You cannot revoke
+1 viewer token: `DELETE` with a viewer token `id` returns `409`. Viewer tokens
+end only when you revoke all tokens, or when you rotate the v3 live URL key.
+
+Each browser allows at most 64 different live viewers in each 5 minutes. More
+viewers get `429`.
+
+## Errors
+
+| Status | Cause |
+| --- | --- |
+| `403` | The API key does not have the `browsers:tokens` scope of its API version. |
+| `404` | The browser does not exist, or it is in a different project. For a revoke of 1 token: the token does not exist. Or the service does not give access tokens yet. |
+| `409` | The browser is stopped. Or the browser is protected (agentic autofill). Or the browser started before access tokens were available. Or you tried to revoke 1 viewer token. |
+| `422` | A field is not valid, such as `ttlSeconds` or `label`. Or a create sends `cdpTokenTtlSeconds` or `closeConnectionsOnExpiry` before the service gives access tokens. |
+| `429` | The browser has the most tokens or live viewers that it allows. |
+| `503` | The token service is not available. Try again. |
+
+## Access log
+
+`GET /browsers/{id}/access-log?pageNumber=1&pageSize=10` returns the token
+events of a browser, newest first. The response has `items`, `totalItems`,
+`pageNumber`, and `pageSize`. `pageSize` is 1 to 100.
+
+| Field | Description |
+| --- | --- |
+| `event` | `token_created`, `token_revoked`, or `tokens_revoked` (revoke of all). Later versions can add event types, so treat an unknown value as a new event. |
+| `tokenId` | The token of a `token_created` or `token_revoked` event. |
+| `tokenKind` | The kind of the token of a `token_created` event. It is null for the other events. |
+| `revokedKinds` | The token kinds of a `tokens_revoked` event. |
+| `actor` | `type` is `api_key`, `user`, or `service`. `id` is the API key ID, the user ID, or the service name. `runId` is the run of a service, or `null`. |
+| `createdAt` | The time of the event. |
+
+## Endpoints
+
+The same paths are in API v2, v3, and v4. Each endpoint needs an API key with
+the scope `browsers:tokens` of that API version, for example
+`v4:browsers:tokens`.
+
+| Method and path | Result |
+| --- | --- |
+| `POST /browsers/{id}/access-tokens` | `201` with the new token. |
+| `GET /browsers/{id}/access-tokens` | `200` with `items`. |
+| `DELETE /browsers/{id}/access-tokens/{tokenId}` | `200` with `effectiveBy`. |
+| `DELETE /browsers/{id}/access-tokens` | `200` with `effectiveBy`. |
+| `GET /browsers/{id}/access-log` | `200` with `items`, newest first. |
+
+See also [Playwright, Puppeteer, and Selenium](/cloud/browser/playwright-puppeteer-selenium).

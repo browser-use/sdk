@@ -5,6 +5,10 @@ from typing import TYPE_CHECKING, Any, Literal
 from ..._core import _UNSET
 from ..._core.http import AsyncHttpClient, SyncHttpClient
 from ...generated.v4.models import (
+    BrowserAccessEventList,
+    BrowserAccessTokenRevoked,
+    BrowserAccessTokenCreated,
+    BrowserAccessTokenList,
     BrowserDownloadListResponse,
     BrowserProxyView,
     BrowserSessionItemView,
@@ -33,6 +37,8 @@ def _build_create_body(
     custom_proxy: CustomProxy | None = None,
     enable_recording: bool | None = None,
     extension_ids: list[str] | None = None,
+    cdp_token_ttl_seconds: int | None = None,
+    close_connections_on_expiry: bool | None = None,
     **extra: Any,
 ) -> dict[str, Any]:
     if metadata is not None and len(metadata) > 10:
@@ -69,6 +75,10 @@ def _build_create_body(
         body["enableRecording"] = enable_recording
     if extension_ids is not None:
         body["extensionIds"] = extension_ids
+    if cdp_token_ttl_seconds is not None:
+        body["cdpTokenTtlSeconds"] = cdp_token_ttl_seconds
+    if close_connections_on_expiry is not None:
+        body["closeConnectionsOnExpiry"] = close_connections_on_expiry
     body.update(extra)
     return body
 
@@ -96,6 +106,23 @@ def _build_proxy_body(
     return body or None
 
 
+def _build_access_token_body(
+    ttl_seconds: int | None,
+    label: str | None,
+    close_connections_on_expiry: bool | None,
+    extra: dict[str, Any],
+) -> dict[str, Any]:
+    body: dict[str, Any] = {}
+    if ttl_seconds is not None:
+        body["ttlSeconds"] = ttl_seconds
+    if label is not None:
+        body["label"] = label
+    if close_connections_on_expiry is not None:
+        body["closeConnectionsOnExpiry"] = close_connections_on_expiry
+    body.update(extra)
+    return body
+
+
 class Browsers:
     def __init__(self, http: SyncHttpClient) -> None:
         self._http = http
@@ -116,6 +143,8 @@ class Browsers:
         custom_proxy: CustomProxy | None = None,
         enable_recording: bool | None = None,
         extension_ids: list[str] | None = None,
+        cdp_token_ttl_seconds: int | None = None,
+        close_connections_on_expiry: bool | None = None,
         **extra: Any,
     ) -> BrowserSessionItemView:
         """Create a new standalone browser session."""
@@ -133,6 +162,8 @@ class Browsers:
             custom_proxy=custom_proxy,
             enable_recording=enable_recording,
             extension_ids=extension_ids,
+            cdp_token_ttl_seconds=cdp_token_ttl_seconds,
+            close_connections_on_expiry=close_connections_on_expiry,
             **extra,
         )
         return BrowserSessionItemView.model_validate(
@@ -223,6 +254,55 @@ class Browsers:
             )
         )
 
+    def create_access_token(
+        self,
+        session_id: str | UUID,
+        *,
+        ttl_seconds: int | None = None,
+        label: str | None = None,
+        close_connections_on_expiry: bool | None = None,
+        **extra: Any,
+    ) -> BrowserAccessTokenCreated:
+        """Create an access token and a CDP URL that holds it; only this answer shows the token."""
+        body = _build_access_token_body(ttl_seconds, label, close_connections_on_expiry, extra)
+        return BrowserAccessTokenCreated.model_validate(
+            self._http.request("POST", f"/browsers/{session_id}/access-tokens", json=body)
+        )
+
+    def list_access_tokens(self, session_id: str | UUID) -> BrowserAccessTokenList:
+        """List the access tokens of a browser session, without the secret values."""
+        return BrowserAccessTokenList.model_validate(
+            self._http.request("GET", f"/browsers/{session_id}/access-tokens")
+        )
+
+    def revoke_access_token(self, session_id: str | UUID, token_id: str | UUID) -> BrowserAccessTokenRevoked:
+        """Revoke one token and close its connections; viewer tokens answer 409, and a system token revoke stops our services."""
+        return BrowserAccessTokenRevoked.model_validate(
+            self._http.request("DELETE", f"/browsers/{session_id}/access-tokens/{token_id}")
+        )
+
+    def revoke_all_access_tokens(self, session_id: str | UUID) -> BrowserAccessTokenRevoked:
+        """Revoke all customer and viewer tokens of a browser session and close their connections."""
+        return BrowserAccessTokenRevoked.model_validate(
+            self._http.request("DELETE", f"/browsers/{session_id}/access-tokens")
+        )
+
+    def get_access_log(
+        self,
+        session_id: str | UUID,
+        *,
+        page_size: int | None = None,
+        page_number: int | None = None,
+    ) -> BrowserAccessEventList:
+        """List the access token events of a browser session, newest first."""
+        return BrowserAccessEventList.model_validate(
+            self._http.request(
+                "GET",
+                f"/browsers/{session_id}/access-log",
+                params={"pageSize": page_size, "pageNumber": page_number},
+            )
+        )
+
 
 class AsyncBrowsers:
     def __init__(self, http: AsyncHttpClient) -> None:
@@ -244,6 +324,8 @@ class AsyncBrowsers:
         custom_proxy: CustomProxy | None = None,
         enable_recording: bool | None = None,
         extension_ids: list[str] | None = None,
+        cdp_token_ttl_seconds: int | None = None,
+        close_connections_on_expiry: bool | None = None,
         **extra: Any,
     ) -> BrowserSessionItemView:
         """Create a new standalone browser session."""
@@ -261,6 +343,8 @@ class AsyncBrowsers:
             custom_proxy=custom_proxy,
             enable_recording=enable_recording,
             extension_ids=extension_ids,
+            cdp_token_ttl_seconds=cdp_token_ttl_seconds,
+            close_connections_on_expiry=close_connections_on_expiry,
             **extra,
         )
         return BrowserSessionItemView.model_validate(
@@ -348,5 +432,54 @@ class AsyncBrowsers:
                     "cursor": cursor,
                     "includeUrls": include_urls,
                 },
+            )
+        )
+
+    async def create_access_token(
+        self,
+        session_id: str | UUID,
+        *,
+        ttl_seconds: int | None = None,
+        label: str | None = None,
+        close_connections_on_expiry: bool | None = None,
+        **extra: Any,
+    ) -> BrowserAccessTokenCreated:
+        """Create an access token and a CDP URL that holds it; only this answer shows the token."""
+        body = _build_access_token_body(ttl_seconds, label, close_connections_on_expiry, extra)
+        return BrowserAccessTokenCreated.model_validate(
+            await self._http.request("POST", f"/browsers/{session_id}/access-tokens", json=body)
+        )
+
+    async def list_access_tokens(self, session_id: str | UUID) -> BrowserAccessTokenList:
+        """List the access tokens of a browser session, without the secret values."""
+        return BrowserAccessTokenList.model_validate(
+            await self._http.request("GET", f"/browsers/{session_id}/access-tokens")
+        )
+
+    async def revoke_access_token(self, session_id: str | UUID, token_id: str | UUID) -> BrowserAccessTokenRevoked:
+        """Revoke one token and close its connections; viewer tokens answer 409, and a system token revoke stops our services."""
+        return BrowserAccessTokenRevoked.model_validate(
+            await self._http.request("DELETE", f"/browsers/{session_id}/access-tokens/{token_id}")
+        )
+
+    async def revoke_all_access_tokens(self, session_id: str | UUID) -> BrowserAccessTokenRevoked:
+        """Revoke all customer and viewer tokens of a browser session and close their connections."""
+        return BrowserAccessTokenRevoked.model_validate(
+            await self._http.request("DELETE", f"/browsers/{session_id}/access-tokens")
+        )
+
+    async def get_access_log(
+        self,
+        session_id: str | UUID,
+        *,
+        page_size: int | None = None,
+        page_number: int | None = None,
+    ) -> BrowserAccessEventList:
+        """List the access token events of a browser session, newest first."""
+        return BrowserAccessEventList.model_validate(
+            await self._http.request(
+                "GET",
+                f"/browsers/{session_id}/access-log",
+                params={"pageSize": page_size, "pageNumber": page_number},
             )
         )

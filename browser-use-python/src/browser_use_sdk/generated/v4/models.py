@@ -216,6 +216,15 @@ class BrowserScreenHeight(RootModel[int]):
     )
 
 
+class CdpTokenTtlSeconds(RootModel[int]):
+    root: int = Field(
+        ...,
+        description='Life in seconds of the customer token in cdpUrl and liveUrl. Null: valid until the browser stops. The create answers 422 while the feature is off.',
+        ge=60,
+        le=86400,
+    )
+
+
 class Username(RootModel[str]):
     root: str = Field(
         ...,
@@ -1535,6 +1544,127 @@ class NetworkPolicyNotFoundError(BaseModel):
     detail: str | None = Field('Network policy not found', title='Detail')
 
 
+class TtlSeconds(RootModel[int]):
+    root: int = Field(
+        ...,
+        description='Life of the token in seconds. Null: valid until the browser stops.',
+        ge=60,
+        le=86400,
+    )
+
+
+class Label(RootModel[str]):
+    root: str = Field(
+        ...,
+        description='Printable ASCII label for the token list.',
+        max_length=64,
+        pattern='^[ -~]*$',
+    )
+
+
+class CreateBrowserAccessTokenRequest(BaseModel):
+    ttl_seconds: TtlSeconds | None = Field(
+        None,
+        alias='ttlSeconds',
+        description='Life of the token in seconds. Null: valid until the browser stops.',
+    )
+    label: Label | None = Field(
+        None, description='Printable ASCII label for the token list.'
+    )
+    close_connections_on_expiry: bool | None = Field(
+        False,
+        alias='closeConnectionsOnExpiry',
+        description='Close the open connections of the token when it expires. Else expiry stops only new connections.',
+    )
+
+
+class BrowserAccessTokenCreated(BaseModel):
+    id: UUID
+    token: str = Field(..., description='Secret token. It appears only in this answer.')
+    cdp_url: str = Field(..., alias='cdpUrl', description='CDP URL with this token.')
+    live_url: str | None = Field(
+        ...,
+        alias='liveUrl',
+        description='Live view URL with this token; null when the project hides the live view.',
+    )
+    expires_at: AwareDatetime | None = Field(
+        ...,
+        alias='expiresAt',
+        description='Expiry of the token; null when it is valid until the browser stops.',
+    )
+
+
+class Kind(Enum):
+    customer = 'customer'
+    viewer = 'viewer'
+    system = 'system'
+
+
+class BrowserAccessTokenItem(BaseModel):
+    id: UUID
+    label: str
+    kind: Kind
+    created_at: AwareDatetime = Field(..., alias='createdAt')
+    expires_at: AwareDatetime | None = Field(..., alias='expiresAt')
+    last_used_at: AwareDatetime | None = Field(
+        ..., alias='lastUsedAt', description='Always null for now.'
+    )
+
+
+class BrowserAccessTokenList(BaseModel):
+    items: List[BrowserAccessTokenItem]
+
+
+class BrowserAccessTokenRevoked(BaseModel):
+    effective_by: AwareDatetime = Field(
+        ..., alias='effectiveBy', description='Latest time when the revoke is complete.'
+    )
+
+
+class Type(Enum):
+    api_key = 'api_key'
+    user = 'user'
+    service = 'service'
+
+
+class BrowserAccessEventActor(BaseModel):
+    type: Type
+    id: str | None = Field(..., description='API key ID, user ID, or service name.')
+    run_id: UUID | None = Field(..., alias='runId')
+
+
+class TokenKind(Enum):
+    customer = 'customer'
+    viewer = 'viewer'
+    system = 'system'
+
+
+class RevokedKind(Enum):
+    customer = 'customer'
+    viewer = 'viewer'
+    system = 'system'
+
+
+class BrowserAccessEventItem(BaseModel):
+    id: UUID
+    event: str = Field(
+        ...,
+        description='Event type: token_created, token_revoked, or tokens_revoked today; later versions can add types.',
+    )
+    token_id: str | None = Field(..., alias='tokenId')
+    token_kind: TokenKind | None = Field(..., alias='tokenKind')
+    revoked_kinds: List[RevokedKind] | None = Field(..., alias='revokedKinds')
+    actor: BrowserAccessEventActor
+    created_at: AwareDatetime = Field(..., alias='createdAt')
+
+
+class BrowserAccessEventList(BaseModel):
+    items: List[BrowserAccessEventItem]
+    total_items: int = Field(..., alias='totalItems')
+    page_number: int = Field(..., alias='pageNumber')
+    page_size: int = Field(..., alias='pageSize')
+
+
 class BrowserSessionItemView(BaseModel):
     model_config = ConfigDict(
         regex_engine="python-re",
@@ -1721,6 +1851,16 @@ class CreateBrowserSessionRequest(BaseModel):
         description='Up to 3 ready extensions from POST /api/v4/extensions to install before the browser starts.',
         max_length=3,
         title='Extension IDs',
+    )
+    cdp_token_ttl_seconds: CdpTokenTtlSeconds | None = Field(
+        None,
+        alias='cdpTokenTtlSeconds',
+        description='Life in seconds of the customer token in cdpUrl and liveUrl. Null: valid until the browser stops. The create answers 422 while the feature is off.',
+    )
+    close_connections_on_expiry: bool | None = Field(
+        False,
+        alias='closeConnectionsOnExpiry',
+        description='Close the open connections of the customer token when it expires. The create answers 422 while the feature is off.',
     )
 
 
