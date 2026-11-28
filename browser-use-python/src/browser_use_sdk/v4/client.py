@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 
 from .._core.http import AsyncHttpClient, SyncHttpClient
 from .resources.browsers import AsyncBrowsers, Browsers
@@ -51,6 +52,11 @@ class BrowserUse:
         self.sessions = Sessions(self._http)
         self.workspaces = Workspaces(self._http)
 
+    def feedback(self, message: str, **extra: Any) -> None:
+        """Send a feedback message (1-5000 chars) to the Browser Use team."""
+        # POST /feedback is hand-written: the route is not in the OpenAPI spec.
+        self._http.request("POST", "/feedback", json={"message": message, **extra})
+
     def close(self) -> None:
         """Close the underlying HTTP client."""
         self._http.close()
@@ -97,6 +103,11 @@ class AsyncBrowserUse:
         self.runs = AsyncRuns(self._http)
         self.sessions = AsyncSessions(self._http)
         self.workspaces = AsyncWorkspaces(self._http)
+
+    async def feedback(self, message: str, **extra: Any) -> None:
+        """Send a feedback message (1-5000 chars) to the Browser Use team."""
+        # POST /feedback is hand-written: the route is not in the OpenAPI spec.
+        await self._http.request("POST", "/feedback", json={"message": message, **extra})
 
     async def close(self) -> None:
         """Close the underlying HTTP client."""
