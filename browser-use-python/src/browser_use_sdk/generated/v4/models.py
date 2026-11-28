@@ -1633,12 +1633,6 @@ class BrowserAccessEventActor(BaseModel):
     run_id: UUID | None = Field(..., alias='runId')
 
 
-class Event(Enum):
-    token_created = 'token_created'
-    token_revoked = 'token_revoked'
-    tokens_revoked = 'tokens_revoked'
-
-
 class TokenKind(Enum):
     customer = 'customer'
     viewer = 'viewer'
@@ -1653,7 +1647,10 @@ class RevokedKind(Enum):
 
 class BrowserAccessEventItem(BaseModel):
     id: UUID
-    event: Event
+    event: str = Field(
+        ...,
+        description='Event type: token_created, token_revoked, or tokens_revoked today; later versions can add types.',
+    )
     token_id: str | None = Field(..., alias='tokenId')
     token_kind: TokenKind | None = Field(..., alias='tokenKind')
     revoked_kinds: List[RevokedKind] | None = Field(..., alias='revokedKinds')

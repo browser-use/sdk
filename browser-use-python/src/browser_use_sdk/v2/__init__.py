@@ -7,7 +7,6 @@ from .helpers import AsyncTaskRun, TaskResult, TaskStream
 from ..generated.v2.models import (
     AccountView,
     Type as BrowserAccessActorType,
-    Event as BrowserAccessEvent,
     BrowserAccessEventActor,
     BrowserAccessEventItem,
     BrowserAccessEventList,
@@ -96,7 +95,6 @@ __all__ = [
     # Response models
     "AccountView",
     "BrowserAccessActorType",
-    "BrowserAccessEvent",
     "BrowserAccessEventActor",
     "BrowserAccessEventItem",
     "BrowserAccessEventList",

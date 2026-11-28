@@ -2904,8 +2904,8 @@ export interface components {
         BrowserAccessEventItem: {
             /** Format: uuid */
             id: string;
-            /** @enum {string} */
-            event: "token_created" | "token_revoked" | "tokens_revoked";
+            /** @description Event type: token_created, token_revoked, or tokens_revoked today; later versions can add types. */
+            event: string;
             tokenId: string | null;
             tokenKind: ("customer" | "viewer" | "system") | null;
             revokedKinds: ("customer" | "viewer" | "system")[] | null;

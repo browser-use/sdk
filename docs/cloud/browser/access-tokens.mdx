@@ -170,7 +170,7 @@ events of a browser, newest first. The response has `items`, `totalItems`,
 
 | Field | Description |
 | --- | --- |
-| `event` | `token_created`, `token_revoked`, or `tokens_revoked` (revoke of all). |
+| `event` | `token_created`, `token_revoked`, or `tokens_revoked` (revoke of all). Later versions can add event types, so treat an unknown value as a new event. |
 | `tokenId` | The token of a `token_created` or `token_revoked` event. |
 | `tokenKind` | The kind of the token of a `token_created` event. It is null for the other events. |
 | `revokedKinds` | The token kinds of a `tokens_revoked` event. |

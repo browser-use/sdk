@@ -6,7 +6,6 @@ from .._core.x402 import get_wallet_balance
 from ..generated.v3.models import (
     AccountView,
     Type as BrowserAccessActorType,
-    Event as BrowserAccessEvent,
     BrowserAccessEventActor,
     BrowserAccessEventItem,
     BrowserAccessEventList,
@@ -70,7 +69,6 @@ __all__ = [
     "PlanInfo",
     # Browser models
     "BrowserAccessActorType",
-    "BrowserAccessEvent",
     "BrowserAccessEventActor",
     "BrowserAccessEventItem",
     "BrowserAccessEventList",

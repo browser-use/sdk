@@ -2259,11 +2259,7 @@
           },
           "event": {
             "type": "string",
-            "enum": [
-              "token_created",
-              "token_revoked",
-              "tokens_revoked"
-            ]
+            "description": "Event type: token_created, token_revoked, or tokens_revoked today; later versions can add types."
           },
           "tokenId": {
             "anyOf": [
