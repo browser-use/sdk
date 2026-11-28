@@ -218,7 +218,7 @@ class Browsers:
         )
 
     def revoke_access_token(self, session_id: str, token_id: str) -> BrowserAccessTokenRevoked:
-        """Revoke one access token and close its open connections."""
+        """Revoke one token and close its connections; viewer tokens answer 409, and a system token revoke stops our services."""
         return BrowserAccessTokenRevoked.model_validate(
             self._http.request("DELETE", f"/browsers/{session_id}/access-tokens/{token_id}")
         )
@@ -375,7 +375,7 @@ class AsyncBrowsers:
         )
 
     async def revoke_access_token(self, session_id: str, token_id: str) -> BrowserAccessTokenRevoked:
-        """Revoke one access token and close its open connections."""
+        """Revoke one token and close its connections; viewer tokens answer 409, and a system token revoke stops our services."""
         return BrowserAccessTokenRevoked.model_validate(
             await self._http.request("DELETE", f"/browsers/{session_id}/access-tokens/{token_id}")
         )

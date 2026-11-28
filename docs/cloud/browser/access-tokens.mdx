@@ -36,6 +36,9 @@ client.browsers.revoke_all_access_tokens(browser.id)
 
 for event in client.browsers.get_access_log(browser.id).items:
     print(event.created_at, event.event.value, event.actor.type.value, event.actor.id)
+
+# Stop the browser, so it stops billing.
+client.browsers.stop(browser.id)
 ```
 
 ```typescript TypeScript
@@ -64,6 +67,9 @@ await client.browsers.revokeAllAccessTokens(browser.id);
 
 const log = await client.browsers.getAccessLog(browser.id);
 for (const event of log.items) console.log(event.createdAt, event.event, event.actor.type, event.actor.id);
+
+// Stop the browser, so it stops billing.
+await client.browsers.stop(browser.id);
 ```
 
 </CodeGroup>
@@ -149,7 +155,7 @@ viewers get `429`.
 
 | Status | Cause |
 | --- | --- |
-| `404` | The browser does not exist, or it is in a different project. For a revoke of 1 token: the token does not exist. |
+| `404` | The browser does not exist, or it is in a different project. For a revoke of 1 token: the token does not exist. Or access tokens are not available for your project yet. |
 | `409` | The browser is stopped. Or the browser is protected (agentic autofill). Or the browser started before access tokens were available. Or you tried to revoke 1 viewer token. |
 | `429` | The browser has the most tokens or live viewers that it allows. |
 | `503` | The token service is not available. Try again. |

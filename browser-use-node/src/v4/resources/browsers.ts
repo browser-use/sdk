@@ -16,7 +16,7 @@ type BrowserAccessTokenCreated = components["schemas"]["BrowserAccessTokenCreate
 type BrowserAccessTokenList = components["schemas"]["BrowserAccessTokenList"];
 type BrowserAccessTokenRevoked = components["schemas"]["BrowserAccessTokenRevoked"];
 type BrowserAccessEventList = components["schemas"]["BrowserAccessEventList"];
-export type CreateAccessTokenBody = Partial<components["schemas"]["CreateBrowserAccessTokenRequest"]> & Record<string, unknown>;
+export type CreateAccessTokenBody = Partial<components["schemas"]["CreateBrowserAccessTokenRequest"]>;
 export type CreateBrowserBody = Partial<components["schemas"]["CreateBrowserSessionRequest"]>;
 
 export interface BrowserListParams {
@@ -98,7 +98,7 @@ export class Browsers {
     return this.http.get<BrowserAccessTokenList>(`/browsers/${sessionId}/access-tokens`);
   }
 
-  /** Revoke one access token and close its open connections. */
+  /** Revoke one token and close its connections; viewer tokens answer 409, and a system token revoke stops our services. */
   revokeAccessToken(sessionId: string, tokenId: string): Promise<BrowserAccessTokenRevoked> {
     return this.http.delete<BrowserAccessTokenRevoked>(`/browsers/${sessionId}/access-tokens/${tokenId}`);
   }

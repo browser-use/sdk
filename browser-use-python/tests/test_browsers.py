@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import pytest
 
+from browser_use_sdk.v2.resources.browsers import AsyncBrowsers as V2AsyncBrowsers
 from browser_use_sdk.v2.resources.browsers import Browsers as V2Browsers
+from browser_use_sdk.v3.resources.browsers import AsyncBrowsers as V3AsyncBrowsers
 from browser_use_sdk.v3.resources.browsers import Browsers as V3Browsers
 
-from .test_v4 import FakeSyncHttp
+from .test_v4 import FakeAsyncHttp, FakeSyncHttp
 
 
 class FakeHttp:
@@ -81,11 +84,19 @@ def test_browser_metadata_rejects_more_than_10_entries(browser_cls: type[Any]) -
     assert http.calls == []
 
 
-@pytest.mark.parametrize("browser_cls", [V2Browsers, V3Browsers])
-def test_browser_access_token_routes(browser_cls: type[Any]) -> None:
+@pytest.mark.parametrize(
+    ("browser_cls", "fake_http"),
+    [
+        (V2Browsers, FakeSyncHttp),
+        (V3Browsers, FakeSyncHttp),
+        (V2AsyncBrowsers, FakeAsyncHttp),
+        (V3AsyncBrowsers, FakeAsyncHttp),
+    ],
+)
+def test_browser_access_token_routes(browser_cls: type[Any], fake_http: type[Any]) -> None:
     token_id = "00000000-0000-0000-0000-000000000031"
     revoked = {"effectiveBy": "2026-01-01T00:00:02Z"}
-    http = FakeSyncHttp([
+    http = fake_http([
         {"id": token_id, "token": "secret", "cdpUrl": "wss://cdp", "liveUrl": None, "expiresAt": None},
         {"items": []},
         revoked,
@@ -93,12 +104,20 @@ def test_browser_access_token_routes(browser_cls: type[Any]) -> None:
         {"items": [], "totalItems": 0, "pageNumber": 1, "pageSize": 5},
     ])
     browsers = browser_cls(http)
+    calls = [
+        browsers.create_access_token("b1", ttl_seconds=300),
+        browsers.list_access_tokens("b1"),
+        browsers.revoke_access_token("b1", token_id),
+        browsers.revoke_all_access_tokens("b1"),
+        browsers.get_access_log("b1", page_size=5),
+    ]
+    if fake_http is FakeAsyncHttp:
 
-    browsers.create_access_token("b1", ttl_seconds=300)
-    browsers.list_access_tokens("b1")
-    browsers.revoke_access_token("b1", token_id)
-    browsers.revoke_all_access_tokens("b1")
-    browsers.get_access_log("b1", page_size=5)
+        async def in_order() -> None:
+            for call in calls:
+                await call
+
+        asyncio.run(in_order())
 
     assert http.calls == [
         ("POST", "/browsers/b1/access-tokens", {"ttlSeconds": 300}, None),

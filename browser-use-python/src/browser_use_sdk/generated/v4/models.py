@@ -1555,7 +1555,10 @@ class TtlSeconds(RootModel[int]):
 
 class Label(RootModel[str]):
     root: str = Field(
-        ..., description='Printable ASCII label for the token list.', max_length=64
+        ...,
+        description='Printable ASCII label for the token list.',
+        max_length=64,
+        pattern='^[ -~]*$',
     )
 
 
